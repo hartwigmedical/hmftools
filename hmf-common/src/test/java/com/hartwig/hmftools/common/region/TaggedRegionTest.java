@@ -19,11 +19,12 @@ public class TaggedRegionTest
         String bedFilePath = Resources.getResource("bed/regions2.bed").getPath();
         Map<Chromosome, List<TaggedRegion>> map = TaggedRegion.loadRegionsFromBedFile(bedFilePath);
 
+        assert map != null;
         assertEquals(3, map.size());
         List<TaggedRegion> chr1Regions = map.get(HumanChromosome._1);
         assertEquals(2, chr1Regions.size());
-        assertEquals(new TaggedRegion(11, 12, "AAA"), chr1Regions.get(0));
-        assertEquals(new TaggedRegion(19, 20, "BBB"), chr1Regions.get(1));
+        assertEquals(new TaggedRegion("1", 11, 12, "AAA"), chr1Regions.get(0));
+        assertEquals(new TaggedRegion("1", 19, 20, "BBB"), chr1Regions.get(1));
     }
 
     @Test
@@ -32,17 +33,18 @@ public class TaggedRegionTest
         String bedFilePath = Resources.getResource("bed/regions3.bed").getPath();
         Map<Chromosome, List<TaggedRegion>> map = TaggedRegion.loadRegionsFromBedFile(bedFilePath);
 
+        assert map != null;
         assertEquals(3, map.size());
         List<TaggedRegion> chr1Regions = map.get(HumanChromosome._1);
         assertEquals(2, chr1Regions.size());
-        assertEquals(new TaggedRegion(11, 12, ""), chr1Regions.get(0));
-        assertEquals(new TaggedRegion(19, 20, ""), chr1Regions.get(1));
+        assertEquals(new TaggedRegion("1", 11, 12, ""), chr1Regions.get(0));
+        assertEquals(new TaggedRegion("1", 19, 20, ""), chr1Regions.get(1));
     }
 
     @Test
     public void formattedTest()
     {
-        TaggedRegion taggedRegion = new TaggedRegion(19, 100, "AAA");
+        TaggedRegion taggedRegion = new TaggedRegion("1", 19, 100, "AAA");
         assertEquals("AAA:19-100", taggedRegion.formatted());
     }
 }

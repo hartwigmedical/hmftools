@@ -38,10 +38,20 @@ public final class BedFileReader
         return loadBedFile(filename, true);
     }
 
-    public static List<ChrBaseRegion> loadBedFile(final String filename, boolean checkSortedMerged) throws Exception
+    public static List<ChrBaseRegion> loadBedFile(
+            final String filename,
+            boolean checkSortedMerged) throws Exception
+    {
+        return loadBedFile(filename, checkSortedMerged, BedLine.factory());
+    }
+
+    public static <T extends ChrBaseRegion>  List<T> loadBedFile(
+            final String filename,
+            boolean checkSortedMerged,
+            Function<String, T> factory) throws IOException
     {
         List<String> lines = FileWriterUtils.readLines(filename);
-        return loadBedFile(lines, checkSortedMerged);
+        return loadBedFile(lines, checkSortedMerged, factory);
     }
 
     public static List<ChrBaseRegion> loadBedFile(final List<String> lines)
@@ -54,10 +64,12 @@ public final class BedFileReader
         return loadBedFile(lines, checkSortedMerged, BedLine.factory());
     }
 
-    public static List<ChrBaseRegion> loadBedFile(final List<String> lines, boolean checkSortedMerged,
-            Function<String, ChrBaseRegion> factory)
+    public static <T extends ChrBaseRegion>  List<T> loadBedFile(
+            final List<String> lines,
+            boolean checkSortedMerged,
+            Function<String, T> factory)
     {
-        List<ChrBaseRegion> regions = Lists.newArrayList();
+        List<T> regions = Lists.newArrayList();
 
         for(String line : lines)
         {
@@ -83,11 +95,18 @@ public final class BedFileReader
 
     public static Map<Chromosome, List<BaseRegion>> loadBedFileChrMap(final String filename, boolean checkSortedMerged)
     {
-        return loadBedFileChrMap(filename, checkSortedMerged, BedLine.factory(), chrBaseRegion -> new BaseRegion(chrBaseRegion.start(), chrBaseRegion.end()));
+        return loadBedFileChrMap(
+                filename,
+                checkSortedMerged,
+                BedLine.factory(),
+                chrBaseRegion -> new BaseRegion(chrBaseRegion.start(), chrBaseRegion.end()));
     }
 
-    public static <R extends BaseRegion, T extends ChrBaseRegion> Map<Chromosome, List<R>> loadBedFileChrMap(final String filename,
-            boolean checkSortedMerged, Function<String, T> factory, Function<T, R> converter)
+    public static <R extends BaseRegion, T extends ChrBaseRegion> Map<Chromosome, List<R>> loadBedFileChrMap(
+            final String filename,
+            boolean checkSortedMerged,
+            Function<String, T> factory,
+            Function<T, R> converter)
     {
         final Map<Chromosome, List<R>> chrRegionsMap = Maps.newHashMap();
 

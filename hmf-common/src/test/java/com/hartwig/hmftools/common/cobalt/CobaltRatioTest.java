@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class CobaltRatioTest
     @Test
     public void windowTest()
     {
-        assertEquals(new BaseRegion(1001, 2000), ratio.window());
+        assertEquals(new ChrBaseRegion(ratio.chromosome(), 1001, 2000), ratio.window());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class CobaltRatioTest
     @Test
     public void noOverlapsTest()
     {
-        List<BaseRegion> regions = of(br(100, 200), br(400, 500), br(2100, 2300));
+        List<ChrBaseRegion> regions = of(gr(100, 200), gr(400, 500), gr(2100, 2300));
         Assert.assertTrue(ratio.findWindowOverlaps(regions).isEmpty());
     }
 
@@ -56,15 +56,15 @@ public class CobaltRatioTest
     {
         int oneBefore = ratio.position() - 1;
         int oneAfter = ratio.window().end() + 1;
-        List<BaseRegion> regions = of(br(oneBefore - 100, oneBefore), br(oneAfter, oneAfter + 100));
+        List<ChrBaseRegion> regions = of(gr(oneBefore - 100, oneBefore), gr(oneAfter, oneAfter + 100));
         Assert.assertTrue(ratio.findWindowOverlaps(regions).isEmpty());
     }
 
     @Test
     public void overlapWithFirstBase()
     {
-        BaseRegion region = br(ratio.position() - 100, ratio.position());
-        List<BaseRegion> overlaps = ratio.findWindowOverlaps(of(region));
+        ChrBaseRegion region = gr(ratio.position() - 100, ratio.position());
+        List<ChrBaseRegion> overlaps = ratio.findWindowOverlaps(of(region));
         assertEquals(1, overlaps.size());
         assertEquals(region, overlaps.get(0));
     }
@@ -72,8 +72,8 @@ public class CobaltRatioTest
     @Test
     public void overlapsWithLastBase()
     {
-        BaseRegion region = br(ratio.window().end(), ratio.window().end() + 100);
-        List<BaseRegion> overlaps = ratio.findWindowOverlaps(of(region));
+        ChrBaseRegion region = gr(ratio.window().end(), ratio.window().end() + 100);
+        List<ChrBaseRegion> overlaps = ratio.findWindowOverlaps(of(region));
         assertEquals(1, overlaps.size());
         assertEquals(region, overlaps.get(0));
     }
@@ -81,18 +81,18 @@ public class CobaltRatioTest
     @Test
     public void multipleOverlaps()
     {
-        BaseRegion region0 = br(850, 950);
-        BaseRegion region1 = br(950, 1050);
-        BaseRegion region2 = br(1150, 1250);
-        BaseRegion region3 = br(1750, 1850);
-        BaseRegion region4 = br(1950, 2050);
-        BaseRegion region5 = br(2150, 2250);
-        List<BaseRegion> overlaps = ratio.findWindowOverlaps(of(region0, region1, region2, region3, region4, region5));
+        ChrBaseRegion region0 = gr(850, 950);
+        ChrBaseRegion region1 = gr(950, 1050);
+        ChrBaseRegion region2 = gr(1150, 1250);
+        ChrBaseRegion region3 = gr(1750, 1850);
+        ChrBaseRegion region4 = gr(1950, 2050);
+        ChrBaseRegion region5 = gr(2150, 2250);
+        List<ChrBaseRegion> overlaps = ratio.findWindowOverlaps(of(region0, region1, region2, region3, region4, region5));
         assertEquals(of(region1, region2, region3, region4), overlaps);
     }
 
-    private BaseRegion br(int start, int end)
+    private ChrBaseRegion gr(int start, int end)
     {
-        return new BaseRegion(start, end);
+        return new ChrBaseRegion(ratio.chromosome(), start, end);
     }
 }

@@ -2,25 +2,30 @@ package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
 public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
                                       List<TaggedRegion> mOverlappingRegions,
                                       PurpleCopyNumber mPurpleCopyNumber)
 {
+    static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
+
     public static String tsvFileHeader()
     {
         return new StringJoiner("\t")
                 .add("chromosome")
                 .add("windowStart")
                 .add("windowEnd")
-                .add("panelRegions")
+                .add("bedRegions")
                 .add("masked")
                 .add("averageDepth")
                 .add("windowGCContent")
@@ -28,16 +33,17 @@ public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
                 .add("regionStart")
                 .add("regionEnd")
                 .add("copyNumber")
-                .add("minorAlleleCopNumber")
+                .add("minorAlleleCopyNumber")
                 .add("depthWindowCount")
                 .add("bafCount")
                 .add("GCContent")
+                .add("CNMethod")
                 .toString();
     }
 
     public String toTSV()
     {
-        BaseRegion cobaltRegion = mCobaltRatio.window();
+        ChrBaseRegion cobaltRegion = mCobaltRatio.window();
         StringJoiner panelRegionsStringJoiner = new StringJoiner(":");
         for(TaggedRegion region : mOverlappingRegions)
         {
@@ -49,16 +55,17 @@ public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
                 .add(String.valueOf(cobaltRegion.end()))
                 .add(panelRegionsStringJoiner.toString())
                 .add(String.valueOf(masked))
-                .add(String.valueOf(mCobaltRatio.tumorReadDepth()))
-                .add(String.valueOf(mCobaltRatio.tumorGcContent()))
-                .add(String.valueOf(mCobaltRatio.tumorGCRatio()))
+                .add(FORMAT.format(mCobaltRatio.tumorReadDepth()))
+                .add(FORMAT.format(mCobaltRatio.tumorGcContent()))
+                .add(FORMAT.format(mCobaltRatio.tumorGCRatio()))
                 .add(String.valueOf(mPurpleCopyNumber.start()))
                 .add(String.valueOf(mPurpleCopyNumber.end()))
-                .add(String.valueOf(mPurpleCopyNumber.averageTumorCopyNumber()))
-                .add(String.valueOf(mPurpleCopyNumber.minorAlleleCopyNumber()))
+                .add(FORMAT.format(mPurpleCopyNumber.averageTumorCopyNumber()))
+                .add(FORMAT.format(mPurpleCopyNumber.minorAlleleCopyNumber()))
                 .add(String.valueOf(mPurpleCopyNumber.depthWindowCount()))
                 .add(String.valueOf(mPurpleCopyNumber.bafCount()))
-                .add(String.valueOf(mPurpleCopyNumber.gcContent()))
+                .add(FORMAT.format(mPurpleCopyNumber.gcContent()))
+                .add(mPurpleCopyNumber.method().name())
                 .toString();
     }
 }
