@@ -20,7 +20,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
 public class TargetRegionsData
@@ -192,7 +191,7 @@ public class TargetRegionsData
             }
 
             // now compute the coding bases
-            for(BaseRegion region : chrRegions)
+            for(TaggedRegion region : chrRegions)
             {
                 mTotalBases += region.baseLength();
 

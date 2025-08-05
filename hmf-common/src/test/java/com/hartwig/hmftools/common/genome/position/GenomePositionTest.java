@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.genome;
+package com.hartwig.hmftools.common.genome.position;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GR;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.junit.Assert;
@@ -57,12 +57,3 @@ public class GenomePositionTest
     }
 }
 
-record GP(int position, String chromosome) implements GenomePosition
-{
-
-}
-
-record GR(int start, int end, String chromosome) implements GenomeRegion
-{
-
-}

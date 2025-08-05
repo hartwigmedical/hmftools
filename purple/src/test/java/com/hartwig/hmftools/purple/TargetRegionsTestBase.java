@@ -19,8 +19,6 @@ public class TargetRegionsTestBase
             Paths.get("src", "test", "resources", "reference", "msi_indels_1.tsv").toAbsolutePath().toString();
     private final String ratiosFilePath =
             Paths.get("src", "test", "resources", "reference", "target_regions_ratios_1.tsv").toAbsolutePath().toString();
-    private final String panelFilePath =
-            Paths.get("src", "test", "resources", "panel", "panel_1.bed").toAbsolutePath().toString();
     EnsemblDataCache ensemblDataCache;
     TargetRegionsData targetRegionsData;
 
@@ -32,6 +30,5 @@ public class TargetRegionsTestBase
         ensemblDataCache.createTranscriptIdMap();
 
         targetRegionsData = new TargetRegionsData(ratiosFilePath, indelsFilePath);
-        targetRegionsData.loadTargetRegionsBed(panelFilePath, ensemblDataCache);
     }
 }

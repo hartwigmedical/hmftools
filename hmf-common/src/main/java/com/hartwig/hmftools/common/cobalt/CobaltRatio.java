@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,13 +27,19 @@ public record CobaltRatio(
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
     }
 
-    public BaseRegion window()
+    public ChrBaseRegion window()
     {
-        return new BaseRegion(position, position + 1000 - 1);
+        return new ChrBaseRegion(chromosome, position, position + 1000 - 1);
     }
 
-    public <T extends BaseRegion> List<T> findWindowOverlaps(@NotNull List<T> intervals)
+    public <T extends ChrBaseRegion> List<T> findWindowOverlaps(@NotNull List<T> intervals)
     {
         return intervals.stream().filter(t -> this.window().overlaps(t)).collect(Collectors.toList());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "CobaltRatio(" + chromosome + ", "+ position + ")";
     }
 }
