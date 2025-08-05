@@ -14,9 +14,6 @@ import static com.hartwig.hmftools.lilac.coverage.AlleleCoverage.coverageAlleles
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.filterUnsupportedWildcardFragments;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findUnsupportedWildcards;
 import static com.hartwig.hmftools.lilac.coverage.FragmentAlleleMapper.findWildcardAlleles;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.util.Collections;
 import java.util.List;
@@ -200,12 +197,17 @@ public class ComplexBuilder
         unsupportedWildcards.forEach(x -> mConfirmedProteinAlleles.remove(x));
         unsupportedWildcards.forEach(x -> mUniqueProteinAlleles.remove(x));
 
-        List<HlaComplex> aOnlyComplexes = buildComplexesByGene(HLA_A, mUniqueGroupAlleles, mUniqueProteinAlleles);
-        List<HlaComplex> bOnlyComplexes = buildComplexesByGene(HLA_B, mUniqueGroupAlleles, mUniqueProteinAlleles);
-        List<HlaComplex> cOnlyComplexes = buildComplexesByGene(HLA_C, mUniqueGroupAlleles, mUniqueProteinAlleles);
+        Map<HlaGene, List<HlaComplex>> geneOnlyComplexes_ = Maps.newHashMap();
+        for(HlaGene gene : GENE_CACHE.GeneNames)
+        {
+            if(gene.isPseudo())
+                continue;
+
+            geneOnlyComplexes_.put(gene, buildComplexesByGene(gene, mUniqueGroupAlleles, mUniqueProteinAlleles));
+        }
 
         List<HlaComplex> complexes;
-        long simpleComplexCount = (long)aOnlyComplexes.size() * bOnlyComplexes.size() * cOnlyComplexes.size();
+        long simpleComplexCount = geneOnlyComplexes_.values().stream().mapToLong(x -> (long) x.size()).reduce(1L, (acc, x) -> acc * x);
 
         if(simpleComplexCount > COMPLEX_PERMS_THRESHOLD || simpleComplexCount < 0)
         {
@@ -214,16 +216,17 @@ public class ComplexBuilder
                     .filter(x -> mUniqueProteinAlleles.contains(x))
                     .collect(Collectors.toList());
 
-            LL_LOGGER.info("candidate permutations exceeds threshold, candidates(A={} B={} C={}) common({})",
-                    aOnlyComplexes.size(), bOnlyComplexes.size(), cOnlyComplexes.size(), commonAlleles.size());
+            Map<HlaGene, Integer> geneOnlyComplexeSizes_ = geneOnlyComplexes_.entrySet().stream().collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue().size()));
+            LL_LOGGER.info("candidate permutations exceeds threshold, candidates({}) common({})",
+                    geneOnlyComplexeSizes_, commonAlleles.size());
 
-            List<HlaAllele> aTopCandidates = rankedGroupCoverage(10, refFragAlleles, aOnlyComplexes, recoveredAlleles);
-            List<HlaAllele> bTopCandidates = rankedGroupCoverage(10, refFragAlleles, bOnlyComplexes, recoveredAlleles);
-            List<HlaAllele> cTopCandidates = rankedGroupCoverage(10, refFragAlleles, cOnlyComplexes, recoveredAlleles);
-            List<HlaAllele> topCandidates = Lists.newArrayList();
-            topCandidates.addAll(aTopCandidates);
-            topCandidates.addAll(bTopCandidates);
-            topCandidates.addAll(cTopCandidates);
+            Map<HlaGene, List<HlaAllele>> geneTopCandidates_ = Maps.newHashMap();
+            for(Map.Entry<HlaGene, List<HlaComplex>> entry : geneOnlyComplexes_.entrySet())
+            {
+                geneTopCandidates_.put(entry.getKey(), rankedGroupCoverage(10, refFragAlleles, entry.getValue(), recoveredAlleles));
+            }
+
+            List<HlaAllele> topCandidates = geneTopCandidates_.values().stream().flatMap(x -> x.stream()).collect(Collectors.toCollection(Lists::newArrayList));
 
             // ensure any common alleles, unfiltered so far, are kept regardless of ranking
             commonAlleles.stream().filter(x -> !topCandidates.contains(x)).forEach(x -> topCandidates.add(x));
@@ -257,17 +260,18 @@ public class ComplexBuilder
 
     private static List<HlaComplex> buildAlleleComplexes(final List<HlaAllele> confirmedGroups, final List<HlaAllele> candidates)
     {
-        List<HlaComplex> a = buildComplexesByGene(HLA_A, confirmedGroups, candidates);
-        List<HlaComplex> b = buildComplexesByGene(HLA_B, confirmedGroups, candidates);
-        List<HlaComplex> c = buildComplexesByGene(HLA_C, confirmedGroups, candidates);
-        return combineComplexes(combineComplexes(a, b), c);
+        return GENE_CACHE.GeneNames.stream()
+                .filter(gene -> !gene.isPseudo())
+                .map(gene -> buildComplexesByGene(gene, confirmedGroups, candidates))
+                .reduce((acc, x) -> combineComplexes(acc, x))
+                .orElse(null);
     }
 
     public static List<HlaComplex> buildComplexesByGene(
-            final HlaGene gene, final List<HlaAllele> unfilteredGroups, final List<HlaAllele> unfilteredCandidates)
+            final HlaGene gene_, final List<HlaAllele> unfilteredGroups, final List<HlaAllele> unfilteredCandidates)
     {
-        List<HlaAllele> confirmedGroups = takeN(unfilteredGroups.stream().filter(x -> x.Gene == gene).collect(Collectors.toList()), 2);
-        List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene == gene).collect(Collectors.toList());
+        List<HlaAllele> confirmedGroups = takeN(unfilteredGroups.stream().filter(x -> x.Gene == gene_).collect(Collectors.toList()), 2);
+        List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene == gene_).collect(Collectors.toList());
         Set<HlaAllele> candidatesSet = Sets.newHashSet(candidates);
 
         if (confirmedGroups.size() == 2)

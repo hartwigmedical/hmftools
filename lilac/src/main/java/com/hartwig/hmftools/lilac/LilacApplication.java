@@ -20,9 +20,6 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
@@ -59,6 +56,7 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
@@ -77,6 +75,7 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication
@@ -218,15 +217,11 @@ public class LilacApplication
 
         LL_LOGGER.info(format("totalFrags(%d)", totalFragmentCount));
 
-        Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences_, mRefData.AminoAcidSequences_);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaA()));
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaB()));
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
+        for(HlaContext context : HLA_CONTEXT_FACTORY.contexts(mConfig))
+            geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, context));
 
         List<Callable<Void>> callableList = Lists.newArrayList(geneTasks);
 
@@ -291,7 +286,7 @@ public class LilacApplication
             candidateAlleles.addAll(missingExpected);
         }
 
-        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> candidateSequences = mRefData.AminoAcidSequences_.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
@@ -301,10 +296,10 @@ public class LilacApplication
         Map<HlaGene, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
                 Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
 
-        List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
+        List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences_.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
+        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences_.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap =
@@ -692,16 +687,19 @@ public class LilacApplication
 
     private boolean hasSufficientGeneDepth(final Map<HlaGene, int[]> geneBaseDepth)
     {
-        int aLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int bLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int cLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-
-        int totalLowCoveragePositions = aLowCoveragePositions + bLowCoveragePositions + cLowCoveragePositions;
+        Map<HlaGene, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();
+        int totalLowCoveragePositions = 0;
+        for(Map.Entry<HlaGene, int[]> entry : geneBaseDepth.entrySet())
+        {
+            int count = (int) Arrays.stream(entry.getValue()).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
+            geneLowCoveragePositionCounts.put(entry.getKey(), count);
+            totalLowCoveragePositions += count;
+        }
 
         if(totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
         {
-            LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene(A={}, B={}, C={}) total({}) exceeds threshold({})",
-                    WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
+            LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene({}) total({}) exceeds threshold({})",
+                    WARN_LOW_COVERAGE_DEPTH, geneLowCoveragePositionCounts.toString(),
                     totalLowCoveragePositions, mConfig.FatalTotalLowCoveragePositions);
             return false;
         }

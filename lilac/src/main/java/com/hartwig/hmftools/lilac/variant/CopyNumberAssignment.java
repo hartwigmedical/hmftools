@@ -33,21 +33,22 @@ public class CopyNumberAssignment
         if(config.CopyNumberFile.isEmpty())
             return;
 
-        try
-        {
-            List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                    .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene.fromString(x.geneName()))).toList();
-
-            List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
-                    .collect(Collectors.toList());
-
-            mSampleCopyNumberData.put(config.Sample, cnDataList);
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to read gene copy number file({}): {}", config.CopyNumberFile, e.toString());
-        }
+        // TODO:
+//        try
+//        {
+//            List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
+//                    .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene.fromString(x.geneName()))).toList();
+//
+//            List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
+//                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
+//                    .collect(Collectors.toList());
+//
+//            mSampleCopyNumberData.put(config.Sample, cnDataList);
+//        }
+//        catch(IOException e)
+//        {
+//            LL_LOGGER.error("failed to read gene copy number file({}): {}", config.CopyNumberFile, e.toString());
+//        }
     }
 
     public static List<Double> formEmptyAlleleCopyNumber(final Iterable<HlaAllele> winners)
