@@ -4,10 +4,11 @@
 
 LILAC determines the most likely combination of HLA class I alleles present in a patient, aka HLA typing. 
 HLA typing is performed to 4 digit allele resolution, meaning LILAC uniquely identifies a specific protein, but ignores synonymous variants 
-(6 digits) and intronic differences (8 digits). LILAC is described and validated in the publication:
-*Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* ([link](https://www.nature.com/articles/s41588-023-01367-1)).
+(6 digits) and intronic differences (8 digits).
 
-To get started using LILAC, please jump to [Usage](#usage).
+Please jump to **[Usage](#usage)** to get started using LILAC.
+
+LILAC is described and validated in the publication: *Genetic immune escape landscape in primary and metastatic cancer, Nature 2023* (**[link](https://www.nature.com/articles/s41588-023-01367-1)**).
 
 Notable existing tools for HLA class I typing include Polysolver, xHLA, Optitype and DRAGEN-HLA. LILAC offers a number of potential 
 advantages including:
@@ -62,11 +63,13 @@ Older versions:
 
 ### Sample inputs
 
-LILAC performs HLA typing from GRCh37 or GRCh38 (no alt) BAMs. It can run in various sample modes:
-- **Germline-only** or **tumor-only**: Basic HLA typing
-- **Paired tumor/normal**: Call allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles. This mode
-  can take somatic variant calls and copy number variant calls from [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple)
-  as inputs, but outputs from other callers are also accepted.
+LILAC performs HLA typing from **BAM** files aligned to GRCh37 or GRCh38 (no alt) ref genomes. 
+
+It can run in various sample modes:
+- [Germline-only](#reference-only-mode) or [tumor-only](#tumor-only-mode): Basic HLA typing
+- [Paired tumor/normal](#paired-tumornormal-mode): Call allele specific somatic mutations, allelic imbalance, and/or complete loss of 
+alleles. This mode can take somatic variant calls and copy number variant calls from 
+[PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) as inputs, but outputs from other callers are also accepted.
 
 LILAC only considers reads from the HLA gene regions. You may provide BAMs which have been sliced for the HLA gene regions.
 
@@ -76,19 +79,18 @@ LILAC only considers reads from the HLA gene regions. You may provide BAMs which
 > used for this task.
 
 LILAC has been tested on WGS samples (30-40x germline depth, 100x tumor depth, paired 151 bp reads) and panel samples 
-(1000x coverage, paired 86 bp reads). Generally, shorter read length and lower depths are problematic for LILAC. In tumor samples with high purity and LOH, the lost allele in
-the tumor may also be difficult to detect.
+(1000x coverage, paired 86 bp reads). Generally, shorter read length and lower depths are problematic for LILAC. In tumor samples with 
+high purity and LOH, the [lost allele in the tumor](#tumor-and-rna-status-of-alleles) may also be difficult to detect.
 
 ### Reference data
 
 The reference data required to run LILAC can be downloaded from the `oncoanalyser`
 [downloads](https://nf-co.re/oncoanalyser/docs/usage/#reference-data-urls) page:
-- Reference genome FASTA
-- Allele population frequencies: `lilac_allele_frequencies.csv`
-- Allele nucleotide sequences: `hla_ref_nucleotide_sequences.csv`
-- Allele amino acid sequences: `hla_ref_aminoacid_sequences.csv`
-
-Allele sequences and frequencies files are found in the `hmf_pipeline_resources.*.tar.gz` bundle from `oncoanalyser`.
+- Reference genome FASTA: `Homo_sapiens.GRCh37.GATK.illumina.fasta` or `GRCh38_masked_exclusions_alts_hlas.fasta`
+- Within `hmf_pipeline_resources.*.tar.gz`:
+  - Allele population frequencies: `lilac_allele_frequencies.csv`
+  - Allele nucleotide sequences: `hla_ref_nucleotide_sequences.csv`
+  - Allele amino acid sequences: `hla_ref_aminoacid_sequences.csv`
 
 See section [Reference data generation](#reference-data-generation) for details on how the allele reference data files are derived.
 
@@ -126,8 +128,9 @@ java -jar lilac.jar \
 
 ##### Paired tumor/normal mode
 
-HLA-typing, and calling allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles in the tumor sample. Provide 
-the reference and tumor BAMs, as well as somatic variants VCF and gene copy number TSV from 
+HLA-typing, and calling allele specific somatic mutations, allelic imbalance, and/or complete loss of alleles in the tumor sample 
+(details in section [Tumor and RNA status of alleles](#tumor-and-rna-status-of-alleles)). 
+Provide the reference and tumor BAMs, as well as somatic variants VCF and gene copy number TSV from 
 [PURPLE](https://github.com/hartwigmedical/hmftools/tree/master/purple) (or other variant callers).
 
 ```
@@ -222,8 +225,8 @@ C*07:02  3011     2288      723       0       0          ...
 
 ### Top ranked solutions summary
 
-The `<sample_id>.lilac.candidates.coverage.tsv` file contains coverage (i.e. fragment support) info for all candidate solutions within X% 
-of the top solution's score.
+The `<sample_id>.lilac.candidates.coverage.tsv` file contains coverage (i.e. fragment support) info for all candidate solutions within 
+5% of the top solution's score (`top_score_threshold`).
 
 | Field(s)                                    | Description                                                                                                                                           |
 |:--------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -301,8 +304,8 @@ PASS   26.513      C*02:175            37                NONE       ...
 | File                                           | Description                                                                                                       |
 |:-----------------------------------------------|:------------------------------------------------------------------------------------------------------------------|
 | `<sample_id>.lilac.log`                        | Log file with information about the fit and details of all [unmatched haplotypes and indels](#qc-metrics-and-pon) |
-| `<sample_id>.lilac.HLA-A.aminoacids.txt`       | Fragment support for each amino acid by HLA gene                                                                  |
-| `<sample_id>.lilac.HLA-A.nucleotides.txt`      | Fragment support for each nucleotide by HLA gene                                                                  |
+| `<sample_id>.lilac.HLA-A.aminoacids.txt`       | Fragment support for each amino acid by HLA gene (See: [Amino acid matrix](#amino-acid-matrix))                   |
+| `<sample_id>.lilac.HLA-A.nucleotides.txt`      | Fragment support for each nucleotide by HLA gene (See: [Nucleotide matrix](#nucleotide-matrix))                   |
 | `<sample_id>.lilac.fragments.csv`              | Read details for all BAM fragments                                                                                |
 | `<sample_id>.lilac.candidates.fragments.csv`   | Allocation of each fragment to one or more solutions and which alleles they support                               |
 | `<sample_id>.lilac.candidates.aminoacids.txt`  | Fragment support for amino acids in the candidate alleles                                                         |
@@ -433,7 +436,7 @@ related pseudogenes:
 
 The main steps of the algorithm are:
 - [Elimination phase](#elimination-phase) (eliminate unlikely candidate alleles): 
-  - [Construct nucleotide matrix](#nucleotide-matrix-construction) (position x fragment support per base). Eliminate alleles with sequences not matching possible **nucleotide** sequences
+  - [Construct nucleotide matrix](#nucleotide-matrix) (position x fragment support per base). Eliminate alleles with sequences not matching possible **nucleotide** sequences
   - [Construct amino acid matrix](#amino-acid-matrix) (position x fragment support per residue). Eliminate alleles with sequences not matching possible **amino acid** sequences
   - Eliminate based on [phased haplotypes](#elimination-based-on-phased-haplotypes)
   - Exclude [HLA-Y](#excluding-hla-y-pseudogene-fragments) pseudogene fragments
@@ -453,15 +456,13 @@ The elimination phase removes alleles that are unlikely part of the final soluti
 at each nucleotide / amino acid position. This reduces runtime by reducing the number of allele combinations LILAC needs to consider in 
 the evidence phase.
 
-#### Nucleotide matrix construction
+#### Nucleotide matrix
 
 For each HLA gene, create a matrix containing the nucleotide counts (i.e. high quality fragment support) for each position, resulting in the
-below output. Bases with 0 fragment support not shown, and soft-clipped bases are represented as multi-character strings. Positions with 
-multiple nucleotides candidate are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
-
+below output.
 
 ```
-#index count1 base1 count2 base2 etc...
+#index raw_counts candidate1 count1 candidate2 count2 etc...
 0	766	A	991
 1	769	T	997
 2	768	G	999
@@ -478,6 +479,11 @@ multiple nucleotides candidate are deemed **heterozygous**, and positions with o
 288	1179	A	3412	G	289
 ...
 ```
+
+Note that:
+- Bases with 0 fragment support not shown, and soft-clipped bases are represented as multi-character strings
+- `raw_counts` only includes fragments aligned at that gene, whereas `count` can include [fragments from other genes](#shared-fragment-support-across-genes)
+- Positions with multiple nucleotide candidates are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**
 
 Construction of the nucleotide matrix has some conditions/caveats which are described in the below subsections.
 
@@ -537,11 +543,10 @@ probe binding affinity.
 
 #### Amino acid matrix
 
-Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. Amino acids with 0 fragment support not shown, 
-and amino acids derived from soft-clipped bases are represented as multi-character strings. Positions with multiple amino acid candidates 
-are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**.
+Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates. 
 
 ```
+#index raw_counts candidate1 count1 candidate2 count2 etc...
 0	749	M	971
 1	755	A	752	R	164	L	72
 2	776	V	1009
@@ -552,6 +557,11 @@ are deemed **heterozygous**, and positions with only 1 are considered to be **ho
 96	1178	T	3385	A	285
 ...
 ```
+
+Note that:
+- Amino acids with 0 fragment support not shown and amino acids derived from soft-clipped bases are represented as multi-character strings
+- `raw_counts` only includes fragments aligned at that gene, whereas `count` can include [fragments from other genes](#shared-fragment-support-across-genes)
+- Positions with multiple amino acid candidates are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**
 
 Amino acid matrix construction has the similar conditions/caveats as for the nucleotide matrix, namely: 
 - [Shared fragment support across genes](#shared-fragment-support-across-genes) is taken into account
