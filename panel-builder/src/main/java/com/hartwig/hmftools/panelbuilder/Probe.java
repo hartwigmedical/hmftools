@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
+
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +30,8 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match probe region length");
         }
-        if (!sequence.matches("[ACGT]*")) {
-            throw new IllegalArgumentException("sequence must only contain valid DNA bases");
+        if (!isDnaSequenceNormal(sequence)) {
+            throw new IllegalArgumentException("sequence must only contain normal DNA bases");
         }
         if(rejectionReason != null && (rejectionReason.isBlank()))
         {

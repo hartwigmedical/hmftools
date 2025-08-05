@@ -2,9 +2,12 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
+import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.function.DoubleSupplier;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
@@ -35,22 +38,44 @@ public class ProbeFactory
     }
 
     // Create a probe that corresponds exactly to a region in the reference genome.
-    public Probe createProbeFromRegion(final ChrBaseRegion region, final TargetMetadata metadata)
+    // Returns empty optional if it's not valid to create a probe at that location.
+    public Optional<Probe> createProbeFromRegion(final ChrBaseRegion region, final TargetMetadata metadata)
     {
         String sequence = getSequence(region);
-        return new Probe(
+        return createProbe(
                 region, sequence, metadata,
-                null, null,
-                getQualityScore(region, sequence, false), calcGcPercent(sequence));
+                () -> getQualityScore(region, sequence, false),
+                () -> calcGcPercent(sequence));
     }
 
     // Create a probe with a custom sequence.
-    public Probe createProbeFromSequence(final String sequence, final TargetMetadata metadata)
+    // Returns empty optional if it's not valid to create a probe at that location.
+    public Optional<Probe> createProbeFromSequence(final String sequence, final TargetMetadata metadata)
     {
-        return new Probe(
+        return createProbe(
                 null, sequence, metadata,
-                null, null,
-                getQualityScore(null, sequence, true), calcGcPercent(sequence));
+                () -> getQualityScore(null, sequence, true),
+                () -> calcGcPercent(sequence));
+    }
+
+    private Optional<Probe> createProbe(final ChrBaseRegion region, final String sequence, final TargetMetadata metadata,
+            final DoubleSupplier getQualityScore, final DoubleSupplier getGcContent)
+    {
+        // Only check the sequence, which the caller probably won't inspect in advance.
+        // Everything else is expected to be checked by the caller.
+        boolean valid = !isDnaSequenceNormal(sequence);
+        if(valid)
+        {
+            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
+            return Optional.empty();
+        }
+        else
+        {
+            return Optional.of(new Probe(
+                    region, sequence, metadata,
+                    null, null,
+                    getQualityScore.getAsDouble(), getGcContent.getAsDouble()));
+        }
     }
 
     private String getSequence(final ChrBaseRegion region)

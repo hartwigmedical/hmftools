@@ -79,7 +79,8 @@ public class GermlineMutation extends Variant
     {
         VariantProbeGenerator.Result result = generateMutationProbe(
                 refGenome, PROBE_LENGTH, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
-        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
+        probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
+                .ifPresent(this::setProbe);
     }
 
     @Override

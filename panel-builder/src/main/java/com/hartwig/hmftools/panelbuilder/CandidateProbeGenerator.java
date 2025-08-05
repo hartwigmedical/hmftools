@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreStartOff
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -94,7 +95,8 @@ public class CandidateProbeGenerator
                                 ChrBaseRegion.from(
                                         initialPosition.Chromosome,
                                         probeRegionCenteredAt(initialPosition.Position + offset)),
-                                metadata));
+                                metadata))
+                .flatMap(Optional::stream);
     }
 
     // Generates all probes overlapping a region, in order from left to right.
@@ -107,6 +109,7 @@ public class CandidateProbeGenerator
                 .mapToObj(start ->
                         mProbeFactory.createProbeFromRegion(
                                 ChrBaseRegion.from(region.chromosome(), probeRegionStartingAt(start)),
-                                metadata));
+                                metadata))
+                .flatMap(Optional::stream);
     }
 }

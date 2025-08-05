@@ -94,13 +94,15 @@ public class ReferenceMutation extends Variant
         ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
         if(mAlt.isEmpty())
         {
-            setProbe(probeFactory.createProbeFromRegion(region, probeMetadata()));
+            probeFactory.createProbeFromRegion(region, probeMetadata())
+                    .ifPresent(this::setProbe);
         }
         else
         {
             VariantProbeGenerator.Result result =
                     generateMutationProbe(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
-            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
+            probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
+                    .ifPresent(this::setProbe);
         }
     }
 
