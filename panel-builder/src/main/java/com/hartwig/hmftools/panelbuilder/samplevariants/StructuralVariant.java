@@ -2,15 +2,12 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -18,10 +15,11 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
 import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateSglProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateSvProbe;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +28,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -48,7 +45,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -168,157 +164,24 @@ public class StructuralVariant extends Variant
         return mCategoryType == FUSION || mCategoryType == AMP || mCategoryType == CategoryType.DEL || mCategoryType == DISRUPTION;
     }
 
-    protected static List<String> generateSvReferenceSequences(
-            final RefGenomeInterface refGenome,
-            final String chrStart, final int positionStart, final String chrEnd, final int positionEnd)
-    {
-        List<String> refSequences = Lists.newArrayList();
-
-        int probeLength = PROBE_LENGTH;
-        int halfProbeLength = probeLength / 2;
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            String chromosome = se == SE_START ? chrStart : chrEnd;
-            int position = se == SE_START ? positionStart : positionEnd;
-
-            if(position <= 0) // ie SGLs
-            {
-                continue;
-            }
-
-            int probeStart = position - halfProbeLength;
-
-            refSequences.add(refGenome.getBaseString(chromosome, probeStart, probeStart + probeLength - 1));
-        }
-
-        return refSequences;
-    }
-
-    private static String generateSglSequence(
-            final RefGenomeInterface refGenome,
-            final String chromosome, final int position, final byte orientation, final String insertSequence)
-    {
-        int probeLength = PROBE_LENGTH;
-        int halfProbeLength = probeLength / 2;
-        int insSeqLength = min(insertSequence.length(), halfProbeLength);
-        int refBaseLength = probeLength - insSeqLength;
-
-        // +1 take as-is
-        // -1 to +1 - a DUP
-
-        // +1 to +1 - start normal, add insert and then reverse compliment of the other side
-        // -1 to -1 - alt insert sequence then ref
-
-        String sequence;
-
-        if(orientation == ORIENT_FWD)
-        {
-            int probeStart = position - refBaseLength + 1;
-            String refBases = refGenome.getBaseString(chromosome, probeStart, position);
-            sequence = refBases + insertSequence.substring(0, insSeqLength);
-        }
-        else
-        {
-            String refBases = refGenome.getBaseString(chromosome, position, position + refBaseLength - 1);
-            sequence = insertSequence.substring(insertSequence.length() - insSeqLength) + refBases;
-        }
-
-        if(sequence.length() != probeLength)
-        {
-            LOGGER.error("variant({}:{}) invalid sequenceLength({}): {}", chromosome, position, sequence.length(), sequence);
-        }
-
-        return sequence;
-    }
-
-    protected static String generateSvSequence(
-            final RefGenomeInterface refGenome,
-            final String chrStart, final int positionStart, final byte orientStart,
-            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
-    {
-        int probeLength = PROBE_LENGTH;
-        int halfProbeLength = probeLength / 2;
-        int insSeqLength = insertSequence.length();
-        int halfInsSeqLength = insSeqLength / 2;
-        int halfNonInsSeqLength = halfProbeLength - halfInsSeqLength;
-
-        // +1 to -1 - do nothing
-        // -1 to +1 - a DUP
-
-        // +1 to +1 - start normal, add insert and then reverse compliment of the other side
-        // -1 to -1 - alt insert sequence then ref
-
-        String basesStart;
-        String basesEnd;
-
-        if(orientStart == ORIENT_FWD)
-        {
-            int probeStart = positionStart - halfNonInsSeqLength + 1;
-            basesStart = refGenome.getBaseString(chrStart, probeStart, positionStart);
-
-            int endBaseLength = probeLength - basesStart.length() - insSeqLength;
-
-            if(orientEnd == ORIENT_REV)
-            {
-                basesEnd = refGenome.getBaseString(chrEnd, positionEnd, positionEnd + endBaseLength - 1);
-            }
-            else
-            {
-                basesEnd = refGenome.getBaseString(chrEnd, positionEnd - endBaseLength + 1, positionEnd);
-                basesEnd = Nucleotides.reverseComplementBases(basesEnd);
-            }
-        }
-        else
-        {
-            if(orientEnd == ORIENT_FWD)
-            {
-                // swap ends and treat as +1/-1
-                int probeStart = positionEnd - halfNonInsSeqLength + 1;
-                basesStart = refGenome.getBaseString(chrEnd, probeStart, positionEnd);
-
-                int endBaseLength = probeLength - basesStart.length() - insSeqLength;
-                basesEnd = refGenome.getBaseString(chrStart, positionStart, positionStart + endBaseLength - 1);
-            }
-            else
-            {
-                // -1/-1 - start with the reversed bases from the end breakend
-                basesStart = refGenome.getBaseString(chrEnd, positionEnd, positionEnd + halfNonInsSeqLength - 1);
-                basesStart = Nucleotides.reverseComplementBases(basesStart);
-
-                int endBaseLength = probeLength - basesStart.length() - insSeqLength;
-                basesEnd = refGenome.getBaseString(chrStart, positionStart, positionStart + endBaseLength - 1);
-            }
-        }
-
-        String sequence = basesStart + insertSequence + basesEnd;
-
-        if(sequence.length() != probeLength)
-        {
-            LOGGER.error("variant({}:{} - {}:{}) invalid sequenceLength({}): {}",
-                    chrStart, positionStart, chrEnd, positionEnd, sequence.length(), sequence);
-        }
-
-        return sequence;
-    }
-
     @Override
     public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
-        String sequence;
         if(mVariant.type() == SGL)
         {
-            sequence = generateSglSequence(
+            VariantProbeGenerator.Result result = generateSglProbe(
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
+            // TODO: what if insert sequence is significant?
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
         }
         else
         {
-            sequence = generateSvSequence(
+            VariantProbeGenerator.Result result = generateSvProbe(
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
+            // TODO: what if insert sequence is significant?
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
         }
-        Probe probe = probeFactory.createProbeFromSequence(sequence, probeMetadata());
-        setProbe(probe);
     }
 
     @Override

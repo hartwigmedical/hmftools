@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
@@ -21,6 +20,7 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_LOWER;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
 
 import java.util.List;
 
@@ -34,7 +34,6 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -166,12 +165,11 @@ public class SomaticMutation extends Variant
     @Override
     public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
-        String sequence = generateMutationSequence(
+        VariantProbeGenerator.Result result = generateMutationProbe(
                 refGenome, PROBE_LENGTH,
                 mVariantDecorator.chromosome(), mVariantDecorator.position(),
                 mVariantDecorator.ref(), mVariantDecorator.alt());
-        Probe probe = probeFactory.createProbeFromSequence(sequence, probeMetadata());
-        setProbe(probe);
+        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
     }
 
     private double subclonalLikelihood()

@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -91,15 +91,16 @@ public class ReferenceMutation extends Variant
     @Override
     public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
+        ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
         if(mAlt.isEmpty())
         {
-            ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
             setProbe(probeFactory.createProbeFromRegion(region, probeMetadata()));
         }
         else
         {
-            String sequence = generateMutationSequence(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
-            setProbe(probeFactory.createProbeFromSequence(sequence, probeMetadata()));
+            VariantProbeGenerator.Result result =
+                    generateMutationProbe(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
         }
     }
 

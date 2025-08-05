@@ -2,8 +2,8 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.wisp.Utils.generateMutationSequence;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
 
 import java.util.List;
 
@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -78,10 +77,9 @@ public class GermlineMutation extends Variant
     @Override
     public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
     {
-        String sequence = generateMutationSequence(
+        VariantProbeGenerator.Result result = generateMutationProbe(
                 refGenome, PROBE_LENGTH, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
-        Probe probe = probeFactory.createProbeFromSequence(sequence, probeMetadata());
-        setProbe(probe);
+        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
     }
 
     @Override

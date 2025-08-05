@@ -42,6 +42,9 @@ public class ProbeFactory
     public Probe createProbeFromSequence(final String sequence, final TargetMetadata metadata,
             final List<ChrBaseRegion> contributingRegions)
     {
+        // Approximate the quality score by considering the regions which contributed to making this probe.
+        // Not going to be exact but should be good enough because all we need is to decide between low vs. high quality.
+        // TODO: should we run the whole probe through the real quality model instead?
         double qualityScore = contributingRegions.stream().mapToDouble(this::getQualityScore).min().orElseThrow();
         return new Probe(null, sequence, metadata, null, null, qualityScore, calcGcPercent(sequence));
     }
