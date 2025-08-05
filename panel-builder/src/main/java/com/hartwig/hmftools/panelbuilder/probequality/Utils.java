@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.probequality;
+package com.hartwig.hmftools.panelbuilder.probequality;
 
 import java.util.ArrayList;
 import java.util.Iterator;

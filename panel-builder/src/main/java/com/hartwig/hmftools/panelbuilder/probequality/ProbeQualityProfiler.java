@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.probequality;
+package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.String.format;
 
@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_S
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -319,7 +318,7 @@ public class ProbeQualityProfiler
 
     public static void main(String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
         addRefGenomeFile(configBuilder, true);
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);

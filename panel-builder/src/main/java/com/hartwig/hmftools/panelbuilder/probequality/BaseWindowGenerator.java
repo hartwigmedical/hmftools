@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.geneutils.probequality;
+package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.geneutils.probequality.Utils.partitionStream;
+import static com.hartwig.hmftools.panelbuilder.probequality.Utils.partitionStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;

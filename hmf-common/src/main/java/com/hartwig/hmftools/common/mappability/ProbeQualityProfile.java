@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// Reads the data written by GeneUtils ProbeQualityProfiler and provides utilities for calculating probe quality scores based on the data.
+// Reads the data written by ProbeQualityProfiler and provides utilities for calculating probe quality scores based on the data.
 // See ProbeQualityProfiler class for more context.
 public class ProbeQualityProfile
 {

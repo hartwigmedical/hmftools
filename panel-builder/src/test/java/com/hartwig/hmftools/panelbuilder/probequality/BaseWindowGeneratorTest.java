@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.probequality;
+package com.hartwig.hmftools.panelbuilder.probequality;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
