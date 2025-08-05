@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.panelbuilder.probequality.ProbeQualityModel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,9 +62,9 @@ public class ProbeGenerator
     }
 
     public static ProbeGenerator create(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
-            final Consumer<Probe> candidateCallback)
+            final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        ProbeFactory probeFactory = new ProbeFactory(refGenome, probeQualityProfile);
+        ProbeFactory probeFactory = new ProbeFactory(refGenome, probeQualityProfile, probeQualityModel);
         return new ProbeGenerator(
                 probeFactory,
                 new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths()),

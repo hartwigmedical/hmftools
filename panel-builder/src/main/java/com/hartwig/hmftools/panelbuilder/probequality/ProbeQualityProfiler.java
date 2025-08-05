@@ -17,11 +17,10 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_S
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.panelbuilder.probequality.Utils.createBwaMemAligner;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
@@ -37,7 +36,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 // Tool for helping with panel probe design. It produces a file which annotates the genome with information informing how likely a probe is
 // to hybridise with off-target genome regions.
@@ -155,7 +153,7 @@ public class ProbeQualityProfiler
 
         String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
         LOGGER.debug("BWA-MEM index image: {}", bwaIndexImageFile);
-        Supplier<BwaMemAligner> alignerFactory = () -> createAligner(bwaIndexImageFile, threads);
+        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(bwaIndexImageFile, threads);
 
         mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
         LOGGER.debug("Verbose output: {}", mVerboseOutput);
@@ -166,21 +164,6 @@ public class ProbeQualityProfiler
         mBaseWindowGenerator = new BaseWindowGenerator(refGenome, specificRegions, baseWindowLength, baseWindowSpacing, batchSize);
         mProbeQualityModel = new ProbeQualityModel(alignerFactory, baseWindowLength, matchScoreThreshold, matchScoreOffset);
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
-    }
-
-    private static BwaMemAligner createAligner(String bwaIndexImageFile, int threads)
-    {
-        if(!Files.exists(Paths.get(bwaIndexImageFile)) || bwaIndexImageFile.isEmpty())
-        {
-            throw new RuntimeException("Reference genome file is missing or empty");
-        }
-
-        BwaMemIndex index = new BwaMemIndex(bwaIndexImageFile);
-        BwaMemAligner aligner = new BwaMemAligner(index);
-
-        aligner.setNThreadsOption(threads);
-
-        return aligner;
     }
 
     private static BufferedWriter initialiseOutputWriter(String path, boolean verboseOutput)

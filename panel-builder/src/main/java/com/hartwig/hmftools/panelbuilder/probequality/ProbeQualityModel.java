@@ -77,7 +77,7 @@ public class ProbeQualityModel
         });
 
         List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
-        LOGGER.debug("Running risk model");
+        LOGGER.trace("Running risk model");
         return alignments.stream().map(this::computeFromAlignments).toList();
     }
 
@@ -93,7 +93,7 @@ public class ProbeQualityModel
             return batches
                     .flatMap(batch ->
                     {
-                        LOGGER.debug("Running BWA-MEM alignment");
+                        LOGGER.trace("Running BWA-MEM alignment");
                         List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
                         if(batchAlignments.size() != batch.size())
                         {

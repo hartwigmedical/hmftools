@@ -28,6 +28,9 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match probe region length");
         }
+        if (!sequence.matches("[ACGT]*")) {
+            throw new IllegalArgumentException("sequence must only contain valid DNA bases");
+        }
         if(rejectionReason != null && (rejectionReason.isBlank()))
         {
             throw new IllegalArgumentException("rejectionReason should not be blank");

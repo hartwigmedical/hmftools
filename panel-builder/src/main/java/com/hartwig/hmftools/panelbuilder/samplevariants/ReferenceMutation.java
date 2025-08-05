@@ -100,7 +100,7 @@ public class ReferenceMutation extends Variant
         {
             VariantProbeGenerator.Result result =
                     generateMutationProbe(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
-            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
         }
     }
 

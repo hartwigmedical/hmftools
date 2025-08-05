@@ -35,6 +35,8 @@ public class ProbeQualityProfile
 {
     private final int mBaseWindowLength;
     private final int mBaseWindowSpacing;
+    private final int mMatchScoreThreshold;
+    private final int mMatchScoreOffset;
     // Keyed by chromosome.
     protected final Map<String, List<ProbeQualityWindow>> mWindows;
 
@@ -44,11 +46,15 @@ public class ProbeQualityProfile
     // Must match the config used for generating the file.
     private static final int RESOURCE_BASE_WINDOW_LENGTH = 40;
     private static final int RESOURCE_BASE_WINDOW_SPACING = 20;
+    private static final int RESOURCE_MATCH_SCORE_THRESHOLD = 24;
+    private static final int RESOURCE_MATCH_SCORE_OFFSET = 26;
+
     private static final String FLD_QUALITY_SCORE = "QualityScore";
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
-    public ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows, int baseWindowLength, int baseWindowSpacing)
+    public ProbeQualityProfile(final Map<String, List<ProbeQualityWindow>> windows, int baseWindowLength, int baseWindowSpacing,
+            int matchScoreThreshold, int matchScoreOffset)
     {
         if(baseWindowLength < 1)
         {
@@ -77,6 +83,8 @@ public class ProbeQualityProfile
         }));
         mBaseWindowLength = baseWindowLength;
         mBaseWindowSpacing = baseWindowSpacing;
+        mMatchScoreThreshold = matchScoreThreshold;
+        mMatchScoreOffset = matchScoreOffset;
         mWindows = windows;
     }
 
@@ -89,7 +97,8 @@ public class ProbeQualityProfile
     {
         return new ProbeQualityProfile(
                 loadProbeQualityWindows(filePath, RESOURCE_BASE_WINDOW_LENGTH),
-                RESOURCE_BASE_WINDOW_LENGTH, RESOURCE_BASE_WINDOW_SPACING);
+                RESOURCE_BASE_WINDOW_LENGTH, RESOURCE_BASE_WINDOW_SPACING,
+                RESOURCE_MATCH_SCORE_THRESHOLD, RESOURCE_MATCH_SCORE_OFFSET);
     }
 
     private static Map<String, List<ProbeQualityWindow>> loadProbeQualityWindows(final String filePath, int baseWindowLength)
@@ -141,6 +150,16 @@ public class ProbeQualityProfile
                 LOGGER.trace("Loaded chromosome {} with {} windows", chromosome, windows.size()));
         LOGGER.debug("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
+    }
+
+    public int matchScoreThreshold()
+    {
+        return mMatchScoreThreshold;
+    }
+
+    public int matchScoreOffset()
+    {
+        return mMatchScoreOffset;
     }
 
     // Compute the final quality score from the probe quality profile.

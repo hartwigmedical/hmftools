@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.panelbuilder.probequality;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
+import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 public class Utils
 {
@@ -25,5 +30,20 @@ public class Utils
             }
             return batch;
         }).takeWhile(b -> !b.isEmpty());
+    }
+
+    public static BwaMemAligner createBwaMemAligner(String bwaIndexImageFile, int threads)
+    {
+        if(!Files.exists(Paths.get(bwaIndexImageFile)) || bwaIndexImageFile.isEmpty())
+        {
+            throw new RuntimeException("Reference genome file is missing or empty");
+        }
+
+        BwaMemIndex index = new BwaMemIndex(bwaIndexImageFile);
+        BwaMemAligner aligner = new BwaMemAligner(index);
+
+        aligner.setNThreadsOption(threads);
+
+        return aligner;
     }
 }

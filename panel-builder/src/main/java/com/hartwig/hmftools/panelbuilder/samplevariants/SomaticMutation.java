@@ -169,7 +169,7 @@ public class SomaticMutation extends Variant
                 refGenome, PROBE_LENGTH,
                 mVariantDecorator.chromosome(), mVariantDecorator.position(),
                 mVariantDecorator.ref(), mVariantDecorator.alt());
-        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
+        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
     }
 
     private double subclonalLikelihood()

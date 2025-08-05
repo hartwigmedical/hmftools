@@ -171,16 +171,14 @@ public class StructuralVariant extends Variant
         {
             VariantProbeGenerator.Result result = generateSglProbe(
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
-            // TODO: what if insert sequence is significant?
-            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
         }
         else
         {
             VariantProbeGenerator.Result result = generateSvProbe(
                     refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
-            // TODO: what if insert sequence is significant?
-            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
+            setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
         }
     }
 

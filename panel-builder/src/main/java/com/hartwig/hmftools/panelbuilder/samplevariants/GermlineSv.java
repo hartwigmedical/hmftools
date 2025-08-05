@@ -84,7 +84,7 @@ public class GermlineSv extends Variant
                 refGenome, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence);
         // TODO: what if insert sequence is significant?
-        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata(), result.regions()));
+        setProbe(probeFactory.createProbeFromSequence(result.sequence(), probeMetadata()));
     }
 
     @Override
