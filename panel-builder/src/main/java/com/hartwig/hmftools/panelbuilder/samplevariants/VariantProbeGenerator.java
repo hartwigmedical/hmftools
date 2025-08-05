@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.panelbuilder.PanelCoverage;
+import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
@@ -221,22 +222,20 @@ public class VariantProbeGenerator
     private static ProbeGenerationResult createProbe(final ProbeData probeData, final TargetMetadata metadata,
             final ProbeFactory probeFactory, final PanelCoverage coverage)
     {
-        return probeFactory.createProbeFromSequence(probeData.sequence(), metadata)
-                .map(probe ->
-                {
-                    List<TargetRegion> targetRegions = probeData.regions().stream()
-                            .map(region -> new TargetRegion(region, metadata))
-                            .toList();
-                    boolean covered = probeData.regions().stream().allMatch(coverage::isCovered);
-                    if(covered)
-                    {
-                        return new ProbeGenerationResult(emptyList(), targetRegions, emptyList(), emptyList());
-                    }
-                    else
-                    {
-                        return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-                    }
-                })
-                .orElseThrow();
+        List<TargetRegion> targetRegions = probeData.regions().stream()
+                .map(region -> new TargetRegion(region, metadata))
+                .toList();
+
+        // If there's an alt sequence then always produce a probe to cover it.
+        boolean covered = probeData.insert().isEmpty() && probeData.regions().stream().allMatch(coverage::isCovered);
+        if(covered)
+        {
+            return new ProbeGenerationResult(emptyList(), targetRegions, emptyList(), emptyList());
+        }
+        else
+        {
+            Probe probe = probeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
+            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+        }
     }
 }
