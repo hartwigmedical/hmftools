@@ -30,7 +30,8 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match probe region length");
         }
-        if (!isDnaSequenceNormal(sequence)) {
+        if(!isDnaSequenceNormal(sequence))
+        {
             throw new IllegalArgumentException("sequence must only contain normal DNA bases");
         }
         if(rejectionReason != null && (rejectionReason.isBlank()))

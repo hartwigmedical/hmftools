@@ -21,9 +21,9 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLON
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;

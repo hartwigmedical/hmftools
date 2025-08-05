@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.PanelData;
