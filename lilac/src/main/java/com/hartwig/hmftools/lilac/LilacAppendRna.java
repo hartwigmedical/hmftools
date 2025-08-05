@@ -76,10 +76,10 @@ public class LilacAppendRna
 
         for(LilacAllele allele : solutionAlleles)
         {
-            List<HlaSequenceLoci> alleleAaSequences = mRefData.AminoAcidSequences.stream()
+            List<HlaSequenceLoci> alleleAaSequences = mRefData.AminoAcidSequences_.stream()
                     .filter(x -> allele.allele().equals(x.Allele.toString())).collect(Collectors.toList());
 
-            List<HlaSequenceLoci> alleleNucSequences = mRefData.NucleotideSequences.stream()
+            List<HlaSequenceLoci> alleleNucSequences = mRefData.NucleotideSequences_.stream()
                     .filter(x -> allele.allele().equals(x.Allele.asFourDigit().toString())).collect(Collectors.toList());
 
             if(alleleNucSequences.isEmpty() || alleleAaSequences.isEmpty())

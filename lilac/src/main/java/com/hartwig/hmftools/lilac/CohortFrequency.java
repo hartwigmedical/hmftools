@@ -13,7 +13,7 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class CohortFrequency
 {
-    private final Map<HlaAllele,Double> mAlleleFrequencies;
+    private final Map<HlaAllele, Double> mAlleleFrequencies;
 
     public CohortFrequency(final String freqFile)
     {
@@ -31,7 +31,7 @@ public class CohortFrequency
     public double getAlleleFrequency(final HlaAllele allele)
     {
         Double frequency = mAlleleFrequencies.get(allele);
-        return frequency != null ? frequency : 0;
+        return frequency != null ? frequency : 0.0;
     }
 
     private void loadData(final String filename)

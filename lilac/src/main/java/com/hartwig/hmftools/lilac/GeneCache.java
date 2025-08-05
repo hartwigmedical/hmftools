@@ -14,12 +14,14 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class GeneCache
 {
-    public final MhcClass ClassType;
     public final Map<HlaGene, TranscriptData> GeneTranscriptMap;
     public final List<TranscriptData> Transcripts;
 
+    // TODO: Load the appropriate genes
     public final List<HlaGene> GeneNames; // long names matching Ensembl
 
     public final int ExpectAlleleCount;
@@ -30,9 +32,14 @@ public class GeneCache
     public final Map<HlaGene, List<Integer>> NucleotideExonBoundaries;
     public final Map<HlaGene, Integer> NucleotideLengths;
 
-    public GeneCache(final MhcClass mhcClass, final Map<HlaGene, TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene, TranscriptData> hlaTranscriptMap)
     {
-        ClassType = mhcClass;
+        // TODO:
+        if(!hlaTranscriptMap.containsKey(HlaGene.HLA_DQB1))
+        {
+            throw new RuntimeException("hlaTranscriptMap odes not contain HLA-DQB1");
+        }
+
         GeneTranscriptMap = hlaTranscriptMap;
 
         // establish other properties and commonly used constants

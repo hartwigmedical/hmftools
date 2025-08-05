@@ -52,6 +52,7 @@ public class HlaYCoverage
     private static final int Y0101_X = 0;
     private static final int EXON_3 = 1;
 
+    // TODO: only build this for CLASS1
     public HlaYCoverage(
             final List<HlaSequenceLoci> hlaYSequences, final Map<HlaGene, Map<Integer,Set<String>>> geneAminoAcidHetLociMap,
             final LilacConfig config)

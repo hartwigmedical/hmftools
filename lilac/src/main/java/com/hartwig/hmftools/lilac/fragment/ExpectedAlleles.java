@@ -5,21 +5,23 @@ import static java.lang.Math.min;
 
 import java.util.List;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class ExpectedAlleles
 {
-    private final int[] mAlleleCount;
+    private final int[] mAlleleCount_;
 
-    public ExpectedAlleles(final int[] alleleCount)
+    public ExpectedAlleles(final int[] alleleCount_)
     {
-        mAlleleCount = alleleCount;
+        mAlleleCount_ = alleleCount_;
     }
 
-    public final int expectedAlleles(int loci)
+    private int expectedAlleles(int loci)
     {
-        return loci >= mAlleleCount.length ? 2 : mAlleleCount[loci];
+        return mAlleleCount_ == null || loci >= mAlleleCount_.length ? 2 : mAlleleCount_[loci];
     }
 
-    public final int expectedAlleles(final List<Integer> loci)
+    public int expectedAlleles(final List<Integer> loci)
     {
         return loci.stream().mapToInt(x -> expectedAlleles(x)).min().orElse(0);
     }

@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class HlaSequenceLoci
 {
     public final HlaAllele Allele;
