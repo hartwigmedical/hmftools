@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateSglProbe;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateSvProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,10 +45,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
-import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -168,24 +164,21 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
+    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        ProbeGenerationResult result;
-        TargetMetadata metadata = targetMetadata();
         if(mVariant.type() == SGL)
         {
-            result = generateSglProbe(
+            return buildSglProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
-                    metadata, refGenome, probeFactory, coverage);
+                    refGenome);
         }
         else
         {
-            result = generateSvProbe(
+            return buildSvProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
-                    metadata, refGenome, probeFactory, coverage);
+                    refGenome);
         }
-        setProbeGenResult(result);
     }
 
     @Override

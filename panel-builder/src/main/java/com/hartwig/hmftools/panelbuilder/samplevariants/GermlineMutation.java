@@ -2,7 +2,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.List;
 
@@ -12,9 +12,6 @@ import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,12 +73,9 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
+    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        ProbeGenerationResult result = generateMutationProbe(
-                mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(),
-                targetMetadata(), refGenome, probeFactory, coverage);
-        setProbeGenResult(result);
+        return buildMutationProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), refGenome);
     }
 
     @Override

@@ -73,7 +73,7 @@ public class Cdr3Regions
         else
         {
             LOGGER.debug("No acceptable probe for CDR3 target: {}", target);
-            String rejectionReason = "Probe des not meet criteria " + PROBE_CRITERIA;
+            String rejectionReason = "Probe does not meet criteria " + PROBE_CRITERIA;
             return ProbeGenerationResult.rejectTarget(target, rejectionReason);
         }
     }

@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_STRICT;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.List;
 
@@ -33,9 +33,6 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -164,12 +161,10 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
+    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        ProbeGenerationResult result = generateMutationProbe(
-                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
-                targetMetadata(), refGenome, probeFactory, coverage);
-        setProbeGenResult(result);
+        return buildMutationProbe(
+                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(), refGenome);
     }
 
     private double subclonalLikelihood()

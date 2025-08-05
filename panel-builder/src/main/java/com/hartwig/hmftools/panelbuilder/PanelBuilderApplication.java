@@ -123,9 +123,7 @@ public class PanelBuilderApplication
         }
         else
         {
-            CopyNumberBackbone copyNumberBackbone =
-                    new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData);
-            copyNumberBackbone.generateProbes();
+            new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData).generateProbes();
             // Result is stored into mPanelData
         }
     }
@@ -166,7 +164,7 @@ public class PanelBuilderApplication
         else
         {
             SampleVariants.ExtraOutput extraOutput =
-                    SampleVariants.generateProbes(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData);
+                    new SampleVariants(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData).generateProbes();
             // Result is stored into mPanelData
             return extraOutput;
         }

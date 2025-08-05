@@ -2,61 +2,19 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.Probe;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
-import com.hartwig.hmftools.panelbuilder.TargetMetadata;
-import com.hartwig.hmftools.panelbuilder.TargetRegion;
 
-import org.jetbrains.annotations.Nullable;
-
-public class VariantProbeGenerator
+public class VariantProbeBuilder
 {
-    private record ProbeData(
-            String sequence,
-            @Nullable ChrBaseRegion start,
-            String insert,
-            @Nullable ChrBaseRegion end
-    )
-    {
-        List<ChrBaseRegion> regions()
-        {
-            List<ChrBaseRegion> result = new ArrayList<>();
-            if(start != null)
-            {
-                result.add(start);
-            }
-            if(end != null)
-            {
-                result.add(end);
-            }
-            return result;
-        }
-    }
-
-    public static ProbeGenerationResult generateMutationProbe(final String chromosome, final int position, final String ref,
-            final String alt, final TargetMetadata metadata, final RefGenomeInterface refGenome, final ProbeFactory probeFactory,
-            final PanelCoverage coverage)
-    {
-        ProbeData probeData = generateMutationProbe(refGenome, chromosome, position, ref, alt);
-        return createProbe(probeData, metadata, probeFactory, coverage);
-    }
-
-    private static ProbeData generateMutationProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
-            final String ref, final String alt)
+    public static VariantProbeData buildMutationProbe(final String chromosome, final int position, final String ref, final String alt,
+            final RefGenomeInterface refGenome)
     {
         int probeLength = PROBE_LENGTH;
         int altLength = alt.length();
@@ -80,20 +38,12 @@ public class VariantProbeGenerator
                     chromosome, position, ref, alt, sequence.length(), sequence));
         }
 
-        return new ProbeData(sequence, startRegion, alt, endRegion);
+        return new VariantProbeData(sequence, startRegion, alt, endRegion);
     }
 
-    public static ProbeGenerationResult generateSvProbe(final String chrStart, final int positionStart, final byte orientStart,
-            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence, final TargetMetadata metadata,
-            final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
-    {
-        ProbeData probeData =
-                generateSvProbe(refGenome, chrStart, positionStart, orientStart, chrEnd, positionEnd, orientEnd, insertSequence);
-        return createProbe(probeData, metadata, probeFactory, coverage);
-    }
-
-    private static ProbeData generateSvProbe(final RefGenomeInterface refGenome, final String chrStart, final int positionStart,
-            final byte orientStart, final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
+    public static VariantProbeData buildSvProbe(final String chrStart, final int positionStart, final byte orientStart,
+            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence,
+            final RefGenomeInterface refGenome)
     {
         int probeLength = PROBE_LENGTH;
         int halfProbeLength = probeLength / 2;
@@ -164,19 +114,11 @@ public class VariantProbeGenerator
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new ProbeData(sequence, startRegion, insertSequence, endRegion);
+        return new VariantProbeData(sequence, startRegion, insertSequence, endRegion);
     }
 
-    public static ProbeGenerationResult generateSglProbe(final String chromosome, final int position, final byte orientation,
-            final String insertSequence, final TargetMetadata metadata, final RefGenomeInterface refGenome, final ProbeFactory probeFactory,
-            final PanelCoverage coverage)
-    {
-        ProbeData probeData = generateSglProbe(refGenome, chromosome, position, orientation, insertSequence);
-        return createProbe(probeData, metadata, probeFactory, coverage);
-    }
-
-    private static ProbeData generateSglProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
-            final byte orientation, final String insertSequence)
+    public static VariantProbeData buildSglProbe(final String chromosome, final int position, final byte orientation,
+            final String insertSequence, final RefGenomeInterface refGenome)
     {
         int probeLength = PROBE_LENGTH;
         int halfProbeLength = probeLength / 2;
@@ -216,26 +158,6 @@ public class VariantProbeGenerator
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new ProbeData(sequence, startRegion, insert, endRegion);
-    }
-
-    private static ProbeGenerationResult createProbe(final ProbeData probeData, final TargetMetadata metadata,
-            final ProbeFactory probeFactory, final PanelCoverage coverage)
-    {
-        List<TargetRegion> targetRegions = probeData.regions().stream()
-                .map(region -> new TargetRegion(region, metadata))
-                .toList();
-
-        // If there's an alt sequence then always produce a probe to cover it.
-        boolean covered = probeData.insert().isEmpty() && probeData.regions().stream().allMatch(coverage::isCovered);
-        if(covered)
-        {
-            return new ProbeGenerationResult(emptyList(), targetRegions, emptyList(), emptyList());
-        }
-        else
-        {
-            Probe probe = probeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
-            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-        }
+        return new VariantProbeData(sequence, startRegion, insert, endRegion);
     }
 }

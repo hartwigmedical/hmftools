@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_SV;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateSvProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,9 +16,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,13 +77,12 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
+    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        ProbeGenerationResult result = generateSvProbe(
+        return buildSvProbe(
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence,
-                targetMetadata(), refGenome, probeFactory, coverage);
-        setProbeGenResult(result);
+                refGenome);
     }
 
     @Override

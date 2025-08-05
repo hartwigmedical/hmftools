@@ -67,4 +67,14 @@ public record ProbeGenerationResult(
                 emptyList(),
                 List.of(RejectedRegion.rejectTarget(target, rejectionReason)));
     }
+
+    // Convenience method for creating a result from rejecting multiple entire target regions.
+    public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets, final String rejectionReason)
+    {
+        return new ProbeGenerationResult(
+                emptyList(),
+                List.copyOf(targets),
+                emptyList(),
+                targets.stream().map(target -> RejectedRegion.rejectTarget(target, rejectionReason)).toList());
+    }
 }

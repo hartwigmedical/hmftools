@@ -7,23 +7,15 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
-import com.hartwig.hmftools.panelbuilder.ProbeFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
-import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.jetbrains.annotations.Nullable;
 
 public abstract class Variant
 {
-    // TODO: refactor this, also figure out GC constraints
-    @Nullable
-    private ProbeGenerationResult mProbeGenResult;
     private SelectionStatus mStatus;
 
     public Variant()
     {
-        mProbeGenResult = null;
         mStatus = SelectionStatus.NOT_SET;
     }
 
@@ -35,11 +27,6 @@ public abstract class Variant
     public String gene()
     {
         return null;
-    }
-
-    protected void setProbeGenResult(final ProbeGenerationResult result)
-    {
-        mProbeGenResult = result;
     }
 
     public abstract double copyNumber();
@@ -61,7 +48,7 @@ public abstract class Variant
 
     public abstract boolean reported();
 
-    public abstract void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage);
+    public abstract VariantProbeData generateProbe(final RefGenomeInterface refGenome);
 
     public abstract boolean checkFilters();
 
@@ -96,10 +83,5 @@ public abstract class Variant
     public void setSelectionStatus(final SelectionStatus status)
     {
         mStatus = status;
-    }
-
-    protected TargetMetadata targetMetadata()
-    {
-        return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, description());
     }
 }

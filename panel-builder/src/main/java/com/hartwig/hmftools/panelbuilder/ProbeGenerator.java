@@ -47,6 +47,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class ProbeGenerator
 {
+    // TODO: review external uses of members
     public final ProbeFactory mProbeFactory;
     public final CandidateProbeGenerator mCandidateGenerator;
     public final ProbeEvaluator mProbeEvaluator;
