@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
@@ -124,6 +125,41 @@ public class VariantReadContextTest
         assertEquals(17, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
+    }
+
+    @Test
+    public void testLowBaseQualVariants()
+    {
+        // test 1: most simple case with no repeats or homology
+        SimpleVariant var = createSimpleVariant(50, "C", "A");
+
+        String readBases = REF_BASES_200.substring(30, 50) + "A" + REF_BASES_200.substring(51, 70);
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+
+        // low qual bases in core
+        baseQuals[18] = BASE_QUAL_MINIMUM;
+        String readCigar = "40M";
+        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
+        assertNull(readContext);
+
+        // an indel with low bases in the flank
+
+        var = createSimpleVariant(50, "C", "CTTT");
+        readBases = REF_BASES_200.substring(30, 51) + "TTT" + REF_BASES_200.substring(51, 70);
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+
+        // low qual bases in core
+        baseQuals[6] = BASE_QUAL_MINIMUM;
+        baseQuals[31] = BASE_QUAL_MINIMUM;
+        readCigar = "20M3I20M";
+        read = buildSamRecord(30, readCigar, readBases, baseQuals);
+
+        readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
+        assertNull(readContext);
     }
 
     @Test

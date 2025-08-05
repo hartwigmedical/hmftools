@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -46,6 +47,9 @@ public class VariantReadContextBuilder
 
             // enforce full flanks
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
+                return null;
+
+            if(!aboveMinBasQual(readContext, read, varReadIndex))
                 return null;
 
             // enforce ref base padding for trinucleotide generation
@@ -197,6 +201,29 @@ public class VariantReadContextBuilder
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
+    }
+
+    private static boolean aboveMinBasQual(final VariantReadContext readContext, final SAMRecord read, final int varReadIndex)
+    {
+        int indexStart = varReadIndex - readContext.leftCoreLength();
+        int indexEnd = varReadIndex + readContext.rightCoreLength();
+
+        if(readContext.variant().isIndel())
+        {
+            indexStart -= readContext.leftFlankLength();
+            indexEnd += readContext.rightFlankLength();
+        }
+
+        if(indexStart < 0 || indexEnd >= read.getBaseQualities().length)
+            return false;
+
+        for(int i = indexStart; i <= indexEnd; ++i)
+        {
+            if(read.getBaseQualities()[i] <= BASE_QUAL_MINIMUM)
+                return false;
+        }
+
+        return true;
     }
 
     private class SoftClipReadAdjustment

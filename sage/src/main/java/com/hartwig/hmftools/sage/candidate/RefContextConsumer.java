@@ -432,9 +432,10 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
+                        int mnvNumEvents = NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt);
+
                         readInfo.addAltRead(new AltRead(
-                                refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt),
-                                sufficientMapQuality, record, readBaseIndex));
+                                refContext, mnvRef, mnvAlt, mnvNumEvents, sufficientMapQuality, record, readBaseIndex));
                     }
                 }
             }
