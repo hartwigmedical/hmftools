@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
@@ -80,7 +83,9 @@ public class SageConfig
     public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
-    public final SequencingType Sequencing;
+
+    // global for convenience
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
 
@@ -214,7 +219,7 @@ public class SageConfig
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
-        Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
@@ -280,6 +285,11 @@ public class SageConfig
 
         mReadLength = readLength;
     }
+
+    // convenience
+    public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
+    public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public String outputDir() { return pathFromFile(OutputFile); }
 
@@ -433,7 +443,6 @@ public class SageConfig
         PerfWarnTime = 0;
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        Sequencing = SequencingType.ILLUMINA;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;

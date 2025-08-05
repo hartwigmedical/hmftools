@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
 
 import htsjdk.samtools.SAMRecord;

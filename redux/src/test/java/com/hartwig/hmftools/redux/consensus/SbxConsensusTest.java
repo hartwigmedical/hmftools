@@ -2,9 +2,11 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.extractDuplexBaseIndex;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_1_QUAL;
@@ -12,7 +14,6 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_2_QU
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
-import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
@@ -24,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -184,16 +185,20 @@ public class SbxConsensusTest
             assertEquals(SBX_DUPLEX_QUAL, read.getBaseQualities()[i]);
         }
 
-        String umiInfo = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        assertEquals(format("%s_0", ConsensusType.NONE), umiInfo);
+        ConsensusType consensusType = extractConsensusType(read);
+        int duplexBaseIndex = extractDuplexBaseIndex(read);
+        assertEquals(ConsensusType.DUAL, consensusType);
+        assertEquals(0, duplexBaseIndex);
 
         baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
         read = createSamRecord(readBases, position, baseQuals);
         read.setReadNegativeStrandFlag(true);
         SbxRoutines.finaliseRead(mRefGenome, read);
 
-        umiInfo = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        assertEquals(format("%s_9", ConsensusType.NONE), umiInfo);
+        consensusType = extractConsensusType(read);
+        duplexBaseIndex = extractDuplexBaseIndex(read);
+        assertEquals(ConsensusType.DUAL, consensusType);
+        assertEquals(9, duplexBaseIndex);
 
         // mark the transition point mid-way through the read
         baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
@@ -207,8 +212,10 @@ public class SbxConsensusTest
         read.setReadNegativeStrandFlag(true);
         SbxRoutines.finaliseRead(mRefGenome, read);
 
-        umiInfo = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        assertEquals(format("%s_6", ConsensusType.NONE), umiInfo);
+        consensusType = extractConsensusType(read);
+        duplexBaseIndex = extractDuplexBaseIndex(read);
+        assertEquals(ConsensusType.DUAL, consensusType);
+        assertEquals(6, duplexBaseIndex);
 
         // test duplex mismatch bases
         baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);

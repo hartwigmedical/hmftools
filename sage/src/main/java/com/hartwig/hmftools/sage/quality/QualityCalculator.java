@@ -4,19 +4,25 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 
+import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -30,7 +36,6 @@ public class QualityCalculator
     private final BqrRecordMap mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
-    private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
 
     public static final byte INVALID_BASE_QUAL = -1;
@@ -40,13 +45,12 @@ public class QualityCalculator
             final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
-        mSequencingType = config.Sequencing;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
 
         mRefBases = refBases;
 
-        mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
+        mUltimaQualCalculator = isUltima() ? new UltimaQualCalculator(refGenome) : null;
     }
 
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
@@ -157,13 +161,23 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        BqrReadType readType = extractReadType(record, mSequencingType);
+        ConsensusType consensusType = SamRecordUtils.extractConsensusType(record);
+        boolean posOrientRead = !record.getReadNegativeStrandFlag();
+
+        int dualBaseIndex = -1;
+        if(isSbx() && consensusType == DUAL)
+        {
+            dualBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
+
+            if(!SbxBamUtils.inDuplexRegion(posOrientRead, dualBaseIndex, startReadIndex))
+                consensusType = SINGLE;
+        }
 
         if(readContextCounter.isSnv())
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return readContextCounter.qualCache().getQual(rawQuality, readType, 0);
+            return readContextCounter.qualCache().getQual(rawQuality, consensusType, 0, posOrientRead);
         }
 
         // MNV case
@@ -176,7 +190,7 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, readType, i);
+            double recalibratedQual = readContextCounter.qualCache().getQual(rawQuality, consensusType, i, posOrientRead);
             quality = min(quality, recalibratedQual);
         }
 
@@ -188,7 +202,7 @@ public class QualityCalculator
         return mRefBases.containsPosition(refPosition) ? mRefBases.trinucleotideContext(refPosition) : null;
     }
 
-    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final BqrReadType readType)
+    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final ConsensusType readType)
     {
         if(rawQuality == 0)
             return 0; // never adjust a zero qual up

@@ -219,13 +219,15 @@ public class PartitionReader
         }
     }
 
-    private void postProcessPrimaryRead(@Nullable final SAMRecord primaryRead)
+    private void postProcessPrimaryRead(final DuplicateGroup duplicateGroup)
     {
-        if(primaryRead == null)
-            return;
-
         if(isSbx())
-            finaliseRead(mConfig.RefGenome, primaryRead);
+        {
+            if(duplicateGroup.consensusRead() != null)
+                finaliseRead(mConfig.RefGenome, duplicateGroup.consensusRead());
+            else if(duplicateGroup.primaryRead() != null)
+                finaliseRead(mConfig.RefGenome, duplicateGroup.primaryRead());
+        }
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -393,7 +395,7 @@ public class PartitionReader
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
 
-            postProcessPrimaryRead(duplicateGroup.primaryRead());
+            postProcessPrimaryRead(duplicateGroup);
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 

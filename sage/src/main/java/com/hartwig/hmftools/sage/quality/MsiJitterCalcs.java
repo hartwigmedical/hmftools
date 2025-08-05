@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;

@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELI
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -381,7 +381,7 @@ public class VariantVis
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
                     td(format("%d-%d", counter.jitter().shortened(), counter.jitter().lengthened())),
                     td(format("%d", counter.fragmentCoords().minCount())),
-                    td(Arrays.toString(counter.umiTypeCounts()).replace("[", "").replace("]", ""))
+                    td(Arrays.toString(counter.consensusTypeCounts()).replace("[", "").replace("]", ""))
                     ));
 
             for(int j = 0; j < columnElems.size(); ++j)
@@ -677,7 +677,7 @@ public class VariantVis
         String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
         readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
 
-        String umiTypeStr = firstRead.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        String umiTypeStr = firstRead.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
         if(umiTypeStr != null)
         {
             readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));

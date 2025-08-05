@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BqrKey;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 
 public class BqrRecordMap
@@ -33,7 +33,7 @@ public class BqrRecordMap
         }
     }
 
-    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual, final BqrReadType readType)
+    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual, final ConsensusType readType)
     {
         final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual, readType);
 

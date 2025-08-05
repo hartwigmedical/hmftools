@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.bam;
 
-public enum UmiReadType
+public enum ConsensusType
 {
     NONE,
     SINGLE,

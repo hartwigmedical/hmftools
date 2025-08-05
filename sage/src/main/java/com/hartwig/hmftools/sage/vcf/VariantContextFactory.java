@@ -191,9 +191,9 @@ public final class VariantContextFactory
                 .attribute(MIN_COORDS_COUNT, counter.fragmentCoords().minCount())
                 .alleles(NO_CALL);
 
-        if(counter.umiTypeCounts() != null)
+        if(counter.consensusTypeCounts() != null)
         {
-            builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+            builder.attribute(UMI_TYPE_COUNTS, counter.consensusTypeCounts());
         }
         else
         {

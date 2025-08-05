@@ -3,12 +3,13 @@ package com.hartwig.hmftools.common.sequencing;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import com.hartwig.hmftools.common.bam.ConsensusType;
+
 import htsjdk.samtools.SAMRecord;
 
 public final class UltimaBamUtils
 {
     public static final byte ULTIMA_MAX_QUAL = 40;
-    public static final byte ULTIMA_INVALID_QUAL = -1;
 
     public static final String ULTIMA_TP_TAG = "tp";
     public static final String ULTIMA_T0_TAG = "t0";
@@ -37,7 +38,7 @@ public final class UltimaBamUtils
         return results;
     }
 
-    public static UltimaConsensusType extractConsensusType(final SAMRecord record)
+    public static ConsensusType deriveConsensusType(final SAMRecord record)
     {
         //  example: as:i:3  ts:i:4  ae:i:3  te:i:3
         int as = getIntegerAttribute(record, PPM_STRAND_AS, 0);
@@ -49,18 +50,18 @@ public final class UltimaBamUtils
         double sumEnd = ae + te;
 
         if(sumStart < PPM_STRAND_MIN_SUM || sumStart > PPM_STRAND_MAX_SUM || sumEnd < PPM_STRAND_MIN_SUM || sumEnd > PPM_STRAND_MAX_SUM)
-            return UltimaConsensusType.STANDARD;
+            return ConsensusType.NONE;
 
         double ratioStart = as / sumStart;
         double ratioEnd = ae / sumEnd;
 
         if(ratioStart < PPM_STRAND_BALANCED_LOW || ratioStart > PPM_STRAND_BALANCED_HIGH)
-            return UltimaConsensusType.STANDARD;
+            return ConsensusType.NONE;
 
         if(ratioEnd < PPM_STRAND_BALANCED_LOW || ratioEnd > PPM_STRAND_BALANCED_HIGH)
-            return UltimaConsensusType.STANDARD;
+            return ConsensusType.NONE;
 
-        return UltimaConsensusType.BALANCED;
+        return ConsensusType.DUAL;
     }
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)

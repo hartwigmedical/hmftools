@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
@@ -115,7 +115,7 @@ public class JitterCountsTableFile
 			String unit = row.get(JitterModelParamsFile.Column.unit);
 
 			ConsensusType consensusType = hasConsensusType ?
-					ConsensusType.valueOf(row.get(JitterModelParamsFile.Column.consensusType)) : ConsensusType.IGNORE;
+					ConsensusType.valueOf(row.get(JitterModelParamsFile.Column.consensusType)) : ConsensusType.NONE;
 
 			JitterCountsTable unitConsensusData = null;
 			for(JitterCountsTable perUnitConsensusData : jitterCountData)

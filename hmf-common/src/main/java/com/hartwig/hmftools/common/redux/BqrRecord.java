@@ -31,6 +31,10 @@ public class BqrRecord implements Comparable<BqrRecord>
         if(altCompare != 0)
             return altCompare;
 
+        int typeCompare = Integer.compare(Key.ReadType.ordinal(), other.Key.ReadType.ordinal());
+        if(typeCompare != 0)
+            return typeCompare;
+
         int qualCompare = Byte.compare(Key.Quality, other.Key.Quality);
         if(qualCompare != 0)
             return qualCompare;

@@ -37,7 +37,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DES
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
@@ -260,7 +260,7 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, CONSENSUS_TAG_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
     }
 
     @Override

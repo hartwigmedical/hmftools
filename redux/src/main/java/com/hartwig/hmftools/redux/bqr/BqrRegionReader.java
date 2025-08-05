@@ -3,13 +3,17 @@ package com.hartwig.hmftools.redux.bqr;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
-import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 
 import java.util.Collection;
@@ -22,11 +26,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.redux.BqrKey;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.CigarElement;
@@ -57,7 +62,7 @@ public class BqrRegionReader implements CigarHandler
     private long mTotalReadsUsed;
     private int mTotalAltsFiltered;
 
-    private BqrReadType mCurrentReadType;
+    private ConsensusType mCurrentReadType;
     private final SequencingType mSequencingType;
 
     public static final int REF_BASE_REGION_SIZE = 100000;
@@ -76,7 +81,7 @@ public class BqrRegionReader implements CigarHandler
         mCurrentRefSequence = null;
         mHasActiveRegion = false;
 
-        mCurrentReadType = BqrReadType.NONE;
+        mCurrentReadType = ConsensusType.NONE;
         mSequencingType = sequencingType;
 
         mBaseQualityData = null;
@@ -256,7 +261,7 @@ public class BqrRegionReader implements CigarHandler
 
         setShortFragmentBoundaries(record);
 
-        mCurrentReadType = extractReadType(record, mSequencingType);
+        mCurrentReadType = extractConsensusType(record);
 
         CigarHandler.traverseCigar(record, this);
 
@@ -333,7 +338,7 @@ public class BqrRegionReader implements CigarHandler
     private static final List<String> LOG_TNCS = List.of("AAA");
     private static final List<Byte> LOG_QUAL = List.of((byte)11);
     private static final List<Byte> LOG_POSITIONS = List.of();
-    private static final List<BqrReadType> LOG_READ_TYPES = List.of();
+    private static final List<ConsensusType> LOG_CONSENSUS_TYPES = List.of();
 
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
@@ -341,6 +346,12 @@ public class BqrRegionReader implements CigarHandler
         byte[] trinucleotideContext = new byte[3];
         boolean readPosStrand = !record.getReadNegativeStrandFlag();
         boolean readUsed = false;
+
+        int duplexBaseIndex = -1;
+        if(isSbx() && mCurrentReadType == DUAL)
+        {
+            duplexBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
+        }
 
         for(int i = 0; i < cigarElement.getLength(); i++)
         {
@@ -368,28 +379,36 @@ public class BqrRegionReader implements CigarHandler
 
             byte quality = record.getBaseQualities()[readIndex];
 
+            if(quality <= BASE_QUAL_MINIMUM) // no recalibration for the minimum value
+                continue;
+
             if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
                 continue;
 
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
             readUsed = true;
 
+            ConsensusType consensusType = mCurrentReadType;
+
+            if(duplexBaseIndex >= 0 && consensusType == DUAL && !SbxBamUtils.inDuplexRegion(readPosStrand, duplexBaseIndex, readIndex))
+                consensusType = SINGLE;
+
             if(LOG_READ_INFO)
             {
                 String tncStr = new String(trinucleotideContext);
 
                 if((LOG_QUAL.isEmpty() || LOG_QUAL.contains(quality))
-                || (LOG_POSITIONS.isEmpty() || LOG_POSITIONS.contains(position))
-                || (LOG_READ_TYPES.isEmpty() || LOG_READ_TYPES.contains(mCurrentReadType))
-                || (LOG_TNCS.isEmpty() || LOG_TNCS.contains(tncStr)))
+                && (LOG_POSITIONS.isEmpty() || LOG_POSITIONS.contains(position))
+                && (LOG_CONSENSUS_TYPES.isEmpty() || LOG_CONSENSUS_TYPES.contains(consensusType))
+                && (LOG_TNCS.isEmpty() || LOG_TNCS.contains(tncStr)))
                 {
                     RD_LOGGER.debug("BQR: read({}) position({}:{}) context({}) alt({}) qual({}) readType({}) posStrand({})",
-                            record.getReadName(), mPartitionOverlapRegion.Chromosome, position, tncStr, alt, quality, mCurrentReadType, readPosStrand);
+                            record.getReadName(), mPartitionOverlapRegion.Chromosome, position, tncStr, alt, quality, consensusType, readPosStrand);
                 }
             }
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
-            baseQualityData.processReadBase(mCurrentReadType, alt, quality, readPosStrand);
+            baseQualityData.processReadBase(consensusType, alt, quality, readPosStrand);
         }
 
         if(readUsed)

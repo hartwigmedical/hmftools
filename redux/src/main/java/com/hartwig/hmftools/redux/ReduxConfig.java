@@ -316,7 +316,7 @@ public class ReduxConfig
     public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
     public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
-    public static boolean isBiomdal() { return SEQUENCING_TYPE == BIOMODAL; }
+    public static boolean isBiomodal() { return SEQUENCING_TYPE == BIOMODAL; }
 
     public boolean isValid() { return mIsValid; }
 

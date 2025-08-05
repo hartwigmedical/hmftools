@@ -14,15 +14,15 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.redux.BqrKey;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 
 public class BaseQualityData
 {
     public final byte[] TrinucleotideContext;
 
-    private final Map<BqrReadType,List<AltQualityCount>> mAltQualityCountsMap;
+    private final Map<ConsensusType,List<AltQualityCount>> mAltQualityCountsMap;
     private boolean mHasIndel;
     private int mFilteredAltCount;
 
@@ -37,7 +37,7 @@ public class BaseQualityData
 
     public byte ref() { return TrinucleotideContext[1]; }
 
-    public void processReadBase(final BqrReadType readType, byte alt, byte quality, boolean posStrand)
+    public void processReadBase(final ConsensusType readType, byte alt, byte quality, boolean posStrand)
     {
         List<AltQualityCount> altQualityCounts = mAltQualityCountsMap.get(readType);
 
@@ -63,8 +63,6 @@ public class BaseQualityData
     public boolean hasIndel() { return mHasIndel; }
     public int filteredAltCount() { return mFilteredAltCount; }
 
-    private static final boolean USE_READ_STRAND = true; // debug only
-
     public Map<BqrKey,Integer> formKeyCounts()
     {
         Map<BqrKey,Integer> keyCounts = Maps.newHashMap();
@@ -77,9 +75,9 @@ public class BaseQualityData
         int dualTotalCount = 0;
         Set<Byte> allAlts = Sets.newHashSet();
 
-        for(Map.Entry<BqrReadType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
+        for(Map.Entry<ConsensusType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
         {
-            boolean isDual = entry.getKey().isHighQuality();
+            boolean isDual = entry.getKey() == ConsensusType.DUAL;
 
             for(AltQualityCount aqCount : entry.getValue())
             {
@@ -131,32 +129,25 @@ public class BaseQualityData
 
         mFilteredAltCount = failedAlts.size();
 
-        for(Map.Entry<BqrReadType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
+        for(Map.Entry<ConsensusType,List<AltQualityCount>> entry : mAltQualityCountsMap.entrySet())
         {
-            BqrReadType readType = entry.getKey();
+            ConsensusType readType = entry.getKey();
 
             for(AltQualityCount aqCount : entry.getValue())
             {
                 if(failedAlts.contains(aqCount.Alt))
                     continue;
 
-                if(USE_READ_STRAND)
+                if(aqCount.PosStrandCount > 0)
                 {
-                    if(aqCount.PosStrandCount > 0)
-                    {
-                        keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.PosStrandCount);
-                    }
-
-                    if(aqCount.NegStrandCount > 0)
-                    {
-                        byte[] tncReversed = Nucleotides.reverseComplementBases(TrinucleotideContext);
-                        byte altReversed = Nucleotides.swapDnaBase(aqCount.Alt);
-                        keyCounts.put(new BqrKey(tncReversed[1], altReversed, tncReversed, aqCount.Quality, readType), aqCount.NegStrandCount);
-                    }
+                    keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.PosStrandCount);
                 }
-                else
+
+                if(aqCount.NegStrandCount > 0)
                 {
-                    keyCounts.put(new BqrKey(ref(), aqCount.Alt, TrinucleotideContext, aqCount.Quality, readType), aqCount.totalCount());
+                    byte[] tncReversed = Nucleotides.reverseComplementBases(TrinucleotideContext);
+                    byte altReversed = Nucleotides.swapDnaBase(aqCount.Alt);
+                    keyCounts.put(new BqrKey(tncReversed[1], altReversed, tncReversed, aqCount.Quality, readType), aqCount.NegStrandCount);
                 }
             }
         }

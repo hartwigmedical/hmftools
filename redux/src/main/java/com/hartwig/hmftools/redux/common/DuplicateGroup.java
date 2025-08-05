@@ -5,8 +5,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNSET_COUNT;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
-import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
-import static com.hartwig.hmftools.common.bam.UmiReadType.SINGLE;
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.collect.Cluster.clusterCount;
 import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.getReadNameAttributes;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.IlluminaReadNameAttributes;
 import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.TileCoord;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -116,9 +116,9 @@ public class DuplicateGroup
             if(!isPrimaryGroup)
                 nonPolyGFirstInPairCount = nonPolyGReadCount - nonPolyGFirstInPairCount; // adjusted so both reads report the same ratio
 
-            UmiReadType umiReadType = mDualStrand ? DUAL : SINGLE;
+            ConsensusType consensusType = mDualStrand ? DUAL : SINGLE;
 
-            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount(), nonPolyGFirstInPairCount, umiReadType, mPCRClusterCount);
+            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount(), nonPolyGFirstInPairCount, consensusType, mPCRClusterCount);
 
             mConsensusRead = consensusReadInfo.ConsensusRead;
         }

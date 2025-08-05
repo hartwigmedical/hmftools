@@ -4,9 +4,9 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.RawContext;
@@ -62,7 +62,7 @@ public class StrandBiasData
             return;
         }
 
-        if(extractUmiType(record) == UmiReadType.DUAL)
+        if(extractConsensusType(record) == ConsensusType.DUAL)
         {
             ++mForwardCount;
             ++mReverseCount;

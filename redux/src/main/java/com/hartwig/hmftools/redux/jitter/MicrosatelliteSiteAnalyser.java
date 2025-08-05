@@ -8,7 +8,7 @@ import java.util.SortedMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.lang3.Validate;
