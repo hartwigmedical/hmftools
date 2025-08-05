@@ -45,7 +45,10 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -165,23 +168,24 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
     {
+        ProbeGenerationResult result;
+        TargetMetadata metadata = targetMetadata();
         if(mVariant.type() == SGL)
         {
-            VariantProbeGenerator.Result result = generateSglProbe(
-                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence());
-            probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
-                    .ifPresent(this::setProbe);
+            result = generateSglProbe(
+                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
+                    metadata, refGenome, probeFactory, coverage);
         }
         else
         {
-            VariantProbeGenerator.Result result = generateSvProbe(
-                    refGenome, mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence());
-            probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
-                    .ifPresent(this::setProbe);
+            result = generateSvProbe(
+                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
+                    metadata, refGenome, probeFactory, coverage);
         }
+        setProbeGenResult(result);
     }
 
     @Override
@@ -198,7 +202,7 @@ public class StructuralVariant extends Variant
             return true;
         }
 
-        if(!passesGcRatioLimit(gc(), useLowerLimits))
+        if(!passesGcRatioLimit(probe().gcContent(), useLowerLimits))
         {
             return false;
         }

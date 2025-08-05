@@ -2,6 +2,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
@@ -13,12 +14,17 @@ import java.util.List;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
+import com.hartwig.hmftools.panelbuilder.ProbeFactory;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
+import com.hartwig.hmftools.panelbuilder.TargetRegion;
 
 import org.jetbrains.annotations.Nullable;
 
 public class VariantProbeGenerator
 {
-    public record Result(
+    private record ProbeData(
             String sequence,
             @Nullable ChrBaseRegion start,
             String insert,
@@ -40,10 +46,18 @@ public class VariantProbeGenerator
         }
     }
 
-    public static Result generateMutationProbe(
-            final RefGenomeInterface refGenome, final int probeLength,
-            final String chromosome, final int position, final String ref, final String alt)
+    public static ProbeGenerationResult generateMutationProbe(final String chromosome, final int position, final String ref,
+            final String alt, final TargetMetadata metadata, final RefGenomeInterface refGenome, final ProbeFactory probeFactory,
+            final PanelCoverage coverage)
     {
+        ProbeData probeData = generateMutationProbe(refGenome, chromosome, position, ref, alt);
+        return createProbe(probeData, metadata, probeFactory);
+    }
+
+    private static ProbeData generateMutationProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
+            final String ref, final String alt)
+    {
+        int probeLength = PROBE_LENGTH;
         int altLength = alt.length();
         int refLength = ref.length();
         int startLength = probeLength / 2 - altLength / 2;
@@ -65,10 +79,19 @@ public class VariantProbeGenerator
                     chromosome, position, ref, alt, sequence.length(), sequence));
         }
 
-        return new Result(sequence, startRegion, alt, endRegion);
+        return new ProbeData(sequence, startRegion, alt, endRegion);
     }
 
-    public static Result generateSvProbe(final RefGenomeInterface refGenome, final String chrStart, final int positionStart,
+    public static ProbeGenerationResult generateSvProbe(final String chrStart, final int positionStart, final byte orientStart,
+            final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence, final TargetMetadata metadata,
+            final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
+    {
+        ProbeData probeData =
+                generateSvProbe(refGenome, chrStart, positionStart, orientStart, chrEnd, positionEnd, orientEnd, insertSequence);
+        return createProbe(probeData, metadata, probeFactory);
+    }
+
+    private static ProbeData generateSvProbe(final RefGenomeInterface refGenome, final String chrStart, final int positionStart,
             final byte orientStart, final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
     {
         int probeLength = PROBE_LENGTH;
@@ -140,10 +163,18 @@ public class VariantProbeGenerator
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new Result(sequence, startRegion, insertSequence, endRegion);
+        return new ProbeData(sequence, startRegion, insertSequence, endRegion);
     }
 
-    public static Result generateSglProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
+    public static ProbeGenerationResult generateSglProbe(final String chromosome, final int position, final byte orientation,
+            final String insertSequence, final TargetMetadata metadata, final RefGenomeInterface refGenome, final ProbeFactory probeFactory,
+            final PanelCoverage coverage)
+    {
+        ProbeData probeData = generateSglProbe(refGenome, chromosome, position, orientation, insertSequence);
+        return createProbe(probeData, metadata, probeFactory);
+    }
+
+    private static ProbeData generateSglProbe(final RefGenomeInterface refGenome, final String chromosome, final int position,
             final byte orientation, final String insertSequence)
     {
         int probeLength = PROBE_LENGTH;
@@ -184,6 +215,21 @@ public class VariantProbeGenerator
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new Result(sequence, startRegion, insert, endRegion);
+        return new ProbeData(sequence, startRegion, insert, endRegion);
+    }
+
+    private static ProbeGenerationResult createProbe(final ProbeData probeData, final TargetMetadata metadata,
+            final ProbeFactory probeFactory)
+    {
+        // TODO: overlap detection
+        return probeFactory.createProbeFromSequence(probeData.sequence(), metadata)
+                .map(probe ->
+                {
+                    List<TargetRegion> targetRegions = probeData.regions().stream()
+                            .map(region -> new TargetRegion(region, metadata))
+                            .toList();
+                    return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+                })
+                .orElseThrow();
     }
 }

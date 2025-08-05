@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.abs;
-import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE_STRICT;
@@ -14,21 +12,24 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.jetbrains.annotations.Nullable;
 
 public abstract class Variant
 {
+    // TODO: refactor this, also figure out GC constraints
     @Nullable
-    private Probe mProbe;
+    private ProbeGenerationResult mProbeGenResult;
     private SelectionStatus mStatus;
 
     public Variant()
     {
-        mProbe = null;
+        mProbeGenResult = null;
         mStatus = SelectionStatus.NOT_SET;
     }
 
@@ -42,24 +43,19 @@ public abstract class Variant
         return null;
     }
 
-    protected void setProbe(final Probe probe)
+    protected void setProbeGenResult(final ProbeGenerationResult result)
     {
-        mProbe = probe;
+        mProbeGenResult = result;
     }
 
     public Probe probe()
     {
-        return requireNonNull(mProbe);
+        return mProbeGenResult.probes().get(0);
     }
 
     public abstract double copyNumber();
 
     public abstract double vaf();
-
-    public double gc()
-    {
-        return calcGcPercent(requireNonNull(probe().sequence()));
-    }
 
     @Nullable
     public String otherData()
@@ -76,7 +72,7 @@ public abstract class Variant
 
     public abstract boolean reported();
 
-    public abstract void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory);
+    public abstract void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage);
 
     public abstract boolean checkFilters();
 
@@ -125,7 +121,7 @@ public abstract class Variant
         mStatus = status;
     }
 
-    protected TargetMetadata probeMetadata()
+    protected TargetMetadata targetMetadata()
     {
         return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, description());
     }

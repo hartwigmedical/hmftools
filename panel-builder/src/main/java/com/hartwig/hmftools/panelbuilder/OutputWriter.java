@@ -365,7 +365,7 @@ public class OutputWriter implements AutoCloseable
             sj.add(variantInfo.toString());
             sj.add("ALT");
             sj.add(variant.probe().sequence());
-            sj.add(format("%.2f", variant.gc()));
+            sj.add(format("%.2f", variant.probe().gcContent()));
             sj.add(variant.otherData());
             mSampleVariantsTsvWriter.write(sj.toString());
             mSampleVariantsTsvWriter.newLine();

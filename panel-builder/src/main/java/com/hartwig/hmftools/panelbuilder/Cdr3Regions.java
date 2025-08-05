@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Fixed set of probes based on CDR3 regions.
+// TODO: describe the methodology
 public class Cdr3Regions
 {
     // TODO: confirm constraints

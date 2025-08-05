@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX;
@@ -34,7 +33,9 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -163,14 +164,12 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
     {
-        VariantProbeGenerator.Result result = generateMutationProbe(
-                refGenome, PROBE_LENGTH,
-                mVariantDecorator.chromosome(), mVariantDecorator.position(),
-                mVariantDecorator.ref(), mVariantDecorator.alt());
-        probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
-                .ifPresent(this::setProbe);
+        ProbeGenerationResult result = generateMutationProbe(
+                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
+                targetMetadata(), refGenome, probeFactory, coverage);
+        setProbeGenResult(result);
     }
 
     private double subclonalLikelihood()
@@ -187,7 +186,7 @@ public class SomaticMutation extends Variant
     @Override
     public boolean passNonReportableFilters(boolean useLowerLimits)
     {
-        if(!passesGcRatioLimit(gc(), useLowerLimits))
+        if(!passesGcRatioLimit(probe().gcContent(), useLowerLimits))
         {
             return false;
         }

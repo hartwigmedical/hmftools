@@ -62,7 +62,7 @@ public class SampleVariants
         variants.addAll(StructuralVariant.loadStructuralVariants(config.sampleId(), config.purpleDir(), config.linxDir()));
         variants.addAll(GermlineSv.loadGermlineStructuralVariants(config.sampleId(), config.linxGermlineDir()));
 
-        variants.forEach(variant -> variant.generateProbe(refGenome, probeGenerator.mProbeFactory));
+        variants.forEach(variant -> variant.generateProbe(refGenome, probeGenerator.mProbeFactory, panelData));
 
         List<Variant> selectedVariants = VariantSelector.selectVariants(variants);
 

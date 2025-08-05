@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeGenerator.generateMutationProbe;
 
@@ -22,7 +21,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
+import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeFactory;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
+import com.hartwig.hmftools.panelbuilder.TargetRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,21 +93,24 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
-    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory)
+    public void generateProbe(final RefGenomeInterface refGenome, final ProbeFactory probeFactory, final PanelCoverage coverage)
     {
         ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
+        TargetMetadata metadata = targetMetadata();
+        ProbeGenerationResult result;
         if(mAlt.isEmpty())
         {
-            probeFactory.createProbeFromRegion(region, probeMetadata())
-                    .ifPresent(this::setProbe);
+            // TODO: overlap detection
+            TargetRegion target = new TargetRegion(region, metadata);
+            Probe probe = probeFactory.createProbeFromRegion(target.region(), target.metadata()).orElseThrow();
+            result = ProbeGenerationResult.coveredTarget(target, probe);
         }
         else
         {
-            VariantProbeGenerator.Result result =
-                    generateMutationProbe(refGenome, PROBE_LENGTH, mPosition.Chromosome, mPosition.Position, mRef, mAlt);
-            probeFactory.createProbeFromSequence(result.sequence(), probeMetadata())
-                    .ifPresent(this::setProbe);
+            result =
+                    generateMutationProbe(mPosition.Chromosome, mPosition.Position, mRef, mAlt, metadata, refGenome, probeFactory, coverage);
         }
+        setProbeGenResult(result);
     }
 
     @Override
