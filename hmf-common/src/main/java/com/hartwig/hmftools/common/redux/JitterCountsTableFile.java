@@ -129,7 +129,7 @@ public class JitterCountsTableFile
 			boolean newUnitConsensusData = unitConsensusData == null;
 			if(newUnitConsensusData)
 			{
-				unitConsensusData = new JitterCountsTable(unit, consensusType, 1.0);
+				unitConsensusData = new JitterCountsTable(unit, consensusType);
 			}
 
 			JitterTableRow countRow = unitConsensusData.getOrCreateRow(row.getInt(NUM_UNITS));

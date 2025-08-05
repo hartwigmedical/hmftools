@@ -20,7 +20,7 @@ public class JitterCountsTable
     // ref num unit to rows
     private final List<JitterTableRow> mRows = new ArrayList<>();
 
-    public JitterCountsTable(final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc)
+    public JitterCountsTable(final String repeatUnit, final ConsensusType consensusType)
     {
         RepeatUnit = repeatUnit;
         ConsensusType = consensusType;
