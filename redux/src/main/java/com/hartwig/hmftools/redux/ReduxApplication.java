@@ -69,6 +69,11 @@ public class ReduxApplication
 
         if(mConfig.UnmapRegions.enabled())
         {
+            if(mConfig.UnmapAltDecoys)
+            {
+                mConfig.UnmapRegions.addNonStandardContigs(mConfig.RefGenome);
+            }
+
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 

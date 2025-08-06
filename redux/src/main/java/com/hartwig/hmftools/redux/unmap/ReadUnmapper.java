@@ -31,9 +31,13 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.mappability.UnmappedRegions;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -853,6 +857,19 @@ public class ReadUnmapper
             return;
 
         addRegion(chromosome, new UnmappingRegion(1, 20000, UNMAP_MIN_HIGH_DEPTH));
+    }
+
+    public void addNonStandardContigs(final RefGenomeInterface refGenome)
+    {
+        for(Map.Entry<String, Integer> contigEntry : refGenome.chromosomeLengths().entrySet())
+        {
+            String contig = contigEntry.getKey();
+
+            if(!HumanChromosome.contains(contig) && !MitochondrialChromosome.contains(contig))
+            {
+                addRegion(contig, new UnmappingRegion(1, contigEntry.getValue(), UNMAP_MIN_HIGH_DEPTH));
+            }
+        }
     }
 
     @VisibleForTesting

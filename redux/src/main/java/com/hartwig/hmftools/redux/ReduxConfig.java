@@ -99,6 +99,7 @@ public class ReduxConfig
 
     public final ReadUnmapper UnmapRegions;
     public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
+    public final boolean UnmapAltDecoys;
 
     public final String OutputBam;
     public final String OutputDir;
@@ -149,6 +150,7 @@ public class ReduxConfig
     private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
     private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
+    private static final String UNMAP_NON_ALT_DECOY = "unmap_alt_decoy";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -266,6 +268,8 @@ public class ReduxConfig
             UnmapRegions = new ReadUnmapper(unmapRegionsMap);
         }
 
+        UnmapAltDecoys = configBuilder.hasFlag(UNMAP_NON_ALT_DECOY);
+
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
         RD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
@@ -380,6 +384,7 @@ public class ReduxConfig
         configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
         configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
+        configBuilder.addFlag(UNMAP_NON_ALT_DECOY, "Unmap non-standard contig reads");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -434,6 +439,7 @@ public class ReduxConfig
         KeepInterimBams = false;
         SkipFullyUnmappedReads = false;
         SkipUnmapping = false;
+        UnmapAltDecoys = false;
         LogReadType = NONE;
         FailOnMissingSuppMateCigar = false;
 
