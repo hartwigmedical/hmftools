@@ -3,7 +3,6 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_SV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
@@ -35,7 +34,7 @@ public class GermlineSv extends Variant
     @Override
     public CategoryType categoryType()
     {
-        return GERMLINE_SV;
+        return CategoryType.GERMLINE_SV;
     }
 
     @Override

@@ -8,11 +8,6 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CLONAL_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INDEL;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
@@ -80,7 +75,7 @@ public class SomaticMutation extends Variant
     {
         if(mVariantDecorator.reported())
         {
-            return REPORTABLE_MUTATION;
+            return CategoryType.REPORTABLE_MUTATION;
         }
 
         boolean isCoding = mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
@@ -92,12 +87,12 @@ public class SomaticMutation extends Variant
         {
             if(isCoding)
             {
-                return OTHER_CODING_MUTATION;
+                return CategoryType.OTHER_CODING_MUTATION;
             }
 
             if(!isSubclonal)
             {
-                return OTHER_CLONAL_MUTATION;
+                return CategoryType.OTHER_CLONAL_MUTATION;
             }
         }
 
@@ -105,7 +100,7 @@ public class SomaticMutation extends Variant
         // if(isSubclonal)
         //    return SUBCLONAL_MUTATION;
 
-        return OTHER_MUTATION;
+        return CategoryType.OTHER_MUTATION;
     }
 
     @Override
@@ -183,7 +178,7 @@ public class SomaticMutation extends Variant
     @Override
     public boolean passNonReportableFilters(boolean strictLimits)
     {
-        if(categoryType() != SUBCLONAL_MUTATION && vaf() < SAMPLE_VAF_MIN)
+        if(categoryType() != CategoryType.SUBCLONAL_MUTATION && vaf() < SAMPLE_VAF_MIN)
         {
             return false;
         }

@@ -11,10 +11,6 @@ import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
-import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
@@ -66,7 +62,7 @@ public class StructuralVariant extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mCategoryType = OTHER_SV;
+        mCategoryType = CategoryType.OTHER_SV;
         setCategoryType();
     }
 
@@ -90,19 +86,19 @@ public class StructuralVariant extends Variant
     {
         if(!mFusions.isEmpty())
         {
-            mCategoryType = FUSION;
+            mCategoryType = CategoryType.FUSION;
         }
-        else if(mCategoryType == AMP || mCategoryType == CategoryType.DEL)
+        else if(mCategoryType == CategoryType.AMP || mCategoryType == CategoryType.DEL)
         {
             return;
         }
         else if(mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption))
         {
-            mCategoryType = DISRUPTION;
+            mCategoryType = CategoryType.DISRUPTION;
         }
         else
         {
-            mCategoryType = OTHER_SV;
+            mCategoryType = CategoryType.OTHER_SV;
         }
     }
 
@@ -161,7 +157,10 @@ public class StructuralVariant extends Variant
     @Override
     public boolean reported()
     {
-        return mCategoryType == FUSION || mCategoryType == AMP || mCategoryType == CategoryType.DEL || mCategoryType == DISRUPTION;
+        return mCategoryType == CategoryType.FUSION
+                || mCategoryType == CategoryType.AMP
+                || mCategoryType == CategoryType.DEL
+                || mCategoryType == CategoryType.DISRUPTION;
     }
 
     @Override
@@ -185,13 +184,13 @@ public class StructuralVariant extends Variant
     @Override
     public boolean checkFilters()
     {
-        return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL;
+        return mCategoryType != CategoryType.FUSION && mCategoryType != CategoryType.AMP && mCategoryType != CategoryType.DEL;
     }
 
     @Override
     public boolean passNonReportableFilters(boolean strictLimits)
     {
-        if(reported() && mCategoryType != DISRUPTION)
+        if(reported() && mCategoryType != CategoryType.DISRUPTION)
         {
             return true;
         }

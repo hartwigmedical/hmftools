@@ -4,10 +4,6 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONREPORTABLE_SV_MAX;
@@ -152,8 +148,7 @@ public class SampleVariants
                         variant.setSelectionStatus(SelectionStatus.GENE_LOCATIONS);
                         canSelect = false;
                     }
-                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, SAMPLE_NONREPORTABLE_SV_MAX)
-                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SAMPLE_SUBCLONAL_MAX))
+                    else if(exceedsMaxByType(variant.categoryType(), typeCounts))
                     {
                         variant.setSelectionStatus(SelectionStatus.EXCEEDS_COUNT);
                         canSelect = false;
@@ -248,6 +243,12 @@ public class SampleVariants
         }
     }
 
+    private static boolean exceedsMaxByType(final CategoryType variantCategory, final int[] typeCounts)
+    {
+        return exceedsMaxByType(variantCategory, CategoryType.OTHER_SV, typeCounts, SAMPLE_NONREPORTABLE_SV_MAX)
+                || exceedsMaxByType(variantCategory, CategoryType.SUBCLONAL_MUTATION, typeCounts, SAMPLE_SUBCLONAL_MAX);
+    }
+
     private static boolean exceedsMaxByType(final CategoryType variantCategory, final CategoryType categoryType, final int[] typeCounts,
             int maxCount)
     {
@@ -281,8 +282,8 @@ public class SampleVariants
                 return first.reported() ? -1 : 1;
             }
 
-            if(first.categoryType() == OTHER_MUTATION || first.categoryType() == OTHER_CODING_MUTATION
-                    || first.categoryType() == SUBCLONAL_MUTATION)
+            if(first.categoryType() == CategoryType.OTHER_MUTATION || first.categoryType() == CategoryType.OTHER_CODING_MUTATION
+                    || first.categoryType() == CategoryType.SUBCLONAL_MUTATION)
             {
                 // to randomise selection of the lowest priority variants (and avoid multiple selections from highly amplified regions)
                 // use the inverse of position as the final comparison
