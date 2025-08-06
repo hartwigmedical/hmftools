@@ -15,9 +15,9 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
 import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
@@ -195,7 +195,7 @@ public class StructuralVariant extends Variant
             return true;
         }
 
-        if(vaf() < VAF_MIN)
+        if(vaf() < SAMPLE_VAF_MIN)
         {
             return false;
         }
@@ -234,7 +234,7 @@ public class StructuralVariant extends Variant
             }
             else
             {
-                if(breakendCount >= SV_BREAKENDS_PER_GENE)
+                if(breakendCount >= SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
                 {
                     return false;
                 }
@@ -314,7 +314,7 @@ public class StructuralVariant extends Variant
                 continue;
             }
 
-            if(variant.insertSequence().length() >= MAX_INSERT_BASES && variant.type() != SGL)
+            if(variant.insertSequence().length() >= SAMPLE_MAX_INSERT && variant.type() != SGL)
             {
                 continue;
             }

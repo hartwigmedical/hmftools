@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.FRAG_COUNT_MIN_STRICT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAG_COUNT_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAG_COUNT_MIN_STRICT;
 
 import java.util.Map;
 
@@ -66,7 +66,7 @@ public abstract class Variant
 
     protected static boolean passesFragmentCountLimit(int fragmentCount, boolean strictLimits)
     {
-        int limit = strictLimits ? FRAG_COUNT_MIN_STRICT : FRAG_COUNT_MIN;
+        int limit = strictLimits ? SAMPLE_FRAG_COUNT_MIN_STRICT : SAMPLE_FRAG_COUNT_MIN;
         return fragmentCount >= limit;
     }
 

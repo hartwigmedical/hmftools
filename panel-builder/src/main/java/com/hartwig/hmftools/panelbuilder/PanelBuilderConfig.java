@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.mappability.ProbeQualityProfile.CFG_PROBE_QUALITY_FILE;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -33,8 +31,7 @@ public record PanelBuilderConfig(
         @Nullable SampleVariantsConfig sampleVariants,
         @Nullable String outputId,
         String outputDir,
-        boolean verboseOutput,
-        int threads
+        boolean verboseOutput
 )
 {
     private static final String CFG_BWA_INDEX_IMAGE_FILE = "bwa_index_image";
@@ -66,8 +63,7 @@ public record PanelBuilderConfig(
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
                 parseOutputDir(configBuilder),
-                configBuilder.hasFlag(CFG_VERBOSE_OUTPUT),
-                parseThreads(configBuilder)
+                configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
         );
     }
 
@@ -87,8 +83,6 @@ public record PanelBuilderConfig(
 
         addOutputOptions(configBuilder);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
-
-        addThreadOptions(configBuilder);
 
         addLoggingOptions(configBuilder);
 

@@ -7,6 +7,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
 
+// Data that defines a probe creates for a variant.
+// Exists to decouple the code which determines the probe sequence from the rest of the probe generation code.
 // Possibilities:
 //   - The probe is all ref sequence:
 //       `start` is non-null, others are null.

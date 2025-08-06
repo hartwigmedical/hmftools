@@ -14,7 +14,7 @@ public class ProximateLocations
 {
     private final Map<String, List<Location>> mRegisteredLocations;
 
-    private final byte NO_ORIENTATION = 0;
+    private static final byte NO_ORIENTATION = 0;
     private static final int NEAR_DISTANCE = 50;
 
     public ProximateLocations()

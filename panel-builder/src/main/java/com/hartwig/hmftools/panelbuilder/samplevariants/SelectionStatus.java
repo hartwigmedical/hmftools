@@ -3,8 +3,9 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 public enum SelectionStatus
 {
     NOT_SET,    // Not considered for selection yet
-    SELECTED,
+    SELECTED,   // Probe included in panel
     FILTERED,   // Failed internal filters
+    // Filters reported to the user
     EXCEEDS_COUNT,
     PROXIMATE,
     GENE_LOCATIONS;

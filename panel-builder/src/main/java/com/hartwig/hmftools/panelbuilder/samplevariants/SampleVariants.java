@@ -10,10 +10,10 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONREPORTABLE_SV_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.NONREPORTABLE_SV_COUNT;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_COUNT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SUBCLONAL_MAX;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -171,8 +171,8 @@ public class SampleVariants
                         variant.setSelectionStatus(SelectionStatus.GENE_LOCATIONS);
                         canSelect = false;
                     }
-                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, NONREPORTABLE_SV_COUNT)
-                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SUBCLONAL_COUNT))
+                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, SAMPLE_NONREPORTABLE_SV_MAX)
+                            || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, SAMPLE_SUBCLONAL_MAX))
                     {
                         variant.setSelectionStatus(SelectionStatus.EXCEEDS_COUNT);
                         canSelect = false;

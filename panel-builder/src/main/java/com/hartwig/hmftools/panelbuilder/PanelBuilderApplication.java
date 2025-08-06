@@ -50,7 +50,7 @@ public class PanelBuilderApplication
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());
-        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
+        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), 1);
         ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 

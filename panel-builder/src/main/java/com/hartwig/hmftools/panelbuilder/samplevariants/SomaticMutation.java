@@ -13,12 +13,12 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INDEL_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.REPEAT_COUNT_MAX_STRICT;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.Constants.VAF_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INDEL;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX_STRICT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.ArrayList;
@@ -85,7 +85,7 @@ public class SomaticMutation extends Variant
         boolean isCoding = mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
                 && mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.UNDEFINED;
 
-        boolean isSubclonal = subclonalLikelihood() >= SUBCLONAL_LIKELIHOOD_MIN;
+        boolean isSubclonal = subclonalLikelihood() >= SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
 
         if(mVariantDecorator.type() == SNP)
         {
@@ -181,7 +181,7 @@ public class SomaticMutation extends Variant
     @Override
     public boolean passNonReportableFilters(boolean strictLimits)
     {
-        if(categoryType() != SUBCLONAL_MUTATION && vaf() < VAF_MIN)
+        if(categoryType() != SUBCLONAL_MUTATION && vaf() < SAMPLE_VAF_MIN)
         {
             return false;
         }
@@ -193,7 +193,7 @@ public class SomaticMutation extends Variant
 
         int repeatCountMax = max(
                 mVariantDecorator.repeatCount(), mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0));
-        int maxRepeatCount = strictLimits ? REPEAT_COUNT_MAX_STRICT : REPEAT_COUNT_MAX;
+        int maxRepeatCount = strictLimits ? SAMPLE_REPEAT_COUNT_MAX_STRICT : SAMPLE_REPEAT_COUNT_MAX;
         if(repeatCountMax > maxRepeatCount)
         {
             return false;
@@ -201,7 +201,7 @@ public class SomaticMutation extends Variant
 
         if(mVariantDecorator.type() == VariantType.INDEL)
         {
-            if(max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length()) > MAX_INDEL_LENGTH)
+            if(max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length()) > SAMPLE_MAX_INDEL)
             {
                 return false;
             }
@@ -258,7 +258,7 @@ public class SomaticMutation extends Variant
             }
 
             String alt = VariantContextDecorator.getAlt(variantContext);
-            if(alt.length() >= MAX_INSERT_BASES)
+            if(alt.length() >= SAMPLE_MAX_INSERT)
             {
                 continue;
             }
