@@ -57,7 +57,7 @@ public class AminoAcidQC
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
-            Set<String> hlaYSequences = hlaYSequenceLoci.stream()
+            Set<String> hlaYSequences = hlaYSequenceLoci == null ? null : hlaYSequenceLoci.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
             if(actualSequences.stream().anyMatch(x -> x.equals(WILD_STR)))
@@ -71,7 +71,7 @@ public class AminoAcidQC
                 if(actualSequences.contains(aminoAcid))
                     continue;
 
-                if(hlaYSequences.contains(aminoAcid))
+                if(hlaYSequences != null && hlaYSequences.contains(aminoAcid))
                     continue;
 
                 int count = entry.getCount();

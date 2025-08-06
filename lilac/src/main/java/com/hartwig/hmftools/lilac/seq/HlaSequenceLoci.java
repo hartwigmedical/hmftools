@@ -231,7 +231,7 @@ public class HlaSequenceLoci
             char seqChar = sequence.charAt(i);
             char refChar = i < reference.length() ? reference.charAt(i) : IDENTICAL;
             boolean isBaseInserted = seqChar != DELETION && (i >= reference.length() || refChar == DELETION);
-            boolean isBaseIgnored = (seqChar == '.' && i < reference.length() && refChar == DELETION) || (seqChar == EXON_BOUNDARY);
+            boolean isBaseIgnored = (seqChar == DELETION && refChar == DELETION) || (seqChar == EXON_BOUNDARY);
 
             if(insLength > 0 && !isBaseInserted)
             {

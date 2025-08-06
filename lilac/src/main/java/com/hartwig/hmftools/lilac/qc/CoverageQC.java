@@ -1,28 +1,28 @@
 package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class CoverageQC
 {
 
-    public final int ATypes;
-    public final int BTypes;
-    public final int CTypes;
+    public final Map<HlaGene, Integer> CountsByGene;
 
     public final int TotalFragments; // fragment with at least 1 sufficient map-qual base
 
@@ -56,13 +56,10 @@ public class CoverageQC
      */
 
 
-    public CoverageQC(
-            int aTypes, int bTypes, int cTypes, int totalFragments, int unmatched, int uninformative, int hlaY,
+    public CoverageQC(final Map<HlaGene, Integer> countsByGene, int totalFragments, int unmatched, int uninformative, int hlaY,
             int uniqueFragments, int sharedFragments, int wildcardFragments)
     {
-        ATypes = aTypes;
-        BTypes = bTypes;
-        CTypes = cTypes;
+        CountsByGene = countsByGene;
         TotalFragments = totalFragments;
         UnmatchedFragments = unmatched;
         UninformativeFragments = uninformative;
@@ -81,13 +78,21 @@ public class CoverageQC
     public static CoverageQC create(final Collection<Fragment> fragments, final ComplexCoverage winner)
     {
         List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).toList();
-        int aTypes = alleles.stream().filter(x -> x.Gene == HLA_A).collect(Collectors.toSet()).size();
-        int bTypes = alleles.stream().filter(x -> x.Gene == HLA_B).collect(Collectors.toSet()).size();
-        int cTypes = alleles.stream().filter(x -> x.Gene == HLA_C).collect(Collectors.toSet()).size();
-
-        if(aTypes == 0 || bTypes == 0 || cTypes == 0)
+        Map<HlaGene, Integer> countsByGene = Maps.newHashMap();
+        for(HlaGene gene : GENE_CACHE.GeneNames)
         {
-            LL_LOGGER.warn("  UNMATCHED ALLELE: {} A alleles, {} B alleles, {} C alleles", aTypes, bTypes, cTypes);
+            if(gene.isPseudo())
+                continue;
+
+            int count = alleles.stream().filter(x -> x.Gene == gene).collect(Collectors.toSet()).size();
+            countsByGene.put(gene, count);
+        }
+
+        if(countsByGene.values().stream().anyMatch(x -> x == 0))
+        {
+            StringJoiner msgBuilder = new StringJoiner(", ");
+            countsByGene.entrySet().forEach(x -> msgBuilder.add(x.getValue() + " " + x.getKey().shortName() + " alleles"));
+            LL_LOGGER.warn("  UNMATCHED ALLELE: {}", msgBuilder.toString());
         }
 
         /*
@@ -134,27 +139,33 @@ public class CoverageQC
                     totalFragments, solutionFragments, unmatchedFragments, uninformativeFragments, hlaYFragments, unassignedFragments);
         }
 
-        return new CoverageQC(
-                aTypes, bTypes, cTypes,
-                totalFragments, unmatchedFragments, uninformativeFragments, hlaYFragments,
+        return new CoverageQC(countsByGene, totalFragments, unmatchedFragments, uninformativeFragments, hlaYFragments,
                 winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage);
     }
 
     public static List<String> header()
     {
-        return Lists.newArrayList(
-                "ATypes", "BTypes", "CTypes",
-                "TotalFragments", "FittedFragments", "UnmatchedFragments", "UninformativeFragments", "HlaYFragments",
-                "PercentUnique", "PercentShared", "PercentWildcard");
+        List<String> headerStrs = GENE_CACHE.GeneNames.stream()
+                .filter(x -> !x.isPseudo())
+                .map(x -> x.shortName() + "Types")
+                .collect(Collectors.toCollection(Lists::newArrayList));
+        headerStrs.addAll(List.of("TotalFragments", "FittedFragments", "UnmatchedFragments", "UninformativeFragments", "HlaYFragments", "PercentUnique", "PercentShared", "PercentWildcard"));
+        return headerStrs;
     }
 
     public List<String> body()
     {
-        return Lists.newArrayList(
-                String.valueOf(ATypes), String.valueOf(BTypes), String.valueOf(CTypes),
+        List<String> bodyStrs = GENE_CACHE.GeneNames.stream()
+                .filter(x -> !x.isPseudo())
+                .map(gene -> String.valueOf(CountsByGene.getOrDefault(gene, 0)))
+                .collect(Collectors.toCollection(Lists::newArrayList));
+
+        bodyStrs.addAll(List.of(
                 String.valueOf(TotalFragments), String.valueOf(FittedFragments),
                 String.valueOf(UnmatchedFragments), String.valueOf(UninformativeFragments), String.valueOf(HlaYFragments),
-                String.format("%.3f", PercentUnique), String.format("%.3f", PercentShared), String.format("%.3f", PercentWildcard));
+                String.format("%.3f", PercentUnique), String.format("%.3f", PercentShared), String.format("%.3f", PercentWildcard)));
+
+        return bodyStrs;
     }
 
     /*

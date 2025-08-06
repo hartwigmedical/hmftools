@@ -177,7 +177,7 @@ public final class LilacQC
             Status.add(WARN_UNMATCHED_AMINO_ACID);
         }
 
-        if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
+        if(CoverageQC.CountsByGene.values().stream().anyMatch(x -> x == 0))
         {
             Status.add(WARN_UNMATCHED_ALLELE);
         }

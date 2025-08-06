@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
-import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -145,7 +145,7 @@ public class HaplotypeQC
         // ignore any wildcard sections
         Map<String,Integer> unmatched = evidence.getEvidence().entrySet().stream()
                 .filter(x -> !consistentWithAny(evidence, winners, x.getKey()))
-                .filter(x -> !consistentWithAny(evidence, hlaYSequences, x.getKey()))
+                .filter(x -> hlaYSequences == null || !consistentWithAny(evidence, hlaYSequences, x.getKey()))
                 .filter(x -> x.getValue() >= minEvidence)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 

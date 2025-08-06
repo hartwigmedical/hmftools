@@ -2,16 +2,17 @@ package com.hartwig.hmftools.lilac.seq;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -61,29 +62,29 @@ public class HlaSequenceFile
         return new HlaSequenceLoci(allele, sequences);
     }
 
-    public static List<HlaSequence> readDefintionFile(final String filename)
+    public static List<HlaSequence> readDefintionFile(final File filename, final HlaGene gene)
     {
         if(filename == null)
             return Lists.newArrayList();
 
         try
         {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            String linePrefix = gene.shortName() + "*";
+            final List<String> fileData = Files.readAllLines(filename.toPath());
 
             final List<String> orderedAlleles = Lists.newArrayList();
-            final Map<String,HlaSequence> entries = Maps.newHashMap();
+            final Map<String, HlaSequence> entries = Maps.newHashMap();
 
             for(final String line : fileData)
             {
                 String lineData = line.trim();
 
-                if(!lineData.startsWith("*", 1))
+                if(!lineData.startsWith(linePrefix))
                     continue;
 
                 String[] split = lineData.split(" ");
                 String alleleStr = split[0].trim();
-                int alleleIndex = lineData.indexOf(alleleStr);
-                String remainder = lineData.substring(alleleIndex + alleleStr.length()).trim().replace(" ", "");
+                String remainder = lineData.substring(alleleStr.length()).trim().replace(" ", "");
 
                 HlaSequence sequence = entries.get(alleleStr);
 
@@ -104,7 +105,7 @@ public class HlaSequenceFile
         }
         catch (IOException e)
         {
-            LL_LOGGER.error("failed to read HLF nucleotide file({}): {}", filename, e.toString());
+            LL_LOGGER.error("failed to read HLF nucleotide file({}): {}", filename.toString(), e.toString());
             return Lists.newArrayList();
         }
     }

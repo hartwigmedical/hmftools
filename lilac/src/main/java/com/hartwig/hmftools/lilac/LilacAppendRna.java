@@ -143,7 +143,8 @@ public class LilacAppendRna
 
         List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
 
-        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
+        if(nucleotideGeneEnrichment != null)
+            nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

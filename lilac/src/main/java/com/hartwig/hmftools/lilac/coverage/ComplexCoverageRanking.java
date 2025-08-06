@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -47,7 +48,7 @@ public class ComplexCoverageRanking
     }
 
     public List<ComplexCoverage> rankCandidates(
-            final List<ComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final List<ComplexCoverage> complexes, final Set<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
     {
         if(complexes.isEmpty())
             return complexes;
@@ -90,7 +91,7 @@ public class ComplexCoverageRanking
     }
 
     private void calcScore(
-            final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
     {
         calcCohortFrequency(complexCoverage);
         calcRecoveryPenalty(complexCoverage, recoveredAlleles);
@@ -98,7 +99,7 @@ public class ComplexCoverageRanking
         calcComplexScore(complexCoverage);
     }
 
-    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
+    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles)
     {
         int recoveredCount = (int) complexCoverage.getAlleles().stream()
                 .filter(recoveredAlleles::contains)

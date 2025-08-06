@@ -9,7 +9,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.GeneCache;
-import com.hartwig.hmftools.lilac.MhcClass;
+import com.hartwig.hmftools.lilac.GeneSelector;
 
 import org.junit.Test;
 
@@ -18,13 +18,11 @@ public class HlaGeneCacheTest
     @Test
     public void testClass1GeneCache()
     {
-        MhcClass mhcClass = MhcClass.CLASS_1;
-
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mhcClass);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, GeneSelector.MHC_CLASS_1);
 
         assertEquals(3, hlaTranscriptMap.size());
 
-        GeneCache geneCache = new GeneCache(mhcClass, hlaTranscriptMap);
+        GeneCache geneCache = new GeneCache(hlaTranscriptMap);
 
         assertEquals(3, geneCache.GeneNames.size());
 
