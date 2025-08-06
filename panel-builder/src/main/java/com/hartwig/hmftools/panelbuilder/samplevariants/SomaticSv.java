@@ -3,13 +3,12 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
-import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
-import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
@@ -23,9 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxCommonTypes;
@@ -56,8 +55,7 @@ public class SomaticSv extends Variant
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticSv.class);
 
-    public SomaticSv(
-            final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
+    public SomaticSv(final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
     {
         mVariant = variant;
         mBreakends = breakends;
@@ -105,7 +103,7 @@ public class SomaticSv extends Variant
     @Override
     public String description()
     {
-        if(mVariant.type() == SGL)
+        if(mVariant.type() == StructuralVariantType.SGL)
         {
             return format("%s %s:%d:%d",
                     mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
@@ -127,13 +125,12 @@ public class SomaticSv extends Variant
         }
 
         LinxBreakend breakend = mBreakends.stream().filter(LinxBreakend::reportedDisruption).findFirst().orElse(null);
-
         if(breakend != null)
         {
             return breakend.gene();
         }
 
-        return !mBreakends.isEmpty() ? mBreakends.get(0).gene() : null;
+        return mBreakends.isEmpty() ? null : mBreakends.get(0).gene();
     }
 
     @Override
@@ -166,7 +163,7 @@ public class SomaticSv extends Variant
     @Override
     public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        if(mVariant.type() == SGL)
+        if(mVariant.type() == StructuralVariantType.SGL)
         {
             return buildSglProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
@@ -192,7 +189,8 @@ public class SomaticSv extends Variant
     {
         if(reported() && mCategoryType != CategoryType.DISRUPTION)
         {
-            return true;
+            // Should never be called since checkFilters() is false.
+            throw new IllegalStateException();
         }
 
         if(vaf() < SAMPLE_VAF_MIN)
@@ -251,14 +249,12 @@ public class SomaticSv extends Variant
 
     public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)
     {
-        ArrayList<SomaticSv> variants = new ArrayList<>();
-
         if(linxDir == null)
         {
-            return variants;
+            return emptyList();
         }
 
-        // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
+        // load each structural variant (ignoring INFs), and link to any disruption/breakend and fusion, and cluster info
 
         String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
@@ -278,15 +274,15 @@ public class SomaticSv extends Variant
             annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));
             fusions = LinxFusion.read(LinxFusion.generateFilename(linxDir, sampleId));
 
-            drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId))
-                    .stream().filter(x -> x.eventType() == DEL || x.eventType() == GAIN)
+            drivers = LinxDriver.read(LinxDriver.generateFilename(linxDir, sampleId)).stream()
+                    .filter(driver -> driver.eventType() == DriverEventType.DEL || driver.eventType() == DriverEventType.GAIN)
                     .toList();
 
-            if(drivers.stream().anyMatch(x -> x.eventType() == DEL))
+            if(drivers.stream().anyMatch(driver -> driver.eventType() == DriverEventType.DEL))
             {
                 String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
                 GeneCopyNumberFile.read(geneCopyNumberFile).stream()
-                        .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
+                        .filter(cn -> drivers.stream().anyMatch(driver -> driver.gene().equals(cn.geneName())))
                         .forEach(geneCopyNumbers::add);
             }
 
@@ -299,8 +295,10 @@ public class SomaticSv extends Variant
             throw new RuntimeException(error);
         }
 
+        ArrayList<SomaticSv> variants = new ArrayList<>();
+
         HashMap<Integer, ArrayList<SomaticSv>> clusterSVs = new HashMap<>();
-        drivers.forEach(x -> clusterSVs.put(x.clusterId(), new ArrayList<>()));
+        drivers.forEach(driver -> clusterSVs.put(driver.clusterId(), new ArrayList<>()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
         {
@@ -309,18 +307,20 @@ public class SomaticSv extends Variant
                 continue;
             }
 
-            if(!variant.filter().equals(PASS))
+            if(!requireNonNull(variant.filter()).equals(PASS))
             {
                 continue;
             }
 
-            if(variant.insertSequence().length() >= SAMPLE_MAX_INSERT && variant.type() != SGL)
+            if(variant.insertSequence().length() >= SAMPLE_MAX_INSERT && variant.type() != StructuralVariantType.SGL)
             {
                 continue;
             }
 
-            LinxSvAnnotation annotation = annotations.stream().filter(x -> x.vcfId().equals(variant.id())).findFirst().orElse(null);
-
+            LinxSvAnnotation annotation = annotations.stream().
+                    filter(a -> a.vcfId().equals(variant.id()))
+                    .findFirst()
+                    .orElse(null);
             if(annotation == null)
             {
                 LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
@@ -328,22 +328,24 @@ public class SomaticSv extends Variant
                 continue;
             }
 
-            List<LinxBreakend> svBreakends = breakends.stream().filter(x -> x.svId() == annotation.svId()).collect(Collectors.toList());
+            List<LinxBreakend> svBreakends = breakends.stream().filter(breakend -> breakend.svId() == annotation.svId()).toList();
 
             List<LinxFusion> svFusions = fusions.stream()
                     .filter(LinxFusion::reported)
-                    .filter(x -> x.chainLinks() == 0)
-                    .filter(x -> svBreakends.stream().anyMatch(y -> y.id() == x.fivePrimeBreakendId()))
-                    .collect(Collectors.toList());
+                    .filter(fusion -> fusion.chainLinks() == 0)
+                    .filter(fusion -> svBreakends.stream().anyMatch(breakend -> breakend.id() == fusion.fivePrimeBreakendId()))
+                    .toList();
 
             // only use SGLs if in a reportable fusion
-            if(variant.type() == SGL && svFusions.isEmpty())
+            if(variant.type() == StructuralVariantType.SGL && svFusions.isEmpty())
             {
                 continue;
             }
 
-            LinxCluster cluster = clusters.stream().filter(x -> x.clusterId() == annotation.clusterId()).findFirst().orElse(null);
-
+            LinxCluster cluster = clusters.stream()
+                    .filter(c -> c.clusterId() == annotation.clusterId())
+                    .findFirst()
+                    .orElse(null);
             if(cluster == null || cluster.category().equals(LinxCommonTypes.SUPER_TYPE_ARTIFACT))
             {
                 continue;
@@ -366,10 +368,11 @@ public class SomaticSv extends Variant
         for(LinxDriver driver : drivers)
         {
             List<SomaticSv> svList = clusterSVs.get(driver.clusterId());
-            SomaticSv driverSv = null;
 
-            if(driver.eventType() == GAIN)
+            if(driver.eventType() == DriverEventType.GAIN)
             {
+                // Only mark as AMP if VCN is highest within the cluster.
+                SomaticSv driverSv = null;
                 double maxJcn = 0;
                 for(SomaticSv sv : svList)
                 {
@@ -380,11 +383,16 @@ public class SomaticSv extends Variant
                         driverSv = sv;
                     }
                 }
+                if(driverSv != null)
+                {
+                    driverSv.markAmpDelDriver(true);
+                }
             }
-            else
+            else if(driver.eventType() == DriverEventType.DEL)
             {
-                GeneCopyNumber geneCopyNumber =
-                        geneCopyNumbers.stream().filter(x -> x.geneName().equals(driver.gene())).findFirst().orElse(null);
+                GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
+                        .filter(cn -> cn.geneName().equals(driver.gene()))
+                        .findFirst().orElse(null);
 
                 if(geneCopyNumber != null)
                 {
@@ -397,39 +405,30 @@ public class SomaticSv extends Variant
                     }
                 }
             }
-
-            if(driverSv != null)
-            {
-                driverSv.markAmpDelDriver(true);
-            }
         }
 
         return variants;
     }
 
-    public static boolean matchesDelRegion(final SomaticSv sv, final GeneCopyNumber geneCopyNumber)
+    private static boolean matchesDelRegion(final SomaticSv sv, final GeneCopyNumber geneCopyNumber)
     {
-        if(sv.variantData().startOrientation() == ORIENT_FWD
-                && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        StructuralVariantData svData = sv.variantData();
+        if(svData.startOrientation() == ORIENT_FWD && abs(svData.startPosition() - geneCopyNumber.minRegionStart()) <= 1)
         {
             return true;
         }
-
-        if(sv.variantData().endOrientation() == ORIENT_FWD && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(svData.endOrientation() == ORIENT_FWD && abs(svData.endPosition() - geneCopyNumber.minRegionStart()) <= 1)
         {
             return true;
         }
-
-        if(sv.variantData().startOrientation() == ORIENT_REV && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(svData.startOrientation() == ORIENT_REV && abs(svData.startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
         {
             return true;
         }
-
-        if(sv.variantData().endOrientation() == ORIENT_REV && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(svData.endOrientation() == ORIENT_REV && abs(svData.endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
         {
             return true;
         }
-
         return false;
     }
 }

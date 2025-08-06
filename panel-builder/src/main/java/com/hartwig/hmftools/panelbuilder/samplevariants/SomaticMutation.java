@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
-import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INDEL;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
@@ -73,7 +72,7 @@ public class SomaticMutation extends Variant
     @Override
     public CategoryType categoryType()
     {
-        if(mVariantDecorator.reported())
+        if(reported())
         {
             return CategoryType.REPORTABLE_MUTATION;
         }
@@ -83,7 +82,7 @@ public class SomaticMutation extends Variant
 
         boolean isSubclonal = subclonalLikelihood() >= SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
 
-        if(mVariantDecorator.type() == SNP)
+        if(mVariantDecorator.type() == VariantType.SNP)
         {
             if(isCoding)
             {
@@ -100,8 +99,10 @@ public class SomaticMutation extends Variant
         {
             return CategoryType.SUBCLONAL_MUTATION;
         }
-
-        return CategoryType.OTHER_MUTATION;
+        else
+        {
+            return CategoryType.OTHER_MUTATION;
+        }
     }
 
     @Override

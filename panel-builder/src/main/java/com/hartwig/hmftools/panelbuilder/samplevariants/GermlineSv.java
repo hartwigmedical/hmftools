@@ -148,13 +148,13 @@ public class GermlineSv extends Variant
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
-            if(germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
+            if(germlineBreakends.stream().anyMatch(breakend -> breakend.svId() == germlineSv.SvId))
             {
                 variants.add(new GermlineSv(germlineSv));
             }
         }
 
-        LOGGER.info("loaded {} germline SVs from vcf({})", variants.size(), germlineSvFile);
+        LOGGER.info("loaded {} germline SVs", variants.size());
 
         return variants;
     }

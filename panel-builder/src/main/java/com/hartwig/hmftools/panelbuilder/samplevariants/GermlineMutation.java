@@ -117,7 +117,9 @@ public class GermlineMutation extends Variant
         {
             List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
 
-            germlineVariants.stream().filter(GermlineVariant::reported).forEach(x -> variants.add(new GermlineMutation(x)));
+            germlineVariants.stream()
+                    .filter(GermlineVariant::reported)
+                    .forEach(v -> variants.add(new GermlineMutation(v)));
 
             LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
         }
