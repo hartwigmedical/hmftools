@@ -28,7 +28,7 @@ public class ReversePaveTestBase
 {
     public final File ensemblDataDir;
     public final ReversePave reversePave;
-    public final RefGenomeInterface genome = new TinyGenome();
+    public final RefGenomeInterface genome = new SmallGenome();
     protected final String braf = "BRAF";
     protected final String brafCanonical = "ENST00000646891";
     protected final String zyx = "ZYX";

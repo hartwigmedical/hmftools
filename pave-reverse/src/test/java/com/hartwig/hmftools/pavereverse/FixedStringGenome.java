@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.pavereverse;
 
+import com.hartwig.hmftools.common.genome.tiny.SimpleTestGenome;
+
 import org.jetbrains.annotations.NotNull;
 
 public class FixedStringGenome extends SimpleTestGenome
