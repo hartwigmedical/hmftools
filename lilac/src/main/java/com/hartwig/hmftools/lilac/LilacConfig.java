@@ -314,6 +314,7 @@ public class LilacConfig
 
         registerCommonConfig(configBuilder);
 
+        // TODO: change default value to "ALL"
         configBuilder.addConfigItem(GENES, false, "Gene set to use", GeneSelector.MHC_CLASS_1.name());
         configBuilder.addInteger(MIN_BASE_QUAL, "Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
