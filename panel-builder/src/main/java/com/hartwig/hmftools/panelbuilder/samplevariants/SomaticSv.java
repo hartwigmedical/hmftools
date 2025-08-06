@@ -290,9 +290,7 @@ public class SomaticSv extends Variant
         }
         catch(IOException e)
         {
-            String error = "Failed to load structural variants: " + e;
-            LOGGER.error(error);
-            throw new RuntimeException(error);
+            throw new RuntimeException("Failed to load structural variants: " + e);
         }
 
         ArrayList<SomaticSv> variants = new ArrayList<>();
@@ -362,8 +360,6 @@ public class SomaticSv extends Variant
             }
         }
 
-        LOGGER.info("loaded {} structural variants from vcf({})", variants.size(), vcfFile);
-
         // find SVs related to DEL and AMP events
         for(LinxDriver driver : drivers)
         {
@@ -406,6 +402,9 @@ public class SomaticSv extends Variant
                 }
             }
         }
+
+        LOGGER.info("Loaded {} somatic structural variants", variants.size());
+        variants.forEach(variant -> LOGGER.trace("SomaticSV: {}", variant));
 
         return variants;
     }

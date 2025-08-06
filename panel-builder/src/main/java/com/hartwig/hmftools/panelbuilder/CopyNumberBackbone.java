@@ -221,7 +221,7 @@ public class CopyNumberBackbone
                     TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), bestProbe.metadata());
                     if(mPanelData.isCovered(target.region()))
                     {
-                        LOGGER.debug("Copy number backbone target already covered by panel: {}", target);
+                        LOGGER.trace("Copy number backbone target already covered by panel: {}", target);
                         return ProbeGenerationResult.alreadyCoveredTarget(target);
                     }
                     else

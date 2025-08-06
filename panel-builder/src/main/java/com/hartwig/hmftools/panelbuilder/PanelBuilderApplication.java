@@ -197,15 +197,20 @@ public class PanelBuilderApplication
             PanelBuilderApplication panelBuilder = new PanelBuilderApplication(config);
             panelBuilder.run();
         }
+        catch(UserInputError e)
+        {
+            LOGGER.error("Bad input data");
+            LOGGER.error(e.getMessage());
+            exit(1);
+        }
         catch(IOException e)
         {
             LOGGER.error("IO error", e);
             exit(1);
         }
-        catch(UserInputError e)
+        catch(RuntimeException e)
         {
-            LOGGER.error("Bad input data");
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Runtime error", e);
             exit(1);
         }
     }

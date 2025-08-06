@@ -74,7 +74,7 @@ public class ProbeEvaluator
 
     private void logCandidateProbe(final Probe probe)
     {
-        LOGGER.trace("Evaluated probe: {}", probe);
+//        LOGGER.trace("Evaluated probe: {}", probe);
         if(mCandidateCallback != null)
         {
             mCandidateCallback.accept(probe);

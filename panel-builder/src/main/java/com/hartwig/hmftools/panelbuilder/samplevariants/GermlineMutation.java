@@ -112,7 +112,6 @@ public class GermlineMutation extends Variant
 
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
-        // TODO: better error handling?
         try
         {
             List<GermlineVariant> germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
@@ -120,13 +119,13 @@ public class GermlineMutation extends Variant
             germlineVariants.stream()
                     .filter(GermlineVariant::reported)
                     .forEach(v -> variants.add(new GermlineMutation(v)));
-
-            LOGGER.debug("sample({}) loaded {} germline variants", sampleId, variants.size());
         }
         catch(Exception e)
         {
-            LOGGER.error("sample({}) failed to load germline variants from file: {}", sampleId, vcfFile);
+            throw new RuntimeException(format("Failed to load germline variants from file: %s", vcfFile));
         }
+
+        LOGGER.info("Loaded {} germline mutations", sampleId);
 
         return variants;
     }

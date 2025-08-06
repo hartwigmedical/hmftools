@@ -141,9 +141,7 @@ public class GermlineSv extends Variant
         }
         catch(IOException e)
         {
-            String error = "Failed to load germline structural variants: " + e;
-            LOGGER.error(error);
-            throw new RuntimeException(error);
+            throw new RuntimeException("Failed to load germline structural variants: " + e);
         }
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
@@ -154,7 +152,7 @@ public class GermlineSv extends Variant
             }
         }
 
-        LOGGER.info("loaded {} germline SVs", variants.size());
+        LOGGER.info("Loaded {} germline structural variants", variants.size());
 
         return variants;
     }

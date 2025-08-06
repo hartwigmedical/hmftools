@@ -242,9 +242,7 @@ public class SomaticMutation extends Variant
 
         if(!vcfFileReader.fileValid())
         {
-            String error = "failed to read somatic vcf: " + vcfFile;
-            LOGGER.error(error);
-            throw new RuntimeException(error);
+            throw new RuntimeException("Failed to read somatic vcf: " + vcfFile);
         }
 
         ArrayList<SomaticMutation> variants = new ArrayList<>();
@@ -265,7 +263,7 @@ public class SomaticMutation extends Variant
             variants.add(new SomaticMutation(variantContext, sampleId));
         }
 
-        LOGGER.info("loaded {} somatic variants from vcf({})", variants.size(), vcfFile);
+        LOGGER.info("Loaded {} somatic mutations", variants.size());
 
         return variants;
     }

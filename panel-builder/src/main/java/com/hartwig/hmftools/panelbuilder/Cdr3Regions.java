@@ -41,7 +41,7 @@ public class Cdr3Regions
                 .filter(IgTcrGene::inPrimaryAssembly)
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
-        LOGGER.debug("Loaded {} V/J genes", genes.size());
+        LOGGER.info("Loaded {} V/J genes", genes.size());
 
         ProbeGenerationResult result = new ProbeGenerationResult();
         ArrayList<ChrBaseRegion> coveredRegions = new ArrayList<>();
@@ -77,7 +77,7 @@ public class Cdr3Regions
         {
             if(coverage.isCovered(region))
             {
-                LOGGER.debug("CDR3 target already covered by panel: {}", target);
+                LOGGER.trace("CDR3 target already covered by panel: {}", target);
                 return ProbeGenerationResult.alreadyCoveredTarget(target);
             }
             else
