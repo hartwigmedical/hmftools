@@ -7,8 +7,6 @@ public class PanelBuilderConstants
     // Common constants.
     public static final int PROBE_LENGTH = 120;
     // By default, have wide GC content tolerance since it matters less for general probes.
-    public static final double GENERAL_GC_TARGET = 0.45;
-    public static final double GENERAL_GC_TOLERANCE = 1;    // I.e. any GC is ok
     // If we can't calculate the quality score of a probe, what quality score do we assign?
     public static final double DEFAULT_PROBE_QUALITY = 0;
 
@@ -31,15 +29,17 @@ public class PanelBuilderConstants
     public static final int GENE_UPDOWNSTREAM_REGION = 2000;
     // Coding exons are expanded by this many bases each side to include splice points in probe coverage.
     public static final int GENE_CODING_REGION_EXPAND = 10;
-    public static final double GENE_GENERAL_QUALITY_MIN = 0.05;
     // Minimum space between exon and intron probe.
     public static final int GENE_EXON_FLANK_GAP = 1000;
     // Exon flank probes are selected within a region of this many bases.
     public static final int GENE_EXON_FLANK_REGION_MIN = 1000;
     public static final int GENE_EXON_FLANK_REGION_MAX = 5000;
-    public static final double GENE_CN_QUALITY_MIN = 0.5;
     // How many bases upstream to cover as part of the promoter region.
     public static final int GENE_PROMOTER_REGION = 500;
+    public static final double GENE_GENERAL_QUALITY_MIN = 0.05;
+    public static final double GENE_GENERAL_GC_TARGET = 0.45;
+    public static final double GENE_GENERAL_GC_TOLERANCE = 1;
+    public static final double GENE_CN_QUALITY_MIN = 0.5;
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
@@ -52,6 +52,8 @@ public class PanelBuilderConstants
 
     // CDR3 probe constants.
     public static final double CDR3_QUALITY_MIN = 0.1;
+    public static final double CDR3_GC_TARGET = 0.45;
+    public static final double CDR3_GC_TOLERANCE = 1;
 
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
@@ -62,14 +64,17 @@ public class PanelBuilderConstants
 
     // Custom regions parameters.
     public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
+    public static final double CUSTOM_REGION_GC_TARGET = 0.45;
+    public static final double CUSTOM_REGION_GC_TOLERANCE = 1;
 
     // Sample variants parameters.
     public static final int SAMPLE_PROBES = 500;
-    // TODO: sort these out with the wisp filtering
-    public static final double SAMPLE_QUALITY_MIN = 0.5;
-    public static final double SAMPLE_GC_TARGET = 0.5;
-    public static final double SAMPLE_GC_TOLERANCE_STRICT = 0.1;
-    public static final double SAMPLE_GC_TOLERANCE = 0.2;
+    public static final double SAMPLE_NONDRIVER_QUALITY_MIN = 0.1;
+    public static final double SAMPLE_NONDRIVER_GC_TARGET = 0.45;
+    public static final double SAMPLE_NONDRIVER_GC_TOLERANCE = 0.15;
+    public static final double SAMPLE_DRIVER_QUALITY_MIN = 0.05;
+    public static final double SAMPLE_DRIVER_GC_TARGET = 0.45;
+    public static final double SAMPLE_DRIVER_GC_TOLERANCE = 1;
     public static final double SAMPLE_VAF_MIN = 0.05;
     public static final int SAMPLE_FRAG_COUNT_MIN_STRICT = 11;
     public static final int SAMPLE_FRAG_COUNT_MIN = 7;

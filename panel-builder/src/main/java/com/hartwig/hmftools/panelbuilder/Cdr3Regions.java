@@ -2,9 +2,9 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Objects.requireNonNull;
 
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CDR3_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC_TARGET;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
 
@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 public class Cdr3Regions
 {
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
-            CDR3_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
+            CDR3_QUALITY_MIN, CDR3_GC_TARGET, CDR3_GC_TOLERANCE);
 
     private static final Logger LOGGER = LogManager.getLogger(Cdr3Regions.class);
 

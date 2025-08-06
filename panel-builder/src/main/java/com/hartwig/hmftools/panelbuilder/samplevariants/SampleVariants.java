@@ -3,10 +3,13 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TARGET;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_QUALITY_MIN;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -37,9 +40,10 @@ public class SampleVariants
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
 
-    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
-            SAMPLE_QUALITY_MIN,
-            SAMPLE_GC_TARGET, SAMPLE_GC_TOLERANCE);
+    private static final ProbeEvaluator.Criteria NONDRIVER_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            SAMPLE_NONDRIVER_QUALITY_MIN, SAMPLE_NONDRIVER_GC_TARGET, SAMPLE_NONDRIVER_GC_TOLERANCE);
+    private static final ProbeEvaluator.Criteria DRIVER_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            SAMPLE_DRIVER_QUALITY_MIN, SAMPLE_DRIVER_GC_TARGET, SAMPLE_DRIVER_GC_TOLERANCE);
 
     private static final Logger LOGGER = LogManager.getLogger(SampleVariants.class);
 
@@ -208,6 +212,7 @@ public class SampleVariants
         }
         else
         {
+            ProbeEvaluator.Criteria evalCriteria = variant.reported() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
             Probe probe;
             if(probeData.sequence() == null)
             {
@@ -217,7 +222,7 @@ public class SampleVariants
             {
                 probe = mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
             }
-            probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA);
+            probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
 
             if(probe.accepted())
             {
@@ -227,7 +232,7 @@ public class SampleVariants
             }
             else
             {
-                String rejectionReason = "Probe does not meet criteria " + PROBE_CRITERIA;
+                String rejectionReason = "Probe does not meet criteria " + evalCriteria;
                 return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
             }
         }

@@ -5,9 +5,9 @@ import static java.util.Objects.requireNonNull;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC_TARGET;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENERAL_GC_TOLERANCE;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class CustomRegions
     private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CUSTOM;
 
     private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE),
+            new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE),
             new ProbeSelector.Strategy.MaxQuality());
 
     private static final String FLD_EXTRA_INFO = "ExtraInfo";
