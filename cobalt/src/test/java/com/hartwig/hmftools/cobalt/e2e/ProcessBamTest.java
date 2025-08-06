@@ -96,9 +96,14 @@ public class ProcessBamTest
         runCobalt();
         List<CobaltRatio> ratios = ratioResults.get(_1);
 
-        assertEquals(0.5, ratios.get(1).tumorGCRatio(), 0.01);
-        assertEquals(2.0, ratios.get(2).tumorGCRatio(), 0.01);
-        assertEquals(1.0, ratios.get(3).tumorGCRatio(), 0.01);
+        // ratio -> ratio/relativeEnrichment: (1.0, 1.0, 1.0)/(2.0, 0.5, 1.0) = (0.5, 2.0, 1.0)
+        // Normalised again by dividing by mean so that the mean is 1.0:
+        // mean = 3.5/3 = 7/6, so (0.5, 2.0, 1.0_) => (1/7, 4/7, 2/7)*3.0
+        // 0.5 / 7/6 = 3/7, 2.0 / 7/6 = 12/7, 1.0 / 7/6 = 6/7
+        double oneSeventh = 1.0/7.0;
+        assertEquals(3.0 * 1.0 * oneSeventh, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(3.0 * 4.0 * oneSeventh, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(3.0 * 2.0 * oneSeventh, ratios.get(3).tumorGCRatio(), 0.01);
     }
 
     @Test
@@ -124,6 +129,54 @@ public class ProcessBamTest
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(3).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void sexChromosomesFilteredOut() throws Exception
+    {
+        // 1 chr of length 5000
+        // 1:1001-4000 depth 100
+        setupForThreeWindowBam();
+
+        // Overwrite the gc profile
+        double mappability0 = MIN_MAPPABLE_PERCENTAGE + 0.01;
+        double mappability2 = MIN_MAPPABLE_PERCENTAGE - 0.01;
+        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
+        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, mappability0));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1,
+                regionOffset + 1000, regionOffset + 1_000, MIN_MAPPABLE_PERCENTAGE));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, mappability2));
+        gcFileWriter.write(gcProfile);
+
+        runCobalt();
+
+        List<CobaltRatio> ratios = ratioResults.get(_1);
+        assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(3).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void filterOutWindowsWhereGcProfileDataIsMissing() throws Exception
+    {
+        // 1 chr of length 5000
+        // 1:1001-4000 depth 100
+        setupForThreeWindowBam();
+
+        // Overwrite the gc profile
+        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
+        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, 0.99));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, 0.99));
+        gcFileWriter.write(gcProfile);
+
+        runCobalt();
+
+        List<CobaltRatio> ratios = ratioResults.get(_1);
+        assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(3).tumorGCRatio(), 0.01);
     }
 
     private void setupForSingleWindowBam() throws IOException
@@ -160,7 +213,7 @@ public class ProcessBamTest
 
         panelNormalisation = new File(tempDir, "ThePanel.tsv");
         PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 4_000, 1.00));
+        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 4_000, 1.0001));
         panelWriter.write(panelNormalisation);
     }
 

@@ -16,10 +16,17 @@ public class BamUtilities
 //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
         ChromosomeRegionDepths chr1Depths = new RepeatingACGTChromosomeRegionDepths(0);
         int regionOffset = 1_001;
-        chr1Depths.addRange(regionOffset, regionOffset + 3_000, 100);
+        chr1Depths.addRange(regionOffset, regionOffset + 3_000, 10);
 //        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
 //        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
         bamRecipe.add(chr1Depths);
+
+        ChromosomeRegionDepths chrXDepths = new RepeatingACGTChromosomeRegionDepths(22);
+        regionOffset = 1_001;
+        chrXDepths.addRange(regionOffset, regionOffset + 3_000, 10);
+//        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
+//        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
+        bamRecipe.add(chrXDepths);
 
 //        ChromosomeRegionDepths chr2Depths = new GenomeBackedChromosomeRegionDepths(1, refGenomeSource);
 //        chr2Depths.addRange(regionOffset, regionOffset + 100_000, 50);
@@ -28,7 +35,7 @@ public class BamUtilities
 //        bamRecipe.add(chr2Depths);
 
         File outputDir = new File("/Users/timlavers/work/junk/rubbish");
-        File bamFile = new File(outputDir, "Example9.bam");
+        File bamFile = new File(outputDir, "Example10.bam");
         bamRecipe.writeToBam(bamFile.getAbsolutePath());
     }
 }
