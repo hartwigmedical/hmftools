@@ -37,7 +37,7 @@ public class RegionUtils
         // Sort by start position ascending, then end position ascending.
         coveredRegions = coveredRegions.sorted(Comparator.comparing(BaseRegion::start).thenComparing(BaseRegion::end));
 
-        List<BaseRegion> uncoveredRegions = new ArrayList<>();
+        ArrayList<BaseRegion> uncoveredRegions = new ArrayList<>();
 
         Iterator<BaseRegion> iterator = coveredRegions.iterator();
         // Setting this to just before the target region simplifies handling of first and last uncovered regions.

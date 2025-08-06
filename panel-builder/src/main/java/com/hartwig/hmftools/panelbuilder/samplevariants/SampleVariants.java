@@ -65,10 +65,10 @@ public class SampleVariants
         List<Variant> variants = new ArrayList<>();
 
         checkSampleDirectories(mConfig.purpleDir(), mConfig.linxDir(), mConfig.linxGermlineDir());
-        variants.addAll(SomaticMutation.loadSomatics(mConfig.sampleId(), mConfig.purpleDir()));
-        variants.addAll(GermlineMutation.loadGermlineMutations(mConfig.sampleId(), mConfig.purpleDir()));
-        variants.addAll(StructuralVariant.loadStructuralVariants(mConfig.sampleId(), mConfig.purpleDir(), mConfig.linxDir()));
-        variants.addAll(GermlineSv.loadGermlineStructuralVariants(mConfig.sampleId(), mConfig.linxGermlineDir()));
+        variants.addAll(SomaticMutation.load(mConfig.sampleId(), mConfig.purpleDir()));
+        variants.addAll(GermlineMutation.load(mConfig.sampleId(), mConfig.purpleDir()));
+        variants.addAll(SomaticSv.load(mConfig.sampleId(), mConfig.purpleDir(), mConfig.linxDir()));
+        variants.addAll(GermlineSv.load(mConfig.sampleId(), mConfig.linxGermlineDir()));
 
         ArrayList<Variant> selectedVariants = new ArrayList<>();
         ProbeGenerationResult result = generateProbes(variants, selectedVariants);

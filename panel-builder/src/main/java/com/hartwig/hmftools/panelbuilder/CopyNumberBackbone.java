@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TARG
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.ProbeSelector.selectBestProbe;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -117,12 +117,12 @@ public class CopyNumberBackbone
     private static class Partition
     {
         public final ChrBaseRegion Region;
-        public final List<AmberSite> Sites;
+        public final ArrayList<AmberSite> Sites;
 
         public Partition(final ChrBaseRegion region)
         {
             Region = region;
-            Sites = Lists.newArrayList();
+            Sites = new ArrayList<>();
         }
     }
 

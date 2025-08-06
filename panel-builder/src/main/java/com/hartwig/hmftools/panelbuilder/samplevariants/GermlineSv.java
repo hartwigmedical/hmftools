@@ -2,6 +2,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
@@ -110,15 +111,13 @@ public class GermlineSv extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final String linxGermlineDir)
+    public static List<GermlineSv> load(final String sampleId, final String linxGermlineDir)
     {
-        List<Variant> variants = new ArrayList<>();
-
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
 
         if(linxGermlineDir == null)
         {
-            return variants;
+            return emptyList();
         }
 
         String germlineSvFile = LinxGermlineDisruption.generateFilename(linxGermlineDir, sampleId);
@@ -126,8 +125,10 @@ public class GermlineSv extends Variant
 
         if(!Files.exists(Paths.get(germlineSvFile)) || !Files.exists(Paths.get(germlineBreakendsFile)))
         {
-            return variants;
+            return emptyList();
         }
+
+        ArrayList<GermlineSv> variants = new ArrayList<>();
 
         List<LinxGermlineDisruption> germlineSvs;
         List<LinxBreakend> germlineBreakends;

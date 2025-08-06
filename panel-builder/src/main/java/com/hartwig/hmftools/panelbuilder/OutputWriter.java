@@ -47,7 +47,7 @@ public class OutputWriter implements AutoCloseable
     @Nullable
     private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
     @Nullable
-    private final List<Probe> mCandidateProbesBuffer;
+    private final ArrayList<Probe> mCandidateProbesBuffer;
     private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
     private final BufferedWriter mSampleVariantsTsvWriter;
 

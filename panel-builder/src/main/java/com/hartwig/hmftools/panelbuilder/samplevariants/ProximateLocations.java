@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class ProximateLocations
 {
-    private final Map<String, List<Location>> mRegisteredLocations;
+    private final Map<String, ArrayList<Location>> mRegisteredLocations;
 
     private static final byte NO_ORIENTATION = 0;
     private static final int NEAR_DISTANCE = 50;
@@ -47,7 +47,7 @@ public class ProximateLocations
 
     public void addRegisteredLocation(final String chromosome, final int position, byte orientation)
     {
-        List<Location> positions = mRegisteredLocations.get(chromosome);
+        ArrayList<Location> positions = mRegisteredLocations.get(chromosome);
 
         if(positions == null)
         {

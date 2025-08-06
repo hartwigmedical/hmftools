@@ -47,16 +47,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class StructuralVariant extends Variant
+public class SomaticSv extends Variant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
     private CategoryType mCategoryType;
 
-    private static final Logger LOGGER = LogManager.getLogger(StructuralVariant.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticSv.class);
 
-    public StructuralVariant(
+    public SomaticSv(
             final StructuralVariantData variant, final List<LinxBreakend> breakends, final List<LinxFusion> fusions)
     {
         mVariant = variant;
@@ -249,9 +249,9 @@ public class StructuralVariant extends Variant
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
     }
 
-    public static List<Variant> loadStructuralVariants(final String sampleId, final String purpleDir, @Nullable final String linxDir)
+    public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)
     {
-        List<Variant> variants = new ArrayList<>();
+        ArrayList<SomaticSv> variants = new ArrayList<>();
 
         if(linxDir == null)
         {
@@ -267,7 +267,7 @@ public class StructuralVariant extends Variant
         List<LinxSvAnnotation> annotations;
         List<LinxFusion> fusions;
         List<LinxDriver> drivers;
-        List<GeneCopyNumber> geneCopyNumbers = new ArrayList<>();
+        ArrayList<GeneCopyNumber> geneCopyNumbers = new ArrayList<>();
         List<LinxCluster> clusters;
 
         try
@@ -299,7 +299,7 @@ public class StructuralVariant extends Variant
             throw new RuntimeException(error);
         }
 
-        Map<Integer, List<StructuralVariant>> clusterSVs = new HashMap<>();
+        HashMap<Integer, ArrayList<SomaticSv>> clusterSVs = new HashMap<>();
         drivers.forEach(x -> clusterSVs.put(x.clusterId(), new ArrayList<>()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
@@ -351,7 +351,7 @@ public class StructuralVariant extends Variant
 
             StructuralVariantData variantData = convertSvData(variant, annotation.svId());
 
-            StructuralVariant sv = new StructuralVariant(variantData, svBreakends, svFusions);
+            SomaticSv sv = new SomaticSv(variantData, svBreakends, svFusions);
             variants.add(sv);
 
             if(clusterSVs.containsKey(cluster.clusterId()))
@@ -365,13 +365,13 @@ public class StructuralVariant extends Variant
         // find SVs related to DEL and AMP events
         for(LinxDriver driver : drivers)
         {
-            List<StructuralVariant> svList = clusterSVs.get(driver.clusterId());
-            StructuralVariant driverSv = null;
+            List<SomaticSv> svList = clusterSVs.get(driver.clusterId());
+            SomaticSv driverSv = null;
 
             if(driver.eventType() == GAIN)
             {
                 double maxJcn = 0;
-                for(StructuralVariant sv : svList)
+                for(SomaticSv sv : svList)
                 {
                     double svJcn = max(sv.variantData().adjustedStartCopyNumberChange(), sv.variantData().adjustedEndCopyNumberChange());
                     if(svJcn > maxJcn)
@@ -388,7 +388,7 @@ public class StructuralVariant extends Variant
 
                 if(geneCopyNumber != null)
                 {
-                    for(StructuralVariant sv : svList)
+                    for(SomaticSv sv : svList)
                     {
                         if(matchesDelRegion(sv, geneCopyNumber))
                         {
@@ -407,7 +407,7 @@ public class StructuralVariant extends Variant
         return variants;
     }
 
-    public static boolean matchesDelRegion(final StructuralVariant sv, final GeneCopyNumber geneCopyNumber)
+    public static boolean matchesDelRegion(final SomaticSv sv, final GeneCopyNumber geneCopyNumber)
     {
         if(sv.variantData().startOrientation() == ORIENT_FWD
                 && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)

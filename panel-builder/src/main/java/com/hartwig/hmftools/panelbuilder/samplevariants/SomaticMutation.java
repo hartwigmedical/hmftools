@@ -233,11 +233,9 @@ public class SomaticMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadSomatics(final String sampleId, final String purpleDir)
+    public static List<SomaticMutation> load(final String sampleId, final String purpleDir)
     {
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
-
-        List<Variant> variants = new ArrayList<>();
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -247,6 +245,8 @@ public class SomaticMutation extends Variant
             LOGGER.error(error);
             throw new RuntimeException(error);
         }
+
+        ArrayList<SomaticMutation> variants = new ArrayList<>();
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {

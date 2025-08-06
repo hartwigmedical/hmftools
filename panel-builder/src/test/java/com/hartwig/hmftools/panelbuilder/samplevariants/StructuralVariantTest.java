@@ -32,7 +32,7 @@ public class StructuralVariantTest
 //        TestUtils.MOCK_REF_GENOME.RefGenomeMap.put(CHR_2, TestUtils.REF_BASES_CHR_2);
 //
 //        // a DEL
-//        StructuralVariant var = new StructuralVariant(
+//        SomaticSv var = new SomaticSv(
 //                createSv(0, "001", CHR_1, CHR_1, 20, 30, ORIENT_FWD, ORIENT_REV, StructuralVariantType.DEL,
 //                        2, 2, ""),
 //                Lists.newArrayList(), Lists.newArrayList());
@@ -46,7 +46,7 @@ public class StructuralVariantTest
 //
 //        // DUP with an insert
 //        String insertSeq = "AAAAA";
-//        var = new StructuralVariant(
+//        var = new SomaticSv(
 //                createSv(0, "001", CHR_1, CHR_1, 20, 40, ORIENT_REV, ORIENT_FWD, StructuralVariantType.DUP,
 //                        2, 2, insertSeq),
 //                Lists.newArrayList(), Lists.newArrayList());
@@ -57,7 +57,7 @@ public class StructuralVariantTest
 //
 //        // BND with -1/-1
 //        insertSeq = "AAAAAA";
-//        var = new StructuralVariant(
+//        var = new SomaticSv(
 //                createSv(0, "001", CHR_1, CHR_2, 20, 40, ORIENT_REV, ORIENT_REV, StructuralVariantType.BND,
 //                        2, 2, insertSeq),
 //                Lists.newArrayList(), Lists.newArrayList());
@@ -70,7 +70,7 @@ public class StructuralVariantTest
 //        // SGL with positive orientation
 //        insertSeq = "AAAAA";
 //        LinxBreakend reportableBreakend = createBreakend(true);
-//        var = new StructuralVariant(
+//        var = new SomaticSv(
 //                createSv(0, "001", CHR_1, "-1", 20, 0, ORIENT_FWD, 0, StructuralVariantType.SGL,
 //                        2, 0, insertSeq),
 //                Lists.newArrayList(reportableBreakend), Lists.newArrayList());
@@ -82,7 +82,7 @@ public class StructuralVariantTest
 //
 //        // with a longer insert sequence - will only allocate half the probe length
 //        insertSeq = "AAAAAGGGGGCCCCCTTTTT";
-//        var = new StructuralVariant(
+//        var = new SomaticSv(
 //                createSv(0, "001", CHR_1, "-1", 20, 0, ORIENT_FWD, 0, StructuralVariantType.SGL,
 //                        2, 0, insertSeq),
 //                Lists.newArrayList(reportableBreakend), Lists.newArrayList());
@@ -93,7 +93,7 @@ public class StructuralVariantTest
 //        assertEquals(TestUtils.REF_BASES_CHR_1.substring(10, 10 + PROBE_LENGTH), var.refSequences().get(0));
 //
 //        // negative orientation
-//        var = new StructuralVariant(
+//        var = new SomaticSv(
 //                createSv(0, "001", CHR_1, "-1", 20, 0, ORIENT_REV, 0, StructuralVariantType.SGL,
 //                        2, 0, insertSeq),
 //                Lists.newArrayList(reportableBreakend), Lists.newArrayList());

@@ -102,9 +102,9 @@ public class GermlineMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineMutations(final String sampleId, final String purpleDir)
+    public static List<GermlineMutation> load(final String sampleId, final String purpleDir)
     {
-        List<Variant> variants = new ArrayList<>();
+        ArrayList<GermlineMutation> variants = new ArrayList<>();
 
         // TODO: unused - bug?
         CompoundFilter filter = new CompoundFilter(true);
