@@ -72,9 +72,6 @@ public class SampleVariants
 
         List<Variant> variants = new ArrayList<>();
 
-        // TODO: not personalised - remove ??
-        variants.addAll(loadReferenceVariants());
-
         checkSampleDirectories(mConfig.purpleDir(), mConfig.linxDir(), mConfig.linxGermlineDir());
         variants.addAll(SomaticMutation.loadSomatics(mConfig.sampleId(), mConfig.purpleDir()));
         variants.addAll(GermlineMutation.loadGermlineMutations(mConfig.sampleId(), mConfig.purpleDir()));
@@ -89,23 +86,6 @@ public class SampleVariants
         LOGGER.info("Done generating sample variant probes");
 
         return new ExtraOutput(selectedVariants);
-    }
-
-    private List<Variant> loadReferenceVariants()
-    {
-        if(mConfig.referenceVariantsFile() == null)
-        {
-            return emptyList();
-        }
-        else
-        {
-            List<Variant> referenceVariants = ReferenceMutation.loadKnownMutations(mConfig.referenceVariantsFile());
-            if(referenceVariants == null)
-            {
-                throw new RuntimeException("Failed to load reference variants");
-            }
-            return referenceVariants;
-        }
     }
 
     private static void checkSampleDirectories(final String purpleDir, final String linxDir, final String linxGermlineDir)
