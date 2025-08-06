@@ -13,6 +13,7 @@ import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public enum GeneSelector
 {
+    // TODO: implement "all" selector
     MHC_CLASS_1((final HlaGene gene) -> gene.mhcClass() == MhcClass.CLASS_1 && !gene.isPseudo()),
     HLA_DQB1(HlaGene.HLA_DQB1),
     HLA_DPA1(HlaGene.HLA_DPA1),
