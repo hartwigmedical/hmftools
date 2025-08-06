@@ -6,7 +6,7 @@ public enum SelectionStatus
     SELECTED,   // Probe included in panel
     FILTERED,   // Failed internal filters
     // Filters reported to the user
-    EXCEEDS_COUNT,
+    EXCLUDED_CATEGORY,
     PROXIMATE,
     GENE_LOCATIONS;
 }

@@ -78,8 +78,8 @@ public class SomaticMutation extends Variant
             return CategoryType.REPORTABLE_MUTATION;
         }
 
-        boolean isCoding = mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
-                && mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.UNDEFINED;
+        CodingEffect codingEffect = mVariantDecorator.variantImpact().CanonicalCodingEffect;
+        boolean isCoding = codingEffect != CodingEffect.NONE && codingEffect != CodingEffect.UNDEFINED;
 
         boolean isSubclonal = subclonalLikelihood() >= SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
 
@@ -96,9 +96,10 @@ public class SomaticMutation extends Variant
             }
         }
 
-        // unused for now
-        // if(isSubclonal)
-        //    return SUBCLONAL_MUTATION;
+        if(isSubclonal)
+        {
+            return CategoryType.SUBCLONAL_MUTATION;
+        }
 
         return CategoryType.OTHER_MUTATION;
     }
@@ -178,7 +179,7 @@ public class SomaticMutation extends Variant
     @Override
     public boolean passNonReportableFilters(boolean strictLimits)
     {
-        if(categoryType() != CategoryType.SUBCLONAL_MUTATION && vaf() < SAMPLE_VAF_MIN)
+        if(vaf() < SAMPLE_VAF_MIN)
         {
             return false;
         }

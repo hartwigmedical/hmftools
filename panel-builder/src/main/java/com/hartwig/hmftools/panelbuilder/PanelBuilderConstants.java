@@ -79,8 +79,6 @@ public class PanelBuilderConstants
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_MAX_INSERT = 60;
     public static final int SAMPLE_MAX_INDEL = 32;
-    public static int SAMPLE_NONREPORTABLE_SV_MAX = 0;
-    public static int SAMPLE_SUBCLONAL_MAX = 0;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
