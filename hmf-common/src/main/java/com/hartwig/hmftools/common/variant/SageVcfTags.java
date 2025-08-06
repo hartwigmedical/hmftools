@@ -67,8 +67,12 @@ public final class SageVcfTags
     public static final String MIN_COORDS_COUNT = "MUC";
     public static final String MIN_COORDS_COUNT_DESC = "Min unique fragment coordinates in alt reads";
 
+    // deprecated after v4.1, replaced by percentage
     public static final String AVG_READ_EDGE_DISTANCE = "AED";
     public static final String AVG_READ_EDGE_DISTANCE_DESC = "Average read edge distance [alt,total]";
+
+    public static final String AVG_EDGE_DISTANCE_PERC = "AED";
+    public static final String AVG_EDGE_DISTANCE_PERC_DESC = "Average edge distance as percent of read length [alt,total]";
 
     public static final int CONSENSUS_TYPE_COUNT = ConsensusType.values().length;
     public static final int CONSENSUS_TAG_TYPE_COUNT = CONSENSUS_TYPE_COUNT * 2;

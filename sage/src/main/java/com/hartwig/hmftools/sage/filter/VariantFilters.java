@@ -7,7 +7,6 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
-import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
@@ -68,8 +67,6 @@ public class VariantFilters
 {
     private final boolean mIsGermline;
     private final FilterConfig mConfig;
-    private final int mReadEdgeDistanceThreshold;
-    private final int mReadEdgeDistanceThresholdPanel;
 
     private final int[] mFilterCounts;
 
@@ -87,17 +84,10 @@ public class VariantFilters
     {
         mConfig = config.Filter;
         mIsGermline = config.IsGermline;
-        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
-        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
     }
 
-    public int readEdgeDistanceThreshold(final VariantTier tier)
-    {
-        return tier == HOTSPOT || tier == PANEL ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
-    }
-
-    private static double readEdgeDistanceThresholdPerc(final VariantTier tier)
+    public static double readEdgeDistanceThreshold(final VariantTier tier)
     {
         return tier == HOTSPOT || tier == PANEL ? MAX_READ_EDGE_DISTANCE_PERC_PANEL : MAX_READ_EDGE_DISTANCE_PERC;
     }
@@ -388,9 +378,10 @@ public class VariantFilters
         double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
         double edgeDistancePenalty = 0;
 
-        double readEdgeDistanceThresholdPerc = readEdgeDistanceThresholdPerc(tier);
+        double readEdgeDistanceThresholdPerc = readEdgeDistanceThreshold(tier);
+        double altAvgEdgeDistanceRatio = avgAltEdgeDistance / avgEdgeDistance;
 
-        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc && !highlyPolymorphicSite)
+        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc)
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
         }
@@ -468,14 +459,14 @@ public class VariantFilters
         if(primaryTumor.isLongInsert())
             return false;
 
-        int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
+        double altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
 
-        int readEdgeDistanceThreshold = readEdgeDistanceThreshold(tier);
+        double edgeDistanceThreshold = readEdgeDistanceThreshold(tier);
 
-        if(altMed >= readEdgeDistanceThreshold)
+        if(altMed >= edgeDistanceThreshold)
             return false;
 
-        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
+        double maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
 
         // note max MED for all reads * 2 covers scenarios were no reads have the variant centred
         double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());

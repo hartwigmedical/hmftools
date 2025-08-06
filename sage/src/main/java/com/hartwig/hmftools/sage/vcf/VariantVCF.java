@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.vcf;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
@@ -226,7 +226,7 @@ public class VariantVCF implements AutoCloseable
         // add in alphabetical order
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_EDGE_DISTANCE_PERC, 2, VCFHeaderLineType.Float, AVG_EDGE_DISTANCE_PERC_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));

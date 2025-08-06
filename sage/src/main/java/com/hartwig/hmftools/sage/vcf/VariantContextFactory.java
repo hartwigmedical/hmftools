@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static java.lang.Math.round;
@@ -125,6 +126,7 @@ public final class VariantContextFactory
     private static final Set<String> GENOTYPE_CHECK_ATTRIBUTES = Sets.newHashSet(MIN_COORDS_COUNT, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE);
 
     // added in v4.1: MIN_COORDS_FLAG, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE
+    // added in v4.2: AVG_EDGE_DISTANCE_PERC, replacing AVG_READ_EDGE_DISTANCE
 
     public static Genotype checkGenotypeFields(final Genotype genotype)
     {
@@ -132,16 +134,18 @@ public final class VariantContextFactory
         if(GENOTYPE_CHECK_ATTRIBUTES.stream().allMatch(x -> genotype.getExtendedAttributes().keySet().contains(x)))
             return genotype;
 
-        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(genotype);
+        // TODO: add in default values for any missing genotype fields
 
-        if(!genotype.hasExtendedAttribute(AVG_READ_EDGE_DISTANCE))
-            genotypeBuilder.attribute(AVG_READ_EDGE_DISTANCE, new int[] {0, 0});
+        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(genotype);
 
         if(!genotype.hasExtendedAttribute(MIN_COORDS_COUNT))
             genotypeBuilder.attribute(MIN_COORDS_COUNT, 0);
 
         if(!genotype.hasExtendedAttribute(AVG_RAW_BASE_QUAL))
             genotypeBuilder.attribute(AVG_RAW_BASE_QUAL, 0);
+
+        if(!genotype.hasExtendedAttribute(AVG_EDGE_DISTANCE_PERC))
+            genotypeBuilder.attribute(AVG_EDGE_DISTANCE_PERC, new double[] {0, 0});
 
         return genotypeBuilder.make();
     }
@@ -177,7 +181,7 @@ public final class VariantContextFactory
                 .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
                 .attribute(AVG_RAW_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(
-                        AVG_READ_EDGE_DISTANCE, new int[] {
+                        AVG_EDGE_DISTANCE_PERC, new double[] {
                                 counter.readEdgeDistance().avgDistanceFromEdge(),
                                 counter.readEdgeDistance().avgAltDistanceFromEdge() })
                 .attribute(AVG_MODIFIED_BASE_QUAL, avgAltModifiedBaseQuality)

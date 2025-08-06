@@ -471,8 +471,8 @@ public class VariantVis
         records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mVariant.Position));
     }
 
-    private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, int maxDistanceFromEdge,
-                                         int nonAltAvgEdgeDist, int altAvgEdgeDist, final Set<String> filters)
+    private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, double maxDistanceFromEdge,
+                                         double nonAvgEdgeDist, double altAvgEdgeDist, final Set<String> filters)
     {
         CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
@@ -510,9 +510,9 @@ public class VariantVis
                 td(horizontalSpacer),
                 td("NEARBY_INDEL = " + nearbyIndel),
                 td(horizontalSpacer),
-                td("MED = " + maxDistanceFromEdge),
+                td("MED = " + format("%.2f", maxDistanceFromEdge)),
                 td(horizontalSpacer),
-                td("AED = " + nonAltAvgEdgeDist + "," + altAvgEdgeDist),
+                td("AED = " + format("%.2f", nonAvgEdgeDist) + "," + format("%.2f", altAvgEdgeDist)),
                 td(horizontalSpacer),
                 td(filterStr),
                 td(horizontalSpacer),
