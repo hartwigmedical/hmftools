@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -32,8 +31,9 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.TUMOR_QUALITY_PROB;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.evidence.QualCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -120,37 +120,12 @@ public final class VariantContextFactory
         return context;
     }
 
-    // built in fields: GT:AD:DP, not populated: RAD:RDP
-    // v4.0 attributes: ABQ:    AF:AMBQ:AMMQ:AMQ:         RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RSB:SAC:SB:UMI_CNT
-    // v4.1 attributes: ABQ:AED:AF:AMBQ:AMMQ:AMQ:MUC:RABQ:RC_CNT:RC_IPC:RC_JIT:RC_QUAL:RSB:SAC:SB:UMI_CNT
-    private static final Set<String> GENOTYPE_CHECK_ATTRIBUTES = Sets.newHashSet(MIN_COORDS_COUNT, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE);
-
-    // added in v4.1: MIN_COORDS_FLAG, AVG_RAW_BASE_QUAL, AVG_READ_EDGE_DISTANCE
-    // added in v4.2: AVG_EDGE_DISTANCE_PERC, replacing AVG_READ_EDGE_DISTANCE
-
-    public static Genotype checkGenotypeFields(final Genotype genotype)
+    private static Genotype createGenotype(final ReadContextCounter counter, final String sampleId)
     {
-        // checks that existing genotype contain all required fields (eg append is adding any new ones) and if not adds defaults
-        if(GENOTYPE_CHECK_ATTRIBUTES.stream().allMatch(x -> genotype.getExtendedAttributes().keySet().contains(x)))
-            return genotype;
-
-        // TODO: add in default values for any missing genotype fields
-
-        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(genotype);
-
-        if(!genotype.hasExtendedAttribute(MIN_COORDS_COUNT))
-            genotypeBuilder.attribute(MIN_COORDS_COUNT, 0);
-
-        if(!genotype.hasExtendedAttribute(AVG_RAW_BASE_QUAL))
-            genotypeBuilder.attribute(AVG_RAW_BASE_QUAL, 0);
-
-        if(!genotype.hasExtendedAttribute(AVG_EDGE_DISTANCE_PERC))
-            genotypeBuilder.attribute(AVG_EDGE_DISTANCE_PERC, new double[] {0, 0});
-
-        return genotypeBuilder.make();
+        return createGenotype(counter, sampleId, null);
     }
 
-    public static Genotype createGenotype(final ReadContextCounter counter, final String sampleId)
+    public static Genotype createGenotype(final ReadContextCounter counter, final String sampleId, @Nullable final Set<String> existingTags)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 
@@ -202,6 +177,17 @@ public final class VariantContextFactory
         else
         {
             builder.attribute(UMI_TYPE_COUNTS, new int[] {counter.depth(), 0, 0, counter.readCounts().strongSupport(), 0, 0});
+        }
+
+        if(existingTags != null)
+        {
+            Set<String> allTags = builder.make().getExtendedAttributes().keySet();
+
+            for(String vcfTag : existingTags)
+            {
+                if(!allTags.contains(vcfTag))
+                    builder.attribute(vcfTag, "");
+            }
         }
 
         return builder.make();

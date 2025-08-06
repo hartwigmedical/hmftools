@@ -58,15 +58,15 @@ public class GenotypeFragments
 
     public boolean isOutlier() { return mIsOutlier; }
 
-    public int averageReadDistance()
+    public double averageReadDistance()
     {
-        Object intField = GenotypeData.getExtendedAttribute(SageVcfTags.AVG_READ_EDGE_DISTANCE, null);
+        Object value = GenotypeData.getExtendedAttribute(SageVcfTags.AVG_EDGE_DISTANCE_PERC, null);
 
-        if(intField == null)
+        if(value == null)
             return -1;
 
-        String[] aedCounts = intField.toString().split(LIST_SEPARATOR, 2);
-        return aedCounts.length == 2 ? Integer.parseInt(aedCounts[1]) : -1;
+        String[] aedCounts = value.toString().split(LIST_SEPARATOR, 2);
+        return aedCounts.length == 2 ? Double.parseDouble(aedCounts[1]) : -1;
     }
 
     public boolean isFiltered() { return !mFilterReasons.isEmpty(); }

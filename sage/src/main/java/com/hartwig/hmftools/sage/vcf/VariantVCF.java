@@ -193,7 +193,7 @@ public class VariantVCF implements AutoCloseable
                 MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Float, MAX_READ_EDGE_DISTANCE_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL_FLAG, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_FLAG_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
