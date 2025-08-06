@@ -72,6 +72,7 @@ public class SampleVariants
 
         List<Variant> variants = new ArrayList<>();
 
+        // TODO: not personalised - remove ??
         variants.addAll(loadReferenceVariants());
 
         checkSampleDirectories(mConfig.purpleDir(), mConfig.linxDir(), mConfig.linxGermlineDir());
@@ -232,7 +233,7 @@ public class SampleVariants
                 .map(region -> new TargetRegion(region, metadata))
                 .toList();
 
-        // If there's an alt sequence (i.e. not in the ref genome) then always produce a probe to cover it.
+        // If there's an alt sequence then always produce a probe to cover it.
         boolean covered = !probeData.hasAltSequence() && probeData.regions().stream().allMatch(mPanelData::isCovered);
 
         if(covered)

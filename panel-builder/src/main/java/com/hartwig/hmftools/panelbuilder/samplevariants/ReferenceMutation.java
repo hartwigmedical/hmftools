@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
@@ -91,12 +92,12 @@ public class ReferenceMutation extends Variant
     {
         if(mAlt.isEmpty())
         {
-            ChrBaseRegion region = ChrBaseRegion.from(mPosition.Chromosome, probeRegionCenteredAt(mPosition.Position));
+            ChrBaseRegion region = probeRegionCenteredAt(mPosition.Chromosome, mPosition.Position);
             return new VariantProbeData(null, region, null, null);
         }
         else
         {
-            return buildMutationProbe(mPosition.Chromosome, mPosition.Position, mRef, mAlt, refGenome);
+            return buildMutationProbe(mPosition.Chromosome, mPosition.Position, mRef, mAlt, PROBE_LENGTH, refGenome);
         }
     }
 

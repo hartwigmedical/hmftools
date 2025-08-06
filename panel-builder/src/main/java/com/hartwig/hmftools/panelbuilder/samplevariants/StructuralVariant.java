@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.AMP;
 import static com.hartwig.hmftools.common.wisp.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.FUSION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_SV;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
@@ -170,14 +171,14 @@ public class StructuralVariant extends Variant
         {
             return buildSglProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
-                    refGenome);
+                    PROBE_LENGTH, refGenome);
         }
         else
         {
             return buildSvProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
-                    refGenome);
+                    PROBE_LENGTH, refGenome);
         }
     }
 

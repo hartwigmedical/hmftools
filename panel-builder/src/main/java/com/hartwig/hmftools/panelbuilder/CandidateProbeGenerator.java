@@ -92,9 +92,7 @@ public class CandidateProbeGenerator
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset ->
                         mProbeFactory.createProbeFromRegion(
-                                ChrBaseRegion.from(
-                                        initialPosition.Chromosome,
-                                        probeRegionCenteredAt(initialPosition.Position + offset)),
+                                probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset),
                                 metadata))
                 .flatMap(Optional::stream);
     }
@@ -107,9 +105,7 @@ public class CandidateProbeGenerator
         int maxProbeStart = probeRegionEndingAt(maxProbeEnd).start();
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
                 .mapToObj(start ->
-                        mProbeFactory.createProbeFromRegion(
-                                ChrBaseRegion.from(region.chromosome(), probeRegionStartingAt(start)),
-                                metadata))
+                        mProbeFactory.createProbeFromRegion(probeRegionStartingAt(region.chromosome(), start), metadata))
                 .flatMap(Optional::stream);
     }
 }

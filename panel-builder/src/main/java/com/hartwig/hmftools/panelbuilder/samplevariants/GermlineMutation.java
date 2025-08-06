@@ -2,6 +2,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.ArrayList;
@@ -75,7 +76,7 @@ public class GermlineMutation extends Variant
     @Override
     public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
-        return buildMutationProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), refGenome);
+        return buildMutationProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), PROBE_LENGTH, refGenome);
     }
 
     @Override

@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 //   - 1 probe at the start of J regions
 public class Cdr3Regions
 {
-    // TODO: confirm constraints
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             CDR3_QUALITY_MIN, GENERAL_GC_TARGET, GENERAL_GC_TOLERANCE);
 
@@ -101,11 +100,11 @@ public class Cdr3Regions
         boolean jReverse = gene.region() == IgTcrRegion.J_REGION && gene.geneStrand() == Strand.REVERSE;
         if(vForward || jReverse)
         {
-            return ChrBaseRegion.from(anchor.chromosome(), probeRegionEndingAt(anchor.end()));
+            return probeRegionEndingAt(anchor.chromosome(), anchor.end());
         }
         else
         {
-            return ChrBaseRegion.from(anchor.chromosome(), probeRegionStartingAt(anchor.start()));
+            return probeRegionStartingAt(anchor.chromosome(), anchor.start());
         }
     }
 

@@ -122,6 +122,11 @@ public class RegionUtils
         return region;
     }
 
+    public static ChrBaseRegion regionStartingAt(final String chromosome, int startPosition, int length)
+    {
+        return ChrBaseRegion.from(chromosome, regionStartingAt(startPosition, length));
+    }
+
     public static int regionCentreStartOffset(int length)
     {
         return -(length / 2) + (1 - length % 2);
@@ -147,6 +152,11 @@ public class RegionUtils
         }
         BaseRegion region = new BaseRegion(endPosition - length + 1, endPosition);
         return region;
+    }
+
+    public static ChrBaseRegion regionEndingAt(final String chromosome, int endPosition, int length)
+    {
+        return ChrBaseRegion.from(chromosome, regionEndingAt(endPosition, length));
     }
 
     public static Optional<BaseRegion> regionIntersection(final BaseRegion region1, final BaseRegion region2)

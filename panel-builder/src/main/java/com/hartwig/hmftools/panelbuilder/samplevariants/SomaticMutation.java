@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INDEL;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
@@ -164,7 +165,8 @@ public class SomaticMutation extends Variant
     public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
     {
         return buildMutationProbe(
-                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(), refGenome);
+                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
+                PROBE_LENGTH, refGenome);
     }
 
     private double subclonalLikelihood()

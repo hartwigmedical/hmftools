@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_SV;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
 import java.io.IOException;
@@ -82,7 +83,7 @@ public class GermlineSv extends Variant
         return buildSvProbe(
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence,
-                refGenome);
+                PROBE_LENGTH, refGenome);
     }
 
     @Override

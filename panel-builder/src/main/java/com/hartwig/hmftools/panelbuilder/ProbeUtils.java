@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 // Miscellaneous probe maths and utilities.
 public class ProbeUtils
@@ -15,14 +16,29 @@ public class ProbeUtils
         return regionStartingAt(startPosition, PROBE_LENGTH);
     }
 
+    public static ChrBaseRegion probeRegionStartingAt(final String chromosome, int startPosition)
+    {
+        return ChrBaseRegion.from(chromosome, probeRegionStartingAt(startPosition));
+    }
+
     public static BaseRegion probeRegionCenteredAt(int centrePosition)
     {
         return regionCenteredAt(centrePosition, PROBE_LENGTH);
     }
 
+    public static ChrBaseRegion probeRegionCenteredAt(final String chromosome, int centrePosition)
+    {
+        return ChrBaseRegion.from(chromosome, regionCenteredAt(centrePosition, PROBE_LENGTH));
+    }
+
     public static BaseRegion probeRegionEndingAt(int endPosition)
     {
         return regionEndingAt(endPosition, PROBE_LENGTH);
+    }
+
+    public static ChrBaseRegion probeRegionEndingAt(final String chromosome, int endPosition)
+    {
+        return ChrBaseRegion.from(chromosome, probeRegionEndingAt(endPosition));
     }
 
     // Calculates the minimum probe starting position such that the specified position is contained within the probe.
