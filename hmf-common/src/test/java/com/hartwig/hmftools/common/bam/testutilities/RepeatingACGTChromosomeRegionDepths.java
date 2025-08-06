@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.bam.testutilities;
 
 import htsjdk.samtools.SAMFileWriter;
 
-public class RandomBasesChromosomeRegionDepths extends ChromosomeRegionDepths
+public class RepeatingACGTChromosomeRegionDepths extends ChromosomeRegionDepths
 {
-    public RandomBasesChromosomeRegionDepths(final int mChromosome)
+    public RepeatingACGTChromosomeRegionDepths(final int mChromosome)
     {
         super(mChromosome);
     }
@@ -12,6 +12,6 @@ public class RandomBasesChromosomeRegionDepths extends ChromosomeRegionDepths
     @Override
     public void writeEntriesForRange(final RegionDepth range, final SAMFileWriter bamWriter)
     {
-        range.length100ReadsBamRegionWriter().writeEntries(bamWriter, ChromosomeWindow::toRandomBasesRegion);
+        range.length100ReadsBamRegionWriter().writeEntries(bamWriter, ChromosomeWindow::toACGTBasesRegion);
     }
 }

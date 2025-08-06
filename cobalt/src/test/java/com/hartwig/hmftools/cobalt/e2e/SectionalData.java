@@ -59,7 +59,7 @@ interface ChromosomeSection
     default List<String> lines()
     {
         int interval = stop() - start();
-        Preconditions.checkArgument(interval > 0);
+//        Preconditions.checkArgument(interval > 0);
         Preconditions.checkArgument(interval % 1000 == 0);
 
         int steps = (interval / 1000) + 1;

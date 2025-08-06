@@ -9,7 +9,7 @@ public record PanelFileSection(HumanChromosome chromosome, int start, int stop, 
     @Override
     public String line(final int position)
     {
-        return format("chr%s\t%d\t%.4f", chromosome().toString(),position, 1.0001);
+        return format("chr%s\t%d\t%.4f", chromosome().toString(),position, relativeEnrichment);
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 public record ChromosomeWindow(int chromosome, int start, int end)
 {
@@ -18,10 +19,24 @@ public record ChromosomeWindow(int chromosome, int start, int end)
         return "chr" + (chromosome + 1);
     }
 
+    public Pair<BaseRegion,BaseRegion> toACGTBasesRegion()
+    {
+        int length = end - start;
+        int quadCount = length / 4;
+        byte[] bases = "ACGT".repeat(Math.max(0, quadCount)).getBytes();
+        return buildPairFromBases(bases);
+    }
+
     public Pair<BaseRegion,BaseRegion> toRandomBasesRegion()
     {
         int length = end - start;
         byte[] bases = MockRefGenome.generateRandomBases(length).getBytes();
+        return buildPairFromBases(bases);
+    }
+
+    @NotNull
+    private ImmutablePair<BaseRegion, BaseRegion> buildPairFromBases(final byte[] bases)
+    {
         BaseRegion left = new BaseRegion(chromosome, start, end, bases);
         int mateStart = end;
         int mateStop = mateStart + (end - start);
