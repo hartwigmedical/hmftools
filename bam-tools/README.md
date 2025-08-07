@@ -56,6 +56,31 @@ exclude_zero_coverage | Exclude regions of zero coverage from overall statistics
 driver_gene_panel | Path to driver gene panel
 ensembl_data_dir | Path to Ensembl data cache
 
+### Gene Panel Coverage
+To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample.  Note that only reads with MapQ > 10 are included in the coverage calculations.
+
+The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
+
+For a sample with approximately 30x depth this may appear as: 
+
+```
+gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
+BRCA1	0	0	0	...	23	54	116	1854	2834	875	5	0	0	0	0
+ERBB2	0	0	0	...	106	154	203	2315	832	83	0	0	0	0	0
+TP53	0	0	0	...	31	41	59	636	192	35	0	0	0	0	0
+```
+
+While a 100x depth sample might appear something more like:
+
+```
+gene	0	1	2	...	27	28	29	30-39	40-49	50-59	60-69	70-79	80-89	90-99	100+
+BRCA1	0	0	0	...	0	0	0	0	0	0	0	8	390	1700	3672
+ERBB2	0	0	0	...	0	0	0	0	0	18	257	590	1311	1111	611
+TP53	0	0	0	...	0	0	0	0	0	0	0	90	423	343	376
+```
+
+A 'missed variant likelihood' is calculated using poisson as the mean probability of not finding at least 3 reads coverage for an allele given the depth distribution over the whole gene.
+
 
 ## RegionSlicer
 Slice a BAM across 1 or more regions, and gather any remote mate and supplementary reads linked to those regions
