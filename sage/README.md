@@ -513,13 +513,13 @@ max_map_qual_ref_alt_difference| 15                  | 15                  | 15 
 maxEdgeDistance<sup>6</sup> | 0.001               | 0.001               | 0.001               | 0.001               | Derived from `MED` and `AD`
 fragmentStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | SBLikelihood<sup>4</sup>
 readStrandBias| 0.0                 | 0.0005              | 0.0005              | 0.0005              | RSBLikelihood<sup>4</sup>
-minAvgBaseQual<sup>8</sup>| 18                  | 25                  | 25                  | 25                  |`ABQ`
+minAvgBaseQual<sup>8</sup>| 18                  | 25                  | 25                  | 25                  |`RABQ`
 minFragmentCoords<sup>8</sup>| AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | AD>4: 3<br/>AD>2: 2 | Num distinct start/end fragment coordinates
 minStrongSupport| 2                   | 3                   | 3                   | 3                   | `RC_CNT[0+1+3]`
 maxRealignedPercentage | 70%                 | 70%                 | 70%                 | 70%                 | `RC_CNT[3]` / `RC_CNT[0+1+2+3]`
-jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` and `LENGTHENED`
+jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` and `LENGTHENED` (see Jitter determinations section for more details)
 
-1. The `TQP` is a p-score representing the chance of randomly observing the number of qual-supporting reads we did, at the quality we did.
+1. The `TQP` is a p-score representing the chance of randomly observing the number of qual-supporting reads we did, at the quality we did. It uses the binomial distribution with n=`DP`, k=`RC_CNT[0+1+2+3]`, and p=phred of `AMBQ`, floored at 15 and boosted for novel indels in HOTSPOT/PANEL regions
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
@@ -527,9 +527,9 @@ jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` 
 
 4. Likelihood =  `binomial(min(SB,1-SB)*AD,AD,0.5,TRUE)`  If 0.15<SB<0.85 or if ref is sufficiently biased, we never filter.
 
-5. Even if tumor VAF threshold is not met, we can still call a variant if p-score likelihood < 10<sup>-14</sup> (10<sup>-9</sup> in hotspots), considering the ref and alt average recalibrated base qual.
+5. Even if tumor VAF threshold is not met, we can still call a variant if p-score likelihood < 10<sup>-14</sup> (10<sup>-9</sup> in hotspots), considering the ref and alt average recalibrated base qual. This is a Binomial test with n=`DP`, k=`RC_CNT[0+1+3]` and p=phred score of `ABQ` across whole depth, with `k` scaled down if alt reads have a lower average qual than ref read, and p is boosted for novel indels in HOTSPOT/PANEL regions
 
-6. If `MED` > 33% of read length (20% for `HOTSPOT`/`PANEL`) or variant is 10+ base insert, we never filter
+6. If `MED` > 33% of read length (20% for `HOTSPOT`/`PANEL`) or variant is 10+ base insert, we never filter. Otherwise, p-score is calculated as `MED[alt]/MED[all] ^ AD`
 
 7. `MQF` is an overall site-wide map qual factor, evaulated as: `AMMQ - 25 - 2*max(AMQ[ALL]-AMQ[ALT], 0) - phred(pscore(readStrandBias)) - phred(pscore(AED)) - repeatPenalty`, where `repeatPenalty` is 3 per repeat count if the core contains a non-homopolymer repeat of at least 15 bases.
 
