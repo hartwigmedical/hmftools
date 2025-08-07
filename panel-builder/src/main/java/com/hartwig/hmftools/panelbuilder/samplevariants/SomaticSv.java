@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.DriverEventType;
@@ -101,23 +99,6 @@ public class SomaticSv extends Variant
     }
 
     @Override
-    public String gene()
-    {
-        if(!mFusions.isEmpty())
-        {
-            return mFusions.get(0).name();
-        }
-
-        LinxBreakend breakend = mBreakends.stream().filter(LinxBreakend::reportedDisruption).findFirst().orElse(null);
-        if(breakend != null)
-        {
-            return breakend.gene();
-        }
-
-        return mBreakends.isEmpty() ? null : mBreakends.get(0).gene();
-    }
-
-    @Override
     public double copyNumber()
     {
         return max(mVariant.adjustedStartCopyNumberChange(), mVariant.adjustedEndCopyNumberChange());
@@ -191,39 +172,16 @@ public class SomaticSv extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
+    public List<ProximateLocations.Location> checkedLocations()
     {
-        if(registeredLocations.isNearRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation())
-                || registeredLocations.isNearRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()))
-        {
-            return false;
-        }
-
-        registeredLocations.addRegisteredLocation(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
-        registeredLocations.addRegisteredLocation(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
-        return true;
+        return List.of(
+                new ProximateLocations.Location(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation()),
+                new ProximateLocations.Location(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()));
     }
 
-    @Override
-    public boolean checkAndRegisterGeneLocation(Map<String, Integer> geneDisruptions)
+    public List<LinxBreakend> breakends()
     {
-        for(LinxBreakend breakend : mBreakends)
-        {
-            Integer breakendCount = geneDisruptions.get(breakend.gene());
-            if(breakendCount == null)
-            {
-                geneDisruptions.put(breakend.gene(), 1);
-            }
-            else
-            {
-                if(breakendCount >= SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
-                {
-                    return false;
-                }
-                geneDisruptions.put(breakend.gene(), breakendCount + 1);
-            }
-        }
-        return true;
+        return mBreakends;
     }
 
     public String toString()

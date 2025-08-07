@@ -105,12 +105,6 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public String gene()
-    {
-        return mVariantDecorator.variantImpact().GeneName;
-    }
-
-    @Override
     public double copyNumber()
     {
         return mVariantDecorator.adjustedCopyNumber();
@@ -194,15 +188,9 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
+    public List<ProximateLocations.Location> checkedLocations()
     {
-        if(registeredLocations.isNearRegisteredLocation(mVariantDecorator.chromosome(), mVariantDecorator.position()))
-        {
-            return false;
-        }
-
-        registeredLocations.addRegisteredLocation(mVariantDecorator.chromosome(), mVariantDecorator.position());
-        return true;
+        return List.of(new ProximateLocations.Location(mVariantDecorator.chromosome(), mVariantDecorator.position()));
     }
 
     public String toString()

@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.abs;
-import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ProximateLocations
 {
-    private final Map<String, ArrayList<Location>> mRegisteredLocations;
+    // chromosome -> position -> orientations
+    private final Map<String, Map<Integer, Set<Byte>>> mRegisteredLocations;
 
     private static final byte NO_ORIENTATION = 0;
     private static final int NEAR_DISTANCE = 50;
@@ -22,77 +21,32 @@ public class ProximateLocations
         mRegisteredLocations = new HashMap<>();
     }
 
-    public boolean isNearRegisteredLocation(final String chromosome, final int position)
+    public record Location(
+            String chromosome,
+            int position,
+            byte orientation
+    )
     {
-        return isNearRegisteredLocation(chromosome, position, NO_ORIENTATION);
+        public Location(String chromosome, int position)
+        {
+            this(chromosome, position, NO_ORIENTATION);
+        }
     }
 
-    public boolean isNearRegisteredLocation(final String chromosome, final int position, byte orientation)
+    // TODO: desired behaviour for NO_ORIENTATION?
+
+    public boolean isNearRegisteredLocation(final Location location)
     {
-        List<Location> positions = mRegisteredLocations.get(chromosome);
-
-        if(positions == null)
-        {
-            return false;
-        }
-
-        return positions.stream()
-                .anyMatch(x -> abs(x.Position - position) <= NEAR_DISTANCE && x.Orientations.contains(orientation));
+        return mRegisteredLocations.getOrDefault(location.chromosome(), emptyMap())
+                .entrySet().stream()
+                .anyMatch(entry ->
+                        abs(entry.getKey() - location.position()) <= NEAR_DISTANCE && entry.getValue().contains(location.orientation()));
     }
 
-    public void addRegisteredLocation(final String chromosome, final int position)
+    public void addRegisteredLocation(final Location location)
     {
-        addRegisteredLocation(chromosome, position, NO_ORIENTATION);
-    }
-
-    public void addRegisteredLocation(final String chromosome, final int position, byte orientation)
-    {
-        ArrayList<Location> positions = mRegisteredLocations.get(chromosome);
-
-        if(positions == null)
-        {
-            positions = new ArrayList<>();
-            positions.add(new Location(position, orientation));
-            mRegisteredLocations.put(chromosome, positions);
-            return;
-        }
-
-        int index = 0;
-        while(index < positions.size())
-        {
-            Location location = positions.get(index);
-            if(location.Position == position)
-            {
-                location.Orientations.add(orientation);
-                return;
-            }
-
-            if(location.Position > position)
-            {
-                ++index;
-            }
-
-            break;
-        }
-
-        positions.add(index, new Location(position, orientation));
-    }
-
-    private static class Location
-    {
-        public final int Position;
-        public final Set<Byte> Orientations;
-
-        public Location(int position, byte orientation)
-        {
-            Position = position;
-            Orientations = new HashSet<>();
-            Orientations.add(orientation);
-        }
-
-        public String toString()
-        {
-            return format("%d orients(%d)", Position, Orientations.size());
-        }
+        Map<Integer, Set<Byte>> positions = mRegisteredLocations.computeIfAbsent(location.chromosome(), k -> new HashMap<>());
+        Set<Byte> orientations = positions.computeIfAbsent(location.position(), k -> new HashSet<>());
+        orientations.add(location.orientation());
     }
 }

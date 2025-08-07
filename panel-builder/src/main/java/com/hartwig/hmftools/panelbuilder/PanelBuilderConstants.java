@@ -68,7 +68,7 @@ public class PanelBuilderConstants
     public static final double CUSTOM_REGION_GC_TOLERANCE = 1;
 
     // Sample variants parameters.
-    public static final int SAMPLE_PROBES = 500;
+    public static final int SAMPLE_PROBES_MAX = 500;
     public static final double SAMPLE_NONDRIVER_QUALITY_MIN = 0.1;
     public static final double SAMPLE_NONDRIVER_GC_TARGET = 0.45;
     public static final double SAMPLE_NONDRIVER_GC_TOLERANCE = 0.15;

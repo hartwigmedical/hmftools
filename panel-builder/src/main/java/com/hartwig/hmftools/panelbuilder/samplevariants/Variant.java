@@ -3,29 +3,14 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAG_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAG_COUNT_MIN_STRICT;
 
-import java.util.Map;
+import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 
-import org.jetbrains.annotations.Nullable;
-
 public abstract class Variant
 {
-    private SelectionStatus mStatus;
-
-    public Variant()
-    {
-        mStatus = SelectionStatus.NOT_SET;
-    }
-
     public abstract CategoryType categoryType();
-
-    @Nullable
-    public String gene()
-    {
-        return null;
-    }
 
     public abstract double copyNumber();
 
@@ -39,12 +24,7 @@ public abstract class Variant
 
     public abstract boolean checkFilters();
 
-    public abstract boolean checkAndRegisterLocation(ProximateLocations registeredLocations);
-
-    public boolean checkAndRegisterGeneLocation(Map<String, Integer> geneDisruptions)
-    {
-        return true;
-    }
+    public abstract List<ProximateLocations.Location> checkedLocations();
 
     public boolean passNonReportableFilters(boolean strictLimits)
     {
@@ -55,20 +35,5 @@ public abstract class Variant
     {
         int limit = strictLimits ? SAMPLE_FRAG_COUNT_MIN_STRICT : SAMPLE_FRAG_COUNT_MIN;
         return fragmentCount >= limit;
-    }
-
-    public SelectionStatus selectionStatus()
-    {
-        return mStatus;
-    }
-
-    public boolean isSelected()
-    {
-        return mStatus == SelectionStatus.SELECTED;
-    }
-
-    public void setSelectionStatus(final SelectionStatus status)
-    {
-        mStatus = status;
     }
 }

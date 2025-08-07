@@ -9,7 +9,8 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRI
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,9 +18,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.Probe;
@@ -68,8 +69,7 @@ public class SampleVariants
         variants.addAll(SomaticSv.load(mConfig.sampleId(), mConfig.purpleDir(), mConfig.linxDir()));
         variants.addAll(GermlineSv.load(mConfig.sampleId(), mConfig.linxGermlineDir()));
 
-        ArrayList<Variant> selectedVariants = new ArrayList<>();
-        ProbeGenerationResult result = generateProbes(variants, selectedVariants);
+        ProbeGenerationResult result = generateProbes(variants);
 
         mPanelData.addResult(result);
 
@@ -87,105 +87,145 @@ public class SampleVariants
         }
     }
 
-    public ProbeGenerationResult generateProbes(List<Variant> variants, ArrayList<Variant> selectedVariants)
+    private enum VariantSelectionStatus
     {
-        variants.forEach(variant -> variant.setSelectionStatus(SelectionStatus.NOT_SET));
+        SELECTED,
+        EXCLUDED,
+        FILTERED
+    }
+
+    public ProbeGenerationResult generateProbes(List<Variant> variants)
+    {
         variants.sort(new VariantComparator());
 
         ProbeGenerationResult result = new ProbeGenerationResult();
 
+        HashMap<Variant, VariantSelectionStatus> selectionStatuses = new HashMap<>();
         ProximateLocations registeredLocations = new ProximateLocations();
-        Map<String, Integer> geneDisruptions = new HashMap<>();
+        HashMap<String, Integer> geneDisruptions = new HashMap<>();
 
-        result = result.add(generateProbes(variants, selectedVariants, registeredLocations, geneDisruptions, true));
-        result = result.add(generateProbes(variants, selectedVariants, registeredLocations, geneDisruptions, false));
+        for(boolean firstPass : List.of(true, false))
+        {
+            result = result.add(generateProbes(variants, selectionStatuses, registeredLocations, geneDisruptions,
+                    SAMPLE_PROBES_MAX - result.probes().size(), firstPass));
+        }
 
         return result;
     }
 
-    private ProbeGenerationResult generateProbes(final List<Variant> variants, ArrayList<Variant> selectedVariants,
-            ProximateLocations registeredLocations, Map<String, Integer> geneDisruptions, boolean firstPass)
+    private ProbeGenerationResult generateProbes(List<Variant> variants, HashMap<Variant, VariantSelectionStatus> selectionStatuses,
+            ProximateLocations registeredLocations, HashMap<String, Integer> geneDisruptions, int maxProbes, boolean firstPass)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
 
         for(Variant variant : variants)
         {
-            if(selectedVariants.size() >= SAMPLE_PROBES)
+            if(result.probes().size() >= maxProbes)
             {
+                // Filled the probe quota.
                 break;
             }
-
-            if(variant.isSelected())
+            if(selectionStatuses.containsKey(variant) && selectionStatuses.get(variant) != VariantSelectionStatus.FILTERED)
             {
+                // Already selected or excluded.
+                continue;
+            }
+            if(!supportedVariantCategory(variant.categoryType()))
+            {
+                // This type of variant can never be selected.
+                selectionStatuses.put(variant, VariantSelectionStatus.EXCLUDED);
                 continue;
             }
 
-            boolean canSelect;
+            boolean canSelect = true;
+            boolean canExclude = true;
 
-            if(supportedVariantCategory(variant.categoryType()))
+            if(variant.checkFilters())
             {
-                if(variant.checkFilters())
+                if(firstPass)
                 {
-                    if(firstPass)
+                    if(!geneDisruptionCheck(variant, geneDisruptions))
                     {
-                        if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
-                        {
-                            variant.setSelectionStatus(SelectionStatus.GENE_LOCATIONS);
-                            canSelect = false;
-                        }
-                        else if(!variant.passNonReportableFilters(true))
-                        {
-                            // This will be checked again on the second pass.
-                            variant.setSelectionStatus(SelectionStatus.FILTERED);
-                            canSelect = false;
-                        }
-                        else
-                        {
-                            canSelect = true;
-                        }
+                        canSelect = false;
                     }
-                    else
+                    else if(!variant.passNonReportableFilters(true))
                     {
-                        // If the variant failed the strict filters before, give it a chance to pass the relaxed filters now.
-                        // Otherwise, the variant failed other checks and it can't be selected.
-                        if(variant.selectionStatus() == SelectionStatus.FILTERED)
-                        {
-                            canSelect = variant.passNonReportableFilters(false);
-                        }
-                        else
-                        {
-                            canSelect = false;
-                        }
+                        // These filters will be checked again on the second pass.
+                        canSelect = false;
+                        canExclude = false;
                     }
                 }
                 else
                 {
-                    canSelect = true;
+                    // If the variant failed the strict filters before, give it a chance to pass the relaxed filters now.
+                    // Otherwise, the variant failed other checks and it can't be selected.
+                    canSelect = selectionStatuses.get(variant) == VariantSelectionStatus.FILTERED
+                            && variant.passNonReportableFilters(false);
                 }
-            }
-            else
-            {
-                variant.setSelectionStatus(SelectionStatus.EXCLUDED_CATEGORY);
-                canSelect = false;
             }
 
-            if(canSelect)
+            if(canSelect && checkAndRegisterLocations(variant, registeredLocations))
             {
-                if(variant.checkAndRegisterLocation(registeredLocations))
-                {
-                    result = result.add(generateProbe(variant, selectedVariants));
-                }
-                else
-                {
-                    variant.setSelectionStatus(SelectionStatus.PROXIMATE);
-                }
+                ProbeGenerationResult probeGenResult = generateProbe(variant);
+                result = result.add(probeGenResult);
+                selectionStatuses.put(variant, VariantSelectionStatus.SELECTED);
+            }
+            else if(canExclude)
+            {
+                selectionStatuses.putIfAbsent(variant, VariantSelectionStatus.EXCLUDED);
             }
         }
 
         return result;
     }
 
-    private ProbeGenerationResult generateProbe(Variant variant, ArrayList<Variant> selectedVariants)
+    private boolean geneDisruptionCheck(final Variant variant, HashMap<String, Integer> geneDisruptions)
+    {
+        if(variant instanceof SomaticSv)
+        {
+            List<String> genes = ((SomaticSv) variant).breakends().stream().map(LinxBreakend::gene).toList();
+            for(String gene : genes)
+            {
+                Integer disruptionCount = geneDisruptions.get(gene);
+                if(disruptionCount == null)
+                {
+                    geneDisruptions.put(gene, 1);
+                }
+                else
+                {
+                    if(disruptionCount >= SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
+                    {
+                        return false;
+                    }
+                    geneDisruptions.put(gene, disruptionCount + 1);
+                }
+            }
+            return true;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private boolean checkAndRegisterLocations(final Variant variant, ProximateLocations registeredLocations)
+    {
+        List<ProximateLocations.Location> locations = variant.checkedLocations();
+        for(ProximateLocations.Location location : locations)
+        {
+            if(registeredLocations.isNearRegisteredLocation(location))
+            {
+                return false;
+            }
+        }
+        for(ProximateLocations.Location location : locations)
+        {
+            registeredLocations.addRegisteredLocation(location);
+        }
+        return true;
+    }
+
+    private ProbeGenerationResult generateProbe(final Variant variant)
     {
         VariantProbeData probeData = variant.generateProbe(mRefGenome);
 
@@ -217,8 +257,6 @@ public class SampleVariants
 
             if(probe.accepted())
             {
-                selectedVariants.add(variant);
-                variant.setSelectionStatus(SelectionStatus.SELECTED);
                 return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
             }
             else

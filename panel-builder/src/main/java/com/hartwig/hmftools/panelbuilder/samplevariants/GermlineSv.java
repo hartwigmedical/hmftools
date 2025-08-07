@@ -39,12 +39,6 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public String gene()
-    {
-        return mVariant.GeneName;
-    }
-
-    @Override
     public double copyNumber()
     {
         return 0;
@@ -85,17 +79,11 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
+    public List<ProximateLocations.Location> checkedLocations()
     {
-        if(registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart)
-                || registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd))
-        {
-            return false;
-        }
-
-        registeredLocations.addRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart);
-        registeredLocations.addRegisteredLocation(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd);
-        return true;
+        return List.of(
+                new ProximateLocations.Location(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart),
+                new ProximateLocations.Location(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd));
     }
 
     public String toString()

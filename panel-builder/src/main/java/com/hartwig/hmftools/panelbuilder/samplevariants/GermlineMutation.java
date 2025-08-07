@@ -35,12 +35,6 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public String gene()
-    {
-        return mVariant.gene();
-    }
-
-    @Override
     public double copyNumber()
     {
         return mVariant.adjustedCopyNumber();
@@ -77,15 +71,9 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public boolean checkAndRegisterLocation(ProximateLocations registeredLocations)
+    public List<ProximateLocations.Location> checkedLocations()
     {
-        if(registeredLocations.isNearRegisteredLocation(mVariant.chromosome(), mVariant.position()))
-        {
-            return false;
-        }
-
-        registeredLocations.addRegisteredLocation(mVariant.chromosome(), mVariant.position());
-        return true;
+        return List.of(new ProximateLocations.Location(mVariant.chromosome(), mVariant.position()));
     }
 
     public String toString()
