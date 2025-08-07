@@ -12,21 +12,23 @@ public class BamUtilities
     {
         File refGenomeFile = new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
-        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(5_000));
+        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(6_000));
 //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
         ChromosomeRegionDepths chr1Depths = new RepeatingACGTChromosomeRegionDepths(0);
-        int regionOffset = 1_001;
-        chr1Depths.addRange(regionOffset, regionOffset + 3_000, 10);
+        int regionOffset = 1_201;
+        chr1Depths.addRange(regionOffset, regionOffset + 1_000, 10);
+        chr1Depths.addRange(regionOffset + 1000, regionOffset + 2_000, 100);
+        chr1Depths.addRange(regionOffset + 2000, regionOffset + 3_000, 50);
 //        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
 //        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
         bamRecipe.add(chr1Depths);
 
-        ChromosomeRegionDepths chrXDepths = new RepeatingACGTChromosomeRegionDepths(22);
-        regionOffset = 1_001;
-        chrXDepths.addRange(regionOffset, regionOffset + 3_000, 10);
+//        ChromosomeRegionDepths chrXDepths = new RepeatingACGTChromosomeRegionDepths(22);
+//        regionOffset = 1_001;
+//        chrXDepths.addRange(regionOffset, regionOffset + 3_000, 10);
 //        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
 //        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
-        bamRecipe.add(chrXDepths);
+//        bamRecipe.add(chrXDepths);
 
 //        ChromosomeRegionDepths chr2Depths = new GenomeBackedChromosomeRegionDepths(1, refGenomeSource);
 //        chr2Depths.addRange(regionOffset, regionOffset + 100_000, 50);

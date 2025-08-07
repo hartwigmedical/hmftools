@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cobalt.e2e;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.gc.GCProfile.MIN_MAPPABLE_PERCENTAGE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
@@ -18,9 +17,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
@@ -29,7 +26,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.Gender;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -53,6 +49,14 @@ public class ProcessBamTest
         outputDir.mkdirs();
         FileUtils.cleanDirectory(outputDir);
     }
+
+    /*
+    Things to test:
+     - sex chromosomes
+     - GC normalisation
+     - counting of reads that lie across windows
+     - gc bucket smoothing
+     */
 
     @Test
     public void singleWindow() throws Exception
@@ -132,29 +136,30 @@ public class ProcessBamTest
     }
 
     @Test
-    public void sexChromosomesFilteredOut() throws Exception
+    public void readsAreApportionedToWindows() throws Exception
     {
-        // 1 chr of length 5000
-        // 1:1001-4000 depth 100
-        setupForThreeWindowBam();
+        // 1 chr of length 6000
+        // 1:1201-2201 depth 10
+        // 1:2201-3201 depth 100
+        // 1:3201-4201 depth 50
+        sample = "three_windows_with_offset";
+        bamFile = getBam(sample);
+        regionOffset = 1_200;
 
-        // Overwrite the gc profile
-        double mappability0 = MIN_MAPPABLE_PERCENTAGE + 0.01;
-        double mappability2 = MIN_MAPPABLE_PERCENTAGE - 0.01;
-        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, mappability0));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1,
-                regionOffset + 1000, regionOffset + 1_000, MIN_MAPPABLE_PERCENTAGE));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, mappability2));
-        gcFileWriter.write(gcProfile);
+        createStandardChr1GCFile(5_000);
+        createStandardChr1PanelFile(5_000, 1.0001);
 
         runCobalt();
 
+        // window 1001-2000 has 0.8 * 10 = 8
+        // window 2001-3000 has 0.2 * 10 + 0.8 * 100 = 82
+        // window 3001-4000 has 0.2 * 100 + 0.8 * 50 = 60
+        // window 4001-5000 has 0.2 * 50 = 10
         List<CobaltRatio> ratios = ratioResults.get(_1);
-        assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
-        assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(3).tumorGCRatio(), 0.01);
+        assertEquals(8.0, ratios.get(1).tumorReadDepth(), 0.01);
+        assertEquals(82.0, ratios.get(2).tumorReadDepth(), 0.01);
+        assertEquals(60.0, ratios.get(3).tumorReadDepth(), 0.01);
+        assertEquals(10.0, ratios.get(4).tumorReadDepth(), 0.01);
     }
 
     @Test
@@ -187,15 +192,8 @@ public class ProcessBamTest
         bamFile = getBam(sample);
         regionOffset = 1_000;
 
-        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + 2_000, 0.5));
-        gcFileWriter.write(gcProfile);
-
-        panelNormalisation = new File(tempDir, "ThePanel.tsv");
-        PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 2_000, 1.00));
-        panelWriter.write(panelNormalisation);
+        createStandardChr1GCFile(2_000);
+        createStandardChr1PanelFile(2_000, 1.00);
     }
 
     private void setupForThreeWindowBam() throws IOException
@@ -206,15 +204,24 @@ public class ProcessBamTest
         bamFile = getBam(sample);
         regionOffset = 1_000;
 
-        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + 4_000, 0.5));
-        gcFileWriter.write(gcProfile);
+        createStandardChr1GCFile(4_000);
+        createStandardChr1PanelFile(4_000, 1.0001);
+    }
 
+    private void createStandardChr1PanelFile(final int length, final double relativeEnrichment) throws IOException
+    {
         panelNormalisation = new File(tempDir, "ThePanel.tsv");
         PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 4_000, 1.0001));
+        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + length, relativeEnrichment));
         panelWriter.write(panelNormalisation);
+    }
+
+    private void createStandardChr1GCFile(final int length) throws IOException
+    {
+        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
+        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + length, 0.5));
+        gcFileWriter.write(gcProfile);
     }
 
     private File getBam(String sample)
