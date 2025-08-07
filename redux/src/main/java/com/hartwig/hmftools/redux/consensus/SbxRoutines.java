@@ -321,7 +321,7 @@ public final class SbxRoutines
                     repeatStrIndex = duplexIndelBases.length() - 1;
             }
 
-            // set quals of first duplexIndelBases.length() of the repeat to zero
+            // set quals of first duplexIndelBases.length() of the repeat to SBX_DUPLEX_MISMATCH_QUAL
             int basesSeen = 0;
             for(int j = readRepeatStart; basesSeen < duplexIndelBases.length(); j++)
             {
