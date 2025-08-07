@@ -1,38 +1,17 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.BASE_MODIFICATIONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MODC_ANNOTATION;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndices;
-import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.SortedSet;
-
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
-
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
-
-public class BiomodalBaseBuilder extends NonStandardBaseBuilder
+public class BiomodalRoutines
 {
-    private final BaseBuilder mBaseBuilder;
-
-    public BiomodalBaseBuilder(final RefGenome refGenome)
+    public static BaseQualPair determineBaseAndQual(
+            final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position, final RefGenome refGenome)
     {
-        super(refGenome);
-
-        mBaseBuilder = new BaseBuilder(refGenome, null, SEQUENCING_TYPE);
+        // TODO: use logic below to implement per base
+        return null;
     }
 
+    /*
     @Override
     public void buildConsensusRead(final List<SAMRecord> reads, final ConsensusState consensusState, final boolean hasIndels)
     {
@@ -137,4 +116,5 @@ public class BiomodalBaseBuilder extends NonStandardBaseBuilder
             annotatedRead.get(readIndex).Annotations.add(MODC_ANNOTATION);
         }
     }
+    */
 }

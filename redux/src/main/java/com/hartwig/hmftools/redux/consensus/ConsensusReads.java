@@ -42,7 +42,6 @@ public class ConsensusReads
     private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
-    private final NonStandardBaseBuilder mNonStandardBaseBuilder;
 
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
@@ -53,22 +52,6 @@ public class ConsensusReads
 
         mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats, sequencingType);
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
-        mNonStandardBaseBuilder = null;
-
-        /*
-        mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
-
-        if(mNonStandardBaseBuilder == null)
-        {
-            mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats, sequencingType);
-            mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
-        }
-        else
-        {
-            mBaseBuilder = null;
-            mIndelConsensusReads = null;
-        }
-        */
 
         mConsensusStats = consensusStats;
         mValidateConsensusReads = false;
@@ -132,11 +115,7 @@ public class ConsensusReads
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
         }
 
-        if(mNonStandardBaseBuilder != null)
-        {
-            mNonStandardBaseBuilder.buildConsensusRead(readsView, consensusState, hasIndels);
-        }
-        else if(hasIndels)
+        if(hasIndels)
         {
             mIndelConsensusReads.buildIndelComponents(readsView, consensusState, templateRead);
 
@@ -190,13 +169,7 @@ public class ConsensusReads
 
     public void setChromosomeLength(int chromosomeLength)
     {
-        if(mBaseBuilder != null)
-        {
-            mBaseBuilder.setChromosomLength(chromosomeLength);
-            return;
-        }
-
-        mNonStandardBaseBuilder.setChromosomeLength(chromosomeLength);
+        mBaseBuilder.setChromosomLength(chromosomeLength);
     }
 
     private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)
