@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.position.GP;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,6 +17,20 @@ import org.junit.Test;
 public class ChrBaseRegionTest
 {
     private final ChrBaseRegion theRegion = new ChrBaseRegion("12", 1000, 2000);
+
+    @Test
+    public void containsPositionTest()
+    {
+        assertFalse(theRegion.containsPosition(new GP(999, "12")));
+        assertTrue(theRegion.containsPosition(new GP(1000, "12")));
+        assertTrue(theRegion.containsPosition(new GP(1001, "12")));
+        assertTrue(theRegion.containsPosition(new GP(1500, "12")));
+        assertTrue(theRegion.containsPosition(new GP(1999, "12")));
+        assertTrue(theRegion.containsPosition(new GP(2000, "12")));
+        assertFalse(theRegion.containsPosition(new GP(2001, "12")));
+
+        assertFalse(theRegion.containsPosition(new GP(1500, "18")));
+    }
 
     @Test
     public void splitBySingleOverlapTest()

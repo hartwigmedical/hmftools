@@ -11,7 +11,8 @@ import java.util.TreeMap;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
@@ -20,18 +21,24 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class TargetRegionsCopyNumbers
 {
+    public interface DataSupplier
+    {
+        List<TaggedRegion> targetRegions(final Chromosome chromosome);
+
+        GermlineStatus germlineStatus(final GenomePosition position);
+    }
+
     private final List<TargetRegionsCopyNumber> mCopyNumbers = new ArrayList<>();
 
     public TargetRegionsCopyNumbers(
-            final TargetRegionsData mTargetRegionsData,
-            final Map<Chromosome, List<CobaltRatio>> mCobaltData,
-            final List<PurpleCopyNumber> purpleCopyNumbers,
-            final RefGenomeVersion mRefGenomeVersion)
+            final DataSupplier dataSupplier,
+            final Map<Chromosome, List<CobaltRatio>> cobaltData,
+            final List<PurpleCopyNumber> purpleCopyNumbers)
     {
         SortedMap<CobaltRatio, List<TaggedRegion>> relevantCobaltRegions = new TreeMap<>();
-        mCobaltData.forEach((chromosome, cobaltRatios) ->
+        cobaltData.forEach((chromosome, cobaltRatios) ->
         {
-            List<TaggedRegion> targetRegions = mTargetRegionsData.targetRegions(mRefGenomeVersion.versionedChromosome(chromosome));
+            List<TaggedRegion> targetRegions = dataSupplier.targetRegions(chromosome);
             cobaltRatios.forEach(cobaltRatio ->
             {
                 List<TaggedRegion> overlappingRegions = cobaltRatio.findWindowOverlaps(targetRegions);
@@ -58,8 +65,8 @@ public class TargetRegionsCopyNumbers
                     final ChrBaseRegion region = pair.getLeft();
                     CobaltRatio restrictedRatio = cobaltRatio.realign(region.start());
                     final PurpleCopyNumber mPurpleCopyNumber = pair.getValue();
-                    TargetRegionsCopyNumber regionsCopyNumber = new TargetRegionsCopyNumber(restrictedRatio, regions, mPurpleCopyNumber);
-                    mCopyNumbers.add(regionsCopyNumber);
+                    final GermlineStatus germlineStatus = dataSupplier.germlineStatus(restrictedRatio);
+                    mCopyNumbers.add(new TargetRegionsCopyNumber(restrictedRatio, regions, mPurpleCopyNumber, germlineStatus));
                 }
             }
         });

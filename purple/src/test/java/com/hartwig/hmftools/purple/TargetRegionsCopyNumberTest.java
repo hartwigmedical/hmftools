@@ -6,6 +6,7 @@ import static org.immutables.value.internal.$guava$.collect.$ImmutableList.of;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -25,17 +26,19 @@ public class TargetRegionsCopyNumberTest extends TargetRegionsTestBase
     @Test
     public void headingsTest()
     {
-        String expected = "chromosome\twindowStart\twindowEnd\tbedRegions\tmasked\taverageDepth\twindowGCContent\twindowTumorRatio\tregionStart"
-                + "\tregionEnd\tcopyNumber\tminorAlleleCopyNumber\tdepthWindowCount\tbafCount\tGCContent\tCNMethod";
+        String expected =
+                "chromosome\twindowStart\twindowEnd\tbedRegions\tmasked\taverageDepth\twindowGCContent\twindowTumorRatio\tregionStart"
+                        + "\tregionEnd\tcopyNumber\tminorAlleleCopyNumber\tdepthWindowCount\tbafCount\tgermlineStatus\tcopyNumberMethod";
         assertEquals(expected, TargetRegionsCopyNumber.tsvFileHeader());
     }
 
     @Test
     public void tsvTest()
     {
-        CobaltRatio cobaltRatio = new CobaltRatio("chr1", 55_000_001, -1, -1, -1, 1.011111111122222, 183.845111111111, 0.551111111, 1.0122222222222);
+        CobaltRatio cobaltRatio =
+                new CobaltRatio("chr1", 55_000_001, -1, -1, -1, 1.011111111122222, 183.845111111111, 0.551111111, 1.0122222222222);
         TaggedRegion region = new TaggedRegion(cobaltRatio.chromosome(), 55_000_080, 55_000_130, "BLAH");
-        PurpleCopyNumber purpleCopyNumber= ImmutablePurpleCopyNumber.builder()
+        PurpleCopyNumber purpleCopyNumber = ImmutablePurpleCopyNumber.builder()
                 .chromosome(cobaltRatio.chromosome())
                 .start(1000)
                 .end(100_000_000)
@@ -53,9 +56,10 @@ public class TargetRegionsCopyNumberTest extends TargetRegionsTestBase
         double minorAlleleCopyNumber = purpleCopyNumber.minorAlleleCopyNumber();
         assertEquals(5.1674, minorAlleleCopyNumber, 0.00001); // see below
         String method = GERMLINE_HET2HOM_DELETION.name();
-        TargetRegionsCopyNumber trc = new TargetRegionsCopyNumber(cobaltRatio, of(region), purpleCopyNumber);
+        GermlineStatus status = GermlineStatus.HET_DELETION;
+        TargetRegionsCopyNumber trc = new TargetRegionsCopyNumber(cobaltRatio, of(region), purpleCopyNumber, status);
         final String cobaltPart = "chr1\t55000001\t55001000\tBLAH:55000080-55000130\tfalse\t183.8451\t1.0122\t0.5511";
-        final String purplePart = "\t1000\t100000000\t12.1111\t5.1674\t2\t123\t0.5502\t" + method;
-        assertEquals(cobaltPart+purplePart, trc.toTSV());
+        final String purplePart = "\t1000\t100000000\t12.1111\t5.1674\t2\t123\t" + status.name() + "\t" + method;
+        assertEquals(cobaltPart + purplePart, trc.toTSV());
     }
 }

@@ -14,10 +14,11 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
 
-public final class PurpleSegment
+public final class PurpleSegment extends ChrBaseRegion
 {
     public final String Chromosome;
     public final int PosStart;
@@ -62,6 +63,7 @@ public final class PurpleSegment
             double minorAlleleCopyNumberDeviation, double majorAlleleCopyNumberDeviation, double deviationPenalty, double eventPenalty,
             double refNormalisedCopyNumber, double tumorCopyNumber, double tumorBAF, double fittedTumorCopyNumber, double fittedBAF)
     {
+        super(chromosome, posStart, posEnd);
         Chromosome = chromosome;
         PosStart = posStart;
         PosEnd = posEnd;

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
@@ -187,6 +188,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     public boolean containsPosition(final String chromosome, int position)
     {
         return Chromosome.equals(chromosome) && positionWithin(position, start(), end());
+    }
+
+    public boolean containsPosition(final GenomePosition position)
+    {
+        return containsPosition(position.chromosome(), position.position());
     }
 
     public boolean containsRegion(final ChrBaseRegion region)

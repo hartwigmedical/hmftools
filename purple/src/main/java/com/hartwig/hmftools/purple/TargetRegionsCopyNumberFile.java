@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 public class TargetRegionsCopyNumberFile
 {
-    public static final String EXTENSION = ".purple.cn.windows.tsv";
+    public static final String EXTENSION = ".purple.copynumbertargeted.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {

@@ -9,13 +9,15 @@ import java.util.Locale;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
-public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
-                                      List<TaggedRegion> mOverlappingRegions,
-                                      PurpleCopyNumber mPurpleCopyNumber)
+public record TargetRegionsCopyNumber(CobaltRatio cobaltRatio,
+                                      List<TaggedRegion> overlappingRegions,
+                                      PurpleCopyNumber purpleCopyNumber,
+                                      GermlineStatus germlineStatus)
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
@@ -36,36 +38,36 @@ public record TargetRegionsCopyNumber(CobaltRatio mCobaltRatio,
                 .add("minorAlleleCopyNumber")
                 .add("depthWindowCount")
                 .add("bafCount")
-                .add("GCContent")
-                .add("CNMethod")
+                .add("germlineStatus")
+                .add("copyNumberMethod")
                 .toString();
     }
 
     public String toTSV()
     {
-        ChrBaseRegion cobaltRegion = mCobaltRatio.window();
+        ChrBaseRegion cobaltRegion = cobaltRatio.window();
         StringJoiner panelRegionsStringJoiner = new StringJoiner(":");
-        for(TaggedRegion region : mOverlappingRegions)
+        for(TaggedRegion region : overlappingRegions)
         {
             panelRegionsStringJoiner.add(region.formatted());
         }
-        boolean masked = mCobaltRatio.tumorGCRatio() < 0;
-        return new StringJoiner(TSV_DELIM).add(mCobaltRatio.chromosome())
+        boolean masked = cobaltRatio.tumorGCRatio() < 0;
+        return new StringJoiner(TSV_DELIM).add(cobaltRatio.chromosome())
                 .add(String.valueOf(cobaltRegion.start()))
                 .add(String.valueOf(cobaltRegion.end()))
                 .add(panelRegionsStringJoiner.toString())
                 .add(String.valueOf(masked))
-                .add(FORMAT.format(mCobaltRatio.tumorReadDepth()))
-                .add(FORMAT.format(mCobaltRatio.tumorGcContent()))
-                .add(FORMAT.format(mCobaltRatio.tumorGCRatio()))
-                .add(String.valueOf(mPurpleCopyNumber.start()))
-                .add(String.valueOf(mPurpleCopyNumber.end()))
-                .add(FORMAT.format(mPurpleCopyNumber.averageTumorCopyNumber()))
-                .add(FORMAT.format(mPurpleCopyNumber.minorAlleleCopyNumber()))
-                .add(String.valueOf(mPurpleCopyNumber.depthWindowCount()))
-                .add(String.valueOf(mPurpleCopyNumber.bafCount()))
-                .add(FORMAT.format(mPurpleCopyNumber.gcContent()))
-                .add(mPurpleCopyNumber.method().name())
+                .add(FORMAT.format(cobaltRatio.tumorReadDepth()))
+                .add(FORMAT.format(cobaltRatio.tumorGcContent()))
+                .add(FORMAT.format(cobaltRatio.tumorGCRatio()))
+                .add(String.valueOf(purpleCopyNumber.start()))
+                .add(String.valueOf(purpleCopyNumber.end()))
+                .add(FORMAT.format(purpleCopyNumber.averageTumorCopyNumber()))
+                .add(FORMAT.format(purpleCopyNumber.minorAlleleCopyNumber()))
+                .add(String.valueOf(purpleCopyNumber.depthWindowCount()))
+                .add(String.valueOf(purpleCopyNumber.bafCount()))
+                .add(germlineStatus.name())
+                .add(purpleCopyNumber.method().name())
                 .toString();
     }
 }
