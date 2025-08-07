@@ -172,7 +172,7 @@ public class SampleVariants
             }
             else if(canExclude)
             {
-                selectionStatuses.putIfAbsent(variant, VariantSelectionStatus.EXCLUDED);
+                selectionStatuses.put(variant, VariantSelectionStatus.EXCLUDED);
             }
         }
 
