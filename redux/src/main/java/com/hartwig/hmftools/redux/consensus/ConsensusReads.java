@@ -4,8 +4,10 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
@@ -165,6 +167,14 @@ public class ConsensusReads
 
         consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
+
+        if(isSbx())
+        {
+            int firstDuplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(readsView);
+
+            if(firstDuplexBaseIndex >= 0)
+                consensusRead.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
+        }
 
         if(mValidateConsensusReads)
         {

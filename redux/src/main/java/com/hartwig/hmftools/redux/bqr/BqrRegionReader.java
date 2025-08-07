@@ -335,10 +335,10 @@ public class BqrRegionReader implements CigarHandler
 
     // debug only
     private static final boolean LOG_READ_INFO = false;
-    private static final List<String> LOG_TNCS = List.of("AAA");
-    private static final List<Byte> LOG_QUAL = List.of((byte)11);
+    private static final List<String> LOG_TNCS = List.of(); // "AAA"
+    private static final List<Byte> LOG_QUAL = List.of((byte)10,(byte)40); // (byte)10, (byte)15
     private static final List<Byte> LOG_POSITIONS = List.of();
-    private static final List<ConsensusType> LOG_CONSENSUS_TYPES = List.of();
+    private static final List<ConsensusType> LOG_CONSENSUS_TYPES = List.of(SINGLE);
 
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)

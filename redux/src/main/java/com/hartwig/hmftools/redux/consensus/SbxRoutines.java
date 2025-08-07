@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -14,6 +15,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
+import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
@@ -41,6 +44,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +53,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.redux.umi.UmiType;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -478,7 +481,7 @@ public final class SbxRoutines
         if(baseCountsByQual.isEmpty()) // all reads have invalid qual
             return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
 
-        if(simplexCount > 0 && duplexCount == 0)
+        if(simplexCount > 0 && duplexCount == 0 && lowQuallReads == 0)
         {
             int[] baseCounts = baseCountsByQual.get(SIMPLEX_QUAL);
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
@@ -533,15 +536,78 @@ public final class SbxRoutines
         return maxBase;
     }
 
-    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
+    public static int findMaxDuplexBaseIndex(final List<SAMRecord> reads)
     {
         int firstDuplexBaseIndex = -1;
 
+        // simplex bases are on the 5' end of the read, so look from that end for the first duplex base
+        boolean fromStart = !reads.get(0).getReadNegativeStrandFlag();
+
+        int maxReadIndex = reads.stream().mapToInt(x -> x.getReadBases().length).max().orElse(0);
+        int index = fromStart ? 0 : maxReadIndex - 1;
+
+        while(index >= 0 && index < maxReadIndex)
+        {
+            for(SAMRecord read : reads)
+            {
+                if(index >= read.getReadBases().length)
+                    continue;
+
+                if(read.getBaseQualities()[index] != SIMPLEX_QUAL)
+                {
+                    return index;
+                }
+            }
+
+            index += fromStart ? 1 : -1;
+        }
+
+        return firstDuplexBaseIndex;
+    }
+
+    private static final int[] ADJACENT_INDICES = {-2, -1, 1, 2};
+
+    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
         // first pass map to final base quals and note duplex mismatches requiring adjacent base adjustments
         List<Integer> duplexMismatchIndices = null;
-        boolean isPosOrientRead = !record.getReadNegativeStrandFlag();
+        int readLength = record.getBaseQualities().length;
+        int lastReadIndex = readLength - 1;
 
-        for(int i = 0; i < record.getBaseQualities().length; ++i)
+        ConsensusType consensusType = extractConsensusType(record);
+        Integer firstDuplexBaseIndex = null;
+        int duplexRegionStart = -1;
+        int duplexRegionEnd = -1;
+
+        if(consensusType == NONE)
+        {
+            firstDuplexBaseIndex = findMaxDuplexBaseIndex(List.of(record));
+        }
+        else
+        {
+            firstDuplexBaseIndex = record.getIntegerAttribute(SBX_DUPLEX_READ_INDEX_TAG);
+        }
+
+        if(firstDuplexBaseIndex != null && firstDuplexBaseIndex >= 0)
+        {
+            // mark the whole read as DUAL if it has any duplex bases - downstream processes will then use the duplex base index to
+            // determine if a base is single or dual for consensus classification
+            if(consensusType == SINGLE)
+                record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, DUAL.toString());
+
+            if(record.getReadNegativeStrandFlag())
+            {
+                duplexRegionStart = 0;
+                duplexRegionEnd = firstDuplexBaseIndex;
+            }
+            else
+            {
+                duplexRegionStart = firstDuplexBaseIndex;
+                duplexRegionEnd = lastReadIndex;
+            }
+        }
+
+        for(int i = 0; i < readLength; ++i)
         {
             // values to handle and convert:
             // 93 - convert to 40
@@ -552,17 +618,7 @@ public final class SbxRoutines
 
             byte qual = record.getBaseQualities()[i];
 
-            // work out the first duplex base from the 5-prime end, which can with simplex if
-            if(isPosOrientRead && firstDuplexBaseIndex < 0 && isDuplexQual(qual))
-            {
-                firstDuplexBaseIndex = i;
-            }
-            else if(!isPosOrientRead && isDuplexQual(qual))
-            {
-                firstDuplexBaseIndex = i;
-            }
-
-            if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL)
+            if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual <= SBX_DUPLEX_MISMATCH_QUAL)
             {
                 if(duplexMismatchIndices == null)
                     duplexMismatchIndices = Lists.newArrayList();
@@ -574,10 +630,19 @@ public final class SbxRoutines
             {
                 case DUPLEX_QUAL:
                     record.getBaseQualities()[i] = SBX_DUPLEX_QUAL;
+
+                    // fix instances where consensus has set simplex in a duplex region
+                    if(duplexRegionStart >= 0 && (i < duplexRegionStart || i > duplexRegionEnd))
+                        record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;
 
                 case SIMPLEX_QUAL:
                     record.getBaseQualities()[i] = SBX_SIMPLEX_QUAL;
+
+                    // as above
+                    if(duplexRegionStart >= 0 && i >= duplexRegionStart && i <= duplexRegionEnd)
+                        record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+
                     break;
 
                 case SIMPLEX_NO_CONSENSUS_QUAL:
@@ -593,28 +658,26 @@ public final class SbxRoutines
 
         if(duplexMismatchIndices != null)
         {
-            int lastIndex = record.getBaseQualities().length - 1;
-
+            // apply duplex adjacent error logic within the duplex region
             for(Integer i : duplexMismatchIndices)
             {
-                if(i >= 1 && record.getBaseQualities()[i - 1] > SBX_DUPLEX_ADJACENT_1_QUAL)
-                    record.getBaseQualities()[i - 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
+                for(int j = 0; j < ADJACENT_INDICES.length; ++j)
+                {
+                    byte adjustQual = abs(ADJACENT_INDICES[j]) == 1 ? SBX_DUPLEX_ADJACENT_1_QUAL : SBX_DUPLEX_ADJACENT_2_QUAL;
+                    int adjustIndex = i + ADJACENT_INDICES[j];
 
-                if(i >= 2 && record.getBaseQualities()[i - 2] > SBX_DUPLEX_ADJACENT_2_QUAL)
-                    record.getBaseQualities()[i - 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
+                    if(duplexRegionStart >= 0 && (adjustIndex < duplexRegionStart || adjustIndex > duplexRegionEnd))
+                        continue;
 
-                if(i <= lastIndex - 1 && record.getBaseQualities()[i + 1] > SBX_DUPLEX_ADJACENT_1_QUAL)
-                    record.getBaseQualities()[i + 1] = SBX_DUPLEX_ADJACENT_1_QUAL;
+                    if(adjustIndex >= 0 && adjustIndex <= lastReadIndex)
+                    {
+                        byte indexQual = record.getBaseQualities()[adjustIndex];
 
-                if(i <= lastIndex - 2 && record.getBaseQualities()[i + 2] > SBX_DUPLEX_ADJACENT_2_QUAL)
-                    record.getBaseQualities()[i + 2] = SBX_DUPLEX_ADJACENT_2_QUAL;
+                        if(indexQual > adjustQual && indexQual != SBX_SIMPLEX_QUAL)
+                            record.getBaseQualities()[adjustIndex] = adjustQual;
+                    }
+                }
             }
-        }
-
-        if(firstDuplexBaseIndex >= 0)
-        {
-            record.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
-            record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, DUAL.toString());
         }
 
         if(!record.getReadUnmappedFlag())
@@ -674,6 +737,25 @@ public final class SbxRoutines
                 record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
             }
         }
+    }
+
+    // unused methods for now
+    public static int determineBaseMatchQual(int existingQual, byte newQual)
+    {
+        if(existingQual < 0)
+            return newQual;
+
+        if(existingQual == newQual)
+            return existingQual;
+
+        if(newQual == DUPLEX_QUAL || existingQual == DUPLEX_QUAL)
+            return DUPLEX_QUAL;
+
+        // ensure a mismatch duplex qual takes precedence over simple quals
+        if(newQual <= SBX_DUPLEX_MISMATCH_QUAL || existingQual <= SBX_DUPLEX_MISMATCH_QUAL)
+            return SBX_DUPLEX_MISMATCH_QUAL;
+
+        return max(existingQual, newQual);
     }
 
     private static boolean isDuplexQual(final byte qual)

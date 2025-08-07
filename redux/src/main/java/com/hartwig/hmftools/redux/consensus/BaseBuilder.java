@@ -5,8 +5,11 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 
@@ -71,7 +74,7 @@ public class BaseBuilder
         {
             // check bases at this index - work on the premise that most bases will agree
             boolean hasMismatch = false;
-            int maxQual = 0;
+            int maxQual = -1;
             byte firstBase = NO_BASE;
 
             for(int r = 0; r < readCount; ++r)

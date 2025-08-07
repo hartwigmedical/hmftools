@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.extractDuplexBaseIndex;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -186,13 +187,16 @@ public class SbxConsensusTest
         }
 
         ConsensusType consensusType = extractConsensusType(read);
-        int duplexBaseIndex = extractDuplexBaseIndex(read);
-        assertEquals(ConsensusType.DUAL, consensusType);
+        int duplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(List.of(read));
+        assertEquals(ConsensusType.NONE, consensusType);
         assertEquals(0, duplexBaseIndex);
 
         baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
         read = createSamRecord(readBases, position, baseQuals);
         read.setReadNegativeStrandFlag(true);
+        read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
+        setDupluxBaseIndex(read);
+
         SbxRoutines.finaliseRead(mRefGenome, read);
 
         consensusType = extractConsensusType(read);
@@ -209,7 +213,10 @@ public class SbxConsensusTest
         baseQuals[lastIndex - 2] = SIMPLEX_QUAL;
 
         read = createSamRecord(readBases, position, baseQuals);
+        read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
         read.setReadNegativeStrandFlag(true);
+        setDupluxBaseIndex(read);
+
         SbxRoutines.finaliseRead(mRefGenome, read);
 
         consensusType = extractConsensusType(read);
@@ -237,6 +244,14 @@ public class SbxConsensusTest
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[7]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[8]);
         assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[9]);
+    }
+
+    private static void setDupluxBaseIndex(final SAMRecord record)
+    {
+        int firstDuplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(List.of(record));
+
+        if(firstDuplexBaseIndex >= 0)
+            record.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
     }
 
     private static SAMRecord createSamRecord(final String readBases, final int position, final byte[] baseQualities)
