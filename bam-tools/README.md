@@ -13,7 +13,8 @@ Various routines to run on a BAM file:
 Captures and writes the follow metrics for a BAM file:
 - overall statistics for types of reads and coverage
 - fragment length distribution
-- coverage distribution
+- general coverage distribution
+- gene coverage and median exon depths (if driver_gene_panel and driver_gene_panel set)
 - flag stats - frequency by read flag type
 - partition read stats per 1M (default) bucket
 - targeted panel coverage if configured
@@ -52,6 +53,8 @@ map_qual_threshold | Reads below this map quality count towards MAPQ counts, def
 base_qual_threshold | Bases below this base quality count towards BASEQ count, default 10
 max_coverage | Positions with coverage above this count towards CAPPED counts, default 250
 exclude_zero_coverage | Exclude regions of zero coverage from overall statistics
+driver_gene_panel | Path to driver gene panel
+ensembl_data_dir | Path to Ensembl data cache
 
 
 ## RegionSlicer
