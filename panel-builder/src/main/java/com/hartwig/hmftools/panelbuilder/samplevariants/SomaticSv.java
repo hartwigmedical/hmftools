@@ -101,22 +101,6 @@ public class SomaticSv extends Variant
     }
 
     @Override
-    public String description()
-    {
-        if(mVariant.type() == StructuralVariantType.SGL)
-        {
-            return format("%s %s:%d:%d",
-                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
-        }
-        else
-        {
-            return format("%s %s:%d:%d - %s:%d:%d",
-                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
-        }
-    }
-
-    @Override
     public String gene()
     {
         if(!mFusions.isEmpty())
@@ -244,7 +228,19 @@ public class SomaticSv extends Variant
 
     public String toString()
     {
-        return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
+        String s;
+        if(mVariant.type() == StructuralVariantType.SGL)
+        {
+            s = format("%s %s:%d:%d", mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
+        }
+        else
+        {
+            s = format("%s %s:%d:%d - %s:%d:%d",
+                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
+        }
+
+        return format("%s %s breakends=%d, fusions=%d", s, categoryType(), mBreakends.size(), mFusions.size());
     }
 
     public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)

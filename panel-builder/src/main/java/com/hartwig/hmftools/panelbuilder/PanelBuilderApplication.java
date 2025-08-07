@@ -75,7 +75,7 @@ public class PanelBuilderApplication
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
-        SampleVariants.ExtraOutput sampleExtraOutput = generateSampleVariantProbes();
+        generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
@@ -85,10 +85,6 @@ public class PanelBuilderApplication
         if(geneExtraOutput != null)
         {
             mOutputWriter.writeGeneStats(geneExtraOutput.geneStats());
-        }
-        if(sampleExtraOutput != null)
-        {
-            mOutputWriter.writeSampleVariants(sampleExtraOutput.variants());
         }
 
         mOutputWriter.close();
@@ -154,19 +150,16 @@ public class PanelBuilderApplication
         }
     }
 
-    private SampleVariants.ExtraOutput generateSampleVariantProbes()
+    private void generateSampleVariantProbes()
     {
         if(mConfig.sampleVariants() == null)
         {
             LOGGER.info("Sample data not provided; skipping sample variants probes");
-            return null;
         }
         else
         {
-            SampleVariants.ExtraOutput extraOutput =
-                    new SampleVariants(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData).generateProbes();
+            new SampleVariants(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData).generateProbes();
             // Result is stored into mPanelData
-            return extraOutput;
         }
     }
 

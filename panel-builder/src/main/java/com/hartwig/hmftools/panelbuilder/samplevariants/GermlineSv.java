@@ -39,14 +39,6 @@ public class GermlineSv extends Variant
     }
 
     @Override
-    public String description()
-    {
-        return format("%s %s:%d:%d - %s:%d:%d",
-                mVariant.Type, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
-                mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd);
-    }
-
-    @Override
     public String gene()
     {
         return mVariant.GeneName;
@@ -108,7 +100,9 @@ public class GermlineSv extends Variant
 
     public String toString()
     {
-        return format("variant(%s) category(%s)", description(), categoryType());
+        return format("%s %s:%d:%d - %s:%d:%d %s",
+                mVariant.Type, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
+                mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, categoryType());
     }
 
     public static List<GermlineSv> load(final String sampleId, final String linxGermlineDir)

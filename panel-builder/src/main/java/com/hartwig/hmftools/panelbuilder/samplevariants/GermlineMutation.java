@@ -35,12 +35,6 @@ public class GermlineMutation extends Variant
     }
 
     @Override
-    public String description()
-    {
-        return format("%s:%s %s>%s %s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), mVariant.type());
-    }
-
-    @Override
     public String gene()
     {
         return mVariant.gene();
@@ -96,7 +90,8 @@ public class GermlineMutation extends Variant
 
     public String toString()
     {
-        return format("variant(%s) category(%s)", description(), categoryType());
+        return format("%s %s:%s %s>%s %s",
+                mVariant.type(), mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), categoryType());
     }
 
     public static List<GermlineMutation> load(final String sampleId, final String purpleDir)

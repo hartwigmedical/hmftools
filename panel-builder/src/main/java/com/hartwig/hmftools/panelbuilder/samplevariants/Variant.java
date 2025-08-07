@@ -21,8 +21,6 @@ public abstract class Variant
 
     public abstract CategoryType categoryType();
 
-    public abstract String description();
-
     @Nullable
     public String gene()
     {
@@ -33,18 +31,7 @@ public abstract class Variant
 
     public abstract double vaf();
 
-    @Nullable
-    public String otherData()
-    {
-        return null;
-    }
-
     public abstract int tumorFragments();
-
-    public boolean hasPhaseVariants()
-    {
-        return false;
-    }
 
     public abstract boolean reported();
 

@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INDEL;
@@ -106,13 +105,6 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public String description()
-    {
-        return format("%s:%s %s>%s %s", mVariantDecorator.chromosome(), mVariantDecorator.position(),
-                mVariantDecorator.ref(), mVariantDecorator.alt(), mVariantDecorator.type());
-    }
-
-    @Override
     public String gene()
     {
         return mVariantDecorator.variantImpact().GeneName;
@@ -131,25 +123,9 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public String otherData()
-    {
-        return format("Map=%.2f Repeats=%d/%d SubClonal=%.2f GermlineStatus=%s",
-                mVariantDecorator.mappability(), mVariantDecorator.repeatCount(),
-                mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0),
-                subclonalLikelihood(),
-                mVariantDecorator.context().getAttributeAsString(PURPLE_GERMLINE_INFO, ""));
-    }
-
-    @Override
     public int tumorFragments()
     {
         return mTumorDepth;
-    }
-
-    @Override
-    public boolean hasPhaseVariants()
-    {
-        return mVariantDecorator.context().hasAttribute(LOCAL_PHASE_SET);
     }
 
     @Override
@@ -231,7 +207,9 @@ public class SomaticMutation extends Variant
 
     public String toString()
     {
-        return format("variant(%s) category(%s)", description(), categoryType());
+        return format("%s %s:%s %s>%s %s",
+                mVariantDecorator.type(), mVariantDecorator.chromosome(), mVariantDecorator.position(),
+                mVariantDecorator.ref(), mVariantDecorator.alt(), categoryType());
     }
 
     public static List<SomaticMutation> load(final String sampleId, final String purpleDir)

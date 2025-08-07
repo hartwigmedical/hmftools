@@ -56,13 +56,7 @@ public class SampleVariants
         mPanelData = panelData;
     }
 
-    public record ExtraOutput(
-            List<Variant> variants
-    )
-    {
-    }
-
-    public ExtraOutput generateProbes()
+    public void generateProbes()
     {
         LOGGER.info("Generating sample variant probes");
 
@@ -80,9 +74,6 @@ public class SampleVariants
         mPanelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
-
-        // TODO: output more than just selected variants?
-        return new ExtraOutput(selectedVariants);
     }
 
     private static void checkSampleDirectories(final String purpleDir, final String linxDir, final String linxGermlineDir)
@@ -301,6 +292,6 @@ public class SampleVariants
 
     private TargetMetadata createTargetMetadata(final Variant variant)
     {
-        return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, variant.description());
+        return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, variant.toString());
     }
 }

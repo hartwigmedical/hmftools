@@ -7,14 +7,12 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANTS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
 
 import java.io.BufferedWriter;
@@ -23,12 +21,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.function.Function;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
-import com.hartwig.hmftools.panelbuilder.samplevariants.Variant;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +45,6 @@ public class OutputWriter implements AutoCloseable
     @Nullable
     private final ArrayList<Probe> mCandidateProbesBuffer;
     private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
-    private final BufferedWriter mSampleVariantsTsvWriter;
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
@@ -109,7 +104,6 @@ public class OutputWriter implements AutoCloseable
         String candidateRegionsBedFile = outputFilePath.apply(CANDIDATE_REGIONS_FILE_NAME);
         String candidateProbesTsvFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
         String geneStatsTsvFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
-        String sampleVariantsTsvFile = outputFilePath.apply(SAMPLE_VARIANTS_FILE_NAME);
 
         mPanelProbesTsvWriter = new DelimFileWriter<>(panelProbesTsvFile, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
         mPanelProbesBedWriter = createBufferedWriter(panelProbesBedFile);
@@ -136,9 +130,6 @@ public class OutputWriter implements AutoCloseable
         }
 
         mGeneStatsTsvWriter = new DelimFileWriter<>(geneStatsTsvFile, GENE_STATS_COLUMNS, OutputWriter::writeGeneStatsRow);
-
-        mSampleVariantsTsvWriter = createBufferedWriter(sampleVariantsTsvFile);
-        writeSampleVariantsHeader();
     }
 
     public void writePanelProbes(List<Probe> probes) throws IOException
@@ -346,44 +337,6 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_PROBE_COUNT, stats.probeCount());
     }
 
-    public void writeSampleVariants(final List<Variant> variants) throws IOException
-    {
-        for(Variant variant : variants)
-        {
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(variant.categoryType().toString());
-            sj.add(variant.description());
-            sj.add(String.valueOf(variant.reported()));
-            sj.add(format("%.2f", variant.copyNumber()));
-            sj.add(format("%.2f", variant.vaf()));
-            sj.add(String.valueOf(variant.tumorFragments()));
-            sj.add(String.valueOf(variant.hasPhaseVariants()));
-            sj.add(variant.gene());
-            sj.add("ALT");
-            sj.add(variant.otherData());
-            mSampleVariantsTsvWriter.write(sj.toString());
-            mSampleVariantsTsvWriter.newLine();
-        }
-    }
-
-    private void writeSampleVariantsHeader() throws IOException
-    {
-        StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj
-                .add("Category")
-                .add("Variant")
-                .add("Reported")
-                .add("CopyNumber")
-                .add("Vaf")
-                .add("TumorFrags")
-                .add("PhasedVariants")
-                .add("Gene")
-                .add("Type")
-                .add("OtherData");
-        mSampleVariantsTsvWriter.write(sj.toString());
-        mSampleVariantsTsvWriter.newLine();
-    }
-
     @Override
     public void close() throws IOException
     {
@@ -407,7 +360,5 @@ public class OutputWriter implements AutoCloseable
         }
 
         mGeneStatsTsvWriter.close();
-
-        mSampleVariantsTsvWriter.close();
     }
 }
