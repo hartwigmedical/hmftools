@@ -6,7 +6,7 @@ REDUX currently performs 3 key tasks:
 
 Feature  | Functionality | Why? 
 ---|---|---
-Unmapping | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misalgined by BWA). 
+Unmapping | Unmap reads that are aligned to a set of predefined problematic regions AND are either discordant, have long soft clipping or are in a region of extreme high depth. The reads are retained in the BAM and used by downstream tools. Supplementary reads that qualify for unmapping are deleted.<br/><br/>Overall, the problematic regions make up ~0.3% of the genome and lead to the ~3-6% of all reads being unmapped depending on genome version | There are 2 types of reads we want to unmap: <br/><br/> 1. Regions with recurrent very high depth – these are generally unmappable regions that have high discordant fragments.  Unmapping reduces false positive variant calling downstream and can drastically reduce runtime and memory usage.  ~98% of unmapped reads fall into this category  <br/> 2. Very long repeats – reads with long homopolymers or dinucleotide repeats may align randomly to arbitrary microsatellite locations based on idosyncratic sequencing errors.  Unmapping improves duplicate marking and detection of LINE insertions (which have a characteristic polyA insert which often is misaligned by BWA). 
 Duplicate marking and consensus | Mark duplicates based off fragment start and end positions and UMI (if available). Unlike many tools, supplementary reads are also deduplicated. <br/><br/> For any fragments found to be duplicates a single consensus fragment is formed and a consensus base and qual is calculated. | Amplification during library preparation or on-sequencer can cause duplicates of fragments. By marking duplicates, we avoid potential multiple counting of evidence from a single source fragment which reduces FP variant calling. <br/><br/> Forming a consensus read for every duplicated fragment ensures we choose the most likely base at each location and a representative base quality. 
 Microsatellite jitter rates | The rate of microsatellite errors is measured genome wide per {consensusType, repeatContext, repeatLength} and fit to a model. | Microsatellite jitter or stutter is a common error caused by PCR amplification and on-sequencer errors.  Some sequencing technologies have specific problems with homopolymers. The rate may be highly sample specific as it depends on the amount of and quality of the amplification process. The sample and context specific rate measured in REDUX is used to inform and improve variant calling in downstream tools 
 
@@ -49,13 +49,14 @@ ref_genome | Required | Path to reference genome files as used in alignment
 ref_genome_version | Required | V37 or V38
 form_consensus | Optional | Form a consensus read from duplicates
 unmap_regions | Optional | Regions of high depth, repeats or otherwise problematic for mapping
+unmap_mt | Optional | Unmap reads mapping to mitochondrial DNA
 bamtool | Required | Used for BAM sorting, concatenation and indexing
 threads | Optional | Number of threads, default = 1
 output_dir | Optional | If not specified will write output same directory as input BAM
 output_id | Optional | Additonal file suffix
 read_output | Optional, default = NONE | Write detailed read info to CSV, types are: ALL, DUPLICATE, NONE
 write_stats | Optional | Writes a duplicate frequency TSV file
-ref_genome_msi_file | Optional | Path to file of microsatellite sites used for sample-specific jitter, require for Sage
+ref_genome_msi_file | Optional | Path to file of microsatellite sites used for sample-specific jitter, required for Sage
 jitter_msi_only | Optional, default = false | Only runs to model sample-specific microsatellite jitter
 
 ### UMI Command
@@ -109,13 +110,25 @@ Note also that all supplementary reads with alignment score < 30 are unmapped.
 There are 2 steps in the deduplication algorithm:
 
 #### 1. Identify duplicates 
-Duplicates can be marked either with or without UMIs. If UMIs are not available, then simply mark any fragments (including any secondary & supplementary alignments) with the same fragment strand orientation and identical unclipped 5’ alignment coordinates (allowing for strand) on both reads in fragment are identified as belonging to the same duplicate group.  For non-paired reads the length of the fragment must also be identical. For paired reads, the MC (mate cigar) tag is used, where available (note BWA normally populates this but not STAR), to identify from the 1st read whether the fragment is in the same duplicate group. Where it is not available, both reads are assessed together, at the cost of higher runtime memory. If a primary read is marked as duplicate, all supplementary and secondary reads from the same fragment will also be marked duplicate. If one of the reads is unmapped then all fragments with the same start coordinates on the mappable side are placed in the same duplicate group. 
+Duplicates can be marked either with or without UMIs. If UMIs are not available, then simply mark any fragments (including any secondary & supplementary alignments) with the same fragment strand orientation and identical unclipped 5’ alignment coordinates (allowing for strand) on both reads in fragment are identified as belonging to the same duplicate group. For non-paired reads the length of the fragment must also be identical.
+
+For paired reads, the MC (mate cigar) tag is used, where available (note BWA normally populates this but not STAR), to identify from the 1st read whether the fragment is in the same duplicate group. Where it is not available, both reads are assessed together, at the cost of higher runtime memory. If a primary read is marked as duplicate, all supplementary and secondary reads from the same fragment will also be marked duplicate. If one of the reads is unmapped then all fragments with the same start coordinates on the mappable side are placed in the same duplicate group. 
 
 For each duplicate group, the fragment with the highest R1 average base qual (or highest base qual  are assessed together) is kept as primary and the remaining are marked as duplicates. If UMIs are available, then 1 duplicate group is made per UMI allowing for a small edit distance using a directional network (as described by [UMI-tools](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5340976/)).  To implement this, UMIs with the same alignment coordinates are ranked from most supported to least supported.   Starting with the 2nd highest supported distinct UMI, each UMI may be collapsed recursively into a more supported UMI group if it is within 1 edit distance of any UMI in that group.   Following this, a 2nd single level sweep is made from most supported to least supported, where any UMIs with same alignment coordinates and a configurable edit distance [3].  A 3rd single level sweep is to a default edit distance of 4 to collapse any highly imbalanced groups (ie where 1 group has more than 25x the support of another). 
 
 For DUPLEX UMIs only, duplicates with the same coordinates but opposite orientations are further collapsed into a single group and and marked as 'DUAL_STRAND’. 
 
-If run in duplex mode, the UMI pairs must match (within an edit distance of 1) between the fragments to be collapsed. If multiple UMI groups with the same coordinates may be collapsed then the group with the highest support on the forward strand is matched first to the group with the highest support on the reverse strand  
+If run in duplex mode, the UMI pairs must match (within an edit distance of 1) between the fragments to be collapsed. If multiple UMI groups with the same coordinates may be collapsed then the group with the highest support on the forward strand is matched first to the group with the highest support on the reverse strand.
+
+There are two additional categories of UMI-based duplicate collapsing that do not adhere to these strict conditions:
+1. PolyG UMI collapse - this handles scenarios where one or more duplicate fragments has its sequencing die out, leading to a poly-G tail. This results in an unmapped read and a UMI with a trailing poly-G. Therefore, allow collapsing if:
+   * each fragment to be collapsed has the same unclipped 5’ position on one read, and
+   * at least one of the fragments has the other read unmapped, and
+   * the UMIs match, excluding letters in the trailing poly-G on the unmapped read(s) which are not checked
+2. Jitter tolerance collapse - this handles scenarios where a fragment edge borders a long microsatellite repeat, such that jitter in this repeat leads to slightly different fragment coordinates across different fragment duplicates. Therefore, allow collapsing between two duplicate groups if:
+   * the consensus groups have matching UMIs, and
+   * have an exact 5’ unclipped coordinate match
+   * have a unclipped 5’ coordinate distance within 10bp of each other
 
 #### 2. Consensus fragments 
 
@@ -129,7 +142,12 @@ To construct the consensus fragment, the following logic is applied separately f
 
 In the case of DUPLEX UMIs, the logic is applied to each strand individually and then again to merge the 2 strands.   When merging strands, if the consensus base on each strand is different and one matches the ref genome then the base is set to the ref genome, otherwise the highest qual base is chosen as per above.   
 
-The ‘CR’ flag is added to the bam to record the number of reads contributing to each consensus read. The ‘UT’ tag is also used to mark the UMI group as either ‘SINGLE’ or ‘DUAL_STRAND’ 
+The ‘UT’ tag is added to the BAM to mark the UMI group as either ‘SINGLE’ or ‘DUAL_STRAND’. The ‘CR’ flag is also used to record the number of reads contributing to each consensus read. It is a series of 3 numbers and can be interpreted as follows:
+1. Number of fragments in the conesnsus group
+2. Number of fragments in the most common strand
+3. Number of distinct PCR clusters identified for the consensus group, using the following rules:
+   * A 2-fragment duplicate group with both fragments on the same run and lane and with tile difference is in {0,1,999,1000,1001} are in the same cluster
+   * For larger duplicate groups, a tile with exactly two fragments in the group, with tile distance < 2500 between each other, are in the same cluster
 
 ### Microsatellite jitter modelling
 
@@ -141,7 +159,7 @@ This process begins by considering reads that cover a given microsatellite repea
 * Each base associated with the microsatellite repeat is part of a M, I or D Cigar element
 * Any inserted bases should be multiples of the microsatellite repeat unit
 
-For each read, identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and this becomes the repeat unit count. Then for each microsatellite site,  the number of reads with repeat unit counts from ref_count-10 to ref_count+10 are determined. Then a site is considered to potentially contain an alt if any of the following are true:
+For each read, identify the insertion or deletion at the start of the microsatellite repeat which extends or contracts the repeat count, and this becomes the repeat unit count. Then for each microsatellite site, the number of reads with repeat unit counts from ref_count-10 to ref_count+10 are determined. Then a site is considered to potentially contain an alt if any of the following are true:
 * 20% or more considered reads are rejected
 * Less than 20 non-rejected reads are accumulated
 * A site has a sufficiently high AF for a non-zero repeat count change:
@@ -151,9 +169,7 @@ For each read, identify the insertion or deletion at the start of the microsatel
   * For ±4 repeat counts: AF > 15%
   * For ±5 or more repeat counts: AF > 10%
 
-At this point, the per-site data is exported to `SAMPLE.repeat.tsv.gz`. The column `realVariant` specifies whether any of the above conditions are true - if so, this site is not considered any further.
-
-Other sites are aggregated by repeat unit and repeat count (from 4-20), producing a file which is exported as `SAMPLE.ms_table.tsv.gz`. This aggregated data is then used to produce a 6-parameter model for each repeat unit describing a series of asymmetric laplace distributions, which collectively model empirical jitter frequencies for any given repeat unit + repeat count. A file containing the 6 parameters for each repeat unit is exported as `SAMPLE.jitter_params.tsv`. The parameters can be interpreted as such:
+Sites are aggregated by consensus type, repeat unit and repeat count (from 4-20), producing a file which is exported as `SAMPLE.ms_table.tsv.gz`. This aggregated data is then used to produce a 6-parameter model for each consensus type and repeat unit describing a series of asymmetric laplace distributions, which collectively model empirical jitter frequencies for any given repeat unit + repeat count. A file containing the 6 parameters for each repeat unit is exported as `SAMPLE.jitter_params.tsv`. The parameters can be interpreted as such:
 * `optimalScaleRepeat4` - represents the magnitude of jitter at repeat count = 4
 * `optimalScaleRepeat5` - represents the magnitude of jitter at repeat count = 5
 * `optimalScaleRepeat6` - represents the magnitude of jitter at repeat count = 6
@@ -232,9 +248,8 @@ NCount | Frequency of ‘N’ NT
 ### Microsatellite jitter modelling
 File Name | Details 
 ---|---
-SAMPLE_ID.repeat.tsv.gz | Frequency of each repeat count for each site 
-SAMPLE_ID.ms_table.tsv.gz | Equivalent to `SAMPLE_ID.repeat.tsv.gz` after aggregating sites by repeat unit / ref repeat count and discarding potential alt sites
-SAMPLE_ID.jitter_params.tsv  | 6-parameter model parameterisation for each repeat unit
+SAMPLE_ID.ms_table.tsv.gz | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites
+SAMPLE_ID.jitter_params.tsv  | 6-parameter model parameterisation for each consensus type and repeat unit
 
 ## Problematic regions file defintion
 
@@ -259,19 +274,14 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 ## Known Issues / Future improvements
 
 **Duplicate marking**
-- **Read length for unpaired** - Currently this is not checked, and hence we tend to over collapse duplicates, but in some scenarios it may be valuable
-- **Reads with unmapped mates** – Currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
+- **PolyG UMI collapsing** – Checking only one read could lead to over-clustering at high depth sites.
 - **Reads with mates with multiple similar local alignments** – These are currently under-clustered and lead to counting umi groups multiple times 
-- **Distinguish optical vs PCR duplicates** - Duplicates should be marked as ‘optical’ on Illumina if on the same run and lane and the tile difference is in {0,1,999,1000,1001}. For duplicate groups >2, require same tile + distance < 2500.  Investiage rules for other technologies
-- **Supplementary and Primary mixed up** - A fragment with a supplementary can be duplicated sometimes where there are the same 2 alignments for the read but the opposite alignment is marked as supplementary in each.  This leads us to fail to realise it is the same fragment
 
 **UMI matching** 
 - **Fixed UMI sets** - (eg TWIST) we don’t explicitly model, but doing so could lead to improvements.
 - **Indel UMI errors** - will cause alignments to be different and we will fail to mark as duplicates 
 - **UMI Base qual** - Not currently used, but could add value. Used in fgbio.
 - **G>T errors on 1st base on UMIs** – We have observed this frequently in TWIST data, but don’t know why. 
-- **INDELS near 5' read end** - We should add a final pass to UMI collapsing to allow for indels at the 5’ end of the read where we collapse groups with identical UMIs that match coordinates on 1 end and within 8 bases on the other end.
-- **R2 UMI sometimes is Poly G** - Sometimes R2 fails to be read by illumin sequencers and returns Poly G.  In this case we may end up with a 2nd fragment covering R1 with an unmapped R2.
 
 **Consensus Fragment**
 - **DUAL strand consensus ref preference** - For DUAL strand consensus a qual 11 ref on one strand can cause a qual 37 alt on the other to be set to consensus ref.  This may be sub-optimal.
@@ -285,6 +295,5 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 **Microsatellite jitter modelling**
 - For non-homopolymers, the empirical jitter model does not closely resemble an Asymmetric Laplace distribution for medium to large repeat counts. This mainfests as the model overstating the likelihood of 1xINS/DEL, and understating the likelihood of >=3xINS/DEL. Could change underlying model or add a wing boost
 - The empirical 4bp repeat / 5bp jitter data tends to be sparse and difficult to fit. To address this, we clump all 3bp/4bp/5bp microsatellite data together and fit as one microsatellite category
-- Empirical jitter is likely lower for non-SINGLE consensus fragments, as this would imply the jitter is consistent across the duplicate reads used to source the fragment. We could anticipate this by splitting parameterisation by consensus type
 
  ## Version History and Download Links
