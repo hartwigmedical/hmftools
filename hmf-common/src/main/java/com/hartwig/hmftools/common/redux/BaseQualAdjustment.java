@@ -4,8 +4,10 @@ import static java.lang.Math.log10;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 
 public class BaseQualAdjustment
 {
@@ -52,11 +54,12 @@ public class BaseQualAdjustment
 
     public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
     {
-        if(sequencingType == SequencingType.SBX)
-            return SbxBamUtils.isMediumBaseQual(qual);
+        if(sequencingType == SequencingType.ILLUMINA)
+            return IlluminaBamUtils.isHighBaseQual(qual);
+        else if(sequencingType == SequencingType.SBX)
+            return SbxBamUtils.isHighBaseQual(qual);
         else
-            return false;
-
+            return UltimaBamUtils.isHighBaseQual(qual);
     }
 
     public static boolean isMediumBaseQual(final byte qual, final SequencingType sequencingType)

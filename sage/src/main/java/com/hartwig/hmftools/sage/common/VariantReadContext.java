@@ -114,6 +114,7 @@ public class VariantReadContext
     public String rightFlankStr() { return new String(ReadBases, CoreIndexEnd + 1, rightFlankLength()); }
 
     public String readBases() { return new String(ReadBases); }
+    public byte[] readBasesBytes() { return ReadBases; }
     public String refBases() { return new String(RefBases); }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }

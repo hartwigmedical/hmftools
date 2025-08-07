@@ -145,6 +145,14 @@ public class SageConstants
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
 
+    // SBX
+
+    // ULTIMA
+    public static final byte ULTIMA_MAX_QUAL_TP = 40;
+    public static final byte ULTIMA_TP_0_BOOST = 5;
+    public static final byte ULTIMA_MAX_QUAL_T0 = 40;
+    public static final byte ULTIMA_BOOSTED_QUAL = 35;
+
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 

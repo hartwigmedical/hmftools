@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.PARTIAL_CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -54,6 +55,7 @@ import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.isHighBaseQual;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.N;
@@ -113,6 +115,7 @@ public class ReadContextCounter
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
     private int mSimpleAltMatches;
+    private int mHighQualStrongSupport;
 
     private final StrandBiasData mAltFragmentStrandBias;
     private final StrandBiasData mNonAltFragmentStrandBias;
@@ -168,6 +171,7 @@ public class ReadContextCounter
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
         mSimpleAltMatches = 0;
+        mHighQualStrongSupport = 0;
 
         mJitterData = new JitterData();
 
@@ -218,6 +222,7 @@ public class ReadContextCounter
     public int refSupport() { return mCounts.Ref; }
 
     public int simpleAltMatches() { return mSimpleAltMatches; }
+    public int strongHighQualSupport() { return mHighQualStrongSupport; }
 
     public int depth() { return mCounts.Total; }
 
@@ -423,7 +428,7 @@ public class ReadContextCounter
             {
                 VariantReadSupport readSupport = matchType.toReadSupport();
 
-                registerReadSupport(record, readSupport, readVarIndex, modifiedQuality);
+                registerReadSupport(record, readSupport, readVarIndex, modifiedQuality, calcBaseQuality);
 
                 mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -468,7 +473,7 @@ public class ReadContextCounter
                 if(realignedType == EXACT || realignedType == LOW_QUAL_MISMATCHES)
                 {
                     matchType = ReadContextMatch.REALIGNED;
-                    registerReadSupport(record, REALIGNED, readVarIndex, modifiedQuality);
+                    registerReadSupport(record, REALIGNED, readVarIndex, modifiedQuality, calcBaseQuality);
 
                     mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -520,7 +525,7 @@ public class ReadContextCounter
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
 
-        registerReadSupport(record, readSupport, readVarIndex, modifiedQuality);
+        registerReadSupport(record, readSupport, readVarIndex, modifiedQuality, calcBaseQuality);
         mReadEdgeDistance.update(record, fragmentData, false);
         mFragmentLengths.processRead(record, false);
 
@@ -561,10 +566,11 @@ public class ReadContextCounter
 
     private boolean belowQualThreshold(double calcBaseQuality)
     {
-        return !mQualCache.usesMsiIndelErrorQual() && mConfig.Quality.HighDepthMode && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
+        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
     }
 
-    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, int readVarIndex, double quality)
+    private void registerReadSupport(
+            final SAMRecord record, @Nullable final VariantReadSupport support, int readVarIndex, double quality, double baseQuality)
     {
         boolean supportsAlt = false;
         boolean supportsAltStrong = false;
@@ -579,7 +585,10 @@ public class ReadContextCounter
         countConsensusType(record, readVarIndex, supportsAltStrong);
 
         mCounts.addSupport(support, 1);
-        mQualities.addSupport(support, (int) quality);
+        mQualities.addSupport(support, (int)quality);
+
+        if(supportsAltStrong && isHighBaseQual(baseQuality))
+            ++mHighQualStrongSupport;
 
         if(mFragmentLengthData != null && (support == REF || supportsAlt))
         {
