@@ -198,7 +198,7 @@ public class SomaticSv extends Variant
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
         }
 
-        return format("%s %s breakends=%d, fusions=%d", s, categoryType(), mBreakends.size(), mFusions.size());
+        return format("%s %s breakends=%d fusions=%d", s, categoryType(), mBreakends.size(), mFusions.size());
     }
 
     public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)
