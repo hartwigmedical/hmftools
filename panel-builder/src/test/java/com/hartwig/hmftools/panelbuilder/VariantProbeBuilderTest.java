@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
+import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
 
 import static org.junit.Assert.assertEquals;
 
@@ -57,6 +59,18 @@ public class VariantProbeBuilderTest
                 new ChrBaseRegion(CHR, 97, 100),
                 "CG",
                 new ChrBaseRegion(CHR, 102, 106));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testBuildSglProbe()
+    {
+        VariantProbeData actual = buildSglProbe(CHR, 101, ORIENT_FWD, "CGT", 11, mRefGenome);
+        VariantProbeData expected = new VariantProbeData(
+                "AAAAAAAACGT",
+                new ChrBaseRegion(CHR, 94, 101),
+                "CGT",
+                null);
         assertEquals(expected, actual);
     }
 
