@@ -61,8 +61,14 @@ public class QualityCalculator
         return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
     }
 
+    public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)
+    {
+        // more events are permitted for longer reads
+        return (int)round(max(0, numEvents - 1) * readLength * readMapQualEventsPenalty);
+    }
+
     public static int modifiedMapQuality(
-            final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
+            final QualityConfig config, final BasePosition position, int mapQuality, int readLength, double readEvents, boolean isImproperPair)
     {
         if(isHighlyPolymorphic(position))
         {
@@ -70,7 +76,7 @@ public class QualityCalculator
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
-        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadMapQualEventsPenalty);
+        int eventPenalty = calcEventPenalty(readEvents, readLength, config.ReadMapQualEventsPenalty);
 
         int modifiedMapQuality = mapQuality - config.FixedMapQualPenalty - improperPairPenalty - eventPenalty;
 
@@ -95,7 +101,8 @@ public class QualityCalculator
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
 
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
+        int modifiedMapQuality = modifiedMapQuality(
+                mConfig, readContextCounter.variant(), mapQuality, record.getReadBases().length, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = baseQuality;
 
@@ -239,7 +246,6 @@ public class QualityCalculator
 
         if(readContextCounter.isIndel())
         {
-
             VariantReadContext readContext = readContextCounter.readContext();
             int lowerVarIndex = readIndex - (readContext.VarIndex - readContextCounter.matcher().altIndexLower());
             int upperVarIndex = readIndex + (readContextCounter.matcher().altIndexUpper() - readContext.VarIndex);

@@ -129,7 +129,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 / DEFAULT_READ_LENGTH; // since now scaled
 
     // filters
     public static final int MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
