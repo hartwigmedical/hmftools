@@ -17,9 +17,6 @@ import com.hartwig.hmftools.common.wisp.CategoryType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-
 public class GermlineMutation extends Variant
 {
     private final GermlineVariant mVariant;
@@ -105,10 +102,6 @@ public class GermlineMutation extends Variant
     public static List<GermlineMutation> load(final String sampleId, final String purpleDir)
     {
         ArrayList<GermlineMutation> variants = new ArrayList<>();
-
-        // TODO: unused - bug?
-        CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new PassingVariantFilter());
 
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
