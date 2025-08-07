@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.purple;
 
 import static com.hartwig.hmftools.common.genome.chromosome.GermlineAberration.NONE;
+import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleGermlineSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.FAIL_NO_TUMOR;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
-import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGET_REGIONS_MAX_DELETED_GENES;
@@ -48,10 +48,10 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
-import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
@@ -65,7 +65,6 @@ import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
 import com.hartwig.hmftools.purple.plot.Charts;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.purple.segment.Segmentation;
 import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
@@ -250,7 +249,9 @@ public class PurpleApplication
             chimerismDetection.run();
 
             if(chimerismDetection.isDetected())
+            {
                 chimerismPercentage = chimerismDetection.chimerismLevel();
+            }
 
             PPL_LOGGER.info("fitting purity");
 
@@ -321,7 +322,7 @@ public class PurpleApplication
 
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
 
-        List<PurpleSegment> segments = fittedRegions.stream().map(x -> x.toSegment()).collect(Collectors.toList());
+        List<PurpleSegment> segments = fittedRegions.stream().map(ObservedRegion::toSegment).collect(Collectors.toList());
         PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), segments);
 
         GermlineDeletions germlineDeletions = null;
@@ -356,9 +357,12 @@ public class PurpleApplication
 
         List<DriverSourceData> driverSourceData = Lists.newArrayList();
 
-        if (mConfig.TargetRegionsMode)
+        if(mConfig.TargetRegionsMode)
         {
-            TargetRegionsCopyNumbers targetRegionsCopyNumbers = new TargetRegionsCopyNumbers(mReferenceData.TargetRegions, sampleData.Cobalt.Ratios, copyNumbers, mReferenceData.RefGenVersion);
+            TargetRegionsDataSource dataSource =
+                    new TargetRegionsDataSource(mReferenceData.TargetRegions, mReferenceData.RefGenVersion, segments);
+            TargetRegionsCopyNumbers targetRegionsCopyNumbers =
+                    new TargetRegionsCopyNumbers(dataSource, sampleData.Cobalt.Ratios, copyNumbers);
             List<TargetRegionsCopyNumber> copyNumberData = targetRegionsCopyNumbers.copyNumbersData();
             String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
             TargetRegionsCopyNumberFile.write(fileName, copyNumberData);

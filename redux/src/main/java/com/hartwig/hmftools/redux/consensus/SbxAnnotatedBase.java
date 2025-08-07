@@ -92,7 +92,7 @@ public class SbxAnnotatedBase
     @Override
     public String toString()
     {
-        return format("%d:$d %c@%d cigar(%s) duplexIndel(%s) deleted(%d)",
+        return format("%d:%d %c@%d cigar(%s) duplexIndel(%s) deleted(%s)",
                 ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted);
     }
 }
