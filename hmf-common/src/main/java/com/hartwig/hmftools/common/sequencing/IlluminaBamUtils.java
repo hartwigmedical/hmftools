@@ -7,6 +7,13 @@ import org.jetbrains.annotations.Nullable;
 
 public class IlluminaBamUtils
 {
+    public static final byte ILLUMINA_HIGH_BASE_QUAL = 30;
+
+    public static boolean isHighBaseQual(final byte qual)
+    {
+        return qual >= ILLUMINA_HIGH_BASE_QUAL;
+    }
+
     public record IlluminaReadNameAttributes(
             String instrumentName, int runId, String flowcellId, int flowcellLane, int tileNumber, int xCoord, int yCoord)
     {

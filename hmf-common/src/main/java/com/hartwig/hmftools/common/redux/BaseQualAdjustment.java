@@ -4,12 +4,15 @@ import static java.lang.Math.log10;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+
 public class BaseQualAdjustment
 {
     public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
-    public static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
 
-    public static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
+    private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
+    private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
 
     public static byte adjustBaseQual(final double baseQual) { return adjustBaseQual(STANDARD_BASE_QUALS, baseQual); }
 
@@ -46,4 +49,21 @@ public class BaseQualAdjustment
     }
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
+
+    public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
+    {
+        if(sequencingType == SequencingType.SBX)
+            return SbxBamUtils.isMediumBaseQual(qual);
+        else
+            return false;
+
+    }
+
+    public static boolean isMediumBaseQual(final byte qual, final SequencingType sequencingType)
+    {
+        if(sequencingType == SequencingType.SBX)
+            return SbxBamUtils.isMediumBaseQual(qual);
+        else
+            return false;
+    }
 }

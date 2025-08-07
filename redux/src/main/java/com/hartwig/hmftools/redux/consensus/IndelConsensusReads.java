@@ -2,16 +2,12 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.determineBaseMatchQual;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
@@ -22,8 +18,6 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

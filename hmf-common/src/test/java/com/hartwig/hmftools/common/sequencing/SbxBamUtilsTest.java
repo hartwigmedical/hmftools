@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.sequencing;
 
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 
 import static org.junit.Assert.assertEquals;

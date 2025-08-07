@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
 import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -36,6 +37,8 @@ import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.consensus.SbxRoutines;
+import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
 import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
@@ -210,24 +213,29 @@ public class PartitionReader
 
     private void postProcessSingleReads(final List<ReadInfo> singleReads)
     {
-        if(isSbx())
-        {
-            for(ReadInfo readInfo : singleReads)
-            {
-                finaliseRead(mConfig.RefGenome, readInfo.read());
-            }
-        }
+        singleReads.forEach(x -> finaliseRead(x.read()));
     }
 
     private void postProcessPrimaryRead(final DuplicateGroup duplicateGroup)
     {
+        if(duplicateGroup.consensusRead() != null)
+            finaliseRead(duplicateGroup.consensusRead());
+        else if(duplicateGroup.primaryRead() != null)
+            finaliseRead(duplicateGroup.primaryRead());
+    }
+
+    private void finaliseRead(final SAMRecord record)
+    {
+        // TODO: make an interface for seq-tech routines
         if(isSbx())
         {
-            if(duplicateGroup.consensusRead() != null)
-                finaliseRead(mConfig.RefGenome, duplicateGroup.consensusRead());
-            else if(duplicateGroup.primaryRead() != null)
-                finaliseRead(mConfig.RefGenome, duplicateGroup.primaryRead());
+            SbxRoutines.finaliseRead(mConfig.RefGenome, record);
         }
+        else if(isUltima())
+        {
+            UltimaRoutines.finaliseRead(mConfig.RefGenome, record);
+        }
+
     }
 
     private void processSamRecord(final SAMRecord read)

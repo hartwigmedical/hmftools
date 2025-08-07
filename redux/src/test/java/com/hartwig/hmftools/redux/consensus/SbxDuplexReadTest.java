@@ -4,13 +4,13 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_P
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.getAnnotatedBases;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedBases;
@@ -44,7 +44,7 @@ import htsjdk.samtools.SAMRecord;
 public class SbxDuplexReadTest
 {
     private static final String MISMATCH_QUAL = String.valueOf(phredToFastq(SBX_DUPLEX_MISMATCH_QUAL));
-    private static final String NON_ZERO_QUAL = String.valueOf(phredToFastq(DUPLEX_QUAL));
+    private static final String NON_ZERO_QUAL = String.valueOf(phredToFastq(RAW_DUPLEX_QUAL));
 
     @Test
     public void testGetAnnotatedBasesSimple()
@@ -351,7 +351,7 @@ public class SbxDuplexReadTest
     }
 
     // UNCLEAR of the value of these tests
-    private static final String DUPLEX_QUAL_STR = String.valueOf(phredToFastq(DUPLEX_QUAL));
+    private static final String DUPLEX_QUAL_STR = String.valueOf(phredToFastq(RAW_DUPLEX_QUAL));
 
     @Test
     public void testSoftclipLeft()

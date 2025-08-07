@@ -1,25 +1,16 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.SAMRecord;

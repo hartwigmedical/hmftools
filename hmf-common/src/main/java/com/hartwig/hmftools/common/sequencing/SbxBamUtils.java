@@ -10,21 +10,36 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxBamUtils
 {
-    public static final byte DUPLEX_QUAL = 93;
-    public static final byte SIMPLEX_QUAL = 18;
+    public static final byte RAW_DUPLEX_QUAL = 93;
+    public static final byte RAW_SIMPLEX_QUAL = 18;
+
+    // values assigned by Redux, used in BQR and all downstream tools
+    public static final byte SBX_SIMPLEX_QUAL = 27;
+    public static final byte SBX_DUPLEX_QUAL = 40;
+    public static final byte SBX_DUPLEX_MISMATCH_QUAL = 1;
+    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL = 10;
+    public static final byte SBX_DUPLEX_ADJACENT_2_QUAL = 15;
+
+    private static final byte SBX_MEDIUM_QUAL_LOWER = SBX_SIMPLEX_QUAL;
+    private static final byte SBX_MEDIUM_QUAL_UPPER = 29;
 
     public static final String SBX_YC_TAG = "YC";
     public static final String SBX_DUPLEX_READ_INDEX_TAG = "YX";
+
+    public static boolean isHighBaseQual(final byte qual)
+    {
+        return qual > SBX_MEDIUM_QUAL_UPPER;
+    }
+
+    public static boolean isMediumBaseQual(final byte qual)
+    {
+        return qual >= SBX_MEDIUM_QUAL_LOWER && qual <= SBX_MEDIUM_QUAL_UPPER;
+    }
 
     public static int extractDuplexBaseIndex(final SAMRecord record)
     {
         Integer baseIndex = record.getIntegerAttribute(SBX_DUPLEX_READ_INDEX_TAG);
         return baseIndex != null ? baseIndex : -1;
-    }
-
-    public static boolean inDuplexRegion(final SAMRecord record, int duplexBaseIndex, int baseIndex)
-    {
-        return inDuplexRegion(!record.getReadNegativeStrandFlag(), duplexBaseIndex, baseIndex);
     }
 
     public static boolean inDuplexRegion(final boolean posOrientationRead, int duplexBaseIndex, int baseIndex)

@@ -26,6 +26,11 @@ public final class UltimaBamUtils
 
     private static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
 
+    public static boolean isHighBaseQual(final byte qual)
+    {
+        return qual >= ULTIMA_MAX_QUAL;
+    }
+
     public static byte[] extractTpValues(final SAMRecord record)
     {
         return record.getByteArrayAttribute(ULTIMA_TP_TAG);

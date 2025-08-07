@@ -24,18 +24,18 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusTyp
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_1_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_2_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
@@ -44,7 +44,6 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -446,11 +445,11 @@ public final class SbxRoutines
         {
             byte qual = locationQuals[i];
 
-            if(qual == SIMPLEX_QUAL)
+            if(qual == RAW_SIMPLEX_QUAL)
             {
                 ++simplexCount;
             }
-            else if(qual == DUPLEX_QUAL)
+            else if(qual == RAW_DUPLEX_QUAL)
             {
                 ++duplexCount;
             }
@@ -483,24 +482,24 @@ public final class SbxRoutines
 
         if(simplexCount > 0 && duplexCount == 0 && lowQuallReads == 0)
         {
-            int[] baseCounts = baseCountsByQual.get(SIMPLEX_QUAL);
+            int[] baseCounts = baseCountsByQual.get(RAW_SIMPLEX_QUAL);
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
             if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
-                return new BaseQualPair(maxBase, SIMPLEX_QUAL);
+                return new BaseQualPair(maxBase, RAW_SIMPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, SIMPLEX_NO_CONSENSUS_QUAL);
         }
 
         if(duplexCount > 0)
         {
-            int[] baseCounts = baseCountsByQual.get(DUPLEX_QUAL);
+            int[] baseCounts = baseCountsByQual.get(RAW_DUPLEX_QUAL);
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
             if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQuallReads))
-                return new BaseQualPair(maxBase, DUPLEX_QUAL);
+                return new BaseQualPair(maxBase, RAW_DUPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, DUPLEX_NO_CONSENSUS_QUAL);
         }
@@ -553,7 +552,7 @@ public final class SbxRoutines
                 if(index >= read.getReadBases().length)
                     continue;
 
-                if(read.getBaseQualities()[index] != SIMPLEX_QUAL)
+                if(read.getBaseQualities()[index] != RAW_SIMPLEX_QUAL)
                 {
                     return index;
                 }
@@ -628,7 +627,7 @@ public final class SbxRoutines
 
             switch(qual)
             {
-                case DUPLEX_QUAL:
+                case RAW_DUPLEX_QUAL:
                     record.getBaseQualities()[i] = SBX_DUPLEX_QUAL;
 
                     // fix instances where consensus has set simplex in a duplex region
@@ -636,7 +635,7 @@ public final class SbxRoutines
                         record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;
 
-                case SIMPLEX_QUAL:
+                case RAW_SIMPLEX_QUAL:
                     record.getBaseQualities()[i] = SBX_SIMPLEX_QUAL;
 
                     // as above
@@ -748,8 +747,8 @@ public final class SbxRoutines
         if(existingQual == newQual)
             return existingQual;
 
-        if(newQual == DUPLEX_QUAL || existingQual == DUPLEX_QUAL)
-            return DUPLEX_QUAL;
+        if(newQual == RAW_DUPLEX_QUAL || existingQual == RAW_DUPLEX_QUAL)
+            return RAW_DUPLEX_QUAL;
 
         // ensure a mismatch duplex qual takes precedence over simple quals
         if(newQual <= SBX_DUPLEX_MISMATCH_QUAL || existingQual <= SBX_DUPLEX_MISMATCH_QUAL)
@@ -760,11 +759,11 @@ public final class SbxRoutines
 
     private static boolean isDuplexQual(final byte qual)
     {
-        return qual == DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL;
+        return qual == RAW_DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL;
     }
 
     private static boolean isSimplexQual(final byte qual)
     {
-        return qual == SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL;
+        return qual == RAW_SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL;
     }
 }

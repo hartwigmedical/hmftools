@@ -4,16 +4,16 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SIMPLEX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.extractDuplexBaseIndex;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_1_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_ADJACENT_2_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_MISMATCH_QUAL;
-import static com.hartwig.hmftools.redux.ReduxConstants.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
@@ -60,16 +60,16 @@ public class SbxConsensusTest
         String refBases = REF_BASES.substring(position, 11);
 
         // reads have a single disagreeing base but find > 50% in agreement
-        byte[] baseQuals = buildBaseQuals(refBases.length(), SIMPLEX_QUAL);
+        byte[] baseQuals = buildBaseQuals(refBases.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read1 = createSamRecord(refBases, position, baseQuals);
         reads.add(read1);
 
         String readBases = "T" + refBases.substring(1);
-        baseQuals = buildBaseQuals(readBases.length(), SIMPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read2 = createSamRecord(readBases, position, baseQuals);
         reads.add(read2);
 
-        baseQuals = buildBaseQuals(readBases.length(), SIMPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read3 = createSamRecord(readBases, position, baseQuals);
         reads.add(read3);
 
@@ -80,7 +80,7 @@ public class SbxConsensusTest
 
         for(int i = 0; i < readInfo.ConsensusRead.getBaseQualities().length; ++i)
         {
-            assertEquals(SIMPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[i]);
+            assertEquals(RAW_SIMPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[i]);
         }
 
         assertEquals(position, readInfo.ConsensusRead.getAlignmentStart());
@@ -107,15 +107,15 @@ public class SbxConsensusTest
         String readBases = "T" + refBases.substring(1);
 
         // reads all agree
-        byte[] baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        byte[] baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         SAMRecord read1 = createSamRecord(readBases, position, baseQuals);
         reads.add(read1);
 
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         SAMRecord read2 = createSamRecord(readBases, position, baseQuals);
         reads.add(read2);
 
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         SAMRecord read3 = createSamRecord(readBases, position, baseQuals);
         reads.add(read3);
 
@@ -125,7 +125,7 @@ public class SbxConsensusTest
 
         for(int i = 0; i < readInfo.ConsensusRead.getBaseQualities().length; ++i)
         {
-            assertEquals(DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[i]);
+            assertEquals(RAW_DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[i]);
         }
 
         assertEquals(position, readInfo.ConsensusRead.getAlignmentStart());
@@ -138,10 +138,10 @@ public class SbxConsensusTest
 
         readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(readBases, readInfo.ConsensusRead.getReadString());
-        assertEquals(DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
+        assertEquals(RAW_DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
 
         // test that low qual reads are considered for the required percentage but not consensus itself
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         baseQuals[0] = SBX_DUPLEX_MISMATCH_QUAL;
         SAMRecord read4 = createSamRecord(readBases, position, baseQuals);
         reads.add(read4);
@@ -151,7 +151,7 @@ public class SbxConsensusTest
         assertEquals(DUPLEX_NO_CONSENSUS_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
 
         // a simplex read is not enough for consensus again
-        baseQuals = buildBaseQuals(readBases.length(), SIMPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read5 = createSamRecord(readBases, position, baseQuals);
         reads.add(read5);
 
@@ -159,13 +159,13 @@ public class SbxConsensusTest
         assertEquals(refBases, readInfo.ConsensusRead.getReadString());
         assertEquals(DUPLEX_NO_CONSENSUS_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
 
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         SAMRecord read6 = createSamRecord(readBases, position, baseQuals);
         reads.add(read6);
 
         readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(readBases, readInfo.ConsensusRead.getReadString());
-        assertEquals(DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
+        assertEquals(RAW_DUPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class SbxConsensusTest
 
         String readBases = "T" + refBases.substring(1);
 
-        byte[] baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        byte[] baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         SAMRecord read = createSamRecord(readBases, position, baseQuals);
 
         SbxRoutines.finaliseRead(mRefGenome, read);
@@ -191,7 +191,7 @@ public class SbxConsensusTest
         assertEquals(ConsensusType.NONE, consensusType);
         assertEquals(0, duplexBaseIndex);
 
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
         read = createSamRecord(readBases, position, baseQuals);
         read.setReadNegativeStrandFlag(true);
         read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
@@ -205,12 +205,12 @@ public class SbxConsensusTest
         assertEquals(9, duplexBaseIndex);
 
         // mark the transition point mid-way through the read
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
 
         int lastIndex = readBases.length() - 1;
-        baseQuals[lastIndex] = SIMPLEX_QUAL;
-        baseQuals[lastIndex - 1] = SIMPLEX_QUAL;
-        baseQuals[lastIndex - 2] = SIMPLEX_QUAL;
+        baseQuals[lastIndex] = RAW_SIMPLEX_QUAL;
+        baseQuals[lastIndex - 1] = RAW_SIMPLEX_QUAL;
+        baseQuals[lastIndex - 2] = RAW_SIMPLEX_QUAL;
 
         read = createSamRecord(readBases, position, baseQuals);
         read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
@@ -225,7 +225,7 @@ public class SbxConsensusTest
         assertEquals(6, duplexBaseIndex);
 
         // test duplex mismatch bases
-        baseQuals = buildBaseQuals(readBases.length(), DUPLEX_QUAL);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
 
         baseQuals[3] = SBX_DUPLEX_MISMATCH_QUAL;
         baseQuals[7] = SBX_DUPLEX_MISMATCH_QUAL;

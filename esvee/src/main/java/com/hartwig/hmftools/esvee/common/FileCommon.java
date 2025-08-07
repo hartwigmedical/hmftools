@@ -95,7 +95,7 @@ public final class FileCommon
             SvConstants.Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
             if(SvConstants.Sequencing == SBX)
-                LOW_BASE_QUAL_THRESHOLD = SbxBamUtils.SIMPLEX_QUAL;
+                LOW_BASE_QUAL_THRESHOLD = SbxBamUtils.RAW_SIMPLEX_QUAL;
         }
     }
 

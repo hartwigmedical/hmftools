@@ -1,38 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.DUPLEX_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
-import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.getAnnotatedBases;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedBases;
-
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.test.MockRefGenome;
-
-import org.junit.Test;
-
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
 
 public class SbxRoutinesTest
 {

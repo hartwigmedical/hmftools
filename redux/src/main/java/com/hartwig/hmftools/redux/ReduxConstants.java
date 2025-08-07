@@ -25,12 +25,7 @@ public class ReduxConstants
 
     public static final int SUPP_ALIGNMENT_SCORE_MIN = 30;
 
-    // SBX qual and consensus
-    public static final byte SBX_SIMPLEX_QUAL = 27;
-    public static final byte SBX_DUPLEX_QUAL = 40;
-    public static final byte SBX_DUPLEX_MISMATCH_QUAL = 1;
-    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL = 10;
-    public static final byte SBX_DUPLEX_ADJACENT_2_QUAL = 15;
+    // SBX-specfic
     public static final double SBX_CONSENSUS_BASE_THRESHOLD = 0.5;
 
     public static byte INVALID_BASE_QUAL = -1;
