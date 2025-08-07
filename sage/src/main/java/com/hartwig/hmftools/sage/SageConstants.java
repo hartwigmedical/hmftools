@@ -71,6 +71,7 @@ public class SageConstants
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT = 3;
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC = 10;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
+    public static final double MAX_GERMLINE_REL_RAW_QUAL_RATIO = 0.1;
 
     public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;

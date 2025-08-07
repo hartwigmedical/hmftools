@@ -134,6 +134,7 @@ public class ReadContextCounter
     private FragmentLengthCounts mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
     private final FragmentLengths mFragmentLengths;
+    private double mAdjustedRefVaf;
 
     // info only for VCF
     private double mTumorQualProbability;
@@ -189,6 +190,7 @@ public class ReadContextCounter
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
+        mAdjustedRefVaf = 0;
 
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
@@ -712,6 +714,9 @@ public class ReadContextCounter
 
     public double mapQualFactor() { return mMapQualFactor; }
     public void setMapQualFactor(double factor) { mMapQualFactor = factor; }
+
+    public double adjustedRefVaf() { return mAdjustedRefVaf; }
+    public void setAdjustedRefVaf(double vaf) { mAdjustedRefVaf = vaf; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

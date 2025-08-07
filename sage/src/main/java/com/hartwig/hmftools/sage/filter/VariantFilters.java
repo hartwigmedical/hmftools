@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_REL_RAW_QUAL_RATIO;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -593,14 +594,19 @@ public class VariantFilters
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
+        int refTotalReads = refCounter.readCounts().Total;
+        double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
+
+        primaryTumor.setAdjustedRefVaf(adjustedRefVaf);
+
         return aboveMaxGermlineVaf(
                 tier, refCounter.isInLongRepeat(), tumorVaf, adjustedRefAltCount, refCounter.averageAltRecalibratedBaseQuality(),
-                refCounter.readCounts().Total, config.MaxGermlineVaf);
+                adjustedRefVaf, config.MaxGermlineVaf);
     }
 
     public static boolean aboveMaxGermlineVaf(
             final VariantTier tier, boolean isInLongRepeat,
-            double tumorVaf, int adjustedRefAltCount, double baseQualAvg, int refTotalReads, double maxGermlineVaf)
+            double tumorVaf, int adjustedRefAltCount, double baseQualAvg, double adjustedRefVaf, double maxGermlineVaf)
     {
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
@@ -618,24 +624,28 @@ public class VariantFilters
             }
         }
 
-        double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
         return Doubles.greaterThan(adjustedRefVaf, maxGermlineVaf);
     }
 
     private static boolean aboveMaxGermlineRelativeQual(
             final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
-        return aboveMaxGermlineRelativeQual(config, primaryTumor.tumorQuality(), refCounter.tumorQuality());
+        double threshold = config.MaxGermlineRelativeQual;
+
+        if(!primaryTumor.isIndel() && primaryTumor.adjustedRefVaf() > 0)
+            threshold = min(config.MaxGermlineRelativeQual * config.MaxGermlineVaf / primaryTumor.adjustedRefVaf(), MAX_GERMLINE_REL_RAW_QUAL_RATIO);
+
+        return aboveMaxGermlineRelativeQual(primaryTumor.tumorQuality(), refCounter.tumorQuality(), threshold);
     }
 
-    public static boolean aboveMaxGermlineRelativeQual(final SoftFilterConfig config, double tumorQual, double refQual)
+    public static boolean aboveMaxGermlineRelativeQual(double tumorQual, double refQual, double threshold)
     {
         if(tumorQual == 0)
             return false; // will be handled in tumor filters
 
         double refTumorQualRatio = refQual / tumorQual;
 
-        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineRelativeQual);
+        return Doubles.greaterThan(refTumorQualRatio, threshold);
     }
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)
