@@ -15,13 +15,11 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.wisp.CategoryType;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
@@ -96,19 +94,13 @@ public class SampleVariants
 
     public ProbeGenerationResult generateProbes(List<Variant> variants)
     {
-        variants.sort(new VariantComparator());
-
         ProbeGenerationResult result = new ProbeGenerationResult();
 
-        HashMap<Variant, VariantSelectionStatus> selectionStatuses = new HashMap<>();
         ProximateLocations registeredLocations = new ProximateLocations();
         HashMap<String, Integer> geneDisruptions = new HashMap<>();
 
-        for(boolean firstPass : List.of(true, false))
-        {
-            result = result.add(generateProbes(variants, selectionStatuses, registeredLocations, geneDisruptions,
-                    SAMPLE_PROBES_MAX - result.probes().size(), firstPass));
-        }
+        result = result.add(selectDrivers(variants, registeredLocations, geneDisruptions, SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(selectNondrivers(variants, registeredLocations, SAMPLE_PROBES_MAX - result.probes().size()));
 
         return result;
     }
@@ -186,42 +178,27 @@ public class SampleVariants
             List<String> genes = ((SomaticSv) variant).breakends().stream().map(LinxBreakend::gene).toList();
             for(String gene : genes)
             {
-                Integer disruptionCount = geneDisruptions.get(gene);
-                if(disruptionCount == null)
+                int disruptionCount = geneDisruptions.computeIfAbsent(gene, k -> 1);
+                if(disruptionCount > SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
                 {
-                    geneDisruptions.put(gene, 1);
+                    return false;
                 }
-                else
-                {
-                    if(disruptionCount >= SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
-                    {
-                        return false;
-                    }
-                    geneDisruptions.put(gene, disruptionCount + 1);
-                }
+                // TODO: this should only be done if the variant is selected. do it together with the proximity check
+                geneDisruptions.put(gene, disruptionCount + 1);
             }
-            return true;
         }
-        else
-        {
-            return true;
-        }
+        return true;
     }
 
     private boolean checkAndRegisterLocations(final Variant variant, ProximateLocations registeredLocations)
     {
         List<ProximateLocations.Location> locations = variant.checkedLocations();
-        for(ProximateLocations.Location location : locations)
+        if(locations.stream().anyMatch(registeredLocations::isNearRegisteredLocation))
         {
-            if(registeredLocations.isNearRegisteredLocation(location))
-            {
-                return false;
-            }
+            return false;
         }
-        for(ProximateLocations.Location location : locations)
-        {
-            registeredLocations.addRegisteredLocation(location);
-        }
+        // TODO: only do this if the variant is selected. do it together with the gene disruption check
+        locations.forEach(registeredLocations::addRegisteredLocation);
         return true;
     }
 
@@ -243,7 +220,7 @@ public class SampleVariants
         }
         else
         {
-            ProbeEvaluator.Criteria evalCriteria = variant.reported() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
+            ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
             Probe probe;
             if(probeData.sequence() == null)
             {
@@ -264,67 +241,6 @@ public class SampleVariants
                 String rejectionReason = "Probe does not meet criteria " + evalCriteria;
                 return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
             }
-        }
-    }
-
-    private static boolean supportedVariantCategory(final CategoryType category)
-    {
-        return switch(category)
-        {
-            case REFERENCE -> true;
-            case FUSION -> true;
-            case AMP -> true;
-            case DEL -> true;
-            case REPORTABLE_MUTATION -> true;
-            case DISRUPTION -> true;
-            case GERMLINE_MUTATION -> true;
-            case GERMLINE_SV -> true;
-            case OTHER_CODING_MUTATION -> true;
-            case OTHER_CLONAL_MUTATION -> true;
-            case OTHER_MUTATION -> true;
-            case SUBCLONAL_MUTATION -> false;
-            case AMP_DEL -> true;
-            case OTHER_SV -> false;
-        };
-    }
-
-    private static class VariantComparator implements Comparator<Variant>
-    {
-        public int compare(final Variant first, final Variant second)
-        {
-            // Order by:
-            //   1. category
-            //   2. reported
-            //   3. VCN / copy number
-
-            if(first.categoryType() != second.categoryType())
-            {
-                return first.categoryType().ordinal() < second.categoryType().ordinal() ? -1 : 1;
-            }
-
-            if(first.reported() != second.reported())
-            {
-                return first.reported() ? -1 : 1;
-            }
-
-            if(first.categoryType() == CategoryType.OTHER_MUTATION || first.categoryType() == CategoryType.OTHER_CODING_MUTATION)
-            {
-                // to randomise selection of the lowest priority variants (and avoid multiple selections from highly amplified regions)
-                // use the inverse of position as the final comparison
-                int locationHash1 = ((SomaticMutation) first).locationHash();
-                int locationHash2 = ((SomaticMutation) second).locationHash();
-
-                if(locationHash1 != locationHash2)
-                {
-                    return locationHash1 < locationHash2 ? -1 : 1;
-                }
-            }
-            else if(first.copyNumber() != second.copyNumber())
-            {
-                return first.copyNumber() > second.copyNumber() ? -1 : 1;
-            }
-
-            return 0;
         }
     }
 

@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_MAX_INSERT;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
@@ -49,7 +49,6 @@ public class SomaticSv extends Variant
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
-    private CategoryType mCategoryType;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticSv.class);
 
@@ -58,8 +57,6 @@ public class SomaticSv extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mCategoryType = CategoryType.OTHER_SV;
-        setCategoryType();
     }
 
     private StructuralVariantData variantData()
@@ -70,12 +67,6 @@ public class SomaticSv extends Variant
     private void markAmpDelDriver(boolean isAmp)
     {
         mCategoryType = isAmp ? CategoryType.AMP : CategoryType.DEL;
-    }
-
-    @Override
-    public CategoryType categoryType()
-    {
-        return mCategoryType;
     }
 
     private void setCategoryType()
@@ -98,26 +89,18 @@ public class SomaticSv extends Variant
         }
     }
 
-    @Override
-    public double copyNumber()
-    {
-        return max(mVariant.adjustedStartCopyNumberChange(), mVariant.adjustedEndCopyNumberChange());
-    }
-
-    @Override
     public double vaf()
     {
         return mVariant.adjustedStartAF();
     }
 
-    @Override
     public int tumorFragments()
     {
         return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount());
     }
 
     @Override
-    public boolean reported()
+    public boolean isDriver()
     {
         return mCategoryType == CategoryType.FUSION
                 || mCategoryType == CategoryType.AMP
@@ -144,13 +127,7 @@ public class SomaticSv extends Variant
     }
 
     @Override
-    public boolean checkFilters()
-    {
-        return mCategoryType != CategoryType.FUSION && mCategoryType != CategoryType.AMP && mCategoryType != CategoryType.DEL;
-    }
-
-    @Override
-    public boolean passNonReportableFilters(boolean strictLimits)
+    public boolean passNonReportableFilters()
     {
         if(reported() && mCategoryType != CategoryType.DISRUPTION)
         {
@@ -158,12 +135,12 @@ public class SomaticSv extends Variant
             throw new IllegalStateException();
         }
 
-        if(vaf() < SAMPLE_VAF_MIN)
+        if(!(vaf() >= SAMPLE_VAF_MIN))
         {
             return false;
         }
 
-        if(!passesFragmentCountLimit(tumorFragments(), strictLimits))
+        if(!(tumorFragments() >= SAMPLE_FRAGMENT_COUNT_MIN))
         {
             return false;
         }
@@ -184,6 +161,7 @@ public class SomaticSv extends Variant
         return mBreakends;
     }
 
+    @Override
     public String toString()
     {
         String s;
@@ -198,7 +176,7 @@ public class SomaticSv extends Variant
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
         }
 
-        return format("%s %s breakends=%d fusions=%d", s, categoryType(), mBreakends.size(), mFusions.size());
+        return format("%s breakends=%d fusions=%d", s, mBreakends.size(), mFusions.size());
     }
 
     public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)
@@ -207,8 +185,6 @@ public class SomaticSv extends Variant
         {
             return emptyList();
         }
-
-        // load each structural variant (ignoring INFs), and link to any disruption/breakend and fusion, and cluster info
 
         String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
@@ -259,12 +235,8 @@ public class SomaticSv extends Variant
                 continue;
             }
 
+            // TODO: what does this do?
             if(!requireNonNull(variant.filter()).equals(PASS))
-            {
-                continue;
-            }
-
-            if(variant.insertSequence().length() >= SAMPLE_MAX_INSERT && variant.type() != StructuralVariantType.SGL)
             {
                 continue;
             }
@@ -343,12 +315,11 @@ public class SomaticSv extends Variant
                 GeneCopyNumber geneCopyNumber = geneCopyNumbers.stream()
                         .filter(cn -> cn.geneName().equals(driver.gene()))
                         .findFirst().orElse(null);
-
                 if(geneCopyNumber != null)
                 {
                     for(SomaticSv sv : svList)
                     {
-                        if(matchesDelRegion(sv, geneCopyNumber))
+                        if(matchesDelRegion(sv.variantData(), geneCopyNumber))
                         {
                             sv.markAmpDelDriver(false);
                         }
@@ -363,9 +334,8 @@ public class SomaticSv extends Variant
         return variants;
     }
 
-    private static boolean matchesDelRegion(final SomaticSv sv, final GeneCopyNumber geneCopyNumber)
+    private static boolean matchesDelRegion(final StructuralVariantData svData, final GeneCopyNumber geneCopyNumber)
     {
-        StructuralVariantData svData = sv.variantData();
         if(svData.startOrientation() == ORIENT_FWD && abs(svData.startPosition() - geneCopyNumber.minRegionStart()) <= 1)
         {
             return true;

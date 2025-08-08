@@ -76,14 +76,11 @@ public class PanelBuilderConstants
     public static final double SAMPLE_DRIVER_GC_TARGET = 0.45;
     public static final double SAMPLE_DRIVER_GC_TOLERANCE = 1;
     public static final double SAMPLE_VAF_MIN = 0.05;
-    public static final int SAMPLE_FRAG_COUNT_MIN_STRICT = 11;
-    public static final int SAMPLE_FRAG_COUNT_MIN = 7;
-    public static final int SAMPLE_REPEAT_COUNT_MAX_STRICT = 3;
-    public static final int SAMPLE_REPEAT_COUNT_MAX = 6;
+    public static final int SAMPLE_FRAGMENT_COUNT_MIN = 11;
+    public static final int SAMPLE_REPEAT_COUNT_MAX = 3;
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
-    public static final int SAMPLE_MAX_INSERT = 60;
-    public static final int SAMPLE_MAX_INDEL = 32;
+    public static final int SAMPLE_MAX_INDEL = 31;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
