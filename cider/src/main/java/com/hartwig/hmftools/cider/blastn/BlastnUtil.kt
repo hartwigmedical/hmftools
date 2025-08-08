@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.cider.blastn
 
+import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants
+import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.region.Strand
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
+import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 
 object BlastnUtil
 {
@@ -82,5 +87,74 @@ object BlastnUtil
             .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
             .build()
             .run(sequences)
+    }
+
+    data class BwaMemMatch(
+        val refContig: String,
+        val refStart: Int,
+        val refEnd: Int,
+        val alignmentScore: Int,
+        val strand: Strand
+    ) {
+        init {
+            assert(refStart <= refEnd)
+        }
+    }
+
+    fun runBwaMem(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
+                  expectedValueCutoff: Double)
+            : Multimap<Int, BwaMemMatch>
+    {
+        val refGenomeFasta = "/Users/reecejones/GenomicData/GRCh38/GRCh38_masked_exclusions_alts_hlas.fasta"
+        val index = BwaMemIndex(refGenomeFasta + ".img.hmftools-bwa-jni")
+        val aligner = BwaMemAligner(index)
+        aligner.setNThreadsOption(numThreads)
+        aligner.setFlagOption(aligner.getFlagOption() or BwaMemAligner.MEM_F_ALL)
+        aligner.setOutputScoreThresholdOption(1)
+        aligner.setMinSeedLengthOption(WORD_SIZE)
+        aligner.setMatchScoreOption(MATCH_SCORE)
+        aligner.setMismatchPenaltyOption(-MISMATCH_SCORE)
+        aligner.dGapOpenPenaltyOption = -GAP_OPENING_SCORE;
+        aligner.iGapOpenPenaltyOption = -GAP_OPENING_SCORE;
+        aligner.dGapExtendPenaltyOption = -GAP_EXTEND_SCORE;
+        aligner.iGapExtendPenaltyOption = -GAP_EXTEND_SCORE;
+//        aligner.setMaxMemIntvOption(2000)
+//        aligner.setMaxSeedOccurencesOption(2000)
+
+        val keys = sequences.keys.toList()
+        val seqs = keys.map { k -> sequences[k]!!.toByteArray() }
+        val alignments = aligner.alignSeqs(seqs)
+        val results = ArrayListMultimap.create<Int, BwaMemMatch>()
+        for (key in keys.withIndex()) {
+            for (alignment in alignments[key.index]) {
+                val chromosome = BLAST_REF_GENOME_VERSION.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
+                val resAlignment = BwaMemMatch(
+                    chromosome,
+                    alignment.refStart,
+                    alignment.refEnd,
+                    alignment.alignerScore,
+                    if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE })
+                results.put(key.value, resAlignment)
+            }
+        }
+        return results
+
+//        return BlastnRunner.Builder()
+//            .withTask("blastn")
+//            .withPrefix(sampleId)
+//            .withBlastDir(blastDir)
+//            .withBlastDb(blastDb)
+//            .withOutputDir(outputDir)
+//            .withWordSize(WORD_SIZE)
+//            .withReward(MATCH_SCORE)
+//            .withPenalty(MISMATCH_SCORE)
+//            .withGapOpen(-GAP_OPENING_SCORE)
+//            .withGapExtend(-GAP_EXTEND_SCORE)
+//            .withExpectedValueCutoff(expectedValueCutoff)
+//            .withNumThreads(numThreads)
+//            .withSubjectBestHit(true)
+//            .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
+//            .build()
+//            .run(sequences)
     }
 }

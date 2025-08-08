@@ -35,6 +35,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.broadinstitute</groupId>
+            <artifactId>gatk-bwamem-jni</artifactId>
+            <version>1.0.5</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
