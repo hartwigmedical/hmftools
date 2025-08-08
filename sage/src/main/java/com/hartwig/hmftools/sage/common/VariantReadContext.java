@@ -116,6 +116,7 @@ public class VariantReadContext
     public String readBases() { return new String(ReadBases); }
     public byte[] readBasesBytes() { return ReadBases; }
     public String refBases() { return new String(RefBases); }
+    public byte[] refBasesBytes() { return RefBases; }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }
     public int maxRepeatCount() { return MaxRepeat != null ? MaxRepeat.Count : 0; }

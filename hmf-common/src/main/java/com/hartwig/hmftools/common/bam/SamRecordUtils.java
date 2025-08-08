@@ -58,7 +58,7 @@ public final class SamRecordUtils
 
     public static final int UNSET_COUNT = -1;
 
-    private static final int PHRED_OFFSET = 33;
+    public static final int PHRED_OFFSET = 33;
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 

@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -202,6 +203,14 @@ public class MsiJitterCalcs
         }
 
         return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
+    }
+
+    public double calcErrorRate(
+            final SimpleVariant variant, int varIndex, int variantRefIndex, final byte[] refBases,
+            final byte[] readBases, final String sampleId)
+    {
+        // TODO: see Ultima changes
+        return 0;
     }
 
     public double calcErrorRate(final VariantReadContext readContext, final String sampleId)

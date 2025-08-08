@@ -726,6 +726,7 @@ public class ReadContextCounter
 
     public double adjustedRefVaf() { return mAdjustedRefVaf; }
     public void setAdjustedRefVaf(double vaf) { mAdjustedRefVaf = vaf; }
+    public QualityCalculator qualityCalculator() { return mQualityCalculator; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };

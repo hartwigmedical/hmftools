@@ -58,9 +58,9 @@ public class QualityCalculator
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
 
-    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
+    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant, final byte[] coreBases)
     {
-        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
+        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant, coreBases) : null;
     }
 
     public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)

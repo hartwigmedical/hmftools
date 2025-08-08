@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -34,7 +35,12 @@ public class ReadContextCounterFactory
         for(Candidate candidate : candidates)
         {
             if(qualityCalculator.ultimaEnabled())
-                candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant()));
+            {
+                byte[] coreBases = Arrays.subsetArray(
+                        candidate.readContext().ReadBases,
+                        candidate.readContext().VarIndex-1, candidate.readContext().VarIndex+1);
+                candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant(), coreBases));
+            }
 
             try
             {
