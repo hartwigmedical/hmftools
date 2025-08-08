@@ -16,8 +16,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 public class MockRefGenome implements RefGenomeInterface
 {
     private final boolean mOneBasedIndexing;
-    public final Map<String,String> RefGenomeMap;
-    public final Map<String,Integer> ChromosomeLengths;
+    public Map<String,String> RefGenomeMap;
+    public Map<String,Integer> ChromosomeLengths;
 
     public MockRefGenome(boolean oneBasedIndexing)
     {
