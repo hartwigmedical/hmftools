@@ -279,7 +279,7 @@ Phase groups are created by maximally linking any breakends which share at least
 - they form a DUP orientation <500b OR DEL orientation < 1kb AND 
 - both breakends have at least 1 split read with concordant mate on the soft clipped side OR at least one side has a PolyA / PolyT tail sequence with insertion site orientation.
 
-During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging. 
+During phasing, all candidate remote linking sites are collected for each breakend. These are taken from discordant reads, breakend assembly read mates and breakend read supplementaries, and are established from the remote read or supplementaries coordinates (ie its chromosome and read start and end alignments). Remote reads with overlapping alignments are merged into sets of remote regions, and then cached against each assembly and are used later in phasing and assembly merging.
 
 At this stage each phase group consists of multiple breakends:
 - Sharing fragment support (=1) or  
@@ -314,7 +314,7 @@ For LINE insertions sites with 2 breakends, both breakends are assembled simulta
 Esvee next merges chained or facing breakends that share fragments and are at least 30 bases apart and less than 1kb. To merge, any overlapping reference bases must agree with each other and soft clipping in the reference base must match the facing breakend. 
  
 #### 5. Infer local gaps 
-If any unassembled mates remain which are within 200 bases of an assembly on the 3’ side of the read and neither the assembly sequencing or the reads are soft clipped on the facing breakend, then extend the assembly to include the read sequence and assume the bases in between match the reference sequence 
+If any unassembled mates remain which are within 200 bases of an assembly on the 3’ side of the read and neither the assembly sequencing or the reads are soft clipped on the facing breakend, then extend the assembly to include the read sequence and assume the bases in between match the reference sequence.
 
 #### 6. Collapse duplicates 
 Finally each assembly within the phase group are compared to each other.  If they overlap and mismatches are within tolerances they are merged into a single assembly. Phased assemblies should only be collapsed if either: 
