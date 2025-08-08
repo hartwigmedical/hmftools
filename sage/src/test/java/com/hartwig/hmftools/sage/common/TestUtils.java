@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -60,6 +61,10 @@ public class TestUtils
         variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
         variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
+
+    public static void setIlluminaSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.ILLUMINA; }
+    public static void setSbxSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.SBX; }
+    public static void setUltimaSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.ULTIMA; }
 
     public static String buildCigarString(int alignedLength) { return format("%dM", alignedLength); }
 

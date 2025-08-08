@@ -6,7 +6,10 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
@@ -16,14 +19,12 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 
-import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -56,11 +57,19 @@ public class QualityCalculator
     }
 
     public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+    public UltimaQualCalculator ultimaQualityCalculator() { return mUltimaQualCalculator; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
 
     public UltimaQualModel createUltimaQualModel(final SimpleVariant variant, final byte[] coreBases)
     {
         return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant, coreBases) : null;
+    }
+
+    public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
+    {
+        return mUltimaQualCalculator != null
+                ? UltimaRealignedQualModelsBuilder_0.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
+                : null;
     }
 
     public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)
@@ -90,14 +99,33 @@ public class QualityCalculator
     {
         double baseQuality;
 
-        if(readContextCounter.isIndel() || readContextCounter.artefactContext() != null
-        || (readContextCounter.ultimaQualModel() != null && calcBaseQuality != ULTIMA_MAX_QUAL))
+        boolean recalibrateBaseQuality;
+        if(readContextCounter.realignedUltimaQualModels() == null)
         {
-            baseQuality = calcBaseQuality;
+            recalibrateBaseQuality = !(readContextCounter.isIndel() || readContextCounter.artefactContext() != null);
         }
         else
         {
+            recalibrateBaseQuality = readContextCounter.isSnv();
+        }
+
+        if(recalibrateBaseQuality && readContextCounter.realignedUltimaQualModels() == null)
+        {
             baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+        }
+        else if(recalibrateBaseQuality)
+        {
+            // CHECK: with recent BQR changes if still correct
+            double bqrQual = readContextCounter.qualCache().getQual(
+                    ULTIMA_BOOSTED_QUAL, SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
+
+            bqrQual += max(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, ULTIMA_MAX_QUAL_T0) - ULTIMA_BOOSTED_QUAL;
+
+            baseQuality = min(calcBaseQuality, bqrQual);
+        }
+        else
+        {
+            baseQuality = calcBaseQuality;
         }
 
         int mapQuality = record.getMappingQuality();
@@ -129,8 +157,10 @@ public class QualityCalculator
 
     public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        if(readContextCounter.ultimaQualModel() != null)
-            return readContextCounter.ultimaQualModel().calculateQual(record, readIndex);
+        if(readContextCounter.realignedUltimaQualModels() != null)
+        {
+            return readContextCounter.realignedUltimaQualModels().calculateQual(readContextCounter, readIndex, record);
+        }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?
                 readContextCounter.artefactContext().findApplicableBaseQual(record, readIndex) : INVALID_BASE_QUAL;

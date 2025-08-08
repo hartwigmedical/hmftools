@@ -259,7 +259,8 @@ public class UltimaRealignedQualModelsBuilder_0
         return buildUltimaRealignedQualModels(readContext, ultimaQualCalculator, false);
     }
 
-    private static List<CigarElement> readContextCoreCigar(final VariantReadContext readContext)
+    @VisibleForTesting
+    public static List<CigarElement> readContextCoreCigar(final VariantReadContext readContext)
     {
         List<CigarElement> coreCigar = Lists.newArrayList();
         List<CigarElement> cigar = TextCigarCodec.decode(readContext.readCigar()).getCigarElements();

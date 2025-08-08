@@ -11,7 +11,11 @@ import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.UltimaModelType;
+import com.hartwig.hmftools.sage.quality.UltimaQualModel;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
 
 public class ReadContextCounterFactory
 {
@@ -22,6 +26,26 @@ public class ReadContextCounterFactory
     public ReadContextCounterFactory(final SageConfig config)
     {
         mConfig = config;
+    }
+
+    // TODO move elsewhere
+    private static boolean isCleanHpTransition(VariantReadContext readContext, UltimaQualModel qualModel)
+    {
+        if(qualModel == null || !qualModel.type().equals(UltimaModelType.HOMOPOLYMER_TRANSITION))
+            return false;
+
+        byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+        if(coreReadBases.length != readContext.RefBases.length + readContext.variant().indelLength())
+            return false;
+
+        for(int i = 0; i < coreReadBases.length; ++i)
+        {
+            int offset = i > readContext.leftCoreLength() ? readContext.variant().indelLength() : 0;
+            if(coreReadBases[i] != readContext.RefBases[i - offset])
+                return false;
+        }
+
+        return true;
     }
 
     public List<ReadContextCounter> create(
@@ -39,7 +63,20 @@ public class ReadContextCounterFactory
                 byte[] coreBases = Arrays.subsetArray(
                         candidate.readContext().ReadBases,
                         candidate.readContext().VarIndex-1, candidate.readContext().VarIndex+1);
-                candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant(), coreBases));
+
+                UltimaQualModel qualModel = qualityCalculator.createUltimaQualModel(candidate.variant(), coreBases);
+
+                // TODO: awkward to place this here
+                if(isCleanHpTransition(candidate.readContext(), qualModel))
+                {
+                    candidate.readContext().setUltimaRealignedQualModels(new UltimaRealignedQualModels(candidate.readContext(),
+                            qualityCalculator.ultimaQualityCalculator(), Lists.newArrayList()));
+                }
+                else
+                {
+                    candidate.readContext().setUltimaRealignedQualModels(
+                            qualityCalculator.createRealignedUltimaQualModels(candidate.readContext()));
+                }
             }
 
             try

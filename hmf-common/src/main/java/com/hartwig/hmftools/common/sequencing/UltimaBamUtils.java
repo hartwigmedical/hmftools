@@ -15,6 +15,11 @@ public final class UltimaBamUtils
     public static final byte ULTIMA_MAX_QUAL = 40;
     public static final byte ULTIMA_INVALID_QUAL = -1;
 
+    public static final byte ULTIMA_MAX_QUAL_TP = 40;
+    public static final byte ULTIMA_TP_0_BOOST = 5;
+    public static final byte ULTIMA_MAX_QUAL_T0 = 40;
+    public static final byte ULTIMA_BOOSTED_QUAL = 35;
+
     public static final String ULTIMA_TP_TAG = "tp";
     public static final String ULTIMA_T0_TAG = "t0";
 
@@ -78,6 +83,11 @@ public final class UltimaBamUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
+        if(indexStart < 0)
+        {
+            return ULTIMA_INVALID_QUAL;
+        }
+
         byte[] tpValues = extractTpValues(record);
 
         int qualValue1 = -1;
@@ -99,14 +109,32 @@ public final class UltimaBamUtils
             }
         }
 
+        if(qualValue1 == ULTIMA_BOOSTED_QUAL)
+            qualValue1 = ULTIMA_MAX_QUAL_TP;
+
+        if(qualValue2 == ULTIMA_BOOSTED_QUAL)
+            qualValue2 = ULTIMA_MAX_QUAL_TP;
+
         if(qualValue1 < 0)
         {
             // if bases aren't found, use middle base(s) as: min(40, Q + 6 * abs(required_tp – T))
             int middleIndex = indexStart + (indexEnd - indexStart) / 2;
-            qualValue1 = record.getBaseQualities()[middleIndex];
+            final byte[] baseQualities = record.getBaseQualities();
+            if(middleIndex < 0 || middleIndex >= baseQualities.length)
+            {
+                return ULTIMA_INVALID_QUAL;
+            }
+
+            qualValue1 = baseQualities[middleIndex];
             byte tpValue = tpValues[middleIndex];
 
-            return (byte)min(ULTIMA_MAX_QUAL, qualValue1 + 6 * abs(tpSearchValue - tpValue));
+            if(tpValue == (byte)0)
+                return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
+
+            if(qualValue1 == ULTIMA_BOOSTED_QUAL)
+                qualValue1 = ULTIMA_MAX_QUAL_TP;
+
+            return (byte)min(ULTIMA_MAX_QUAL_TP, qualValue1 + 6 * abs(tpSearchValue - tpValue));
         }
 
         if(qualValue2 < 0)
@@ -144,6 +172,9 @@ public final class UltimaBamUtils
     public static boolean isBaseInCycle(final byte startBase, final byte endBase, final byte testBase)
     {
         if(startBase == endBase || startBase == testBase)
+            return false;
+
+        if(baseIndex(startBase) == -1 || baseIndex(endBase) == -1)
             return false;
 
         boolean started = false;

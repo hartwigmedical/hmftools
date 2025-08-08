@@ -1,16 +1,18 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.ultima;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MAX_QUAL_T0;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
+import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_TRANSITION;
@@ -21,8 +23,10 @@ import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.quality.UltimaQualCalculator;
+import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
-import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,7 +43,11 @@ public class UltimaQualModelTest
     {
         mRefGenome = new MockRefGenome(true);
         mModelBuilder = new UltimaQualCalculator(mRefGenome);
+        setUltimaSequencing();
     }
+
+    @After
+    public void resetSequencingType() { setIlluminaSequencing(); }
 
     private void setRefBases(final String refBases)
     {

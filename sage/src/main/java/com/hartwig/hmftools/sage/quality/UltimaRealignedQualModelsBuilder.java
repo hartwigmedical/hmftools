@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.CYCLE_BASES;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -239,4 +240,11 @@ public class UltimaRealignedQualModelsBuilder
 
         return true;
     }
+
+    public static List<Integer> coreHomopolymerLengths(final VariantReadContext readContext)
+    {
+        List<Homopolymer> homopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+        return homopolymers.stream().map(x -> x.Length).collect(Collectors.toList());
+    }
+
 }

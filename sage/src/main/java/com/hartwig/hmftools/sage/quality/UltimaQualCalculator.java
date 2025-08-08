@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -10,10 +14,6 @@ import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_BOOSTED_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MAX_QUAL_T0;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_TP_0_BOOST;
 
 import java.util.List;
 

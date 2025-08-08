@@ -9,6 +9,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
@@ -48,6 +49,7 @@ import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -151,12 +153,14 @@ public class VariantFilters
         // setting ref sample count to zero disables the tumor-germline filters
         int maxReferenceSamples = min(refReadCounters.size(), mConfig.ReferenceSampleCount);
 
+        boolean isNearIndel = variant.nearIndel();
+
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
             Set<SoftFilter> tumorFilters = Sets.newHashSet();
 
-            applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
+            applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters, isNearIndel);
 
             if(!mIsGermline)
             {
@@ -181,7 +185,8 @@ public class VariantFilters
 
     // tumor-only tests
     public void applyTumorFilters(
-            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
+            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters,
+            boolean isNearIndel)
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
@@ -249,6 +254,16 @@ public class VariantFilters
         if(belowMinAverageBaseQuality(primaryTumor, tier))
         {
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
+        }
+
+        if(belowExpectedHpQuals(primaryTumor))
+        {
+            filters.add(SoftFilter.MIN_AVG_HP_QUAL);
+        }
+
+        if(belowExpectedT0Quals(primaryTumor, isNearIndel))
+        {
+            filters.add(SoftFilter.MIN_AVG_T0_QUAL);
         }
     }
 
@@ -438,13 +453,73 @@ public class VariantFilters
 
     private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
+        int threshold = tier == HOTSPOT ? mConfig.MinAvgBaseQualHotspot : mConfig.MinAvgBaseQual;
+
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(tier == HOTSPOT)
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
-        else
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
+        if(isUltima())
+        {
+            // CHECK: Ultima diffs and make constants?
+            if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() == 1
+            && primaryTumor.readContext().MaxRepeat.Count >= 5)
+            {
+                threshold -= 5;
+            }
+
+            if(primaryTumor.readStrandBiasAlt().minBias() < STRAND_BIAS_CHECK_THRESHOLD
+            &&!(primaryTumor.readStrandBiasNonAlt().minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS
+                    &&(primaryTumor.readStrandBiasAlt().bias() < 0.5) == (primaryTumor.readStrandBiasNonAlt().bias() < 0.5)))
+            {
+                threshold += 10;
+            }
+        }
+
+        double avgBaseQuality = primaryTumor.averageAltBaseQuality();
+
+        return Doubles.lessThan(avgBaseQuality, threshold);
+    }
+
+    private boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
+    {
+        // TODO: make constants and generally improve
+        if(primaryTumor.homopolymerLengths() == null || !primaryTumor.isIndel())
+            return false;
+        if(primaryTumor.isLongIndel() && Collections.max(primaryTumor.homopolymerLengths()) < 5)
+            return false;
+        for(int i = 0; i < primaryTumor.homopolymerLengths().size(); i++)
+        {
+            int length = primaryTumor.homopolymerLengths().get(i);
+            double avgQual = primaryTumor.homopolymerAvgQuals().get(i);
+            if(length == 1 && avgQual < 24)
+                return true;
+            else if(length == 2 && avgQual < 22)
+                return true;
+            else if(length == 3 && avgQual < 18)
+                return true;
+            else if(length == 4 && avgQual < 18)
+                return true;
+            else if(length == 5 && avgQual < 16)
+                return true;
+            else if(length == 6 && avgQual < 14)
+                return true;
+            else if(length == 7 && avgQual < 12)
+                return true;
+            else if(avgQual < 10)
+                return true;
+            else if(length >= 15)
+                return true;
+        }
+        return false;
+    }
+
+    private boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
+    {
+        // TODO: make constants
+        if(primaryTumor.t0AvgQuals() == null)
+            return false;
+        int threshold = nearbyVariant ? 28 : 18;
+        return Collections.min(primaryTumor.t0AvgQuals()) < threshold;
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)

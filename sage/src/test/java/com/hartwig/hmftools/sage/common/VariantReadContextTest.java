@@ -11,18 +11,27 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.readContextCoreCigar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.candidate.AltRead;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextTest
@@ -448,5 +457,69 @@ public class VariantReadContextTest
         assertEquals(80, readContext.CorePositionStart);
         assertEquals(14, readContext.VarIndex);
         assertEquals(116, readContext.CorePositionEnd);
+    }
+
+    private static void checkCoreCigarElements(
+            int coreLength, final List<CigarElement> readCigar, final List<CigarElement> expectedCoreCigar)
+    {
+        int coreIndexStart = TEST_FLANK_LENGTH;
+        int coreIndexEnd = coreIndexStart + coreLength - 1;
+
+        VariantReadContext readContext = new VariantReadContext(null, -1, -1, null,
+                        null, readCigar, coreIndexStart, -1, coreIndexEnd, null,
+                        null, null, -1, -1);
+
+        List<CigarElement> actualCoreCigar = readContextCoreCigar(readContext);
+        assertEquals(expectedCoreCigar, actualCoreCigar);
+    }
+
+    @Test
+    public void testCoreCigarElements()
+    {
+        int coreLength = 10;
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(new CigarElement(2 * TEST_FLANK_LENGTH + coreLength, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength, M),
+                        new CigarElement(1, D),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, I),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, I), new CigarElement(coreLength - 1, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength - 1, M),
+                        new CigarElement(1, I),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength - 1, M), new CigarElement(1, I)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + 1, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, M), new CigarElement(1, D), new CigarElement(coreLength - 1, M)));
     }
 }

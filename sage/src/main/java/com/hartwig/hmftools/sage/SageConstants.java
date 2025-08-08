@@ -83,6 +83,10 @@ public class SageConstants
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
+    // CHECK: whehther or how to set these
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY = 20;
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
+
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
@@ -144,14 +148,6 @@ public class SageConstants
     public static final int HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD = 40;
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
-
-    // SBX
-
-    // ULTIMA
-    public static final byte ULTIMA_MAX_QUAL_TP = 40;
-    public static final byte ULTIMA_TP_0_BOOST = 5;
-    public static final byte ULTIMA_MAX_QUAL_T0 = 40;
-    public static final byte ULTIMA_BOOSTED_QUAL = 35;
 
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;

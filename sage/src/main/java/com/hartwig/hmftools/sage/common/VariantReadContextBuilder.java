@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -22,6 +23,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -72,7 +74,9 @@ public class VariantReadContextBuilder
             // set max ref repeat for use in MSI calcs and VCF output
             setMaxRefRepeat(readContext);
 
-            readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
+            // CHECK: relevant for SBX as well?
+            if(isIllumina())
+                readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
 
             return readContext;
         }
@@ -86,7 +90,8 @@ public class VariantReadContextBuilder
         }
     }
 
-    private VariantReadContext buildContext(
+    @VisibleForTesting
+    public VariantReadContext buildContext(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final RefSequence refSequence)
     {
         /* Routine:

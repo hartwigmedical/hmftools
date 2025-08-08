@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.select;
+package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.common.TestUtils.region;
 
@@ -10,7 +10,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.sage.select.PanelSelector;
+import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class PanelSelectorTest
@@ -45,7 +48,7 @@ public class PanelSelectorTest
     @Test
     public void testPanelStatus()
     {
-        assertEquals(ReadPanelStatus.WITHIN_PANEL, mPanelSelector.panelStatus(995));
+        Assert.assertEquals(ReadPanelStatus.WITHIN_PANEL, mPanelSelector.panelStatus(995));
         assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(996));
         assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(994));
         assertEquals(ReadPanelStatus.OUTSIDE_PANEL, mPanelSelector.panelStatus(2103));

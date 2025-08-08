@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.ultima;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
+import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getQualVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getRealignedVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.mergeSandwichedHomopolymers;
@@ -27,10 +28,19 @@ import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopo
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
+import org.junit.After;
 import org.junit.Test;
 
 public class UltimaRealignedQualModelsBuilderTest
 {
+    public UltimaRealignedQualModelsBuilderTest()
+    {
+        setUltimaSequencing();
+    }
+
+    @After
+    public void resetSequencingType() { setIlluminaSequencing(); }
+
     /*
     @Test
     public void testGetHomopolymersInvalidIndices()
