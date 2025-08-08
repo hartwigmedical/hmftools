@@ -16,17 +16,13 @@ object BlastnMatchTsvWriter
         gene,
         functionality,
         pIdent,
-        seqLength,
         alignStart,
         alignEnd,
-        alignGaps,
-        alignEValue,
-        alignBitScore,
+        alignScore,
         refStrand,
         refStart,
         refEnd,
-        refContig,
-        refSeq,
+        refContig
     }
 
     enum class MatchType
@@ -86,17 +82,13 @@ object BlastnMatchTsvWriter
                     Column.gene -> csvPrinter.print(gene?.geneName)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
                     Column.pIdent -> csvPrinter.print(match.percentageIdent)
-                    Column.seqLength -> csvPrinter.print(match.querySeqLen)
                     Column.alignStart -> csvPrinter.print(match.queryAlignStart)
                     Column.alignEnd -> csvPrinter.print(match.queryAlignEnd)
-                    Column.alignGaps -> csvPrinter.print(match.numGapOpenings)
-                    Column.alignEValue -> csvPrinter.print(match.expectedValue)
-                    Column.alignBitScore -> csvPrinter.print(match.bitScore)
-                    Column.refStrand -> csvPrinter.print(match.subjectFrame.asChar())
-                    Column.refStart -> csvPrinter.print(match.subjectAlignStart)
-                    Column.refEnd -> csvPrinter.print(match.subjectAlignEnd)
-                    Column.refContig -> csvPrinter.print(match.subjectTitle)
-                    Column.refSeq -> csvPrinter.print(match.alignedPartOfSubjectSeq)
+                    Column.alignScore -> csvPrinter.print(match.alignmentScore)
+                    Column.refStrand -> csvPrinter.print(match.strand.asChar())
+                    Column.refStart -> csvPrinter.print(match.refStart)
+                    Column.refEnd -> csvPrinter.print(match.refEnd)
+                    Column.refContig -> csvPrinter.print(match.refContig)
                 }
             }
             csvPrinter.println()

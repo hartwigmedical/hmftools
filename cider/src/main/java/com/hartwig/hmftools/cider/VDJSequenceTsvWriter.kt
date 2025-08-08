@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.blastn.BlastnUtil
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
@@ -191,7 +192,7 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
-    private fun zeroBaseAlignStart(blastnMatch: BlastnMatch?) : Int?
+    private fun zeroBaseAlignStart(blastnMatch: BlastnUtil.BwaMemMatch?) : Int?
     {
         return if (blastnMatch == null) null else blastnMatch.queryAlignStart - 1
     }

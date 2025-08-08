@@ -21,10 +21,10 @@ data class BlastnAnnotation(
     val vGene: IgTcrGene? = null,
     val dGene: IgTcrGene? = null,
     val jGene: IgTcrGene? = null,
-    val vMatch: BlastnMatch? = null,
-    val dMatch: BlastnMatch? = null,
-    val jMatch: BlastnMatch? = null,
-    val fullMatch: BlastnMatch? = null,
+    val vMatch: BlastnUtil.BwaMemMatch? = null,
+    val dMatch: BlastnUtil.BwaMemMatch? = null,
+    val jMatch: BlastnUtil.BwaMemMatch? = null,
+    val fullMatch: BlastnUtil.BwaMemMatch? = null,
     val blastnStatus: BlastnStatus)
 
 // run blastn and matches and turn them into annotations
@@ -141,12 +141,13 @@ class BlastnAnnotator
 
         // we also need to fix up the matches, since we did not use the full sequence to query blastn, the queryAlignStart
         // and queryAlignEnd indices are off
-//        blastnMatches.forEach { blastnMatch ->
-//            blastnMatch.queryAlignStart = blastnMatch.queryAlignStart + alignStartOffset
-//            blastnMatch.queryAlignEnd = blastnMatch.queryAlignEnd + alignStartOffset
-//        }
+        val blastnMatchesAdjusted = blastnMatches.map {
+            it.copy(
+                queryAlignStart = it.queryAlignStart + alignStartOffset,
+                queryAlignEnd = it.queryAlignEnd + alignStartOffset)
+        }
 
-        val sortedMatches: List<BlastnUtil.BwaMemMatch> = blastnMatches.sortedBy { m -> -m.alignmentScore }
+        val sortedMatches: List<BlastnUtil.BwaMemMatch> = blastnMatchesAdjusted.sortedBy { m -> -m.alignmentScore }
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
         // locus supercedes a 100% identity match from the correct locus
@@ -163,11 +164,9 @@ class BlastnAnnotator
 
         for (blastnMatch in sortedMatches)
         {
-            val percentIdentApprox = blastnMatch.alignmentScore.toDouble() / blastnRunData.querySeq.length
-
             // check if it matches whole way. Require 95% sequence identity
-            if (percentIdentApprox >= CiderConstants.BLASTN_MATCH_FULL_MATCH_IDENTITY)
-//                && blastnMatch.querySeqLen <= (blastnMatch.queryAlignEnd - blastnMatch.queryAlignStart) + 5)
+            if (blastnMatch.percentageIdent >= CiderConstants.BLASTN_MATCH_FULL_MATCH_IDENTITY &&
+                blastnRunData.querySeq.length <= (blastnMatch.queryAlignEnd - blastnMatch.queryAlignStart) + 5)
             {
                 // sLogger.debug("blastn matches ref genome: {}", blastnMatch.subjectTitle)
                 // sLogger.debug("  query seq: {}", blastnMatch.alignedPartOfQuerySeq)
@@ -175,14 +174,14 @@ class BlastnAnnotator
 
                 return BlastnAnnotation(
                     vdjSequence = vdjSequence,
-//                    fullMatch = blastnMatch,
+                    fullMatch = blastnMatch,
                     blastnStatus = BlastnStatus.NO_REARRANGEMENT)
             }
 
             var vdjGene: IgTcrGene? = findGene(blastnMatch)
 
             // for V/J gene segments, we mandate 90% identity
-            if (vdjGene != null && vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && percentIdentApprox < CiderConstants.BLASTN_MATCH_MIN_VJ_IDENTITY)
+            if (vdjGene != null && vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && blastnMatch.percentageIdent < CiderConstants.BLASTN_MATCH_MIN_VJ_IDENTITY)
             {
                 vdjGene = null
             }
@@ -267,9 +266,9 @@ class BlastnAnnotator
             vGene = vGene,
             dGene = dGene,
             jGene = jGene,
-//            vMatch = vMatch,
-//            dMatch = dMatch,
-//            jMatch = jMatch,
+            vMatch = vMatch,
+            dMatch = dMatch,
+            jMatch = jMatch,
             blastnStatus = blastnStatus)
     }
 

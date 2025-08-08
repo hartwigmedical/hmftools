@@ -7,10 +7,15 @@ import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
+import com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary
+import com.hartwig.hmftools.common.codon.Nucleotides
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
+import kotlin.math.min
+import kotlin.math.round
 
 object BlastnUtil
 {
@@ -94,10 +99,14 @@ object BlastnUtil
         val refStart: Int,
         val refEnd: Int,
         val alignmentScore: Int,
-        val strand: Strand
+        val strand: Strand,
+        val queryAlignStart: Int,
+        val queryAlignEnd: Int,
+        val percentageIdent: Double
     ) {
         init {
-            assert(refStart <= refEnd)
+            require(refStart <= refEnd)
+            require(queryAlignStart <= queryAlignEnd)
         }
     }
 
@@ -105,7 +114,9 @@ object BlastnUtil
                   expectedValueCutoff: Double)
             : Multimap<Int, BwaMemMatch>
     {
+        loadAlignerLibrary(null);
         val refGenomeFasta = "/Users/reecejones/GenomicData/GRCh38/GRCh38_masked_exclusions_alts_hlas.fasta"
+        val refGenome = loadRefGenome(refGenomeFasta);
         val index = BwaMemIndex(refGenomeFasta + ".img.hmftools-bwa-jni")
         val aligner = BwaMemAligner(index)
         aligner.setNThreadsOption(numThreads)
@@ -127,34 +138,56 @@ object BlastnUtil
         val results = ArrayListMultimap.create<Int, BwaMemMatch>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
-                val chromosome = BLAST_REF_GENOME_VERSION.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
+                val chromosome = if (alignment.refId >= 0 && alignment.refId < HumanChromosome.entries.size) {
+                    BLAST_REF_GENOME_VERSION.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
+                }
+                else {
+                    continue
+                }
+                val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
+                val refEnd = alignment.refEnd
+                require(refStart <= refEnd)
+                val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
+                var refSeq = refGenome.getBases(chromosome, refStart, refEnd)
+                refSeq = if (strand == Strand.FORWARD) { refSeq } else {
+                    Nucleotides.reverseComplementBases(refSeq)
+                }
+                val querySeq = seqs[key.index]
+                // Apparently these need to be inverted if the alignment reports the reverse strand
+                // Do this to match Blastn behaviour
+                val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.size - alignment.seqEnd }
+                val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.size - alignment.seqStart }
+                require(queryAlignStart <= queryAlignEnd)
+                val alignedQuerySeq = querySeq.copyOfRange(queryAlignStart, queryAlignEnd)
+//                println("ref " + String(refSeq))
+//                println("que " + String(querySeq))
+//                println("aln " + String(alignedQuerySeq))
+                val percentIdentity = calcPercentIdentity(refSeq, alignedQuerySeq)
                 val resAlignment = BwaMemMatch(
                     chromosome,
                     alignment.refStart,
                     alignment.refEnd,
                     alignment.alignerScore,
-                    if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE })
+                    strand,
+                    // Convert to 1-indexed for the rest of the code
+                    queryAlignStart + 1,
+                    queryAlignEnd,
+                    // Match the previous Blastn result, which only showed up to 3 decimal places
+                    round(percentIdentity * 1000) / 1000
+                )
                 results.put(key.value, resAlignment)
             }
         }
         return results
+    }
 
-//        return BlastnRunner.Builder()
-//            .withTask("blastn")
-//            .withPrefix(sampleId)
-//            .withBlastDir(blastDir)
-//            .withBlastDb(blastDb)
-//            .withOutputDir(outputDir)
-//            .withWordSize(WORD_SIZE)
-//            .withReward(MATCH_SCORE)
-//            .withPenalty(MISMATCH_SCORE)
-//            .withGapOpen(-GAP_OPENING_SCORE)
-//            .withGapExtend(-GAP_EXTEND_SCORE)
-//            .withExpectedValueCutoff(expectedValueCutoff)
-//            .withNumThreads(numThreads)
-//            .withSubjectBestHit(true)
-//            .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
-//            .build()
-//            .run(sequences)
+    private fun calcPercentIdentity(refSeq: ByteArray, alignedQuerySeq: ByteArray): Double {
+        var match = 0
+        for (i in 0 until min(refSeq.size, alignedQuerySeq.size)) {
+            if (refSeq[i] == alignedQuerySeq[i]) {
+                ++match
+            }
+        }
+        return 100 * match.toDouble() / alignedQuerySeq.size
     }
 }
