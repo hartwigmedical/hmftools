@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMatcher;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.readContextCoreCigar;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.readContextCoreCigar;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

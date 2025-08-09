@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.seqtech;
 
 public enum UltimaModelType
 {

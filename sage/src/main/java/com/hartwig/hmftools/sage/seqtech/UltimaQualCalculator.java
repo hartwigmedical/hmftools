@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
 import org.jetbrains.annotations.Nullable;
 

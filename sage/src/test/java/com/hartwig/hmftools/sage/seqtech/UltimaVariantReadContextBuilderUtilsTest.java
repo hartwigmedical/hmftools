@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.ultima;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 

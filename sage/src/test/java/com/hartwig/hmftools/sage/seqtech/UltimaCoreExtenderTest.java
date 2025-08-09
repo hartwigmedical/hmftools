@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.ultima;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.INVALID_INDEX;

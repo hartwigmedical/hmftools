@@ -30,6 +30,10 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualCalculator;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualModel;
+import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
+import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -68,7 +72,7 @@ public class QualityCalculator
     public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
     {
         return mUltimaQualCalculator != null
-                ? UltimaRealignedQualModelsBuilder_0.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
+                ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
                 : null;
     }
 

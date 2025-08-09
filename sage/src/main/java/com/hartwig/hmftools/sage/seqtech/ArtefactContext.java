@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;

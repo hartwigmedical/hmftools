@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.min;
 
@@ -6,13 +6,14 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_Q
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.MICROSAT_ADJUSTMENT;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.MICROSAT_ADJUSTMENT;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.MsiJitterQualCache;
 
 import htsjdk.samtools.SAMRecord;
 

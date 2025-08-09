@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.ultima;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
@@ -6,13 +6,13 @@ import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getQualVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getRealignedVariants;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELETION;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.getQualVariants;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.getRealignedVariants;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,12 +27,7 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.UltimaQualCalculator;
-import com.hartwig.hmftools.sage.quality.UltimaQualCalculator.HomopolymerAdjustment;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModel;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualCalculator.HomopolymerAdjustment;
 
 import org.junit.After;
 import org.junit.Ignore;
@@ -40,9 +35,9 @@ import org.junit.Test;
 
 import htsjdk.samtools.CigarElement;
 
-public class UltimaRealignedQualModelsBuilderTest
+public class UltimaRealignedQualModelTest
 {
-    public UltimaRealignedQualModelsBuilderTest()
+    public UltimaRealignedQualModelTest()
     {
         setUltimaSequencing();
     }

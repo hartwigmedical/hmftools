@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
@@ -27,7 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.quality.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;

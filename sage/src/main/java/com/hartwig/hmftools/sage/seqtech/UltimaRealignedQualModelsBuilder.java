@@ -1,18 +1,17 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.CYCLE_BASE_INDEX;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.INVALID_BASE;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
-import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
+import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.CYCLE_BASE_INDEX;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.INVALID_BASE;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
 
 import static htsjdk.samtools.CigarOperator.I;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -21,16 +20,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.TextCigarCodec;
 
-public class UltimaRealignedQualModelsBuilder_0
+public class UltimaRealignedQualModelsBuilder
 {
     public static int cycleCount(final List<Homopolymer> homopolymers, int startIndex)
     {
@@ -299,6 +295,7 @@ public class UltimaRealignedQualModelsBuilder_0
             final VariantReadContext readContext,
             final UltimaQualCalculator ultimaQualCalculator, boolean skipSandwichMasking)
     {
+        // ULTIMA CHECK: expand to cover all isolated variants where ref = core and can skip realigned Ultima models
         if(!skipSandwichMasking && isCleanSnv(readContext))
         {
             return new UltimaRealignedQualModels(readContext, ultimaQualCalculator);  // if a clean SNV, want to take max of quals, not min

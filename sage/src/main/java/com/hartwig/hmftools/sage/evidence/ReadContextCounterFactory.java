@@ -13,9 +13,9 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.UltimaModelType;
-import com.hartwig.hmftools.sage.quality.UltimaQualModel;
-import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModels;
+import com.hartwig.hmftools.sage.seqtech.UltimaModelType;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualModel;
+import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
 
 public class ReadContextCounterFactory
 {

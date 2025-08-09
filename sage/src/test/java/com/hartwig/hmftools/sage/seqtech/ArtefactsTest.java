@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
@@ -16,7 +16,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.quality.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
 
 import org.junit.Test;
 

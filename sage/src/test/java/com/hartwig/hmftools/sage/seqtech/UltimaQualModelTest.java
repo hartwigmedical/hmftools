@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.ultima;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
@@ -13,21 +13,18 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_TRANSITION;
-import static com.hartwig.hmftools.sage.quality.UltimaModelType.SNV;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELETION;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_TRANSITION;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.SNV;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.quality.UltimaQualCalculator;
-import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
