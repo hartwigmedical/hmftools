@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.sage.ultima;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
 import static com.hartwig.hmftools.sage.common.UltimaVariantReadContextBuilderUtils.isAdjacentToLongHomopolymer;
@@ -12,21 +15,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -42,116 +40,73 @@ public class UltimaVariantReadContextBuilderUtilsTest
     public void resetSequencingType() { setIlluminaSequencing(); }
 
     @Test
-    public void testIsMsiIndelOfTypeNotIndel()
+    public void testIsMsiIndelTypes()
     {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(false);
+        // not an indel
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "C");
+        assertFalse(isMsiIndelOfType(variant, null));
 
-        assertFalse(isMsiIndelOfType(mockVariant, null));
-    }
-
-    @Test
-    public void testIsMsiIndelOfTypeNoUnits()
-    {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
-        when(mockVariant.isInsert()).thenReturn(true);
-        when(mockVariant.ref()).thenReturn("A");
-        when(mockVariant.alt()).thenReturn("AA");
-
+        // no repeat units
+        variant = new SimpleVariant(CHR_1, 100, "A", "AA");
         List<String> units = Lists.newArrayList();
-        assertFalse(isMsiIndelOfType(mockVariant, units));
+        assertFalse(isMsiIndelOfType(variant, units));
+
+        // single unit but not MSI
+        variant = new SimpleVariant(CHR_1, 100, "A", "AAB");
+        units = Lists.newArrayList("A");
+        assertFalse(isMsiIndelOfType(variant, units));
+
+        // MSI repeat
+        variant = new SimpleVariant(CHR_1, 100, "A", "AABABAB");
+        units = Lists.newArrayList("AB");
+        assertTrue(isMsiIndelOfType(variant, units));
     }
 
     @Test
-    public void testIsMsiIndelOfTypeSingleUnitNotMsiIndel()
-    {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
-        when(mockVariant.isInsert()).thenReturn(true);
-        when(mockVariant.ref()).thenReturn("A");
-        when(mockVariant.alt()).thenReturn("AAB");
-
-        List<String> units = Lists.newArrayList("A");
-        assertFalse(isMsiIndelOfType(mockVariant, units));
-    }
-
-    @Test
-    public void testIsMsiIndelOfTypeSingleUnitIsMsiIndel()
-    {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
-        when(mockVariant.isInsert()).thenReturn(true);
-        when(mockVariant.ref()).thenReturn("A");
-        when(mockVariant.alt()).thenReturn("AABABAB");
-
-        List<String> units = Lists.newArrayList("AB");
-        assertTrue(isMsiIndelOfType(mockVariant, units));
-    }
-
-    @Test
-    public void testIsAdjacentToLongHomopolymerNotLongEnough()
+    public void testIsAdjacentToLongHomopolymers()
     {
         int longLength = 10;
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn("A".repeat(2*longLength - 1).getBytes());
+        String readBases = "A".repeat(2*longLength - 1);
+        SAMRecord read = createRead(readBases);
 
-        assertFalse(isAdjacentToLongHomopolymer(mockRead, longLength - 1, longLength));
+        // not long enough
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "A".repeat(longLength) + "C" + "T".repeat(longLength - 1);
+        read = createRead(readBases);
+
+        // on left
+        assertTrue(isAdjacentToLongHomopolymer(read, longLength, longLength));
+
+        readBases = "T".repeat(longLength - 1) + "C" + "A".repeat(longLength);
+        read = createRead(readBases);
+
+        // on right
+        assertTrue(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "C" + "A".repeat(2*longLength - 1);
+        read = createRead(readBases);
+
+        // not on left
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
+
+        readBases = "A".repeat(2*longLength - 1) + "C";
+        read = createRead(readBases);
+
+        // not on right
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "N".repeat(2*longLength);
+        read = createRead(readBases);
+
+        // invalid bases
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
     }
 
-    @Test
-    public void testIsAdjacentToLongHomopolymerOnLeft()
+    private static SAMRecord createRead(final String readBases)
     {
-        int longLength = 10;
-        String readBases = "A".repeat(longLength) + "C" + "T".repeat(longLength - 1);
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn(readBases.getBytes());
-
-        assertTrue(isAdjacentToLongHomopolymer(mockRead, longLength, longLength));
-    }
-
-    @Test
-    public void testIsAdjacentToLongHomopolymerOnRight()
-    {
-        int longLength = 10;
-        String readBases = "T".repeat(longLength - 1) + "C" + "A".repeat(longLength);
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn(readBases.getBytes());
-
-        assertTrue(isAdjacentToLongHomopolymer(mockRead, longLength - 1, longLength));
-    }
-
-    @Test
-    public void testIsAdjacentToLongHomopolymerNotOnLeft()
-    {
-        int longLength = 10;
-        String readBases = "C" + "A".repeat(2*longLength - 1);
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn(readBases.getBytes());
-
-        assertFalse(isAdjacentToLongHomopolymer(mockRead, longLength, longLength));
-    }
-
-    @Test
-    public void testIsAdjacentToLongHomopolymerNotOnRight()
-    {
-        int longLength = 10;
-        String readBases = "A".repeat(2*longLength - 1) + "C";
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn(readBases.getBytes());
-
-        assertFalse(isAdjacentToLongHomopolymer(mockRead, longLength - 1, longLength));
-    }
-
-    @Ignore
-    @Test
-    public void testIsAdjacentToLongHomopolymerNHomopolymerOnLeft()
-    {
-        int longLength = 10;
-        SAMRecord mockRead = mock(SAMRecord.class);
-        when(mockRead.getReadBases()).thenReturn("N".repeat(2*longLength).getBytes());
-
-        assertFalse(isAdjacentToLongHomopolymer(mockRead, longLength, longLength));
+        String cigar = format("%dM", readBases.length());
+        return buildSamRecord(100, cigar, readBases);
     }
 
     @Test

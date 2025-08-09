@@ -266,7 +266,6 @@ public class UltimaQualModelTest
         assertEquals(34, calcQual);
     }
 
-    @Ignore
     @Test
     public void testSNVs()
     {

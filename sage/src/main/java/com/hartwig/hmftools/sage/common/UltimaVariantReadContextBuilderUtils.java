@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
 
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class UltimaVariantReadContextBuilderUtils
 
     private static boolean isDnaBaseHomopolymer(final byte[] bases, int startIndex, int endIndex)
     {
-        if(baseIndex(bases[startIndex]) < 0)
+        if(!isValidDnaBase(bases[startIndex]))
             return false;
 
         for(int i = startIndex + 1; i <= endIndex; i++)

@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.ultima;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.INVALID_INDEX;
 import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.MISSING_BASE;
 import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.addPadding;
@@ -12,8 +13,6 @@ import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.populateAligne
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
@@ -27,6 +26,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.IntPair;
+import com.hartwig.hmftools.sage.common.ReadCigarInfo;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.UltimaCoreExtender.AlignedBase;
 import com.hartwig.hmftools.sage.common.UltimaCoreExtender.UltimaCoreInfo;
 
@@ -168,26 +169,28 @@ public class UltimaCoreExtenderTest
     @Test
     public void testExtendCoreInitCoreIndicesOutOfRange()
     {
-        List mockAlignedBases = mock(List.class);
-        when(mockAlignedBases.size()).thenReturn(3);
+        List<AlignedBase> alignedBases = Lists.newArrayList(
+                new AlignedBase(1, 0, DNA_BASE_BYTES[0], DNA_BASE_BYTES[0], M),
+                new AlignedBase(2, 1, DNA_BASE_BYTES[0], DNA_BASE_BYTES[0], M),
+                new AlignedBase(3, 2, DNA_BASE_BYTES[0], DNA_BASE_BYTES[0], M));
 
-        IntPair extendCoreIndices = extendCore(mockAlignedBases, -1, 2, null, null);
+        IntPair extendCoreIndices = extendCore(alignedBases, -1, 2, null, null);
         assertNull(extendCoreIndices);
 
-        extendCoreIndices = extendCore(mockAlignedBases, 1, 3, null, null);
+        extendCoreIndices = extendCore(alignedBases, 1, 3, null, null);
         assertNull(extendCoreIndices);
     }
 
     @Test
     public void testAddPaddingNoSpaceForPadding()
     {
-        List mockAlignedBases = mock(List.class);
-        when(mockAlignedBases.size()).thenReturn(1);
+        List<AlignedBase> alignedBases = Lists.newArrayList(
+                new AlignedBase(1, 0, DNA_BASE_BYTES[0], DNA_BASE_BYTES[0], M));
 
-        int coreStart = addPadding(mockAlignedBases, 0, true);
+        int coreStart = addPadding(alignedBases, 0, true);
         assertEquals(INVALID_INDEX, coreStart);
 
-        int coreEnd = addPadding(mockAlignedBases, 1, false);
+        int coreEnd = addPadding(alignedBases, 1, false);
         assertEquals(INVALID_INDEX, coreEnd);
     }
 

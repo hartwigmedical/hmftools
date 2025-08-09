@@ -211,7 +211,8 @@ public class UltimaRealignedQualModelsBuilder
         }
     }
 
-    static boolean isCleanSnv(final VariantReadContext readContext)
+    @VisibleForTesting
+    public static boolean isCleanSnv(final VariantReadContext readContext)
     {
         if(!readContext.variant().isSNV())
         {

@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.sage.ultima;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.getHomopolymers;
+import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.isCleanSnv;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getQualVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.getRealignedVariants;
 import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder_0.mergeSandwichedHomopolymers;
@@ -13,23 +17,28 @@ import static com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.quality.UltimaQualCalculator;
 import com.hartwig.hmftools.sage.quality.UltimaQualCalculator.HomopolymerAdjustment;
+import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModel;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.Homopolymer;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.MergedHomopolymers;
 import com.hartwig.hmftools.sage.quality.UltimaRealignedQualModelsBuilder.RefMask;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import htsjdk.samtools.CigarElement;
 
 public class UltimaRealignedQualModelsBuilderTest
 {
@@ -41,7 +50,6 @@ public class UltimaRealignedQualModelsBuilderTest
     @After
     public void resetSequencingType() { setIlluminaSequencing(); }
 
-    /*
     @Test
     public void testGetHomopolymersInvalidIndices()
     {
@@ -76,14 +84,10 @@ public class UltimaRealignedQualModelsBuilderTest
                 new Homopolymer((byte) 'T', 10),
                 new Homopolymer((byte) 'A', 1));
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "AC");
+        VariantReadContext readContext = createReadContext(variant);
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.CorePositionStart).thenReturn(0);
-
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, true);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, true);
         List<Homopolymer> expectedHomopolymers = refHomopolymers;
 
         assertEquals(expectedHomopolymers, mergedHomopolymers.RefHomopolymers);
@@ -98,14 +102,10 @@ public class UltimaRealignedQualModelsBuilderTest
         List<Homopolymer> refHomopolymers = getHomopolymers(refBases.getBytes(), 0, refBases.length() - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readBases.getBytes(), 0, readBases.length() - 1);
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "AC");
+        VariantReadContext readContext = createReadContext(variant);
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.CorePositionStart).thenReturn(0);
-
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, true);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, true);
         List<Homopolymer> expectedMergedRefHomopolymers = refHomopolymers;
         List<Homopolymer> expectedMergedReadHomopolymers = Lists.newArrayList(refHomopolymers);
         expectedMergedReadHomopolymers.set(expectedMergedReadHomopolymers.size() - 3, new Homopolymer((byte) 'A', 11));
@@ -139,14 +139,12 @@ public class UltimaRealignedQualModelsBuilderTest
 
         public void check()
         {
-            SimpleVariant mockVariant = mock(SimpleVariant.class);
-            when(mockVariant.isIndel()).thenReturn(true);
+            SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+            String refBases = REF_BASES_200.substring(30, 70);
+            String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+            VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
-            VariantReadContext mockReadContext = mock(VariantReadContext.class);
-            when(mockReadContext.variant()).thenReturn(mockVariant);
-            when(mockReadContext.CorePositionStart).thenReturn(0);
-
-            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, RefHomopolymers, ReadHomopolymers, true);
+            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, RefHomopolymers, ReadHomopolymers, true);
 
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.RefHomopolymers);
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.ReadHomopolymers);
@@ -189,11 +187,13 @@ public class UltimaRealignedQualModelsBuilderTest
         SimpleVariant realignedVariant2 = new SimpleVariant(CHR_1, variantPos - 100, "C", "CCC");
         SimpleVariant realignedVariant3 = new SimpleVariant(CHR_1, variantPos, "C", "CA");
         SimpleVariant realignedVariant4 = new SimpleVariant(CHR_1, variantPos, "C", "CT");
+
         List<UltimaRealignedQualModel> realignedVariants = Lists.newArrayList(
                 new UltimaRealignedQualModel(realignedVariant1),
                 new UltimaRealignedQualModel(realignedVariant2),
                 new UltimaRealignedQualModel(realignedVariant3),
                 new UltimaRealignedQualModel(realignedVariant4));
+
         List<SimpleVariant> actualQualVariants = getQualVariants(false, variant, realignedVariants)
                 .stream()
                 .map(UltimaRealignedQualModel::variant)
@@ -203,7 +203,9 @@ public class UltimaRealignedQualModelsBuilderTest
 
         assertEquals(expectedQualVariants.size(), actualQualVariants.size());
         for(int i = 0; i < expectedQualVariants.size(); i++)
+        {
             assertTrue(expectedQualVariants.get(i).matches(actualQualVariants.get(i)));
+        }
     }
 
     @Test
@@ -213,15 +215,19 @@ public class UltimaRealignedQualModelsBuilderTest
                 new Homopolymer((byte) 'A', 5),
                 new Homopolymer((byte) 'T', 5),
                 new Homopolymer((byte) 'A', 5));
+
         List<Homopolymer> readHomopolymers = Lists.newArrayList(
                 new Homopolymer((byte) 'A', 5),
                 new Homopolymer((byte) 'T', 2),
                 new Homopolymer((byte) 'A', 5));
+
         int coreIndexStart = 0;
         int varIndex = 4;
         int corePositionStart = 100;
         int position = 104;
+
         SimpleVariant variant = new SimpleVariant(CHR_1, position, "ATTT", "A");
+
         VariantReadContext readContext = new VariantReadContext(
                 variant, -1, -1, null, "AAAAATTAAAAA".getBytes(), Lists.newArrayList(),
                 coreIndexStart, varIndex, -1, null, null, null, corePositionStart, -1);
@@ -241,14 +247,17 @@ public class UltimaRealignedQualModelsBuilderTest
                 new Homopolymer((byte) 'A', 5),
                 new Homopolymer((byte) 'T', 2),
                 new Homopolymer((byte) 'A', 5));
+
         List<Homopolymer> readHomopolymers = Lists.newArrayList(
                 new Homopolymer((byte) 'A', 5),
                 new Homopolymer((byte) 'T', 5),
                 new Homopolymer((byte) 'A', 5));
+
         int coreIndexStart = 0;
         int varIndex = 4;
         int corePositionStart = 100;
         int position = 104;
+
         SimpleVariant variant = new SimpleVariant(CHR_1, position, "A", "ATTT");
         VariantReadContext readContext = new VariantReadContext(
                 variant, -1, -1, null, "AAAAATTTTTAAAAA".getBytes(), Lists.newArrayList(),
@@ -265,21 +274,18 @@ public class UltimaRealignedQualModelsBuilderTest
     @Test
     public void testSandwichRefGenome()
     {
-        String refBases = "GTAAAAAAAAAAAAGAGAGAAAAAAC";
+        String refBases =      "GTAAAAAAAAAAAAGAGAGAAAAAAC";
         String readCoreBases = "GTGAAAAAAAAAAGAGAGAAAAAAC";
         List<Homopolymer> refHomopolymers = getHomopolymers(refBases.getBytes(), 0, refBases.length() - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readCoreBases.getBytes(), 0, readCoreBases.length() - 1);
 
         int corePositionStart = 13;
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isIndel()).thenReturn(true);
+        SimpleVariant variant = new SimpleVariant(CHR_1, 15, "AA", "G");
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.CorePositionStart).thenReturn(corePositionStart);
+        VariantReadContext readContext = createVariantReadContext(variant, readCoreBases.getBytes(), refBases.getBytes());
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(mockReadContext, refHomopolymers, readHomopolymers, false);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, false);
 
         int refMaskIndex = 18;
         assertEquals(1, mergedHomopolymers.refMasks().size());
@@ -290,6 +296,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(corePositionStart + refMaskIndex, refMask.PosStart);
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsSingleHomopolymerDeletion()
     {
@@ -304,35 +311,41 @@ public class UltimaRealignedQualModelsBuilderTest
 
         int refGenomePaddingLength = 99;
         String refGenomePadding = "C".repeat(refGenomePaddingLength);
-        String refGenomeBases =
-                refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
+        String refGenomeBases = refGenomePadding + refHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + refGenomePadding;
 
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.RefGenomeMap.put(CHR_1, refGenomeBases);
         refGenome.ChromosomeLengths.put(CHR_1, refGenomeBases.length());
 
-        int flankLength = 10;
+        int flankLength = DEFAULT_FLANK_LENGTH;
         String flankBases = "C".repeat(flankLength);
         int corePositionStart = refGenomePaddingLength + 1;
         int coreIndexStart = flankLength;
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.chromosome()).thenReturn(CHR_1);
-        when(mockVariant.isIndel()).thenReturn(true);
+        //SimpleVariant mockVariant = mock(SimpleVariant.class);
+        //when(mockVariant.chromosome()).thenReturn(CHR_1);
+        //when(mockVariant.isIndel()).thenReturn(true);
 
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "AA", "G");
+
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), readBases.getBytes());
+
+        /*
         VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
+        when(mockReadContext.variant()).thenReturn(variant);
         when(mockReadContext.CorePositionStart).thenReturn(corePositionStart);
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
 
+         */
+
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -343,6 +356,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertTrue(realignedVariant.variant().matches(CHR_1, corePositionStart + 4, "ATT", "A"));
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsSingleHomopolymerContraction()
     {
@@ -372,6 +386,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -382,11 +397,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -403,6 +424,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(3, qualModel.hpEndIndex() + realignedVariant.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsTwoHomopolymerDeletions()
     {
@@ -432,6 +454,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -442,11 +465,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -462,6 +491,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 6, "TC", "A"));
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsTwoHomopolymerContractions()
     {
@@ -493,6 +523,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -504,10 +535,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
 
+         */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
+
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -535,6 +573,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(4, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsHomopolyerDeletionThenHomopolymerContraction()
     {
@@ -565,6 +604,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -575,11 +615,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -601,6 +647,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(1, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsHomopolyerContractionThenHomopolymerDeletion()
     {
@@ -631,6 +678,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -641,11 +689,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -667,6 +721,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 9, "TCC", "T"));
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsSingleHomopolymerCreation()
     {
@@ -695,6 +750,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -705,11 +761,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -726,6 +788,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(2, qualModel.hpEndIndex() + realignedVariant.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsSingleHomopolymerExpansion()
     {
@@ -755,6 +818,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -765,11 +829,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
 
@@ -786,6 +856,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(5, qualModel.hpEndIndex() + realignedVariant.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsTwoHomopolymerCreations()
     {
@@ -815,6 +886,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -825,11 +897,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -857,6 +935,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(3, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsTwoHomopolymerExpansions()
     {
@@ -888,6 +967,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -898,11 +978,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -930,6 +1016,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(7, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsHomopolyerCreationThenHomopolymerExpansion()
     {
@@ -960,6 +1047,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -970,11 +1058,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+        */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -1002,6 +1096,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(7, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsHomopolyerExpansionThenHomopolymerCreation()
     {
@@ -1032,6 +1127,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -1042,11 +1138,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+         */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -1074,6 +1176,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(7, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsHomopolyerCreationThenHomopolymerCreation()
     {
@@ -1105,6 +1208,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -1115,11 +1219,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
+         */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(2, realignedVariants.size());
 
@@ -1146,6 +1256,7 @@ public class UltimaRealignedQualModelsBuilderTest
         assertEquals(2, qualModel2.hpEndIndex() + realignedVariant2.varReadIndexOffset());
     }
 
+    @Ignore
     @Test
     public void testGetRealignedVariantsSNV()
     {
@@ -1175,6 +1286,7 @@ public class UltimaRealignedQualModelsBuilderTest
         int varIndex = flankLength + 4;
         String readBases = flankBases + readHomopolymers.stream().map(Homopolymer::expand).collect(Collectors.joining()) + flankBases;
 
+        /*
         SimpleVariant mockVariant = mock(SimpleVariant.class);
         when(mockVariant.chromosome()).thenReturn(CHR_1);
         when(mockVariant.isIndel()).thenReturn(true);
@@ -1186,10 +1298,17 @@ public class UltimaRealignedQualModelsBuilderTest
         when(mockReadContext.VarIndex).thenReturn(varIndex);
         when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
 
+         */
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, 50, "A", "AA");
+        String refBases = REF_BASES_200.substring(30, 70);
+        // String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
+
         UltimaQualCalculator ultimaQualCalculator = new UltimaQualCalculator(refGenome);
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                mockReadContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ultimaQualCalculator, refHomopolymers, readHomopolymers, refMasks);
 
         List<UltimaRealignedQualModel> delRealignedVariants = realignedVariants.stream()
                 .filter(x -> x.type() == HOMOPOLYMER_DELETION)
@@ -1223,29 +1342,27 @@ public class UltimaRealignedQualModelsBuilderTest
     @Test
     public void testIsCleanSnvIndel()
     {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isSNV()).thenReturn(false);
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "AC");
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
+        String refBases = "AGACT";
+        String readBases = "AGACCT";
 
-        assertFalse(isCleanSnv(mockReadContext));
+        VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
+        assertFalse(isCleanSnv(readContext));
     }
 
     @Test
     public void testIsCleanSnvRefCoreLengthMismatch()
     {
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isSNV()).thenReturn(true);
+        String readBases = "AATAAA";
+        String refBases = "AAAAAA";
 
-        byte[] mockRefBases = "A".repeat(6).getBytes();
+        VariantReadContext readContext = createVariantReadContext(createSimpleSnv(), readBases.getBytes(), refBases.getBytes());
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.coreLength()).thenReturn(5);
-        when(mockReadContext.refBasesBytes()).thenReturn(mockRefBases);
+        assertFalse(isCleanSnv(readContext));
 
-        assertFalse(isCleanSnv(mockReadContext));
+        assertEquals(5, readContext.coreLength());
+        assertFalse(isCleanSnv(readContext));
     }
 
     @Test
@@ -1264,19 +1381,9 @@ public class UltimaRealignedQualModelsBuilderTest
         refBasesBuilder.delete(0, coreIndexStart);
         String refBases = refBasesBuilder.toString();
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isSNV()).thenReturn(true);
+        VariantReadContext readContext = createVariantReadContext(createSimpleSnv(), readBases.getBytes(), refBases.getBytes());
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.coreLength()).thenReturn(coreLength);
-        when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
-        when(mockReadContext.CoreIndexEnd).thenReturn(coreIndexEnd);
-        when(mockReadContext.VarIndex).thenReturn(varIndex);
-        when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
-        when(mockReadContext.refBasesBytes()).thenReturn(refBases.getBytes());
-
-        assertTrue(isCleanSnv(mockReadContext));
+        assertFalse(isCleanSnv(readContext));
     }
 
     @Test
@@ -1296,19 +1403,35 @@ public class UltimaRealignedQualModelsBuilderTest
         refBasesBuilder.delete(0, coreIndexStart);
         String refBases = refBasesBuilder.toString();
 
-        SimpleVariant mockVariant = mock(SimpleVariant.class);
-        when(mockVariant.isSNV()).thenReturn(true);
+        VariantReadContext readContext = createVariantReadContext(createSimpleSnv(), readBases.getBytes(), refBases.getBytes());
 
-        VariantReadContext mockReadContext = mock(VariantReadContext.class);
-        when(mockReadContext.variant()).thenReturn(mockVariant);
-        when(mockReadContext.coreLength()).thenReturn(coreLength);
-        when(mockReadContext.CoreIndexStart).thenReturn(coreIndexStart);
-        when(mockReadContext.CoreIndexEnd).thenReturn(coreIndexEnd);
-        when(mockReadContext.VarIndex).thenReturn(varIndex);
-        when(mockReadContext.readBasesBytes()).thenReturn(readBases.getBytes());
-        when(mockReadContext.refBasesBytes()).thenReturn(refBases.getBytes());
-
-        assertFalse(isCleanSnv(mockReadContext));
+        assertFalse(isCleanSnv(readContext));
     }
-    */
+
+    private static SimpleVariant createSimpleSnv()
+    {
+        return new SimpleVariant(CHR_1, 100, "A", "C");
+    }
+
+    private static VariantReadContext createVariantReadContext(
+            final SimpleVariant variant, final byte[] readBases, final byte[] refBase)
+    {
+        List<CigarElement> readCigar = CigarUtils.cigarElementsFromStr("25M");
+
+        int corePosStart = variant.Position - 2;
+
+        int corePosEnd = variant.Position + variant.indelLength() + 2;
+
+        int flankLength = DEFAULT_FLANK_LENGTH;
+        int coreIndexStart = flankLength;
+        int varIndex = coreIndexStart + 2;
+        int coreIndexEnd = varIndex + variant.indelLength() + 2;
+        int alignStart = variant.Position - varIndex;
+        int alignEnd = variant.Position + (coreIndexEnd - varIndex) + flankLength;
+
+        return new VariantReadContext(
+                variant, alignStart, alignEnd, refBase, readBases, readCigar, coreIndexStart, varIndex, coreIndexEnd,
+                null, null, Collections.emptyList(), corePosStart, corePosEnd);
+    }
+
 }

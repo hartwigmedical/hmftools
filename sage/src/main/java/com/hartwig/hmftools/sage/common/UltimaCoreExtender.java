@@ -292,7 +292,8 @@ public class UltimaCoreExtender
 
     @VisibleForTesting
     @Nullable
-    public static IntPair extendCore(final List<AlignedBase> alignedBases, final int initCoreStart, final int initCoreEnd,
+    public static IntPair extendCore(
+            final List<AlignedBase> alignedBases, final int initCoreStart, final int initCoreEnd,
             final Map<Integer, Integer> lookupFromRefPos, final Map<Integer, Integer> lookupFromReadIndex)
     {
         if(initCoreStart < 0 || initCoreEnd >= alignedBases.size())
