@@ -12,16 +12,40 @@ public class BamUtilities
     {
         File refGenomeFile = new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
-        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(6_000));
-//        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
-        ChromosomeRegionDepths chr1Depths = new RepeatingACGTChromosomeRegionDepths(0);
-        int regionOffset = 1_201;
-        chr1Depths.addRange(regionOffset, regionOffset + 1_000, 10);
-        chr1Depths.addRange(regionOffset + 1000, regionOffset + 2_000, 100);
-        chr1Depths.addRange(regionOffset + 2000, regionOffset + 3_000, 50);
-//        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
-//        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
-        bamRecipe.add(chr1Depths);
+        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(101_000));
+        int regionOffset = 1_001;
+        //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
+            for (int i=0; i<11; i++)
+            {
+                double ratio = 1.0 * (40 + i) / 100.0;
+                ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(0, ratio);
+                depths.addRange(regionOffset, regionOffset + 1_000, 10 +i);
+                regionOffset += 1000;
+                depths.addRange(regionOffset, regionOffset + 1_000, 10 +i);
+                regionOffset += 1000;
+                depths.addRange(regionOffset, regionOffset + 1_000, 10 +i);
+                regionOffset += 1000;
+                depths.addRange(regionOffset, regionOffset + 1_000, 20 +i);
+                regionOffset += 1000;
+                depths.addRange(regionOffset, regionOffset + 1_000, 50 +i);
+                regionOffset += 1000;
+                bamRecipe.add(depths);
+            }
+//        for (int i=0; i<100; i++)
+//        {
+//            double ratio = 1.0 * i / 100.0;
+//            ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(0, ratio);
+//            depths.addRange(regionOffset, regionOffset + 1_000, 1);
+//            regionOffset += 1000;
+//            bamRecipe.add(depths);
+//        }
+//        ChromosomeRegionDepths chr1Depths = new GCRatioChromosomeRegionDepths(0, 0.20);
+//        chr1Depths.addRange(regionOffset, regionOffset + 1_000, 10);
+//        chr1Depths.addRange(regionOffset + 1000, regionOffset + 2_000, 100);
+//        bamRecipe.add(chr1Depths);
+//        chr1Depths.addRange(regionOffset + 2000, regionOffset + 3_000, 50);
+        //        chr1Depths.addRange(regionOffset + 3_000, regionOffset + 6_000, 10);
+        //        chr1Depths.addRange(regionOffset + 6_000, regionOffset + 9_000, 100);
 
 //        ChromosomeRegionDepths chrXDepths = new RepeatingACGTChromosomeRegionDepths(22);
 //        regionOffset = 1_001;

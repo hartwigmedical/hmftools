@@ -56,6 +56,7 @@ public class ProcessBamTest
      - GC normalisation
      - counting of reads that lie across windows
      - gc bucket smoothing
+     - filtering of regions of extreme gc
      */
 
     @Test
@@ -160,6 +161,38 @@ public class ProcessBamTest
         assertEquals(82.0, ratios.get(2).tumorReadDepth(), 0.01);
         assertEquals(60.0, ratios.get(3).tumorReadDepth(), 0.01);
         assertEquals(10.0, ratios.get(4).tumorReadDepth(), 0.01);
+    }
+
+    @Test
+    public void regionsOfExtremeGCAreFilteredOut() throws Exception
+    {
+        // 1 chr of length 101_000
+        // 1:1001-2001 depth 1, gc ratio = 0.00
+        // 1:2001-3001 depth 1, gc ratio = 0.01
+        // 1:3001-4001 depth 1, gc ratio = 0.02
+        // etc
+        sample = "increasing_gc_per_window";
+        bamFile = getBam(sample);
+        regionOffset = 1000;
+
+        createStandardChr1GCFile(101_000);
+        createStandardChr1PanelFile(101_000, 1.0001);
+
+        runCobalt();
+        // Upper and lower limits for gc ratio are 0.26 and 0.68 respectively
+        List<CobaltRatio> ratios = ratioResults.get(_1);
+        for (int i=1; i < 26; i++)
+        {
+            assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
+        for (int i=26; i < 68; i++)
+        {
+            assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
+        for (int i=69; i < ratios.size(); i++)
+        {
+            assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
     }
 
     @Test

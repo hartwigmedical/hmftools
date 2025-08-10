@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
@@ -34,6 +35,37 @@ public record ChromosomeWindow(int chromosome, int start, int end)
         return buildPairFromBases(bases);
     }
 
+    public Pair<BaseRegion, BaseRegion> toBasesWithGivenGC(double gcRatio)
+    {
+        Preconditions.checkArgument(gcRatio >= 0.0 && gcRatio <= 1.0);
+        int length = end - start;
+        Preconditions.checkArgument(length > 0);
+        Preconditions.checkArgument(length % 100 == 0);
+        int gCount = (int) (length * gcRatio);
+        String gPart = "G".repeat(gCount);
+        String aPart = "A".repeat(length - gCount);
+        byte[] bases = (gPart + aPart).getBytes();
+        return buildPairFromBases(bases);
+    }
+
+    public Pair<BaseRegion,BaseRegion> toBaseRegionPair(RefGenomeSource refGenomeSource){
+        return Pair.of(toBaseRegion(refGenomeSource), mateBaseRegion(refGenomeSource));
+    }
+
+    private BaseRegion toBaseRegion(RefGenomeSource refGenomeSource)
+    {
+        byte[] bases = refGenomeSource.getBases(chromosomeName(), start, end - 1);
+        return new BaseRegion(chromosome, start, end, bases);
+    }
+
+    private BaseRegion mateBaseRegion(RefGenomeSource refGenomeSource)
+    {
+        int mateStart = end;
+        int mateStop = mateStart + (end - start);
+        byte[] mateBases = refGenomeSource.getBases(chromosomeName(), mateStart, mateStop - 1);
+        return new BaseRegion(chromosome, mateStart, mateStop, mateBases);
+    }
+
     @NotNull
     private ImmutablePair<BaseRegion, BaseRegion> buildPairFromBases(final byte[] bases)
     {
@@ -42,23 +74,5 @@ public record ChromosomeWindow(int chromosome, int start, int end)
         int mateStop = mateStart + (end - start);
         BaseRegion right = new BaseRegion(chromosome, mateStart, mateStop, bases);
         return new ImmutablePair<>(left, right);
-    }
-
-    public Pair<BaseRegion,BaseRegion> toBaseRegionPair(RefGenomeSource refGenomeSource){
-        return Pair.of(toBaseRegion(refGenomeSource), mateBaseRegion(refGenomeSource));
-    }
-
-    public BaseRegion toBaseRegion(RefGenomeSource refGenomeSource)
-    {
-        byte[] bases = refGenomeSource.getBases(chromosomeName(), start, end - 1);
-        return new BaseRegion(chromosome, start, end, bases);
-    }
-
-    public BaseRegion mateBaseRegion(RefGenomeSource refGenomeSource)
-    {
-        int mateStart = end;
-        int mateStop = mateStart + (end - start);
-        byte[] mateBases = refGenomeSource.getBases(chromosomeName(), mateStart, mateStop - 1);
-        return new BaseRegion(chromosome, mateStart, mateStop, mateBases);
     }
 }

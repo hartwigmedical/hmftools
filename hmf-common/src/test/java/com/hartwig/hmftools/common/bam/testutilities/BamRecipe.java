@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.bam.FastBamWriter;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -12,7 +13,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class BamRecipe
 {
-    private final Map<Integer, ChromosomeRegionDepths> chromosomeDepths = new HashMap<>();
+    private final Map<Integer, List<ChromosomeRegionDepths>> chromosomeDepths = new HashMap<>();
     private final ChromosomeLengths chromosomeLengths;
 
     public BamRecipe(final ChromosomeLengths chromosomeLengths)
@@ -22,8 +23,9 @@ public class BamRecipe
 
     public void add(ChromosomeRegionDepths depths)
     {
-        Preconditions.checkArgument(!chromosomeDepths.containsKey(depths.mChromosome), "Duplicate chromosome index");
-        chromosomeDepths.put(depths.mChromosome, depths);
+        List<ChromosomeRegionDepths> depthsForChromosome = chromosomeDepths.getOrDefault(depths.mChromosome, new ArrayList<>());
+        depthsForChromosome.add(depths);
+        chromosomeDepths.put(depths.mChromosome, depthsForChromosome);
     }
 
     public void writeToBam(String outputFileName)
@@ -37,7 +39,10 @@ public class BamRecipe
         });
         SAMFileWriter bamWriter = new FastBamWriter(header, outputFileName);
 
-        chromosomeDepths.values().forEach(depths -> depths.writeToBam(bamWriter));
+        chromosomeDepths.values()
+                .forEach(depthsList ->
+                        depthsList.forEach( chromosomeRegionDepths ->
+                                chromosomeRegionDepths.writeToBam(bamWriter)));
         bamWriter.close();
     }
 }
