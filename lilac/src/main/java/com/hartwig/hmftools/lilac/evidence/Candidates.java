@@ -73,7 +73,7 @@ public final class Candidates
                 .collect(Collectors.toList());
 
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
-                nucleotideCandidatesAfterAminoAcidFiltering, fragments);
+                context.Gene, nucleotideCandidatesAfterAminoAcidFiltering, fragments);
 
         List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
                 (nucleotideSpecificSequences.stream().map(x -> x.Allele.asFourDigit()).collect(Collectors.toList()));
