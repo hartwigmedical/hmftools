@@ -23,7 +23,8 @@ public class UltimaRealignedQualModels
     private final UltimaQualModel mOriginalQualModel;
     private final List<UltimaRealignedQualModel> mRealignedQualModels;
 
-    public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator,
+    public UltimaRealignedQualModels(
+            final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator,
             final List<UltimaRealignedQualModel> realignedQualModels)
     {
         mOriginalQualModel = originalQualModel(readContext, ultimaQualCalculator);

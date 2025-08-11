@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELETION;
-import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.getQualVariants;
 import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.getRealignedVariants;
 import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.mergeSandwichedHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
@@ -80,7 +79,7 @@ public class UltimaRealignedQualModelTest
         SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "AC");
         VariantReadContext readContext = createReadContext(variant);
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, true);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         List<Homopolymer> expectedHomopolymers = refHomopolymers;
 
         assertEquals(expectedHomopolymers, mergedHomopolymers.RefHomopolymers);
@@ -98,7 +97,7 @@ public class UltimaRealignedQualModelTest
         SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "AC");
         VariantReadContext readContext = createReadContext(variant);
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, true);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         List<Homopolymer> expectedMergedRefHomopolymers = refHomopolymers;
         List<Homopolymer> expectedMergedReadHomopolymers = Lists.newArrayList(refHomopolymers);
         expectedMergedReadHomopolymers.set(expectedMergedReadHomopolymers.size() - 3, new Homopolymer((byte) 'A', 11));
@@ -137,7 +136,7 @@ public class UltimaRealignedQualModelTest
             String readBases = REF_BASES_200.substring(30, 51) + "A" + REF_BASES_200.substring(51, 70);
             VariantReadContext readContext = createVariantReadContext(variant, readBases.getBytes(), refBases.getBytes());
 
-            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, RefHomopolymers, ReadHomopolymers, true);
+            MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, RefHomopolymers, ReadHomopolymers);
 
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.RefHomopolymers);
             assertEquals(ExpectedHomopolymers, mergedHomopolymers.ReadHomopolymers);
@@ -167,37 +166,6 @@ public class UltimaRealignedQualModelTest
         for(SandwichedHomopolymerTestCase testCase : testCases)
         {
             testCase.check();
-        }
-    }
-
-    // TODO: Tests around getQualVariants now that this method has been modified?
-    @Test
-    public void testGetQualVariantsNonHomopolymerInsert()
-    {
-        int variantPos = 1000;
-        SimpleVariant variant = new SimpleVariant(CHR_1, variantPos, "C", "CAT");
-        SimpleVariant realignedVariant1 = new SimpleVariant(CHR_1, variantPos - 200, "CC", "C");
-        SimpleVariant realignedVariant2 = new SimpleVariant(CHR_1, variantPos - 100, "C", "CCC");
-        SimpleVariant realignedVariant3 = new SimpleVariant(CHR_1, variantPos, "C", "CA");
-        SimpleVariant realignedVariant4 = new SimpleVariant(CHR_1, variantPos, "C", "CT");
-
-        List<UltimaRealignedQualModel> realignedVariants = Lists.newArrayList(
-                new UltimaRealignedQualModel(realignedVariant1),
-                new UltimaRealignedQualModel(realignedVariant2),
-                new UltimaRealignedQualModel(realignedVariant3),
-                new UltimaRealignedQualModel(realignedVariant4));
-
-        List<SimpleVariant> actualQualVariants = getQualVariants(false, variant, realignedVariants)
-                .stream()
-                .map(UltimaRealignedQualModel::variant)
-                .collect(Collectors.toList());
-
-        List<SimpleVariant> expectedQualVariants = Lists.newArrayList(realignedVariant2, realignedVariant3, realignedVariant4);
-
-        assertEquals(expectedQualVariants.size(), actualQualVariants.size());
-        for(int i = 0; i < expectedQualVariants.size(); i++)
-        {
-            assertTrue(expectedQualVariants.get(i).matches(actualQualVariants.get(i)));
         }
     }
 
@@ -278,7 +246,7 @@ public class UltimaRealignedQualModelTest
 
         VariantReadContext readContext = createVariantReadContext(variant, readCoreBases.getBytes(), refBases.getBytes());
 
-        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers, false);
+        MergedHomopolymers mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
 
         int refMaskIndex = 18;
         assertEquals(1, mergedHomopolymers.refMasks().size());

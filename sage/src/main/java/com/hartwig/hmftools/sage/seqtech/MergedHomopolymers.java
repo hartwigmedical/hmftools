@@ -48,7 +48,6 @@ public class MergedHomopolymers
         return mRefMasks;
     }
 
-    // TODO: remove
     @Override
     public boolean equals(final Object o)
     {

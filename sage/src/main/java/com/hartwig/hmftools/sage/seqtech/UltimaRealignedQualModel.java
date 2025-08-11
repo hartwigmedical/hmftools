@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.seqtech;
 
+import static java.lang.String.format;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.quality.MsiJitterQualCache;
@@ -57,8 +59,8 @@ public class UltimaRealignedQualModel
         return mBaseQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);
     }
 
-    public MsiJitterQualCache qualCache(final byte[] refBases, final byte[] readBases, final QualityCalculator qualityCalculator,
-            final String sampleId)
+    public MsiJitterQualCache qualCache(
+            final byte[] refBases, final byte[] readBases, final QualityCalculator qualityCalculator, final String sampleId)
     {
         if(mMsiJitterQualCache == null)
         {
@@ -73,9 +75,11 @@ public class UltimaRealignedQualModel
     public int varReadIndexOffset() { return mVarReadIndexOffset; }
     public SimpleVariant variant() { return mVariant; }
 
-    public UltimaModelType type()
+    public UltimaModelType type() { return mBaseQualModel == null ? UltimaModelType.NONE : mBaseQualModel.type(); }
+
+    public String toString()
     {
-        // TODO: HOMOPOLYMER_ADJUSTMENT is a debugging placeholder
-        return mBaseQualModel == null ? UltimaModelType.HOMOPOLYMER_ADJUSTMENT : mBaseQualModel.type();
+        return format("%s model(%s) indices(var=%d refIndex=%d readIndexOffset=%d)",
+                mVariant, type(), mVarIndex, mVariantRefIndex, mVarReadIndexOffset);
     }
 }

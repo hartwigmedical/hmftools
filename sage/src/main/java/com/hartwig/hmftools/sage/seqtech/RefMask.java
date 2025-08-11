@@ -15,7 +15,6 @@ public class RefMask
         BaseMask = baseMask;
     }
 
-    // TODO: Remove
     @Override
     public boolean equals(final Object o)
     {

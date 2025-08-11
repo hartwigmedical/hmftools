@@ -21,25 +21,11 @@ import htsjdk.samtools.SAMRecord;
 
 public final class UltimaUtils
 {
-    protected static final HashMap<Byte, Integer> CYCLE_BASE_INDEX;
-
-    // TODO: temporarily since we don't fall back to MSI model properly.
     protected static final int MAX_HOMOPOLYMER = 15;
 
-    // ULTIMA CHECK: Access modifiers (?)
-    public static final byte INVALID_BASE = -1;
+    protected static final byte INVALID_BASE = -1;
 
-    // TODO: make a constant if continue with use
     private static final int LONG_LENGTH = 20;
-
-    static
-    {
-        CYCLE_BASE_INDEX = Maps.newHashMap();
-        for(int i = 0; i < CYCLE_BASES.length; i++)
-        {
-            CYCLE_BASE_INDEX.put(CYCLE_BASES[i], i);
-        }
-    }
 
     public static byte safeQualLookup(final byte[] qualityArray, int index)
     {
