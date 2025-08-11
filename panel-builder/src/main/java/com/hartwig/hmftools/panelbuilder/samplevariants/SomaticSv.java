@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
 
@@ -38,7 +36,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.common.wisp.CategoryType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +46,8 @@ public class SomaticSv extends Variant
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
+    private boolean mIsAmpDriver;
+    private boolean mIsDelDriver;
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticSv.class);
 
@@ -57,6 +56,8 @@ public class SomaticSv extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
+        mIsAmpDriver = false;
+        mIsDelDriver = false;
     }
 
     private StructuralVariantData variantData()
@@ -64,29 +65,36 @@ public class SomaticSv extends Variant
         return mVariant;
     }
 
-    private void markAmpDelDriver(boolean isAmp)
+    // Setters only used during loading from file (because we construct the variant then determine these properties afterwards).
+    // TODO: can we get rid of the setters?
+    private void setIsAmpDriver(boolean isAmpDriver)
     {
-        mCategoryType = isAmp ? CategoryType.AMP : CategoryType.DEL;
+        mIsAmpDriver = isAmpDriver;
     }
 
-    private void setCategoryType()
+    private void setIsDelDriver(boolean isDelDriver)
     {
-        if(!mFusions.isEmpty())
-        {
-            mCategoryType = CategoryType.FUSION;
-        }
-        else if(mCategoryType == CategoryType.AMP || mCategoryType == CategoryType.DEL)
-        {
-            return;
-        }
-        else if(mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption))
-        {
-            mCategoryType = CategoryType.DISRUPTION;
-        }
-        else
-        {
-            mCategoryType = CategoryType.OTHER_SV;
-        }
+        mIsDelDriver = isDelDriver;
+    }
+
+    public boolean isFusion()
+    {
+        return !mFusions.isEmpty();
+    }
+
+    public boolean isAmpDriver()
+    {
+        return mIsAmpDriver;
+    }
+
+    public boolean isDelDriver()
+    {
+        return mIsDelDriver;
+    }
+
+    public boolean isReportedDisruption()
+    {
+        return mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption);
     }
 
     public double vaf()
@@ -102,10 +110,9 @@ public class SomaticSv extends Variant
     @Override
     public boolean isDriver()
     {
-        return mCategoryType == CategoryType.FUSION
-                || mCategoryType == CategoryType.AMP
-                || mCategoryType == CategoryType.DEL
-                || mCategoryType == CategoryType.DISRUPTION;
+        return isAmpDriver() || isDelDriver()
+                || mFusions.stream().anyMatch(LinxFusion::reported)
+                || isReportedDisruption();
     }
 
     @Override
@@ -127,28 +134,6 @@ public class SomaticSv extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters()
-    {
-        if(reported() && mCategoryType != CategoryType.DISRUPTION)
-        {
-            // Should never be called since checkFilters() is false.
-            throw new IllegalStateException();
-        }
-
-        if(!(vaf() >= SAMPLE_VAF_MIN))
-        {
-            return false;
-        }
-
-        if(!(tumorFragments() >= SAMPLE_FRAGMENT_COUNT_MIN))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
     public List<ProximateLocations.Location> checkedLocations()
     {
         return List.of(
@@ -156,9 +141,9 @@ public class SomaticSv extends Variant
                 new ProximateLocations.Location(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()));
     }
 
-    public List<LinxBreakend> breakends()
+    public List<String> disruptedGenes()
     {
-        return mBreakends;
+        return mBreakends.stream().map(LinxBreakend::gene).toList();
     }
 
     @Override
@@ -289,14 +274,14 @@ public class SomaticSv extends Variant
         // find SVs related to DEL and AMP events
         for(LinxDriver driver : drivers)
         {
-            List<SomaticSv> svList = clusterSVs.get(driver.clusterId());
+            List<SomaticSv> clusterSvs = clusterSVs.get(driver.clusterId());
 
             if(driver.eventType() == DriverEventType.GAIN)
             {
                 // Only mark as AMP if VCN is highest within the cluster.
                 SomaticSv driverSv = null;
                 double maxJcn = 0;
-                for(SomaticSv sv : svList)
+                for(SomaticSv sv : clusterSvs)
                 {
                     double svJcn = max(sv.variantData().adjustedStartCopyNumberChange(), sv.variantData().adjustedEndCopyNumberChange());
                     if(svJcn > maxJcn)
@@ -307,7 +292,7 @@ public class SomaticSv extends Variant
                 }
                 if(driverSv != null)
                 {
-                    driverSv.markAmpDelDriver(true);
+                    driverSv.setIsAmpDriver(true);
                 }
             }
             else if(driver.eventType() == DriverEventType.DEL)
@@ -317,11 +302,11 @@ public class SomaticSv extends Variant
                         .findFirst().orElse(null);
                 if(geneCopyNumber != null)
                 {
-                    for(SomaticSv sv : svList)
+                    for(SomaticSv sv : clusterSvs)
                     {
                         if(matchesDelRegion(sv.variantData(), geneCopyNumber))
                         {
-                            sv.markAmpDelDriver(false);
+                            sv.setIsDelDriver(false);
                         }
                     }
                 }

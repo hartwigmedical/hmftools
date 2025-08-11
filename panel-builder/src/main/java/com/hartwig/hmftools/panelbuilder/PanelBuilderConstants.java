@@ -78,9 +78,8 @@ public class PanelBuilderConstants
     public static final double SAMPLE_VAF_MIN = 0.05;
     public static final int SAMPLE_FRAGMENT_COUNT_MIN = 11;
     public static final int SAMPLE_REPEAT_COUNT_MAX = 3;
-    public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
-    public static final int SAMPLE_MAX_INDEL = 31;
+    public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

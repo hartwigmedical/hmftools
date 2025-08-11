@@ -27,7 +27,6 @@ public class GermlineMutation extends Variant
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineMutation.class);
 
-    // TODO: only select if driver = true
     @Override
     public boolean isDriver()
     {

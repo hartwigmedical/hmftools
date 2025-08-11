@@ -32,7 +32,6 @@ public class GermlineSv extends Variant
         mBreakends = breakends;
     }
 
-    // TODO: only select if driver = true
     @Override
     public boolean isDriver()
     {

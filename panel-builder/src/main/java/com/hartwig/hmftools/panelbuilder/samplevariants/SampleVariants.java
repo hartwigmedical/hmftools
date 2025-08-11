@@ -6,20 +6,25 @@ import static java.util.Objects.requireNonNull;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INDEL_LENGTH_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
@@ -85,13 +90,6 @@ public class SampleVariants
         }
     }
 
-    private enum VariantSelectionStatus
-    {
-        SELECTED,
-        EXCLUDED,
-        FILTERED
-    }
-
     public ProbeGenerationResult generateProbes(List<Variant> variants)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
@@ -99,17 +97,60 @@ public class SampleVariants
         ProximateLocations registeredLocations = new ProximateLocations();
         HashMap<String, Integer> geneDisruptions = new HashMap<>();
 
-        result = result.add(selectDrivers(variants, registeredLocations, geneDisruptions, SAMPLE_PROBES_MAX - result.probes().size()));
-        result = result.add(selectNondrivers(variants, registeredLocations, SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(generateDriverProbes(variants, registeredLocations, geneDisruptions,
+                SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(generateNondriverProbes(variants, registeredLocations, SAMPLE_PROBES_MAX - result.probes().size()));
 
         return result;
     }
 
-    private ProbeGenerationResult generateProbes(List<Variant> variants, HashMap<Variant, VariantSelectionStatus> selectionStatuses,
-            ProximateLocations registeredLocations, HashMap<String, Integer> geneDisruptions, int maxProbes, boolean firstPass)
-    {
-        ProbeGenerationResult result = new ProbeGenerationResult();
+    private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, ProximateLocations registeredLocations,
+            Map<String, Integer> geneDisruptions, int maxProbes)
 
+    {
+        // TODO: variant prioritisation?
+        ProbeGenerationResult result = new ProbeGenerationResult();
+        for(Variant variant : variants)
+        {
+            if(result.probes().size() >= maxProbes)
+            {
+                // TODO: warning if we get here?
+                // Filled the probe quota.
+                break;
+            }
+            boolean select = variant.isDriver()
+                    && driverFilters(variant)
+                    && proximityFilter(variant, registeredLocations)
+                    && geneDisruptionFilter(variant, geneDisruptions);
+            if(select)
+            {
+                ProbeGenerationResult probeGenResult = generateProbe(variant);
+                result = result.add(probeGenResult);
+                registeredLocations.addLocations(variant.checkedLocations());
+                registerDisruptedGenes(variant, geneDisruptions);
+            }
+        }
+        return result;
+    }
+
+    private static boolean driverFilters(final Variant variant)
+    {
+        // Only disruption SVs have these filters, other SV types have no additional filters and are always accepted if they are drivers.
+        if(variant instanceof SomaticSv sv)
+        {
+            if(sv.isReportedDisruption())
+            {
+                return vafFilter(sv.vaf()) && tumorFragmentsFilter(sv.tumorFragments());
+            }
+        }
+        return true;
+    }
+
+    private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, ProximateLocations registeredLocations,
+            int maxProbes)
+    {
+        // TODO: variant prioritisation
+        ProbeGenerationResult result = new ProbeGenerationResult();
         for(Variant variant : variants)
         {
             if(result.probes().size() >= maxProbes)
@@ -117,89 +158,90 @@ public class SampleVariants
                 // Filled the probe quota.
                 break;
             }
-            if(selectionStatuses.containsKey(variant) && selectionStatuses.get(variant) != VariantSelectionStatus.FILTERED)
-            {
-                // Already selected or excluded.
-                continue;
-            }
-            if(!supportedVariantCategory(variant.categoryType()))
-            {
-                // This type of variant can never be selected.
-                selectionStatuses.put(variant, VariantSelectionStatus.EXCLUDED);
-                continue;
-            }
-
-            boolean canSelect = true;
-            boolean canExclude = true;
-
-            if(variant.checkFilters())
-            {
-                if(firstPass)
-                {
-                    if(!geneDisruptionCheck(variant, geneDisruptions))
-                    {
-                        canSelect = false;
-                    }
-                    else if(!variant.passNonReportableFilters(true))
-                    {
-                        // These filters will be checked again on the second pass.
-                        canSelect = false;
-                        canExclude = false;
-                    }
-                }
-                else
-                {
-                    // If the variant failed the strict filters before, give it a chance to pass the relaxed filters now.
-                    // Otherwise, the variant failed other checks and it can't be selected.
-                    canSelect = selectionStatuses.get(variant) == VariantSelectionStatus.FILTERED
-                            && variant.passNonReportableFilters(false);
-                }
-            }
-
-            if(canSelect && checkAndRegisterLocations(variant, registeredLocations))
+            boolean select = !variant.isDriver()
+                    && nondriverFilters(variant)
+                    && proximityFilter(variant, registeredLocations);
+            if(select)
             {
                 ProbeGenerationResult probeGenResult = generateProbe(variant);
                 result = result.add(probeGenResult);
-                selectionStatuses.put(variant, VariantSelectionStatus.SELECTED);
-            }
-            else if(canExclude)
-            {
-                selectionStatuses.put(variant, VariantSelectionStatus.EXCLUDED);
+                registeredLocations.addLocations(variant.checkedLocations());
             }
         }
-
         return result;
     }
 
-    private boolean geneDisruptionCheck(final Variant variant, HashMap<String, Integer> geneDisruptions)
+    private static boolean nondriverFilters(final Variant variant)
     {
-        if(variant instanceof SomaticSv)
+        // Only somatic SNV/INDEL can be selected, if it passes these additional filters. Other nondrivers are never selected.
+        if(variant instanceof SomaticMutation mutation)
         {
-            List<String> genes = ((SomaticSv) variant).breakends().stream().map(LinxBreakend::gene).toList();
-            for(String gene : genes)
-            {
-                int disruptionCount = geneDisruptions.computeIfAbsent(gene, k -> 1);
-                if(disruptionCount > SAMPLE_SV_BREAKENDS_PER_GENE_MAX)
-                {
-                    return false;
-                }
-                // TODO: this should only be done if the variant is selected. do it together with the proximity check
-                geneDisruptions.put(gene, disruptionCount + 1);
-            }
+            return vafFilter(mutation.vaf())
+                    && tumorFragmentsFilter(mutation.tumorFragments())
+                    && indelLengthFilter(mutation.indelLength())
+                    && repeatCountFilter(mutation.repeatCount())
+                    && germlineStatusFilter(mutation.germlineStatus());
+        }
+        return false;
+    }
+
+    private static boolean vafFilter(double vaf)
+    {
+        return vaf >= SAMPLE_VAF_MIN;
+    }
+
+    private static boolean tumorFragmentsFilter(int tumorFragments)
+    {
+        return tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN;
+    }
+
+    private static boolean indelLengthFilter(int indelLength)
+    {
+        return indelLength <= SAMPLE_INDEL_LENGTH_MAX;
+    }
+
+    private static boolean repeatCountFilter(int repeatCount)
+    {
+        return repeatCount <= SAMPLE_REPEAT_COUNT_MAX;
+    }
+
+    private static boolean germlineStatusFilter(final GermlineStatus germlineStatus)
+    {
+        // TODO
+        return switch(germlineStatus)
+        {
+            case HOM_DELETION -> true;
+            case HET_DELETION -> true;
+            case AMPLIFICATION -> true;
+            case NOISE -> false;
+            case DIPLOID -> false;
+            case EXCLUDED -> true;
+            case CENTROMETIC -> true;
+            case UNKNOWN -> true;
+        };
+    }
+
+    private static boolean proximityFilter(final Variant variant, final ProximateLocations registeredLocations)
+    {
+        return variant.checkedLocations().stream().anyMatch(registeredLocations::isNearLocation);
+    }
+
+    private static boolean geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
+    {
+        if(variant instanceof SomaticSv sv)
+        {
+            return sv.disruptedGenes().stream()
+                    .allMatch(gene -> geneDisruptions.getOrDefault(gene, 1) <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
         }
         return true;
     }
 
-    private boolean checkAndRegisterLocations(final Variant variant, ProximateLocations registeredLocations)
+    private static void registerDisruptedGenes(final Variant variant, Map<String, Integer> geneDisruptions)
     {
-        List<ProximateLocations.Location> locations = variant.checkedLocations();
-        if(locations.stream().anyMatch(registeredLocations::isNearRegisteredLocation))
+        if(variant instanceof SomaticSv sv)
         {
-            return false;
+            sv.disruptedGenes().forEach(gene -> geneDisruptions.put(gene, geneDisruptions.getOrDefault(gene, 0)));
         }
-        // TODO: only do this if the variant is selected. do it together with the gene disruption check
-        locations.forEach(registeredLocations::addRegisteredLocation);
-        return true;
     }
 
     private ProbeGenerationResult generateProbe(final Variant variant)
