@@ -10,7 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
 import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
 
 import htsjdk.samtools.CigarElement;
@@ -39,7 +39,7 @@ public class VariantReadContext
 
     private final String mReadCigarStr;
 
-    private ArtefactContext mArtefactContext;
+    private IlluminaArtefactContext mIlluminaArtefactContext;
     private UltimaRealignedQualModels mUltimaRealignedQualModels;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
@@ -68,10 +68,11 @@ public class VariantReadContext
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
 
-        mArtefactContext = null;
-        mUltimaRealignedQualModels = null;
         mMaxRefRepeat = null;
         mExtendedRefBases = null;
+
+        mIlluminaArtefactContext = null;
+        mUltimaRealignedQualModels = null;
     }
 
     // read context methods
@@ -130,8 +131,8 @@ public class VariantReadContext
     public final String trinucleotideStr() { return new String(trinucleotide()); }
     public final String readCigar() { return mReadCigarStr; }
 
-    public ArtefactContext artefactContext() { return mArtefactContext; }
-    public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
+    public IlluminaArtefactContext artefactContext() { return mIlluminaArtefactContext; }
+    public void setArtefactContext(final IlluminaArtefactContext context) { mIlluminaArtefactContext = context; }
 
     public UltimaRealignedQualModels realignedUltimaQualModels() { return mUltimaRealignedQualModels; }
     public void setUltimaRealignedQualModels(final UltimaRealignedQualModels models) { mUltimaRealignedQualModels = models; }

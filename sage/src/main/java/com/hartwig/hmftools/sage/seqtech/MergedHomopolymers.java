@@ -6,7 +6,6 @@ import java.util.Objects;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-@VisibleForTesting
 public class MergedHomopolymers
 {
     public final List<Homopolymer> RefHomopolymers;
@@ -15,8 +14,8 @@ public class MergedHomopolymers
     private boolean mVariantInMergedHomopolymers;
     private List<RefMask> mRefMasks;
 
-    public MergedHomopolymers(final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers,
-            boolean variantInMergedHomopolymers)
+    public MergedHomopolymers(
+            final List<Homopolymer> refHomopolymers, final List<Homopolymer> readHomopolymers, boolean variantInMergedHomopolymers)
     {
         RefHomopolymers = refHomopolymers;
         ReadHomopolymers = readHomopolymers;

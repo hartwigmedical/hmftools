@@ -446,6 +446,7 @@ public class UltimaRealignedQualModelsBuilder
 
             realignedVariants.add(realignedQualModel);
         }
+        
         for(int i = 0; i < insHomopolymers.size(); i++)
         {
             HomopolymerVariant insHomopolymer = insHomopolymers.get(i);

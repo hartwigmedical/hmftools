@@ -1,25 +1,17 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
+
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
-import static com.google.common.primitives.UnsignedBytes.max;
-import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 
@@ -29,9 +21,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class UltimaQualCalculator
 {
-    // TODO: temporarily since we don't fall back to MSI model properly.
-    private static final int MAX_HOMOPOLYMER = 15;
-
     private final RefGenomeInterface mRefGenome;
 
     public UltimaQualCalculator(final RefGenomeInterface refGenome)
@@ -44,8 +33,7 @@ public class UltimaQualCalculator
         return buildContext(variant, coreBases, null);
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases,
-            @Nullable final List<RefMask> refMasks) // pass in MH or repeat info
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases, @Nullable final List<RefMask> refMasks)
     {
         int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
@@ -72,11 +60,11 @@ public class UltimaQualCalculator
         {
             if(variant.isDelete() && isHomopolymerDeletion(variant, origRefBases))
             {
-                return new HomopolymerDeletion(variant, origRefBases[2], coreBases[1], coreBases[2]);
+                return new UltimaHomopolymerDeletion(variant, origRefBases[2], coreBases[1], coreBases[2]);
             }
             else if(variant.isDelete() && isHomopolymerDeletion(variant, refBases))
             {
-                return new HomopolymerDeletion(variant, refBases[2], coreBases[1], coreBases[2]);
+                return new UltimaHomopolymerDeletion(variant, refBases[2], coreBases[1], coreBases[2]);
             }
 
             int homopolymerTransitionIndex = findHomopolymerTransitionCandidate(variant);
@@ -97,7 +85,7 @@ public class UltimaQualCalculator
 
                 if(lowerHpLength > 2 && upperHpLength > 2 && variant.ref().length() + variant.position() - 1 <= upperRefBaseEnd)
                 {
-                    return new HomopolymerTransitionDeletion(variant, homopolymerTransitionIndex, lowerHpLength, upperHpLength);
+                    return new UltimaHomopolymerTransitionDeletion(variant, homopolymerTransitionIndex, lowerHpLength, upperHpLength);
                 }
             }
 
@@ -123,7 +111,7 @@ public class UltimaQualCalculator
                 int homopolymerEndIndex = homopolymerStartIndex + homopolymerLength - 1 + variant.indelLength();
                 int refAdjustCount = -variant.indelLength();
 
-                return new HomopolymerAdjustment(homopolymerStartIndex, homopolymerEndIndex, refAdjustCount);
+                return new UltimaHomopolymerAdjustment(homopolymerStartIndex, homopolymerEndIndex, refAdjustCount);
             }
             else
             {
@@ -132,7 +120,7 @@ public class UltimaQualCalculator
         }
         else if(variant.isSNV())
         {
-            return new SnvMnv(variant, refBases, refVarIndex, coreBases[0], coreBases[2]);
+            return new UltimaSnv(variant, refBases, refVarIndex, coreBases[0], coreBases[2], mRefGenome);
         }
 
         return null;
@@ -175,380 +163,14 @@ public class UltimaQualCalculator
         return true;
     }
 
-    private static int findHomopolymerLength(final byte[] refBases, final byte compareBase, int startIndex, boolean searchUp)
-    {
-        // byte repeatBase = refBases[startIndex];
-        int repeatCount = 0;
-
-        // int i = startIndex + (searchUp ? 1 : -1);
-        int i = startIndex;
-
-        while(i >= 0 && i < refBases.length)
-        {
-            if(refBases[i] != compareBase)
-                return repeatCount;
-
-            ++repeatCount;
-
-            if(searchUp)
-                ++i;
-            else
-                --i;
-        }
-
-        return repeatCount;
-    }
-
-    @VisibleForTesting
-    public static class HomopolymerAdjustment extends UltimaQualModel
-    {
-        private final int mHpStartIndex;
-        private final int mHpEndIndex;
-        private final int mRefAdjustCount;
-
-        public HomopolymerAdjustment(final int hpStartIndex, final int hpEndIndex, final int refAdjustCount)
-        {
-            super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
-
-            // TODO: Do we keep this around after testing?
-            if(hpEndIndex < hpStartIndex)
-            {
-                throw new IllegalArgumentException("Homopolymer end index is before start index.");
-            }
-
-            mHpStartIndex = hpStartIndex;
-            mHpEndIndex = hpEndIndex;
-            mRefAdjustCount = refAdjustCount;
-        }
-
-        public byte calculateQual(final SAMRecord record, int varReadIndex)
-        {
-            return calcTpBaseQual(
-                    record, varReadIndex + mHpStartIndex, varReadIndex + mHpEndIndex, mRefAdjustCount);
-        }
-
-        public int hpStartIndex() { return mHpStartIndex; }
-        public int hpEndIndex() { return mHpEndIndex; }
-        public int refAdjustCount() { return mRefAdjustCount; }
-
-        public String toString()
-        {
-            return format("adjust: hpIndex(%d-%d) adjust(%d)", mHpStartIndex, mHpEndIndex, mRefAdjustCount);
-        }
-    }
-
-    private class HomopolymerDeletion extends UltimaQualModel
-    {
-        // the index of the bases relative to the variant that surround the deleted HP
-        private final int mStraddleIndexStart;
-        private final int mStraddleIndexEnd;
-        private final byte mStraddleBaseStart;
-        private final byte mStraddleBaseEnd;
-        private final boolean mInCyclePosStrand;
-        private final boolean mInCycleNegStrand;
-
-        public HomopolymerDeletion(
-                final SimpleVariant variant, final byte deletedHpBase, final byte straddleBaseStart, final byte straddleBaseEnd)
-        {
-            super(UltimaModelType.HOMOPOLYMER_DELETION);
-
-            byte deletedBase;
-
-            if(variant.isDelete())
-            {
-                mStraddleIndexStart = 0;
-                mStraddleIndexEnd = 1;
-                mStraddleBaseStart = straddleBaseStart; // the variant position ref base
-                mStraddleBaseEnd = straddleBaseEnd; // the first ref base after the deleted bases
-
-                deletedBase = deletedHpBase;
-
-                mInCyclePosStrand = isBaseInCycle(mStraddleBaseStart, mStraddleBaseEnd, deletedBase);
-
-                byte revDeletedBase = swapDnaBase(deletedBase);
-                mInCycleNegStrand = isBaseInCycle(swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), revDeletedBase);
-            }
-            else  // used for SNVs where the variant's ref base is considered deleted
-            {
-                // any HP deletion can just use the SNV base itself
-                mStraddleIndexStart = 0;
-                mStraddleIndexEnd = 0;
-
-                // the 2 bases surrounding the SNV
-                mStraddleBaseStart = straddleBaseStart;
-                mStraddleBaseEnd = straddleBaseEnd;
-
-                deletedBase = deletedHpBase;
-                byte altBase = (byte) variant.alt().charAt(0);
-
-                int posCycleCountRef = UltimaBamUtils.cycleCount(straddleBaseStart, mStraddleBaseEnd, deletedBase);
-                int posCycleCountAlt = UltimaBamUtils.cycleCount(straddleBaseStart, mStraddleBaseEnd, altBase);
-                mInCyclePosStrand = posCycleCountRef == posCycleCountAlt;
-
-                int negCycleCountRef = UltimaBamUtils.cycleCount(
-                        swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), swapDnaBase(deletedHpBase));
-
-                int negCycleCountAlt = UltimaBamUtils.cycleCount(
-                        swapDnaBase(mStraddleBaseEnd), swapDnaBase(mStraddleBaseStart), swapDnaBase(altBase));
-
-                mInCycleNegStrand = negCycleCountRef == negCycleCountAlt;
-            }
-        }
-
-        public byte calculateQual(final SAMRecord record, int varReadIndex)
-        {
-            if(record.getReadNegativeStrandFlag())
-            {
-                if(!mInCycleNegStrand)
-                    return ULTIMA_MAX_QUAL_T0;
-            }
-            else
-            {
-                if(!mInCyclePosStrand)
-                    return ULTIMA_MAX_QUAL_T0;
-            }
-
-            final byte[] t0Values = extractT0Values(record);
-            byte qual1 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexStart);
-            if(qual1 == ULTIMA_INVALID_QUAL)
-            {
-                return ULTIMA_INVALID_QUAL;
-            }
-
-            byte qual2 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexEnd);
-            if(qual2 == ULTIMA_INVALID_QUAL)
-            {
-                return ULTIMA_INVALID_QUAL;
-            }
-
-            return max(qual1, qual2);
-        }
-
-        public String toString()
-        {
-            return format("del: straddle(%d=%d %d=%d) cycle(pos=%s & neg=%s)",
-                    mStraddleIndexStart, mStraddleBaseStart, mStraddleIndexEnd, mStraddleBaseEnd,
-                    mInCyclePosStrand, mInCycleNegStrand);
-        }
-    }
-
-    private class HomopolymerTransitionDeletion extends UltimaQualModel
-    {
-        private final int mLowerHpStartIndex;
-        private final int mLowerHpEndIndex;
-        private final int mLowerRefAdjustCount;
-        private final int mUpperHpStartIndex;
-        private final int mUpperHpEndIndex;
-        private final int mUpperRefAdjustCount;
-
-        public HomopolymerTransitionDeletion(
-                final SimpleVariant variant, final int homopolymerTransitionIndex, final int lowerHpLength, final int upperHpLength)
-        {
-            super(UltimaModelType.HOMOPOLYMER_TRANSITION);
-
-            int delLength = abs(variant.indelLength());
-            int lowerDelLength = homopolymerTransitionIndex - 1;
-            int upperDelLength = delLength - lowerDelLength;
-
-            // the ref base always matches the lower HP base, and the ref + 1 base the upper HP base
-            mLowerHpEndIndex = 0;
-            mLowerHpStartIndex = mLowerHpEndIndex - lowerHpLength + 1 + lowerDelLength;
-            mLowerRefAdjustCount = lowerDelLength;
-
-            mUpperHpStartIndex = mLowerHpEndIndex + 1;
-            mUpperHpEndIndex = mUpperHpStartIndex + upperHpLength - 1 - upperDelLength;
-            mUpperRefAdjustCount = upperDelLength;
-        }
-
-        public byte calculateQual(final SAMRecord record, int varReadIndex)
-        {
-            byte lowerQual = calcTpBaseQual(
-                    record, varReadIndex + mLowerHpStartIndex, varReadIndex + mLowerHpEndIndex, mLowerRefAdjustCount);
-
-            if(lowerQual == ULTIMA_INVALID_QUAL)
-                return ULTIMA_INVALID_QUAL;
-
-            byte upperQual = calcTpBaseQual(
-                    record, varReadIndex + mUpperHpStartIndex, varReadIndex + mUpperHpEndIndex, mUpperRefAdjustCount);
-
-            if(upperQual == ULTIMA_INVALID_QUAL)
-                return ULTIMA_INVALID_QUAL;
-
-            if(lowerQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST || upperQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST)
-                return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
-
-            return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL_TP);
-        }
-
-        public String toString()
-        {
-            return format("transition: lower(%d-%d %d) upper(%d-%d %d)",
-                    mLowerHpStartIndex, mLowerHpEndIndex, mLowerRefAdjustCount,
-                    mUpperHpStartIndex, mUpperHpEndIndex, mLowerRefAdjustCount);
-        }
-    }
-
     private class MicrosatelliteAdjustment extends UltimaQualModel
     {
         public MicrosatelliteAdjustment()
         {
-            super(UltimaModelType.MICROSAT_ADJUSTMENT);
+            super(UltimaModelType.MICROSATELLITE);
         }
 
         public byte calculateQual(final SAMRecord record, int varReadIndex) { return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST; }
-    }
-
-    private class SnvMnv extends UltimaQualModel
-    {
-        private final HomopolymerAdjustment mLeftAdjust;
-        private final HomopolymerAdjustment mRightAdjust;
-        private final HomopolymerDeletion mLeftDeletion;
-        private final HomopolymerDeletion mRightDeletion;
-
-        public SnvMnv(final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final byte leftReadBase,
-                final byte rightReadBase)
-        {
-            super(UltimaModelType.SNV);
-
-            byte refBase = (byte)variant.ref().charAt(0);
-            byte altBase = (byte)variant.alt().charAt(0);
-            byte leftBase = refBases[refVarIndex - 1];
-            byte rightBase = refBases[refVarIndex + 1];
-
-            // SNVs and MNVs
-            if(leftBase == rightBase && (leftBase == refBase || leftBase == altBase))
-            {
-                // both straddling bases match either the ref or alt, so no need to check for HP adjustment
-                mLeftAdjust = null;
-                mRightAdjust = null;
-                mLeftDeletion = null;
-                mRightDeletion = null;
-                return;
-            }
-
-            // one side will be a delete (either partial or complete), the other a 1-base insert
-            HomopolymerAdjustment leftAdjust = null;
-            HomopolymerAdjustment rightAdjust = null;
-            HomopolymerDeletion leftDeletion = null;
-            HomopolymerDeletion rightDeletion = null;
-
-            boolean leftMatchesRef = refBases[refVarIndex - 1] == refBases[refVarIndex];
-            boolean leftMatchesAlt = refBases[refVarIndex - 1] == altBase;
-            boolean rightMatchesRef = refBases[refVarIndex + 1] == refBases[refVarIndex];
-            boolean rightMatchesAlt = refBases[refVarIndex + 1] == altBase;
-            boolean leftSideDelete = (leftMatchesRef && !leftMatchesAlt) || rightMatchesAlt;
-
-            int lowerHpLength = 0;
-            if(leftMatchesAlt || leftMatchesRef)
-            {
-                int lowerRefBaseEnd = leftMatchesRef ? variant.Position : variant.Position - 1;
-                int lowerRefBaseStart = lowerRefBaseEnd - MAX_HOMOPOLYMER;
-                final byte[] lowerRefBases = mRefGenome.getBases(variant.Chromosome, lowerRefBaseStart, lowerRefBaseEnd);
-                byte hpBase = lowerRefBases[lowerRefBases.length - 1];
-                lowerHpLength = findHomopolymerLength(lowerRefBases, hpBase, lowerRefBases.length - 1, false);
-            }
-
-            if(leftMatchesAlt || !leftSideDelete)
-            {
-                // is a HP expansion of 1 base on the left - find DP length start with the left position
-                int newHpLength = lowerHpLength + 1;
-
-                int leftHpEndIndex = 0;
-                int leftHpStartIndex = leftHpEndIndex - newHpLength + 1;
-                leftAdjust = new HomopolymerAdjustment(leftHpStartIndex, leftHpEndIndex, -1);
-            }
-            else if(leftMatchesRef)
-            {
-                // is a HP contraction of 1 base on the left, starting with the variant's position
-                int newLowerHpLength = lowerHpLength - 1; // reflecting the new length of the HP after the delete
-
-                int leftHpEndIndex = -1;
-                int leftHpStartIndex = leftHpEndIndex - newLowerHpLength + 1;
-                leftAdjust = new HomopolymerAdjustment(leftHpStartIndex, leftHpEndIndex, 1);
-            }
-            else
-            {
-                // HP deletion
-                leftDeletion = new HomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
-            }
-
-            int upperHpLength = 0;
-            if(rightMatchesAlt || rightMatchesRef)
-            {
-                int compareStartIndex = rightMatchesRef ? 1 : 2; // 1 being the variant's base, 2 being the one after
-                byte hpBase = refBases[2];
-                upperHpLength = findHomopolymerLength(refBases, hpBase, compareStartIndex, true);
-            }
-
-            if(rightMatchesAlt || leftSideDelete)
-            {
-                // is a HP expansion of 1 base on the right
-                int newHpLength = upperHpLength + 1;
-
-                int rightHpStartIndex = 0;
-                int rightHpEndIndex = rightHpStartIndex + newHpLength - 1;
-                rightAdjust = new HomopolymerAdjustment(rightHpStartIndex, rightHpEndIndex, -1);
-            }
-            else if(rightMatchesRef)
-            {
-                // is a HP contraction of 1 base on the right, starting with the variant's position
-                int newHpLength = upperHpLength - 1;
-
-                int rightHpStartIndex = 1;
-                int rightHpEndIndex = rightHpStartIndex + newHpLength - 1;
-                rightAdjust = new HomopolymerAdjustment(rightHpStartIndex, rightHpEndIndex, 1);
-            }
-            else
-            {
-                rightDeletion = new HomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
-            }
-
-            mLeftAdjust = leftAdjust;
-            mRightAdjust = rightAdjust;
-            mLeftDeletion = leftDeletion;
-            mRightDeletion = rightDeletion;
-        }
-
-        public byte calculateQual(final SAMRecord record, int varReadIndex)
-        {
-            if(mLeftAdjust == null && mLeftDeletion == null || mRightAdjust == null && mRightDeletion == null)
-                return ULTIMA_MAX_QUAL_T0;
-
-            int leftQual = mLeftAdjust != null ?
-                    min(mLeftAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST) : min(mLeftDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
-
-            if(leftQual == ULTIMA_INVALID_QUAL)
-                return ULTIMA_INVALID_QUAL;
-
-            int rightQual = mRightAdjust != null ?
-                    min(mRightAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST) : min(mRightDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
-
-            if(rightQual == ULTIMA_INVALID_QUAL)
-                return ULTIMA_INVALID_QUAL;
-
-            return (byte) Math.max(leftQual, rightQual);
-        }
-
-        public String toString()
-        {
-            if(mLeftDeletion == null && mLeftAdjust == null)
-                return "non-HP";
-
-            return format("left(%s) right(%s)",
-                    mLeftAdjust != null ? mLeftAdjust : mLeftDeletion, mRightAdjust != null ? mRightAdjust : mRightDeletion);
-        }
-    }
-
-    public static byte safeQualLookup(final byte[] qualityArray, int index)
-    {
-        if(index < 0 || index >= qualityArray.length)
-            return ULTIMA_INVALID_QUAL;
-
-        byte value = qualityArray[index];
-        if(value == ULTIMA_BOOSTED_QUAL)
-            return ULTIMA_MAX_QUAL_T0;
-
-        return value;
     }
 
 }

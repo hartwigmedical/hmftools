@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.seqtech;
 
+import static java.lang.String.format;
+
 public class RefMask
 {
     public final int PosStart;
@@ -34,5 +36,10 @@ public class RefMask
         hash = PosEnd + 31 * hash;
         hash = BaseMask + 31 * hash;
         return hash;
+    }
+
+    public String toString()
+    {
+        return format("%d-%d: %c", PosStart, PosEnd, (char)BaseMask);
     }
 }

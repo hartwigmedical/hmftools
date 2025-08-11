@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
@@ -17,6 +17,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.IntPair;
+import com.hartwig.hmftools.sage.common.ReadCigarInfo;
+import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -107,7 +109,8 @@ public class UltimaCoreExtender
     }
 
     @Nullable
-    public static UltimaCoreInfo extendUltimaCore(final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
+    public static UltimaCoreInfo extendUltimaCore(
+            final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
             final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize, final boolean inAppendMode)
     {
         final List<AlignedBase> alignedBases = alignReadBases(readBases, refSequence, readAlignmentStart, cigarElements);
@@ -189,7 +192,8 @@ public class UltimaCoreExtender
     }
 
     @VisibleForTesting
-    public static void populateAlignedBaseLookupMaps(final List<AlignedBase> alignedBases, final Map<Integer, Integer> lookupFromRefPosOut,
+    public static void populateAlignedBaseLookupMaps(
+            final List<AlignedBase> alignedBases, final Map<Integer, Integer> lookupFromRefPosOut,
             final Map<Integer, Integer> lookupFromReadIndexOut)
     {
         for(int i = 0; i < alignedBases.size(); i++)
@@ -209,8 +213,8 @@ public class UltimaCoreExtender
 
     @VisibleForTesting
     @Nullable
-    public static List<AlignedBase> alignReadBases(final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
-            final List<CigarElement> cigarElements)
+    public static List<AlignedBase> alignReadBases(
+            final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart, final List<CigarElement> cigarElements)
     {
         final byte[] refBases = refSequence.Bases;
         int readIndex = 0;
@@ -362,7 +366,8 @@ public class UltimaCoreExtender
         return INVALID_INDEX;
     }
 
-    public static int findFlankBoundary(final List<AlignedBase> alignedBases, int coreBoundaryIndex, boolean leftFlank, int flankSize, boolean inAppendMode)
+    public static int findFlankBoundary(
+            final List<AlignedBase> alignedBases, int coreBoundaryIndex, boolean leftFlank, int flankSize, boolean inAppendMode)
     {
         int inc = leftFlank ? -1 : 1;
         int readBasesSeen = 0;

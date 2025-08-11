@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.extendUltimaCore;
-import static com.hartwig.hmftools.sage.common.UltimaVariantReadContextBuilderUtils.ultimaLongRepeatFilter;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendUltimaCore;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.ultimaLongRepeatFilter;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -26,7 +26,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -73,9 +74,8 @@ public class VariantReadContextBuilder
             // set max ref repeat for use in MSI calcs and VCF output
             setMaxRefRepeat(readContext);
 
-            // CHECK: relevant for SBX as well?
             if(isIllumina())
-                readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
+                readContext.setArtefactContext(IlluminaArtefactContext.buildContext(readContext));
 
             return readContext;
         }

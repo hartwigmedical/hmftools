@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.INVALID_INDEX;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.MISSING_BASE;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.addPadding;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.alignReadBases;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.extendCore;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.extendUltimaCore;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.findFlankBoundary;
-import static com.hartwig.hmftools.sage.common.UltimaCoreExtender.populateAlignedBaseLookupMaps;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.INVALID_INDEX;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.MISSING_BASE;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.addPadding;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.alignReadBases;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendCore;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendUltimaCore;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.findFlankBoundary;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.populateAlignedBaseLookupMaps;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -28,8 +28,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.IntPair;
 import com.hartwig.hmftools.sage.common.ReadCigarInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.UltimaCoreExtender.AlignedBase;
-import com.hartwig.hmftools.sage.common.UltimaCoreExtender.UltimaCoreInfo;
+import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.AlignedBase;
+import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.UltimaCoreInfo;
 
 import org.junit.Test;
 

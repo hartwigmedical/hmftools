@@ -90,7 +90,7 @@ import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.FragmentLengths;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
-import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
@@ -290,7 +290,7 @@ public class ReadContextCounter
 
     public JitterData jitter() { return mJitterData; }
 
-    public ArtefactContext artefactContext() { return mReadContext.artefactContext(); }
+    public IlluminaArtefactContext artefactContext() { return mReadContext.artefactContext(); }
     public UltimaRealignedQualModels realignedUltimaQualModels() { return mReadContext.realignedUltimaQualModels(); }
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 

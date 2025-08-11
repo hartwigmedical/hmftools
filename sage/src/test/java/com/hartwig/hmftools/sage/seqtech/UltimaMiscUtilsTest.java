@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
-import static com.hartwig.hmftools.sage.common.UltimaVariantReadContextBuilderUtils.isAdjacentToLongHomopolymer;
-import static com.hartwig.hmftools.sage.common.UltimaVariantReadContextBuilderUtils.isMsiIndelOfType;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isAdjacentToLongHomopolymer;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isMsiIndelOfType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,9 +29,9 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class UltimaVariantReadContextBuilderUtilsTest
+public class UltimaMiscUtilsTest
 {
-    public UltimaVariantReadContextBuilderUtilsTest()
+    public UltimaMiscUtilsTest()
     {
         setUltimaSequencing();
     }

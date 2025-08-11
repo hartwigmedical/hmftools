@@ -27,7 +27,6 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.seqtech.UltimaQualCalculator.HomopolymerAdjustment;
 
 import org.junit.After;
 import org.junit.Test;
@@ -385,7 +384,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant.varReadIndexOffset());
         assertTrue(realignedVariant.variant().matches(CHR_1, corePositionStart + 4, "ATT", "A"));
 
-        HomopolymerAdjustment qualModel = (HomopolymerAdjustment) realignedVariant.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel = (UltimaHomopolymerAdjustment) realignedVariant.baseQualModel();
 
         assertEquals(2, qualModel.refAdjustCount());
         assertEquals(1, qualModel.hpStartIndex() + realignedVariant.varReadIndexOffset());
@@ -461,7 +460,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "ATT", "A"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(2, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -471,7 +470,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(3, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 9, "TC", "T"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(1, qualModel2.refAdjustCount());
         assertEquals(4, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -514,7 +513,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 9, "TC", "A"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(1, qualModel2.refAdjustCount());
         assertEquals(1, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -553,7 +552,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "ATT", "A"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(2, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -593,7 +592,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant.varReadIndexOffset());
         assertTrue(realignedVariant.variant().matches(CHR_1, corePositionStart + 4, "A", "ATT"));
 
-        HomopolymerAdjustment qualModel = (HomopolymerAdjustment) realignedVariant.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel = (UltimaHomopolymerAdjustment) realignedVariant.baseQualModel();
 
         assertEquals(-2, qualModel.refAdjustCount());
         assertEquals(1, qualModel.hpStartIndex() + realignedVariant.varReadIndexOffset());
@@ -630,7 +629,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant.varReadIndexOffset());
         assertTrue(realignedVariant.variant().matches(CHR_1, corePositionStart + 4, "A", "ATT"));
 
-        HomopolymerAdjustment qualModel = (HomopolymerAdjustment) realignedVariant.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel = (UltimaHomopolymerAdjustment) realignedVariant.baseQualModel();
 
         assertEquals(-2, qualModel.refAdjustCount());
         assertEquals(1, qualModel.hpStartIndex() + realignedVariant.varReadIndexOffset());
@@ -668,7 +667,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "ATT"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(-2, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -678,7 +677,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(2, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 4, "A", "TC"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(-1, qualModel2.refAdjustCount());
         assertEquals(3, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -718,7 +717,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "ATT"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(-2, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -728,7 +727,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(5, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 7, "T", "TC"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(-1, qualModel2.refAdjustCount());
         assertEquals(6, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -767,7 +766,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "ATTTTT"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(-5, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -777,7 +776,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(5, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 4, "A", "TC"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(-1, qualModel2.refAdjustCount());
         assertEquals(6, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -816,7 +815,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "ATT"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(-2, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -826,7 +825,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(5, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 7, "T", "TCC"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(-2, qualModel2.refAdjustCount());
         assertEquals(6, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -865,7 +864,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, realignedVariant1.varReadIndexOffset());
         assertTrue(realignedVariant1.variant().matches(CHR_1, corePositionStart + 4, "A", "AG"));
 
-        HomopolymerAdjustment qualModel1 = (HomopolymerAdjustment) realignedVariant1.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel1 = (UltimaHomopolymerAdjustment) realignedVariant1.baseQualModel();
 
         assertEquals(-1, qualModel1.refAdjustCount());
         assertEquals(1, qualModel1.hpStartIndex() + realignedVariant1.varReadIndexOffset());
@@ -875,7 +874,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(1, realignedVariant2.varReadIndexOffset());
         assertTrue(realignedVariant2.variant().matches(CHR_1, corePositionStart + 4, "A", "GA"));
 
-        HomopolymerAdjustment qualModel2 = (HomopolymerAdjustment) realignedVariant2.baseQualModel();
+        UltimaHomopolymerAdjustment qualModel2 = (UltimaHomopolymerAdjustment) realignedVariant2.baseQualModel();
 
         assertEquals(-1, qualModel2.refAdjustCount());
         assertEquals(2, qualModel2.hpStartIndex() + realignedVariant2.varReadIndexOffset());
@@ -926,7 +925,7 @@ public class UltimaRealignedQualModelTest
         assertEquals(0, adjRealignedVariant.varReadIndexOffset());
         assertTrue(adjRealignedVariant.variant().matches(CHR_1, corePositionStart + 4, "A", "AC"));
 
-        HomopolymerAdjustment adjQualModel = (HomopolymerAdjustment) adjRealignedVariant.baseQualModel();
+        UltimaHomopolymerAdjustment adjQualModel = (UltimaHomopolymerAdjustment) adjRealignedVariant.baseQualModel();
 
         assertEquals(-1, adjQualModel.refAdjustCount());
         assertEquals(1, adjQualModel.hpStartIndex() + adjRealignedVariant.varReadIndexOffset());

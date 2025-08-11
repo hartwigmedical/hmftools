@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ArtefactContext
+public class IlluminaArtefactContext
 {
     // if a variant is adjacent (factoring in left-alignment for INDELs) to an immediately upstream homopolymer of length >= 8,
     // cap per-read base qual to the lowest base qual from the first N bases of the homopolymer
@@ -28,14 +28,14 @@ public class ArtefactContext
     private static final int HOMOPOLYMER_BASE_SEARCH = 3;
     private static final int HOMOPOLYMER_REPEAT_LENGTH = 8;
 
-    public ArtefactContext(final int[] homopolymerStartOffset, final byte[] homopolymerBase)
+    public IlluminaArtefactContext(final int[] homopolymerStartOffset, final byte[] homopolymerBase)
     {
         mHomopolymerStartOffset = homopolymerStartOffset;
         mHomopolymerBase = homopolymerBase;
         mRequiresCheck = mHomopolymerStartOffset[SE_START] != NO_BASE || mHomopolymerStartOffset[SE_END] != NO_BASE;
     }
 
-    public static ArtefactContext buildContext(final VariantReadContext readContext)
+    public static IlluminaArtefactContext buildContext(final VariantReadContext readContext)
     {
         // check for any single-base repeat of 8+ bases not covering the variant
         String flankAndBases = readContext.readBases();
@@ -98,7 +98,7 @@ public class ArtefactContext
         if(hpStartOffset == NO_INDEX && hpEndOffset == NO_INDEX)
             return null;
 
-        return new ArtefactContext(new int[] { hpStartOffset, hpEndOffset}, new byte[] { hpStartBase, hpEndBase });
+        return new IlluminaArtefactContext(new int[] { hpStartOffset, hpEndOffset}, new byte[] { hpStartBase, hpEndBase });
     }
 
     public boolean requiresCheck() { return mRequiresCheck; }

@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.sage.seqtech;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
-import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.MICROSAT_ADJUSTMENT;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.MICROSATELLITE;
 
 import java.util.List;
 
@@ -42,11 +43,12 @@ public class UltimaRealignedQualModels
 
     public double calculateQual(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        double ultimaQual = Math.max(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, ULTIMA_MAX_QUAL_T0);
+        double ultimaQual = max(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, ULTIMA_MAX_QUAL_T0);
+
         if(mOriginalQualModel != null)
         {
             double modelQual;
-            if(mOriginalQualModel.type() == MICROSAT_ADJUSTMENT && readContextCounter.qualCache().usesMsiIndelErrorQual())
+            if(mOriginalQualModel.type() == MICROSATELLITE && readContextCounter.qualCache().usesMsiIndelErrorQual())
             {
                 modelQual = readContextCounter.qualCache().msiIndelErrorQual();
             }
@@ -64,10 +66,9 @@ public class UltimaRealignedQualModels
         }
 
         if(mRealignedQualModels == null)
-        {
             return ultimaQual;
-        }
 
+        // take the minimum qual across the models
         for(UltimaRealignedQualModel realignedUltimaQualModel : mRealignedQualModels)
         {
             MsiJitterQualCache qualCache = realignedUltimaQualModel.qualCache(
@@ -77,7 +78,7 @@ public class UltimaRealignedQualModels
                     readContextCounter.sampleId());
 
             double modelQual;
-            if(realignedUltimaQualModel.type() == MICROSAT_ADJUSTMENT && qualCache.usesMsiIndelErrorQual())
+            if(realignedUltimaQualModel.type() == MICROSATELLITE && qualCache.usesMsiIndelErrorQual())
             {
                 modelQual = qualCache.msiIndelErrorQual();
             }

@@ -75,7 +75,7 @@ public class UltimaRealignedQualModel
 
     public UltimaModelType type()
     {
-        // HOMOPOLYMER_ADJUSTMENT is a debugging placeholder
+        // TODO: HOMOPOLYMER_ADJUSTMENT is a debugging placeholder
         return mBaseQualModel == null ? UltimaModelType.HOMOPOLYMER_ADJUSTMENT : mBaseQualModel.type();
     }
 }

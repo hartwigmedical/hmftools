@@ -21,23 +21,13 @@ public class Homopolymer
     }
 
     @Override
-    public String toString()
-    {
-        return Length + "x" + (char) Base;
-    }
-
-    @Override
     public boolean equals(final Object o)
     {
         if(this == o)
-        {
             return true;
-        }
 
         if(!(o instanceof Homopolymer))
-        {
             return false;
-        }
 
         final Homopolymer that = (Homopolymer) o;
         return Base == that.Base && Length == that.Length;
@@ -75,5 +65,10 @@ public class Homopolymer
 
         homopolymers.add(new Homopolymer(currentBase, currentLength));
         return homopolymers;
+    }
+
+    public String toString()
+    {
+        return Length + "x" + (char)Base;
     }
 }

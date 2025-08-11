@@ -16,7 +16,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.seqtech.ArtefactContext;
 
 import org.junit.Test;
 
@@ -46,7 +45,7 @@ public class ArtefactsTest
         VariantReadContext readContext = createReadContext(
                 variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
+        IlluminaArtefactContext artefactContext = IlluminaArtefactContext.buildContext(readContext);
         assertNotNull(artefactContext);
 
         assertFalse(artefactContext.hasHomopolymerOffset(SE_START));
@@ -80,7 +79,7 @@ public class ArtefactsTest
         readContext = createReadContext(
                 variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        artefactContext = ArtefactContext.buildContext(readContext);
+        artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
@@ -109,7 +108,7 @@ public class ArtefactsTest
 
         readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        artefactContext = ArtefactContext.buildContext(readContext);
+        artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         assertNotNull(artefactContext);
         assertEquals(2, artefactContext.homopolymerOffset(SE_END));
@@ -135,7 +134,7 @@ public class ArtefactsTest
 
         readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        artefactContext = ArtefactContext.buildContext(readContext);
+        artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         assertNotNull(artefactContext);
         assertEquals(3, artefactContext.homopolymerOffset(SE_END));
@@ -166,7 +165,7 @@ public class ArtefactsTest
 
         readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        artefactContext = ArtefactContext.buildContext(readContext);
+        artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         assertNotNull(artefactContext);
         assertEquals(-1, artefactContext.homopolymerOffset(SE_END));
@@ -195,7 +194,7 @@ public class ArtefactsTest
         VariantReadContext readContext = createReadContext(
                 variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
+        IlluminaArtefactContext artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         assertNotNull(artefactContext);
         assertFalse(artefactContext.hasHomopolymerOffset(SE_END));
@@ -227,7 +226,7 @@ public class ArtefactsTest
         readContext = createReadContext(
                 variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        artefactContext = ArtefactContext.buildContext(readContext);
+        artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
 
         assertNotNull(artefactContext);
@@ -257,7 +256,7 @@ public class ArtefactsTest
         VariantReadContext readContext = createReadContext(
                 variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
+        IlluminaArtefactContext artefactContext = IlluminaArtefactContext.buildContext(readContext);
 
         int readLength = readContextBases.length();
         String cigar = format("%dM", readLength);
