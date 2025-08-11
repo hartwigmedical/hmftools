@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.lilac.LilacConstants.EXON_CHUNK_SIZE;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +40,20 @@ public final class HlaExonSequences
                 break;
 
             int toIndex = min(exonBoundary + 1, acids.size());
-            exonAcids.add(acids.subList(index, toIndex));
+            List<String> exonAcid = acids.subList(index, toIndex);
+
+            List<List<String>> chunks = Lists.newArrayList();
+            int chunkCount = (int) ceil(((double) exonAcid.size()) / EXON_CHUNK_SIZE);
+            int chunkSize = (int) ceil(((double) exonAcid.size()) / chunkCount);
+            int start = 0;
+            while(start < exonAcid.size())
+            {
+                int end = min(start + chunkSize, exonAcid.size());
+                chunks.add(exonAcid.subList(start, end));
+                start = end;
+            }
+
+            exonAcids.addAll(chunks);
             index = exonBoundary + 1;
         }
 

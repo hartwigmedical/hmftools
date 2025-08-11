@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
@@ -54,6 +52,7 @@ public final class LilacConstants
     public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
 
     public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
+    public static final int EXON_CHUNK_SIZE = 137;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
