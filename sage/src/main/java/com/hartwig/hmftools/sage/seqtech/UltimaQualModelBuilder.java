@@ -11,19 +11,63 @@ import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLengt
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
-public class UltimaQualCalculator
+public class UltimaQualModelBuilder
 {
     private final RefGenomeInterface mRefGenome;
 
-    public UltimaQualCalculator(final RefGenomeInterface refGenome)
+    public static void setReadContextUltimaModels(final RefGenomeInterface refGenome, final VariantReadContext readContext)
+    {
+        UltimaQualModelBuilder qualModelBuilder = new UltimaQualModelBuilder(refGenome);
+
+        byte[] coreBases = Arrays.subsetArray(
+                readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
+
+        UltimaQualModel qualModel = qualModelBuilder.buildContext(readContext.variant(), coreBases);
+
+        UltimaRealignedQualModels qualModels;
+
+        if(isCleanHpTransition(readContext, qualModel))
+        {
+            qualModels = new UltimaRealignedQualModels(readContext, qualModelBuilder, Lists.newArrayList());
+        }
+        else
+        {
+            qualModels = UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, qualModelBuilder);
+        }
+
+        readContext.setUltimaRealignedQualModels(qualModels);
+    }
+
+    private static boolean isCleanHpTransition(VariantReadContext readContext, final UltimaQualModel qualModel)
+    {
+        if(qualModel == null || !qualModel.type().equals(UltimaModelType.HOMOPOLYMER_TRANSITION))
+            return false;
+
+        byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+        if(coreReadBases.length != readContext.RefBases.length + readContext.variant().indelLength())
+            return false;
+
+        for(int i = 0; i < coreReadBases.length; ++i)
+        {
+            int offset = i > readContext.leftCoreLength() ? readContext.variant().indelLength() : 0;
+            if(coreReadBases[i] != readContext.RefBases[i - offset])
+                return false;
+        }
+
+        return true;
+    }
+
+    public UltimaQualModelBuilder(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
     }
@@ -172,5 +216,4 @@ public class UltimaQualCalculator
 
         public byte calculateQual(final SAMRecord record, int varReadIndex) { return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST; }
     }
-
 }

@@ -32,14 +32,14 @@ import htsjdk.samtools.SAMRecord;
 public class UltimaQualModelTest
 {
     private final MockRefGenome mRefGenome;
-    private final UltimaQualCalculator mModelBuilder;
+    private final UltimaQualModelBuilder mModelBuilder;
 
     private static final String BUFFER_REF_BASES = "AACCGGTTAACCGGTTAA";
 
     public UltimaQualModelTest()
     {
         mRefGenome = new MockRefGenome(true);
-        mModelBuilder = new UltimaQualCalculator(mRefGenome);
+        mModelBuilder = new UltimaQualModelBuilder(mRefGenome);
         setUltimaSequencing();
     }
 

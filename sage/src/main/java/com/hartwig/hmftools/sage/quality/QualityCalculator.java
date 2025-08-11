@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
-import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
@@ -27,13 +26,8 @@ import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.seqtech.UltimaQualCalculator;
-import com.hartwig.hmftools.sage.seqtech.UltimaQualModel;
-import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
-import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -43,7 +37,6 @@ public class QualityCalculator
     private final BqrRecordMap mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
     private final RefSequence mRefBases;
-    private final UltimaQualCalculator mUltimaQualCalculator;
 
     public static final byte INVALID_BASE_QUAL = -1;
 
@@ -56,25 +49,9 @@ public class QualityCalculator
         mMsiJitterCalcs = msiJitterCalcs;
 
         mRefBases = refBases;
-
-        mUltimaQualCalculator = isUltima() ? new UltimaQualCalculator(refGenome) : null;
     }
 
-    public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
-    public UltimaQualCalculator ultimaQualityCalculator() { return mUltimaQualCalculator; }
     public MsiJitterCalcs msiJitterCalcs() { return mMsiJitterCalcs; }
-
-    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant, final byte[] coreBases)
-    {
-        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant, coreBases) : null;
-    }
-
-    public UltimaRealignedQualModels createRealignedUltimaQualModels(final VariantReadContext readContext)
-    {
-        return mUltimaQualCalculator != null
-                ? UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, mUltimaQualCalculator)
-                : null;
-    }
 
     public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)
     {

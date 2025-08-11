@@ -24,22 +24,22 @@ public class UltimaRealignedQualModels
     private final List<UltimaRealignedQualModel> mRealignedQualModels;
 
     public UltimaRealignedQualModels(
-            final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator,
+            final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder,
             final List<UltimaRealignedQualModel> realignedQualModels)
     {
-        mOriginalQualModel = originalQualModel(readContext, ultimaQualCalculator);
+        mOriginalQualModel = originalQualModel(readContext, ultimaQualModelBuilder);
         mRealignedQualModels = realignedQualModels;
     }
 
-    public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder)
     {
-        this(readContext, ultimaQualCalculator, null);
+        this(readContext, ultimaQualModelBuilder, null);
     }
 
-    private static UltimaQualModel originalQualModel(final VariantReadContext readContext, final UltimaQualCalculator ultimaQualCalculator)
+    private static UltimaQualModel originalQualModel(final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder)
     {
         byte[] coreBases = Arrays.subsetArray(readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
-        return ultimaQualCalculator.buildContext(readContext.variant(), coreBases);
+        return ultimaQualModelBuilder.buildContext(readContext.variant(), coreBases);
     }
 
     public double calculateQual(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)

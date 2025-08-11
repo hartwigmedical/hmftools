@@ -274,7 +274,7 @@ public class UltimaRealignedQualModelTest
         REF_GENOME.ChromosomeLengths.put(CHR_1, refBases.length());
     }
 
-    private static final UltimaQualCalculator ULTIMA_QUAL_CALCULATOR = new UltimaQualCalculator(REF_GENOME);
+    private static final UltimaQualModelBuilder ULTIMA_QUAL_CALCULATOR = new UltimaQualModelBuilder(REF_GENOME);
 
     private static VariantReadContext createTestReadContext(final List<Homopolymer> readHomopolymers)
     {
