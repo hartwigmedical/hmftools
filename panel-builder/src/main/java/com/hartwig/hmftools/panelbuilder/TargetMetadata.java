@@ -20,7 +20,14 @@ public record TargetMetadata(
         CN_BACKBONE,
         CDR3,
         CUSTOM,
-        SAMPLE_VARIANT
+        SAMPLE_SNV_INDEL_DRIVER,
+        SAMPLE_SNV_INDEL_OTHER,
+        SAMPLE_SV_AMP_DRIVER,
+        SAMPLE_SV_DEL_DRIVER,
+        SAMPLE_SV_FUSION_DRIVER,
+        SAMPLE_SV_DISRUPTION_DRIVER,
+        SAMPLE_GERMLINE_SNV_INDEL_DRIVER,
+        SAMPLE_GERMLINE_SV_DRIVER,
     }
 
     public sealed interface ExtraData permits CopyNumberBackbone.TargetMetadataExtra

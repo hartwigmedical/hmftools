@@ -11,12 +11,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Germline SNV or INDEL.
-public class GermlineMutation extends Variant
+public class GermlineMutation implements Variant
 {
     private final GermlineVariant mVariant;
 
@@ -46,10 +47,23 @@ public class GermlineMutation extends Variant
     }
 
     @Override
+    public TargetMetadata.Type targetType()
+    {
+        if(isDriver())
+        {
+            return TargetMetadata.Type.SAMPLE_GERMLINE_SNV_INDEL_DRIVER;
+        }
+        else
+        {
+            // Shouldn't happen because nondrivers are filtered out.
+            throw new IllegalStateException("Unhandled germline mutation type");
+        }
+    }
+
+    @Override
     public String toString()
     {
-        return format("%s %s:%s %s>%s",
-                mVariant.type(), mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
+        return format("%s:%s %s>%s %s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), mVariant.type());
     }
 
     public static List<GermlineMutation> load(final String sampleId, final String purpleDir)

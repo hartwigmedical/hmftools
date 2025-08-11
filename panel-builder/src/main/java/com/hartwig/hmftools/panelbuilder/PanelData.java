@@ -33,7 +33,6 @@ public class PanelData implements PanelCoverage
     @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
-        // TODO: include target regions as well (or instead) to include coverage of SV probes?
         return mData.probes().stream().map(Probe::region).filter(Objects::nonNull);
     }
 

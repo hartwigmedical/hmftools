@@ -13,8 +13,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-// TODO: polyA/T checks?
-
 // Common candidate probe filtering.
 public class ProbeEvaluator
 {

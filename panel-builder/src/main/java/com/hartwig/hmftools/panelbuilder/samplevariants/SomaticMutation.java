@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +28,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
 // Somatic SNV or INDEL.
-public class SomaticMutation extends Variant
+public class SomaticMutation implements Variant
 {
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
@@ -68,7 +70,7 @@ public class SomaticMutation extends Variant
 
     public int indelLength()
     {
-        return max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length());
+        return abs(mVariantDecorator.alt().length() - mVariantDecorator.ref().length());
     }
 
     public GermlineStatus germlineStatus()
@@ -114,11 +116,30 @@ public class SomaticMutation extends Variant
     }
 
     @Override
+    public TargetMetadata.Type targetType()
+    {
+        if(isDriver())
+        {
+            return TargetMetadata.Type.SAMPLE_SNV_INDEL_DRIVER;
+        }
+        else
+        {
+            return TargetMetadata.Type.SAMPLE_SNV_INDEL_OTHER;
+        }
+    }
+
+    @Override
     public String toString()
     {
-        return format("%s %s:%s %s>%s",
-                mVariantDecorator.type(), mVariantDecorator.chromosome(), mVariantDecorator.position(),
-                mVariantDecorator.ref(), mVariantDecorator.alt());
+        return format("%s:%s %s>%s %s",
+                mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
+                mVariantDecorator.type());
+    }
+
+    // Hash code for "randomly" ordering variants while maintaining determinism for comparison purposes.
+    public int deterministicHash()
+    {
+        return mVariantDecorator.chromosome().hashCode() ^ mVariantDecorator.position();
     }
 
     public static List<SomaticMutation> load(final String sampleId, final String purpleDir)
@@ -134,7 +155,6 @@ public class SomaticMutation extends Variant
         try(CloseableTribbleIterator<VariantContext> iterator = vcfFileReader.iterator())
         {
             variants = iterator.stream()
-                    // TODO: what is this doing?
                     .filter(variant -> !variant.isFiltered())
                     .map(variant -> new SomaticMutation(variant, sampleId))
                     .toList();

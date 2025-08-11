@@ -14,12 +14,13 @@ import java.util.List;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Germline structural variant.
-public class GermlineSv extends Variant
+public class GermlineSv implements Variant
 {
     private final LinxGermlineDisruption mVariant;
     private final List<LinxBreakend> mBreakends;
@@ -50,17 +51,31 @@ public class GermlineSv extends Variant
     @Override
     public List<ProximateLocations.Location> checkedLocations()
     {
-        return List.of(
-                new ProximateLocations.Location(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart),
-                new ProximateLocations.Location(mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd));
+        // No proximity check for SVs because they create a significantly novel sequence.
+        return emptyList();
+    }
+
+    @Override
+    public TargetMetadata.Type targetType()
+    {
+        if(isDriver())
+        {
+            return TargetMetadata.Type.SAMPLE_GERMLINE_SV_DRIVER;
+        }
+        else
+        {
+            // Shouldn't happen because nondrivers are filtered out.
+            throw new IllegalStateException("Unhandled germline SV type");
+        }
     }
 
     @Override
     public String toString()
     {
-        return format("%s %s:%d:%d - %s:%d:%d",
-                mVariant.Type, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
-                mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd);
+        return format("%s:%d:%d - %s:%d:%d %s",
+                mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
+                mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd,
+                mVariant.Type);
     }
 
     public static List<GermlineSv> load(final String sampleId, final String linxGermlineDir)

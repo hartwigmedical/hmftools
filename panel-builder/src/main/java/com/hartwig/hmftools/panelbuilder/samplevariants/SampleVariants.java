@@ -110,7 +110,6 @@ public class SampleVariants
             Map<String, Integer> geneDisruptions, int maxProbes)
 
     {
-        // TODO: flag to enable SV driver selection?
         ProbeGenerationResult result = new ProbeGenerationResult();
         for(Variant variant : variants)
         {
@@ -164,7 +163,7 @@ public class SampleVariants
                 .toList();
 
         ProbeGenerationResult result = new ProbeGenerationResult();
-        for(Variant variant : nondriverVariants)
+        for(SomaticMutation variant : nondriverVariants)
         {
             if(result.probes().size() >= maxProbes)
             {
@@ -186,7 +185,6 @@ public class SampleVariants
 
     private static class NondriverVariantComparator implements Comparator<SomaticMutation>
     {
-        // Only SomaticMutation is supported because that's the only type of nondriver variant we are interested in.
         @Override
         public int compare(final SomaticMutation v1, final SomaticMutation v2)
         {
@@ -198,23 +196,18 @@ public class SampleVariants
             {
                 return v1.isClonal() ? -1 : 1;
             }
-            // Otherwise random ordering.
-            return Integer.compare(v1.hashCode(), v2.hashCode());
+            // Otherwise random but deterministic ordering.
+            return Integer.compare(v1.deterministicHash(), v2.deterministicHash());
         }
     }
 
-    private static boolean nondriverFilters(final Variant variant)
+    private static boolean nondriverFilters(final SomaticMutation variant)
     {
-        // Only somatic SNV/INDEL can be selected, if it passes these additional filters. Other nondrivers are never selected.
-        if(variant instanceof SomaticMutation mutation)
-        {
-            return vafFilter(mutation.vaf())
-                    && tumorFragmentsFilter(mutation.tumorFragments())
-                    && indelLengthFilter(mutation.indelLength())
-                    && repeatCountFilter(mutation.repeatCount())
-                    && germlineStatusFilter(mutation.germlineStatus());
-        }
-        return false;
+        return vafFilter(variant.vaf())
+                && tumorFragmentsFilter(variant.tumorFragments())
+                && indelLengthFilter(variant.indelLength())
+                && repeatCountFilter(variant.repeatCount())
+                && germlineStatusFilter(variant.germlineStatus());
     }
 
     private static boolean vafFilter(double vaf)
@@ -239,18 +232,7 @@ public class SampleVariants
 
     private static boolean germlineStatusFilter(final GermlineStatus germlineStatus)
     {
-        // TODO
-        return switch(germlineStatus)
-        {
-            case HOM_DELETION -> true;
-            case HET_DELETION -> true;
-            case AMPLIFICATION -> true;
-            case NOISE -> false;
-            case DIPLOID -> false;
-            case EXCLUDED -> true;
-            case CENTROMETIC -> true;
-            case UNKNOWN -> true;
-        };
+        return germlineStatus == GermlineStatus.DIPLOID;
     }
 
     private static boolean proximityFilter(final Variant variant, final ProximateLocations registeredLocations)
@@ -318,8 +300,8 @@ public class SampleVariants
         }
     }
 
-    private TargetMetadata createTargetMetadata(final Variant variant)
+    private static TargetMetadata createTargetMetadata(final Variant variant)
     {
-        return new TargetMetadata(TargetMetadata.Type.SAMPLE_VARIANT, variant.toString());
+        return new TargetMetadata(variant.targetType(), variant.toString());
     }
 }

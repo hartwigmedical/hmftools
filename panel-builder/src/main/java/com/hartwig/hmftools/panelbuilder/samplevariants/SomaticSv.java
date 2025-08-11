@@ -37,12 +37,13 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class SomaticSv extends Variant
+public class SomaticSv implements Variant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
@@ -66,8 +67,7 @@ public class SomaticSv extends Variant
         return mVariant;
     }
 
-    // Setters only used during loading from file (because we construct the variant then determine these properties afterwards).
-    // TODO: can we get rid of the setters?
+    // Setters only used during loading from file (because we construct the variant then determine these properties afterward).
     private void setIsAmpDriver(boolean isAmpDriver)
     {
         mIsAmpDriver = isAmpDriver;
@@ -78,17 +78,17 @@ public class SomaticSv extends Variant
         mIsDelDriver = isDelDriver;
     }
 
-    public boolean isFusion()
+    private boolean isFusion()
     {
         return !mFusions.isEmpty();
     }
 
-    public boolean isAmpDriver()
+    private boolean isAmpDriver()
     {
         return mIsAmpDriver;
     }
 
-    public boolean isDelDriver()
+    private boolean isDelDriver()
     {
         return mIsDelDriver;
     }
@@ -137,9 +137,8 @@ public class SomaticSv extends Variant
     @Override
     public List<ProximateLocations.Location> checkedLocations()
     {
-        return List.of(
-                new ProximateLocations.Location(mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation()),
-                new ProximateLocations.Location(mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation()));
+        // No proximity check for SVs because they create a significantly novel sequence.
+        return emptyList();
     }
 
     public List<String> disruptedGenes()
@@ -148,18 +147,44 @@ public class SomaticSv extends Variant
     }
 
     @Override
+    public TargetMetadata.Type targetType()
+    {
+        if(isDriver())
+        {
+            if(isFusion())
+            {
+                return TargetMetadata.Type.SAMPLE_SV_FUSION_DRIVER;
+            }
+            else if(isAmpDriver())
+            {
+                return TargetMetadata.Type.SAMPLE_SV_AMP_DRIVER;
+            }
+            else if(isDelDriver())
+            {
+                return TargetMetadata.Type.SAMPLE_SV_DEL_DRIVER;
+            }
+            else if(isReportedDisruption())
+            {
+                return TargetMetadata.Type.SAMPLE_SV_DISRUPTION_DRIVER;
+            }
+        }
+        // Shouldn't happen because other types are filtered out.
+        throw new IllegalStateException("Unhandled somatic SV type");
+    }
+
+    @Override
     public String toString()
     {
         String s;
         if(mVariant.type() == StructuralVariantType.SGL)
         {
-            s = format("%s %s:%d:%d", mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation());
+            s = format("%s:%d:%d %s", mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type());
         }
         else
         {
-            s = format("%s %s:%d:%d - %s:%d:%d",
-                    mVariant.type(), mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation());
+            s = format("%s:%d:%d - %s:%d:%d %s",
+                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.type());
         }
 
         return format("%s breakends=%d fusions=%d", s, mBreakends.size(), mFusions.size());
@@ -221,7 +246,6 @@ public class SomaticSv extends Variant
                 continue;
             }
 
-            // TODO: what does this do?
             if(!requireNonNull(variant.filter()).equals(PASS))
             {
                 continue;
