@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 
@@ -54,6 +52,7 @@ public final class LilacConstants
     public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
 
     public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
+    public static final int EXON_CHUNK_SIZE = 137;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
@@ -76,6 +75,7 @@ public final class LilacConstants
             "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
 
     // common INDEL associated with allele C*04:09N
+    // TODO(mkcmkc): If we update the resources change to "C*04:09L"
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
 
     public static final int SPLICE_VARIANT_BUFFER = 5;

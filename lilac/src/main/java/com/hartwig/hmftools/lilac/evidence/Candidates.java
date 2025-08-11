@@ -33,7 +33,8 @@ public final class Candidates
         mAminoAcidSequences = aminoAcidSequences;
     }
 
-    public List<HlaAllele> unphasedCandidates(final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
+    public List<HlaAllele> unphasedCandidates(
+	    final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
@@ -73,7 +74,7 @@ public final class Candidates
                 .collect(Collectors.toList());
 
         List<HlaSequenceLoci> nucleotideSpecificSequences = nucleotideFiltering.filterCandidatesOnAminoAcidBoundaries(
-                nucleotideCandidatesAfterAminoAcidFiltering, fragments);
+                context.Gene, nucleotideCandidatesAfterAminoAcidFiltering, fragments);
 
         List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
                 (nucleotideSpecificSequences.stream().map(x -> x.Allele.asFourDigit()).collect(Collectors.toList()));
@@ -153,7 +154,8 @@ public final class Candidates
 
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterCandidates(
-            final Collection<HlaSequenceLoci> initialCandidates, final Iterable<PhasedEvidence> evidence, final SequenceCount rawAminoAcidCounts)
+            final Collection<HlaSequenceLoci> initialCandidates, final Iterable<PhasedEvidence> evidence,
+            final SequenceCount rawAminoAcidCounts)
     {
         List<HlaSequenceLoci> candidates = Lists.newArrayList();
         candidates.addAll(initialCandidates);
