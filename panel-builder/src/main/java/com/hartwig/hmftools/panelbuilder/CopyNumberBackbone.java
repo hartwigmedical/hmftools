@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_ALTERNATE_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
@@ -39,7 +40,8 @@ import org.jetbrains.annotations.Nullable;
 // Probes based on Amber heterozygous sites, used to deduce copy number.
 // Methodology:
 //   - Divide chromosomes into large partitions;
-//   - In each partition, generate candidate probes on each Amber site;
+//   - In each partition, generate candidate probes on each Amber site.
+//      Or if on chrY and there are no Amber sites, consider all probe positions in the partition.
 //   - In each partition, select the acceptable probe with the best GC content.
 public class CopyNumberBackbone
 {
@@ -52,6 +54,9 @@ public class CopyNumberBackbone
 
     private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
+            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
+    private static final ProbeSelectCriteria PROBE_CRITERIA_ALTERNATIVE = new ProbeSelectCriteria(
+            new ProbeEvaluator.Criteria(CN_BACKBONE_ALTERNATE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
             new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
 
     private static final String FLD_GNOMAD_FREQ = "GnomadFreq";
@@ -134,7 +139,7 @@ public class CopyNumberBackbone
         {
             // Partitions spaced across the chromosome, avoiding the centromeres.
 
-            String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
+            String chrStr = mRefGenomeVersion.versionedChromosome(chromosome);
             int centromere = refGenomeCoordinates.centromeres().get(chromosome);
             int centromereMin = centromere - CN_BACKBONE_CENTROMERE_MARGIN;
             int centromereMax = centromere + CN_BACKBONE_CENTROMERE_MARGIN;
@@ -208,17 +213,39 @@ public class CopyNumberBackbone
     {
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
-        Stream<Probe> candidates = generateCandidateProbes(partition);
-        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateProbes(candidates, PROBE_CRITERIA.eval());
-        Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_CRITERIA.select());
-        LOGGER.trace("{}: Best probe: {}", partition.Region, bestCandidate);
+        // On the Y chromosome there are no heterozygous sites, but we still want copy number determination.
+        // The methodology is the pick the first position that meets stricter criteria.
+        boolean alternativeMethod = useAlternativeCandidateMethod(partition);
+        if(alternativeMethod)
+        {
+            LOGGER.trace("Using alternative methodology");
+        }
+
+        Stream<Probe> candidates = generateCandidateProbes(partition, alternativeMethod);
+        ProbeSelectCriteria probeCriteria = alternativeMethod ? PROBE_CRITERIA_ALTERNATIVE : PROBE_CRITERIA;
+        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateProbes(candidates, probeCriteria.eval());
+        Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, probeCriteria.select());
 
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe ->
                 {
-                    TargetMetadataExtra metadataExtra = (TargetMetadataExtra) requireNonNull(bestProbe.metadata().extraData());
-                    AmberSite site = requireNonNull(metadataExtra.site());
-                    TargetRegion target = new TargetRegion(ChrBaseRegion.from(site.position()), bestProbe.metadata());
+                    // Determine the target position based on which probe was selected as the best.
+                    ChrBaseRegion targetRegion;
+                    TargetMetadataExtra metadataExtra = requireNonNull((TargetMetadataExtra) bestProbe.metadata().extraData());
+                    AmberSite site = metadataExtra.site();
+                    if(site == null)
+                    {
+                        // Case of the alternative method: there is no associated Amber site so use the whole probe region.
+                        ChrBaseRegion probeRegion = requireNonNull(bestProbe.region());
+                        targetRegion = ChrBaseRegion.from(partition.Region.chromosome(), probeRegion.baseRegion());
+                    }
+                    else
+                    {
+                        // Recover the target position from the Amber site.
+                        targetRegion = ChrBaseRegion.from(site.position());
+                    }
+                    TargetRegion target = new TargetRegion(targetRegion, bestProbe.metadata());
+
                     if(mPanelData.isCovered(target.region()))
                     {
                         LOGGER.trace("Copy number backbone target already covered by panel: {}", target);
@@ -237,13 +264,20 @@ public class CopyNumberBackbone
                     TargetRegion target = new TargetRegion(partition.Region, metadata);
 
                     String rejectionReason;
-                    if(partition.Sites.isEmpty())
+                    if(alternativeMethod)
                     {
-                        rejectionReason = "No Amber sites in partition";
+                        rejectionReason = "No probe in partition meeting criteria " + probeCriteria.eval();
                     }
                     else
                     {
-                        rejectionReason = "No probe covering Amber sites meets criteria " + PROBE_CRITERIA.eval();
+                        if(partition.Sites.isEmpty())
+                        {
+                            rejectionReason = "No Amber sites in partition";
+                        }
+                        else
+                        {
+                            rejectionReason = "No probe covering Amber sites meets criteria " + probeCriteria.eval();
+                        }
                     }
 
                     return ProbeGenerationResult.rejectTarget(target, rejectionReason);
@@ -251,18 +285,36 @@ public class CopyNumberBackbone
         return result;
     }
 
-    private Stream<Probe> generateCandidateProbes(final Partition partition)
+    private static boolean useAlternativeCandidateMethod(final Partition partition)
     {
-        return partition.Sites.stream()
-                .flatMap(site -> generateCandidateProbes(partition, site))
-                // Plausible that a site is near the edge of a partition such that the probe goes outside the partition and/or chromosome.
-                .filter(probe -> partition.Region.containsRegion(requireNonNull(probe.region())));
+        return partition.Region.humanChromosome() == HumanChromosome._Y && partition.Sites.isEmpty();
     }
 
-    private Stream<Probe> generateCandidateProbes(final Partition partition, final AmberSite site)
+    private Stream<Probe> generateCandidateProbes(final Partition partition, boolean alternativeMethodology)
+    {
+        if(alternativeMethodology)
+        {
+            return generateCandidateProbesAlternative(partition);
+        }
+        else
+        {
+            return partition.Sites.stream()
+                    .flatMap(site -> generateCandidateProbesForAmberSite(partition, site))
+                    // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
+                    .filter(probe -> partition.Region.containsRegion(requireNonNull(probe.region())));
+        }
+    }
+
+    private Stream<Probe> generateCandidateProbesForAmberSite(final Partition partition, final AmberSite site)
     {
         TargetMetadata metadata = createTargetMetadata(partition.Region, site);
         return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), metadata);
+    }
+
+    private Stream<Probe> generateCandidateProbesAlternative(final Partition partition)
+    {
+        TargetMetadata metadata = createTargetMetadata(partition.Region, null);
+        return mProbeGenerator.mCandidateGenerator.allOverlapping(partition.Region, metadata);
     }
 
     public record TargetMetadataExtra(

@@ -339,7 +339,7 @@ public class SomaticSv implements Variant
         }
 
         LOGGER.info("Loaded {} somatic structural variants", variants.size());
-        variants.forEach(variant -> LOGGER.trace("SomaticSV: {}", variant));
+        variants.forEach(variant -> LOGGER.trace("SomaticSv: {}", variant));
 
         return variants;
     }

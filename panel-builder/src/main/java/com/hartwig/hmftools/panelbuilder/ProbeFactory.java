@@ -77,7 +77,7 @@ public class ProbeFactory
         }
         else
         {
-            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
+//            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
             return Optional.empty();
         }
     }
@@ -103,8 +103,8 @@ public class ProbeFactory
         return qualityScore.orElseGet(() ->
         {
             double quality = DEFAULT_PROBE_QUALITY;
-            LOGGER.trace("Could not compute probe quality so assuming qualityScore={} region={} sequence={}",
-                    quality, region, sequence);
+//            LOGGER.trace("Could not compute probe quality so assuming qualityScore={} region={} sequence={}",
+//                    quality, region, sequence);
             return quality;
         });
     }

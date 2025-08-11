@@ -49,6 +49,7 @@ public class PanelBuilderConstants
     public static final double CN_BACKBONE_GNOMAD_FREQ_MAX = 0.7;
     // Very high probe quality threshold because there are many sites to pick from to we may as well get the best.
     public static final double CN_BACKBONE_QUALITY_MIN = 0.8;
+    public static final double CN_BACKBONE_ALTERNATE_QUALITY_MIN = 1.0;
 
     // CDR3 probe constants.
     public static final double CDR3_QUALITY_MIN = 0.1;
