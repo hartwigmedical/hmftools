@@ -4,8 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.List;
@@ -73,6 +75,22 @@ public class SomaticMutation extends Variant
     {
         return GermlineStatus.valueOf(mVariantDecorator.context()
                 .getAttributeAsString(PURPLE_GERMLINE_INFO, GermlineStatus.UNKNOWN.toString()));
+    }
+
+    public boolean isCoding()
+    {
+        return switch(mVariantDecorator.canonicalCodingEffect())
+        {
+            case NONE, UNDEFINED -> false;
+            default -> true;
+        };
+    }
+
+    public boolean isClonal()
+    {
+        double subclonalLikelihood = mVariantDecorator.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
+        boolean isSubclonal = subclonalLikelihood >= SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
+        return !isSubclonal;
     }
 
     @Override

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,13 +111,15 @@ public class SampleVariants
 
     {
         // TODO: flag to enable SV driver selection?
-        // TODO: variant prioritisation?
         ProbeGenerationResult result = new ProbeGenerationResult();
         for(Variant variant : variants)
         {
             if(result.probes().size() >= maxProbes)
             {
-                // TODO: warning if we get here?
+                // We assume that there will be enough probes to cover all the driver variants.
+                // If not, then we randomly(?) discarded some drivers, which may be important to handle.
+                // Potentially there should be a variant prioritisation scheme to avoid this scenario.
+                LOGGER.warn("Filled sample variant probe quota without including all driver variants!");
                 // Filled the probe quota.
                 break;
             }
@@ -151,9 +154,17 @@ public class SampleVariants
     private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, ProximateLocations registeredLocations,
             int maxProbes)
     {
-        // TODO: variant prioritisation
+        // For nondrivers, we are only interested in somatic SNV/INDEL.
+        // Also, some variants are prioritised over others.
+        List<SomaticMutation> nondriverVariants = variants.stream()
+                .filter(variant -> variant instanceof SomaticMutation)
+                .map(variant -> (SomaticMutation) variant)
+                .filter(variant -> !variant.isDriver())
+                .sorted(new NondriverVariantComparator())
+                .toList();
+
         ProbeGenerationResult result = new ProbeGenerationResult();
-        for(Variant variant : variants)
+        for(Variant variant : nondriverVariants)
         {
             if(result.probes().size() >= maxProbes)
             {
@@ -171,6 +182,25 @@ public class SampleVariants
             }
         }
         return result;
+    }
+
+    private static class NondriverVariantComparator implements Comparator<SomaticMutation>
+    {
+        // Only SomaticMutation is supported because that's the only type of nondriver variant we are interested in.
+        @Override
+        public int compare(final SomaticMutation v1, final SomaticMutation v2)
+        {
+            if(v1.isCoding() != v2.isCoding())
+            {
+                return v1.isCoding() ? -1 : 1;
+            }
+            if(v1.isClonal() != v2.isClonal())
+            {
+                return v1.isClonal() ? -1 : 1;
+            }
+            // Otherwise random ordering.
+            return Integer.compare(v1.hashCode(), v2.hashCode());
+        }
     }
 
     private static boolean nondriverFilters(final Variant variant)
