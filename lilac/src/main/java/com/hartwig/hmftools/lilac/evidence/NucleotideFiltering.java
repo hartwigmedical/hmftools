@@ -89,7 +89,7 @@ public class NucleotideFiltering
         return count;
     }
 
-    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final List<Integer> refNucleotideHetLoci)
+    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final Collection<Integer> refNucleotideHetLoci)
     {
         // convert from amino acid exon boundaries to nucleotides for each gene
         Map<HlaGene, List<Integer>> hetLociMap = Maps.newHashMap();
@@ -108,7 +108,7 @@ public class NucleotideFiltering
             }
 
             hetLociMap.put(gene,
-                    refNucleotideHetLoci.stream().filter(x -> nucleotideExonBoundaries.contains(x)).collect(Collectors.toList()));
+                    refNucleotideHetLoci.stream().filter(nucleotideExonBoundaries::contains).collect(Collectors.toList()));
 
         }
 
