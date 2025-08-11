@@ -108,6 +108,7 @@ public class SampleVariants
             Map<String, Integer> geneDisruptions, int maxProbes)
 
     {
+        // TODO: flag to enable SV driver selection?
         // TODO: variant prioritisation?
         ProbeGenerationResult result = new ProbeGenerationResult();
         for(Variant variant : variants)
@@ -223,7 +224,7 @@ public class SampleVariants
 
     private static boolean proximityFilter(final Variant variant, final ProximateLocations registeredLocations)
     {
-        return variant.checkedLocations().stream().anyMatch(registeredLocations::isNearLocation);
+        return variant.checkedLocations().stream().noneMatch(registeredLocations::isNearLocation);
     }
 
     private static boolean geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
@@ -231,7 +232,7 @@ public class SampleVariants
         if(variant instanceof SomaticSv sv)
         {
             return sv.disruptedGenes().stream()
-                    .allMatch(gene -> geneDisruptions.getOrDefault(gene, 1) <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
+                    .allMatch(gene -> geneDisruptions.getOrDefault(gene, 0) + 1 <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
         }
         return true;
     }
