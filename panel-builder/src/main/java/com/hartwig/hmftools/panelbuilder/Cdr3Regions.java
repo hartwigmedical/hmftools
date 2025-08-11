@@ -44,7 +44,7 @@ public class Cdr3Regions
         LOGGER.info("Loaded {} V/J genes", genes.size());
 
         ProbeGenerationResult result = new ProbeGenerationResult();
-        ArrayList<ChrBaseRegion> coveredRegions = new ArrayList<>();
+        List<ChrBaseRegion> coveredRegions = new ArrayList<>();
         for(IgTcrGene gene : genes)
         {
             result = result.add(generateProbe(gene, probeGenerator, panelData, coveredRegions));
@@ -56,7 +56,7 @@ public class Cdr3Regions
     }
 
     private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage, ArrayList<ChrBaseRegion> coveredRegions)
+            final PanelCoverage coverage, List<ChrBaseRegion> coveredRegions)
     {
         ChrBaseRegion region = calculateProbeRegion(gene);
 

@@ -35,7 +35,7 @@ public record VariantProbeData(
 
     public List<ChrBaseRegion> regions()
     {
-        ArrayList<ChrBaseRegion> result = new ArrayList<>();
+        List<ChrBaseRegion> result = new ArrayList<>();
         if(start != null)
         {
             result.add(start);

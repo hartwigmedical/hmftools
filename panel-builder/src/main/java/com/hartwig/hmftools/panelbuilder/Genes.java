@@ -111,7 +111,7 @@ public class Genes
 
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = new ProbeGenerationResult();
-        ArrayList<GeneStats> geneStats = new ArrayList<>();
+        List<GeneStats> geneStats = new ArrayList<>();
         for(GeneTranscriptData gene : geneTranscriptDatas)
         {
             List<GeneRegion> geneRegions = createGeneRegions(gene);
@@ -152,7 +152,7 @@ public class Genes
         public List<String> transcriptNames()
         {
             // Always get the canonical transcript, plus any extra transcripts requested.
-            ArrayList<String> names = new ArrayList<>();
+            List<String> names = new ArrayList<>();
             names.add(null);
             names.addAll(extraTranscriptNames);
             return names;
@@ -268,7 +268,7 @@ public class Genes
         //   - Exon flanks: based on superset of exons from all transcripts.
         //   - Promoter: first/last exon in the superset of exons from all transcripts.
 
-        ArrayList<GeneRegion> regions = new ArrayList<>();
+        List<GeneRegion> regions = new ArrayList<>();
 
         GeneData geneData = gene.gene();
         List<TranscriptData> transcripts = gene.transcripts();
@@ -382,7 +382,7 @@ public class Genes
         public boolean IsCoding = false;
         public int CodingStart = Integer.MAX_VALUE;
         public int CodingEnd = Integer.MIN_VALUE;
-        public ArrayList<ExonData> Exons = new ArrayList<>();
+        public List<ExonData> Exons = new ArrayList<>();
     }
 
     private static List<MergedExonRegion> mergeExons(final List<TranscriptData> transcripts)

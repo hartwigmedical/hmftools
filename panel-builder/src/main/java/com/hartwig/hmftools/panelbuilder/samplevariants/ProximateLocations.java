@@ -13,13 +13,14 @@ public class ProximateLocations
 {
     // chromosome -> position -> orientations
     private final Map<String, Map<Integer, Set<Byte>>> mLocations;
+    private final int mNearDistance;
 
     private static final byte NO_ORIENTATION = 0;
-    private static final int NEAR_DISTANCE = 50;
 
-    public ProximateLocations()
+    public ProximateLocations(int nearDistance)
     {
         mLocations = new HashMap<>();
+        mNearDistance = nearDistance;
     }
 
     public record Location(
@@ -41,7 +42,7 @@ public class ProximateLocations
         return mLocations.getOrDefault(location.chromosome(), emptyMap())
                 .entrySet().stream()
                 .anyMatch(entry ->
-                        abs(entry.getKey() - location.position()) <= NEAR_DISTANCE && entry.getValue().contains(location.orientation()));
+                        abs(entry.getKey() - location.position()) <= mNearDistance && entry.getValue().contains(location.orientation()));
     }
 
     public void addLocation(final Location location)

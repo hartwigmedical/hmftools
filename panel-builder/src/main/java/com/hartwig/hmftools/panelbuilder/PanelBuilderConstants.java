@@ -80,6 +80,7 @@ public class PanelBuilderConstants
     public static final int SAMPLE_REPEAT_COUNT_MAX = 3;
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
+    public static final int SAMPLE_NEAR_DISTANCE = 50;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

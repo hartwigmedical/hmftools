@@ -127,7 +127,7 @@ public class ProbeGenerator
 
         // These are the subregions in which probes can be placed.
         // Probes are guaranteed to be rejected if they overlap subregions between the acceptable subregions.
-        ArrayList<BaseRegion> acceptableSubregions = new ArrayList<>();
+        List<BaseRegion> acceptableSubregions = new ArrayList<>();
         // Map from start position to probe.
         Map<Integer, Probe> acceptableProbes = new HashMap<>();
         // This requires sorted by position, but it's already in that order.

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRI
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INDEL_LENGTH_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NEAR_DISTANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
@@ -94,8 +95,8 @@ public class SampleVariants
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
 
-        ProximateLocations registeredLocations = new ProximateLocations();
-        HashMap<String, Integer> geneDisruptions = new HashMap<>();
+        ProximateLocations registeredLocations = new ProximateLocations(SAMPLE_NEAR_DISTANCE);
+        Map<String, Integer> geneDisruptions = new HashMap<>();
 
         result = result.add(generateDriverProbes(variants, registeredLocations, geneDisruptions,
                 SAMPLE_PROBES_MAX - result.probes().size()));

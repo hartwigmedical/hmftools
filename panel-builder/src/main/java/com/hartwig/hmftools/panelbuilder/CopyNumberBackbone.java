@@ -117,7 +117,7 @@ public class CopyNumberBackbone
     private static class Partition
     {
         public final ChrBaseRegion Region;
-        public final ArrayList<AmberSite> Sites;
+        public final List<AmberSite> Sites;
 
         public Partition(final ChrBaseRegion region)
         {

@@ -23,12 +23,12 @@ public class Utils
         Iterator<T> iterator = elements.iterator();
         return Stream.generate(() ->
         {
-            ArrayList<T> batch = new ArrayList<>(partitionSize);
+            List<T> batch = new ArrayList<>(partitionSize);
             for(int i = 0; i < partitionSize && iterator.hasNext(); i++)
             {
                 batch.add(iterator.next());
             }
-            return (List<T>) batch;
+            return batch;
         }).takeWhile(b -> !b.isEmpty());
     }
 

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.DriverEventType;
@@ -178,7 +179,7 @@ public class SomaticSv extends Variant
         List<LinxSvAnnotation> annotations;
         List<LinxFusion> fusions;
         List<LinxDriver> drivers;
-        ArrayList<GeneCopyNumber> geneCopyNumbers = new ArrayList<>();
+        List<GeneCopyNumber> geneCopyNumbers = new ArrayList<>();
         List<LinxCluster> clusters;
 
         try
@@ -208,9 +209,9 @@ public class SomaticSv extends Variant
             throw new RuntimeException("Failed to load structural variants: " + e);
         }
 
-        ArrayList<SomaticSv> variants = new ArrayList<>();
+        List<SomaticSv> variants = new ArrayList<>();
 
-        HashMap<Integer, ArrayList<SomaticSv>> clusterSVs = new HashMap<>();
+        Map<Integer, List<SomaticSv>> clusterSVs = new HashMap<>();
         drivers.forEach(driver -> clusterSVs.put(driver.clusterId(), new ArrayList<>()));
 
         for(EnrichedStructuralVariant variant : enrichedVariants)
