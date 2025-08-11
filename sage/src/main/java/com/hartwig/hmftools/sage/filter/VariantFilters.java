@@ -63,6 +63,7 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -256,14 +257,17 @@ public class VariantFilters
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
         }
 
-        if(belowExpectedHpQuals(primaryTumor))
+        if(isUltima())
         {
-            filters.add(SoftFilter.MIN_AVG_HP_QUAL);
-        }
+            if(belowExpectedHpQuals(primaryTumor))
+            {
+                filters.add(SoftFilter.MIN_AVG_HP_QUAL);
+            }
 
-        if(belowExpectedT0Quals(primaryTumor, isNearIndel))
-        {
-            filters.add(SoftFilter.MIN_AVG_T0_QUAL);
+            if(belowExpectedT0Quals(primaryTumor, isNearIndel))
+            {
+                filters.add(SoftFilter.MIN_AVG_T0_QUAL);
+            }
         }
     }
 
@@ -482,15 +486,22 @@ public class VariantFilters
 
     private boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
     {
+        if(!primaryTumor.isIndel())
+            return false;
+
+        UltimaVariantData ultimaData = primaryTumor.ultimaData();
+        final List<Integer> homopolymerLengths = ultimaData.homopolymerLengths();
+
         // TODO: make constants and generally improve
-        if(primaryTumor.homopolymerLengths() == null || !primaryTumor.isIndel())
+        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
             return false;
-        if(primaryTumor.isLongIndel() && Collections.max(primaryTumor.homopolymerLengths()) < 5)
-            return false;
-        for(int i = 0; i < primaryTumor.homopolymerLengths().size(); i++)
+
+        for(int i = 0; i < homopolymerLengths.size(); i++)
         {
-            int length = primaryTumor.homopolymerLengths().get(i);
-            double avgQual = primaryTumor.homopolymerAvgQuals().get(i);
+            int length = homopolymerLengths.get(i);
+
+            double avgQual = ultimaData.homopolymerAvgQuals().get(i);
+
             if(length == 1 && avgQual < 24)
                 return true;
             else if(length == 2 && avgQual < 22)
@@ -516,10 +527,8 @@ public class VariantFilters
     private boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
     {
         // TODO: make constants
-        if(primaryTumor.t0AvgQuals() == null)
-            return false;
         int threshold = nearbyVariant ? 28 : 18;
-        return Collections.min(primaryTumor.t0AvgQuals()) < threshold;
+        return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)

@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.TextCigarCodec;
 
-public class UltimaRealignedQualModelsBuilder
+public class UltimaRealignedQualModelBuilder
 {
     @VisibleForTesting
     public static MergedHomopolymers mergeSandwichedHomopolymers(

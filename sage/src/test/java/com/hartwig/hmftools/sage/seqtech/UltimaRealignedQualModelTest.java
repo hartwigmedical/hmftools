@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELETION;
-import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.getRealignedVariants;
-import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelsBuilder.mergeSandwichedHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelBuilder.getRealignedVariants;
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelBuilder.mergeSandwichedHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
 
 import static org.junit.Assert.assertEquals;

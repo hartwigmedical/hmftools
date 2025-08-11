@@ -42,7 +42,7 @@ public class UltimaQualModelBuilder
         }
         else
         {
-            qualModels = UltimaRealignedQualModelsBuilder.buildUltimaRealignedQualModels(readContext, qualModelBuilder);
+            qualModels = UltimaRealignedQualModelBuilder.buildUltimaRealignedQualModels(readContext, qualModelBuilder);
         }
 
         readContext.setUltimaRealignedQualModels(qualModels);

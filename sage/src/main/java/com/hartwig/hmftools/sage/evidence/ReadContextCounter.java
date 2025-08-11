@@ -96,6 +96,7 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
+import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
@@ -152,10 +153,7 @@ public class ReadContextCounter
     private double mTumorQualProbability;
     private double mMapQualFactor;
 
-    private final List<Integer> mHomopolymerLengths;
-    private final List<Double> mHomopolymerAvgQuals;
-    private int mHomopolymerAvgQualsCount;
-    private final List<Double> mT0AvgQuals;
+    private final UltimaVariantData mUltimaData;
 
     public ReadContextCounter(
             final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
@@ -213,25 +211,7 @@ public class ReadContextCounter
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
 
-        if(isUltima())
-        {
-            mHomopolymerLengths = coreHomopolymerLengths(mReadContext);
-            mHomopolymerAvgQuals = Lists.newArrayList();
-            mT0AvgQuals = Lists.newArrayList();
-            while (mHomopolymerAvgQuals.size() < mHomopolymerLengths.size())
-            {
-                mHomopolymerAvgQuals.add(0.0);
-                mT0AvgQuals.add(0.0);
-            }
-        }
-        else
-        {
-            mHomopolymerLengths = null;
-            mHomopolymerAvgQuals = null;
-            mT0AvgQuals = null;
-        }
-
-        mHomopolymerAvgQualsCount = 0;
+        mUltimaData = isUltima() ? new UltimaVariantData(mReadContext) : null;
     }
 
     public int id() { return mId; }
@@ -331,10 +311,7 @@ public class ReadContextCounter
 
     public int[] consensusTypeCounts() { return mConsensusTypeCounts; }
     public FragmentLengthCounts fragmentLengthCounts() { return mFragmentLengthData; }
-
-    public List<Integer> homopolymerLengths() { return mHomopolymerLengths; }
-    public List<Double> homopolymerAvgQuals() { return mHomopolymerAvgQuals; }
-    public List<Double> t0AvgQuals() { return mT0AvgQuals; }
+    public UltimaVariantData ultimaData() { return mUltimaData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
@@ -652,92 +629,10 @@ public class ReadContextCounter
                 mImproperPairCount++;
         }
 
-        if(mHomopolymerLengths != null && support != null && support == FULL && isUltima())
+        if(mUltimaData != null && support != null && support == FULL)
         {
-            // ULTIMA: Do this in a better way?
-            String recordCore = record.getReadString()
-                    .substring(readVarIndex - mReadContext.leftCoreLength(), readVarIndex + mReadContext.rightCoreLength() + 1);
-            if(recordCore.equals(mReadContext.coreStr()))
-            {
-                registerHomopolymerQuals(record, readVarIndex);
-                registerT0Quals(record, readVarIndex);
-            }
+            mUltimaData.addReadSupportInfo(record, readVarIndex);
         }
-    }
-
-    private void registerHomopolymerQuals(final SAMRecord record, int readVarIndex)
-    {
-        byte[] baseQuals = record.getBaseQualities();
-        byte[] tpValues = extractTpValues(record);
-        int readIndex = readVarIndex - mReadContext.leftCoreLength();
-        boolean firstHomopolymer = true;
-        List<Integer> homopolyerQuals = Lists.newArrayList();
-        for(int len : mHomopolymerLengths)
-        {
-            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
-            int tpValue = tpValues[lookupIndex];
-
-            int homopolymerQual;
-            if(tpValue == 0)
-            {
-                homopolymerQual = ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
-            }
-            else if(len == 1)
-            {
-                homopolymerQual = baseQuals[lookupIndex];
-            }
-            else
-            {
-                homopolymerQual = baseQuals[lookupIndex] - 3;
-            }
-
-            homopolyerQuals.add(homopolymerQual);
-
-            firstHomopolymer = false;
-            readIndex += len;
-        }
-
-        for(int i = 0; i < homopolyerQuals.size(); i++)
-        {
-            mHomopolymerAvgQuals.set(i,
-                    (mHomopolymerAvgQuals.get(i) * mHomopolymerAvgQualsCount + homopolyerQuals.get(i)) / (mHomopolymerAvgQualsCount + 1));
-        }
-    }
-
-    private void registerT0Quals(final SAMRecord record, int readVarIndex)
-    {
-        byte[] t0Values = extractT0Values(record);
-        int readIndex = readVarIndex - mReadContext.leftCoreLength();
-        boolean firstHomopolymer = true;
-        List<Integer> t0Quals = Lists.newArrayList();
-        for(int len : mHomopolymerLengths)
-        {
-            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
-            int t0Value = t0Values[lookupIndex];
-
-            int t0Qual;
-            if(t0Value == ULTIMA_BOOSTED_QUAL)
-            {
-                t0Qual = ULTIMA_MAX_QUAL_T0;
-            }
-            else
-            {
-                t0Qual = t0Value;
-            }
-
-            t0Quals.add(t0Qual);
-
-            firstHomopolymer = false;
-            readIndex += len;
-        }
-
-        for(int i = 0; i < t0Quals.size(); i++)
-        {
-            mT0AvgQuals.set(i,
-                    (mT0AvgQuals.get(i) * mHomopolymerAvgQualsCount + t0Quals.get(i)) / (mHomopolymerAvgQualsCount + 1));
-        }
-
-        mHomopolymerAvgQualsCount++;
     }
 
     private void countConsensusType(final SAMRecord record, int readVarIndex, boolean supportsVariant)
@@ -865,35 +760,6 @@ public class ReadContextCounter
     public double adjustedRefVaf() { return mAdjustedRefVaf; }
     public void setAdjustedRefVaf(double vaf) { mAdjustedRefVaf = vaf; }
     public QualityCalculator qualityCalculator() { return mQualityCalculator; }
-
-    // CHECK: Ultima VCF info?
-    @Nullable
-    public String coreHomopolymerInfo()
-    {
-        if(mHomopolymerLengths == null)
-            return null;
-
-        String lengthsStr = mHomopolymerLengths.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(ITEM_DELIM));
-
-        String qualsStr = mHomopolymerAvgQuals.stream()
-                .map(x -> format("%.3f", x))
-                .collect(Collectors.joining(ITEM_DELIM));
-
-        return lengthsStr + ITEM_DELIM + qualsStr;
-    }
-
-    @Nullable
-    public String coreT0Info()
-    {
-        if(mHomopolymerLengths == null)
-            return null;
-
-        return mT0AvgQuals.stream()
-                .map(x -> format("%.3f", x))
-                .collect(Collectors.joining(ITEM_DELIM));
-    }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
