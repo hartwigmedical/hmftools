@@ -76,6 +76,7 @@ public final class LilacConstants
             "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
 
     // common INDEL associated with allele C*04:09N
+    // TODO(mkcmkc): If we update the resources change to "C*04:09L"
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
 
     public static final int SPLICE_VARIANT_BUFFER = 5;
