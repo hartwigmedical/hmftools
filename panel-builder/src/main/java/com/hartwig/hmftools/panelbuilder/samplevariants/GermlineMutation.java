@@ -28,6 +28,12 @@ public class GermlineMutation implements Variant
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineMutation.class);
 
+    // TODO: use in extra info
+    private String gene()
+    {
+        return mVariant.gene();
+    }
+
     @Override
     public boolean isDriver()
     {

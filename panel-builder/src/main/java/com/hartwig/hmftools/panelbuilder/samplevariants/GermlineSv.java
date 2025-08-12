@@ -33,6 +33,12 @@ public class GermlineSv implements Variant
         mBreakends = breakends;
     }
 
+    // TODO: use in extra info
+    private String gene()
+    {
+        return mVariant.GeneName;
+    }
+
     @Override
     public boolean isDriver()
     {

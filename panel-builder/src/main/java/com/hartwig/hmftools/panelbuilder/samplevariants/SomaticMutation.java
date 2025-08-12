@@ -95,6 +95,12 @@ public class SomaticMutation implements Variant
         return !isSubclonal;
     }
 
+    // TODO: use in extra info
+    private String gene()
+    {
+        return mVariantDecorator.variantImpact().GeneName;
+    }
+
     @Override
     public boolean isDriver()
     {

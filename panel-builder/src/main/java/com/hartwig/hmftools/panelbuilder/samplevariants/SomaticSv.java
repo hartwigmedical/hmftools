@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.DriverEventType;
@@ -101,6 +102,24 @@ public class SomaticSv implements Variant
     public int tumorFragments()
     {
         return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount());
+    }
+
+    // TODO: use in extra info
+    @Nullable
+    private String gene()
+    {
+        if(!mFusions.isEmpty())
+        {
+            return mFusions.get(0).name();
+        }
+
+        Optional<LinxBreakend> breakend = mBreakends.stream().filter(LinxBreakend::reportedDisruption).findFirst();
+        if(breakend.isPresent())
+        {
+            return breakend.get().gene();
+        }
+
+        return mBreakends.isEmpty() ? null : mBreakends.get(0).gene();
     }
 
     @Override
