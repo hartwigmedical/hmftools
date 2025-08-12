@@ -4,7 +4,7 @@
 
 Esvee is a structural variant caller optimised for short read sequencing that identifies somatic and germline somatic rearrangements.
 
-Esvee runs is run in 4 steps
+Esvee is run in 4 steps
 - BAM Filtering & Prep
 - Assembly & Alignment
 - Reference Depth Annotation
@@ -39,7 +39,7 @@ java -jar esvee.jar
 ## STEP 1: BAM Filtering & Prep
 
 Prep generates a maximally filtered SV BAM file by identifying candidate SV junctions and extracting all reads that may provide support to 
-that junction.
+those junctions.
 
 ### Command
 
@@ -98,7 +98,7 @@ Argument | Description
 ---|---
 tumor | Tumor sample ID
 tumor_bam | Path to Prep tumor BAM file
-reference | Tumor sample ID (can be omitted in tumo-only mode)
+reference | Tumor sample ID (can be omitted in tumor-only mode)
 reference_bam | Path to Prep reference BAM file
 junction_file | Path to Prep junction TSV file, assumes named as 'TUMOR_SAMPLE_ID.esvee.prep.junction.tsv'
 ref_genome | Reference genome fasta file
@@ -217,7 +217,7 @@ adjAS = AS - inexact homology length – repeatBases[repeatCount>2]
 ```
 Note that the alignment score incorporates both length and number of mismatches and that the repeats are only evaluated for the bases outside of the homology region (so that this is not double counted) 
 #### Modified MAPQ (modMAPQ)  
-The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignmnet score is low relative to the length.
+The modified MAPQ is intended to convert the MAPQ which is a relative MAPQ into something more akin to an ‘absolute’ MAPQ.  The MAPQ is penalised if the length is short or the alignment score is low relative to the length.
 ```
 modMAPQ = MAPQ * min [1, adjAS/max(100,alignLength)]^2 
 ```
@@ -260,7 +260,7 @@ Breakend supporting reads identified by Prep are used to build initial breakend 
 
  In the first step the ‘extension’ sequence is built from the breakend outwards using the consensus of soft-clipped bases. If 2 or more reads differ from the consensus with high qual mismatches exceeding the mismatch tolerance the extension is split into multiple alignments. Each of the candidate overlapping breakend supporting reads that overlaps the candidate junction site (including any indel containing reads or reads with an SNV and the soft clip junction is within 2 bases) is tested against these unique breakend-extension assemblies. These initial assemblies are filtered unless at least 1 read has a soft clip > 32 bases and at least one other read has a soft clip >= 16 bases OR the sequence contains a PolyA/PolyT LINE sequence of 16 bases and a 2nd read with supporting soft clip > = 8 bases with an insertion site orientation.  However, note that candidate junctions with LINE source insertion orientations are filtered as they may be promiscuous causing issues downstream  These are always assembled from the LINE insertion site end.
 
-To allow calling of variants with long homology which may not have soft clipping, if no assembly can be created with sufficiently long soft clip, but there exists a remote region with more than 3 discordant fragments supporting the link then an assembly is made using only the fragments associated with that specific remote region. Only reads that support the specific remote location are allowed to form the assembly  The breakend is arbitarily initially placed 32 bases from the innermost base of the assembly. Only reads with MAPQ>20 are considered in the assembly construction. 
+To allow calling of variants with long homology which may not have soft clipping, if no assembly can be created with sufficiently long soft clip, but there exists a remote region with more than 3 discordant fragments supporting the link then an assembly is made using only the fragments associated with that specific remote region. Only reads that support the specific remote location are allowed to form the assembly  The breakend is arbitrarily initially placed 32 bases from the innermost base of the assembly. Only reads with MAPQ>20 are considered in the assembly construction. 
 
 All remaining breakend assemblies are then extended into the reference base direction from their supporting reads. Only junction split reads with 10+ soft-clipped bases and at least 2 high quality soft clipped bases matching the consensus, can be used to build the initial assembly ref base sequence. 
 
@@ -297,7 +297,7 @@ Each breakend consists of:
 Breakend assemblies are merged and extended to form junctions. There are 6 sub-steps: 
 <img width="536" alt="image" src="https://github.com/user-attachments/assets/a680046e-5ba0-4e79-9c47-6c1bf592a6ff">
 
-In each step, Esvee attempts to merge existing assemblies with other assemblies, remote regions and/or mates of assembled reads. Assemblies are merged if a 10 base exact seed within a range of +/- 100 bases of each breakend can be matched, and the seed can be extended to the end of each assembly sequence with the minimium require overlap aand up to the prescribed number of high- quality mismatches (see above). When 2 breakends are assembled, if there is a gap between the reference sequences, an insert sequence is recorded. If there is an overlap of reference sequences, the reference bases are also extended. Assemblies are branched into multiple assemblies if there is at least 5 reads and 20% maximum support supporting an alternative alignment. This may occur in the case of foldback inversions. 
+In each step, Esvee attempts to merge existing assemblies with other assemblies, remote regions and/or mates of assembled reads. Assemblies are merged if a 10 base exact seed within a range of +/- 100 bases of each breakend can be matched, and the seed can be extended to the end of each assembly sequence with the minimum require overlap and up to the prescribed number of high- quality mismatches (see above). When 2 breakends are assembled, if there is a gap between the reference sequences, an insert sequence is recorded. If there is an overlap of reference sequences, the reference bases are also extended. Assemblies are branched into multiple assemblies if there is at least 5 reads and 20% maximum support supporting an alternative alignment. This may occur in the case of foldback inversions. 
 
 #### 1. Assemble local pairs 
 Since short DEL & DUP are the most common variant types, Esvee first tries to merge proximate breakends (within 500 bases for DUP or 1000 bases for DEL) with consistent orientations that may be a DEL or DUP, prioritising pairs that share indel containing reads or supplementary alignments. Breakends supported by indel containing reads are also examined to see if the INDEL cigar can fully explain the soft clipping.  
@@ -324,7 +324,7 @@ Finally each assembly within the phase group are compared to each other.  If the
 ### STEP 2D: Alignment & variant calling 
 
 #### Alignment 
-Esvee now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter which has the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The gap open and mismatch penalties are also raised from 4 to 6 to incentise producing softclips where edges of an alignment are very marginal.
+Esvee now has a set of unique assemblies which may relate to a single candidate breakend, a junction pair or a complex set of chained breakends. Each unique assembly is aligned using BWA-mem with '-w 32' parameter which has the effect of splitting gaps of more than 32 bases into supplementary alignments (default = 100).  The gap open and mismatch penalties are also raised from 4 to 6 to incentivise producing softclips where edges of an alignment are very marginal.
 
 BWA may return one primary alignment as well as one or more supplementary alignments. Since BWA can assign an unreliable MAPQ to supplementary alignments, any supplementary alignments are realigned again using BWA with the primary alignment of the re-query kept and any further supplementaries dropped 
 
@@ -354,7 +354,7 @@ Other | No alignment (convert to insert sequence)
 
 For each alignment with modMAPQ<10 and either (XATag!=NULL OR alignment is in DUX4 region) regardless of whether the alignment was inferred or was converted to an insert sequence, then all the alternatives are recorded in the INSALN field for any adjacent breakends or the ALTALN field if an alignment.  
  
-Note that 2 special exceptions are made for clinically relevant fusions in low mappabilitiy: 
+Note that 2 special exceptions are made for clinically relevant fusions in low mappability: 
 - **SSX2**: SS18 Exon 10 to SSX2 Exon 6 mutations are common pathogenic fusions in Synovial Sarcomas, but may be confused with the homolog SSX2B.  Therefore, for any alignment which falls in the range of intron 5 of SSX2 (hg19: X:52,729,628-52,731,680; hg38 chrX: 52,700,578-52,702,630) and SSX2B (hg19: X: 52,784,877-52,786,929; hg38 chrX:52,755,800-52,757,852) with a downstream genic orientation with MAPQ < 20 and the assembly has a breakend mapped to another chromosome is assumed to have the SSX2 alignment. 
 - **DUX4**: DUX4 is a special case as it has known clinically relevant fusions but many identical copies in the reference genome. DUX4 regions are defined as {GL000228.1:20000-125000, 4:190930000-191030000, 10:135420000-135520000} on hg19 and {chr4:190060000-190190000, chr10:133660000-133770000} in hg38. If there are 2 or more consecutive modMAPQ<3 alignments, then the INSALN is merged for those cases.   
  
@@ -380,7 +380,7 @@ For each breakend the total variant fragments (VF) that overlap the breakend acr
 For each breakend, Esvee queries the full BAM files and annotates the fragments with a read that directly overlaps the breakpoint (REFSR) and spans the breakpoint (REFRP). These are also used to calculate a variant allele frequency (AF) for the variant. To be consistent, for INS or DEL and DUP < 1000 bases in length, the REFRP is also ignored from the denominator of the AF calculation. If the VAF is > 90% and the variant falls into an ‘unmapped region’ as defined in REDUX, then the REF_DEPTH is assumed to be the sample median. 
 
 ### STEP 4: Filtering 
-The following filters are applied to the variant with a context of ‘any sample’ (ie PASS if any sample meets the criteria) or ‘all samples’ (pass if the criteria is met across all sampes for the variant: 
+The following filters are applied to the variant with a context of ‘any sample’ (ie PASS if any sample meets the criteria) or ‘all samples’ (pass if the criteria is met across all samples for the variant: 
 
 Filter Name | Samples | Definition | Junction | LINE Site | Single | Hotspot
 ---|---|---|---|---|---|---
@@ -421,10 +421,10 @@ Stage  | Special rules
 ---|---
 Esvee Prep| min 32 base length is not required 
 Trimming | Don’t trim the first 18 bases if at least 16 of them are PolyA or T  
-Local assembly | Prioritse reads with the 5’ in the softclip and which reach beyond the PolyA for extension; Allow any length of PolyA to match. Set the length in the assembly to be the median of lengths with additional bases beyond the PolyA or else just the longest PolyA sequence if none exist; Require only 16 bases longest and 8 bases 2nd longest to retain soft clip 
+Local assembly | Prioritise reads with the 5’ in the softclip and which reach beyond the PolyA for extension; Allow any length of PolyA to match. Set the length in the assembly to be the median of lengths with additional bases beyond the PolyA or else just the longest PolyA sequence if none exist; Require only 16 bases longest and 8 bases 2nd longest to retain soft clip 
 Phasing | Phase breakends even if neither has a locally concordant mate 
 Assembly extension | Allow remote regions and unmapped mates of both sides to extend the assembly 
-Alignment | Secondary links are still aligned for LINE insertion sites; Call single breakend if PolyA length exceeds 1.5x reference PolyA length (no 50 base minimumum); Secondary links are still aligned for LINE insertion sites 
+Alignment | Secondary links are still aligned for LINE insertion sites; Call single breakend if PolyA length exceeds 1.5x reference PolyA length (no 50 base minimum); Secondary links are still aligned for LINE insertion sites 
 Filters | MinLength, ShortFrags, minAnchorLength filters not applied; PASS if either side PASES ; MinSupport & MinQual uses qual of both sides 
 Germline vs Somatic | Mark as germline if either side meets germline filters 
 
@@ -442,9 +442,9 @@ AVGLEN	|Average implied length of fragments supporting the junction
 BEAOR	|Breakend orientation(s) in assembly(s)
 BEAPOS	|Breakend position(s) in assembly(s)
 BEOR	|Breakend orientation(s) in reference genome
-CIPOS	|Confidence interval around breakend position (for homlogy)
+CIPOS	|Confidence interval around breakend position (for homology)
 HOMSEQ	|Homology sequence at junction
-HOTSPOT	|Is Known fusion hotpsot
+HOTSPOT	|Is Known fusion hotspot
 IHOMPOS	|Offset positions of inexact homology
 INSALN	|Potential alignment locations of insert sequence in the format chr:start|strand|cigar|mapq. Populated when max MAPQ =0 and <= 5 alternative alignments
 INSRMP	|Portion of inserted sequence whose alignment overlaps the repeatmasker repeat
@@ -480,13 +480,13 @@ Know sources of errors
 - Poor extension from a single mispleced read => can lead to either a FP or prevent further assembly extension
 - Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
 - Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
-- MSI Jitter of germline INDELS just under 32 bases in length may be intepreted as a somatic SV of 32+ bases
+- MSI Jitter of germline INDELS just under 32 bases in length may be interpreted as a somatic SV of 32+ bases
 - Long dinucleotide MS expansions can fail minAnchorfilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
-- **Somatically activated LINE insertion sites** - Some insertion sites of LINE elments may become active LINE source elements themselves.   These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
+- **Somatically activated LINE insertion sites** - Some insertion sites of LINE elements may become active LINE source elements themselves.   These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
 
 Alignment
-- We should analyse additional supplemementary alignments arising from re-query of initial supplementary alignments (currently dropping)
+- We should analyse additional supplementary alignments arising from re-query of initial supplementary alignments (currently dropping)
 - We should requery long softclips to see if additional alignments can be found.
 - We don't take into account homology for pure INS (which may be duplications)
 
@@ -494,7 +494,7 @@ Esvee has some implicit and explicit assumptions on reads, qualities and alignme
 - **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
-- **Fragment lengtsh** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
+- **Fragment lengths** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
 - **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted.  These should be masked from assembly
 - **Hard clipping** - Esvee prep may not retain reads with hard clipping at or near junctions
 
