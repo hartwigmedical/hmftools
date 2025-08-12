@@ -214,7 +214,7 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.checker.BamChecker \
 
 Filter | Description
 ---|---
-bam_file | BAM file to slice
+bam_file | Input BAM file
 ref_genome | Reference genome file used to create the BAM
 output_dir | Path for output file, if omitted will write to same directory as BAM file
 log_level | As above
