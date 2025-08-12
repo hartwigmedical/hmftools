@@ -163,19 +163,16 @@ public class SomaticSv implements Variant
     @Override
     public String toString()
     {
-        String s;
         if(mVariant.type() == StructuralVariantType.SGL)
         {
-            s = format("%s:%d:%d %s", mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type());
+            return format("%s:%d:%d %s", mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type());
         }
         else
         {
-            s = format("%s:%d:%d - %s:%d:%d %s",
+            return format("%s:%d:%d - %s:%d:%d %s",
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.type());
         }
-
-        return format("%s breakends=%d fusions=%d", s, mBreakends.size(), mFusions.size());
     }
 
     public static List<SomaticSv> load(final String sampleId, final String purpleDir, @Nullable final String linxDir)
