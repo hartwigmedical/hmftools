@@ -109,7 +109,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
         BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
-        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome, mMsiJitterCalcs);
+        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mMsiJitterCalcs);
 
         List<ReadContextCounter> allReadCounters = mFactory.create(candidates, mConfig, mRefGenome, qualityCalculator, sample);
 

@@ -6,13 +6,10 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
@@ -20,7 +17,6 @@ import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
@@ -28,6 +24,7 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -42,7 +39,7 @@ public class QualityCalculator
 
     public QualityCalculator(
             final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
-            final RefGenomeInterface refGenome, final MsiJitterCalcs msiJitterCalcs)
+            final MsiJitterCalcs msiJitterCalcs)
     {
         mConfig = config.Quality;
         mQualityRecalibrationMap = qualityRecalibrationMap;
@@ -90,19 +87,19 @@ public class QualityCalculator
             recalibrateBaseQuality = readContextCounter.isSnv();
         }
 
-        if(recalibrateBaseQuality && readContextCounter.realignedUltimaQualModels() == null)
+        if(recalibrateBaseQuality)
         {
-            baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
-        }
-        else if(recalibrateBaseQuality)
-        {
-            // CHECK: with recent BQR changes if still correct
-            double bqrQual = readContextCounter.qualCache().getQual(
-                    ULTIMA_BOOSTED_QUAL, SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
+            if(isUltima())
+            {
+                double bqrQual = readContextCounter.qualCache().getQual(
+                        UltimaUtils.maxRawQual(), SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
 
-            bqrQual += max(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, ULTIMA_MAX_QUAL_T0) - ULTIMA_BOOSTED_QUAL;
-
-            baseQuality = min(calcBaseQuality, bqrQual);
+                baseQuality = min(calcBaseQuality, bqrQual);
+            }
+            else
+            {
+                baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+            }
         }
         else
         {

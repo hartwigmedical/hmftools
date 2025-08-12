@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
-
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_RECALIBRATED_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
 import java.util.List;
@@ -214,6 +212,6 @@ public class UltimaQualModelBuilder
             super(UltimaModelType.MICROSATELLITE);
         }
 
-        public byte calculateQual(final SAMRecord record, int varReadIndex) { return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST; }
+        public byte calculateQual(final SAMRecord record, int varReadIndex) { return MAX_RECALIBRATED_QUAL; }
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.calcTpBaseQual;
 
 import com.google.common.annotations.VisibleForTesting;
 

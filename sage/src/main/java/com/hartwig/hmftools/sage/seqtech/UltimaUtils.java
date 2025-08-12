@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.sage.seqtech;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.CYCLE_BASES;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -23,20 +22,89 @@ public final class UltimaUtils
 {
     protected static final int MAX_HOMOPOLYMER = 15;
 
+    protected static final byte MAX_RECALIBRATED_QUAL = 55;
     protected static final byte INVALID_BASE = -1;
+    private static final byte TP_ZERO_BASE_QUAL = 0;
 
     private static final int LONG_LENGTH = 20;
+
+    protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
+
+    public static void loadBqrCache(final String filename)
+    {
+        BQR_CACHE.loadRecalibrationFile(filename);
+    }
+
+    public static void setMaxRawQual(final byte qual) { BQR_CACHE.setMaxRawQual(qual); }
+    public static byte maxRawQual() { return BQR_CACHE.maxRawQual(); }
 
     public static byte safeQualLookup(final byte[] qualityArray, int index)
     {
         if(index < 0 || index >= qualityArray.length)
             return ULTIMA_INVALID_QUAL;
 
-        byte value = qualityArray[index];
-        if(value == ULTIMA_BOOSTED_QUAL)
-            return ULTIMA_MAX_QUAL_T0;
+        return qualityArray[index];
+    }
 
-        return value;
+    public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
+    {
+        if(indexStart < 0)
+            return ULTIMA_INVALID_QUAL;
+
+        byte[] tpValues = extractTpValues(record);
+
+        byte qualValue1 = -1;
+        byte qualValue2 = -1;
+
+        for(int i = indexStart; i <= min(indexEnd, tpValues.length - 1); ++i)
+        {
+            if(tpValues[i] == tpSearchValue)
+            {
+                if(qualValue1 < 0)
+                {
+                    qualValue1 = record.getBaseQualities()[i];
+                }
+                else
+                {
+                    qualValue2 = record.getBaseQualities()[i];
+                    break;
+                }
+            }
+        }
+
+        int homopolymerLength = indexEnd - indexStart + 1;
+        char homopolymerBase = (char)record.getReadBases()[indexStart];
+
+        // check quals vs BQR
+        qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
+        qualValue2 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
+
+        if(qualValue1 < 0)
+        {
+            // if bases aren't found, use middle base(s) as: min(40, Q + 6 * abs(required_tp – T))
+            int middleIndex = indexStart + (indexEnd - indexStart) / 2;
+            final byte[] baseQualities = record.getBaseQualities();
+            if(middleIndex < 0 || middleIndex >= baseQualities.length)
+            {
+                return ULTIMA_INVALID_QUAL;
+            }
+
+            qualValue1 = baseQualities[middleIndex];
+            byte tpValue = tpValues[middleIndex];
+
+            if(tpValue == TP_ZERO_BASE_QUAL)
+                return BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, true);;
+
+            qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
+
+            return (byte)min(qualValue1, qualValue1 + 6 * abs(tpSearchValue - tpValue));
+        }
+
+        if(qualValue2 < 0)
+            return qualValue1;
+
+        // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
+        return (byte)(qualValue1 - 3);
     }
 
     protected static int findHomopolymerLength(final byte[] refBases, final byte compareBase, int startIndex, boolean searchUp)
@@ -44,7 +112,6 @@ public final class UltimaUtils
         // byte repeatBase = refBases[startIndex];
         int repeatCount = 0;
 
-        // int i = startIndex + (searchUp ? 1 : -1);
         int i = startIndex;
 
         while(i >= 0 && i < refBases.length)

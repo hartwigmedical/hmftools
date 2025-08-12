@@ -12,13 +12,15 @@ import htsjdk.samtools.SAMRecord;
 
 public final class UltimaBamUtils
 {
-    public static final byte ULTIMA_MAX_QUAL = 40;
+    public static final byte ULTIMA_MAX_QUAL = 35;
     public static final byte ULTIMA_INVALID_QUAL = -1;
 
-    public static final byte ULTIMA_MAX_QUAL_TP = 40;
+    /*
+    public static final byte ULTIMA_MAX_QUAL_TP = 40; // to be deprecated
     public static final byte ULTIMA_TP_0_BOOST = 5;
     public static final byte ULTIMA_MAX_QUAL_T0 = 40;
     public static final byte ULTIMA_BOOSTED_QUAL = 35;
+    */
 
     public static final String ULTIMA_TP_TAG = "tp";
     public static final String ULTIMA_T0_TAG = "t0";
@@ -79,69 +81,6 @@ public final class UltimaBamUtils
             return ConsensusType.NONE;
 
         return ConsensusType.DUAL;
-    }
-
-    public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
-    {
-        if(indexStart < 0)
-        {
-            return ULTIMA_INVALID_QUAL;
-        }
-
-        byte[] tpValues = extractTpValues(record);
-
-        int qualValue1 = -1;
-        int qualValue2 = -1;
-
-        for(int i = indexStart; i <= min(indexEnd, tpValues.length - 1); ++i)
-        {
-            if(tpValues[i] == tpSearchValue)
-            {
-                if(qualValue1 < 0)
-                {
-                    qualValue1 = record.getBaseQualities()[i];
-                }
-                else
-                {
-                    qualValue2 = record.getBaseQualities()[i];
-                    break;
-                }
-            }
-        }
-
-        if(qualValue1 == ULTIMA_BOOSTED_QUAL)
-            qualValue1 = ULTIMA_MAX_QUAL_TP;
-
-        if(qualValue2 == ULTIMA_BOOSTED_QUAL)
-            qualValue2 = ULTIMA_MAX_QUAL_TP;
-
-        if(qualValue1 < 0)
-        {
-            // if bases aren't found, use middle base(s) as: min(40, Q + 6 * abs(required_tp – T))
-            int middleIndex = indexStart + (indexEnd - indexStart) / 2;
-            final byte[] baseQualities = record.getBaseQualities();
-            if(middleIndex < 0 || middleIndex >= baseQualities.length)
-            {
-                return ULTIMA_INVALID_QUAL;
-            }
-
-            qualValue1 = baseQualities[middleIndex];
-            byte tpValue = tpValues[middleIndex];
-
-            if(tpValue == (byte)0)
-                return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
-
-            if(qualValue1 == ULTIMA_BOOSTED_QUAL)
-                qualValue1 = ULTIMA_MAX_QUAL_TP;
-
-            return (byte)min(ULTIMA_MAX_QUAL_TP, qualValue1 + 6 * abs(tpSearchValue - tpValue));
-        }
-
-        if(qualValue2 < 0)
-            return (byte)qualValue1;
-
-        // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
-        return (byte)(qualValue1 - 3);
     }
 
     public static int cycleCount(final byte firstBase, final byte lastBase, final byte innerBase)

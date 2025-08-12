@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.calcTpBaseQual;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.calcTpBaseQual;
 
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 
@@ -59,12 +56,16 @@ class UltimaHomopolymerTransitionDeletion extends UltimaQualModel
             return ULTIMA_INVALID_QUAL;
         }
 
+        // ULTIMA TODO
+        /*
         if(lowerQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST || upperQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST)
         {
             return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
         }
+        */
 
-        return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL_TP);
+        // return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL_TP);
+        return 0;
     }
 
     public String toString()

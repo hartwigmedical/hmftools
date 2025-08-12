@@ -5,9 +5,9 @@ import static java.lang.String.format;
 import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_RECALIBRATED_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.safeQualLookup;
 
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
@@ -78,16 +78,12 @@ class UltimaHomopolymerDeletion extends UltimaQualModel
         if(record.getReadNegativeStrandFlag())
         {
             if(!mInCycleNegStrand)
-            {
-                return ULTIMA_MAX_QUAL_T0;
-            }
+                return MAX_RECALIBRATED_QUAL;
         }
         else
         {
             if(!mInCyclePosStrand)
-            {
-                return ULTIMA_MAX_QUAL_T0;
-            }
+                return MAX_RECALIBRATED_QUAL;
         }
 
         final byte[] t0Values = extractT0Values(record);

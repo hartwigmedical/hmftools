@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_RECALIBRATED_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -131,28 +128,37 @@ class UltimaSnv extends UltimaQualModel
     {
         if(mLeftAdjust == null && mLeftDeletion == null || mRightAdjust == null && mRightDeletion == null)
         {
-            return ULTIMA_MAX_QUAL_T0;
+            // ULTIMA TODO
+            return MAX_RECALIBRATED_QUAL;
+            // return ULTIMA_MAX_QUAL_T0;
         }
 
-        int leftQual = mLeftAdjust != null
-                ?
-                min(mLeftAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST)
-                : min(mLeftDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
+
+        // ULTIMA TODO
+        int leftQual = 0;
+
+        if(mLeftAdjust != null)
+        {
+            // leftQual = min(mLeftAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST);
+        }
+        else
+        {
+            // leftQual = min(mLeftDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
+        }
 
         if(leftQual == ULTIMA_INVALID_QUAL)
-        {
             return ULTIMA_INVALID_QUAL;
-        }
 
-        int rightQual = mRightAdjust != null
-                ?
+        int rightQual = 0;
+
+        /*
+        int rightQual = mRightAdjust != null ?
                 min(mRightAdjust.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST)
                 : min(mRightDeletion.calculateQual(record, varReadIndex), ULTIMA_MAX_QUAL_T0);
+         */
 
         if(rightQual == ULTIMA_INVALID_QUAL)
-        {
             return ULTIMA_INVALID_QUAL;
-        }
 
         return (byte) Math.max(leftQual, rightQual);
     }

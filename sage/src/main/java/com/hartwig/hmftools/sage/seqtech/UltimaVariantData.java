@@ -2,10 +2,6 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_BOOSTED_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_T0;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL_TP;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_0_BOOST;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
@@ -13,8 +9,6 @@ import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -76,7 +70,9 @@ public class UltimaVariantData
             int homopolymerQual;
             if(tpValue == 0)
             {
-                homopolymerQual = ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
+                // ULTIMA TODO
+                homopolymerQual = 0;
+                // homopolymerQual = ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
             }
             else if(len == 1)
             {
@@ -111,7 +107,10 @@ public class UltimaVariantData
             int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
             int t0Value = t0Values[lookupIndex];
 
-            int t0Qual;
+            // ULTIMA TODO
+            int t0Qual = 0;
+
+            /*
             if(t0Value == ULTIMA_BOOSTED_QUAL)
             {
                 t0Qual = ULTIMA_MAX_QUAL_T0;
@@ -120,6 +119,7 @@ public class UltimaVariantData
             {
                 t0Qual = t0Value;
             }
+            */
 
             t0Quals.add(t0Qual);
 

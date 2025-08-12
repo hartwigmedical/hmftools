@@ -48,7 +48,7 @@ public class TestUtils
     public static final RefSequence REF_SEQUENCE_200 = new RefSequence(0, REF_BASES_200.getBytes()); // note zero-based to line up with indices
 
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE_200, MOCK_REF_GENOME, MSI_JITTER_CALCS);
+            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE_200, MSI_JITTER_CALCS);
 
     public static SageConfig createSageConfig()
     {
