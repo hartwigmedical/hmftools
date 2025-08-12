@@ -11,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster
 {
-    private double mPurity;
-    private double mNormFactor;
+    private final double mPurity;
+    private final double mNormFactor;
 
     private final Map<String,Double> mObservedRatioMap;
 
@@ -32,18 +32,11 @@ public class PurityAdjuster
         mObservedRatioMap = observedRatioMap;
     }
 
-    public PurityAdjuster(final Map<String,Double> observedRatioMap)
-    {
-        this(observedRatioMap, 0, 0);
-    }
-
-    public void setPurity(double purity) { mPurity = purity; }
     public double purity()
     {
         return mPurity;
     }
 
-    public void setNormFactor(double normFactor) { mNormFactor = normFactor; }
     public double normFactor()
     {
         return mNormFactor;
@@ -149,5 +142,4 @@ public class PurityAdjuster
     {
         return normFactor * (1 - purity + tumorPloidy / 2d * purity);
     }
-
 }
