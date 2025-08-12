@@ -477,11 +477,11 @@ VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 Know sources of errors
-- Poor extension from a single mispleced read => can lead to either a FP or prevent further assembly extension
+- Poor extension from a single misplaced read => can lead to either a FP or prevent further assembly extension
 - Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
 - Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
 - MSI Jitter of germline INDELS just under 32 bases in length may be interpreted as a somatic SV of 32+ bases
-- Long dinucleotide MS expansions can fail minAnchorfilter
+- Long dinucleotide MS expansions can fail minAnchorFilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
 - **Somatically activated LINE insertion sites** - Some insertion sites of LINE elements may become active LINE source elements themselves.   These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
 
