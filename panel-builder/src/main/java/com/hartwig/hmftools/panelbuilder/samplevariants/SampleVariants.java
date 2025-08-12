@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NON
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NOVEL_SEQUENCE_BASES_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
@@ -100,8 +99,8 @@ public class SampleVariants
 
         Map<String, Integer> geneDisruptions = new HashMap<>();
 
-        result = result.add(generateDriverProbes(variants, geneDisruptions, SAMPLE_PROBES_MAX - result.probes().size()));
-        result = result.add(generateNondriverProbes(variants, SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(generateDriverProbes(variants, geneDisruptions, mConfig.maxProbes() - result.probes().size()));
+        result = result.add(generateNondriverProbes(variants, mConfig.maxProbes() - result.probes().size()));
 
         return result;
     }
