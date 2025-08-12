@@ -421,13 +421,23 @@ public class ProbeGenerator
 
     // Generates the 1 best acceptable probe which covers a position.
     public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
-            final ProbeSelectCriteria criteria)
+            final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
     {
         TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
         Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, metadata);
         Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
         return selectBestProbe(evaluatedCandidates, criteria.select())
-                .map(probe -> ProbeGenerationResult.coveredTarget(target, probe))
+                .map(probe ->
+                {
+                    if(coverage != null && coverage.isCovered(target.region()))
+                    {
+                        return ProbeGenerationResult.alreadyCoveredTarget(target);
+                    }
+                    else
+                    {
+                        return ProbeGenerationResult.coveredTarget(target, probe);
+                    }
+                })
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No probe covering position meeting criteria " + criteria.eval();

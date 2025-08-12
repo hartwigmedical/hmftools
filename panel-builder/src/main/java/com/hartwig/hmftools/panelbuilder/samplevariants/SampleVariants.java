@@ -40,6 +40,7 @@ import com.hartwig.hmftools.panelbuilder.UserInputError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// TODO: doc
 public class SampleVariants
 {
     private final SampleVariantsConfig mConfig;

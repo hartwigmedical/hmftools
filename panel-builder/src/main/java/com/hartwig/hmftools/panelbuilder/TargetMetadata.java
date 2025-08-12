@@ -19,6 +19,7 @@ public record TargetMetadata(
         GENE,
         CN_BACKBONE,
         CDR3,
+        MSI,
         CUSTOM,
         SAMPLE_SNV_INDEL_DRIVER,
         SAMPLE_SNV_INDEL_OTHER,

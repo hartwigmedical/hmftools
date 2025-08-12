@@ -75,6 +75,7 @@ public class PanelBuilderApplication
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
+        generateMsiProbes();
         generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
@@ -106,7 +107,7 @@ public class PanelBuilderApplication
             EnsemblDataCache ensemblData = loadEnsemblData();
             Genes.ExtraOutput extraOutput =
                     Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData
+            // Result is stored into mPanelData.
             return extraOutput;
         }
     }
@@ -120,7 +121,7 @@ public class PanelBuilderApplication
         else
         {
             new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData).generateProbes();
-            // Result is stored into mPanelData
+            // Result is stored into mPanelData.
         }
     }
 
@@ -129,11 +130,24 @@ public class PanelBuilderApplication
         if(mConfig.includeCdr3())
         {
             Cdr3Regions.generateProbes(mRefGenomeVersion, mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData
+            // Result is stored into mPanelData.
         }
         else
         {
             LOGGER.info("CDR3 not requested; skipping CDR3 probe generation");
+        }
+    }
+
+    private void generateMsiProbes()
+    {
+        if(mConfig.msiSitesFile() == null)
+        {
+            LOGGER.info("MSI sites file not provided; skipping MSI probes");
+        }
+        else
+        {
+            MsiSites.generateProbes(mConfig.msiSitesFile(), mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData.
         }
     }
 
@@ -146,7 +160,7 @@ public class PanelBuilderApplication
         else
         {
             CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData
+            // Result is stored into mPanelData.
         }
     }
 
@@ -159,7 +173,7 @@ public class PanelBuilderApplication
         else
         {
             new SampleVariants(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData).generateProbes();
-            // Result is stored into mPanelData
+            // Result is stored into mPanelData.
         }
     }
 

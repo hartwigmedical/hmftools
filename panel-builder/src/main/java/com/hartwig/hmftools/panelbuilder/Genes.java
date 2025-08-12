@@ -449,7 +449,7 @@ public class Genes
             case UTR ->
             {
                 BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
-                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA);
+                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA, null);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK -> probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
         };

@@ -23,6 +23,7 @@ public record PanelBuilderConfig(
         String ensemblDir,
         String probeQualityProfileFile,
         @Nullable String amberSitesFile,
+        @Nullable String msiSitesFile,
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
         @Nullable String genesFile,
@@ -37,7 +38,9 @@ public record PanelBuilderConfig(
     private static final String CFG_BWA_INDEX_IMAGE_FILE = "bwa_index_image";
     private static final String DESC_BWA_INDEX_IMAGE_FILE = "Reference genome BWA-MEM index GATK image file";
     private static final String CFG_AMBER_SITES_FILE = "amber_sites";
-    private static final String DESC_AMBER_SITES_FILE = "Amber het sites file";
+    private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites file";
+    private static final String CFG_MSI_SITES_FILE = "msi_sites";
+    private static final String DESC_MSI_SITES_FILE = "Microsatellite instability positions file";
     private static final String CFG_TARGET_GENES_FILE = "target_genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene and transcript name file";
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
@@ -55,6 +58,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(ENSEMBL_DATA_DIR),
                 configBuilder.getValue(CFG_PROBE_QUALITY_FILE),
                 configBuilder.getValue(CFG_AMBER_SITES_FILE),
+                configBuilder.getValue(CFG_MSI_SITES_FILE),
                 configBuilder.getValue(CFG_BWA_INDEX_IMAGE_FILE, refGenomePath + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
@@ -73,6 +77,7 @@ public record PanelBuilderConfig(
         addEnsemblDir(configBuilder, true);
         ProbeQualityProfile.registerConfig(configBuilder);
         configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
+        configBuilder.addPath(CFG_MSI_SITES_FILE, false, DESC_MSI_SITES_FILE);
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_BWA_INDEX_IMAGE_FILE, false, DESC_BWA_INDEX_IMAGE_FILE);

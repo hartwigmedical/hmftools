@@ -56,6 +56,10 @@ public class PanelBuilderConstants
     public static final double CDR3_GC_TARGET = 0.45;
     public static final double CDR3_GC_TOLERANCE = 1;
 
+    // MSI site probe constants.
+    // TODO
+    public static final double MSI_QUALITY_MIN = 0.1;
+
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.
     public static final double CN_GC_TARGET = 0.45;
