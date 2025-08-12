@@ -36,23 +36,36 @@ public class Cdr3Regions
     {
         LOGGER.info("Generating CDR3 probes");
 
+        List<IgTcrGene> genes = loadIgTcrGenes(refGenomeVersion);
+
+        ProbeGenerationResult result = generateProbes(genes, probeGenerator, panelData);
+        // Overlaps between CDR3 probes are checked as they are generated, so it's safe to add them to the result all at once at the end.
+        panelData.addResult(result);
+
+        LOGGER.info("Done generating CDR3 probes");
+    }
+
+    private static List<IgTcrGene> loadIgTcrGenes(final RefGenomeVersion refGenomeVersion)
+    {
         List<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
                 .filter(gene -> gene.region() == IgTcrRegion.V_REGION || gene.region() == IgTcrRegion.J_REGION)
                 .filter(IgTcrGene::inPrimaryAssembly)
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
         LOGGER.info("Loaded {} V/J genes", genes.size());
+        return genes;
+    }
 
+    private static ProbeGenerationResult generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
+            final PanelCoverage coverage)
+    {
         ProbeGenerationResult result = new ProbeGenerationResult();
         List<ChrBaseRegion> coveredRegions = new ArrayList<>();
         for(IgTcrGene gene : genes)
         {
-            result = result.add(generateProbe(gene, probeGenerator, panelData, coveredRegions));
+            result = result.add(generateProbe(gene, probeGenerator, coverage, coveredRegions));
         }
-
-        panelData.addResult(result);
-
-        LOGGER.info("Done generating CDR3 probes");
+        return result;
     }
 
     private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
