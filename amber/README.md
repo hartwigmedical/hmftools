@@ -102,7 +102,7 @@ java -Xmx16G -jar amber.jar \
 ```
 ## Germline Only Mode
 
-If the tumor / tumor bam are not specified then Amber will be run in germline only mode.   Germline mode has the following differences in behaviour
+If the tumor / tumor bam are not specified then AMBER will be run in germline only mode.   Germline mode has the following differences in behaviour
 - contamination is not run
 - pcf fitting is not run
 - tumor fields are set to -1 for amber.baf.tsv.gz
@@ -110,7 +110,7 @@ If the tumor / tumor bam are not specified then Amber will be run in germline on
 
 ## Targeted Mode
 
-AMBER may be run on targeted data. The differences in behaviour in Amber in targeted mode are documented here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).  
+AMBER may be run on targeted data. The differences in behaviour in AMBER in targeted mode are documented here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).  
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
@@ -120,7 +120,7 @@ No change is made to the SNPCheck or contamination output. These will be run on 
 ## Algorithm 
 
 ### Analysis and filtering of BAF points
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth and with depth and AF in the specificed range are considered.    In tumor only mode, all provided sites are examined in the tumor with additional filteringon tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the germline.
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. Only observations which meet the min map quality, min base quality and min tumor depth and with depth and AF in the specificed range are considered.    In tumor only mode, all provided sites are examined in the tumor with additional filtering on tumor vaf and allelic depth to ensure that the sites are highly unlikely to be homozygous ref or alt in the germline.
  
 ### Segmentation
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
@@ -161,7 +161,7 @@ AMBER also counts the actual number of positions with ALT support. And similarly
 Finally, the contamination rate is chosen whose value minimises the cumulative differences between the predicted and actual proportions. 
 
 ### Regions of Homozygosity
-Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
+AMBER outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
 
 For determination of the region each BAF site in the provided bed file is calculated as homozygous (alt or ref) or heterozygous according to the following criteria:
 ```
