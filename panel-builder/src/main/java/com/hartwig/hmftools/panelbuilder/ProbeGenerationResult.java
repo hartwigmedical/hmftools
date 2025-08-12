@@ -58,6 +58,12 @@ public record ProbeGenerationResult(
         return new ProbeGenerationResult(emptyList(), List.of(candidateTarget), emptyList(), emptyList());
     }
 
+    // Convenience method for creating a result from candidate targets which got no probes since they were already covered.
+    public static ProbeGenerationResult alreadyCoveredTargets(final List<TargetRegion> targets)
+    {
+        return new ProbeGenerationResult(emptyList(), targets, emptyList(), emptyList());
+    }
+
     // Convenience method for creating a result from rejecting an entire target region.
     public static ProbeGenerationResult rejectTarget(final TargetRegion target, final String rejectionReason)
     {

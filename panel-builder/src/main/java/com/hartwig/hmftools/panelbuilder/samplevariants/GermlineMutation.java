@@ -41,12 +41,6 @@ public class GermlineMutation implements Variant
     }
 
     @Override
-    public List<ProximateLocations.Location> checkedLocations()
-    {
-        return List.of(new ProximateLocations.Location(mVariant.chromosome(), mVariant.position()));
-    }
-
-    @Override
     public TargetMetadata.Type targetType()
     {
         if(isDriver())

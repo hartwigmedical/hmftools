@@ -62,11 +62,6 @@ public class SomaticSv implements Variant
         mIsDelDriver = false;
     }
 
-    private StructuralVariantData variantData()
-    {
-        return mVariant;
-    }
-
     // Setters only used during loading from file (because we construct the variant then determine these properties afterward).
     private void setIsAmpDriver(boolean isAmpDriver)
     {
@@ -132,13 +127,6 @@ public class SomaticSv implements Variant
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
                     PROBE_LENGTH, refGenome);
         }
-    }
-
-    @Override
-    public List<ProximateLocations.Location> checkedLocations()
-    {
-        // No proximity check for SVs because they create a significantly novel sequence.
-        return emptyList();
     }
 
     public List<String> disruptedGenes()
@@ -308,7 +296,7 @@ public class SomaticSv implements Variant
                 double maxJcn = 0;
                 for(SomaticSv sv : clusterSvs)
                 {
-                    double svJcn = max(sv.variantData().adjustedStartCopyNumberChange(), sv.variantData().adjustedEndCopyNumberChange());
+                    double svJcn = max(sv.mVariant.adjustedStartCopyNumberChange(), sv.mVariant.adjustedEndCopyNumberChange());
                     if(svJcn > maxJcn)
                     {
                         maxJcn = svJcn;
@@ -329,7 +317,7 @@ public class SomaticSv implements Variant
                 {
                     for(SomaticSv sv : clusterSvs)
                     {
-                        if(matchesDelRegion(sv.variantData(), geneCopyNumber))
+                        if(matchesDelRegion(sv.mVariant, geneCopyNumber))
                         {
                             sv.setIsDelDriver(false);
                         }

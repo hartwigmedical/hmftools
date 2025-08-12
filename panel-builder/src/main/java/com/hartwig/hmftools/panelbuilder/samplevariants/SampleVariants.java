@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INDEL_LENGTH_MAX;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NEAR_DISTANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NOVEL_SEQUENCE_BASES_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_PROBES_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
@@ -27,6 +28,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
@@ -96,18 +98,15 @@ public class SampleVariants
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
 
-        ProximateLocations registeredLocations = new ProximateLocations(SAMPLE_NEAR_DISTANCE);
         Map<String, Integer> geneDisruptions = new HashMap<>();
 
-        result = result.add(generateDriverProbes(variants, registeredLocations, geneDisruptions,
-                SAMPLE_PROBES_MAX - result.probes().size()));
-        result = result.add(generateNondriverProbes(variants, registeredLocations, SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(generateDriverProbes(variants, geneDisruptions, SAMPLE_PROBES_MAX - result.probes().size()));
+        result = result.add(generateNondriverProbes(variants, SAMPLE_PROBES_MAX - result.probes().size()));
 
         return result;
     }
 
-    private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, ProximateLocations registeredLocations,
-            Map<String, Integer> geneDisruptions, int maxProbes)
+    private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, Map<String, Integer> geneDisruptions, int maxProbes)
 
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
@@ -124,13 +123,11 @@ public class SampleVariants
             }
             boolean select = variant.isDriver()
                     && driverFilters(variant)
-                    && proximityFilter(variant, registeredLocations)
                     && geneDisruptionFilter(variant, geneDisruptions);
             if(select)
             {
                 ProbeGenerationResult probeGenResult = generateProbe(variant);
                 result = result.add(probeGenResult);
-                registeredLocations.addLocations(variant.checkedLocations());
                 registerDisruptedGenes(variant, geneDisruptions);
             }
         }
@@ -150,8 +147,7 @@ public class SampleVariants
         return true;
     }
 
-    private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, ProximateLocations registeredLocations,
-            int maxProbes)
+    private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, int maxProbes)
     {
         // For nondrivers, we are only interested in somatic SNV/INDEL.
         // Also, some variants are prioritised over others.
@@ -171,13 +167,11 @@ public class SampleVariants
                 break;
             }
             boolean select = !variant.isDriver()
-                    && nondriverFilters(variant)
-                    && proximityFilter(variant, registeredLocations);
+                    && nondriverFilters(variant);
             if(select)
             {
                 ProbeGenerationResult probeGenResult = generateProbe(variant);
                 result = result.add(probeGenResult);
-                registeredLocations.addLocations(variant.checkedLocations());
             }
         }
         return result;
@@ -235,11 +229,6 @@ public class SampleVariants
         return germlineStatus == GermlineStatus.DIPLOID;
     }
 
-    private static boolean proximityFilter(final Variant variant, final ProximateLocations registeredLocations)
-    {
-        return variant.checkedLocations().stream().noneMatch(registeredLocations::isNearLocation);
-    }
-
     private static boolean geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
     {
         if(variant instanceof SomaticSv sv)
@@ -260,6 +249,8 @@ public class SampleVariants
 
     private ProbeGenerationResult generateProbe(final Variant variant)
     {
+        LOGGER.trace("Generate probe for variant: {}", variant);
+
         VariantProbeData probeData = variant.generateProbe(mRefGenome);
 
         TargetMetadata metadata = createTargetMetadata(variant);
@@ -267,25 +258,22 @@ public class SampleVariants
                 .map(region -> new TargetRegion(region, metadata))
                 .toList();
 
-        // If there's an alt sequence then always produce a probe to cover it.
-        boolean covered = !probeData.hasAltSequence() && probeData.regions().stream().allMatch(mPanelData::isCovered);
+        // Only do the coverage check for variant where the probe is similar to the ref genome.
+        // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
+        // so the variant probe is not needed.
+        // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
+        boolean isNovel = isVariantProbeNovel(probeData);
+        boolean covered = !isNovel && probeData.regions().stream().allMatch(mPanelData::isCovered);
 
         if(covered)
         {
-            return new ProbeGenerationResult(emptyList(), targetRegions, emptyList(), emptyList());
+            LOGGER.trace("Variant probe already covered by panel: {}", probeData);
+            return ProbeGenerationResult.alreadyCoveredTargets(targetRegions);
         }
         else
         {
             ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-            Probe probe;
-            if(probeData.sequence() == null)
-            {
-                probe = mProbeGenerator.mProbeFactory.createProbeFromRegion(requireNonNull(probeData.start()), metadata).orElseThrow();
-            }
-            else
-            {
-                probe = mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
-            }
+            Probe probe = mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
             probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
 
             if(probe.accepted())
@@ -297,6 +285,45 @@ public class SampleVariants
                 String rejectionReason = "Probe does not meet criteria " + evalCriteria;
                 return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
             }
+        }
+    }
+
+    private static boolean isVariantProbeNovel(final VariantProbeData data)
+    {
+        ChrBaseRegion start = data.start();
+        ChrBaseRegion end = data.end();
+        int insertLength = data.insert() == null ? 0 : data.insert().length();
+        if(start == null && end == null)
+        {
+            // Unknown region, assume novel sequence.
+            return true;
+        }
+        else if(start != null && end != null)
+        {
+            if(start.chromosome().equals(end.chromosome()))
+            {
+                // SNV, INDEL, or SV on same chromosome.
+                if(start.start() > end.start())
+                {
+                    // Ensure start and end are ordered correctly to calculate the delete length.
+                    start = data.end();
+                    end = data.start();
+                }
+                // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
+                int deleteLength = max(end.start() - start.end() - 1, 0);
+                int difference = abs(insertLength - deleteLength);
+                return difference >= SAMPLE_NOVEL_SEQUENCE_BASES_MIN;
+            }
+            else
+            {
+                // SV across different chromosomes.
+                return true;
+            }
+        }
+        else
+        {
+            // Single ended SV.
+            return true;
         }
     }
 

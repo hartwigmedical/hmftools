@@ -87,11 +87,10 @@ public class ProbeGenerator
         else
         {
             // Split the region into subregions to avoid overlap with regions already covered by probes.
-            subregions =
-                    computeUncoveredRegions(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
-                            .stream()
-                            .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
-                            .toList();
+            subregions = computeUncoveredRegions(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+                    .stream()
+                    .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
+                    .toList();
             if(subregions.size() > 1)
             {
                 subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));

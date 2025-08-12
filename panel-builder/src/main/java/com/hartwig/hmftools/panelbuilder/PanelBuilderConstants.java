@@ -81,8 +81,10 @@ public class PanelBuilderConstants
     public static final int SAMPLE_REPEAT_COUNT_MAX = 3;
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
-    public static final int SAMPLE_NEAR_DISTANCE = 50;
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
+    // If a variant probe differs from the ref genome by more than this many bases, consider it a novel sequence, and keep the probe even if
+    // it overlaps with existing probes.
+    public static final int SAMPLE_NOVEL_SEQUENCE_BASES_MIN = 5;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
@@ -92,7 +94,6 @@ public class PanelBuilderConstants
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "target_gene_stats.tsv";
-    public static final String SAMPLE_VARIANTS_FILE_NAME = "sample_variants.tsv";
 
     static
     {

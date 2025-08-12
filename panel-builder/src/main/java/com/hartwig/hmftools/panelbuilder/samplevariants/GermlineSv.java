@@ -49,13 +49,6 @@ public class GermlineSv implements Variant
     }
 
     @Override
-    public List<ProximateLocations.Location> checkedLocations()
-    {
-        // No proximity check for SVs because they create a significantly novel sequence.
-        return emptyList();
-    }
-
-    @Override
     public TargetMetadata.Type targetType()
     {
         if(isDriver())

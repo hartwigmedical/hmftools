@@ -77,7 +77,6 @@ public class ProbeQualityModel
         });
 
         List<List<BwaMemAlignment>> alignments = runAlignment(probes, 0);
-        LOGGER.trace("Running risk model");
         return alignments.stream().map(this::computeFromAlignments).toList();
     }
 

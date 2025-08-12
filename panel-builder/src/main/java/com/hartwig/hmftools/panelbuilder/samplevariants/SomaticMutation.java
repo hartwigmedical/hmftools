@@ -110,12 +110,6 @@ public class SomaticMutation implements Variant
     }
 
     @Override
-    public List<ProximateLocations.Location> checkedLocations()
-    {
-        return List.of(new ProximateLocations.Location(mVariantDecorator.chromosome(), mVariantDecorator.position()));
-    }
-
-    @Override
     public TargetMetadata.Type targetType()
     {
         if(isDriver())

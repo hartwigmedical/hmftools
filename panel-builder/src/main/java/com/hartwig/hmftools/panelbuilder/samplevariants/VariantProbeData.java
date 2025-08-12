@@ -9,15 +9,10 @@ import org.jetbrains.annotations.Nullable;
 
 // Data that defines a probe creates for a variant.
 // Exists to decouple the code which determines the probe sequence from the rest of the probe generation code.
-// Possibilities:
-//   - The probe is all ref sequence:
-//       `start` is non-null, others are null.
-//       probe = start
-//   - The probe has an alt sequence or SV:
-//       `sequence` is non-null, at least one of `start` or `end` are non-null.
-//       probe = start + insert + end
 public record VariantProbeData(
-        @Nullable String sequence,
+        // Full probe sequence.
+        String sequence,
+        // probe = start + insert + end
         @Nullable ChrBaseRegion start,
         @Nullable String insert,
         @Nullable ChrBaseRegion end
@@ -25,9 +20,22 @@ public record VariantProbeData(
 {
     public VariantProbeData
     {
-        boolean valid1 = sequence == null && start != null && insert == null && end == null;
-        boolean valid2 = sequence != null && (start != null || end != null);
-        if(!(valid1 || valid2))
+        if(!(start != null || end != null))
+        {
+            throw new IllegalArgumentException();
+        }
+        if(start != null && !start.isValid())
+        {
+            throw new IllegalArgumentException();
+        }
+        if(end != null && !end.isValid())
+        {
+            throw new IllegalArgumentException();
+        }
+        int startLength = start == null ? 0 : start.baseLength();
+        int insertLength = insert == null ? 0 : insert.length();
+        int endLength = end == null ? 0 : end.baseLength();
+        if(sequence.length() != startLength + insertLength + endLength)
         {
             throw new IllegalArgumentException();
         }
@@ -45,10 +53,5 @@ public record VariantProbeData(
             result.add(end);
         }
         return result;
-    }
-
-    public boolean hasAltSequence()
-    {
-        return insert != null && !insert.isEmpty();
     }
 }
