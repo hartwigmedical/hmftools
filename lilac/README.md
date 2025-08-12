@@ -325,7 +325,7 @@ using the [hla_allele_freq_downloader.py](./src/main/resources/frequencies/hla_a
 python hla_allele_freq_downloader.py \
   --output_dir /output_dir/ \
   --locus A,B,C \
-  --hla_level 4 \
+  --hla_level 2 \
   --hla_locus_type Classical \
   --population_standard g
 ```
