@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
