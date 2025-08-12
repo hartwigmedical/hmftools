@@ -204,8 +204,7 @@ For more information on how to run COBALT please refer to the [readme](https://g
 
 ### AMBER
 
-AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of 1,344,880 common germline heterozygous SNP loci. 
-The loci were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.
+AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of several million common germline heterozygous SNP loci. 
 
 To ensure that we only capture heterozygous points, we filter the panel to only loci with allelic frequencies in the reference sample between 40% and 65% and with depth between 50% and 150% of the reference sample genome wide average. 
 Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13. 
@@ -215,7 +214,6 @@ As part of a contamination check, AMBER also finds sites in the tumor that are h
 A sample is considered contaminated if at least 2000 of these sites contain 3 or more reads supporting an alt in the tumor. 
 In this case we model the expected number of non-homozygous sites using a poisson distribution and estimate a contamination percent. 
 The result of this is included in the amber QC output file.
-
 
 For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
 
