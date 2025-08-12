@@ -71,6 +71,10 @@ public class ExtendNonDiploidTest
         newRegion = ObservedRegion.from(eligible);
         newRegion.setObservedNormalRatio(1.2);
         assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
+
+        newRegion = ObservedRegion.from(eligible);
+        newRegion.setGermlineStatus(GermlineStatus.EXCLUDED);
+        assertFalse(ExtendNonDiploid.isEligible(newRegion, null));
     }
 
     @Test
