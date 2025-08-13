@@ -204,8 +204,7 @@ For more information on how to run COBALT please refer to the [readme](https://g
 
 ### AMBER
 
-AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of 1,344,880 common germline heterozygous SNP loci. 
-The loci were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.
+AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of several million common germline heterozygous SNP loci. 
 
 To ensure that we only capture heterozygous points, we filter the panel to only loci with allelic frequencies in the reference sample between 40% and 65% and with depth between 50% and 150% of the reference sample genome wide average. 
 Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13. 
@@ -215,7 +214,6 @@ As part of a contamination check, AMBER also finds sites in the tumor that are h
 A sample is considered contaminated if at least 2000 of these sites contain 3 or more reads supporting an alt in the tumor. 
 In this case we model the expected number of non-homozygous sites using a poisson distribution and estimate a contamination percent. 
 The result of this is included in the amber QC output file.
-
 
 For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
 
@@ -254,7 +252,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - No germline chromosomal aberrations are detected 
   - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
   - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
-  - Regions outside the diploid regions file (if provided) are masked (not recomended for targeted mode)
+  - Regions outside the diploid regions file (if provided) are masked (not recommended for targeted mode)
   
 Example command:
 
@@ -363,7 +361,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromosome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
@@ -635,7 +633,7 @@ Note that additional restrictions apply on amplification and deletion drivers fo
 - If warning = WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
 
 The following special rules apply to the construction of the driver catalog in targeted mode:
-- **DELS**: Don’t report DELS if the copy number segment has onlh 1 depth windows and GC <0.35 or >0.6 (unless supported by SV on both sides)
+- **DELS**: Don’t report DELS if the copy number segment has only 1 depth windows and GC <0.35 or >0.6 (unless supported by SV on both sides)
 - **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 ## Output
@@ -674,7 +672,7 @@ tmlStatus | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if s
 tmbPerMb | Tumor mutational burden (#passing variants per Mb) per mega base
 tmbStatus | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
 svTumorMutationalBurden | Total number of non inferred, non single passing structural variants detected in sample
-runMode  | TUMOR_GERMLINE, TUMOR or GERMLIME, set based on whether a tumor and/or reference sample were supplied
+runMode  | TUMOR_GERMLINE, TUMOR or GERMLINE, set based on whether a tumor and/or reference sample were supplied
 targeted | True if Purple was run with target-region files
 
 The purity QC `TUMOR.purple.purity.qc` contains the following status values:
@@ -935,7 +933,7 @@ This HRD classifier is still in experimental stage due to the small number of tr
 ## Known issues / points for improvement
 
 Purity & Ploidy fitting:
-- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
+- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too aggressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 - **Fit resolution** - currently set to 1%. Setting to 0.5% or lower may allow better fitting at lower purities including potentially <0.08
 - **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ignored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincing evidence of high purity and should be captured.
 - **Imputation** - Used population phased BAF points in segmentation would allow better subclonal calling and calling at TF < 0.08
