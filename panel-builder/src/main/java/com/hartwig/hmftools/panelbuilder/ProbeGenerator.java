@@ -417,6 +417,7 @@ public class ProbeGenerator
     public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, @Nullable final PanelCoverage coverage)
     {
+        // TODO: is it correct for the target to be the whole region?
         TargetRegion target = new TargetRegion(region, metadata);
         Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, metadata);
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
@@ -462,6 +463,7 @@ public class ProbeGenerator
                 {
                     BasePosition position = probeToPosition.get(probe.region());
                     TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), probe.metadata());
+                    // TODO: is it correct to have only the probe as the candidate target?
                     if(coverage.isCovered(target.region()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTarget(target);

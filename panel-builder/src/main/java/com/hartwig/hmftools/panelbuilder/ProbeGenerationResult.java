@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public record ProbeGenerationResult(
         List<Probe> probes,
-        // Regions which potentially targeted to be covered.
+        // Regions which where potentially targeted to be covered (and may or may not be covered).
         List<TargetRegion> candidateTargetRegions,
         // Regions which targeted to be covered and are covered.
         List<TargetRegion> coveredTargetRegions,
@@ -18,6 +18,14 @@ public record ProbeGenerationResult(
         List<RejectedRegion> rejectedRegions
 )
 {
+    public ProbeGenerationResult
+    {
+        if(probes.stream().anyMatch(probe -> !probe.accepted()))
+        {
+            throw new IllegalArgumentException("Should only add accepted probes to result");
+        }
+    }
+
     public ProbeGenerationResult()
     {
         this(emptyList(), emptyList(), emptyList(), emptyList());
@@ -37,10 +45,6 @@ public record ProbeGenerationResult(
     // Convenience method for creating a result from covering a target region with exactly one probe.
     public static ProbeGenerationResult coveredTarget(final TargetRegion candidateTarget, final Probe probe)
     {
-        if(!probe.accepted())
-        {
-            throw new IllegalArgumentException("Should only add accepted probes to result");
-        }
         TargetRegion covered = new TargetRegion(
                 regionIntersection(candidateTarget.region(), requireNonNull(probe.region())).orElseThrow(),
                 candidateTarget.metadata());
@@ -61,7 +65,7 @@ public record ProbeGenerationResult(
     // Convenience method for creating a result from candidate targets which got no probes since they were already covered.
     public static ProbeGenerationResult alreadyCoveredTargets(final List<TargetRegion> targets)
     {
-        return new ProbeGenerationResult(emptyList(), targets, emptyList(), emptyList());
+        return new ProbeGenerationResult(emptyList(), List.copyOf(targets), emptyList(), emptyList());
     }
 
     // Convenience method for creating a result from rejecting an entire target region.
