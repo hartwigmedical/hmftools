@@ -71,7 +71,6 @@ public class ProbeGenerator
                 new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths()),
                 new ProbeEvaluator(candidateCallback)
         );
-
     }
 
     // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
@@ -335,7 +334,7 @@ public class ProbeGenerator
         double centre = regionCentreFloat(region);
 
         // Lower bound is number of probes which completely cover the region, possibly excluding the max allowed uncovered bases.
-        int minProbes = (int) ceil((double) (region.baseLength() - REGION_UNCOVERED_MAX) / PROBE_LENGTH);
+        int minProbes = (int) ceil(max(1.0, region.baseLength() - REGION_UNCOVERED_MAX) / PROBE_LENGTH);
 
         // Upper bound is maximally overlapped and maximally extending outside the target region.
         int maxProbeOverlap = PROBE_LENGTH - 1;
@@ -420,6 +419,7 @@ public class ProbeGenerator
     }
 
     // Generates the 1 best acceptable probe which covers a position.
+    // TODO: bound on left and right to stop probe being on the edge?
     public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
             final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
     {

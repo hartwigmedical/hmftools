@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
-    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CUSTOM;
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CUSTOM;
 
     private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(CUSTOM_REGION_QUALITY_MIN, CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE),
@@ -132,7 +132,7 @@ public class CustomRegions
             final PanelCoverage coverage)
     {
         LOGGER.debug("Generating probes for {}", region);
-        TargetMetadata metadata = new TargetMetadata(TARGET_REGION_TYPE, region.extraInfo());
+        TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, region.extraInfo());
         ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), metadata, PROBE_CRITERIA, coverage);
         return result;
     }

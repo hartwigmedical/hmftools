@@ -27,6 +27,8 @@ import org.apache.logging.log4j.Logger;
 //   - 1 probe at the start of J regions
 public class Cdr3Regions
 {
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CDR3;
+
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             CDR3_QUALITY_MIN, CDR3_GC_TARGET, CDR3_GC_TOLERANCE);
 
@@ -124,6 +126,6 @@ public class Cdr3Regions
     private static TargetMetadata createTargetMetadata(final IgTcrGene gene)
     {
         String extraInfo = gene.geneName();
-        return new TargetMetadata(TargetMetadata.Type.CDR3, extraInfo);
+        return new TargetMetadata(TARGET_TYPE, extraInfo);
     }
 }

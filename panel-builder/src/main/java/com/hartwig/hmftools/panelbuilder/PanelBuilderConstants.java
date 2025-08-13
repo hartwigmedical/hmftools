@@ -43,7 +43,7 @@ public class PanelBuilderConstants
 
     // Copy number backbone constants.
     public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
-    public static final int CN_BACKBONE_CENTROMERE_MARGIN = 5_000_000;
+    public static final int CN_BACKBONE_CENTROMERE_MARGIN = 3_000_000;
     // Aiming to pick heterozygous sites which are common in the population.
     public static final double CN_BACKBONE_GNOMAD_FREQ_MIN = 0.3;
     public static final double CN_BACKBONE_GNOMAD_FREQ_MAX = 0.7;
@@ -57,8 +57,9 @@ public class PanelBuilderConstants
     public static final double CDR3_GC_TOLERANCE = 1;
 
     // MSI site probe constants.
-    // TODO
     public static final double MSI_QUALITY_MIN = 0.1;
+    public static final double MSI_GC_TARGET = 0.45;
+    public static final double MSI_GC_TOLERANCE = 1;
 
     // GC content bounds for probes used for determining copy number.
     // These are tight bounds because different GC can affect the probe amplification process which will affect the calculated copy number.

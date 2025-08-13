@@ -58,7 +58,7 @@ import org.apache.logging.log4j.Logger;
 //     - Large introns: Select the best acceptable probe from each of 1-5kb regions near the adjacent exons.
 public class Genes
 {
-    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.GENE;
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.GENE;
 
     private static final ProbeSelectCriteria GENERAL_PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(GENE_GENERAL_QUALITY_MIN, GENE_GENERAL_GC_TARGET, GENE_GENERAL_GC_TOLERANCE),
@@ -462,7 +462,7 @@ public class Genes
         // If there are multiple transcripts, merge their names, since the region is determined based on 1 or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
-        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo);
+        return new TargetMetadata(TARGET_TYPE, extraInfo);
     }
 
     private static String transcriptDataName(final TranscriptData transcriptData)

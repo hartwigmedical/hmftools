@@ -50,7 +50,7 @@ public class CopyNumberBackbone
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
 
-    private static final TargetMetadata.Type TARGET_REGION_TYPE = TargetMetadata.Type.CN_BACKBONE;
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CN_BACKBONE;
 
     private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
             new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
@@ -331,6 +331,6 @@ public class CopyNumberBackbone
             extraInfo += format(":%d", site.position().Position);
         }
         TargetMetadataExtra extraData = new TargetMetadataExtra(site);
-        return new TargetMetadata(TARGET_REGION_TYPE, extraInfo, extraData);
+        return new TargetMetadata(TARGET_TYPE, extraInfo, extraData);
     }
 }

@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.MSI_GC_TARGET;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.MSI_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.MSI_QUALITY_MIN;
 
 import java.util.List;
@@ -17,10 +19,11 @@ import org.apache.logging.log4j.Logger;
 // TODO: doc
 public class MsiSites
 {
-    // TODO
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.MSI;
+
     private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(MSI_QUALITY_MIN, , ),
-            new ProbeSelector.Strategy.BestGc());
+            new ProbeEvaluator.Criteria(MSI_QUALITY_MIN, MSI_GC_TARGET, MSI_GC_TOLERANCE),
+            new ProbeSelector.Strategy.MaxQuality());
 
     private static final Logger LOGGER = LogManager.getLogger(MsiSites.class);
 
@@ -69,8 +72,6 @@ public class MsiSites
     private static ProbeGenerationResult generateProbe(final BasePosition msiSite, final ProbeGenerator probeGenerator,
             final PanelCoverage coverage)
     {
-        //         TODO: is this the right methodology?
-        // TODO: how big is the MSI site? can't have probe edge on position?
         TargetMetadata metadata = createTargetMetadata(msiSite);
         return probeGenerator.coverPosition(msiSite, metadata, PROBE_CRITERIA, coverage);
     }
@@ -78,6 +79,6 @@ public class MsiSites
     private static TargetMetadata createTargetMetadata(final BasePosition msiSite)
     {
         String extraInfo = msiSite.toString();
-        return new TargetMetadata(TargetMetadata.Type.MSI, extraInfo);
+        return new TargetMetadata(TARGET_TYPE, extraInfo);
     }
 }
