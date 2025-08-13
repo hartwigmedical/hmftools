@@ -76,7 +76,8 @@ public class UltimaVariantData
 
             char homopolymerBase = (char)record.getReadBases()[readVarIndex];
 
-            byte homopolymerQual = BQR_CACHE.getTpRecalibratedQual(hpLength, homopolymerBase, tpValue == 0);
+            byte readQual = baseQuals[readVarIndex];
+            byte homopolymerQual = BQR_CACHE.calcTpRecalibratedQual(readQual, hpLength, homopolymerBase, tpValue == 0);
 
             if(tpValue > 0 && hpLength > 1)
                 homopolymerQual -= 3;

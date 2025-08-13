@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.redux;
 
 import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
@@ -39,6 +40,8 @@ public class BaseQualAdjustment
 
         return (byte)STANDARD_BASE_QUALS[0];
     }
+
+    public static byte maxQual(final byte qual1, final byte qual2) { return (byte)max(qual1, qual2); }
 
     public static double phredQualToProbability(byte quality)
     {

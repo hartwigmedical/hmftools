@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.seqtech;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelBuilder.buildUltimaRealignedQualModels;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
@@ -36,22 +36,40 @@ public class UltimaQualModelBuilder
 
         UltimaRealignedQualModels qualModels;
 
-        if(isCleanHpTransition(readContext, qualModel))
+        if(!canSkipRealignedModels(readContext, qualModel))
         {
             qualModels = new UltimaRealignedQualModels(qualModel);
         }
         else
         {
-            qualModels = buildUltimaRealignedQualModels(readContext, qualModelBuilder, false);;
+            qualModels = buildUltimaRealignedQualModels(readContext, qualModel, qualModelBuilder, false);;
         }
 
         readContextCounter.ultimaData().setQualModels(qualModels);
     }
 
-    private static boolean isCleanHpTransition(VariantReadContext readContext, final UltimaQualModel qualModel)
+    private static boolean canSkipRealignedModels(final VariantReadContext readContext, final UltimaQualModel qualModel)
     {
-        if(qualModel == null || !qualModel.type().equals(UltimaModelType.HOMOPOLYMER_TRANSITION))
-            return false;
+        // this method needs to check all conditions to be a determinant of whether realigned UQMs can be skipped
+        // if(!qualModel.type().equals(UltimaModelType.HOMOPOLYMER_TRANSITION))
+        //    return false;
+
+        /* use the following if applicable
+        if(!skipSandwichMasking && isCleanSnv(readContext))
+        {
+            return true;
+        }
+
+        if(!skipSandwichMasking && readContext.variant().isInsert())
+        {
+            CigarElement insertEl = new CigarElement(readContext.alt().length() - 1, I);
+            List<CigarElement> coreCigarElements = readContextCoreCigar(readContext);
+            if(!coreCigarElements.contains(insertEl))
+            {
+                return true;
+            }
+        }
+        */
 
         byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
         if(coreReadBases.length != readContext.RefBases.length + readContext.variant().indelLength())
@@ -157,17 +175,14 @@ public class UltimaQualModelBuilder
 
                 return new UltimaHomopolymerAdjustment(homopolymerStartIndex, homopolymerEndIndex, refAdjustCount);
             }
-            else
-            {
-                return new MicrosatelliteAdjustment();
-            }
         }
         else if(variant.isSNV())
         {
             return new UltimaSnv(variant, refBases, refVarIndex, coreBases[0], coreBases[2], mRefGenome);
         }
 
-        return null;
+        // return a fall-back for no valid model
+        return new OtherVariant();
     }
 
     private static int findHomopolymerTransitionCandidate(final SimpleVariant variant)
@@ -207,13 +222,16 @@ public class UltimaQualModelBuilder
         return true;
     }
 
-    private class MicrosatelliteAdjustment extends UltimaQualModel
+    private class OtherVariant extends UltimaQualModel
     {
-        public MicrosatelliteAdjustment()
+        public OtherVariant()
         {
-            super(UltimaModelType.MICROSATELLITE);
+            super(UltimaModelType.OTHER);
         }
 
-        public byte calculateQual(final SAMRecord record, int varReadIndex) { return BQR_CACHE.maxRawQual(); }
+        public byte calculateQual(final SAMRecord record, int varReadIndex) { return INVALID_BASE_QUAL; }
+
+        @Override
+        public boolean canCompute() { return false; }
     }
 }

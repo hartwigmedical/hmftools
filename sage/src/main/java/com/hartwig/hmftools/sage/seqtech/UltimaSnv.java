@@ -128,22 +128,21 @@ class UltimaSnv extends UltimaQualModel
 
     public byte calculateQual(final SAMRecord record, int varReadIndex)
     {
-        byte maxQual = BQR_CACHE.maxRawQual();
-
         if(mLeftAdjust == null && mLeftDeletion == null || mRightAdjust == null && mRightDeletion == null)
         {
-            return maxQual;
+            // ULTIMA TODO: use BQR qual if this is the only UQM for this variant - ie fall back to other models
+            return BQR_CACHE.maxRawQual();
         }
 
         int leftQual = 0;
 
         if(mLeftAdjust != null)
         {
-            leftQual = min(mLeftAdjust.calculateQual(record, varReadIndex), maxQual);
+            leftQual = mLeftAdjust.calculateQual(record, varReadIndex);
         }
         else
         {
-            leftQual = min(mLeftDeletion.calculateQual(record, varReadIndex), maxQual);
+            leftQual = mLeftDeletion.calculateQual(record, varReadIndex);
         }
 
         if(leftQual == ULTIMA_INVALID_QUAL)
@@ -153,11 +152,11 @@ class UltimaSnv extends UltimaQualModel
 
         if(mRightAdjust != null)
         {
-            rightQual = min(mRightAdjust.calculateQual(record, varReadIndex), maxQual);
+            rightQual = mRightAdjust.calculateQual(record, varReadIndex);
         }
         else
         {
-            rightQual = min(mRightDeletion.calculateQual(record, varReadIndex), maxQual);
+            rightQual = mRightDeletion.calculateQual(record, varReadIndex);
         }
 
         if(rightQual == ULTIMA_INVALID_QUAL)

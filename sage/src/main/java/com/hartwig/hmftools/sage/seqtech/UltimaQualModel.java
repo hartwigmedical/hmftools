@@ -14,4 +14,6 @@ public abstract class UltimaQualModel
     public UltimaModelType type() { return mType; }
 
     public abstract byte calculateQual(final SAMRecord record, int varReadIndex);
+
+    public boolean canCompute() { return true; }
 }

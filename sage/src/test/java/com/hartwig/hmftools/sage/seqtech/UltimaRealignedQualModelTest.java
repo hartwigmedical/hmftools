@@ -195,7 +195,7 @@ public class UltimaRealignedQualModelTest
 
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                readContext, null, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ULTIMA_QUAL_CALCULATOR, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));
@@ -226,7 +226,7 @@ public class UltimaRealignedQualModelTest
 
         List<RefMask> refMasks = Lists.newArrayList();
         List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
-                readContext, null, refHomopolymers, readHomopolymers, refMasks);
+                readContext, ULTIMA_QUAL_CALCULATOR, refHomopolymers, readHomopolymers, refMasks);
 
         assertEquals(1, realignedVariants.size());
         assertTrue(variant.matches(realignedVariants.get(0).variant()));

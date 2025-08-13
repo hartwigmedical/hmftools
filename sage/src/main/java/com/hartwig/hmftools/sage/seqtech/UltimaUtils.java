@@ -22,11 +22,13 @@ public final class UltimaUtils
 {
     protected static final int MAX_HOMOPOLYMER = 15;
 
-    // protected static final byte MAX_RECALIBRATED_QUAL = 55;
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
 
     private static final int LONG_LENGTH = 20;
+
+    // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
+    private static final int HALF_PHRED_SCORE_SCALING = 3;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 
@@ -96,16 +98,15 @@ public final class UltimaUtils
                 return BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, true);;
 
             qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
+            byte bqrValue = BQR_CACHE.calcTpRecalibratedQual(BQR_CACHE.maxRawQual(), homopolymerLength, homopolymerBase, false);
 
-            return (byte)min(qualValue1, qualValue1 + 6 * abs(tpSearchValue - tpValue));
+            return (byte)min(bqrValue, qualValue1 + HALF_PHRED_SCORE_SCALING * 2 * abs(tpSearchValue - tpValue));
         }
 
         if(qualValue2 < 0)
             return qualValue1;
 
-        // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
-        // TODO: make constant ?
-        return (byte)(qualValue1 - 3);
+        return (byte)(qualValue1 - HALF_PHRED_SCORE_SCALING);
     }
 
     protected static int findHomopolymerLength(final byte[] refBases, final byte compareBase, int startIndex, boolean searchUp)

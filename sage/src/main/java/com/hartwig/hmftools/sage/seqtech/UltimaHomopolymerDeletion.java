@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.google.common.primitives.UnsignedBytes.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isBaseInCycle;
@@ -78,28 +79,29 @@ class UltimaHomopolymerDeletion extends UltimaQualModel
         if(record.getReadNegativeStrandFlag())
         {
             if(!mInCycleNegStrand)
-                return BQR_CACHE.maxRawQual();
+                return BQR_CACHE.outOfCycleT0Qual();
         }
         else
         {
             if(!mInCyclePosStrand)
-                return BQR_CACHE.maxRawQual();
+                return BQR_CACHE.outOfCycleT0Qual();
         }
 
         final byte[] t0Values = extractT0Values(record);
         byte qual1 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexStart);
+
+        qual1 = BQR_CACHE.calcT0RecalibratedQual(qual1, record, varReadIndex + mStraddleIndexStart);
+
         if(qual1 == ULTIMA_INVALID_QUAL)
-        {
             return ULTIMA_INVALID_QUAL;
-        }
 
         byte qual2 = safeQualLookup(t0Values, varReadIndex + mStraddleIndexEnd);
-        if(qual2 == ULTIMA_INVALID_QUAL)
-        {
-            return ULTIMA_INVALID_QUAL;
-        }
+        qual2 = BQR_CACHE.calcT0RecalibratedQual(qual2, record, varReadIndex + mStraddleIndexEnd);
 
-        return max(qual1, qual2);
+        if(qual2 == ULTIMA_INVALID_QUAL)
+            return ULTIMA_INVALID_QUAL;
+
+        return maxQual(qual1, qual2);
     }
 
     public String toString()

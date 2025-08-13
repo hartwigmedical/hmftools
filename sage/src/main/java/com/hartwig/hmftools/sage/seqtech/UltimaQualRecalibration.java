@@ -26,22 +26,26 @@ public class UltimaQualRecalibration
 
     public static final String CFG_FILENAME = "ultima_bqr_file";
 
-    private final static byte RECALIBRATED_QUAL_MAX = 55;
+    private final static String T0_OUT_OF_CYCLE = "OUT_OF_CYCLE";
     private final static int RECALIBRATED_QUAL_MAX_HP_LENGTH = 5;
+    private final static byte DEFAULT_T0_OUT_OF_CYCLE_QUAL = 55;
 
     private final Map<String,Byte> mTpQualMap;
     private final Map<String,Byte> mT0QualMap;
     private byte mMaxRawQual;
+    private byte mOutOfCycleT0Qual;
 
     public UltimaQualRecalibration()
     {
         mTpQualMap = Maps.newHashMap();
         mT0QualMap = Maps.newHashMap();
         mMaxRawQual = ULTIMA_MAX_QUAL;
+        mOutOfCycleT0Qual = DEFAULT_T0_OUT_OF_CYCLE_QUAL;
     }
 
     public void setMaxRawQual(byte qual) { mMaxRawQual = qual; }
     public byte maxRawQual() { return mMaxRawQual; }
+    public byte outOfCycleT0Qual() { return mOutOfCycleT0Qual; }
 
     public byte calcTpRecalibratedQual(final byte readQual, final int homoploymerLength, final char base, final boolean tpIsZero)
     {
@@ -59,6 +63,15 @@ public class UltimaQualRecalibration
         return recalibratedQual != null ? recalibratedQual : INVALID_BASE_QUAL;
     }
 
+    public byte calcT0RecalibratedQual(final byte readQual, final SAMRecord record, int varReadIndex)
+    {
+        if(readQual < mMaxRawQual)
+            return readQual;
+
+        byte bqrQual = getT0RecalibratedQual(record, varReadIndex);
+        return bqrQual != INVALID_BASE_QUAL ? bqrQual : readQual;
+    }
+
     public byte getT0RecalibratedQual(final SAMRecord record, int varReadIndex)
     {
         char variantBase = (char)record.getReadBases()[varReadIndex];
@@ -70,7 +83,7 @@ public class UltimaQualRecalibration
     {
         String key = T0Data.formKey(triNucContext, base);
         Byte recalibratedQual = mT0QualMap.get(key);
-        return recalibratedQual != null ? recalibratedQual : RECALIBRATED_QUAL_MAX;
+        return recalibratedQual != null ? recalibratedQual : mOutOfCycleT0Qual;
     }
 
     private enum QualType { T0, TP; }
@@ -112,7 +125,10 @@ public class UltimaQualRecalibration
                 }
                 else
                 {
-                    mT0QualMap.put(key, recalibratedQual);
+                    if(key.equals(T0_OUT_OF_CYCLE))
+                        mOutOfCycleT0Qual = recalibratedQual;
+                    else
+                        mT0QualMap.put(key, recalibratedQual);
                 }
             }
         }

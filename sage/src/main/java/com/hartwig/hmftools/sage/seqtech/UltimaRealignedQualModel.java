@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.quality.MsiJitterQualCache;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -12,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
 public class UltimaRealignedQualModel
 {
     private final SimpleVariant mVariant;
-    private final UltimaQualModel mBaseQualModel;
+    private final UltimaQualModel mQualModel;
     private final int mVarReadIndexOffset;
     private final int mVarIndex;
     private final int mVariantRefIndex;
@@ -23,7 +22,7 @@ public class UltimaRealignedQualModel
             final SimpleVariant variant, final UltimaQualModel baseQualModel, int varReadIndexOffset, int varIndex, int variantRefIndex)
     {
         mVariant = variant;
-        mBaseQualModel = baseQualModel;
+        mQualModel = baseQualModel;
         mVarReadIndexOffset = varReadIndexOffset;
         mVarIndex = varIndex;
         mVariantRefIndex = variantRefIndex;
@@ -31,6 +30,9 @@ public class UltimaRealignedQualModel
         mMsiJitterQualCache = null;
     }
 
+    public UltimaQualModel qualModel() { return mQualModel; }
+
+    /*
     private UltimaRealignedQualModel(final SimpleVariant variant, int varReadIndexOffset, int varIndex, int variantRefIndex)
     {
         mVariant = variant;
@@ -47,16 +49,11 @@ public class UltimaRealignedQualModel
     {
         this(variant, varReadIndexOffset, -1, -1);
     }
-
-    @VisibleForTesting
-    public UltimaRealignedQualModel(final SimpleVariant variant)
-    {
-        this(variant, -1);
-    }
+    */
 
     public byte calculateQual(final SAMRecord record, final int varReadIndex)
     {
-        return mBaseQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);
+        return mQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);
     }
 
     public MsiJitterQualCache qualCache(
@@ -71,11 +68,11 @@ public class UltimaRealignedQualModel
         return mMsiJitterQualCache;
     }
 
-    public UltimaQualModel baseQualModel() { return mBaseQualModel; }
+    public UltimaQualModel baseQualModel() { return mQualModel; }
     public int varReadIndexOffset() { return mVarReadIndexOffset; }
     public SimpleVariant variant() { return mVariant; }
 
-    public UltimaModelType type() { return mBaseQualModel == null ? UltimaModelType.NONE : mBaseQualModel.type(); }
+    public UltimaModelType type() { return mQualModel.type(); } // mBaseQualModel == null ? UltimaModelType.NONE :
 
     public String toString()
     {
