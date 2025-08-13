@@ -82,17 +82,18 @@ public class Cdr3Regions
             LOGGER.trace("CDR3 region overlaps with another; discarding");
             return new ProbeGenerationResult();
         }
-
-        TargetMetadata metadata = createTargetMetadata(gene);
-        // TODO: need to prevent the probe from going past the end of the gene?
-        ProbeGenerationResult result = probeGenerator.coverRegion(targetRegion, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
-
-        if(!result.probes().isEmpty())
+        else
         {
-            coveredRegions.add(targetRegion);
+            TargetMetadata metadata = createTargetMetadata(gene);
+            // TODO: need to prevent the probe from going past the end of the gene?
+            // TODO: is this producing more than 1 probe?
+            ProbeGenerationResult result = probeGenerator.coverRegion(targetRegion, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
+            if(!result.probes().isEmpty())
+            {
+                coveredRegions.add(targetRegion);
+            }
+            return result;
         }
-
-        return result;
     }
 
     private static ChrBaseRegion calculateTargetRegion(final IgTcrGene gene)

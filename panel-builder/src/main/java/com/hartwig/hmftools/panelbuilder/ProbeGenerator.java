@@ -437,22 +437,25 @@ public class ProbeGenerator
     public ProbeGenerationResult coverOnePosition(Stream<BasePosition> positions, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, final PanelCoverage coverage)
     {
-        List<BasePosition> checkedPositions = new ArrayList<>();
-        positions = positions.peek(checkedPositions::add);
-
-        Map<Probe, BasePosition> probeToPosition = new HashMap<>();
+        Map<ChrBaseRegion, BasePosition> probeToPosition = new HashMap<>();
         Stream<Probe> candidates = positions
                 .flatMap(position ->
                 {
-                    Optional<Probe> probe = mProbeFactory.createProbeFromRegion(probeRegionCenteredAt(position), metadata);
-                    probe.ifPresent(p -> probeToPosition.put(p, position));
+                    ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
+                    Optional<Probe> probe = mProbeFactory.createProbeFromRegion(probeRegion, metadata);
+                    if(probe.isPresent())
+                    {
+                        // Store the target position so it can be retrieved later once the final probe is selected.
+                        // Also needed to compute the rejected regions.
+                        probeToPosition.put(probeRegion, position);
+                    }
                     return probe.stream();
                 });
 
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
-                    BasePosition position = probeToPosition.get(probe);
+                    BasePosition position = probeToPosition.get(probe.region());
                     TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), probe.metadata());
                     if(coverage.isCovered(target.region()))
                     {
@@ -465,7 +468,8 @@ public class ProbeGenerator
                 })
                 .orElseGet(() ->
                 {
-                    List<TargetRegion> targets = checkedPositions.stream()
+                    // Produce a rejected region for every position. Not sure a better way to handle it. No rejected region seems wrong.
+                    List<TargetRegion> targets = probeToPosition.values().stream()
                             .map(position -> new TargetRegion(ChrBaseRegion.from(position), metadata))
                             .toList();
                     String rejectionReason = "Probe at position does not meet criteria " + evalCriteria;
