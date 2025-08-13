@@ -322,11 +322,9 @@ This file gives the nucleotide frequency by UMI base position
 | TCount      | Frequency of ‘T’ NT  |
 | NCount      | Frequency of ‘N’ NT  |
 
-### Microsatellite jitter modelling
+### Microsatellite jitter
 
-| File Name                   | Details                                                                                                                                                   |
-|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-
+Details of how to interpret these files (`SAMPLE_ID.ms_table.tsv.gz` and `SAMPLE_ID.jitter_params.tsv`) are specified in the 'Microsatellite jitter modelling' section of the readme.
 
 ## Problematic regions file definition
 
