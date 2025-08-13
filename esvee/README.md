@@ -536,34 +536,27 @@ VF	|	Total variant fragments supporting the breakend
 
 ## Known issues and future improvements
 Know sources of errors
-- Poor extension from a single misplaced read => can lead to either a FP or prevent further assembly extension
-- Assembly merging requirements are quite strict and sometimes we can miss read support.  If missed in the germline, this may cause germline leakage
 - Misintepretation of INDELs in long repeats can sometimes cause poor quality consensus sequences in assembly extension.
-- MSI Jitter of germline INDELS just under 32 bases in length may be interpreted as a somatic SV of 32+ bases
-- Long dinucleotide MS expansions can fail minAnchorFilter
 - SGL AF will be systematically underestimated if we cannot extend the assembly.
-- **Somatically activated LINE insertion sites** - Some insertion sites of LINE elements may become active LINE source elements themselves.   These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
+- **Somatically activated LINE insertion sites** - Some insertion sites of LINE elements may become active LINE source elements themselves. These may appear to be BOTH insertion and source sites for LINE elements and may lead to overcounting of support at insertion sites. 
 
 Alignment
 - We should analyse additional supplementary alignments arising from re-query of initial supplementary alignments (currently dropping)
-- We should requery long softclips to see if additional alignments can be found.
-- We don't take into account homology for pure INS (which may be duplications)
 
 Esvee has some implicit and explicit assumptions on reads, qualities and alignments:
 - **AS field** - AS is currently required
 - **Low qual masking** -  assumes a high proportion of bases have qual > 30 
 - **Read lengths** - Soft clip & alignment score assumptions require read lengths > 80 bases
 - **Fragment lengths** - We use 1000,500 to refer to short DEL, DUP respectively.  Ideally this should depend on fragment lengths.
-- **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted.  These should be masked from assembly
+- **Low Qual INDELS** - Technologies with many low quality indel errors (eg Ultima) may have assembly impacted. These should be masked from assembly
 - **Hard clipping** - Esvee prep may not retain reads with hard clipping at or near junctions
 
 Other planned improvements
 - Variant visualisations
 - Multi tumor and reference sample support including donor support
 - Append mode
-- Develop an Esvee specific PON (currently using GRIDSS)
 - Investigate region specific filtering for IG,TCR & HLA regions
-- Switch minSupport from MAX to SUM of samples & lower minSupport to 3.  Depends on duplicate collapsing improvements in REDUX to allow supplementary and primary read are reverse
+- Switch minSupport from MAX to SUM of samples & lower minSupport to 3. Could analyse given recent duplicate collapsing improvements in Redux and Esvee prep
 
 ### GRIDSS and GRIPSS SV filtering
 - [Old Gripss information](./README_GRIPSS.md)
