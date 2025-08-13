@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
 
@@ -141,10 +142,15 @@ public class OutputWriter implements AutoCloseable
 
         for(Probe probe : probes)
         {
+            // A few basic checks that might reveal bugs in the code elsewhere.
             if(!probe.accepted())
             {
-                // If this happens there's probably a code bug.
                 throw new IllegalArgumentException("Should only be writing accepted probes");
+            }
+            if((probe.region() != null && probe.region().baseLength() != PROBE_LENGTH)
+                    || (probe.sequence() != null && probe.sequence().length() != PROBE_LENGTH))
+            {
+                throw new IllegalArgumentException("Should only be writing probes of length " + PROBE_LENGTH);
             }
 
             mPanelProbesTsvWriter.writeRow(probe);

@@ -4,9 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.ProbeUtils.maxProbeEndContaining;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.maxProbeEndOverlapping;
-import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartContaining;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartOverlapping;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
@@ -41,7 +39,7 @@ public class CandidateProbeGenerator
     {
         if(region.baseLength() < PROBE_LENGTH)
         {
-            // This method is designed to find probes contained within the region, which requires the region fit at least 1 probe.
+            // This method is designed to find probes contained within the region, which requires the region fit at least one probe.
             throw new IllegalArgumentException("target must be larger than a probe");
         }
 
@@ -50,15 +48,6 @@ public class CandidateProbeGenerator
         int minProbeStart = region.start();
         int maxProbeEnd = region.end();
         return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd, metadata);
-    }
-
-    // Generate candidate probes which cover a position, starting from the position and moving outwards.
-    // TODO: review uses of this. may not be required
-    public Stream<Probe> coverPosition(final BasePosition position, final TargetMetadata metadata)
-    {
-        int minProbeStart = minProbeStartContaining(position.Position);
-        int maxProbeEnd = maxProbeEndContaining(position.Position);
-        return outwardMovingCenterAlignedProbes(position, minProbeStart, maxProbeEnd, metadata);
     }
 
     // Returns candidate probes shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...

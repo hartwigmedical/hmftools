@@ -115,6 +115,8 @@ public class RegionUtils
 
     public static BasePosition regionCentre(final ChrBaseRegion region)
     {
+        // Must be inverse of regionCenteredAt()
+
         return new BasePosition(region.chromosome(), regionCentre(region.baseRegion()));
     }
 
@@ -140,6 +142,8 @@ public class RegionUtils
 
     public static BaseRegion regionCenteredAt(int centrePosition, int length)
     {
+        // Must be inverse of regionCentre()
+
         if(length < 1)
         {
             throw new IllegalArgumentException("Invalid length");

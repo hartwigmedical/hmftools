@@ -17,7 +17,11 @@ public class ProbeSelector
     {
         Stream<Probe> acceptableProbes = probes.filter(Probe::accepted);
 
-        if(strategy instanceof Strategy.MaxQuality maxQualityStrategy)
+        if(strategy instanceof Strategy.FirstAcceptable)
+        {
+            return acceptableProbes.findFirst();
+        }
+        else if(strategy instanceof Strategy.MaxQuality maxQualityStrategy)
         {
             // Early stopping if "optimal" quality score is found.
             double optimalQuality = maxQualityStrategy.optimalQuality();
@@ -46,8 +50,13 @@ public class ProbeSelector
     // When there are multiple acceptable candidate probes, how to select the best?
     public sealed interface Strategy
             permits
-            Strategy.MaxQuality, Strategy.BestGc
+            Strategy.FirstAcceptable, Strategy.MaxQuality, Strategy.BestGc
     {
+        // Pick the first probe that is acceptable.
+        record FirstAcceptable() implements Strategy
+        {
+        }
+
         // Pick the acceptable probe with the highest quality score.
         record MaxQuality(
                 // Consider the max quality to have been found if exceeding this value.

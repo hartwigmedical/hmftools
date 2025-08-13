@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.panelbuilder;
+package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
@@ -12,7 +12,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeData;
 
 import org.junit.Test;
 

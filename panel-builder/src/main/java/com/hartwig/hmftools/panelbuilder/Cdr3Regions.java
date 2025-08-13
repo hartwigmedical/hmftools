@@ -31,6 +31,7 @@ public class Cdr3Regions
 
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             CDR3_QUALITY_MIN, CDR3_GC_TARGET, CDR3_GC_TOLERANCE);
+    private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.FirstAcceptable();
 
     private static final Logger LOGGER = LogManager.getLogger(Cdr3Regions.class);
 
@@ -73,53 +74,28 @@ public class Cdr3Regions
     private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
             final PanelCoverage coverage, List<ChrBaseRegion> coveredRegions)
     {
-        ChrBaseRegion region = calculateProbeRegion(gene);
+        ChrBaseRegion targetRegion = calculateTargetRegion(gene);
 
-        if(coveredRegions.stream().anyMatch(region::overlaps))
+        if(coveredRegions.stream().anyMatch(targetRegion::overlaps))
         {
             // It's possible regions overlap other regions, in which case just take the first and discard the rest.
             LOGGER.trace("CDR3 region overlaps with another; discarding");
             return new ProbeGenerationResult();
         }
-        coveredRegions.add(region);
-
-        // TODO: should use generic probe tiling method here?
 
         TargetMetadata metadata = createTargetMetadata(gene);
-        TargetRegion target = new TargetRegion(region, metadata);
-        return probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata)
-                .map(probe ->
-                {
-                    probe = probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA);
+        // TODO: need to prevent the probe from going past the end of the gene?
+        ProbeGenerationResult result = probeGenerator.coverRegion(targetRegion, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
 
-                    if(probe.accepted())
-                    {
-                        if(coverage.isCovered(region))
-                        {
-                            LOGGER.trace("CDR3 target already covered by panel: {}", target);
-                            return ProbeGenerationResult.alreadyCoveredTarget(target);
-                        }
-                        else
-                        {
-                            return ProbeGenerationResult.coveredTarget(target, probe);
-                        }
-                    }
-                    else
-                    {
-                        LOGGER.debug("No acceptable probe for CDR3 target: {}", target);
-                        String rejectionReason = "Probe does not meet criteria " + PROBE_CRITERIA;
-                        return ProbeGenerationResult.rejectTarget(target, rejectionReason);
-                    }
-                })
-                .orElseGet(() ->
-                {
-                    // Not expecting this to happen because the CDR3 regions should be in sequenceable areas.
-                    LOGGER.debug("CDR3 target produced invalid probe");
-                    return new ProbeGenerationResult();
-                });
+        if(!result.probes().isEmpty())
+        {
+            coveredRegions.add(targetRegion);
+        }
+
+        return result;
     }
 
-    private static ChrBaseRegion calculateProbeRegion(final IgTcrGene gene)
+    private static ChrBaseRegion calculateTargetRegion(final IgTcrGene gene)
     {
         ChrBaseRegion anchor = requireNonNull(gene.anchorLocation());
         boolean vForward = gene.region() == IgTcrRegion.V_REGION && gene.geneStrand() == Strand.FORWARD;

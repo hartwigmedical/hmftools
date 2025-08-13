@@ -23,7 +23,7 @@ public class ProbeQualityModel
     private final int mTargetProbeLength;
     // Alignment score must exceed this to count towards the risk score.
     private final int mMatchScoreThreshold;
-    // Amount that 1 alignment match counts towards the risk score.
+    // Amount that one alignment match counts towards the risk score.
     // E.g. value of 10 means an alignment with score = mMatchScoreThreshold contributes 10 risk score points.
     private final int mMatchScoreOffset;
 

@@ -54,7 +54,7 @@ public class PanelBuilderApplication
         ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
-        mProbeGenerator = ProbeGenerator.create(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
+        mProbeGenerator = ProbeGenerator.construct(mRefGenome, probeQualityProfile, probeQualityModel, this::writeCandidateProbe);
         mPanelData = new PanelData();
     }
 

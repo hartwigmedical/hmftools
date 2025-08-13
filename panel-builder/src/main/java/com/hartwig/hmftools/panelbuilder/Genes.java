@@ -37,7 +37,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -50,7 +49,7 @@ import org.apache.logging.log4j.Logger;
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
 //   - Coding: Cover the full coding region of each exon, plus splice points.
-//   - UTR: Select 1 probe within each noncoding exon.
+//   - UTR: Select one probe within each noncoding exon.
 //   - Upstream/downstream: Select the best acceptable probe from a 2kb region 1kb upstream/downstream.
 //   - Promoter: Cover the full region from the transcription start to 500b upstream.
 //   - Exon flanks: Only when there are not too many exons:
@@ -329,7 +328,7 @@ public class Genes
                     }
                     else
                     {
-                        // Can fit 1 probe.
+                        // Can fit one probe.
                         int intronCentre = regionCentre(new BaseRegion(lastExonEnd, exonRegion.start()));
                         regions.add(new GeneRegion(
                                 gene,
@@ -355,7 +354,10 @@ public class Genes
             {
                 if(options.utr())
                 {
-                    regions.add(new GeneRegion(gene, GeneRegionType.UTR, exonRegion));
+                    // Just one probe approximately at the centre of the exon.
+                    // Noncoding exons can be long and could produce a lot of probes which are not useful.
+                    int centre = regionCentre(exonRegion);
+                    regions.add(new GeneRegion(gene, GeneRegionType.UTR, new BaseRegion(centre, centre)));
                 }
             }
 
@@ -445,16 +447,10 @@ public class Genes
 
         return switch(geneRegion.type())
         {
-            case CODING, PROMOTER ->
+            case CODING, UTR, PROMOTER ->
                     probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
-            case UTR ->
-            {
-                // TODO: review this. may be able to delete some code.
-                BasePosition position = regionCentre(geneRegion.region());
-                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
-            }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-                    probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
+                    probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT, null);
         };
     }
 
@@ -462,7 +458,7 @@ public class Genes
     {
         GeneData geneData = geneRegion.gene().gene();
         List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::transcriptDataName).toList();
-        // If there are multiple transcripts, merge their names, since the region is determined based on 1 or more transcripts.
+        // If there are multiple transcripts, merge their names, since the region is determined based on one or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
         return new TargetMetadata(TARGET_TYPE, extraInfo);

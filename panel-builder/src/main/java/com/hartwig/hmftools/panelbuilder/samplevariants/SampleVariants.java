@@ -2,7 +2,6 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
@@ -33,7 +32,6 @@ import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
-import com.hartwig.hmftools.panelbuilder.TargetRegion;
 import com.hartwig.hmftools.panelbuilder.UserInputError;
 
 import org.apache.logging.log4j.LogManager;
@@ -248,14 +246,9 @@ public class SampleVariants
 
     private ProbeGenerationResult generateProbe(final Variant variant)
     {
-        LOGGER.trace("Generate probe for variant: {}", variant);
+        LOGGER.trace("Generating probe for variant: {}", variant);
 
         VariantProbeData probeData = variant.generateProbe(mRefGenome);
-
-        TargetMetadata metadata = createTargetMetadata(variant);
-        List<TargetRegion> targetRegions = probeData.regions().stream()
-                .map(region -> new TargetRegion(region, metadata))
-                .toList();
 
         // Only do the coverage check for variant where the probe is similar to the ref genome.
         // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
@@ -264,37 +257,9 @@ public class SampleVariants
         boolean isNovel = isVariantProbeNovel(probeData);
         boolean covered = !isNovel && probeData.regions().stream().allMatch(mPanelData::isCovered);
 
-        if(covered)
-        {
-            LOGGER.trace("Variant probe already covered by panel: {}", probeData);
-            return ProbeGenerationResult.alreadyCoveredTargets(targetRegions);
-        }
-        else
-        {
-            ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-            return mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata)
-                    .map(probe ->
-                    {
-                        probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
-
-                        // TODO: this kind of code is common, can factor it out?
-                        if(probe.accepted())
-                        {
-                            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-                        }
-                        else
-                        {
-                            String rejectionReason = "Probe does not meet criteria " + evalCriteria;
-                            return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
-                        }
-                    })
-                    .orElseGet(() ->
-                    {
-                        // Not expecting this to happen because the variants should be in a sequenceable region.
-                        LOGGER.debug("Variant invalid probe");
-                        return new ProbeGenerationResult();
-                    });
-        }
+        TargetMetadata metadata = createTargetMetadata(variant);
+        ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
+        return mProbeGenerator.probeWithSequence(probeData.sequence(), probeData.regions(), metadata, evalCriteria, covered);
     }
 
     private static boolean isVariantProbeNovel(final VariantProbeData data)

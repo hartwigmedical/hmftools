@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -81,42 +80,6 @@ public class CandidateProbeGeneratorTest
         List<Probe> actual = mGenerator.coverOneSubregion(new ChrBaseRegion("1", 1, 1000), METADATA).toList();
         int minStart = actual.stream().mapToInt(probe -> requireNonNull(probe.region()).start()).min().orElseThrow();
         assertEquals(1, minStart);
-    }
-
-    @Test
-    public void testCoverPosition()
-    {
-        String chromosome = "1";
-        int position = 1000;
-        Set<ChrBaseRegion> expectedRegions = IntStream.rangeClosed(position - PROBE_LENGTH + 1, position)
-                .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + PROBE_LENGTH - 1))
-                .collect(Collectors.toSet());
-
-        List<Probe> actual = mGenerator.coverPosition(new BasePosition(chromosome, position), METADATA).toList();
-        List<ChrBaseRegion> actualRegions = actual.stream().map(Probe::region).toList();
-
-        // Check the full set of probes is as expected.
-        assertEquals(expectedRegions, new HashSet<>(actualRegions));
-
-        // Check the first few are in the right order (no need to manually test all the rest).
-        List<BaseRegion> actualFirstRegions = actualRegions.stream().map(ChrBaseRegion::baseRegion).limit(5).toList();
-        List<BaseRegion> expectedFirstRegions = List.of(
-                probeRegionCenteredAt(position),
-                probeRegionCenteredAt(position + 1),
-                probeRegionCenteredAt(position - 1),
-                probeRegionCenteredAt(position + 2),
-                probeRegionCenteredAt(position - 2)
-        );
-        assertEquals(expectedFirstRegions, actualFirstRegions);
-
-        assertProbeAttributes(actual);
-    }
-
-    @Test
-    public void testCoverPositionChromosomeBounds()
-    {
-        List<Probe> actual = mGenerator.coverPosition(new BasePosition("2", 1), METADATA).toList();
-        assertEquals(emptyList(), actual);
     }
 
     @Test

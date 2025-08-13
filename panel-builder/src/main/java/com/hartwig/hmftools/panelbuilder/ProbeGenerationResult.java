@@ -34,7 +34,7 @@ public record ProbeGenerationResult(
         );
     }
 
-    // Convenience method for creating a result from covering a target region with exactly 1 probe.
+    // Convenience method for creating a result from covering a target region with exactly one probe.
     public static ProbeGenerationResult coveredTarget(final TargetRegion candidateTarget, final Probe probe)
     {
         if(!probe.accepted())
