@@ -606,6 +606,8 @@ public final class SbxRoutines
             }
         }
 
+        byte[] newBaseQuals = record.getBaseQualities();
+
         for(int i = 0; i < readLength; ++i)
         {
             // values to handle and convert:
@@ -615,7 +617,7 @@ public final class SbxRoutines
             // 3 (DUPLEX_NO_CONSENSUS_QUAL) - convert 1 and adjust adjacent bases
             // 2 (SIMPLEX_NO_CONSENSUS_QUAL) - convert to 1
 
-            byte qual = record.getBaseQualities()[i];
+            byte qual = newBaseQuals[i];
 
             if(qual == DUPLEX_NO_CONSENSUS_QUAL || qual <= SBX_DUPLEX_MISMATCH_QUAL)
             {
@@ -628,29 +630,29 @@ public final class SbxRoutines
             switch(qual)
             {
                 case RAW_DUPLEX_QUAL:
-                    record.getBaseQualities()[i] = SBX_DUPLEX_QUAL;
+                    newBaseQuals[i] = SBX_DUPLEX_QUAL;
 
                     // fix instances where consensus has set simplex in a duplex region
                     if(duplexRegionStart >= 0 && (i < duplexRegionStart || i > duplexRegionEnd))
-                        record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                        newBaseQuals[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;
 
                 case RAW_SIMPLEX_QUAL:
-                    record.getBaseQualities()[i] = SBX_SIMPLEX_QUAL;
+                    newBaseQuals[i] = SBX_SIMPLEX_QUAL;
 
                     // as above
                     if(duplexRegionStart >= 0 && i >= duplexRegionStart && i <= duplexRegionEnd)
-                        record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                        newBaseQuals[i] = SBX_DUPLEX_MISMATCH_QUAL;
 
                     break;
 
                 case SIMPLEX_NO_CONSENSUS_QUAL:
-                    record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                    newBaseQuals[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;
 
                 case DUPLEX_NO_CONSENSUS_QUAL:
                 default:
-                    record.getBaseQualities()[i] = SBX_DUPLEX_MISMATCH_QUAL;
+                    newBaseQuals[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;
             }
         }
@@ -670,10 +672,10 @@ public final class SbxRoutines
 
                     if(adjustIndex >= 0 && adjustIndex <= lastReadIndex)
                     {
-                        byte indexQual = record.getBaseQualities()[adjustIndex];
+                        byte indexQual = newBaseQuals[adjustIndex];
 
                         if(indexQual > adjustQual && indexQual != SBX_SIMPLEX_QUAL)
-                            record.getBaseQualities()[adjustIndex] = adjustQual;
+                            newBaseQuals[adjustIndex] = adjustQual;
                     }
                 }
             }
@@ -687,7 +689,6 @@ public final class SbxRoutines
             int refPos = record.getAlignmentStart();
             int readIndex = 0;
             byte[] readBases = record.getReadBases();
-            byte[] baseQuals = record.getBaseQualities();
             int nmDiff = 0;
             int alignmentScoreDiff = 0;
 
@@ -706,10 +707,10 @@ public final class SbxRoutines
 
                 for(int i = 0; i < element.getLength(); i++, readIndex++, refPos++)
                 {
-                    if(baseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                    if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
                         continue;
 
-                    baseQuals[readIndex] = SBX_DUPLEX_MISMATCH_QUAL;
+                    newBaseQuals[readIndex] = SBX_DUPLEX_MISMATCH_QUAL;
 
                     byte refBase = refGenome.getBase(chromosome, refPos);
                     byte readBase = readBases[readIndex];
@@ -736,6 +737,8 @@ public final class SbxRoutines
                 record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
             }
         }
+
+        record.setBaseQualities(newBaseQuals);
     }
 
     // unused methods for now

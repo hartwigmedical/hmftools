@@ -188,7 +188,7 @@ public class PartitionReader
 
     public static boolean shouldFilterRead(final SAMRecord read)
     {
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous Redux-generated BAMs runs
             return true;
 
         if(read.getSupplementaryAlignmentFlag())
