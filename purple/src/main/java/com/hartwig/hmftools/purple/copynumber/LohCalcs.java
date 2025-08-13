@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.common.purple.PurpleCopyNumber.buildChromosomeMap;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.copynumber.LohCalcData.LOH_NONE;
 
 import java.util.List;
@@ -62,7 +61,7 @@ public final class LohCalcs
                 beforeCentromere = false;
             }
 
-            if(beforeCentromere && chromosome.isShortArm())
+            if(beforeCentromere && chromosome.hasShortArm())
                 continue;
 
             totalBaseCount += copyNumber.length();

@@ -53,6 +53,8 @@ import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeCopyNumbers;
 import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
@@ -368,6 +370,10 @@ public class PurpleApplication
             String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
             TargetRegionsCopyNumberFile.write(fileName, copyNumberData);
         }
+
+        ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers);
+        String fileName = ChromosomeArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId);
+        ChromosomeArmCopyNumbersFile.write(fileName, ccm.data());
 
         if(mConfig.RunDrivers)
         {
