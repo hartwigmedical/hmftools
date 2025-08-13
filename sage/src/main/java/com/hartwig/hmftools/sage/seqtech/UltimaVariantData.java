@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
 import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
@@ -18,6 +19,9 @@ import htsjdk.samtools.SAMRecord;
 public class UltimaVariantData
 {
     private final VariantReadContext mReadContext;
+
+    private UltimaRealignedQualModels mQualModels;
+
     private final List<Integer> mHomopolymerLengths;
     private final List<Double> mHomopolymerAvgQuals;
     private final List<Double> mT0AvgQuals;
@@ -42,6 +46,9 @@ public class UltimaVariantData
     public List<Double> homopolymerAvgQuals() { return mHomopolymerAvgQuals; }
     public List<Double> t0AvgQuals() { return mT0AvgQuals; }
 
+    public UltimaRealignedQualModels getQualModels() { return mQualModels; }
+    public void setQualModels(final UltimaRealignedQualModels models) { mQualModels = models; }
+
     public void addReadSupportInfo(final SAMRecord record, final int readVarIndex)
     {
         String recordCore = record.getReadString()
@@ -60,33 +67,24 @@ public class UltimaVariantData
         byte[] tpValues = extractTpValues(record);
         int readIndex = readVarIndex - mReadContext.leftCoreLength();
         boolean firstHomopolymer = true;
-        List<Integer> homopolyerQuals = Lists.newArrayList();
+        List<Byte> homopolyerQuals = Lists.newArrayList();
 
-        for(int len : mHomopolymerLengths)
+        for(int hpLength : mHomopolymerLengths)
         {
-            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
+            int lookupIndex = firstHomopolymer ? readIndex + hpLength - 1 : readIndex;
             int tpValue = tpValues[lookupIndex];
 
-            int homopolymerQual;
-            if(tpValue == 0)
-            {
-                // ULTIMA TODO
-                homopolymerQual = 0;
-                // homopolymerQual = ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
-            }
-            else if(len == 1)
-            {
-                homopolymerQual = baseQuals[lookupIndex];
-            }
-            else
-            {
-                homopolymerQual = baseQuals[lookupIndex] - 3;
-            }
+            char homopolymerBase = (char)record.getReadBases()[readVarIndex];
+
+            byte homopolymerQual = BQR_CACHE.getTpRecalibratedQual(hpLength, homopolymerBase, tpValue == 0);
+
+            if(tpValue > 0 && hpLength > 1)
+                homopolymerQual -= 3;
 
             homopolyerQuals.add(homopolymerQual);
 
             firstHomopolymer = false;
-            readIndex += len;
+            readIndex += hpLength;
         }
 
         for(int i = 0; i < homopolyerQuals.size(); i++)
@@ -101,30 +99,25 @@ public class UltimaVariantData
         byte[] t0Values = extractT0Values(record);
         int readIndex = readVarIndex - mReadContext.leftCoreLength();
         boolean firstHomopolymer = true;
-        List<Integer> t0Quals = Lists.newArrayList();
-        for(int len : mHomopolymerLengths)
+
+        List<Byte> t0Quals = Lists.newArrayList();
+
+        for(int hpLength : mHomopolymerLengths)
         {
-            int lookupIndex = firstHomopolymer ? readIndex + len - 1 : readIndex;
-            int t0Value = t0Values[lookupIndex];
+            int lookupIndex = firstHomopolymer ? readIndex + hpLength - 1 : readIndex;
+            byte t0Value = t0Values[lookupIndex];
 
-            // ULTIMA TODO
-            int t0Qual = 0;
+            byte t0Qual = t0Value;
 
-            /*
-            if(t0Value == ULTIMA_BOOSTED_QUAL)
+            if(t0Qual == BQR_CACHE.maxRawQual())
             {
-                t0Qual = ULTIMA_MAX_QUAL_T0;
+                t0Qual = BQR_CACHE.getT0RecalibratedQual(record, readVarIndex);
             }
-            else
-            {
-                t0Qual = t0Value;
-            }
-            */
 
             t0Quals.add(t0Qual);
 
             firstHomopolymer = false;
-            readIndex += len;
+            readIndex += hpLength;
         }
 
         for(int i = 0; i < t0Quals.size(); i++)

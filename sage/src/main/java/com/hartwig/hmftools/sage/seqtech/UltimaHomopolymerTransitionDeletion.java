@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.calcTpBaseQual;
 
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -44,28 +47,26 @@ class UltimaHomopolymerTransitionDeletion extends UltimaQualModel
                 record, varReadIndex + mLowerHpStartIndex, varReadIndex + mLowerHpEndIndex, mLowerRefAdjustCount);
 
         if(lowerQual == ULTIMA_INVALID_QUAL)
-        {
             return ULTIMA_INVALID_QUAL;
-        }
 
         byte upperQual = calcTpBaseQual(
                 record, varReadIndex + mUpperHpStartIndex, varReadIndex + mUpperHpEndIndex, mUpperRefAdjustCount);
 
         if(upperQual == ULTIMA_INVALID_QUAL)
-        {
             return ULTIMA_INVALID_QUAL;
-        }
 
-        // ULTIMA TODO
-        /*
-        if(lowerQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST || upperQual == ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST)
-        {
-            return ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST;
-        }
-        */
+        // cap at higher of BQR quals
+        int lowerHpLength = mLowerHpEndIndex - mLowerHpStartIndex + 1;
+        char lowerHpBase = (char)record.getReadBases()[varReadIndex + mLowerHpStartIndex];
+        int lowerBqrQual = BQR_CACHE.getTpRecalibratedQual(lowerHpLength, lowerHpBase, false);
 
-        // return (byte) min(lowerQual + upperQual, ULTIMA_MAX_QUAL_TP);
-        return 0;
+        int upperHpLength = mUpperHpEndIndex - mUpperHpStartIndex + 1;
+        char upperHpBase = (char)record.getReadBases()[varReadIndex + mUpperHpStartIndex];
+        int upperBqrQual = BQR_CACHE.getTpRecalibratedQual(upperHpLength, upperHpBase, false);
+
+        int maxBqrQual = max(lowerBqrQual, upperBqrQual);
+
+        return (byte)min(lowerQual + upperQual, maxBqrQual);
     }
 
     public String toString()

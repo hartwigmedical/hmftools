@@ -27,10 +27,8 @@ import htsjdk.samtools.TextCigarCodec;
 
 public class UltimaRealignedQualModelBuilder
 {
-    @VisibleForTesting
     public static MergedHomopolymers mergeSandwichedHomopolymers(
-            @Nullable final VariantReadContext readContext,
-            final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0)
+            final VariantReadContext readContext, final List<Homopolymer> refHomopolymers0, final List<Homopolymer> readHomopolymers0)
     {
         List<Homopolymer> refHomopolymers = Lists.newArrayList(refHomopolymers0);
         List<Homopolymer> readHomopolymers = Lists.newArrayList(readHomopolymers0);
@@ -40,6 +38,7 @@ public class UltimaRealignedQualModelBuilder
         int readIndex = 0;
         int readBasesConsumed = 0;
         int refBasesConsumed = 0;
+
         while(refIndex < refHomopolymers.size() && readIndex < readHomopolymers.size())
         {
             Homopolymer refHomopolymer = refHomopolymers.get(refIndex);
@@ -221,11 +220,13 @@ public class UltimaRealignedQualModelBuilder
         return mergedHomopolymers;
     }
 
+    /*
     public static UltimaRealignedQualModels buildUltimaRealignedQualModels(
             final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder)
     {
         return buildUltimaRealignedQualModels(readContext, ultimaQualModelBuilder, false);
     }
+    */
 
     @VisibleForTesting
     public static List<CigarElement> readContextCoreCigar(final VariantReadContext readContext)
@@ -263,7 +264,7 @@ public class UltimaRealignedQualModelBuilder
         return coreCigar;
     }
 
-    private static UltimaRealignedQualModels buildUltimaRealignedQualModels(
+    protected static UltimaRealignedQualModels buildUltimaRealignedQualModels(
             final VariantReadContext readContext,
             final UltimaQualModelBuilder ultimaQualModelBuilder, boolean skipSandwichMasking)
     {
@@ -285,6 +286,7 @@ public class UltimaRealignedQualModelBuilder
 
         List<Homopolymer> refHomopolymers = getHomopolymers(readContext.RefBases, 0, readContext.RefBases.length - 1);
         List<Homopolymer> readHomopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+
         MergedHomopolymers mergedHomopolymers;
         if(skipSandwichMasking)
         {
@@ -295,7 +297,7 @@ public class UltimaRealignedQualModelBuilder
             mergedHomopolymers = mergeSandwichedHomopolymers(readContext, refHomopolymers, readHomopolymers);
         }
 
-        List<UltimaRealignedQualModel> realignedVariants = getRealignedVariants(
+        List<UltimaRealignedQualModel> realignedQualModels = getRealignedVariants(
                 readContext,
                 ultimaQualModelBuilder,
                 mergedHomopolymers.RefHomopolymers,
@@ -305,30 +307,30 @@ public class UltimaRealignedQualModelBuilder
         // doesn't seem a need for sorting any more, but for now leave a log warning
         // realignedVariants.sort(Comparator.comparingInt(x -> x.variant().Position));
 
-        for(int i = 1; i < realignedVariants.size(); i++)
+        for(int i = 1; i < realignedQualModels.size(); i++)
         {
-            if(realignedVariants.get(i).variant().Position < realignedVariants.get(i - 1).variant().Position)
+            if(realignedQualModels.get(i).variant().Position < realignedQualModels.get(i - 1).variant().Position)
             {
-                SG_LOGGER.warn("readContext({}) has {} out of positional order:", readContext, realignedVariants.size());
+                SG_LOGGER.warn("readContext({}) has {} out of positional order:", readContext, realignedQualModels.size());
 
-                for(UltimaRealignedQualModel realignedQualModel : realignedVariants)
+                for(UltimaRealignedQualModel realignedQualModel : realignedQualModels)
                 {
                     SG_LOGGER.warn("realignedQualModel({})", realignedQualModel.toString());
                 }
             }
         }
 
-        if(realignedVariants.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwichMasking)
+        if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwichMasking)
         {
             return buildUltimaRealignedQualModels(readContext, ultimaQualModelBuilder, true);
         }
-        else if(realignedVariants.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
+        else if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers())
         {
             SG_LOGGER.info(format("readContext(%s) is expected to have realigned ultima variants, but none have been found", readContext.toString()));
             return new UltimaRealignedQualModels(readContext, ultimaQualModelBuilder);
         }
 
-        return new UltimaRealignedQualModels(readContext, ultimaQualModelBuilder, realignedVariants);
+        return new UltimaRealignedQualModels(readContext, ultimaQualModelBuilder, realignedQualModels);
     }
 
     private static class HomopolymerVariant
@@ -349,8 +351,8 @@ public class UltimaRealignedQualModelBuilder
         }
     }
 
-    private static void createRealignedVariants(
-            final List<UltimaRealignedQualModel> realignedVariants,
+    private static void createRealignedQualModels(
+            final List<UltimaRealignedQualModel> realignedQualModels,
             @Nullable final UltimaQualModelBuilder ultimaQualModelBuilder, final VariantReadContext readContext, final List<RefMask> refMasks,
             final List<HomopolymerVariant> delHomopolymers, final List<HomopolymerVariant> insHomopolymers,
             final int lastMatchedReadCoreIndex, final int lastMatchedRefPos, final byte lastMatchedBase, final int lastMatchedLength,
@@ -415,7 +417,7 @@ public class UltimaRealignedQualModelBuilder
                     : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset, varIndex,
                             delHomopolymer.VariantPos - readContext.CorePositionStart);
 
-            realignedVariants.add(realignedQualModel);
+            realignedQualModels.add(realignedQualModel);
         }
 
         for(int i = 0; i < insHomopolymers.size(); i++)
@@ -452,7 +454,7 @@ public class UltimaRealignedQualModelBuilder
                     : new UltimaRealignedQualModel(variant, baseQualModel, varReadIndexOffset, varIndex,
                             insHomopolymer.VariantPos - readContext.CorePositionStart);
 
-            realignedVariants.add(realignedQualModel);
+            realignedQualModels.add(realignedQualModel);
         }
     }
 
@@ -508,7 +510,7 @@ public class UltimaRealignedQualModelBuilder
 
             if(refHomopolymer.Base == readHomopolymer.Base && refHomopolymer.Length == readHomopolymer.Length)
             {
-                createRealignedVariants(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
+                createRealignedQualModels(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
 
                 lastMatchedLength = refHomopolymer.Length;
                 priorRefBase = refIndex == 0 ? -1 : refHomopolymers.get(refIndex - 1).Base;
@@ -529,7 +531,7 @@ public class UltimaRealignedQualModelBuilder
 
             if(refHomopolymer.Base == readHomopolymer.Base)
             {
-                createRealignedVariants(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
+                createRealignedQualModels(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
 
                 lastMatchedLength = min(refHomopolymer.Length, readHomopolymer.Length);
                 priorRefBase = refIndex == 0 ? -1 : refHomopolymers.get(refIndex - 1).Base;
@@ -642,7 +644,7 @@ public class UltimaRealignedQualModelBuilder
             refPos += refHomopolymer.Length;
         }
 
-        createRealignedVariants(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
+        createRealignedQualModels(realignedVariants, ultimaQualModelBuilder, readContext, refMasks, delHomopolymers, insHomopolymers, lastMatchedReadCoreIndex, lastMatchedRefPos, lastMatchedBase, lastMatchedLength, priorRefBase, priorReadBase);
 
         return realignedVariants;
     }

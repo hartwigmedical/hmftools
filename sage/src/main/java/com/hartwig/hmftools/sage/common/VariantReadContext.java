@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
-import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
 
 import htsjdk.samtools.CigarElement;
 
@@ -40,7 +39,6 @@ public class VariantReadContext
     private final String mReadCigarStr;
 
     private IlluminaArtefactContext mIlluminaArtefactContext;
-    private UltimaRealignedQualModels mUltimaRealignedQualModels;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
     private byte[] mExtendedRefBases;
@@ -72,7 +70,6 @@ public class VariantReadContext
         mExtendedRefBases = null;
 
         mIlluminaArtefactContext = null;
-        mUltimaRealignedQualModels = null;
     }
 
     // read context methods
@@ -133,9 +130,6 @@ public class VariantReadContext
 
     public IlluminaArtefactContext artefactContext() { return mIlluminaArtefactContext; }
     public void setArtefactContext(final IlluminaArtefactContext context) { mIlluminaArtefactContext = context; }
-
-    public UltimaRealignedQualModels realignedUltimaQualModels() { return mUltimaRealignedQualModels; }
-    public void setUltimaRealignedQualModels(final UltimaRealignedQualModels models) { mUltimaRealignedQualModels = models; }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }

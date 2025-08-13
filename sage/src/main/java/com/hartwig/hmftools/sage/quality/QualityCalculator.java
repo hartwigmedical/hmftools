@@ -78,7 +78,8 @@ public class QualityCalculator
         double baseQuality;
 
         boolean recalibrateBaseQuality;
-        if(readContextCounter.realignedUltimaQualModels() == null)
+
+        if(!isUltima())
         {
             recalibrateBaseQuality = !(readContextCounter.isIndel() || readContextCounter.artefactContext() != null);
         }
@@ -135,9 +136,9 @@ public class QualityCalculator
 
     public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        if(readContextCounter.realignedUltimaQualModels() != null)
+        if(isUltima())
         {
-            return readContextCounter.realignedUltimaQualModels().calculateQual(readContextCounter, readIndex, record);
+            return readContextCounter.ultimaData().getQualModels().calculateQual(readContextCounter, readIndex, record);
         }
 
         byte artefactAdjustedQual = readContextCounter.artefactContext() != null ?

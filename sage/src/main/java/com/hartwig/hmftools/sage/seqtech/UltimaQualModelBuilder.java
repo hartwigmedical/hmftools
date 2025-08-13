@@ -3,17 +3,18 @@ package com.hartwig.hmftools.sage.seqtech;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModelBuilder.buildUltimaRealignedQualModels;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_RECALIBRATED_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -23,27 +24,28 @@ public class UltimaQualModelBuilder
 {
     private final RefGenomeInterface mRefGenome;
 
-    public static void setReadContextUltimaModels(final RefGenomeInterface refGenome, final VariantReadContext readContext)
+    public static void setReadContextUltimaModels(final RefGenomeInterface refGenome, final ReadContextCounter readContextCounter)
     {
+        VariantReadContext readContext = readContextCounter.readContext();
         UltimaQualModelBuilder qualModelBuilder = new UltimaQualModelBuilder(refGenome);
 
-        byte[] coreBases = Arrays.subsetArray(
+        byte[] triNucBases = Arrays.subsetArray(
                 readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
 
-        UltimaQualModel qualModel = qualModelBuilder.buildContext(readContext.variant(), coreBases);
+        UltimaQualModel qualModel = qualModelBuilder.buildContext(readContext.variant(), triNucBases);
 
         UltimaRealignedQualModels qualModels;
 
         if(isCleanHpTransition(readContext, qualModel))
         {
-            qualModels = new UltimaRealignedQualModels(readContext, qualModelBuilder, Lists.newArrayList());
+            qualModels = new UltimaRealignedQualModels(qualModel);
         }
         else
         {
-            qualModels = UltimaRealignedQualModelBuilder.buildUltimaRealignedQualModels(readContext, qualModelBuilder);
+            qualModels = buildUltimaRealignedQualModels(readContext, qualModelBuilder, false);;
         }
 
-        readContext.setUltimaRealignedQualModels(qualModels);
+        readContextCounter.ultimaData().setQualModels(qualModels);
     }
 
     private static boolean isCleanHpTransition(VariantReadContext readContext, final UltimaQualModel qualModel)
@@ -212,6 +214,6 @@ public class UltimaQualModelBuilder
             super(UltimaModelType.MICROSATELLITE);
         }
 
-        public byte calculateQual(final SAMRecord record, int varReadIndex) { return MAX_RECALIBRATED_QUAL; }
+        public byte calculateQual(final SAMRecord record, int varReadIndex) { return BQR_CACHE.maxRawQual(); }
     }
 }

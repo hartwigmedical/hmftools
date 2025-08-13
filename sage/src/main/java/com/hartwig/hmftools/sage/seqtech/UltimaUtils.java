@@ -22,7 +22,7 @@ public final class UltimaUtils
 {
     protected static final int MAX_HOMOPOLYMER = 15;
 
-    protected static final byte MAX_RECALIBRATED_QUAL = 55;
+    // protected static final byte MAX_RECALIBRATED_QUAL = 55;
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
 
@@ -77,7 +77,7 @@ public final class UltimaUtils
 
         // check quals vs BQR
         qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
-        qualValue2 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
+        qualValue2 = BQR_CACHE.calcTpRecalibratedQual(qualValue2, homopolymerLength, homopolymerBase, false);
 
         if(qualValue1 < 0)
         {
@@ -104,6 +104,7 @@ public final class UltimaUtils
             return qualValue1;
 
         // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
+        // TODO: make constant ?
         return (byte)(qualValue1 - 3);
     }
 

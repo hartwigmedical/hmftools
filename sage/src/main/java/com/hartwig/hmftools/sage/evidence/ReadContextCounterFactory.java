@@ -39,12 +39,16 @@ public class ReadContextCounterFactory
         {
             try
             {
-                if(isUltima())
-                    setReadContextUltimaModels(refGenome, candidate.readContext());
-
-                readCounters.add(new ReadContextCounter(
+                ReadContextCounter readContextCounter = new ReadContextCounter(
                         readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
-                        config, qualityCalculator, sampleId, isReferenceSample));
+                        config, qualityCalculator, sampleId, isReferenceSample);
+
+                if(isUltima())
+                {
+                    setReadContextUltimaModels(refGenome, readContextCounter);
+                }
+
+                readCounters.add(readContextCounter);
             }
             catch(Exception e)
             {

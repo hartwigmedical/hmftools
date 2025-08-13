@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
@@ -18,6 +17,8 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import htsjdk.samtools.SAMRecord;
+
 public class UltimaQualRecalibration
 {
     // T0_RECAL	AC_T	56
@@ -28,15 +29,15 @@ public class UltimaQualRecalibration
     private final static byte RECALIBRATED_QUAL_MAX = 55;
     private final static int RECALIBRATED_QUAL_MAX_HP_LENGTH = 5;
 
-    private final Map<String,Double> mTpQualMap;
-    private final Map<String,Double> mT0QualMap;
+    private final Map<String,Byte> mTpQualMap;
+    private final Map<String,Byte> mT0QualMap;
     private byte mMaxRawQual;
 
     public UltimaQualRecalibration()
     {
         mTpQualMap = Maps.newHashMap();
         mT0QualMap = Maps.newHashMap();
-        mMaxRawQual = 0;
+        mMaxRawQual = ULTIMA_MAX_QUAL;
     }
 
     public void setMaxRawQual(byte qual) { mMaxRawQual = qual; }
@@ -44,24 +45,31 @@ public class UltimaQualRecalibration
 
     public byte calcTpRecalibratedQual(final byte readQual, final int homoploymerLength, final char base, final boolean tpIsZero)
     {
-        if(readQual < ULTIMA_MAX_QUAL || homoploymerLength > RECALIBRATED_QUAL_MAX_HP_LENGTH)
+        if(readQual < mMaxRawQual || homoploymerLength > RECALIBRATED_QUAL_MAX_HP_LENGTH)
             return readQual;
 
-        double bqrQual = getTpRecalibratedQual(homoploymerLength, base, tpIsZero);
-        return bqrQual != INVALID_BASE_QUAL ? (byte)round(bqrQual) : readQual;
+        byte bqrQual = getTpRecalibratedQual(homoploymerLength, base, tpIsZero);
+        return bqrQual != INVALID_BASE_QUAL ? bqrQual : readQual;
     }
 
-    public double getTpRecalibratedQual(final int homoploymerLength, final char base, final boolean tpIsZero)
+    public byte getTpRecalibratedQual(final int homoploymerLength, final char base, final boolean tpIsZero)
     {
         String key = TpData.formKey(homoploymerLength, base, tpIsZero);
-        Double recalibratedQual = mTpQualMap.get(key);
+        Byte recalibratedQual = mTpQualMap.get(key);
         return recalibratedQual != null ? recalibratedQual : INVALID_BASE_QUAL;
     }
 
-    public double getT0RecalibratedQual(final String triNucContext, final char base)
+    public byte getT0RecalibratedQual(final SAMRecord record, int varReadIndex)
+    {
+        char variantBase = (char)record.getReadBases()[varReadIndex];
+        String tnc = String.valueOf((char)record.getReadBases()[varReadIndex - 1] + (char)record.getReadBases()[varReadIndex + 1]);
+        return getT0RecalibratedQual(tnc, variantBase);
+    }
+
+    public byte getT0RecalibratedQual(final String triNucContext, final char base)
     {
         String key = T0Data.formKey(triNucContext, base);
-        Double recalibratedQual = mT0QualMap.get(key);
+        Byte recalibratedQual = mT0QualMap.get(key);
         return recalibratedQual != null ? recalibratedQual : RECALIBRATED_QUAL_MAX;
     }
 
@@ -96,7 +104,7 @@ public class UltimaQualRecalibration
 
                 QualType type = QualType.valueOf(values[typeIndex]);
                 String key = values[keyIndex];
-                double recalibratedQual = Double.parseDouble(values[rqIndex]);
+                byte recalibratedQual = Byte.parseByte(values[rqIndex]);
 
                 if(type == QualType.TP)
                 {

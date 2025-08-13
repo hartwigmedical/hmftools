@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.MICROSATELLITE;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_RECALIBRATED_QUAL;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.Arrays;
@@ -29,6 +28,12 @@ public class UltimaRealignedQualModels
         mRealignedQualModels = realignedQualModels;
     }
 
+    public UltimaRealignedQualModels(final UltimaQualModel qualModel)
+    {
+        mOriginalQualModel = qualModel;
+        mRealignedQualModels = Collections.emptyList();
+    }
+
     public UltimaRealignedQualModels(final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder)
     {
         this(readContext, ultimaQualModelBuilder, null);
@@ -36,63 +41,56 @@ public class UltimaRealignedQualModels
 
     private static UltimaQualModel originalQualModel(final VariantReadContext readContext, final UltimaQualModelBuilder ultimaQualModelBuilder)
     {
-        byte[] coreBases = Arrays.subsetArray(readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
-        return ultimaQualModelBuilder.buildContext(readContext.variant(), coreBases);
+        byte[] triNucBases = Arrays.subsetArray(readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
+        return ultimaQualModelBuilder.buildContext(readContext.variant(), triNucBases);
     }
 
     public double calculateQual(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        // ULTIMA TODO
-        double ultimaQual = MAX_RECALIBRATED_QUAL; // max(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, ULTIMA_MAX_QUAL_T0);
+        double modelQual;
 
-        if(mOriginalQualModel != null)
+        if(mOriginalQualModel.type() == MICROSATELLITE && readContextCounter.qualCache().usesMsiIndelErrorQual())
         {
-            double modelQual;
-            if(mOriginalQualModel.type() == MICROSATELLITE && readContextCounter.qualCache().usesMsiIndelErrorQual())
-            {
-                modelQual = readContextCounter.qualCache().msiIndelErrorQual();
-            }
-            else
-            {
-                modelQual = mOriginalQualModel.calculateQual(record, readIndex);
-            }
-
-            if(modelQual < 0)
-            {
-                return INVALID_BASE_QUAL;
-            }
-
-            ultimaQual = min(ultimaQual, modelQual);
+            modelQual = readContextCounter.qualCache().msiIndelErrorQual();
+        }
+        else
+        {
+            modelQual = mOriginalQualModel.calculateQual(record, readIndex);
         }
 
+        if(modelQual < 0)
+            return INVALID_BASE_QUAL;
+
         if(mRealignedQualModels == null)
-            return ultimaQual;
+            return modelQual;
 
         // take the minimum qual across the models
         for(UltimaRealignedQualModel realignedUltimaQualModel : mRealignedQualModels)
         {
+            // CHECK: do all QMs have the same MSI jitter cache
             MsiJitterQualCache qualCache = realignedUltimaQualModel.qualCache(
                     readContextCounter.readContext().RefBases,
                     readContextCounter.readContext().ReadBases,
                     readContextCounter.qualityCalculator(),
                     readContextCounter.sampleId());
 
-            double modelQual;
+            double realignedModelQual;
+
             if(realignedUltimaQualModel.type() == MICROSATELLITE && qualCache.usesMsiIndelErrorQual())
             {
-                modelQual = qualCache.msiIndelErrorQual();
+                realignedModelQual = qualCache.msiIndelErrorQual();
             }
             else
             {
-                modelQual = realignedUltimaQualModel.calculateQual(record, readIndex);
+                realignedModelQual = realignedUltimaQualModel.calculateQual(record, readIndex);
             }
 
-            if(modelQual < 0)
+            if(realignedModelQual < 0)
                 return INVALID_BASE_QUAL;
 
-            ultimaQual = min(ultimaQual, modelQual);
+            modelQual = min(realignedModelQual, modelQual);
         }
 
-        return ultimaQual;
+        return modelQual;
     }
 }

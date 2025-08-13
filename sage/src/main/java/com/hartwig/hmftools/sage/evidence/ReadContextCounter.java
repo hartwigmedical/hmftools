@@ -57,13 +57,10 @@ import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isHighBaseQual;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
-import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
 import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -265,7 +262,6 @@ public class ReadContextCounter
     public JitterData jitter() { return mJitterData; }
 
     public IlluminaArtefactContext artefactContext() { return mReadContext.artefactContext(); }
-    public UltimaRealignedQualModels realignedUltimaQualModels() { return mReadContext.realignedUltimaQualModels(); }
     public boolean useMsiErrorRate() { return mQualCache.msiIndelErrorQual() != INVALID_BASE_QUAL;}
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
@@ -305,6 +301,7 @@ public class ReadContextCounter
 
     public int[] consensusTypeCounts() { return mConsensusTypeCounts; }
     public FragmentLengthCounts fragmentLengthCounts() { return mFragmentLengthData; }
+
     public UltimaVariantData ultimaData() { return mUltimaData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
