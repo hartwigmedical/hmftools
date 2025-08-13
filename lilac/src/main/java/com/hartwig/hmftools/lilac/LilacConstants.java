@@ -72,7 +72,10 @@ public final class LilacConstants
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",
 
             // Similar to HLA-Y
-            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
+            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237",
+
+            // Similar to HLA-H
+            "B*40:278");
 
     // common INDEL associated with allele C*04:09N
     // TODO(mkcmkc): If we update the resources change to "C*04:09L"
