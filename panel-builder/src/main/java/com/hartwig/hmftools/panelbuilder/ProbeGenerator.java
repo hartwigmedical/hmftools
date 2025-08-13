@@ -351,7 +351,7 @@ public class ProbeGenerator
         // and adding more probes will only increase overlap or extension for no gain.
         int probeCount = minProbes;
         // How many probe bases "left over" from covering the region?
-        int extra = minProbes * PROBE_LENGTH - region.baseLength();
+        int extra = probeCount * PROBE_LENGTH - region.baseLength();
 
         if(probeCount <= 0)
         {
@@ -374,7 +374,7 @@ public class ProbeGenerator
             // General case.
 
             // If extra is negative (i.e. some bases uncovered) then reduce the desired tiling region.
-            // If extra is positive (i.e. some overlap) then distribute that between overlap and extension based on the parameter.
+            // If extra is positive (i.e. some overlap) then distribute that between overlap and extension based on the constant.
             double tilingSpace = min(
                     region.baseLength() + min(0, extra) + max(0, extra * PROBE_OVERLAP_EXTENSION_BALANCE),
                     tilingBounds.baseLength());

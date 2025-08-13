@@ -73,6 +73,7 @@ public class MsiSites
             final PanelCoverage coverage)
     {
         TargetMetadata metadata = createTargetMetadata(msiSite);
+        // TODO: is the probe allowed to be shifted?
         return probeGenerator.coverPosition(msiSite, metadata, PROBE_CRITERIA, coverage);
     }
 

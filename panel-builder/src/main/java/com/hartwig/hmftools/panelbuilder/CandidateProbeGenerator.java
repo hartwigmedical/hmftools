@@ -45,7 +45,7 @@ public class CandidateProbeGenerator
             throw new IllegalArgumentException("target must be larger than a probe");
         }
 
-        BasePosition initialPosition = new BasePosition(region.chromosome(), regionCentre(region.baseRegion()));
+        BasePosition initialPosition = regionCentre(region);
         // Stop once the probes go outside the target region.
         int minProbeStart = region.start();
         int maxProbeEnd = region.end();

@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.panelbuilder.PanelData;
-import com.hartwig.hmftools.panelbuilder.Probe;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
@@ -273,18 +272,27 @@ public class SampleVariants
         else
         {
             ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-            Probe probe = mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata).orElseThrow();
-            probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
+            return mProbeGenerator.mProbeFactory.createProbeFromSequence(probeData.sequence(), metadata)
+                    .map(probe ->
+                    {
+                        probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
 
-            if(probe.accepted())
-            {
-                return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-            }
-            else
-            {
-                String rejectionReason = "Probe does not meet criteria " + evalCriteria;
-                return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
-            }
+                        if(probe.accepted())
+                        {
+                            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+                        }
+                        else
+                        {
+                            String rejectionReason = "Probe does not meet criteria " + evalCriteria;
+                            return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
+                        }
+                    })
+                    .orElseGet(() ->
+                    {
+                        // Not expecting this to happen because the variants should be in a sequenceable region.
+                        LOGGER.debug("Variant invalid probe");
+                        return new ProbeGenerationResult();
+                    });
         }
     }
 

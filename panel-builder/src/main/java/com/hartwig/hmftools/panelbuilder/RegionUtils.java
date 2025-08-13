@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -110,6 +111,11 @@ public class RegionUtils
     public static int regionCentre(final BaseRegion region)
     {
         return (int) regionCentreFloat(region);
+    }
+
+    public static BasePosition regionCentre(final ChrBaseRegion region)
+    {
+        return new BasePosition(region.chromosome(), regionCentre(region.baseRegion()));
     }
 
     public static BaseRegion regionStartingAt(int startPosition, int length)

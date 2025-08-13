@@ -85,27 +85,36 @@ public class Cdr3Regions
 
         TargetMetadata metadata = createTargetMetadata(gene);
         TargetRegion target = new TargetRegion(region, metadata);
-        Probe probe = probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata).orElseThrow();
-        probe = probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA);
+        return probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata)
+                .map(probe ->
+                {
+                    probe = probeGenerator.mProbeEvaluator.evaluateProbe(probe, PROBE_CRITERIA);
 
-        if(probe.accepted())
-        {
-            if(coverage.isCovered(region))
-            {
-                LOGGER.trace("CDR3 target already covered by panel: {}", target);
-                return ProbeGenerationResult.alreadyCoveredTarget(target);
-            }
-            else
-            {
-                return ProbeGenerationResult.coveredTarget(target, probe);
-            }
-        }
-        else
-        {
-            LOGGER.debug("No acceptable probe for CDR3 target: {}", target);
-            String rejectionReason = "Probe does not meet criteria " + PROBE_CRITERIA;
-            return ProbeGenerationResult.rejectTarget(target, rejectionReason);
-        }
+                    if(probe.accepted())
+                    {
+                        if(coverage.isCovered(region))
+                        {
+                            LOGGER.trace("CDR3 target already covered by panel: {}", target);
+                            return ProbeGenerationResult.alreadyCoveredTarget(target);
+                        }
+                        else
+                        {
+                            return ProbeGenerationResult.coveredTarget(target, probe);
+                        }
+                    }
+                    else
+                    {
+                        LOGGER.debug("No acceptable probe for CDR3 target: {}", target);
+                        String rejectionReason = "Probe does not meet criteria " + PROBE_CRITERIA;
+                        return ProbeGenerationResult.rejectTarget(target, rejectionReason);
+                    }
+                })
+                .orElseGet(() ->
+                {
+                    // Not expecting this to happen because the CDR3 regions should be in sequenceable areas.
+                    LOGGER.debug("CDR3 target produced invalid probe");
+                    return new ProbeGenerationResult();
+                });
     }
 
     private static ChrBaseRegion calculateProbeRegion(final IgTcrGene gene)

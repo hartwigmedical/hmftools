@@ -104,10 +104,10 @@ public class Genes
                 .flatMap(Optional::stream)
                 .toList();
 
-        // When generating probes, don't care about probe overlap. This is because:
+        // When generating probes, don't check probe overlap. This is because:
         //   - Gene probes are generated first, so nothing is covered beforehand, and
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
-        //   - Within one gene, multiple transcripts are merged beforehand to avoid overlap.
+        //   - Within one gene, multiple transcripts are merged beforehand to avoid subregion overlap.
 
         LOGGER.debug("Generating probes");
         ProbeGenerationResult result = new ProbeGenerationResult();
@@ -448,7 +448,7 @@ public class Genes
             case CODING, PROMOTER -> probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, null);
             case UTR ->
             {
-                BasePosition position = new BasePosition(geneRegion.region().chromosome(), regionCentre(geneRegion.region().baseRegion()));
+                BasePosition position = regionCentre(geneRegion.region());
                 yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA, null);
             }
             case UP_STREAM, DOWN_STREAM, EXON_FLANK -> probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
