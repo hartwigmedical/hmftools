@@ -154,6 +154,11 @@ public class ProbeGenerator
             acceptableProbes.put(probeRegion.start(), probe);
         });
 
+        if(acceptableSubregions.size() > 1)
+        {
+            acceptableSubregions.forEach(subregion -> LOGGER.trace("Split region into acceptable subregion: {}", subregion));
+        }
+
         List<Probe> probes = new ArrayList<>();
         String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + evalCriteria;
         List<RejectedRegion> rejectedRegions = new ArrayList<>();

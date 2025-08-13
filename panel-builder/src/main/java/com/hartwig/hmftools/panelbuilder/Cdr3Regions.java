@@ -86,7 +86,7 @@ public class Cdr3Regions
         {
             TargetMetadata metadata = createTargetMetadata(gene);
             // TODO: need to prevent the probe from going past the end of the gene?
-            // TODO: is this producing more than 1 probe?
+            // TODO: this can produce more than 1 probe due to acceptable subregion splitting. ok?
             ProbeGenerationResult result = probeGenerator.coverRegion(targetRegion, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
             if(!result.probes().isEmpty())
             {
