@@ -61,6 +61,7 @@ java -jar redux.jar
 | output_id           | Optional                  | Additional file suffix                                                                  |
 | read_output         | Optional, default = NONE  | Write detailed read info to CSV, types are: ALL, DUPLICATE, NONE                        |
 | write_stats         | Optional                  | Writes a duplicate frequency TSV file                                                   |
+| write_reads         | Optional                  | Write a detailed reads file (only recommended for a sliced BAM)                         |
 | ref_genome_msi_file | Optional                  | Path to file of microsatellite sites used for sample-specific jitter, required for Sage |
 | jitter_msi_only     | Optional, default = false | Only runs to model sample-specific microsatellite jitter                                |
 
@@ -268,13 +269,15 @@ Runtime on COLO829T with these settings is approximately 100mins.
 
 ## Output Files
 
-| File Name                         | Details                                                       |
-|-----------------------------------|---------------------------------------------------------------|
-| SAMPLE_ID.duplicate_freq.tsv      | Frequency distribution of duplicate groups                    |
-| SAMPLE_ID.reads.tsv               | Detailed read information                                     |
-| SAMPLE_ID.umi_coord_freq.tsv      | Frequency distribution of UMI duplicate groups                |
-| SAMPLE_ID.umi_edit_distance.tsv   | Analysis of UMI differences and potential UMI base mismatches |
-| SAMPLE_ID.umi_nucleotide_freq.tsv | Frequency distribution for nucleotides in UMIs                |
+| File Name                         | Details                                                       | Required config to write                                |
+|-----------------------------------|---------------------------------------------------------------| ------------------------------------------------------- |
+| SAMPLE_ID.duplicate_freq.tsv      | Frequency distribution of duplicate groups                    | `-write_stats`                                          |
+| SAMPLE_ID.reads.tsv               | Detailed read information                                     | `-write_reads`                                          |
+| SAMPLE_ID.umi_coord_freq.tsv      | Frequency distribution of UMI duplicate groups                | `-write_stats` and UMIs enabled                         |
+| SAMPLE_ID.umi_edit_distance.tsv   | Analysis of UMI differences and potential UMI base mismatches | `-write_stats`, `-umi_base_diff_stats` and UMIs enabled |
+| SAMPLE_ID.umi_nucleotide_freq.tsv | Frequency distribution for nucleotides in UMIs                | `-write_stats`, `-umi_base_diff_stats` and UMIs enabled |
+| SAMPLE_ID.ms_table.tsv.gz         | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites | n/a |
+| SAMPLE_ID.jitter_params.tsv       | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                 | n/a |
 
 ### Duplicate Frequency
 
@@ -323,8 +326,7 @@ This file gives the nucleotide frequency by UMI base position
 
 | File Name                   | Details                                                                                                                                                   |
 |-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SAMPLE_ID.ms_table.tsv.gz   | Aggregating counts of reads across microsatellites by consensus type / repeat unit / ref repeat count / read repeat count, discarding potential alt sites |
-| SAMPLE_ID.jitter_params.tsv | 6-parameter model parameterisation for each consensus type and repeat unit                                                                                |
+
 
 ## Problematic regions file definition
 
