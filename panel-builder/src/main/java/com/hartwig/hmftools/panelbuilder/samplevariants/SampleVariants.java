@@ -277,6 +277,7 @@ public class SampleVariants
                     {
                         probe = mProbeGenerator.mProbeEvaluator.evaluateProbe(probe, evalCriteria);
 
+                        // TODO: this kind of code is common, can factor it out?
                         if(probe.accepted())
                         {
                             return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());

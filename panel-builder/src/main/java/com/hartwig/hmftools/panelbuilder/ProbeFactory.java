@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.panelbuilder.probequality.ProbeQualityModel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 // Handles creation of individual probes.
@@ -27,8 +25,6 @@ public class ProbeFactory
     private final ProbeQualityProfile mQualityProfile;
     @Nullable
     private final ProbeQualityModel mQualityModel;
-
-    private static final Logger LOGGER = LogManager.getLogger(ProbeFactory.class);
 
     public ProbeFactory(final RefGenomeInterface refGenome, @Nullable final ProbeQualityProfile qualityProfile,
             @Nullable final ProbeQualityModel qualityModel)
@@ -77,7 +73,6 @@ public class ProbeFactory
         }
         else
         {
-//            LOGGER.trace("Attempted to create invalid probe region={} sequence={} metadata={}", region, sequence, metadata);
             return Optional.empty();
         }
     }
@@ -100,12 +95,6 @@ public class ProbeFactory
             ProbeQualityModel.Result modelResult = mQualityModel.compute(List.of(sequence.getBytes())).get(0);
             qualityScore = OptionalDouble.of(modelResult.qualityScore());
         }
-        return qualityScore.orElseGet(() ->
-        {
-            double quality = DEFAULT_PROBE_QUALITY;
-//            LOGGER.trace("Could not compute probe quality so assuming qualityScore={} region={} sequence={}",
-//                    quality, region, sequence);
-            return quality;
-        });
+        return qualityScore.orElse(DEFAULT_PROBE_QUALITY);
     }
 }

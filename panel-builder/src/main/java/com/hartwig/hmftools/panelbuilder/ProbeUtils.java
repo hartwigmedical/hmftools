@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -26,9 +27,14 @@ public class ProbeUtils
         return regionCenteredAt(centrePosition, PROBE_LENGTH);
     }
 
+    public static ChrBaseRegion probeRegionCenteredAt(final BasePosition centrePosition)
+    {
+        return probeRegionCenteredAt(centrePosition.Chromosome, centrePosition.Position);
+    }
+
     public static ChrBaseRegion probeRegionCenteredAt(final String chromosome, int centrePosition)
     {
-        return ChrBaseRegion.from(chromosome, regionCenteredAt(centrePosition, PROBE_LENGTH));
+        return ChrBaseRegion.from(chromosome, probeRegionCenteredAt(centrePosition));
     }
 
     public static BaseRegion probeRegionEndingAt(int endPosition)

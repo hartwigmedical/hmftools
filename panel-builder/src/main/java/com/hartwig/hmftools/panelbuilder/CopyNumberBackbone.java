@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_OPTI
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.ProbeSelector.selectBestProbe;
+import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,12 +53,11 @@ public class CopyNumberBackbone
 
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CN_BACKBONE;
 
-    private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
-    private static final ProbeSelectCriteria PROBE_CRITERIA_ALTERNATIVE = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(CN_BACKBONE_ALTERNATE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
+    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            CN_BACKBONE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE);
+    private static final ProbeEvaluator.Criteria PROBE_CRITERIA_ALTERNATIVE = new ProbeEvaluator.Criteria(
+            CN_BACKBONE_ALTERNATE_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE);
+    private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE);
 
     private static final String FLD_GNOMAD_FREQ = "GnomadFreq";
 
@@ -222,9 +222,9 @@ public class CopyNumberBackbone
         }
 
         Stream<Probe> candidates = generateCandidateProbes(partition, alternativeMethod);
-        ProbeSelectCriteria probeCriteria = alternativeMethod ? PROBE_CRITERIA_ALTERNATIVE : PROBE_CRITERIA;
-        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateProbes(candidates, probeCriteria.eval());
-        Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, probeCriteria.select());
+        ProbeEvaluator.Criteria probeCriteria = alternativeMethod ? PROBE_CRITERIA_ALTERNATIVE : PROBE_CRITERIA;
+        Stream<Probe> evaluatedCandidates = mProbeGenerator.mProbeEvaluator.evaluateProbes(candidates, probeCriteria);
+        Optional<Probe> bestCandidate = selectBestProbe(evaluatedCandidates, PROBE_SELECT);
 
         ProbeGenerationResult result = bestCandidate
                 .map(bestProbe ->
@@ -236,8 +236,7 @@ public class CopyNumberBackbone
                     if(site == null)
                     {
                         // Case of the alternative method: there is no associated Amber site so use the whole probe region.
-                        ChrBaseRegion probeRegion = requireNonNull(bestProbe.region());
-                        targetRegion = ChrBaseRegion.from(partition.Region.chromosome(), probeRegion.baseRegion());
+                        targetRegion = requireNonNull(bestProbe.region());
                     }
                     else
                     {
@@ -266,7 +265,7 @@ public class CopyNumberBackbone
                     String rejectionReason;
                     if(alternativeMethod)
                     {
-                        rejectionReason = "No probe in partition meeting criteria " + probeCriteria.eval();
+                        rejectionReason = "No probe in partition meeting criteria " + probeCriteria;
                     }
                     else
                     {
@@ -276,7 +275,7 @@ public class CopyNumberBackbone
                         }
                         else
                         {
-                            rejectionReason = "No probe covering Amber sites meets criteria " + probeCriteria.eval();
+                            rejectionReason = "No probe covering Amber sites meets criteria " + probeCriteria;
                         }
                     }
 
@@ -292,23 +291,31 @@ public class CopyNumberBackbone
 
     private Stream<Probe> generateCandidateProbes(final Partition partition, boolean alternativeMethodology)
     {
+        Stream<Probe> candidates;
         if(alternativeMethodology)
         {
             return generateCandidateProbesAlternative(partition);
         }
         else
         {
-            return partition.Sites.stream()
-                    .flatMap(site -> generateCandidateProbesForAmberSite(partition, site))
-                    // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
-                    .filter(probe -> partition.Region.containsRegion(requireNonNull(probe.region())));
+            candidates = generateCandidateProbesFromAmberSites(partition);
         }
+        // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
+        // Filter these out to avoid probe overlap, since there are many probes to choose from.
+        return candidates.filter(probe -> partition.Region.containsRegion(requireNonNull(probe.region())));
     }
 
-    private Stream<Probe> generateCandidateProbesForAmberSite(final Partition partition, final AmberSite site)
+    private Stream<Probe> generateCandidateProbesFromAmberSites(final Partition partition)
+    {
+        return partition.Sites.stream().flatMap(site -> generateCandidateProbesFromAmberSite(partition, site));
+    }
+
+    private Stream<Probe> generateCandidateProbesFromAmberSite(final Partition partition, final AmberSite site)
     {
         TargetMetadata metadata = createTargetMetadata(partition.Region, site);
-        return mProbeGenerator.mCandidateGenerator.coverPosition(site.position(), metadata);
+        ChrBaseRegion probeRegion = probeRegionCenteredAt(site.position());
+        Optional<Probe> probe = mProbeGenerator.mProbeFactory.createProbeFromRegion(probeRegion, metadata);
+        return probe.stream();
     }
 
     private Stream<Probe> generateCandidateProbesAlternative(final Partition partition)

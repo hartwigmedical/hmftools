@@ -53,6 +53,7 @@ public class CandidateProbeGenerator
     }
 
     // Generate candidate probes which cover a position, starting from the position and moving outwards.
+    // TODO: review uses of this. may not be required
     public Stream<Probe> coverPosition(final BasePosition position, final TargetMetadata metadata)
     {
         int minProbeStart = minProbeStartContaining(position.Position);
@@ -98,6 +99,7 @@ public class CandidateProbeGenerator
     }
 
     // Generates all probes overlapping a region, in order from left to right.
+    // Use with care. Generally you would want to choose probes with a more careful approach.
     public Stream<Probe> allOverlapping(final ChrBaseRegion region, final TargetMetadata metadata)
     {
         int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);

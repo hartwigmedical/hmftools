@@ -8,8 +8,6 @@ import java.text.DecimalFormat;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,8 +17,6 @@ public class ProbeEvaluator
     // Hook to catch all candidate probes for output.
     @Nullable
     private final Consumer<Probe> mCandidateCallback;
-
-    private static final Logger LOGGER = LogManager.getLogger(ProbeEvaluator.class);
 
     public ProbeEvaluator(final @Nullable Consumer<Probe> candidateCallback)
     {
@@ -72,7 +68,6 @@ public class ProbeEvaluator
 
     private void logCandidateProbe(final Probe probe)
     {
-//        LOGGER.trace("Evaluated probe: {}", probe);
         if(mCandidateCallback != null)
         {
             mCandidateCallback.accept(probe);

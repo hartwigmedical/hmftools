@@ -17,24 +17,20 @@ public class ProbeSelector
     {
         Stream<Probe> acceptableProbes = probes.filter(Probe::accepted);
 
-        if(strategy instanceof Strategy.FirstAcceptable)
-        {
-            return acceptableProbes.findFirst();
-        }
-        else if(strategy instanceof Strategy.MaxQuality)
+        if(strategy instanceof Strategy.MaxQuality maxQualityStrategy)
         {
             // Early stopping if "optimal" quality score is found.
-            double optimalQuality = ((Strategy.MaxQuality) strategy).optimalQuality();
+            double optimalQuality = maxQualityStrategy.optimalQuality();
             return getBestScoringElement(
                     acceptableProbes,
                     Probe::qualityScore,
                     quality -> Doubles.greaterOrEqual(quality, optimalQuality),
                     true);
         }
-        else if(strategy instanceof Strategy.BestGc)
+        else if(strategy instanceof Strategy.BestGc bestGcStrategy)
         {
             // Early stopping if "optimal" GC content is found.
-            double optimalGcTolerance = ((Strategy.BestGc) strategy).gcToleranceOptimal();
+            double optimalGcTolerance = bestGcStrategy.gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,
                     probe -> abs(probe.gcContent() - requireNonNull(probe.evalCriteria()).gcContentTarget()),
@@ -50,13 +46,8 @@ public class ProbeSelector
     // When there are multiple acceptable candidate probes, how to select the best?
     public sealed interface Strategy
             permits
-            Strategy.FirstAcceptable, Strategy.MaxQuality, Strategy.BestGc
+            Strategy.MaxQuality, Strategy.BestGc
     {
-        // Pick the first probe that is acceptable.
-        record FirstAcceptable() implements Strategy
-        {
-        }
-
         // Pick the acceptable probe with the highest quality score.
         record MaxQuality(
                 // Consider the max quality to have been found if exceeding this value.

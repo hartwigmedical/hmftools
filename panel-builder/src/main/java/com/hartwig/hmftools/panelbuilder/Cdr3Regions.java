@@ -83,6 +83,8 @@ public class Cdr3Regions
         }
         coveredRegions.add(region);
 
+        // TODO: should use generic probe tiling method here?
+
         TargetMetadata metadata = createTargetMetadata(gene);
         TargetRegion target = new TargetRegion(region, metadata);
         return probeGenerator.mProbeFactory.createProbeFromRegion(region, metadata)

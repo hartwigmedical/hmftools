@@ -60,12 +60,12 @@ public class Genes
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.GENE;
 
-    private static final ProbeSelectCriteria GENERAL_PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(GENE_GENERAL_QUALITY_MIN, GENE_GENERAL_GC_TARGET, GENE_GENERAL_GC_TOLERANCE),
-            new ProbeSelector.Strategy.MaxQuality());
-    private static final ProbeSelectCriteria CN_PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE),
-            new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE));
+    private static final ProbeEvaluator.Criteria GENERAL_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            GENE_GENERAL_QUALITY_MIN, GENE_GENERAL_GC_TARGET, GENE_GENERAL_GC_TOLERANCE);
+    private static final ProbeSelector.Strategy GENERAL_PROBE_SELECT = new ProbeSelector.Strategy.MaxQuality();
+    private static final ProbeEvaluator.Criteria CN_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            GENE_CN_QUALITY_MIN, CN_GC_TARGET, CN_GC_TOLERANCE);
+    private static final ProbeSelector.Strategy CN_PROBE_SELECT = new ProbeSelector.Strategy.BestGc(CN_GC_OPTIMAL_TOLERANCE);
 
     private static final String FLD_INCLUDE_CODING = "IncludeCoding";
     private static final String FLD_INCLUDE_UTR = "IncludeUTR";
@@ -445,13 +445,16 @@ public class Genes
 
         return switch(geneRegion.type())
         {
-            case CODING, PROMOTER -> probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, null);
+            case CODING, PROMOTER ->
+                    probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
             case UTR ->
             {
+                // TODO: review this. may be able to delete some code.
                 BasePosition position = regionCentre(geneRegion.region());
-                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA, null);
+                yield probeGenerator.coverPosition(position, metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
             }
-            case UP_STREAM, DOWN_STREAM, EXON_FLANK -> probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA);
+            case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
+                    probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
         };
     }
 

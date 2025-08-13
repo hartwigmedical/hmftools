@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.MSI_QUALIT
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BasePosition;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,9 +22,9 @@ public class MsiSites
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.MSI;
 
-    private static final ProbeSelectCriteria PROBE_CRITERIA = new ProbeSelectCriteria(
-            new ProbeEvaluator.Criteria(MSI_QUALITY_MIN, MSI_GC_TARGET, MSI_GC_TOLERANCE),
-            new ProbeSelector.Strategy.MaxQuality());
+    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
+            MSI_QUALITY_MIN, MSI_GC_TARGET, MSI_GC_TOLERANCE);
+    private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.MaxQuality();
 
     private static final Logger LOGGER = LogManager.getLogger(MsiSites.class);
 
@@ -73,8 +74,8 @@ public class MsiSites
             final PanelCoverage coverage)
     {
         TargetMetadata metadata = createTargetMetadata(msiSite);
-        // TODO: is the probe allowed to be shifted?
-        return probeGenerator.coverPosition(msiSite, metadata, PROBE_CRITERIA, coverage);
+        ChrBaseRegion region = ChrBaseRegion.from(msiSite);
+        return probeGenerator.coverRegion(region, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
     }
 
     private static TargetMetadata createTargetMetadata(final BasePosition msiSite)

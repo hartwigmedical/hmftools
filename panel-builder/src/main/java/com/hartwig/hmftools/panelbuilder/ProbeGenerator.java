@@ -48,6 +48,7 @@ import org.jetbrains.annotations.Nullable;
 // Encapsulates all functionality for creating probes.
 public class ProbeGenerator
 {
+    // TODO: review uses of these outside this class
     public final ProbeFactory mProbeFactory;
     public final CandidateProbeGenerator mCandidateGenerator;
     public final ProbeEvaluator mProbeEvaluator;
@@ -73,10 +74,15 @@ public class ProbeGenerator
         );
     }
 
-    // Generates the best acceptable probes to cover an entire region. The probes may overlap and extend outside the target region.
-    // If `coverage` is not null, avoid placing probes in already covered regions.
+    // General purpose method for generating the best acceptable probes to cover an entire region.
+    // Behaviour:
+    //   - Prefer a probe set which is symmetrical and centered on the target region, unless this would violate constraints.
+    //   - Avoid placing probes in already covered regions, if `coverage` is not null.
+    //   - The edges of the region may be slightly uncovered (since the probes will capture a slightly larger region).
+    //   - Probes may overlap and extend outside the target region.
+    //   - Probes are shifted slightly to optimise for the selection criteria.
     public ProbeGenerationResult coverRegion(final ChrBaseRegion region, final TargetMetadata metadata,
-            final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
+            final ProbeEvaluator.Criteria criteria, final ProbeSelector.Strategy localSelect, @Nullable final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
         if(coverage == null)
@@ -97,7 +103,7 @@ public class ProbeGenerator
         }
 
         ProbeGenerationResult result = subregions.stream()
-                .map(subregion -> coverUncoveredRegion(subregion, metadata, criteria))
+                .map(subregion -> coverUncoveredRegion(subregion, metadata, criteria, localSelect))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
 
         // Add in the candidate target region that's not added by coverSubregion().
@@ -108,7 +114,7 @@ public class ProbeGenerator
     }
 
     private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final TargetMetadata metadata,
-            final ProbeSelectCriteria criteria)
+            final ProbeEvaluator.Criteria criteria, final ProbeSelector.Strategy localSelect)
     {
         // Methodology:
         //   1. Generate all possible probes and check which are acceptable.
@@ -120,7 +126,7 @@ public class ProbeGenerator
         BaseRegion baseRegion = region.baseRegion();
 
         Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, metadata)
-                .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, criteria.eval()))
+                .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, criteria))
                 .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.
@@ -154,7 +160,7 @@ public class ProbeGenerator
         acceptableSubregions.forEach(acceptableSubregion ->
         {
             CoverAcceptableSubregionResult result =
-                    coverAcceptableSubregion(acceptableSubregion, baseRegion, acceptableProbes, criteria.select());
+                    coverAcceptableSubregion(acceptableSubregion, baseRegion, acceptableProbes, localSelect);
             probes.addAll(result.probes());
             // Compute rejected regions based on what has been covered by the probes.
             // Not that the reference region here is not necessarily the target region, but the subregion of the target which the tiling
@@ -185,7 +191,7 @@ public class ProbeGenerator
     }
 
     private static CoverAcceptableSubregionResult coverAcceptableSubregion(final BaseRegion acceptableSubregion,
-            final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy strategy)
+            final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy localSelect)
     {
         BaseRegion subregion = acceptableSubregion;
 
@@ -292,7 +298,7 @@ public class ProbeGenerator
                     .map(offset -> originalProbe.start() + offset)
                     .mapToObj(acceptableProbes::get)
                     .filter(Objects::nonNull);
-            Optional<Probe> bestProbe = selectBestProbe(candidates, strategy);
+            Optional<Probe> bestProbe = selectBestProbe(candidates, localSelect);
             bestProbe.ifPresent(finalProbes::add);
         }
 
@@ -404,29 +410,29 @@ public class ProbeGenerator
 
     // Generates the 1 best acceptable probe that is contained within the specified region.
     public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
-            final ProbeSelectCriteria criteria)
+            final ProbeEvaluator.Criteria criteria, final ProbeSelector.Strategy selectStrategy)
     {
         TargetRegion target = new TargetRegion(region, metadata);
         Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, metadata);
-        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
-        return selectBestProbe(evaluatedCandidates, criteria.select())
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria);
+        return selectBestProbe(evaluatedCandidates, selectStrategy)
                 .map(probe -> ProbeGenerationResult.coveredTarget(target, probe))
                 .orElseGet(() ->
                 {
-                    String rejectionReason = "No probe in region meeting criteria " + criteria.eval();
+                    String rejectionReason = "No probe in region meeting criteria " + criteria;
                     return ProbeGenerationResult.rejectTarget(target, rejectionReason);
                 });
     }
 
     // Generates the 1 best acceptable probe which covers a position.
-    // TODO: bound on left and right to stop probe being on the edge?
+    // TODO: review uses of this. may not be required
     public ProbeGenerationResult coverPosition(final BasePosition position, final TargetMetadata metadata,
-            final ProbeSelectCriteria criteria, @Nullable final PanelCoverage coverage)
+            final ProbeEvaluator.Criteria criteria, final ProbeSelector.Strategy selectStrategy, @Nullable final PanelCoverage coverage)
     {
         TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), metadata);
         Stream<Probe> candidates = mCandidateGenerator.coverPosition(position, metadata);
-        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria.eval());
-        return selectBestProbe(evaluatedCandidates, criteria.select())
+        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, criteria);
+        return selectBestProbe(evaluatedCandidates, selectStrategy)
                 .map(probe ->
                 {
                     if(coverage != null && coverage.isCovered(target.region()))
@@ -440,7 +446,7 @@ public class ProbeGenerator
                 })
                 .orElseGet(() ->
                 {
-                    String rejectionReason = "No probe covering position meeting criteria " + criteria.eval();
+                    String rejectionReason = "No probe covering position meeting criteria " + criteria;
                     return ProbeGenerationResult.rejectTarget(target, rejectionReason);
                 });
     }
