@@ -48,10 +48,7 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        if(!mConfig.BqrAndJitterMsiOnly)
-        {
-            RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
-        }
+        mConfig.logRoutineTypes();
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -163,7 +160,8 @@ public class ReduxApplication
             RD_LOGGER.warn("unsorted BAM write count({}) via sorted BAM writers", sortedBamUnsortedWriteCount);
         }
 
-        combinedStats.logStats();
+        if(!mConfig.SkipDuplicateMarking)
+            combinedStats.logStats();
 
         if(mConfig.UnmapRegions.enabled())
         {

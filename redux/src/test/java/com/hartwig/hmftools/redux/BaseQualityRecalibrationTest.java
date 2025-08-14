@@ -42,8 +42,7 @@ public class BaseQualityRecalibrationTest
     @Test
     public void testBaseQualityCounts()
     {
-        BqrRegionReader bqrCounter = new BqrRegionReader(
-                SequencingType.ILLUMINA, null, new BaseQualityResults(), Collections.emptyList());
+        BqrRegionReader bqrCounter = new BqrRegionReader(null, new BaseQualityResults(), Collections.emptyList());
 
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 100, 250), REF_GENOME);
 
@@ -112,8 +111,7 @@ public class BaseQualityRecalibrationTest
     @Test
     public void testBaseQualityCountsByReadType()
     {
-        BqrRegionReader bqrCounter = new BqrRegionReader(
-                SequencingType.ILLUMINA, null, new BaseQualityResults(), Collections.emptyList());
+        BqrRegionReader bqrCounter = new BqrRegionReader(null, new BaseQualityResults(), Collections.emptyList());
 
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 100, 250), REF_GENOME);
 
@@ -180,8 +178,7 @@ public class BaseQualityRecalibrationTest
     @Test
     public void testBaseQualityAltVafChecks()
     {
-        BqrRegionReader bqrCounter = new BqrRegionReader(
-                SequencingType.ILLUMINA, null, new BaseQualityResults(), Collections.emptyList());
+        BqrRegionReader bqrCounter = new BqrRegionReader(null, new BaseQualityResults(), Collections.emptyList());
 
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 1, 10), REF_GENOME);
 
@@ -270,8 +267,7 @@ public class BaseQualityRecalibrationTest
     @Test
     public void testBaseQualityReadStrands()
     {
-        BqrRegionReader bqrCounter = new BqrRegionReader(
-                SequencingType.ILLUMINA, null, new BaseQualityResults(), Collections.emptyList());
+        BqrRegionReader bqrCounter = new BqrRegionReader(null, new BaseQualityResults(), Collections.emptyList());
 
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 1, 10), REF_GENOME);
 

@@ -242,6 +242,7 @@ public class FileWriterCache
     public boolean finaliseBams()
     {
         mReadDataWriter.close();
+
         if(mFullUnmappedWriter != null)
             mFullUnmappedWriter.close();
 

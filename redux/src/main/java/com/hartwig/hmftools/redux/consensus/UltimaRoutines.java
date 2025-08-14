@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
