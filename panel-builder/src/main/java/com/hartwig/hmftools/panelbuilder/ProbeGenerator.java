@@ -417,7 +417,6 @@ public class ProbeGenerator
     public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, @Nullable final PanelCoverage coverage)
     {
-        // TODO: is it correct for the target to be the whole region?
         TargetRegion target = new TargetRegion(region, metadata);
         Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, metadata);
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
@@ -458,29 +457,34 @@ public class ProbeGenerator
                     return probe.stream();
                 });
 
-        return selectBestCandidate(candidates, evalCriteria, selectStrategy)
+        // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
+        Optional<Probe> bestCandidate = selectBestCandidate(candidates, evalCriteria, selectStrategy);
+
+        // Always include the full list of candidate positions in the result.
+        // Perhaps surprising, but it's consistent with coverOneSubregion().
+        // Also nothing should be precisely relying on the candidate targets output.
+        List<TargetRegion> candidateTargets = probeToPosition.values().stream()
+                .map(position -> new TargetRegion(ChrBaseRegion.from(position), metadata))
+                .toList();
+
+        return bestCandidate
                 .map(probe ->
                 {
                     BasePosition position = probeToPosition.get(probe.region());
                     TargetRegion target = new TargetRegion(ChrBaseRegion.from(position), probe.metadata());
-                    // TODO: is it correct to have only the probe as the candidate target?
                     if(coverage.isCovered(target.region()))
                     {
-                        return ProbeGenerationResult.alreadyCoveredTarget(target);
+                        return ProbeGenerationResult.alreadyCoveredTargets(candidateTargets);
                     }
                     else
                     {
-                        return ProbeGenerationResult.coveredTarget(target, probe);
+                        return new ProbeGenerationResult(List.of(probe), candidateTargets, List.of(target), emptyList());
                     }
                 })
                 .orElseGet(() ->
                 {
-                    // Produce a rejected region for every position. Not sure a better way to handle it. No rejected region seems wrong.
-                    List<TargetRegion> targets = probeToPosition.values().stream()
-                            .map(position -> new TargetRegion(ChrBaseRegion.from(position), metadata))
-                            .toList();
                     String rejectionReason = "Probe at position does not meet criteria " + evalCriteria;
-                    return ProbeGenerationResult.rejectTargets(targets, rejectionReason);
+                    return ProbeGenerationResult.rejectTargets(candidateTargets, rejectionReason);
                 });
     }
 
