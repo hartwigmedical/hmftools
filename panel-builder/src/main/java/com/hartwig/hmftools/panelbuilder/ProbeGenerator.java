@@ -446,7 +446,7 @@ public class ProbeGenerator
                 })
                 .orElseGet(() ->
                 {
-                    String rejectionReason = "No probe in region meeting criteria " + evalCriteria;
+                    String rejectionReason = "No valid probe in region meeting criteria " + evalCriteria;
                     return ProbeGenerationResult.rejectTarget(target, rejectionReason);
                 });
     }
@@ -496,7 +496,7 @@ public class ProbeGenerator
                 })
                 .orElseGet(() ->
                 {
-                    String rejectionReason = "Probe at position does not meet criteria " + evalCriteria;
+                    String rejectionReason = "Probe position is invalid or does not meet criteria " + evalCriteria;
                     return ProbeGenerationResult.rejectTargets(candidateTargets, rejectionReason);
                 });
     }
@@ -531,7 +531,11 @@ public class ProbeGenerator
                             return ProbeGenerationResult.rejectTarget(targetRegion, rejectionReason);
                         }
                     })
-                    .orElseGet(ProbeGenerationResult::new);
+                    .orElseGet(() ->
+                    {
+                        String rejectionReason = "Invalid probe location";
+                        return ProbeGenerationResult.rejectTarget(targetRegion, rejectionReason);
+                    });
         }
     }
 
@@ -563,7 +567,11 @@ public class ProbeGenerator
                             return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
                         }
                     })
-                    .orElseGet(ProbeGenerationResult::new);
+                    .orElseGet(() ->
+                    {
+                        String rejectionReason = "Invalid probe location";
+                        return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
+                    });
         }
     }
 
