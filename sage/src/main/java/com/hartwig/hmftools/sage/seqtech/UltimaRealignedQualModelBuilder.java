@@ -409,13 +409,13 @@ public class UltimaRealignedQualModelBuilder
             String alt = (char)firstAltBase + insBasesString;
 
             SimpleVariant variant = new SimpleVariant(chromosome, insHomopolymer.VariantPos, ref, alt);
-            byte[] coreBases = Arrays.subsetArray(
+            byte[] straddlingReadBases = Arrays.subsetArray(
                     readContext.readBasesBytes(),
                     readContext.VarIndex + varReadIndexOffset - 1,
                     readContext.VarIndex + varReadIndexOffset + 1);
 
             int varIndex = varReadIndexOffset + readContext.VarIndex;
-            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, coreBases, refMasks);
+            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, straddlingReadBases, refMasks);
 
             UltimaRealignedQualModel realignedQualModel = new UltimaRealignedQualModel(
                     variant, baseQualModel, varReadIndexOffset, varIndex,

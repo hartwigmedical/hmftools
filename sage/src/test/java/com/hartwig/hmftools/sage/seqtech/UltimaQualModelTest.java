@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
@@ -10,19 +11,27 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.BASE_SHIFT;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_TRANSITION;
+import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.OTHER;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.SNV;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -39,6 +48,17 @@ public class UltimaQualModelTest
         mRefGenome = new MockRefGenome(true);
         mModelBuilder = new UltimaQualModelBuilder(mRefGenome);
         setUltimaSequencing();
+        populateUltimaBqrCache();
+    }
+
+    protected static void populateUltimaBqrCache()
+    {
+        // ultima_bqr_recalibration.tsv
+        InputStream inputStream = UltimaQualModelTest.class.getResourceAsStream("/seqtech/ultima_bqr_recalibration.tsv");
+
+        List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(toList());
+
+        BQR_CACHE.loadRecalibrationData(lines);
     }
 
     @After
@@ -49,7 +69,6 @@ public class UltimaQualModelTest
         mRefGenome.RefGenomeMap.put(CHR_1, refBases);
     }
 
-    @Ignore
     @Test
     public void testHomopolymerAdjustment()
     {
@@ -71,7 +90,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 18);
-        assertEquals(34, calcQual);
+        assertEquals(38, calcQual);
 
         tpValues = new byte[readBases.length()];
         tpValues[20] = 1;
@@ -173,7 +192,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 18);
-        assertEquals(30, calcQual);
+        assertEquals(BQR_CACHE.outOfCycleT0Qual(), calcQual);
 
         read.setReadNegativeStrandFlag(true);
 
@@ -194,16 +213,13 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 18);
-        // ULTIMA TODO
-        // assertEquals(ULTIMA_MAX_QUAL_T0, calcQual);
+        assertEquals(BQR_CACHE.outOfCycleT0Qual(), calcQual);
 
         read.setReadNegativeStrandFlag(true);
         calcQual = model.calculateQual(read, 18);
-        // ULTIMA TODO
-        // assertEquals(ULTIMA_MAX_QUAL_T0, calcQual);
+        assertEquals(BQR_CACHE.outOfCycleT0Qual(), calcQual);
     }
 
-    @Ignore
     @Test
     public void testHomopolymerTransition()
     {
@@ -267,7 +283,6 @@ public class UltimaQualModelTest
         assertEquals(34, calcQual);
     }
 
-    @Ignore
     @Test
     public void testSNVs()
     {
@@ -290,9 +305,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 22);
-
-        // ULTIMA TODO
-        // assertEquals(ULTIMA_MAX_QUAL_TP + ULTIMA_TP_0_BOOST, calcQual);
+        assertEquals(BQR_CACHE.outOfCycleT0Qual(), calcQual);
 
         //                             01     234     56
         refBases = BUFFER_REF_BASES + "AG" + "CCG" + "AG" + BUFFER_REF_BASES;
@@ -449,6 +462,143 @@ public class UltimaQualModelTest
         // full delete of C, insert of additional T on left
     }
 
+    @Test
+    public void testBaseShifts()
+    {
+        // position starting at 19: 9012 345 6789
+        // index                    0134 567 8901
+        // ref bases                CAAA ACC TTTC
+        // read bases               CAAA CCG TTTC
+        String leftRefBases = "CAAA";
+        String varRefBases = "ACC";
+        String varAltBases = "CCG";
+        String rightRefBases = "TTTC";
+        String refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        // test 1: 4xA -> 3xA contraction on left, 1xG ins on right, ie a left shift
+        SimpleVariant variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        UltimaBaseShift baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftAdjust());
+        assertNotNull(baseShiftModel.rightAdjust());
+        assertTrue(baseShiftModel.isLeftShift());
+
+        String readBases = BUFFER_REF_BASES + leftRefBases + varAltBases + rightRefBases;
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+        byte[] t0Values = buildDefaultBaseQuals(readBases.length());
+        byte[] tpValues = new byte[readBases.length()];
+
+        SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        byte calcQual = model.calculateQual(read, 22);
+        assertEquals(57, calcQual);
+
+        // test 2: 1xG ins on left, 4xT -> 3xT contraction on right
+
+        // ref bases:   CAAA CCT TTTC
+        // read bases:  CAAA GCC TTTC
+        leftRefBases = "CAAA";
+        varRefBases = "CCT";
+        varAltBases = "GCC";
+        rightRefBases = "TTTC";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftAdjust());
+        assertNotNull(baseShiftModel.rightAdjust());
+        assertTrue(baseShiftModel.isRightShift());
+
+        // test 3
+        // ref: ACGT ACC TTTC
+        // alt: ACGT CCG TTTC - 1xA del on left, 1xG ins on right, left shift
+
+        leftRefBases = "ACGT";
+        varRefBases = "ACC";
+        varAltBases = "CCG";
+        rightRefBases = "TTTC";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftDeletion());
+        assertNotNull(baseShiftModel.rightAdjust());
+        assertTrue(baseShiftModel.isLeftShift());
+
+        // test 4
+        // ref: TAGG AT GGAA
+        // alt: TAGG TG GGAA - 1xA del on left, 2xG -> 3xG on right, left shift
+        leftRefBases = "TAGG";
+        varRefBases = "AT";
+        varAltBases = "TG";
+        rightRefBases = "GGAA";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftDeletion());
+        assertNotNull(baseShiftModel.rightAdjust());
+        assertTrue(baseShiftModel.isLeftShift());
+
+        // test 5:
+        // ref: TAGG AT GGAA
+        // alt: TAGG CA GGAA - 1xC ins on left, 1xT del on right
+        varRefBases = "AT";
+        varAltBases = "CA";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftAdjust());
+        assertNotNull(baseShiftModel.rightDeletion());
+        assertTrue(baseShiftModel.isRightShift());
+
+        // test 6: invalid
+        varRefBases = "AT";
+        varAltBases = "CG";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(OTHER, model.type());
+
+        // test 6: invalid
+        varRefBases = "ATC";
+        varAltBases = "TAG";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        assertEquals(OTHER, model.type());
+    }
+
     private static SAMRecord buildUltimaRead(
             final String readBases, final int readStart, final byte[] qualities, final byte[] tpValues, final byte[] t0Values)
     {
@@ -469,21 +619,21 @@ public class UltimaQualModelTest
     {
         byte[] coreBases = new byte[3];
         int refVarIndex = variant.position() - 1;
-        coreBases[0] = (byte) refBases.charAt(refVarIndex - 1);
+        coreBases[0] = (byte)refBases.charAt(refVarIndex - 1);
         if(variant.refLength() > 1 && variant.altLength() > 1)  // MNV
         {
-            coreBases[1] = (byte) variant.alt().charAt(0);
-            coreBases[2] = (byte) variant.alt().charAt(1);
+            coreBases[1] = (byte)variant.alt().charAt(0);
+            coreBases[2] = (byte)variant.alt().charAt(1);
         }
         else if(variant.refLength() > 1 || variant.altLength() > 1) // indel
         {
-            coreBases[1] = (byte) refBases.charAt(refVarIndex);
-            coreBases[2] = (byte) refBases.charAt(refVarIndex + variant.refLength());
+            coreBases[1] = (byte)refBases.charAt(refVarIndex);
+            coreBases[2] = (byte)refBases.charAt(refVarIndex + variant.refLength());
         }
         else  // SNV
         {
-            coreBases[1] = (byte) variant.alt().charAt(0);
-            coreBases[2] = (byte) refBases.charAt(refVarIndex + 1);
+            coreBases[1] = (byte)variant.alt().charAt(0);
+            coreBases[2] = (byte)refBases.charAt(refVarIndex + 1);
         }
         return coreBases;
     }

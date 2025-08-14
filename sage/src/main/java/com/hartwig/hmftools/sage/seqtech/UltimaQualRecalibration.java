@@ -28,7 +28,7 @@ public class UltimaQualRecalibration
 
     private final static String T0_OUT_OF_CYCLE = "OUT_OF_CYCLE";
     private final static int RECALIBRATED_QUAL_MAX_HP_LENGTH = 5;
-    private final static byte DEFAULT_T0_OUT_OF_CYCLE_QUAL = 55;
+    protected final static byte DEFAULT_T0_OUT_OF_CYCLE_QUAL = 55;
 
     private final Map<String,Byte> mTpQualMap;
     private final Map<String,Byte> mT0QualMap;
@@ -86,7 +86,7 @@ public class UltimaQualRecalibration
         return recalibratedQual != null ? recalibratedQual : mOutOfCycleT0Qual;
     }
 
-    private enum QualType { T0, TP; }
+    private enum QualType { T0_RECAL, TP_RECAL; }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
@@ -102,39 +102,44 @@ public class UltimaQualRecalibration
         try
         {
             List<String> lines = Files.readAllLines(new File(filename).toPath());
-
-            String header = lines.get(0);
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-            lines.remove(0);
-
-            int typeIndex = getColumnIndex(fieldsIndexMap, COL_TYPE);
-            int keyIndex = getColumnIndex(fieldsIndexMap, COL_KEY);
-            int rqIndex = getColumnIndex(fieldsIndexMap, COL_RECAL_QUAL);
-
-            for(String line : lines)
-            {
-                String[] values = line.split(TSV_DELIM, -1);
-
-                QualType type = QualType.valueOf(values[typeIndex]);
-                String key = values[keyIndex];
-                byte recalibratedQual = Byte.parseByte(values[rqIndex]);
-
-                if(type == QualType.TP)
-                {
-                    mTpQualMap.put(key, recalibratedQual);
-                }
-                else
-                {
-                    if(key.equals(T0_OUT_OF_CYCLE))
-                        mOutOfCycleT0Qual = recalibratedQual;
-                    else
-                        mT0QualMap.put(key, recalibratedQual);
-                }
-            }
+            loadRecalibrationData(lines);
         }
         catch(Exception e)
         {
             SG_LOGGER.error("failed to read Ultima base-qual recalibration file({}): {}", filename, e.toString());
+        }
+
+    }
+
+    protected void loadRecalibrationData(final List<String> lines)
+    {
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        int typeIndex = getColumnIndex(fieldsIndexMap, COL_TYPE);
+        int keyIndex = getColumnIndex(fieldsIndexMap, COL_KEY);
+        int rqIndex = getColumnIndex(fieldsIndexMap, COL_RECAL_QUAL);
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM, -1);
+
+            QualType type = QualType.valueOf(values[typeIndex]);
+            String key = values[keyIndex];
+            byte recalibratedQual = Byte.parseByte(values[rqIndex]);
+
+            if(type == QualType.TP_RECAL)
+            {
+                mTpQualMap.put(key, recalibratedQual);
+            }
+            else
+            {
+                if(key.equals(T0_OUT_OF_CYCLE))
+                    mOutOfCycleT0Qual = recalibratedQual;
+                else
+                    mT0QualMap.put(key, recalibratedQual);
+            }
         }
     }
 
@@ -184,7 +189,7 @@ public class UltimaQualRecalibration
 
         public static String formKey(final int homoploymerLength, final char base, final boolean tpIsZero)
         {
-            return format("%d_%c_%s", homoploymerLength, base, tpIsZero);
+            return format("%d_%c_%s", homoploymerLength, base, String.valueOf(tpIsZero).toUpperCase());
         }
 
         public String key() { return mKey; }

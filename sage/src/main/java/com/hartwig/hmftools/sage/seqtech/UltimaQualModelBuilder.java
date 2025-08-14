@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
@@ -29,10 +30,10 @@ public class UltimaQualModelBuilder
         VariantReadContext readContext = readContextCounter.readContext();
         UltimaQualModelBuilder qualModelBuilder = new UltimaQualModelBuilder(refGenome);
 
-        byte[] triNucBases = Arrays.subsetArray(
+        byte[] straddlingReadBases = Arrays.subsetArray(
                 readContext.ReadBases, readContext.VarIndex - 1, readContext.VarIndex + 1);
 
-        UltimaQualModel qualModel = qualModelBuilder.buildContext(readContext.variant(), triNucBases);
+        UltimaQualModel qualModel = qualModelBuilder.buildContext(readContext.variant(), straddlingReadBases);
 
         UltimaRealignedQualModels qualModels;
 
@@ -90,24 +91,31 @@ public class UltimaQualModelBuilder
         mRefGenome = refGenome;
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases)
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] straddlingReadBases)
     {
-        return buildContext(variant, coreBases, null);
+        return buildContext(variant, straddlingReadBases, null);
     }
 
-    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] coreBases, @Nullable final List<RefMask> refMasks)
+    public UltimaQualModel buildContext(final SimpleVariant variant, final byte[] straddlingReadBases, @Nullable final List<RefMask> refMasks)
     {
-        int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
+        // straddling read bases are the 3 read bases around the variant itself
+        int maxHomopolymerLength = max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
 
         // extract sufficient ref bases to set the context for most scenarios (only not for homopolymer transition)
-        final byte[] origRefBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
-        final byte[] refBases = Arrays.copyArray(origRefBases);
+
+        // TODO: could use the variant read context's ref bases if long enough, rather than look up the ref genome again
+
+        byte[] origRefBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
+
+        byte[] refBases;
         if(refMasks != null)
         {
+            refBases = Arrays.copyArray(origRefBases);
+
             for(RefMask refMask : refMasks)
             {
-                int startIndex = Math.max(refMask.PosStart - variant.Position + 1, 0);
+                int startIndex = max(refMask.PosStart - variant.Position + 1, 0);
                 int endIndex = min(refMask.PosEnd - variant.Position + 1, refBases.length - 1);
                 for(int i = startIndex; i <= endIndex; i++)
                 {
@@ -115,18 +123,26 @@ public class UltimaQualModelBuilder
                 }
             }
         }
+        else
+        {
+            refBases = origRefBases;
+        }
 
-        int refVarIndex = 1;
+        int refVarIndex = 1; // since the ref bases above start 1 base before the variant
 
         if(variant.isIndel())
         {
             if(variant.isDelete() && isHomopolymerDeletion(variant, origRefBases))
             {
-                return new UltimaHomopolymerDeletion(variant, origRefBases[2], coreBases[1], coreBases[2]);
+                // HP base is the first ref base after the variant's position, ie the first base deleted
+                // the straddling read bases here are the variant's ref and first ref after the delete
+                return UltimaHomopolymerDeletion.fromDelete(origRefBases[2], straddlingReadBases[1], straddlingReadBases[2]);
+                // return new UltimaHomopolymerDeletion(variant, origRefBases[2], straddlingReadBases[1], straddlingReadBases[2]);
             }
             else if(variant.isDelete() && isHomopolymerDeletion(variant, refBases))
             {
-                return new UltimaHomopolymerDeletion(variant, refBases[2], coreBases[1], coreBases[2]);
+                return UltimaHomopolymerDeletion.fromDelete(refBases[2], straddlingReadBases[1], straddlingReadBases[2]);
+                // return new UltimaHomopolymerDeletion(variant, refBases[2], straddlingReadBases[1], straddlingReadBases[2]);
             }
 
             int homopolymerTransitionIndex = findHomopolymerTransitionCandidate(variant);
@@ -178,7 +194,18 @@ public class UltimaQualModelBuilder
         }
         else if(variant.isSNV())
         {
-            return new UltimaSnv(variant, refBases, refVarIndex, coreBases[0], coreBases[2], mRefGenome);
+            UltimaSnv snvModel = new UltimaSnv(variant, refBases, refVarIndex, straddlingReadBases[0], straddlingReadBases[2], mRefGenome);
+
+            if(snvModel.canCompute())
+                return snvModel;
+        }
+        else
+        {
+            // MNV case which may be a base shift
+            UltimaBaseShift mnvModel = new UltimaBaseShift(variant, refBases, refVarIndex, straddlingReadBases[0], straddlingReadBases[2], mRefGenome);
+
+            if(mnvModel.canCompute())
+                return mnvModel;
         }
 
         // return a fall-back for no valid model

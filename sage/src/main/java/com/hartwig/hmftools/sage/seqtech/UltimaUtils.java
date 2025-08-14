@@ -111,7 +111,6 @@ public final class UltimaUtils
 
     protected static int findHomopolymerLength(final byte[] refBases, final byte compareBase, int startIndex, boolean searchUp)
     {
-        // byte repeatBase = refBases[startIndex];
         int repeatCount = 0;
 
         int i = startIndex;
