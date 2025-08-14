@@ -87,9 +87,10 @@ public class PanelBuilderApplication
         {
             mOutputWriter.writeGeneStats(geneExtraOutput.geneStats());
         }
-
         mOutputWriter.close();
         mOutputWriter = null;
+
+        printPanelStats();
 
         LOGGER.info("Panel builder complete, mins({})", runTimeMinsStr(startTimeMs));
     }
@@ -188,6 +189,15 @@ public class PanelBuilderApplication
     private void writeCandidateProbe(final Probe probe)
     {
         requireNonNull(mOutputWriter).writeCandidateProbe(probe);
+    }
+
+    private void printPanelStats()
+    {
+        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.sequence().length()).sum();
+        long targetBases = mPanelData.coveredTargetRegions().stream().mapToLong(target -> target.region().baseLength()).sum();
+        LOGGER.info("Panel stats:");
+        LOGGER.info("  Probe bases: {}", probeBases);
+        LOGGER.info("  Target bases: {}", targetBases);
     }
 
     public static void main(@NotNull final String[] args)
