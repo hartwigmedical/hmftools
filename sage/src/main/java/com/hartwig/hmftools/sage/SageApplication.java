@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.tinc.TincAnalyser.generateTincVcfFilename;
 import static com.hartwig.hmftools.sage.tinc.TincConfig.callerTincConfig;
 
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BqrCache;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.tinc.TincAnalyser;
 import com.hartwig.hmftools.sage.tinc.TincConfig;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
@@ -88,6 +90,9 @@ public class SageApplication implements AutoCloseable
 
         if(!bqrCache.isValid())
             System.exit(1);
+
+        if(isUltima())
+            UltimaUtils.setMaxRawQual(bqrCache.maxRawQual());
 
         final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 

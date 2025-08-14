@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
 
 import static htsjdk.samtools.CigarOperator.I;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -281,20 +282,7 @@ public class UltimaRealignedQualModelBuilder
                 mergedHomopolymers.refMasks());
 
         // doesn't seem a need for sorting any more, but for now leave a log warning
-        // realignedVariants.sort(Comparator.comparingInt(x -> x.variant().Position));
-
-        for(int i = 1; i < realignedQualModels.size(); i++)
-        {
-            if(realignedQualModels.get(i).variant().Position < realignedQualModels.get(i - 1).variant().Position)
-            {
-                SG_LOGGER.warn("readContext({}) has {} out of positional order:", readContext, realignedQualModels.size());
-
-                for(UltimaRealignedQualModel realignedQualModel : realignedQualModels)
-                {
-                    SG_LOGGER.warn("realignedQualModel({})", realignedQualModel.toString());
-                }
-            }
-        }
+        realignedQualModels.sort(Comparator.comparingInt(x -> x.variant().Position));
 
         if(realignedQualModels.isEmpty() && !mergedHomopolymers.variantInMergedHomopolymers() && !skipSandwichMasking)
         {

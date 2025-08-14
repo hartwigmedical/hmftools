@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -74,8 +75,11 @@ public class UltimaQualRecalibration
 
     public byte getT0RecalibratedQual(final SAMRecord record, int varReadIndex)
     {
+        if(varReadIndex <= 0 || varReadIndex >= record.getReadBases().length - 1)
+            return ULTIMA_INVALID_QUAL;
+
         char variantBase = (char)record.getReadBases()[varReadIndex];
-        String tnc = String.valueOf((char)record.getReadBases()[varReadIndex - 1] + (char)record.getReadBases()[varReadIndex + 1]);
+        String tnc = (char)record.getReadBases()[varReadIndex - 1] + String.valueOf((char)record.getReadBases()[varReadIndex + 1]);
         return getT0RecalibratedQual(tnc, variantBase);
     }
 
@@ -108,7 +112,6 @@ public class UltimaQualRecalibration
         {
             SG_LOGGER.error("failed to read Ultima base-qual recalibration file({}): {}", filename, e.toString());
         }
-
     }
 
     protected void loadRecalibrationData(final List<String> lines)

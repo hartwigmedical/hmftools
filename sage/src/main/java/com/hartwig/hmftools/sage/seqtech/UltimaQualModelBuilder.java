@@ -37,7 +37,7 @@ public class UltimaQualModelBuilder
 
         UltimaRealignedQualModels qualModels;
 
-        if(!canSkipRealignedModels(readContext, qualModel))
+        if(!canSkipRealignedModels(readContext))
         {
             qualModels = new UltimaRealignedQualModels(qualModel);
         }
@@ -49,38 +49,49 @@ public class UltimaQualModelBuilder
         readContextCounter.ultimaData().setQualModels(qualModels);
     }
 
-    private static boolean canSkipRealignedModels(final VariantReadContext readContext, final UltimaQualModel qualModel)
+    private static boolean canSkipRealignedModels(final VariantReadContext readContext)
     {
-        // this method needs to check all conditions to be a determinant of whether realigned UQMs can be skipped
-        // if(!qualModel.type().equals(UltimaModelType.HOMOPOLYMER_TRANSITION))
-        //    return false;
+        int indelLength = readContext.variant().indelLength();
+        int coreLength = readContext.coreLength();
 
-        /* use the following if applicable
-        if(!skipSandwichMasking && isCleanSnv(readContext))
-        {
-            return true;
-        }
-
-        if(!skipSandwichMasking && readContext.variant().isInsert())
-        {
-            CigarElement insertEl = new CigarElement(readContext.alt().length() - 1, I);
-            List<CigarElement> coreCigarElements = readContextCoreCigar(readContext);
-            if(!coreCigarElements.contains(insertEl))
-            {
-                return true;
-            }
-        }
-        */
-
-        byte[] coreReadBases = Arrays.subsetArray(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
-        if(coreReadBases.length != readContext.RefBases.length + readContext.variant().indelLength())
+        if(coreLength != readContext.RefBases.length + indelLength)
             return false;
 
-        for(int i = 0; i < coreReadBases.length; ++i)
+        int readIndex = readContext.CoreIndexStart;
+
+        if(readContext.variant().isIndel())
         {
-            int offset = i > readContext.leftCoreLength() ? readContext.variant().indelLength() : 0;
-            if(coreReadBases[i] != readContext.RefBases[i - offset])
-                return false;
+            int refIndex = 0;
+
+            while(readIndex < readContext.ReadBases.length && refIndex < readContext.RefBases.length)
+            {
+                if(readIndex == readContext.VarIndex + 1)
+                {
+                    if(readContext.variant().isDelete())
+                        refIndex += abs(indelLength);
+                    else
+                        readIndex += indelLength;
+                }
+
+                if(readContext.ReadBases[readIndex] != readContext.RefBases[refIndex])
+                    return false;
+
+                ++readIndex;
+                ++refIndex;
+            }
+        }
+        else
+        {
+            int altLength = readContext.variant().altLength();
+
+            for(int i = 0; i < coreLength; ++i, ++readIndex)
+            {
+                if(readIndex >= readContext.VarIndex && readIndex <= readContext.VarIndex + (altLength - 1))
+                    continue;
+
+                if(readContext.ReadBases[readIndex] != readContext.RefBases[i])
+                    return false;
+            }
         }
 
         return true;

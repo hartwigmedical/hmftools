@@ -50,7 +50,7 @@ public final class UltimaUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
-        if(indexStart < 0)
+        if(indexStart < 0 || indexStart >= record.getReadBases().length)
             return ULTIMA_INVALID_QUAL;
 
         byte[] tpValues = extractTpValues(record);
