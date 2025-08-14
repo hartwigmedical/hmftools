@@ -10,12 +10,14 @@ import java.util.stream.Stream;
 
 public record ProbeGenerationResult(
         List<Probe> probes,
-        // Regions which where potentially targeted to be covered (and may or may not be covered).
+        // Regions which were potentially targeted to be covered (and may or may not be covered). For informational purposes only.
         List<TargetRegion> candidateTargetRegions,
-        // Regions which targeted to be covered and are covered.
+        // Regions which were targeted to be covered and are covered by probe regions. Guaranteed to be a subset of the probe regions.
         List<TargetRegion> coveredTargetRegions,
-        // Regions which could not be covered due for various reasons.
+        // Regions which could not be covered due for various reasons. For informational purposes only.
         List<RejectedRegion> rejectedRegions
+        // There is no exact relationship between the types of regions stored here. Don't try to calculate anything based off
+        // candidateTargetRegions or rejectedRegions.
 )
 {
     public ProbeGenerationResult

@@ -159,23 +159,24 @@ public class ProbeGenerator
         }
 
         List<Probe> probes = new ArrayList<>();
-        String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + evalCriteria;
-        List<RejectedRegion> rejectedRegions = new ArrayList<>();
+        List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
         acceptableSubregions.forEach(acceptableSubregion ->
         {
             CoverAcceptableSubregionResult result =
                     coverAcceptableSubregion(acceptableSubregion, uncoveredRegion.baseRegion(), acceptableProbes, localSelect);
             probes.addAll(result.probes());
-            // TODO: this wont output rejected regions for unacceptable regions?
-            // Compute rejected regions based on what has been covered by the probes.
-            // Not that the reference region here is not necessarily the target region, but the subregion of the target which the tiling
-            // algorithm found to be optimal to cover. This may exclude a few bases on the edge which are uncovered. However, we want to
-            // count those as covered and not mark them as rejected.
-            Stream<BaseRegion> probeRegions = result.probes().stream().map(probe -> requireNonNull(probe.region()).baseRegion());
-            computeUncoveredRegions(result.tilingIntendedCoverage(), probeRegions).stream()
-                    .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata, rejectionReason))
-                    .forEach(rejectedRegions::add);
+            permittedUncoveredRegions.addAll(result.permittedUncoveredRegions);
         });
+
+        // Compute rejected regions based on what has been covered by the probes. Also, don't mark regions rejected where the tiling
+        // algorithm found it was optimal to not cover with probes (this occurs on the edges; we allow some edge bases to be uncovered, but
+        // they will likely still be captured during sequencing).
+        String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + evalCriteria;
+        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> requireNonNull(probe.region()).baseRegion());
+        Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
+        List<RejectedRegion> rejectedRegions = computeUncoveredRegions(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
+                .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata, rejectionReason))
+                .toList();
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
         List<TargetRegion> coveredTargets = mergeOverlapAndAdjacentRegions(probes.stream().map(Probe::region)).stream()
@@ -189,8 +190,8 @@ public class ProbeGenerator
 
     private record CoverAcceptableSubregionResult(
             List<Probe> probes,
-            // Region that the tiling algorithm found was optimal to cover, taking into account the edges which may be left uncovered.
-            BaseRegion tilingIntendedCoverage
+            // Region where the tiling algorithm decided it was optimal to not place probes, but shouldn't be marked as rejected.
+            List<BaseRegion> permittedUncoveredRegions
     )
     {
     }
@@ -198,17 +199,15 @@ public class ProbeGenerator
     private static CoverAcceptableSubregionResult coverAcceptableSubregion(final BaseRegion acceptableSubregion,
             final BaseRegion targetRegion, final Map<Integer, Probe> acceptableProbes, final ProbeSelector.Strategy localSelect)
     {
-        BaseRegion subregion = acceptableSubregion;
-
         // Bound the subregion to the target region to prevent producing too many probes (our bounds for generating candidates
         // earlier were the least strict possible).
         // calculateOptimalProbeTiling() will produce probes extending past the target region if that's allowed and optimal.
-        BaseRegion tilingTarget = regionIntersection(subregion, targetRegion).orElseThrow();
+        BaseRegion tilingTarget = regionIntersection(acceptableSubregion, targetRegion).orElseThrow();
 
         // The acceptable subregions are maximal because we checked all probes which overlap the target region.
         // Thus, the subregion is bounded on both sides by unacceptable regions or completely off-target regions, and probes
         // cannot be placed outside it.
-        BaseRegion probeBounds = subregion;
+        BaseRegion probeBounds = acceptableSubregion;
 
         List<BaseRegion> tiling = calculateOptimalProbeTiling(tilingTarget, probeBounds).stream()
                 .map(ProbeUtils::probeRegionStartingAt)
@@ -216,6 +215,7 @@ public class ProbeGenerator
 
         // For each probe, if there is space around the probe within the tiling, try shifting the probe around to find the best.
         List<Probe> finalProbes = new ArrayList<>();
+        boolean[] couldPlaceProbe = new boolean[tiling.size()];
         for(int i = 0; i < tiling.size(); ++i)
         {
             BaseRegion originalProbe = tiling.get(i);
@@ -305,17 +305,29 @@ public class ProbeGenerator
                     .filter(Objects::nonNull);
             Optional<Probe> bestProbe = selectBestProbe(candidates, localSelect);
             bestProbe.ifPresent(finalProbes::add);
+            couldPlaceProbe[i] = bestProbe.isPresent();
         }
 
-        // The region where tiling found was acceptable to cover.
-        // This may be equal to the target region or smaller if the tiling found it was optimal to leave some bases uncovered at the edges.
-        // We want the uncovered edges to count as covered though (don't want to mark as rejected) so we pass this back to the caller.
-        BaseRegion intendedRegion = tiling.isEmpty()
-                ? targetRegion
-                : regionIntersection(targetRegion, new BaseRegion(tiling.get(0).start(), tiling.get(tiling.size() - 1).end()))
-                        .orElseThrow();
+        // If the tiling found it optimal to exclude the edges, don't want to mark them as rejected, so we pass them back to the caller.
+        List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
+        if(!tiling.isEmpty() && couldPlaceProbe[0])
+        {
+            int tilingStart = requireNonNull(finalProbes.get(0).region()).start();
+            if(tilingStart > acceptableSubregion.start())
+            {
+                permittedUncoveredRegions.add(new BaseRegion(acceptableSubregion.start(), tilingStart));
+            }
+        }
+        if(!tiling.isEmpty() && couldPlaceProbe[tiling.size() - 1])
+        {
+            int tilingEnd = requireNonNull(finalProbes.get(finalProbes.size() - 1).region()).end();
+            if(tilingEnd < acceptableSubregion.end())
+            {
+                permittedUncoveredRegions.add(new BaseRegion(tilingEnd, acceptableSubregion.end()));
+            }
+        }
 
-        return new CoverAcceptableSubregionResult(finalProbes, intendedRegion);
+        return new CoverAcceptableSubregionResult(finalProbes, permittedUncoveredRegions);
     }
 
     // Calculates the best probe tiling of a region.
