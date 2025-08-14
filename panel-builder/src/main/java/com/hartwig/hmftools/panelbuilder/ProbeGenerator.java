@@ -113,7 +113,7 @@ public class ProbeGenerator
         return result;
     }
 
-    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion region, final TargetMetadata metadata,
+    private ProbeGenerationResult coverUncoveredRegion(final ChrBaseRegion uncoveredRegion, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect)
     {
         // Methodology:
@@ -122,10 +122,9 @@ public class ProbeGenerator
         //   3. Within each acceptable region, tile probes according to the ideal tiling algorithm.
         //   4. For each probe, try shifting it left and right slightly and pick the local best probe.
 
-        String chromosome = region.chromosome();
-        BaseRegion baseRegion = region.baseRegion();
+        String chromosome = uncoveredRegion.chromosome();
 
-        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(region, metadata)
+        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(uncoveredRegion, metadata)
                 .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, evalCriteria))
                 .filter(Probe::accepted);
 
@@ -165,8 +164,9 @@ public class ProbeGenerator
         acceptableSubregions.forEach(acceptableSubregion ->
         {
             CoverAcceptableSubregionResult result =
-                    coverAcceptableSubregion(acceptableSubregion, baseRegion, acceptableProbes, localSelect);
+                    coverAcceptableSubregion(acceptableSubregion, uncoveredRegion.baseRegion(), acceptableProbes, localSelect);
             probes.addAll(result.probes());
+            // TODO: this wont output rejected regions for unacceptable regions?
             // Compute rejected regions based on what has been covered by the probes.
             // Not that the reference region here is not necessarily the target region, but the subregion of the target which the tiling
             // algorithm found to be optimal to cover. This may exclude a few bases on the edge which are uncovered. However, we want to
@@ -179,7 +179,7 @@ public class ProbeGenerator
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
         List<TargetRegion> coveredTargets = mergeOverlapAndAdjacentRegions(probes.stream().map(Probe::region)).stream()
-                .map(covered -> new TargetRegion(regionIntersection(covered, region).orElseThrow(), metadata))
+                .map(covered -> new TargetRegion(regionIntersection(covered, uncoveredRegion).orElseThrow(), metadata))
                 .toList();
 
         // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for one
@@ -312,7 +312,8 @@ public class ProbeGenerator
         // We want the uncovered edges to count as covered though (don't want to mark as rejected) so we pass this back to the caller.
         BaseRegion intendedRegion = tiling.isEmpty()
                 ? targetRegion
-                : regionIntersection(targetRegion, new BaseRegion(tiling.get(0).start(), tiling.get(tiling.size() - 1).end())).orElse(null);
+                : regionIntersection(targetRegion, new BaseRegion(tiling.get(0).start(), tiling.get(tiling.size() - 1).end()))
+                        .orElseThrow();
 
         return new CoverAcceptableSubregionResult(finalProbes, intendedRegion);
     }
@@ -428,7 +429,7 @@ public class ProbeGenerator
                     }
                     else
                     {
-                        return ProbeGenerationResult.coveredTarget(target, probe);
+                        return ProbeGenerationResult.coverTarget(target, probe);
                     }
                 })
                 .orElseGet(() ->
@@ -486,6 +487,40 @@ public class ProbeGenerator
                     String rejectionReason = "Probe at position does not meet criteria " + evalCriteria;
                     return ProbeGenerationResult.rejectTargets(candidateTargets, rejectionReason);
                 });
+    }
+
+    // Generates a single probe at the given region.
+    public ProbeGenerationResult probeAt(final ChrBaseRegion region, final TargetMetadata metadata,
+            final ProbeEvaluator.Criteria evalCriteria, final PanelCoverage coverage)
+    {
+        if(region.baseLength() != PROBE_LENGTH)
+        {
+            throw new IllegalArgumentException("region length must be equal to probe length");
+        }
+
+        TargetRegion targetRegion = new TargetRegion(region, metadata);
+        if(coverage.isCovered(targetRegion.region()))
+        {
+            return ProbeGenerationResult.alreadyCoveredTarget(targetRegion);
+        }
+        else
+        {
+            return mProbeFactory.createProbeFromRegion(region, metadata)
+                    .map(probe ->
+                    {
+                        probe = mProbeEvaluator.evaluateProbe(probe, evalCriteria);
+                        if(probe.accepted())
+                        {
+                            return ProbeGenerationResult.coverTarget(targetRegion, probe);
+                        }
+                        else
+                        {
+                            String rejectionReason = "Probe does not meet criteria " + evalCriteria;
+                            return ProbeGenerationResult.rejectTarget(targetRegion, rejectionReason);
+                        }
+                    })
+                    .orElseGet(ProbeGenerationResult::new);
+        }
     }
 
     // Generates a probe with the given sequence.

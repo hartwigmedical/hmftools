@@ -43,7 +43,7 @@ public record ProbeGenerationResult(
     }
 
     // Convenience method for creating a result from covering a target region with exactly one probe.
-    public static ProbeGenerationResult coveredTarget(final TargetRegion candidateTarget, final Probe probe)
+    public static ProbeGenerationResult coverTarget(final TargetRegion candidateTarget, final Probe probe)
     {
         TargetRegion covered = new TargetRegion(
                 regionIntersection(candidateTarget.region(), requireNonNull(probe.region())).orElseThrow(),

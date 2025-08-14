@@ -31,7 +31,6 @@ public class Cdr3Regions
 
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             CDR3_QUALITY_MIN, CDR3_GC_TARGET, CDR3_GC_TOLERANCE);
-    private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.FirstAcceptable();
 
     private static final Logger LOGGER = LogManager.getLogger(Cdr3Regions.class);
 
@@ -63,20 +62,20 @@ public class Cdr3Regions
             final PanelCoverage coverage)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
-        List<ChrBaseRegion> coveredRegions = new ArrayList<>();
+        List<ChrBaseRegion> generatedRegions = new ArrayList<>();
         for(IgTcrGene gene : genes)
         {
-            result = result.add(generateProbe(gene, probeGenerator, coverage, coveredRegions));
+            result = result.add(generateProbe(gene, probeGenerator, coverage, generatedRegions));
         }
         return result;
     }
 
     private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage, List<ChrBaseRegion> coveredRegions)
+            final PanelCoverage coverage, List<ChrBaseRegion> generatedRegions)
     {
         ChrBaseRegion targetRegion = calculateTargetRegion(gene);
 
-        if(coveredRegions.stream().anyMatch(targetRegion::overlaps))
+        if(generatedRegions.stream().anyMatch(targetRegion::overlaps))
         {
             // It's possible regions overlap other regions, in which case just take the first and discard the rest.
             LOGGER.trace("CDR3 region overlaps with another; discarding");
@@ -85,13 +84,11 @@ public class Cdr3Regions
         else
         {
             TargetMetadata metadata = createTargetMetadata(gene);
-            // TODO: need to prevent the probe from going past the end of the gene?
-            // TODO: this can produce more than 1 probe due to acceptable subregion splitting. ok?
-            ProbeGenerationResult result = probeGenerator.coverRegion(targetRegion, metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
-            if(!result.probes().isEmpty())
-            {
-                coveredRegions.add(targetRegion);
-            }
+            // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
+            // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
+            ProbeGenerationResult result = probeGenerator.probeAt(targetRegion, metadata, PROBE_CRITERIA, coverage);
+            // For simplicity, don't check any regions where we already attempted any probe generation around that location.
+            generatedRegions.add(targetRegion);
             return result;
         }
     }

@@ -59,14 +59,14 @@ public class ProbeGenerationResultTest
     }
 
     @Test
-    public void testCoveredTarget()
+    public void testCoverTarget()
     {
         TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
         TargetRegion target = new TargetRegion(
                 new ChrBaseRegion("1", 10, 20),
                 metadata);
         Probe probe = probe(new ChrBaseRegion("1", 11, 25), metadata);
-        ProbeGenerationResult actual = ProbeGenerationResult.coveredTarget(target, probe);
+        ProbeGenerationResult actual = ProbeGenerationResult.coverTarget(target, probe);
         ProbeGenerationResult expected = new ProbeGenerationResult(
                 List.of(probe),
                 List.of(target),
