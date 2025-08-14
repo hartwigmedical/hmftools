@@ -256,7 +256,7 @@ public class ReferenceData
     }
 
     @VisibleForTesting
-    public ReferenceData(final PurpleConfig config)
+    public ReferenceData()
     {
         mIsValid = true;
         GcProfileFilename = null;

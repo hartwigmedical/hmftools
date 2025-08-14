@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.purple.PurpleConstants.MAX_DIPLOID_COPY_NUMBER;
-import static com.hartwig.hmftools.purple.PurpleConstants.MIN_DIPLOID_COPY_NUMBER;
-
-import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class RegionFitCalcs
 {
@@ -33,10 +30,7 @@ public class RegionFitCalcs
 
     public boolean isDiploid()
     {
-        return Doubles.greaterOrEqual(majorAlleleCopyNumber(), MIN_DIPLOID_COPY_NUMBER)
-                && Doubles.lessOrEqual(majorAlleleCopyNumber(), MAX_DIPLOID_COPY_NUMBER)
-                && Doubles.greaterOrEqual(minorAlleleCopyNumber(), MIN_DIPLOID_COPY_NUMBER)
-                && Doubles.lessOrEqual(minorAlleleCopyNumber(), MAX_DIPLOID_COPY_NUMBER);
+        return ObservedRegion.isDiploid(majorAlleleCopyNumber()) && ObservedRegion.isDiploid(minorAlleleCopyNumber());
 
     }
 }

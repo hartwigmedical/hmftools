@@ -29,7 +29,7 @@ public class TargetRegionsTestBase
     public void setup()
     {
         ensemblDataCache = new EnsemblDataCache(ensemblPath, RefGenomeVersion.V38);
-        ensemblDataCache.setRequiredData(true, true, true, false);
+        ensemblDataCache.setRequiredData(true, false, false, false);
         ensemblDataCache.load(false);
         ensemblDataCache.createTranscriptIdMap();
 
