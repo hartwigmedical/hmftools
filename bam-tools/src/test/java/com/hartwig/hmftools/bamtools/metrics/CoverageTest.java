@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -79,7 +79,7 @@ public class CoverageTest
         read = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
-        addConsensusReadAttribute(read, 2, 1, UmiReadType.SINGLE);
+        addConsensusReadAttribute(read, 2, 1, ConsensusType.SINGLE);
 
         baseCoverage.processRead(read, null, true);
 

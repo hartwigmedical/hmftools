@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
@@ -46,10 +49,11 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualRecalibration;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
@@ -68,7 +72,7 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BqrConfig BQR;
+    public final boolean SkipBqr;
     public final String JitterParamsDir;
     public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
@@ -81,7 +85,9 @@ public class SageConfig
     public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
-    public final SequencingType Sequencing;
+
+    // global for convenience
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
 
@@ -114,6 +120,7 @@ public class SageConfig
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
     private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
@@ -181,7 +188,8 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        BQR = new BqrConfig(configBuilder);
+
+        SkipBqr = configBuilder.hasFlag(SKIP_BQR);
 
         if(configBuilder.hasValue(JITTER_PARAMS_DIR))
         {
@@ -213,7 +221,12 @@ public class SageConfig
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
-        Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(isUltima() && configBuilder.hasValue(UltimaQualRecalibration.CFG_FILENAME))
+        {
+            UltimaUtils.loadBqrCache(configBuilder.getValue(UltimaQualRecalibration.CFG_FILENAME));
+        }
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
@@ -279,6 +292,11 @@ public class SageConfig
 
         mReadLength = readLength;
     }
+
+    // convenience
+    public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
+    public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public String outputDir() { return pathFromFile(OutputFile); }
 
@@ -349,8 +367,6 @@ public class SageConfig
         return false;
     }
 
-    public boolean bqrRecordWritingOnly() { return BQR.WriteReads; }
-
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
@@ -382,8 +398,9 @@ public class SageConfig
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
-        BqrConfig.registerConfig(configBuilder);
+        configBuilder.addFlag(SKIP_BQR, "Disable base quality recalibration");
         SequencingType.registerConfig(configBuilder);
+        UltimaQualRecalibration.registerConfig(configBuilder);
 
         configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
@@ -413,7 +430,7 @@ public class SageConfig
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
-        BQR = new BqrConfig();
+        SkipBqr = true;
         JitterParamsDir = null;
         SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();
@@ -434,7 +451,6 @@ public class SageConfig
         PerfWarnTime = 0;
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        Sequencing = SequencingType.ILLUMINA;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;

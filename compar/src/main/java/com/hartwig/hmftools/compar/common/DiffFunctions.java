@@ -69,7 +69,7 @@ public final class DiffFunctions
         return true;
     }
 
-    public static void checkFilterDiffs(Set<String> refFilters, final Set<String> otherFilters, final List<String> diffs)
+    public static void checkFilterDiffs(final Set<String> refFilters, final Set<String> otherFilters, final List<String> diffs)
     {
         Set<String> refFilterDiffs = refFilters.stream().filter(x -> !otherFilters.contains(x)).collect(Collectors.toSet());
         Set<String> newFilterDiffs = otherFilters.stream().filter(x -> !refFilters.contains(x)).collect(Collectors.toSet());

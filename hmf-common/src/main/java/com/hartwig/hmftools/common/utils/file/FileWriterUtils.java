@@ -13,11 +13,13 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 public final class
@@ -28,7 +30,10 @@ FileWriterUtils
     public static final String OUTPUT_ID = "output_id";
     public static final String OUTPUT_ID_DESC = "Output file suffix";
 
-    public static void addOutputOptions(final ConfigBuilder configBuilder) { addOutputOptions(configBuilder, false); }
+    public static void addOutputOptions(final ConfigBuilder configBuilder)
+    {
+        addOutputOptions(configBuilder, false);
+    }
 
     public static void addOutputOptions(final ConfigBuilder configBuilder, boolean checkExists)
     {
@@ -44,16 +49,22 @@ FileWriterUtils
     public static void addOutputDir(final ConfigBuilder configBuilder, boolean checkExists)
     {
         if(checkExists)
+        {
             configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        }
         else
+        {
             configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+        }
     }
 
     public static String parseOutputDir(final ConfigBuilder configBuilder)
     {
         String outputDir = configBuilder.getValue(OUTPUT_DIR);
         if(outputDir == null)
+        {
             return null;
+        }
 
         return checkAddDirSeparator(outputDir);
     }
@@ -61,7 +72,9 @@ FileWriterUtils
     public static boolean checkCreateOutputDir(final String outputDirPath)
     {
         if(Files.exists(Paths.get(outputDirPath)))
+        {
             return true;
+        }
 
         final File outputDir = new File(outputDirPath);
         return outputDir.mkdirs();
@@ -70,10 +83,14 @@ FileWriterUtils
     public static String checkAddDirSeparator(final String outputDir)
     {
         if(outputDir == null || outputDir.isEmpty())
+        {
             return outputDir;
+        }
 
         if(outputDir.endsWith(File.separator))
+        {
             return outputDir;
+        }
 
         return outputDir + File.separator;
     }
@@ -122,6 +139,11 @@ FileWriterUtils
         return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
 
+    public static List<String> readLines(final String filename) throws IOException
+    {
+        return IOUtils.readLines(createBufferedReader(filename));
+    }
+
     @NotNull
     public static BufferedReader createGzipBufferedReader(final String filename) throws IOException
     {
@@ -141,12 +163,14 @@ FileWriterUtils
     public static void closeBufferedWriter(BufferedWriter writer)
     {
         if(writer == null)
+        {
             return;
+        }
         try
         {
             writer.close();
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             throw new IllegalStateException("Could not close buffered writer: " + writer + ": " + e.getMessage());
         }
@@ -155,12 +179,14 @@ FileWriterUtils
     public static void closeBufferedReader(final BufferedReader reader)
     {
         if(reader == null)
+        {
             return;
+        }
         try
         {
             reader.close();
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             throw new IllegalStateException("Could not close buffered reader: " + reader + ": " + e.getMessage());
         }

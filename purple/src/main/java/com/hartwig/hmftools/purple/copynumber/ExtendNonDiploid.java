@@ -8,7 +8,6 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 class ExtendNonDiploid extends ExtendRegion
@@ -40,9 +39,13 @@ class ExtendNonDiploid extends ExtendRegion
 
     static boolean isEligible(final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
-        return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio()) && !region.germlineStatus()
-                .equals(GermlineStatus.DIPLOID) && !region.germlineStatus().equals(GermlineStatus.NOISE) && region.depthWindowCount() > 0
-                && !isBoundByCentromere(region, neighbour) && isBoundBySV(region, neighbour);
+        return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio())
+                && !region.germlineStatus().equals(GermlineStatus.EXCLUDED)
+                && !region.germlineStatus().equals(GermlineStatus.DIPLOID)
+                && !region.germlineStatus().equals(GermlineStatus.NOISE)
+                && region.depthWindowCount() > 0
+                && !isBoundByCentromere(region, neighbour)
+                && isBoundBySV(region, neighbour);
     }
 
     private static boolean isBoundByCentromere(final ObservedRegion region, @Nullable final ObservedRegion neighbour)

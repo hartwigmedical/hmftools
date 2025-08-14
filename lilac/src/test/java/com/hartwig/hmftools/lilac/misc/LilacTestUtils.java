@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -22,8 +24,10 @@ import org.apache.logging.log4j.core.config.Configurator;
 
 import htsjdk.samtools.SAMRecord;
 
-public class LilacTestUtils
+public final class LilacTestUtils
 {
+    private LilacTestUtils() {}
+
     public static void disableLogging()
     {
         Configurator.setRootLevel(Level.ERROR);
@@ -35,8 +39,8 @@ public class LilacTestUtils
     }
 
     public static final String TEST_READ_ID = "READ_ID_001";
-    public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(151);
-    public static final String TEST_READ_CIGAR = "151M";
+    private static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(151);
+    private static final String TEST_READ_CIGAR = "151M";
 
     public static Read createReadRecord(final String readId)
     {
@@ -50,10 +54,10 @@ public class LilacTestUtils
     public static Fragment createFragment(final String id)
     {
         return new Fragment(
-                createReadRecord(id), "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                createReadRecord(id), HlaGene.NONE, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 
-    public static Fragment createFragment(final String id, final String gene, final String sequence, int locusStart, int locusEnd)
+    public static Fragment createFragment(final String id, final HlaGene gene, final String sequence, int locusStart, int locusEnd)
     {
         List<Integer> loci = formRange(locusStart, locusEnd);
         List<String> sequences = buildTargetSequences(sequence, loci);
@@ -62,7 +66,7 @@ public class LilacTestUtils
         return new Fragment(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
     }
 
-    public static String buildTargetSequence(final String sequence, final List<Integer> indices)
+    public static String buildTargetSequence(final String sequence, final Collection<Integer> indices)
     {
         if(indices.size() >= sequence.length())
             return "";
@@ -84,8 +88,7 @@ public class LilacTestUtils
         return indices;
     }
 
-
-    public static List<String> buildTargetSequences(final String sequence, final List<Integer> indices)
+    public static List<String> buildTargetSequences(final String sequence, final Collection<Integer> indices)
     {
         List<String> sequences = Lists.newArrayList();
         if(indices.size() > sequence.length())

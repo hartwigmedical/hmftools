@@ -53,9 +53,6 @@ public class SoftFilterTest
 
     private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
 
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME, MSI_JITTER_CALCS);
-
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
 
@@ -114,31 +111,35 @@ public class SoftFilterTest
         String altBase = readContextCounter.alt();
 
         SAMRecord read = createSamRecord(
-                TEST_READ_ID, CHR_1, 45, REF_BASES.substring(45, position) + altBase + REF_BASES.substring(position + 1, 75), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45,
+                REF_BASES.substring(45, position) + altBase + REF_BASES.substring(position + 1, 95), "50M");
 
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
 
         SAMRecord read2 = createSamRecord(
-                TEST_READ_ID, CHR_1, 45,  REF_BASES.substring(42, position) + altBase + REF_BASES.substring(position + 1, 70), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45,
+                REF_BASES.substring(42, position) + altBase + REF_BASES.substring(position + 1, 95), "50M");
 
         readContextCounter.processRead(read2, 1, null);
         readContextCounter.processRead(read2, 1, null);
 
         // factor in soft-clipped bases and use a FULL match rather than CORE
-        SAMRecord read3 = createSamRecord(
-                TEST_READ_ID, CHR_1, 46,
-                TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK, "8S13M4S");
+        String readBases = TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase
+                + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK.repeat(5);
+
+        SAMRecord read3 = createSamRecord(TEST_READ_ID, CHR_1, 46, readBases, "8S13M24S");
 
         readContextCounter.processRead(read3, 1, null);
 
         // a read supporting the ref
-        SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
+        SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M"); // was 98
         readContextCounter.processRead(read4, 1, null);
 
-        assertEquals(4, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
-        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromEdge());
+        double avgReadLength = 25;
+        assertEquals(0.06, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge(), 0.01);
+        assertEquals(0.48, readContextCounter.readEdgeDistance().maxDistanceFromEdge(), 0.01);
 
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 

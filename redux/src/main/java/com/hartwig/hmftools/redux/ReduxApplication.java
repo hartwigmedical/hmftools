@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartiti
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.processFullyUnmappedReads;
 import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -47,7 +48,7 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        if(!mConfig.JitterMsiOnly)
+        if(!mConfig.BqrAndJitterMsiOnly)
         {
             RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
         }
@@ -59,13 +60,20 @@ public class ReduxApplication
         JitterAnalyser jitterAnalyser = null;
 
         if(mConfig.JitterConfig != null)
-            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig, RD_LOGGER);
+            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig);
 
-        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
+        BaseQualRecalibration baseQualRecalibration = new BaseQualRecalibration(mConfig);
+
+        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser, baseQualRecalibration);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
         if(mConfig.UnmapRegions.enabled())
         {
+            if(mConfig.UnmapAltDecoys)
+            {
+                mConfig.UnmapRegions.addNonStandardContigs(mConfig.RefGenome);
+            }
+
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
@@ -123,7 +131,10 @@ public class ReduxApplication
             }
         }
 
-        if(mConfig.JitterMsiOnly)
+        if(baseQualRecalibration.enabled())
+            baseQualRecalibration.finalise();
+
+        if(mConfig.BqrAndJitterMsiOnly)
         {
             RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
             return;

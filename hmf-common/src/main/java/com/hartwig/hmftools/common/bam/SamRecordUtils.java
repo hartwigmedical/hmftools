@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
@@ -42,7 +42,7 @@ public final class SamRecordUtils
 
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
-    public static final String UMI_TYPE_ATTRIBUTE = "UT"; // UMI type - single, dual/duplex or no duplicates
+    public static final String CONSENSUS_TYPE_ATTRIBUTE = "UT"; // originally UMI type - single, dual or none
     public static final String UMI_ATTRIBUTE = "UI"; // the UMI group ID
     public static final String CONSENSUS_INFO_DELIM = ";";
     public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
@@ -58,7 +58,7 @@ public final class SamRecordUtils
 
     public static final int UNSET_COUNT = -1;
 
-    private static final int PHRED_OFFSET = 33;
+    public static final int PHRED_OFFSET = 33;
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 
@@ -109,29 +109,30 @@ public final class SamRecordUtils
     }
 
     public static void addConsensusReadAttribute(
-            final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType, int pcrClusterCount)
+            final SAMRecord record, int readCount, int firstInPairCount, final ConsensusType consensusType, int pcrClusterCount)
     {
         String consensusReadValue = pcrClusterCount == UNSET_COUNT
                 ? format("%d;%d", readCount, firstInPairCount)
                 : format("%d;%d;%d", readCount, firstInPairCount, pcrClusterCount);
+
         record.setAttribute(CONSENSUS_READ_ATTRIBUTE, consensusReadValue);
-        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+        record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
     }
 
     @VisibleForTesting
-    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
+    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final ConsensusType consensusType)
     {
-        addConsensusReadAttribute(record, readCount, firstInPairCount, umiReadType, UNSET_COUNT);
+        addConsensusReadAttribute(record, readCount, firstInPairCount, consensusType, UNSET_COUNT);
     }
 
-    public static UmiReadType extractUmiType(final SAMRecord record)
+    public static ConsensusType extractConsensusType(final SAMRecord record)
     {
-        String umiTypeStr = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        String consensusTypeStr = record.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
 
-        if(umiTypeStr != null)
-            return UmiReadType.valueOf(umiTypeStr);
+        if(consensusTypeStr != null)
+            return ConsensusType.valueOf(consensusTypeStr);
         else
-            return UmiReadType.NONE;
+            return ConsensusType.NONE;
     }
 
     public static int getMateAlignmentEnd(final SAMRecord read)

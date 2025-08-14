@@ -22,16 +22,17 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
 * [Algorithm](#algorithm)
   + [1. Sex](#1-sex-determination)
   + [2. Segmentation](#2-segmentation)
-  + [3. Sample Purity and Ploidy](#3-sample-purity-and-ploidy)
-  + [4. Copy Number Smoothing](#4-copy-number-smoothing)
-  + [5. Inferring copy number for regions without read depth information](#5-inferring-copy-number-for-regions-without-read-depth-information)
-  + [6. Allele specific copy number inferring](#6-allele-specific-copy-number-inferring)
-  + [7. Infer missing SV breakends](#7-Infer-missing-SV-breakends)
-  + [8. Identify germline gene_deletions](#8-identify-germline-gene-deletions)
-  + [9. Determine a QC Status for the tumor](#9-determine-a-qc-status-for-the-tumor)
-  + [10. Somatic enrichment](#10-somatic-enrichment)
-  + [11. Germline enrichment](#11-germline-enrichment)
-  + [12. Driver Identification](#12-driver-identification)
+  + [3. Chimerism](#3-chimerism)
+  + [4. Sample Purity and Ploidy](#4-sample-purity-and-ploidy)
+  + [5. Copy Number Smoothing](#5-copy-number-smoothing)
+  + [6. Inferring copy number for regions without read depth information](#6-inferring-copy-number-for-regions-without-read-depth-information)
+  + [7. Allele specific copy number inferring](#7-allele-specific-copy-number-inferring)
+  + [8. Infer missing SV breakends](#8-Infer-missing-SV-breakends)
+  + [9. Identify germline gene_deletions](#9-identify-germline-gene-deletions)
+  + [10. Determine a QC Status for the tumor](#10-determine-a-qc-status-for-the-tumor)
+  + [11. Somatic enrichment](#11-somatic-enrichment)
+  + [12. Germline enrichment](#12-germline-enrichment)
+  + [13. Driver Identification](#13-driver-identification)
 * [Output](#output)
   + [Files](#files)
   + [VCF](#VCF)
@@ -203,8 +204,7 @@ For more information on how to run COBALT please refer to the [readme](https://g
 
 ### AMBER
 
-AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of 1,344,880 common germline heterozygous SNP loci. 
-The loci were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.
+AMBER calculates the BAF of the tumor sample by finding heterozygous locations in the reference sample from a panel of several million common germline heterozygous SNP loci. 
 
 To ensure that we only capture heterozygous points, we filter the panel to only loci with allelic frequencies in the reference sample between 40% and 65% and with depth between 50% and 150% of the reference sample genome wide average. 
 Furthermore, we filter any loci with a mapping quality < 1 or base quality < 13. 
@@ -214,7 +214,6 @@ As part of a contamination check, AMBER also finds sites in the tumor that are h
 A sample is considered contaminated if at least 2000 of these sites contain 3 or more reads supporting an alt in the tumor. 
 In this case we model the expected number of non-homozygous sites using a poisson distribution and estimate a contamination percent. 
 The result of this is included in the amber QC output file.
-
 
 For more information on how to run AMBER please refer to the [readme](https://github.com/hartwigmedical/hmftools/tree/master/amber).
 
@@ -253,6 +252,7 @@ Tumor only mode impacts PURPLE in the following ways:
   - No germline chromosomal aberrations are detected 
   - HLA SNV / INDEL are ignored and hard filtered (assumed to be germline)
   - somatic SNV/INDEL and SV with PON_ filters are hardfiltered and ignored
+  - Regions outside the diploid regions file (if provided) are masked (not recommended for targeted mode)
   
 Example command:
 
@@ -330,7 +330,15 @@ Once the segments have been established we map our observations to them.  In eac
 
 A reference sample copy number status is determined at this stage based on the observed mean read depth ratio in the reference sample, either ‘DIPLOID’ (0.85 <= ratio <= 1.15), ‘HETEROZYGOUS_DELETION’ (0.1 <= ratio < 0.85), ‘HOMOZYGOUS_DELETION’ (ratio < 0.1), ‘AMPLIFICATION’ (1.15 < ratio <= 2.2) or ‘NOISE’ (ratio > 2.2). The 'diploid normalised' mean read depth ratio is used for this annotation. However,  if a continuous region of >5MB has diploidNormalisedRatio / rawRatio < 0.7 or >1.3 (aside from the following noisy regions chr1:1-50M, chr9:135M-end, chr17:75M-end, chr19:1-20M), then this likely indicates a (rare) large copy number event the raw ratio is used instead.    Regions within 2MB of a centromere and in the IG and TCR regions are further masked.   The purity fitting and smoothing steps below use only the DIPLOID germline segments. 
 
-### 3. Sample Purity and Ploidy
+### 3. Chimerism
+
+PURPLE checks for chimeric content in the sample (ie. the presence of a donor sample) which may affect the copy number fit
+
+This is done by searching for evidence of more than 2 peaks in the BAF segmentation.  For each segment the SD of the (filtered) BAFs is calculated.   If sample's weighted mean of SD > 0.08, chimerism is detected.  For samples with detected chimersim, all near opy number neutral segments (i.e. tumorRatio ~= 1) are selected.  A KDE is used fixed bandwidth is used o find the peak with the highest value in observed mirrored BAF (mBAF) across all segments.   The chimerism % (i.e. donor %) is set to  2 * (1-fitted max mBAF)
+
+Note for any sample with chimerism detected, the SOMATIC fit method is always used since amber data is deemed unreliable.
+
+### 4. Sample Purity and Ploidy
 
 To estimate purity and sample ploidy, we use a model which considers a matrix of all possible sample purities and ploidies and scores each 
 possible combination on a segment by segment basis, based on a set of principles which aim to choose the most parsimonious solution for the fit.      
@@ -350,11 +358,10 @@ The  [sample ploidy, purity] combination with the lowest fit score is selected b
 
 Each of the 3 penalty terms is described in detail in the following sections.
 
-
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromosome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
@@ -369,6 +376,8 @@ The following chart illustrates the deviation penalty applied for each of minor 
 The total deviation penalty is calculated by adding the minor and major allele deviation penalty.   It is weighted by the observedBAF (which varies between 0.5 and 1) to reflect that higher BAF regions have fewer possible solutions.  The formula used is: 
 
 `Deviation Penalty = (MinorAlleleDeviationPenalty + MajorAlleleDeviationPenalty) * ObservedBAF` 
+
+Note that the default fit parameters differ between WGS and targeted modes.
 
 #### Event Penalty
 
@@ -388,9 +397,7 @@ The Deviation Penalty and Event Penalty are aggregated independently across all 
 
 The following chart shows the combined shape of the deviation and event penalty:
 
-
 ![Combined Ploidy Penalty](src/main/resources/readme/FittedPurityPenalty.png)
-
 
 #### Somatic Penalty
 
@@ -409,7 +416,7 @@ Note that a segment is diploid only if both the major and minor allele are betwe
 #### Somatic Purity - Tumor Normal 
 
 If any of the candidate solutions are highly diploid (>= 0.97), PURPLE checks first for the presence of TUMOR.  If NONE of the following criteria are satisfied, then PURPLE sets qcStatus = FAIL_NO_TUMOR, fitMethod=NO_TUMOR and sets purity to min_purity value [0.08]:
-- Tumor has one or more HOTSPOT SV or point mutation
+- Tumor has one or more HOTSPOT SV or point mutation or small variant with ‘TIER=PANEL + CLINSIG=PATHOGENIC’
 - SNV sum(allele read count) > 1000
 - SV sum(startTumorVariantFragmentSupport) > 1000 (excluding SGL breakends)
 - Tumor has 3000 BAF points in germline DIPLOID regions with tumor ratio < 0.8 OR > 1.2 (ie. evidence of at least some aneuploidy)
@@ -430,11 +437,11 @@ Finally, in case of tumors with very low SNV counts (<1000 total SNV) but with k
 
 #### Somatic Purity - Tumor Only 
 
-In Tumor-only, PURPLE selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92). It then checks for the number of variants that are subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
+In Tumor-only, PURPLE selects initial fits that are highly diploid (1.8 <= ploidy <= 2.2) and has a high purity (purity >= 0.92) or if any of the candidate solutions are highly diploid (>= 0.97). It then checks for the number of SNV and INDEL (with repeat count <=4) that are subjected to tier = Hotspot OR ((tier = PANEL and not NONE or synonymous) with VAF >= 0.05 and VAF <= 0.35) in the sample.
 
 If the variant counts are less than one, then the sample is marked as NO_TUMOR. Otherwise the SOMATIC mode is triggered and the purity is calculated as 2 times the 75th percentile VAF in the sample.
 
-### 4. Copy Number Smoothing 
+### 5. Copy Number Smoothing 
 
 Since the initial segmentation algorithm is highly sensitive, and there is a significant amount of noise in the read depth in whole genome sequencing, many adjacent segments will have a similar copy number and BAF profile and are unlikely to represent a real somatic copy number change in the tumor. We therefore apply a smoothing algorithm to merge the raw segments into a final set of smoothed copy number regions. 
 
@@ -459,7 +466,7 @@ Regions that are non-diploid in the germline are typically smoothed over, thus t
 
 Consecutive non-diploid regions un-interrupted by a structural variant will be merged together.
 
-### 5. Inferring copy number for regions without read depth information
+### 6. Inferring copy number for regions without read depth information
 
 Where clusters of SVs exist which are closer together than our read depth ratio window resolution of 1,000 bases, the segments in between will not have any copy number information associated with them.  We use the junction copy number of the structural variants to resolve this.
 
@@ -470,7 +477,7 @@ We repeat this process iteratively and infer the copy number of all regions with
 
 When the entire short arm of a chromosome is lacking copy number information (and always on chromosome 13,14,15,21, or 22), the copy number of the long arm is extended to the short arm.
 
-### 6. Allele specific copy number inferring
+### 7. Allele specific copy number inferring
 
 Once copy number region smoothing and inference is complete, it is possible there will be regions without BAF points which will result in a unknown allele specific copy number, since BAF coverage of the genome is limited and many copy number regions can be very small.
 
@@ -498,11 +505,11 @@ This rule is intended to ensure that short templated insertions do not break reg
 
 At this stage we have determined a copy number and minor allele copy number for every base in the genome
 
-### 7. Infer missing SV breakends 
+### 8. Infer missing SV breakends 
  
 Where there is a copy number a single ended breakend will be inferred (with type = 'INF') at that position.  There are two situations where PURPLE will attempt to infer a breakend. The first is when a copy number segment is unsupported by an existing structural variant. The second is where a missing breakend is required to offset the copy number impact of an existing “unbalanced” structural variant break that has a junction copy number not supported by the copy number change. A structural variant is considered unbalanced if the unexplained copy number change (ie. the junction copy number - copy number change) is greater than 20% of the copy number at the breakpoint and > 0.5.  An unbalanced structural variant must also have a min depth window count of 5 in the copy number segments immediately before and after the SV breakpoint.
 
-### 8. Identify germline gene deletions
+### 9. Identify germline gene deletions
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
 For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID (0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.
@@ -517,7 +524,7 @@ inconsistentTumorCN|the implied refNormalisedCopyNumber of the deleted segment i
 highNormalRatio|the deleted segment must have an observedNormalCopyNumberRatio < 0.65 (ie equivalent to germline copyNumber < 1.3)
 cohortFrequency|the deleted segment is observed in > 3 samples in our cohort
 
-### 9. Determine a QC Status for the tumor
+### 10. Determine a QC Status for the tumor
 
 PURPLE will set a FAIL QC status in 2 cases: 
 - FAIL_CONTAMINATION - if measured contamination in the tumor (by Amber) is >10%
@@ -531,7 +538,7 @@ PURPLE may also report a warning if one of the following conditions is met:
 
 If no warning or fail criteria is met, PURPLE will set qcStatus = PASS
 
-### 10. Somatic Enrichment
+### 11. Somatic Enrichment
 
 If a somatic VCF is supplied to PURPLE each variant is enriched with the following fields:
 
@@ -581,7 +588,7 @@ HIGH: abs(somatic_vaf_distance) - abs(germline_vaf_dist) < -0.05 OR IS HOTSPOT
 LOW: abs(somatic_vaf_distance) - abs(germline_vaf_dist) > 0.08 
 MED: all other 
 ```
-### 11. Germline Enrichment
+### 12. Germline Enrichment
 If a germline VCF is supplied to PURPLE each variant is enriched with the following fields:
 
 - PURPLE_CN: Purity adjusted copy number surrounding variant location
@@ -615,7 +622,7 @@ The reported flag controls if the variant should appear in the driver catalog.  
 - `WILDTYPE_LOST` - report only if the wildtype is predicted to be lost in the tumor for this gene either via LOH or a somatic 2nd hit
 - `VARIANT_NOT_LOST` - report only if the variant is predicted to be NOT lost in the tumor for this gene:
 
-### 12. Driver Identification
+### 13. Driver Identification
 
 PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE automatically assigns a driver likelihood of 1 to all significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that are reportable.  If the somatic VCF is [PAVE](../pave/README.md) annotated, a driver likelihood is calculated for any point mutations in the gene panel.
 
@@ -625,6 +632,9 @@ Note that additional restrictions apply on amplification and deletion drivers fo
 - If warning = WARN_DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
 - If warning = WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
 
+The following special rules apply to the construction of the driver catalog in targeted mode:
+- **DELS**: Don’t report DELS if the copy number segment has only 1 depth windows and GC <0.35 or >0.6 (unless supported by SV on both sides)
+- **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 ## Output
 
@@ -662,7 +672,7 @@ tmlStatus | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if s
 tmbPerMb | Tumor mutational burden (#passing variants per Mb) per mega base
 tmbStatus | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied.  High = > 10 pass variants per Mb
 svTumorMutationalBurden | Total number of non inferred, non single passing structural variants detected in sample
-runMode  | TUMOR_GERMLINE, TUMOR or GERMLIME, set based on whether a tumor and/or reference sample were supplied
+runMode  | TUMOR_GERMLINE, TUMOR or GERMLINE, set based on whether a tumor and/or reference sample were supplied
 targeted | True if Purple was run with target-region files
 
 The purity QC `TUMOR.purple.purity.qc` contains the following status values:
@@ -923,7 +933,7 @@ This HRD classifier is still in experimental stage due to the small number of tr
 ## Known issues / points for improvement
 
 Purity & Ploidy fitting:
-- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
+- **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too aggressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 - **Fit resolution** - currently set to 1%. Setting to 0.5% or lower may allow better fitting at lower purities including potentially <0.08
 - **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ignored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincing evidence of high purity and should be captured.
 - **Imputation** - Used population phased BAF points in segmentation would allow better subclonal calling and calling at TF < 0.08

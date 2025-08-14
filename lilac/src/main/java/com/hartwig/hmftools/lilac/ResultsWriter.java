@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.coverage.FragmentAlleles;
 import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
@@ -38,6 +38,7 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
@@ -103,7 +104,7 @@ public class ResultsWriter
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(WRITE_TYPES, false,
+        configBuilder.addConfigItem(WRITE_TYPES.toString(), false,
                 "Write types: SUMMARY (default), FRAGMENTS, READS, REF_COUNTS or ALL", WriteType.SUMMARY.toString());
     }
 
@@ -146,7 +147,7 @@ public class ResultsWriter
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
-    public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
+    public void writeFailedSampleFileOutputs(final Map<HlaGene, int[]> geneBaseDepth, int medianBaseQuality)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -200,7 +201,7 @@ public class ResultsWriter
             for(Fragment fragment : fragments)
             {
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                fragment.genes().forEach(x -> genesStr.add(x));
+                fragment.genes().forEach(x -> genesStr.add(x.toString()));
 
                 mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
                         source.toString(), fragment.id(), fragment.readInfo(), genesStr));
@@ -220,7 +221,7 @@ public class ResultsWriter
 
     private BufferedWriter initialiseReadWriter()
     {
-        String filename = mConfig.formFileId(LILAC_FILE_READS);
+        String filename = mConfig.formFileId(LILAC_FILE_READS.toString());
 
         try
         {

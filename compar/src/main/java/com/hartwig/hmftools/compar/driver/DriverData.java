@@ -79,7 +79,7 @@ public class DriverData implements ComparableItem
         if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())
             return false;
 
-        if(mCheckTranscript)
+        if(mCheckTranscript || otherDriver.mCheckTranscript)
         {
             if(!DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript())
             && DriverCatalog.isCanonical() != otherDriver.DriverCatalog.isCanonical())

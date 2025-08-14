@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import java.util.List;
@@ -114,6 +115,7 @@ public class RefContextConsumer
         ReadInfo readInfo = buildReadInfo(record);
 
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(readInfo.SoftClipLength);
+
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(
                 record, readInfo.NumberOfEvents, applyMapQualEventPenalty(readStart, readEnd));
 
@@ -311,9 +313,9 @@ public class RefContextConsumer
     private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents, boolean applyEventPenalty)
     {
         if(!applyEventPenalty)
-            return record.getMappingQuality();;
+            return record.getMappingQuality();
 
-        int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadMapQualEventsPenalty);
+        int eventPenalty = calcEventPenalty(numberOfEvents, record.getReadBases().length, mConfig.Quality.ReadMapQualEventsPenalty);
 
         int improperPenalty = isImproperPair(record) || record.getSupplementaryAlignmentFlag() ?
                 mConfig.Quality.ImproperPairPenalty : 0;
@@ -432,9 +434,10 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
+                        int mnvNumEvents = NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt);
+
                         readInfo.addAltRead(new AltRead(
-                                refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt),
-                                sufficientMapQuality, record, readBaseIndex));
+                                refContext, mnvRef, mnvAlt, mnvNumEvents, sufficientMapQuality, record, readBaseIndex));
                     }
                 }
             }

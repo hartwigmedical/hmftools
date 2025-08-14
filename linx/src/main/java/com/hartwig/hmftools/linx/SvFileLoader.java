@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
@@ -30,6 +32,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.logging.log4j.util.Strings;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SvFileLoader
@@ -161,27 +164,25 @@ public final class SvFileLoader
         final VariantContext contextStart = var.startContext();
         final VariantContext contextEnd = var.endContext();
 
-        return ImmutableStructuralVariantData.builder()
-                .id(svId)
+        double afStart = getGenotypeAttributeAsDouble(contextStart.getGenotype(0), ALLELE_FRACTION, 0);
+
+        // assume diploid in the germline, until can use Purple segementation
+        double assumedCopyNumber = 2;
+        double assumedCnChangeStart = assumedCopyNumber - afStart;
+
+        ImmutableStructuralVariantData.Builder builder = ImmutableStructuralVariantData.builder();
+        builder.id(svId)
                 .vcfIdStart(valueNotNull(var.id()))
                 .vcfIdEnd(valueNotNull(var.mateId()))
                 .startChromosome(var.chromosome(true))
-                .endChromosome(var.end() == null ? "0" : var.chromosome(false))
                 .startPosition(var.position(true).intValue())
-                .endPosition(var.end() == null ? -1 : var.position(false).intValue())
                 .startOrientation(var.orientation(true))
-                .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
                 .startHomologySequence(var.start().homology())
-                .endHomologySequence(var.end() == null ? "" : var.end().homology())
-                .junctionCopyNumber(contextStart.getAttributeAsDouble(PURPLE_JUNCTION_COPY_NUMBER, 0))
-                .startAF(valueNotNull(var.start().alleleFrequency()))
-                .endAF(var.end() == null ? 0 : valueNotNull(var.end().alleleFrequency()))
-                .adjustedStartAF(extractPurpleArrayValue(contextStart, PURPLE_AF))
-                .adjustedEndAF(extractPurpleArrayValue(contextEnd, PURPLE_AF))
-                .adjustedStartCopyNumber(extractPurpleArrayValue(contextStart, PURPLE_CN))
-                .adjustedEndCopyNumber(extractPurpleArrayValue(contextEnd, PURPLE_CN))
-                .adjustedStartCopyNumberChange(extractPurpleArrayValue(contextStart, PURPLE_CN_CHANGE))
-                .adjustedEndCopyNumberChange(extractPurpleArrayValue(contextEnd, PURPLE_CN_CHANGE))
+                .junctionCopyNumber(assumedCopyNumber)
+                .startAF(afStart)
+                .adjustedStartAF(afStart)
+                .adjustedStartCopyNumber(assumedCopyNumber)
+                .adjustedStartCopyNumberChange(assumedCnChangeStart)
                 .insertSequence(var.insertSequence())
                 .type(var.type())
                 .filter(var.filter())
@@ -191,14 +192,8 @@ public final class SvFileLoader
                 .startTumorReferenceFragmentCount(valueNotNull(var.start().tumorReferenceFragmentCount()))
                 .startNormalVariantFragmentCount(valueNotNull(var.start().normalVariantFragmentCount()))
                 .startNormalReferenceFragmentCount(valueNotNull(var.start().normalReferenceFragmentCount()))
-                .endTumorVariantFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().tumorVariantFragmentCount()))
-                .endTumorReferenceFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().tumorReferenceFragmentCount()))
-                .endNormalVariantFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().normalVariantFragmentCount()))
-                .endNormalReferenceFragmentCount(var.end() == null ? 0 : valueNotNull(var.end().normalReferenceFragmentCount()))
                 .startIntervalOffsetStart(valueNotNull(var.start().startOffset()))
                 .startIntervalOffsetEnd(valueNotNull(var.start().endOffset()))
-                .endIntervalOffsetStart(var.end() == null ? 0 : valueNotNull(var.end().startOffset()))
-                .endIntervalOffsetEnd(var.end() == null ? 0 : valueNotNull(var.end().endOffset()))
                 .inexactHomologyOffsetStart(valueNotNull(var.start().inexactHomologyOffsetStart()))
                 .inexactHomologyOffsetEnd(valueNotNull(var.start().inexactHomologyOffsetEnd()))
                 .startLinkedBy(valueNotNull(var.startLinkedBy()))
@@ -209,9 +204,49 @@ public final class SvFileLoader
                 .insertSequenceRepeatOrientation(valueNotNull(var.insertSequenceRepeatOrientation()))
                 .insertSequenceRepeatCoverage(valueNotNull(var.insertSequenceRepeatCoverage()))
                 .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
-                .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
-                .ponCount(var.startContext().getAttributeAsInt(PON_COUNT, 0))
-                .build();
+                .ponCount(var.startContext().getAttributeAsInt(PON_COUNT, 0));
+
+        if(contextEnd != null)
+        {
+            double afEnd = getGenotypeAttributeAsDouble(contextEnd.getGenotype(0), ALLELE_FRACTION, 0);
+            double assumedCnChangeEnd = assumedCopyNumber - afEnd;
+
+            builder.endChromosome(var.chromosome(false))
+                .endPosition(var.position(false).intValue())
+                .endOrientation(var.orientation(false))
+                .endHomologySequence(var.end().homology())
+                .endAF(afEnd)
+                .adjustedEndAF(afEnd)
+                .adjustedEndCopyNumber(assumedCopyNumber)
+                .adjustedEndCopyNumberChange(assumedCnChangeEnd)
+                .endTumorVariantFragmentCount(valueNotNull(var.end().tumorVariantFragmentCount()))
+                .endTumorReferenceFragmentCount(valueNotNull(var.end().tumorReferenceFragmentCount()))
+                .endNormalVariantFragmentCount(valueNotNull(var.end().normalVariantFragmentCount()))
+                .endNormalReferenceFragmentCount(valueNotNull(var.end().normalReferenceFragmentCount()))
+                .endIntervalOffsetStart(valueNotNull(var.end().startOffset()))
+                .endIntervalOffsetEnd(valueNotNull(var.end().endOffset()))
+                .endAnchoringSupportDistance(var.end().anchoringSupportDistance());
+        }
+        else
+        {
+            builder.endChromosome("0")
+                    .endPosition(-1)
+                    .endOrientation((byte)0)
+                    .endHomologySequence("")
+                    .endAF(0)
+                    .adjustedEndAF(0)
+                    .adjustedEndCopyNumber(0)
+                    .adjustedEndCopyNumberChange(0)
+                    .endTumorVariantFragmentCount(0)
+                    .endTumorReferenceFragmentCount(0)
+                    .endNormalVariantFragmentCount(0)
+                    .endNormalReferenceFragmentCount(0)
+                    .endIntervalOffsetStart(0)
+                    .endIntervalOffsetEnd(0)
+                    .endAnchoringSupportDistance(0);
+        }
+
+        return builder.build();
     }
 
     private static double valueNotNull(final Double value)

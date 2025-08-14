@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.google.gson.JsonObject;
+import com.hartwig.hmftools.common.utils.file.JsonDatamodelChecker;
 
 import org.junit.Test;
 

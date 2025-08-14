@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.common.vchord.ImmutableVChordPrediction;
 import com.hartwig.hmftools.common.vchord.VChordPrediction;
 import com.hartwig.hmftools.common.vchord.VChordPredictionFile;

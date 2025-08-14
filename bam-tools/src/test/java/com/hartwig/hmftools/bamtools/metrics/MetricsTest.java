@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
@@ -63,7 +63,7 @@ public class MetricsTest
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, false, null);
 
-        addConsensusReadAttribute(read, 2, 1, UmiReadType.SINGLE);
+        addConsensusReadAttribute(read, 2, 1, ConsensusType.SINGLE);
 
         bamReader.processRead(read);
 
@@ -104,7 +104,7 @@ public class MetricsTest
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100,
                 false, true, null);
 
-        addConsensusReadAttribute(read, 2, 1, UmiReadType.DUAL);
+        addConsensusReadAttribute(read, 2, 1, ConsensusType.DUAL);
 
         bamReader.processRead(read);
 

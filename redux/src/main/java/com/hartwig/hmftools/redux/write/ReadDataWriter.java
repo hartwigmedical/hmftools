@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 
@@ -124,9 +124,9 @@ public class ReadDataWriter
 
             if(mConfig.UMIs.Enabled)
             {
-                String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+                String umiType = read.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
                 sj.add(umiId != null ? umiId : "");
-                sj.add(umiType != null ? umiType : UmiReadType.NONE.toString());
+                sj.add(umiType != null ? umiType : ConsensusType.NONE.toString());
             }
 
             sj.add(String.valueOf(read.getMappingQuality()));

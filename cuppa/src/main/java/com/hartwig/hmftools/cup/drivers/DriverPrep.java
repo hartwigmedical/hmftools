@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cup.drivers;
 
 import static com.hartwig.hmftools.cup.prep.CategoryType.DRIVER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
-import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
+import static com.hartwig.hmftools.common.purple.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;

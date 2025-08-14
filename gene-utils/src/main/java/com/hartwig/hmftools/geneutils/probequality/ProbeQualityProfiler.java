@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.geneutils.probequality;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
+import static com.hartwig.hmftools.common.bwa.BwaUtils.LIBBWA_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -56,6 +59,9 @@ public class ProbeQualityProfiler
     private static final int QUALITY_SCORE_PRECISION = 2;
     private static final int QUALITY_SCORE_PRECISION_VERBOSE = 6;
 
+    private static final String BWA_INDEX_IMAGE_FILE_CONFIG = "bwa_index_image";
+    private static final String BWA_INDEX_IMAGE_FILE_DESC = "Reference genome BWA-MEM index GATK image file";
+
     private static final String BASE_WINDOW_LENGTH_CONFIG = "window_length";
     private static final String BASE_WINDOW_LENGTH_DESC = "Base window length for analysis";
     private static final int BASE_WINDOW_LENGTH_DEFAULT = 40;
@@ -74,7 +80,7 @@ public class ProbeQualityProfiler
 
     private static final String BATCH_SIZE_CONFIG = "batch_size";
     private static final String BATCH_SIZE_DESC = "Number of windows to align simultaneously";
-    private static final int BATCH_SIZE_DEFAULT = 100000;
+    private static final int BATCH_SIZE_DEFAULT = 25000;
 
     private static final String OUTPUT_FILE_CONFIG = "output_file";
     private static final String OUTPUT_FILE_DESC = "Output filename";
@@ -94,6 +100,10 @@ public class ProbeQualityProfiler
         String refGenomePath = configBuilder.getValue(REF_GENOME);
         LOGGER.debug("Ref genome: {}", refGenomePath);
         RefGenomeSource refGenome = loadRefGenome(refGenomePath);
+        if(refGenome == null)
+        {
+            throw new RuntimeException("Failed to load reference genome");
+        }
 
         SpecificRegions specificRegions = SpecificRegions.from(configBuilder);
         if(specificRegions == null)
@@ -105,21 +115,21 @@ public class ProbeQualityProfiler
         if(baseWindowLength < 15)
         {
             // Less than 15 bases probably doesn't make much sense and will cause issues trying to find appropriate params for BWA-MEM.
-            throw new RuntimeException(String.format("%s must be >= 10", BASE_WINDOW_LENGTH_CONFIG));
+            throw new RuntimeException(format("%s must be >= 10", BASE_WINDOW_LENGTH_CONFIG));
         }
         LOGGER.debug("Base window length: {}", baseWindowLength);
 
         int baseWindowSpacing = configBuilder.getInteger(BASE_WINDOW_SPACING_CONFIG);
         if(baseWindowSpacing < 1)
         {
-            throw new RuntimeException(String.format("%s must be >= 1", BASE_WINDOW_SPACING_CONFIG));
+            throw new RuntimeException(format("%s must be >= 1", BASE_WINDOW_SPACING_CONFIG));
         }
         LOGGER.debug("Base window spacing: {}", baseWindowSpacing);
 
         int batchSize = configBuilder.getInteger(BATCH_SIZE_CONFIG);
         if(batchSize < 1)
         {
-            throw new RuntimeException(String.format("%s must be >= 1", BATCH_SIZE_CONFIG));
+            throw new RuntimeException(format("%s must be >= 1", BATCH_SIZE_CONFIG));
         }
         LOGGER.debug("Batch size: {}", batchSize);
 
@@ -127,7 +137,7 @@ public class ProbeQualityProfiler
         if(matchScoreThreshold > baseWindowLength)
         {
             // If this is true then all alignments will be excluded which is useless.
-            throw new RuntimeException(String.format("%s must be <= %s", MATCH_SCORE_THRESHOLD_CONFIG, BASE_WINDOW_LENGTH_CONFIG));
+            throw new RuntimeException(format("%s must be <= %s", MATCH_SCORE_THRESHOLD_CONFIG, BASE_WINDOW_LENGTH_CONFIG));
         }
         LOGGER.debug("Match score threshold: {}", matchScoreThreshold);
 
@@ -137,13 +147,16 @@ public class ProbeQualityProfiler
         int threads = TaskExecutor.parseThreads(configBuilder);
         if(threads < 1)
         {
-            throw new RuntimeException(String.format("%s must be >= 1", TaskExecutor.THREADS));
+            throw new RuntimeException(format("%s must be >= 1", TaskExecutor.THREADS));
         }
         LOGGER.debug("Threads: {}", threads);
 
-        String refGenomeImageFile = refGenomePath + ".img";
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
-        Supplier<BwaMemAligner> alignerFactory = () -> createAligner(refGenomeImageFile, threads);
+        LOGGER.debug("BWA-MEM library path: {}", System.getProperty(LIBBWA_PATH));
+
+        String bwaIndexImageFile = configBuilder.getValue(BWA_INDEX_IMAGE_FILE_CONFIG, refGenomePath + ".img");
+        LOGGER.debug("BWA-MEM index image: {}", bwaIndexImageFile);
+        Supplier<BwaMemAligner> alignerFactory = () -> createAligner(bwaIndexImageFile, threads);
 
         mVerboseOutput = configBuilder.hasFlag(VERBOSE_OUTPUT_CONFIG);
         LOGGER.debug("Verbose output: {}", mVerboseOutput);
@@ -156,14 +169,14 @@ public class ProbeQualityProfiler
         mOutputWriter = initialiseOutputWriter(outputFile, mVerboseOutput);
     }
 
-    private static BwaMemAligner createAligner(String refGenomeImageFile, int threads)
+    private static BwaMemAligner createAligner(String bwaIndexImageFile, int threads)
     {
-        if(!Files.exists(Paths.get(refGenomeImageFile)) || refGenomeImageFile.isEmpty())
+        if(!Files.exists(Paths.get(bwaIndexImageFile)) || bwaIndexImageFile.isEmpty())
         {
             throw new RuntimeException("Reference genome file is missing or empty");
         }
 
-        BwaMemIndex index = new BwaMemIndex(refGenomeImageFile);
+        BwaMemIndex index = new BwaMemIndex(bwaIndexImageFile);
         BwaMemAligner aligner = new BwaMemAligner(index);
 
         aligner.setNThreadsOption(threads);
@@ -265,34 +278,35 @@ public class ProbeQualityProfiler
         List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.compute(sequences);
 
         LOGGER.debug("Writing results");
-        for(int i = 0; i < filteredWindows.size(); ++i)
+        try
         {
-            writeBaseWindowResult(filteredWindows.get(i).region(), modelResults.get(i));
+            for(int i = 0; i < filteredWindows.size(); ++i)
+            {
+                writeBaseWindowResult(filteredWindows.get(i).region(), modelResults.get(i));
+            }
+            mOutputWriter.flush();
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(format("Writing to output file failed: %s", e));
         }
 
         return new ProcessingStats(batch.size(), filteredWindows.size(), denormalWindows);
     }
 
-    private void writeBaseWindowResult(ChrBaseRegion region, ProbeQualityModel.Result result)
+    private void writeBaseWindowResult(ChrBaseRegion region, ProbeQualityModel.Result result) throws IOException
     {
-        try
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(region.chromosome()).add(String.valueOf(region.start())).add(formatQualityScore(result.qualityScore()));
+        if(mVerboseOutput)
         {
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-            sj.add(region.chromosome()).add(String.valueOf(region.start())).add(formatQualityScore(result.qualityScore()));
-            if(mVerboseOutput)
-            {
-                sj.add(String.valueOf(region.end()));
-                sj.add(String.valueOf(result.riskScore()));
-                sj.add(String.valueOf(result.offTargetCount()));
-                sj.add(String.valueOf(result.offTargetScoreSum()));
-            }
-            mOutputWriter.write(sj.toString());
-            mOutputWriter.newLine();
+            sj.add(String.valueOf(region.end()));
+            sj.add(String.valueOf(result.riskScore()));
+            sj.add(String.valueOf(result.offTargetCount()));
+            sj.add(String.valueOf(result.offTargetScoreSum()));
         }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write output file: {}", e.toString());
-        }
+        mOutputWriter.write(sj.toString());
+        mOutputWriter.newLine();
     }
 
     private String formatQualityScore(double qualityScore)
@@ -309,6 +323,8 @@ public class ProbeQualityProfiler
 
         addRefGenomeFile(configBuilder, true);
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
+
+        configBuilder.addPath(BWA_INDEX_IMAGE_FILE_CONFIG, false, BWA_INDEX_IMAGE_FILE_DESC);
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
 

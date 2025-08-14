@@ -3,14 +3,14 @@ package com.hartwig.hmftools.wisp.purity;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 public class PurityConstants
 {
     public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
     public static final double SUBCLONAL_VCN_THRESHOLD = 0.7;
     public static final double MAX_REPEAT_COUNT = 3;
-    public static final double MIN_AVG_EDGE_DISTANCE = 9;
+    public static final double MIN_AVG_EDGE_DISTANCE = 0.06; // was 9 when AED was in base terms
     public static final double MAX_GERMLINE_AF = 0.01;
     public static final int HIGH_GERMLINE_QUAL_THRESHOLD = 30;
 

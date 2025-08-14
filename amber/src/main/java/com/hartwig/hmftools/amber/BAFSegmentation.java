@@ -3,7 +3,7 @@ package com.hartwig.hmftools.amber;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
-import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.RExecutor;
 
 public class BAFSegmentation
 {

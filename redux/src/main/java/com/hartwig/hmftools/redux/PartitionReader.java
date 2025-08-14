@@ -7,15 +7,17 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
-import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
+import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.finaliseRead;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -35,6 +37,8 @@ import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
+import com.hartwig.hmftools.redux.consensus.SbxRoutines;
+import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
 import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
@@ -77,27 +81,30 @@ public class PartitionReader
         mBamReader = bamReader;
         mReadUnmapper = mConfig.UnmapRegions;
 
-        if(config.Sequencing == ILLUMINA && mConfig.UMIs.Enabled)
+        if(isIllumina())
         {
-            mReadCache = new JitterReadCache(new ReadCache(
-                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
-        }
-        else if(config.Sequencing == ILLUMINA)
-        {
-            mReadCache = new ReadCache(
-                    ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+            if(mConfig.UMIs.Enabled)
+            {
+                mReadCache = new JitterReadCache(new ReadCache(
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
+            }
+            else
+            {
+                mReadCache = new ReadCache(
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+            }
         }
         else
         {
-            // the sampled max read length is doubled, because it has been observed in non-ulimina bams that the max read length is usually
-            // larger than the sampled max read length, so we need extra room
+            // the sampled max read length is doubled, because it has been observed in non-Illumina bams that the max read length is usually
+            // larger than the sampled max read length extra room is required
             mReadCache = new ReadCache(3 * mConfig.readLength(),
                     2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
         }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
-        mConsensusReads = new ConsensusReads(config.RefGenome, mConfig.Sequencing, mStats.ConsensusStats);
+        mConsensusReads = new ConsensusReads(config.RefGenome, SEQUENCING_TYPE, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;
@@ -147,7 +154,7 @@ public class PartitionReader
 
         setUnmappedRegions();
 
-        mBamWriter.initialiseRegion(region.Chromosome, region.start());
+        mBamWriter.initialiseRegion(region);
     }
 
     public void processRegion()
@@ -166,7 +173,7 @@ public class PartitionReader
         // post-slice clean-up
         processReadGroups(mReadCache.evictAll());
 
-        mBamWriter.onRegionComplete();
+        mBamWriter.regionComplete();
 
         Level logLevel = isAltContigRegion() ? TRACE : DEBUG;
         RD_LOGGER.log(logLevel, "region({}) complete, processed {} reads", mCurrentRegion, mProcessedReads);
@@ -181,7 +188,7 @@ public class PartitionReader
 
     public static boolean shouldFilterRead(final SAMRecord read)
     {
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous Redux-generated BAMs runs
             return true;
 
         if(read.getSupplementaryAlignmentFlag())
@@ -198,7 +205,7 @@ public class PartitionReader
 
     private void preprocessSamRecord(final SAMRecord read)
     {
-        if(mConfig.Sequencing == SBX)
+        if(isSbx())
         {
             stripDuplexIndels(mConfig.RefGenome, read);
         }
@@ -206,20 +213,29 @@ public class PartitionReader
 
     private void postProcessSingleReads(final List<ReadInfo> singleReads)
     {
-        if(mConfig.Sequencing == SBX)
-        {
-            for(ReadInfo readInfo : singleReads)
-                fillQualZeroMismatchesWithRef(mConfig.RefGenome, readInfo.read());
-        }
+        singleReads.forEach(x -> finaliseRead(x.read()));
     }
 
-    private void postProcessPrimaryRead(@Nullable SAMRecord primaryRead)
+    private void postProcessPrimaryRead(final DuplicateGroup duplicateGroup)
     {
-        if(primaryRead == null)
-            return;
+        if(duplicateGroup.consensusRead() != null)
+            finaliseRead(duplicateGroup.consensusRead());
+        else if(duplicateGroup.primaryRead() != null)
+            finaliseRead(duplicateGroup.primaryRead());
+    }
 
-        if(mConfig.Sequencing == SBX)
-            fillQualZeroMismatchesWithRef(mConfig.RefGenome, primaryRead);
+    private void finaliseRead(final SAMRecord record)
+    {
+        // TODO: make an interface for seq-tech routines
+        if(isSbx())
+        {
+            SbxRoutines.finaliseRead(mConfig.RefGenome, record);
+        }
+        else if(isUltima())
+        {
+            UltimaRoutines.finaliseRead(mConfig.RefGenome, record);
+        }
+
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -241,9 +257,9 @@ public class PartitionReader
             mNextLogReadCount += LOG_READ_COUNT;
         }
 
-        if(mConfig.JitterMsiOnly)
+        if(mConfig.BqrAndJitterMsiOnly)
         {
-            mBamWriter.processJitterRead(read);
+            mBamWriter.captureReadInfo(read);
             return;
         }
 
@@ -382,12 +398,12 @@ public class PartitionReader
             // do not form consensus if duplicateGroup only contains one non poly-g umi read
             if(mConfig.FormConsensus && duplicateGroup.readCount() - duplicateGroup.polyGUmiReads().size() >= 2)
             {
-                duplicateGroup.setPCRClusterCount(mConfig.Sequencing);
+                duplicateGroup.setPCRClusterCount(SEQUENCING_TYPE);
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
 
-            postProcessPrimaryRead(duplicateGroup.primaryRead());
+            postProcessPrimaryRead(duplicateGroup);
             mBamWriter.writeDuplicateGroup(duplicateGroup);
         }
 

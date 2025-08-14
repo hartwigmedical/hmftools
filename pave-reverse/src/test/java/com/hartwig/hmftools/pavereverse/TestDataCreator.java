@@ -30,50 +30,78 @@ public class TestDataCreator
     public void createReducedEnsemblDataSet() throws IOException
     {
         File fullEnsemblDataDir = new File("/Users/timlavers/work/data/v6_0/ref/38/common/ensembl_data");
-        File outputDir = new File("/Users/timlavers/work/junk/ensemblmini");
+        File outputDir = new File("/Users/timlavers/work/code/hmftools/purple/src/test/resources/ensembl");
 
         final Set<String> geneNames = Set.of(
-                "MTOR,",
-                "TET2,",
-                "VHL,",
-                "BRAF,",
-                "ADCK2,",
-                "EGFR,",
-                "RNU1-82P,",
-                "ZYX,",
-                "PIK3R1",
-                "ARID1A",
-                "KIT",
-                "BRCA1",
-                "DYRK1A",
-                "TATDN2",
-                "TERT",
-                "SRGAP2,",
-                "AP5Z1,"
+                "ETV6,"
+//                "TET2,",
+//                "VHL,",
+//                "BRAF,",
+//                "ADCK2,",
+//                "EGFR,",
+//                "RNU1-82P,",
+//                "ZYX,",
+//                "PIK3R1",
+//                "ARID1A",
+//                "KIT",
+//                "BRCA1",
+//                "DYRK1A",
+//                "TATDN2",
+//                "TERT",
+//                "SRGAP2,",
+//                "AP5Z1,"
         );
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneNames);
-        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
-        Set<String> geneIds = Set.of(
-                "ENSG00000198793", // MTOR
-                "ENSG00000168769", // TET2
-                "ENSG00000134086",  // VHL
-                "ENSG00000133597", // ADCK2
-                "ENSG00000157764", // BRAF
-                "ENSG00000146648", // EGFR
-                "ENSG00000212153", // RNU-82P
-                "ENSG00000159840", // ZYX
-                "ENSG00000145675", // PIK3R1
-                "ENSG00000117713", // ARID1A
-                "ENSG00000157404", // KIT
-                "ENSG00000012048",  // BRCA1
-                "ENSG00000157540", // DYRK1A
-                "ENSG00000157014", // TATDN2
-                "ENSG00000164362", // TERT
-                "ENSG00000163486", // SRGAP2
-                "ENSG00000242802" // AP5Z1
-        );
+//        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_protein_features.csv"), outputDir, Set.of());
+                Set<String> geneIds = Set.of(
+                        "ENSG00000198793",
+                        "ENSG00000117713",
+                        "ENSG00000266028",
+                        "ENSG00000242802",
+                        "ENSG00000146648",
+                        "ENSG00000133597",
+                        "ENSG00000157764",
+                        "ENSG00000212153",
+                        "ENSG00000159840",
+                        "ENSG00000071564",
+        "ENSG00000139083"
+        //                "ENSG00000168769", // TET2
+        //                "ENSG00000134086",  // VHL
+        //                "ENSG00000133597", // ADCK2
+        //                "ENSG00000157764", // BRAF
+        //                "ENSG00000146648", // EGFR
+        //                "ENSG00000212153", // RNU-82P
+        //                "ENSG00000159840", // ZYX
+        //                "ENSG00000145675", // PIK3R1
+        //                "ENSG00000117713", // ARID1A
+        //                "ENSG00000157404", // KIT
+        //                "ENSG00000012048",  // BRCA1
+        //                "ENSG00000157540", // DYRK1A
+        //                "ENSG00000157014", // TATDN2
+        //                "ENSG00000164362", // TERT
+        //                "ENSG00000163486", // SRGAP2
+        //                "ENSG00000242802" // AP5Z1
+                );
+//        Set<String> geneIds = Set.of(
+//                "ENSG00000198793", // MTOR
+//                "ENSG00000168769", // TET2
+//                "ENSG00000134086",  // VHL
+//                "ENSG00000133597", // ADCK2
+//                "ENSG00000157764", // BRAF
+//                "ENSG00000146648", // EGFR
+//                "ENSG00000212153", // RNU-82P
+//                "ENSG00000159840", // ZYX
+//                "ENSG00000145675", // PIK3R1
+//                "ENSG00000117713", // ARID1A
+//                "ENSG00000157404", // KIT
+//                "ENSG00000012048",  // BRCA1
+//                "ENSG00000157540", // DYRK1A
+//                "ENSG00000157014", // TATDN2
+//                "ENSG00000164362", // TERT
+//                "ENSG00000163486", // SRGAP2
+//                "ENSG00000242802" // AP5Z1
+//        );
+        copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_gene_data.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_amino_acids.csv"), outputDir, geneIds);
-
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_exon_data.csv"), outputDir, geneIds);
         copyLinesMatching(new File(fullEnsemblDataDir, "ensembl_trans_splice_data.csv"), outputDir, geneIds);
     }

@@ -4,8 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,7 +25,7 @@ import com.hartwig.hmftools.pavereverse.protein.SingleAminoAcidVariant;
 
 public class ReversePaveTestBase
 {
-    public final File ensemblDataDir;
+    private File ensemblDataDir = Paths.get("src","test","resources","ensembl").toFile();
     public final ReversePave reversePave;
     public final RefGenomeInterface genome = new SmallGenome();
     protected final String braf = "BRAF";
@@ -38,16 +37,6 @@ public class ReversePaveTestBase
 
     public ReversePaveTestBase()
     {
-        URL resourceUrl = getClass().getClassLoader().getResource("ensembl_mini");
-        try
-        {
-            assert resourceUrl != null;
-            ensemblDataDir = new File(resourceUrl.toURI());
-        }
-        catch(URISyntaxException e)
-        {
-            throw new RuntimeException(e);
-        }
         reversePave = new ReversePave(ensemblDataDir, RefGenomeVersion.V38, genome);
     }
 

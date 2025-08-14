@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
 
 public class HotspotRegionCache
 {

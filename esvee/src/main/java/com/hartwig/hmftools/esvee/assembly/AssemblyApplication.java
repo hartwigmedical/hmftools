@@ -81,7 +81,12 @@ public class AssemblyApplication
 
     public AssemblyApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = new AssemblyConfig(configBuilder);
+        this(configBuilder, false);
+    }
+
+    public AssemblyApplication(final ConfigBuilder configBuilder, boolean asSubRoutine)
+    {
+        mConfig = new AssemblyConfig(configBuilder, asSubRoutine);
 
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = Maps.newHashMap();

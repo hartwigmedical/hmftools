@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.tinc.TincAnalyser.generateTincVcfFilename;
@@ -14,12 +14,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
-import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrCache;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.tinc.TincAnalyser;
 import com.hartwig.hmftools.sage.tinc.TincConfig;
@@ -84,20 +84,12 @@ public class SageApplication implements AutoCloseable
 
         SageCommon.setReadLength(mConfig.Common, mRefData.PanelWithHotspots, mConfig.TumorBams.get(0));
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
-                mConfig.Common, mRefData.RefGenome, mConfig.PanelBed, mConfig.TumorIds, mConfig.TumorBams);
-        baseQualityRecalibration.produceRecalibrationMap();
+        BqrCache bqrCache = new BqrCache(mConfig.Common, mConfig.TumorIds);
 
-        if(!baseQualityRecalibration.isValid())
+        if(!bqrCache.isValid())
             System.exit(1);
 
-        if(mConfig.Common.bqrRecordWritingOnly())
-        {
-            SG_LOGGER.info("exiting after BQR read writing");
-            return;
-        }
-
-        final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 
         List<String> combinedSampleIds = Lists.newArrayList(mConfig.TumorIds);
         combinedSampleIds.addAll(mConfig.Common.ReferenceIds);

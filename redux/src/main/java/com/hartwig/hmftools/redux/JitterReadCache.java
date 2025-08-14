@@ -44,7 +44,7 @@ public class JitterReadCache implements IReadCache
     private final ReadCache mReadCache;
     private final int mMaxSoftClipLength;
     private final SortedMultiset<Integer> mInnerCachedReadStarts;
-    private final HashMap<String, CollapsedPartition> mCollapsedPartitionLookup = Maps.newHashMap();
+    private final HashMap<String, CollapsedPartition> mCollapsedPartitionLookup;
 
     private int mCurrentReadPos;
     private int mLastReadCacheBoundary;
@@ -54,6 +54,7 @@ public class JitterReadCache implements IReadCache
         mReadCache = readCache;
         mMaxSoftClipLength = readCache.maxSoftClipLength();
         mInnerCachedReadStarts = TreeMultiset.create();
+        mCollapsedPartitionLookup = Maps.newHashMap();
 
         mCurrentReadPos = 0;
         mLastReadCacheBoundary = readCacheBoundary();

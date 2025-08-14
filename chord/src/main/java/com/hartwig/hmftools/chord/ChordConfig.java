@@ -33,6 +33,8 @@ public class ChordConfig
     public final String SnvIndelVcfFile;
     public final String SvVcfFile;
 
+    public final String ChordModelFile;
+
     public final String RefGenomeFile;
 
     public final String OutputDir;
@@ -48,6 +50,9 @@ public class ChordConfig
 
     private static final String SV_VCF_FILE = "sv_vcf_file";
     private static final String SV_VCF_FILE_DESC = "Path to the VCF containing structural variants";
+
+    private static final String CHORD_MODEL_FILE = "chord_model_file";
+    private static final String CHORD_MODEL_FILE_DESC = "Path to the CHORD.rds file";
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
     private static final String INCLUDE_NON_PASS_DESC = "Include non pass variants when counting mutation types";
@@ -65,6 +70,8 @@ public class ChordConfig
         SnvIndelVcfFile = configBuilder.getValue(SNV_INDEL_VCF_FILE);
         SvVcfFile = configBuilder.getValue(SV_VCF_FILE);
         checkRequiredInputPaths(PurpleDir, SnvIndelVcfFile, SvVcfFile);
+
+        ChordModelFile = configBuilder.getValue(CHORD_MODEL_FILE);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
@@ -134,6 +141,8 @@ public class ChordConfig
         configBuilder.addPath(SNV_INDEL_VCF_FILE, false, SNV_INDEL_VCF_FILE_DESC);
         configBuilder.addPath(SV_VCF_FILE, false, SV_VCF_FILE_DESC);
 
+        configBuilder.addPath(CHORD_MODEL_FILE, false, CHORD_MODEL_FILE_DESC);
+
         configBuilder.addConfigItem(REF_GENOME, false, REF_GENOME_CFG_DESC);
 
         FileWriterUtils.addOutputOptions(configBuilder);
@@ -148,7 +157,7 @@ public class ChordConfig
 
     @VisibleForTesting
     public ChordConfig(
-            List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile, String refGenomeFile,
+            List<String> sampleIds, String purpleDir, String snvIndelVcfFile, String svFileFile, String chordModelFile, String refGenomeFile,
             String outputDir, String outputId, int threads, boolean includeNonPass, boolean writeDetailedFiles
     )
     {
@@ -156,6 +165,7 @@ public class ChordConfig
         PurpleDir = purpleDir;
         SnvIndelVcfFile = snvIndelVcfFile;
         SvVcfFile = svFileFile;
+        ChordModelFile = chordModelFile;
         RefGenomeFile = refGenomeFile;
         OutputDir = outputDir;
         OutputId = outputId;
@@ -171,6 +181,7 @@ public class ChordConfig
         private String PurpleDir;
         private String SnvIndelVcfFile;
         private String SvVcfFile;
+        private String ChordModelFile;
         private String RefGenomeFile;
         private String OutputDir;
         private String OutputId = "";
@@ -205,6 +216,12 @@ public class ChordConfig
         public Builder svVcfFile(String svVcfFile)
         {
             SvVcfFile = svVcfFile;
+            return this;
+        }
+
+        public Builder chordModelFile(String chordModelFile)
+        {
+            ChordModelFile = chordModelFile;
             return this;
         }
 
@@ -247,7 +264,7 @@ public class ChordConfig
         public ChordConfig build()
         {
             return new ChordConfig(
-                    SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile, RefGenomeFile,
+                    SampleIds, PurpleDir, SnvIndelVcfFile, SvVcfFile, ChordModelFile, RefGenomeFile,
                     OutputDir, OutputId, Threads, IncludeNonPass, WriteDetailedFiles
             );
         }

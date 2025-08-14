@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,5 +25,21 @@ public record CobaltRatio(
     {
         return new CobaltRatio(chromosome, newPosition, referenceReadDepth, referenceGCRatio, referenceGcContent,
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
+    }
+
+    public ChrBaseRegion window()
+    {
+        return new ChrBaseRegion(chromosome, position, position + 1000 - 1);
+    }
+
+    public <T extends ChrBaseRegion> List<T> findWindowOverlaps(@NotNull List<T> intervals)
+    {
+        return intervals.stream().filter(t -> this.window().overlaps(t)).collect(Collectors.toList());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "CobaltRatio(" + chromosome + ", "+ position + ")";
     }
 }

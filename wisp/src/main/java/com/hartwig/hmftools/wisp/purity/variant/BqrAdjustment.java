@@ -2,7 +2,6 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.BQR_MIN_ERROR_RATE;
@@ -17,10 +16,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.qual.BqrFile;
-import com.hartwig.hmftools.common.qual.BqrKey;
-import com.hartwig.hmftools.common.qual.BqrReadType;
-import com.hartwig.hmftools.common.qual.BqrRecord;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.redux.BqrFile;
+import com.hartwig.hmftools.common.redux.BqrKey;
+import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 
 public class BqrAdjustment
@@ -96,7 +95,7 @@ public class BqrAdjustment
         else
             bqrFileDir = mConfig.SomaticDir;
 
-        String bqrFilename = generateBqrFilename(bqrFileDir, sampleId);
+        String bqrFilename = BqrFile.generateFilename(bqrFileDir, sampleId);
 
         if(!Files.exists(Paths.get(bqrFilename)))
         {
@@ -115,7 +114,7 @@ public class BqrAdjustment
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 
-            if(bqrRecord.Key.ReadType == BqrReadType.DUAL)
+            if(bqrRecord.Key.ReadType == ConsensusType.DUAL)
                 continue;
 
             BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, key.ReadType);

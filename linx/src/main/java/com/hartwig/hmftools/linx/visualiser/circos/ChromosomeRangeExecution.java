@@ -9,7 +9,7 @@ import java.nio.file.Files;
 
 import com.hartwig.hmftools.common.genome.chromosome.CytoBands;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 
 public class ChromosomeRangeExecution

@@ -3,7 +3,8 @@ package com.hartwig.hmftools.redux.write;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
+import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -20,9 +21,9 @@ public class BamWriterNoSync extends BamWriter
 
     public BamWriterNoSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser)
+            @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, bqr);
 
         mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
 
@@ -37,7 +38,7 @@ public class BamWriterNoSync extends BamWriter
     @Override
     public long unsortedWriteCount() { return mUnsortedWriteCount; }
 
-    public void initialiseRegion(final String chromosome, int startPosition)
+    public void onRegionInitialised(final String chromosome, int startPosition)
     {
         if(mSortedBamWriter != null)
             mSortedBamWriter.initialiseStartPosition(chromosome, startPosition);

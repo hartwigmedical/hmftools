@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
-
-import java.util.List;
-
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
 import com.hartwig.hmftools.sage.filter.SoftFilterConfig;
 
 public class SageConstants
@@ -28,18 +22,6 @@ public class SageConstants
 
     public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
-
-    // base quality recalibration
-    public static final double BQR_DUAL_AF_LOW = 0.01;
-    public static final double BQR_DUAL_AF_HIGH = 0.075;
-    public static final int BQR_DUAL_AD = 2;
-
-    public static final double BQR_NON_DUAL_AF_LOW = 0.05;
-    public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
-    public static final int BQR_NON_DUAL_AD = 3;
-
-    public static final int BQR_SAMPLE_SIZE = 2_000_000;
-    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
     // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
@@ -77,6 +59,7 @@ public class SageConstants
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT = 3;
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC = 10;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
+    public static final double MAX_GERMLINE_REL_RAW_QUAL_RATIO = 0.1;
 
     public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
@@ -87,6 +70,10 @@ public class SageConstants
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
+
+    // CHECK: whehther or how to set these
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY = 20;
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
 
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
@@ -135,7 +122,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final int DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 / DEFAULT_READ_LENGTH; // since now scaled
 
     // filters
     public static final int MAP_QUAL_FACTOR_FIXED_PENALTY = 25;

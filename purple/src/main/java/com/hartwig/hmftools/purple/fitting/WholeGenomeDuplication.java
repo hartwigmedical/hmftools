@@ -1,17 +1,12 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
-import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NO_TUMOR;
-import static com.hartwig.hmftools.common.purple.FittedPurityMethod.SOMATIC;
-
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.Multimaps;
 
 import org.jetbrains.annotations.NotNull;
 

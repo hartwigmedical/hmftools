@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 
 public class UmiTypeCounts
 {
@@ -19,9 +19,9 @@ public class UmiTypeCounts
         if(umiTypeCountsRaw == null)
             return NO_UMI_COUNTS;
 
-        String[] umiValues = ((String)umiTypeCountsRaw).split(",", UMI_TYPE_COUNT);
+        String[] umiValues = ((String)umiTypeCountsRaw).split(",", CONSENSUS_TAG_TYPE_COUNT);
 
-        if(umiValues.length < UMI_TYPE_COUNT)
+        if(umiValues.length < CONSENSUS_TAG_TYPE_COUNT)
             return NO_UMI_COUNTS;
 
         int index = 0;

@@ -24,7 +24,7 @@ public class AlignmentWriter
 
     public AlignmentWriter(final AssemblyConfig config)
     {
-        mWriter = initialiseWriter(config);
+        mWriter = initialisePhasedAssemblyWriter(config);
         mDetailedWriter = initialiseAlignmentDataWriter(config);
     }
 
@@ -37,7 +37,7 @@ public class AlignmentWriter
         closeBufferedWriter(mDetailedWriter);
     }
 
-    private BufferedWriter initialiseWriter(final AssemblyConfig config)
+    private BufferedWriter initialisePhasedAssemblyWriter(final AssemblyConfig config)
     {
         if(!config.WriteTypes.contains(WriteType.PHASED_ASSEMBLY))
             return null;
@@ -70,8 +70,7 @@ public class AlignmentWriter
         }
     }
 
-    public synchronized static void writeAssemblyAlignment(
-            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment)
+    public synchronized static void writePhasedAssembly(final BufferedWriter writer, final AssemblyAlignment assemblyAlignment)
     {
         if(writer == null)
             return;

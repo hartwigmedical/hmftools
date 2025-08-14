@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.ReadDataWriter;
@@ -19,7 +20,7 @@ public class TestBamWriter extends BamWriterSync
 
     public TestBamWriter(final ReduxConfig config)
     {
-        super("", config, new ReadDataWriter(config), null, null);
+        super("", config, new ReadDataWriter(config), null, null, new BaseQualRecalibration(config));
 
         WrittenRecords = Lists.newArrayList();
         CurrentPosUpper = 0;
@@ -33,7 +34,7 @@ public class TestBamWriter extends BamWriterSync
     @Override
     public long unsortedWriteCount() { return 0; }
 
-    public void initialiseRegion(final String chromosome, int startPosition)
+    public void onRegionInitialised(final String chromosome, int startPosition)
     {
         CurrentPosLower = startPosition;
         CurrentChromosome = chromosome;

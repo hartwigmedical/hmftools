@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.doid;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.json.JsonDatamodelChecker;
+import com.hartwig.hmftools.common.utils.file.JsonDatamodelChecker;
 
 import org.jetbrains.annotations.NotNull;
 

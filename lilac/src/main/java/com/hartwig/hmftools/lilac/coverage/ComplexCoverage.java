@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public final class ComplexCoverage implements Comparable<ComplexCoverage>
 {
@@ -81,7 +82,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     public boolean isHomozygous(final HlaAllele allele)
     {
-        return getAlleles().stream().filter(x -> x.Gene.equals(allele.Gene)).count() == 1;
+        return getAlleles().stream().filter(x -> x.Gene == allele.Gene).count() == 1;
     }
 
     public void setScore(double score) { mScore = score; }
@@ -103,10 +104,10 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
-        for(String gene : GENE_CACHE.GeneIds)
+        for(HlaGene gene : GENE_CACHE.GeneNames)
         {
             List<AlleleCoverage> geneCoverage = existingCoverage.stream()
-                    .filter(x -> x.Allele.Gene.equals(gene))
+                    .filter(x -> x.Allele.Gene == gene)
                     .collect(Collectors.toList());
 
             if(geneCoverage.size() == 2)
@@ -201,6 +202,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return new ComplexCoverage(unique, (int) round(shared), (int) round(wild), sortedAlleles);
     }
 
+    @Override
     public String toString()
     {
         return String.format("alleles(%s) coverage(%d) score(%.2f) complexityPenalty(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore, mComplexityPenalty);

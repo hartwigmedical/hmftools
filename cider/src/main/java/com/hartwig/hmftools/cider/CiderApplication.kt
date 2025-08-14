@@ -16,7 +16,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
-import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.utils.config.VersionInfo
 import htsjdk.samtools.SAMFileHeader
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord

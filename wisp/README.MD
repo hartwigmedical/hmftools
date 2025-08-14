@@ -54,22 +54,26 @@ Here is a schematic of the recommended pipeline setup to run WISP
 Using the cfDNA annotated tissue biopsy purple VCF, apply the following filters based on the primary tumor annotations
 - Mappability>=0.5 
 - RepeatCount<4 
-- High confidence observation in ctDNA: (AMBQ > 30 & AMMQ > 33)|AD==0 
+- High confidence observation in ctDNA: (RC_QUAL[0]+RC_QUAL[1]+RC_QUAL[3]) / (RC_CNT[0]+RC_CNT[1]+RC_CNT[3]) >= 18
 - Not subclonal:  AND(SubclonalPerc<0.5,VCN<0.7) 
-- GC content:  GC[probe] > 0.4 (if in PANEL mode) 
+- GC content:  GC[probe] > 0.4 (if in PANEL mode)
+- Is an SNV
+- Not in LOW_CONFIDENCE tier
 - !NEAR_INDEL: ie no germline or somatic indel present in the variant core (as annotated by SAGE)
 - GERMLINE_VAF < 1% OR GERLMINE_ABQ < 30
+- Adequate average edge distance: AED[1] >= 9
 
 Considering only the remaining unfiltered sites calculate the TFctDNA using the following formula 
 ```
+
 adjVAFctDNA = ADctDNA/DPctDNA -ε 
 Where ε = expected noise in cfDNA  
 TFctDNA = 2* adjVAFctDNA / (WA_VCN + 2* adjVAFctDNA - WA_CN * adjVAFctDNA) 
 ```
 
-The expected noise is set as the depth weighted average empirical error rate from SAGE BQR of all fragments based on the trinucleotide context for variants with high raw base qual (>=30).  For INDELs a fixed rate of 45 is used.   
+The expected noise is set as the depth weighted average empirical error rate from SAGE BQR of all fragments based on the trinucleotide context for variants with high raw base qual (>=30).
 
-A check is made at this stage for variants which are outliers and may unduly contribute to the fit.   Variants with a VAF of more than 8x the average cfDNA VAF for the sample, with allele support of at least 3 and whose allele support makes up more than 15% of reads in the sample are filtered as outliers. This test is performaed iteratively with the threshold raised to 30% after the first round.   These are excluded as likely germline variants which have leaked into the somatic variants or clonal haematopoiesis. The ctDNA_TF is then recalculated excluding the filtered observation. 
+A check is made at this stage for variants which are outliers and may unduly contribute to the fit.   Variants with a VAF of more than 8x the average cfDNA VAF for the sample, with allele support of at least 3 and whose allele support makes up more than 15% of reads in the sample are filtered as outliers. This test is performaed iteratively with the threshold raised to 30% after the first round.   These are excluded as outliers and are assumed to be likely germline variants which have leaked into the somatic variants or clonal haematopoiesis. The ctDNA_TF is then recalculated excluding the filtered observation. 
  
 The estimated ctDNA_TF represents the purity if all SNV considered from the tissue biopsy are still present in the ctDNA. However, the % of SNV that are present is frequently observed to be much lower than this, since the tissue biopsy may be taken from a locally dominant subclone (eg. a single metastasis) which has a number of private mutations.  The dominant clone present in the cfDNA may have evolved from an earlier or different subclone in the primary. Hence the raw ctDNA_TF at this stage represents a lower bound for the purity estimate.  
 
@@ -142,7 +146,7 @@ TumorPurity | Purity of primary tissue biopsy
 TumorPloidy | Ploidy of primary tissue biopsy
 TotalVariants | Total number of variants evaluated for SNV TF estimate 
 CalcVariants | # sites passing all filters for SNV TF estimate 
-ChipVariants | # of sites excluded as clonal hematopeioisis variants 
+OutlierVariants | A list of variants excluded from the analysis as outliers due to high AD (potentially artefacts or CHIP variants)
 SNVPurity | Final SNV cfDNA tumor fraction estimate (adjusted for clonality) 
 RawSNVPurity | Raw SNV cfDNA tumor fraction estimate (not adjusted for clonality) 
 SNVPValue | P-value likelihood of tumor presence in sample based on SNV support 

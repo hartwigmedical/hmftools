@@ -38,12 +38,14 @@ public class GermlineVariantData implements ComparableItem
 {
     public final GermlineVariant Variant;
     public final Set<String> Filters;
-    private final BasePosition mComparisonPosition;
+    public final BasePosition mComparisonPosition;
+
+    public static final String FILTER_DELIMITER = ";";
 
     public GermlineVariantData(final GermlineVariant variant, final BasePosition comparisonPosition)
     {
         Variant = variant;
-        Filters = Arrays.stream(variant.filter().split(";", -1)).collect(Collectors.toSet());
+        Filters = Arrays.stream(variant.filter().split(FILTER_DELIMITER, -1)).collect(Collectors.toSet());
         mComparisonPosition = comparisonPosition;
     }
 

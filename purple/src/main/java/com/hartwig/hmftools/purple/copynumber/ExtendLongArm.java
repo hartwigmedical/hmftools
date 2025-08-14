@@ -16,7 +16,7 @@ public final class ExtendLongArm
 
     static
     {
-        Arrays.stream(HumanChromosome.values()).filter(x -> x.isShortArm()).forEach(x -> FORCE_CHROMOSOMES.add(x));
+        Arrays.stream(HumanChromosome.values()).filter(x -> x.hasShortArm()).forEach(x -> FORCE_CHROMOSOMES.add(x));
         ELIGIBLE_CHROMOSOMES.addAll(FORCE_CHROMOSOMES);
         ELIGIBLE_CHROMOSOMES.add(HumanChromosome._Y);
     }

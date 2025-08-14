@@ -3,7 +3,7 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 public class BqrContextData
 {
