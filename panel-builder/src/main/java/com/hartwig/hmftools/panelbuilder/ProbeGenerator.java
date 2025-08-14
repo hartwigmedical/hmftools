@@ -77,7 +77,7 @@ public class ProbeGenerator
     // General purpose method for generating the best acceptable probes to cover an entire region.
     // Behaviour:
     //   - Prefer a probe set which is symmetrical and centered on the target region, unless this would violate constraints.
-    //   - Avoid placing probes in already covered regions, if `coverage` is not null.
+    //   - Avoid placing probes in already covered regions, if `coverage` is not null. But not guaranteed!
     //   - The edges of the region may be slightly uncovered (since the probes will capture a slightly larger region).
     //   - Probes may overlap and extend outside the target region.
     //   - Probes are shifted slightly to optimise for the selection criteria.
@@ -91,7 +91,7 @@ public class ProbeGenerator
         }
         else
         {
-            // Split the region into subregions to avoid overlap with regions already covered by probes.
+            // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
             subregions = computeUncoveredRegions(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
                     .stream()
                     .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))

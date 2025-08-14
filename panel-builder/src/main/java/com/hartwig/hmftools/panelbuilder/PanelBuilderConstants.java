@@ -10,7 +10,7 @@ public class PanelBuilderConstants
     // If we can't calculate the quality score of a probe, what quality score do we assign?
     public static final double DEFAULT_PROBE_QUALITY = 0;
 
-    // Parameters when covering a large region with probes.
+    // Parameters when covering an arbitrary region with probes.
     // How many bases a probe may be shifted left or right from its "ideal" tiled position.
     public static final int PROBE_SHIFT_MAX = 5;
     // How many bases may be uncovered before we add another probe?

@@ -41,13 +41,12 @@ public record PanelBuilderConfig(
     private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites file";
     private static final String CFG_MSI_SITES_FILE = "msi_sites";
     private static final String DESC_MSI_SITES_FILE = "Microsatellite instability positions file";
-    // TODO: rename this
-    private static final String CFG_TARGET_GENES_FILE = "target_genes";
-    private static final String DESC_TARGET_GENES_FILE = "Gene and transcript name file";
+    private static final String CFG_TARGET_GENES_FILE = "genes";
+    private static final String DESC_TARGET_GENES_FILE = "Gene options and transcript TSV file";
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
-    private static final String DESC_CUSTOM_REGIONS_FILE = "Custom region file";
+    private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
     private static final String DESC_VERBOSE_OUTPUT = "Output more information useful for debugging";
 
