@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBON
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_CENTROMERE_MARGIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_GNOMAD_FREQ_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_PARTITION_SIZE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_TARGET;
@@ -36,7 +35,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// Probes based on Amber heterozygous sites, used to deduce copy number.
+// Probes based on Amber heterozygous sites, used to calculate accurate copy number.
 // Methodology:
 //   - Divide chromosomes into large partitions;
 //   - In each partition, generate candidate probes on each Amber site.
@@ -45,6 +44,7 @@ import org.apache.logging.log4j.Logger;
 public class CopyNumberBackbone
 {
     private final String mAmberSitesFile;
+    private final int mResolution;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
@@ -61,10 +61,11 @@ public class CopyNumberBackbone
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberBackbone.class);
 
-    public CopyNumberBackbone(final String amberSitesFile, final RefGenomeVersion refGenomeVersion, final ProbeGenerator probeGenerator,
-            PanelData panelData)
+    public CopyNumberBackbone(final String amberSitesFile, int resolution, final RefGenomeVersion refGenomeVersion,
+            final ProbeGenerator probeGenerator, PanelData panelData)
     {
         mAmberSitesFile = amberSitesFile;
+        mResolution = resolution;
         mRefGenomeVersion = refGenomeVersion;
         mProbeGenerator = probeGenerator;
         mPanelData = panelData;
@@ -131,6 +132,12 @@ public class CopyNumberBackbone
 
     private Map<String, List<Partition>> createPartitions()
     {
+        LOGGER.debug("Creating copy number backbone partitions with resolution: {}b", mResolution);
+        if(mResolution < 1000)
+        {
+            throw new IllegalArgumentException("Copy number backbone resolution too small");
+        }
+
         RefGenomeCoordinates refGenomeCoordinates = refGenomeCoordinates(mRefGenomeVersion);
 
         return Arrays.stream(HumanChromosome.values()).map(chromosome ->
@@ -143,7 +150,7 @@ public class CopyNumberBackbone
             int centromereMax = centromere + CN_BACKBONE_CENTROMERE_MARGIN;
             LOGGER.debug("Excluded centromere region {}:{}-{}", chromosome, centromereMin, centromereMax);
 
-            List<Partition> chrPartitions = partitionChromosome(chrStr, mRefGenomeVersion, CN_BACKBONE_PARTITION_SIZE).stream()
+            List<Partition> chrPartitions = partitionChromosome(chrStr, mRefGenomeVersion, mResolution).stream()
                     .filter(region -> !region.overlaps(chrStr, centromereMin, centromereMax))
                     .map(Partition::new)
                     .toList();

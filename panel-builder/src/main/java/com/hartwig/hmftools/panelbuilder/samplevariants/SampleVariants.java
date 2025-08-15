@@ -37,7 +37,10 @@ import com.hartwig.hmftools.panelbuilder.UserInputError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: doc
+// Probes covering variants found in sample data.
+// Inputs Linx and Purple data from a previous pipeline run.
+// Probes are generated for driver SNV, INDEL, and SV, and then nondriver SNV/INDEL.
+// Each variant gets 1 probe which consists of the alt sequence.
 public class SampleVariants
 {
     private final SampleVariantsConfig mConfig;
@@ -104,8 +107,9 @@ public class SampleVariants
     }
 
     private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, Map<String, Integer> geneDisruptions, int maxProbes)
-
     {
+        LOGGER.debug("Selecting up to {} driver variants", max(0, maxProbes));
+
         ProbeGenerationResult result = new ProbeGenerationResult();
         for(Variant variant : variants)
         {
@@ -146,6 +150,8 @@ public class SampleVariants
 
     private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, int maxProbes)
     {
+        LOGGER.debug("Selecting up to {} nondriver variants", max(0, maxProbes));
+
         // For nondrivers, we are only interested in somatic SNV/INDEL.
         // Also, some variants are prioritised over others.
         List<SomaticMutation> nondriverVariants = variants.stream()

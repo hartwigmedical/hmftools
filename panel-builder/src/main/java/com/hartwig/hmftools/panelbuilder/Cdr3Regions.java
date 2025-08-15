@@ -78,7 +78,7 @@ public class Cdr3Regions
         if(generatedRegions.stream().anyMatch(targetRegion::overlaps))
         {
             // It's possible regions overlap other regions, in which case just take the first and discard the rest.
-            LOGGER.trace("CDR3 region overlaps with another; discarding");
+            LOGGER.trace("CDR3 region {} overlaps with another; discarding", targetRegion);
             return new ProbeGenerationResult();
         }
         else

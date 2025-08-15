@@ -62,6 +62,8 @@ public class PanelBuilderApplication
     {
         LOGGER.info("Starting panel builder");
 
+        LOGGER.debug("Config: {}", mConfig);
+
         long startTimeMs = System.currentTimeMillis();
 
         checkCreateOutputDir(mConfig.outputDir());
@@ -121,7 +123,8 @@ public class PanelBuilderApplication
         }
         else
         {
-            new CopyNumberBackbone(mConfig.amberSitesFile(), mRefGenomeVersion, mProbeGenerator, mPanelData).generateProbes();
+            new CopyNumberBackbone(mConfig.amberSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
+                    .generateProbes();
             // Result is stored into mPanelData.
         }
     }

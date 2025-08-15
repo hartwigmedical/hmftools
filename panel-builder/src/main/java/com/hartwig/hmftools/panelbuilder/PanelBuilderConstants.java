@@ -42,7 +42,8 @@ public class PanelBuilderConstants
     public static final double GENE_CN_QUALITY_MIN = 0.5;
 
     // Copy number backbone constants.
-    public static final int CN_BACKBONE_PARTITION_SIZE = 1_000_000;
+    public static final int CN_BACKBONE_RESOLUTION_KB_DEFAULT = 1_000;
+    // Region excluded, per side of the centromere.
     public static final int CN_BACKBONE_CENTROMERE_MARGIN = 3_000_000;
     // Aiming to pick heterozygous sites which are common in the population.
     public static final double CN_BACKBONE_GNOMAD_FREQ_MIN = 0.3;
@@ -133,10 +134,6 @@ public class PanelBuilderConstants
             throw new IllegalArgumentException();
         }
         if(!(GENE_UPDOWNSTREAM_GAP > GENE_PROMOTER_REGION))
-        {
-            throw new IllegalArgumentException();
-        }
-        if(!(CN_BACKBONE_PARTITION_SIZE >= PROBE_LENGTH * 2))
         {
             throw new IllegalArgumentException();
         }

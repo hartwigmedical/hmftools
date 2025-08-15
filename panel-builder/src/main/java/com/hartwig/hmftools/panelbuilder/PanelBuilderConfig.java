@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_RESOLUTION_KB_DEFAULT;
 
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -22,11 +23,12 @@ public record PanelBuilderConfig(
         String refGenomeFile,
         String ensemblDir,
         String probeQualityProfileFile,
-        @Nullable String amberSitesFile,
-        @Nullable String msiSitesFile,
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
         @Nullable String genesFile,
+        @Nullable String amberSitesFile,
+        int cnBackboneResolution,
+        @Nullable String msiSitesFile,
         boolean includeCdr3,
         @Nullable String customRegionsFile,
         @Nullable SampleVariantsConfig sampleVariants,
@@ -39,6 +41,8 @@ public record PanelBuilderConfig(
     private static final String DESC_BWA_INDEX_IMAGE_FILE = "Reference genome BWA-MEM index GATK image file";
     private static final String CFG_AMBER_SITES_FILE = "amber_sites";
     private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites file";
+    private static final String CFG_CN_BACKBONE_RESOLUTION = "cn_backbone_res_kb";
+    private static final String DESC_CN_BACKBONE_RESOLUTION = "Approximate spacing between copy number backbone probes, in kb";
     private static final String CFG_MSI_SITES_FILE = "msi_sites";
     private static final String DESC_MSI_SITES_FILE = "Microsatellite instability positions file";
     private static final String CFG_TARGET_GENES_FILE = "genes";
@@ -57,11 +61,12 @@ public record PanelBuilderConfig(
                 refGenomePath,
                 configBuilder.getValue(ENSEMBL_DATA_DIR),
                 configBuilder.getValue(CFG_PROBE_QUALITY_FILE),
-                configBuilder.getValue(CFG_AMBER_SITES_FILE),
-                configBuilder.getValue(CFG_MSI_SITES_FILE),
                 configBuilder.getValue(CFG_BWA_INDEX_IMAGE_FILE, refGenomePath + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
+                configBuilder.getValue(CFG_AMBER_SITES_FILE),
+                configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
+                configBuilder.getValue(CFG_MSI_SITES_FILE),
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
                 configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
@@ -76,21 +81,21 @@ public record PanelBuilderConfig(
         addRefGenomeFile(configBuilder, true);
         addEnsemblDir(configBuilder, true);
         ProbeQualityProfile.registerConfig(configBuilder);
-        configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
-        configBuilder.addPath(CFG_MSI_SITES_FILE, false, DESC_MSI_SITES_FILE);
-
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_BWA_INDEX_IMAGE_FILE, false, DESC_BWA_INDEX_IMAGE_FILE);
 
+        configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
+        configBuilder.addInteger(CFG_CN_BACKBONE_RESOLUTION, DESC_CN_BACKBONE_RESOLUTION, CN_BACKBONE_RESOLUTION_KB_DEFAULT);
+        configBuilder.addPath(CFG_MSI_SITES_FILE, false, DESC_MSI_SITES_FILE);
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
+
+        SampleVariantsConfig.registerConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addLoggingOptions(configBuilder);
-
-        SampleVariantsConfig.registerConfig(configBuilder);
     }
 }
