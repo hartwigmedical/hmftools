@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.wisp.common;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,7 +17,6 @@ public final class CommonUtils
     public static final String FLD_TUMOR_ID = "TumorId";
     public static final String FLD_CATEGORY = "Category";
     public static final String FLD_VARIANT = "Variant";
-    public static final String FLD_BATCH_ID = "BatchId";
 
     public static final String BATCH_CONTROL_TAG = "batch_control";
 
@@ -40,8 +41,8 @@ public final class CommonUtils
 
         if(sequence.length() != probeLength)
         {
-            CT_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
-                    chromosome, position, ref, alt, sequence.length(), sequence);
+            throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d): %s",
+                    chromosome, position, ref, alt, sequence.length(), sequence));
         }
 
         return sequence;
