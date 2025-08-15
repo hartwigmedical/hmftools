@@ -279,7 +279,7 @@ public class PurpleInterpreterTest
     {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
-                .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.builder().chromosome("1").geneName(TEST_GENE).build())
+                .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
                 .allPassingGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineDeletions(allGermlineDeletions)
                 .reportableGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported).collect(Collectors.toList()))

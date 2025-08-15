@@ -32,7 +32,7 @@ public class FittingTestUtils
     }
 
     public static final int DEFAULT_REF_DEPTH = 30;
-    public static final int DEFAULT_TUMOR_DEPTH = 1000;
+    public static final int DEFAULT_TUMOR_DEPTH = 100;
 
     public static AmberBAF createAmberBaf(final String chromosome, final int position, final double tumorBAF, final double normalBAF)
     {

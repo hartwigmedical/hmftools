@@ -6,24 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.driver.AmplificationDrivers;
-import com.hartwig.hmftools.common.driver.DeletionDrivers;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
-import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
@@ -56,7 +49,6 @@ import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
@@ -353,7 +345,21 @@ public class PurpleInterpreter
             final Set<PurpleQCStatus> qcStatus, final Gender gender, double ploidy, boolean isTargetRegions,
             final List<GeneCopyNumber> allGeneCopyNumbers)
     {
+        List<DriverCatalog> allGainDels = Lists.newArrayList();
+
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
+        {
+            // logic from DeletionDrivers
+
+
+
+
+            // logic from AmplicationDrivers
+        }
+
+        /*
         List<DriverGene> allGenes = Lists.newArrayList();
+
         for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
         {
             allGenes.add(ImmutableDriverGene.builder()
@@ -375,6 +381,7 @@ public class PurpleInterpreter
         }
 
         DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
+
         DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
 
         List<DriverCatalog> allGainDels = Lists.newArrayList();
@@ -383,6 +390,8 @@ public class PurpleInterpreter
                 qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
 
         allGainDels.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
+        */
+
 
         return somaticGainsDelsFromDrivers(allGainDels);
     }

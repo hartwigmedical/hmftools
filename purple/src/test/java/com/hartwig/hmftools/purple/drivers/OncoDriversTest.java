@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikeliho
 import com.hartwig.hmftools.common.driver.dnds.ModifiableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -151,26 +151,9 @@ public class OncoDriversTest
 
     public static GeneCopyNumber createGeneCopyNumber(final String gene)
     {
-        return ImmutableGeneCopyNumber.builder()
-                .start(0)
-                .end(0)
-                .geneName(gene)
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .minRegionStart(0)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEnd(0)
-                .minRegionEndSupport(SegmentSupport.NONE)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegions(1)
-                .somaticRegions(1)
-                .minCopyNumber(0D)
-                .maxCopyNumber(0D)
-                .transName(Strings.EMPTY)
-                .isCanonical(true)
-                .minMinorAlleleCopyNumber(0)
-                .depthWindowCount(0)
-                .gcContent(1.0)
-                .build();
+        return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
+                Strings.EMPTY, 0 ,0, 0, 1, 1,
+                0, 0, 0, 1.0,
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
     }
 }

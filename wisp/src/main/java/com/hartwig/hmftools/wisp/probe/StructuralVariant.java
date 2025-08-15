@@ -545,16 +545,16 @@ public class StructuralVariant extends Variant
 
     public static boolean matchesDelRegion(final StructuralVariant sv, final GeneCopyNumber geneCopyNumber)
     {
-        if(sv.variantData().startOrientation() == ORIENT_FWD && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(sv.variantData().startOrientation() == ORIENT_FWD && abs(sv.variantData().startPosition() - geneCopyNumber.MinRegionStart) <= 1)
             return true;
 
-        if(sv.variantData().endOrientation() == ORIENT_FWD && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(sv.variantData().endOrientation() == ORIENT_FWD && abs(sv.variantData().endPosition() - geneCopyNumber.MinRegionStart) <= 1)
             return true;
 
-        if(sv.variantData().startOrientation() == ORIENT_REV && abs(sv.variantData().startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(sv.variantData().startOrientation() == ORIENT_REV && abs(sv.variantData().startPosition() - geneCopyNumber.MinRegionEnd) <= 1)
             return true;
 
-        if(sv.variantData().endOrientation() == ORIENT_REV && abs(sv.variantData().endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(sv.variantData().endOrientation() == ORIENT_REV && abs(sv.variantData().endPosition() - geneCopyNumber.MinRegionEnd) <= 1)
             return true;
 
         return false;

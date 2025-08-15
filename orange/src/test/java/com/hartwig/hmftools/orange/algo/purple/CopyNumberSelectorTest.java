@@ -27,12 +27,12 @@ public class CopyNumberSelectorTest
         DriverGene driver3 = DriverGeneTestFactory.builder().gene("driver 3").reportAmplification(false).build();
         List<DriverGene> driverGenes = Lists.newArrayList(driver1, driver2, driver3);
 
-        GeneCopyNumber match = GeneCopyNumberTestFactory.builder().geneName(driver1.gene()).minCopyNumber(11D).maxCopyNumber(11D).build();
-        GeneCopyNumber tooLowCN = GeneCopyNumberTestFactory.builder().geneName(driver2.gene()).minCopyNumber(5D).maxCopyNumber(5D).build();
+        GeneCopyNumber match = GeneCopyNumberTestFactory.createGeneCopyNumber(driver1.gene(), 11D, 11D);
+        GeneCopyNumber tooLowCN = GeneCopyNumberTestFactory.createGeneCopyNumber(driver2.gene(), 5D, 5D);
         GeneCopyNumber tooHighCN =
-                GeneCopyNumberTestFactory.builder().geneName(driver2.gene()).minCopyNumber(15D).maxCopyNumber(15D).build();
+                GeneCopyNumberTestFactory.createGeneCopyNumber(driver2.gene(), 15D, 15D);
         GeneCopyNumber noReportAmp =
-                GeneCopyNumberTestFactory.builder().geneName(driver3.gene()).minCopyNumber(11D).maxCopyNumber(11D).build();
+                GeneCopyNumberTestFactory.createGeneCopyNumber(driver3.gene(), 11D, 11D);
         List<GeneCopyNumber> allGeneCopyNumbers = Lists.newArrayList(match, tooLowCN, tooHighCN, noReportAmp);
 
         List<PurpleGainDeletion> nearReportableGains =
@@ -47,7 +47,7 @@ public class CopyNumberSelectorTest
     {
         DriverGene driver = DriverGeneTestFactory.builder().gene("driver 1").reportAmplification(true).build();
 
-        GeneCopyNumber match = GeneCopyNumberTestFactory.builder().geneName(driver.gene()).minCopyNumber(11D).build();
+        GeneCopyNumber match = GeneCopyNumberTestFactory.createGeneCopyNumber(driver.gene(), 11D, 0);
 
         PurpleGainDeletion reportable = TestPurpleGainDeletionFactory.builder().gene(match.geneName()).build();
 
