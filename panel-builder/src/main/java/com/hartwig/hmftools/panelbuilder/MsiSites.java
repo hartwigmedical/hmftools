@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: doc
+// TODO: covert to custom region. add buffer to sides of regions
 public class MsiSites
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.MSI;
