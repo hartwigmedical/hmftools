@@ -30,8 +30,8 @@ LINX additionally filters any deletion which exactly matches exon boundaries on 
 Disruptive breakends are marked as ‘reportable’ and added to the driver catalog if:
 - Filter = “PASS”
 - The variant is biologically plausible in the germline.   ie. Resolved Type = “DEL”, “DUP”,  “RECIPROCAL_INVERSION”, including synthetic events.   We also report any variant in a more complex cluster that is of type “DEL” or “DUP” .  For “DEL” and “DUP” we also require that the length of the event is < 3M bases.   “SGL” breakends are also allowed if a candidate alignment exists that would make it a reportable DEL or DUP <500Kb bases.  
-The impacted gene has been configured as report_germline_disruptions=”TRUE” in the driver gene panel.
-- CohortFrequency (ie PonCount) < 3
+The impacted gene has been configured as report_germline_disruptions=”TRUE” in the driver gene panel.  3'UTR only disruptions are never reported.
+- CohortFrequency (ie PonCount) < 10
 
 ## Output
 
