@@ -73,6 +73,10 @@ import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumbers;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsDataSource;
 
 import org.jetbrains.annotations.Nullable;
 

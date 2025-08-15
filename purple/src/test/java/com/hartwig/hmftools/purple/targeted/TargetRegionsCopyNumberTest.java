@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.targeted;
 
 import static com.hartwig.hmftools.common.purple.CopyNumberMethod.GERMLINE_HET2HOM_DELETION;
 
