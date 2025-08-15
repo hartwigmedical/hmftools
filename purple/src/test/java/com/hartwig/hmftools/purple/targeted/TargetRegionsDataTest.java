@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.targeted;
 
 import static org.junit.Assert.assertEquals;
 

@@ -8,17 +8,11 @@ import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.MB_PER_GENOME;
 
-import java.util.stream.Collectors;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.TargetRegionsData;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class MicrosatelliteIndels
 {

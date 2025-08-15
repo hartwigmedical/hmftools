@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
 

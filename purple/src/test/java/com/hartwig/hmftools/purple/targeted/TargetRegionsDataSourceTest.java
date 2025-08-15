@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.targeted;
 
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
