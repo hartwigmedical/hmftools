@@ -64,14 +64,14 @@ public class SomaticSv implements Variant
     }
 
     // Setters only used during loading from file (because we construct the variant then determine these properties afterward).
-    private void setIsAmpDriver(boolean isAmpDriver)
+    private void setIsAmpDriver()
     {
-        mIsAmpDriver = isAmpDriver;
+        mIsAmpDriver = true;
     }
 
-    private void setIsDelDriver(boolean isDelDriver)
+    private void setIsDelDriver()
     {
-        mIsDelDriver = isDelDriver;
+        mIsDelDriver = true;
     }
 
     private boolean isFusion()
@@ -321,7 +321,7 @@ public class SomaticSv implements Variant
                 }
                 if(driverSv != null)
                 {
-                    driverSv.setIsAmpDriver(true);
+                    driverSv.setIsAmpDriver();
                 }
             }
             else if(driver.eventType() == DriverEventType.DEL)
@@ -335,7 +335,7 @@ public class SomaticSv implements Variant
                     {
                         if(matchesDelRegion(sv.mVariant, geneCopyNumber))
                         {
-                            sv.setIsDelDriver(false);
+                            sv.setIsDelDriver();
                         }
                     }
                 }
