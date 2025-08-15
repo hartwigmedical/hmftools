@@ -53,7 +53,9 @@ public class PanelBuilderConstants
     public static final double CN_BACKBONE_ALTERNATE_QUALITY_MIN = 1.0;
 
     // CDR3 probe constants.
-    public static final double CDR3_QUALITY_MIN = 0.1;
+    // Very low quality score threshold because many of these CDR3 regions are similar to another, which is ok.
+    // We manually vetted the region list to ensure the "off-target" is other CDR3 regions.
+    public static final double CDR3_QUALITY_MIN = 0.01;
     public static final double CDR3_GC_TARGET = 0.45;
     public static final double CDR3_GC_TOLERANCE = 1;
 
