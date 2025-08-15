@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -122,30 +123,24 @@ public class SampleVariants
                 // Filled the probe quota.
                 break;
             }
-            boolean select = variant.isDriver()
-                    && driverFilters(variant)
-                    && geneDisruptionFilter(variant, geneDisruptions);
-            if(select)
+            if(!variant.isDriver())
+            {
+                continue;
+            }
+
+            FilterResult filterResult = driverFilters(variant, geneDisruptions);
+            if(filterResult.passed())
             {
                 ProbeGenerationResult probeGenResult = generateProbe(variant);
                 result = result.add(probeGenResult);
                 registerDisruptedGenes(variant, geneDisruptions);
             }
-        }
-        return result;
-    }
-
-    private static boolean driverFilters(final Variant variant)
-    {
-        // Only disruption SVs have these filters, other SV types have no additional filters and are always accepted if they are drivers.
-        if(variant instanceof SomaticSv sv)
-        {
-            if(sv.isReportedDisruption())
+            else
             {
-                return vafFilter(sv.vaf()) && tumorFragmentsFilter(sv.tumorFragments());
+                LOGGER.trace("Variant failed filter: {} {}", variant, filterResult.failReason());
             }
         }
-        return true;
+        return result;
     }
 
     private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, int maxProbes)
@@ -169,15 +164,37 @@ public class SampleVariants
                 // Filled the probe quota.
                 break;
             }
-            boolean select = !variant.isDriver()
-                    && nondriverFilters(variant);
-            if(select)
+
+            FilterResult filterResult = nondriverFilters(variant);
+            if(filterResult.passed())
             {
                 ProbeGenerationResult probeGenResult = generateProbe(variant);
                 result = result.add(probeGenResult);
             }
+            else
+            {
+                LOGGER.trace("Variant failed filter: {} {}", variant, filterResult.failReason());
+            }
         }
         return result;
+    }
+
+    private static FilterResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
+    {
+        List<Supplier<FilterResult>> filters = new ArrayList<>();
+
+        if(variant instanceof SomaticSv sv)
+        {
+            if(sv.isReportedDisruption())
+            {
+                filters.add(() -> vafFilter(sv.vaf()));
+                filters.add(() -> tumorFragmentsFilter(sv.tumorFragments()));
+            }
+        }
+
+        filters.add(() -> geneDisruptionFilter(variant, geneDisruptions));
+
+        return FilterResult.applyFilters(filters);
     }
 
     private static class NondriverVariantComparator implements Comparator<SomaticMutation>
@@ -198,48 +215,50 @@ public class SampleVariants
         }
     }
 
-    private static boolean nondriverFilters(final SomaticMutation variant)
+    private static FilterResult nondriverFilters(final SomaticMutation variant)
     {
-        return vafFilter(variant.vaf())
-                && tumorFragmentsFilter(variant.tumorFragments())
-                && indelLengthFilter(variant.indelLength())
-                && repeatCountFilter(variant.repeatCount())
-                && germlineStatusFilter(variant.germlineStatus());
+        return FilterResult.applyFilters(List.of(
+                () -> vafFilter(variant.vaf()),
+                () -> tumorFragmentsFilter(variant.tumorFragments()),
+                () -> indelLengthFilter(variant.indelLength()),
+                () -> repeatCountFilter(variant.repeatCount()),
+                () -> germlineStatusFilter(variant.germlineStatus())));
     }
 
-    private static boolean vafFilter(double vaf)
+    private static FilterResult vafFilter(double vaf)
     {
-        return vaf >= SAMPLE_VAF_MIN;
+        return FilterResult.condition(vaf >= SAMPLE_VAF_MIN, "VAF");
     }
 
-    private static boolean tumorFragmentsFilter(int tumorFragments)
+    private static FilterResult tumorFragmentsFilter(int tumorFragments)
     {
-        return tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN;
+        return FilterResult.condition(tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN, "tumor fragments");
     }
 
-    private static boolean indelLengthFilter(int indelLength)
+    private static FilterResult indelLengthFilter(int indelLength)
     {
-        return indelLength <= SAMPLE_INDEL_LENGTH_MAX;
+        return FilterResult.condition(indelLength <= SAMPLE_INDEL_LENGTH_MAX, "indel length");
     }
 
-    private static boolean repeatCountFilter(int repeatCount)
+    private static FilterResult repeatCountFilter(int repeatCount)
     {
-        return repeatCount <= SAMPLE_REPEAT_COUNT_MAX;
+        return FilterResult.condition(repeatCount <= SAMPLE_REPEAT_COUNT_MAX, "repeat count");
     }
 
-    private static boolean germlineStatusFilter(final GermlineStatus germlineStatus)
+    private static FilterResult germlineStatusFilter(final GermlineStatus germlineStatus)
     {
-        return germlineStatus == GermlineStatus.DIPLOID;
+        return FilterResult.condition(germlineStatus == GermlineStatus.DIPLOID, "germline status");
     }
 
-    private static boolean geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
+    private static FilterResult geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
     {
         if(variant instanceof SomaticSv sv)
         {
-            return sv.disruptedGenes().stream()
+            boolean pass = sv.disruptedGenes().stream()
                     .allMatch(gene -> geneDisruptions.getOrDefault(gene, 0) + 1 <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
+            return FilterResult.condition(pass, "gene disruptions");
         }
-        return true;
+        return FilterResult.pass();
     }
 
     private static void registerDisruptedGenes(final Variant variant, Map<String, Integer> geneDisruptions)
