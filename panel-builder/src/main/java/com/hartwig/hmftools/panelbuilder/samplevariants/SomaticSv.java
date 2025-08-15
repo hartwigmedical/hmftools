@@ -261,8 +261,7 @@ public class SomaticSv implements Variant
                     .orElse(null);
             if(annotation == null)
             {
-                LOGGER.error("sample({}) vcfId({}) Linx annotation not found", sampleId, variant.id());
-                // return new ArrayList<>();
+                LOGGER.error("Linx annotation not found vcfId={}", variant.id());
                 continue;
             }
 
