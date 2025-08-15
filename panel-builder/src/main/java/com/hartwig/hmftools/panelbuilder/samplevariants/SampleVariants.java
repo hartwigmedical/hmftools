@@ -137,7 +137,7 @@ public class SampleVariants
             }
             else
             {
-                LOGGER.trace("Variant failed filter: {} {}", variant, filterResult.failReason());
+                LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, filterResult.failReason());
             }
         }
         return result;
@@ -173,7 +173,7 @@ public class SampleVariants
             }
             else
             {
-                LOGGER.trace("Variant failed filter: {} {}", variant, filterResult.failReason());
+                LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, filterResult.failReason());
             }
         }
         return result;
@@ -265,7 +265,7 @@ public class SampleVariants
     {
         if(variant instanceof SomaticSv sv)
         {
-            sv.disruptedGenes().forEach(gene -> geneDisruptions.put(gene, geneDisruptions.getOrDefault(gene, 0)));
+            sv.disruptedGenes().forEach(gene -> geneDisruptions.put(gene, geneDisruptions.getOrDefault(gene, 0) + 1));
         }
     }
 
