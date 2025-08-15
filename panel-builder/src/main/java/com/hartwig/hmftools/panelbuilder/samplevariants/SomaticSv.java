@@ -269,8 +269,9 @@ public class SomaticSv implements Variant
 
             List<LinxFusion> svFusions = fusions.stream()
                     .filter(LinxFusion::reported)
-                    .filter(fusion -> fusion.chainLinks() == 0)
-                    .filter(fusion -> svBreakends.stream().anyMatch(breakend -> breakend.id() == fusion.fivePrimeBreakendId()))
+                    // If in a chained fusion, only interested in the SVs at the ends of the fusion, not the chain links.
+                    .filter(fusion -> svBreakends.stream().anyMatch(
+                            breakend -> breakend.id() == fusion.fivePrimeBreakendId() || breakend.id() == fusion.threePrimeBreakendId()))
                     .toList();
 
             // only use SGLs if in a reportable fusion
