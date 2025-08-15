@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_TUMOR_ID;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_VARIANT;
-import static com.hartwig.hmftools.common.wisp.CategoryType.GERMLINE_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CLONAL_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.REPORTABLE_MUTATION;
-import static com.hartwig.hmftools.common.wisp.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.GERMLINE_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_CLONAL_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_CODING_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.SUBCLONAL_MUTATION;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,7 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.common.wisp.CategoryType;
+import com.hartwig.hmftools.wisp.common.CategoryType;
 
 public class ProbeVariantCache
 {
