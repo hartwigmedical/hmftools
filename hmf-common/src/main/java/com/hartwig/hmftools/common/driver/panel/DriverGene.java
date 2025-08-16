@@ -24,10 +24,13 @@ public interface DriverGene extends Comparable<DriverGene>
     boolean reportSplice();
 
     boolean reportDeletion();
+    boolean reportHetDeletion();
+    double hetDeletionThreshold();
 
     boolean reportDisruption();
 
     boolean reportAmplification();
+    double amplificationRatio();
 
     boolean reportSomaticHotspot();
 

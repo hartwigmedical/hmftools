@@ -20,8 +20,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 
 public final class AmplificationDrivers
 {
-    private static final double MIN_COPY_NUMBER_RELATIVE_INCREASE = 3;
-
     private static final List<String> TARGET_REGIONS_PARTIAL_AMP_GENES = Lists.newArrayList(
             "BRAF", "EGFR", "CTNNB1", "CBL", "MET", "ALK", "PDGFRA");
 
@@ -36,8 +34,6 @@ public final class AmplificationDrivers
 
         boolean isHighCopyNoise = qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
 
-        double standardCopyNumberThreshold = ploidy * MIN_COPY_NUMBER_RELATIVE_INCREASE;
-
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
             DriverGene driverGene = amplificationDriverGenes.get(geneCopyNumber.geneName());
@@ -48,8 +44,10 @@ public final class AmplificationDrivers
             if(isHighCopyNoise && !supportedByOneSV(geneCopyNumber))
                 continue;
 
+            double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
+
             double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
-                    ? standardCopyNumberThreshold * 0.5 :  standardCopyNumberThreshold;
+                    ? ampCopyNumberThreshold * 0.5 :  ampCopyNumberThreshold;
 
             if(geneCopyNumber.minCopyNumber() > geneCopyNummberThreshold)
             {
