@@ -86,7 +86,7 @@ public class Cdr3Regions
             TargetMetadata metadata = createTargetMetadata(gene);
             // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
             // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
-            ProbeGenerationResult result = probeGenerator.probeAt(targetRegion, metadata, PROBE_CRITERIA, coverage);
+            ProbeGenerationResult result = probeGenerator.probe(targetRegion, metadata, PROBE_CRITERIA, coverage);
             // For simplicity, don't check any regions where we already attempted any probe generation around that location.
             generatedRegions.add(targetRegion);
             return result;

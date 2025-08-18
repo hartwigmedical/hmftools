@@ -176,7 +176,7 @@ public class PanelBuilderApplication
         }
         else
         {
-            new SampleVariants(mConfig.sampleVariants(), mRefGenome, mProbeGenerator, mPanelData).generateProbes();
+            new SampleVariants(mConfig.sampleVariants(), mProbeGenerator, mPanelData).generateProbes();
             // Result is stored into mPanelData.
         }
     }

@@ -15,8 +15,9 @@ public class ProbeGenerationResultTest
 {
     public static Probe probe(final ChrBaseRegion region, final TargetMetadata metadata)
     {
+        ProbeTarget target = ProbeTarget.exactRegion(region);
         String sequence = MockRefGenome.generateRandomBases(region.baseLength());
-        return new Probe(region, sequence, metadata, null, null, 0, 0)
+        return new Probe(target, sequence, metadata, null, null, 0, 0)
                 .withEvalCriteria(new ProbeEvaluator.Criteria(1.0, 0.5, 0.1))
                 .withRejectionReason(null);
     }
@@ -58,23 +59,7 @@ public class ProbeGenerationResultTest
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void testCoverTarget()
-    {
-        TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
-        TargetRegion target = new TargetRegion(
-                new ChrBaseRegion("1", 10, 20),
-                metadata);
-        Probe probe = probe(new ChrBaseRegion("1", 11, 25), metadata);
-        ProbeGenerationResult actual = ProbeGenerationResult.coverTarget(target, probe);
-        ProbeGenerationResult expected = new ProbeGenerationResult(
-                List.of(probe),
-                List.of(target),
-                List.of(new TargetRegion(new ChrBaseRegion("1", 11, 20), metadata)),
-                emptyList()
-        );
-        assertEquals(expected, actual);
-    }
+    // TODO: test others
 
     @Test
     public void testRejectTarget()

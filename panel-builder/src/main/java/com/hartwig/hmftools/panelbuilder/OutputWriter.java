@@ -46,11 +46,15 @@ public class OutputWriter implements AutoCloseable
     @Nullable
     private final ArrayList<Probe> mCandidateProbesBuffer;
     private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
+    private int mProbeId = 0;
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
     private static final String FASTA_EXT = ".fasta";
 
+    private static final String FLD_TARGET_START = "StartRegion";
+    private static final String FLD_TARGET_INSERT_SEQ = "InsertSequence";
+    private static final String FLD_TARGET_END = "EndRegion";
     private static final String FLD_SEQUENCE = "Sequence";
     private static final String FLD_QUALITY_SCORE = "QualityScore";
     private static final String FLD_GC_CONTENT = "GCContent";
@@ -61,7 +65,7 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_PROBE_COUNT = "ProbeCount";
 
     private static final List<String> PANEL_PROBES_COLUMNS = List.of(
-            FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SEQUENCE,
+            FLD_TARGET_START, FLD_TARGET_INSERT_SEQ, FLD_TARGET_END, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT);
 
@@ -71,7 +75,7 @@ public class OutputWriter implements AutoCloseable
             FLD_REJECT_REASON);
 
     private static final List<String> CANDIDATE_PROBES_COLUMNS = List.of(
-            FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_SEQUENCE,
+            FLD_TARGET_START, FLD_TARGET_INSERT_SEQ, FLD_TARGET_END, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
             FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
@@ -137,8 +141,11 @@ public class OutputWriter implements AutoCloseable
     {
         LOGGER.debug("Writing {} panel probes to file", probes.size());
 
+        // TODO: should there be a probe ID which matches between TSV, BED, and FASTA?
+
         // Must be sorted for BED files since some tools expect sorted order.
-        probes = probes.stream().sorted(Comparator.comparing(Probe::region, Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+        probes = probes.stream().sorted(Comparator.comparing(
+                probe -> probe.target().exactRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
         for(Probe probe : probes)
         {
@@ -147,14 +154,13 @@ public class OutputWriter implements AutoCloseable
             {
                 throw new IllegalArgumentException("Should only be writing accepted probes");
             }
-            if((probe.region() != null && probe.region().baseLength() != PROBE_LENGTH)
-                    || (probe.sequence() != null && probe.sequence().length() != PROBE_LENGTH))
+            if(probe.target().baseLength() != PROBE_LENGTH || probe.sequence().length() != PROBE_LENGTH)
             {
                 throw new IllegalArgumentException("Should only be writing probes of length " + PROBE_LENGTH);
             }
 
             mPanelProbesTsvWriter.writeRow(probe);
-            if(probe.region() != null)
+            if(probe.target().isExactRegion())
             {
                 writePanelProbesBedRow(probe);
             }
@@ -164,10 +170,12 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        ChrBaseRegion region = probe.region();
-        row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
-        row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
-        row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
+        ProbeTarget target = probe.target();
+        ChrBaseRegion start = target.startRegion();
+        ChrBaseRegion end = target.endRegion();
+        row.setOrNull(FLD_TARGET_START, start == null ? null : start.toString());
+        row.setOrNull(FLD_TARGET_INSERT_SEQ, target.insertSequence());
+        row.setOrNull(FLD_TARGET_END, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_QUALITY_SCORE, probe.qualityScore());
         row.set(FLD_GC_CONTENT, probe.gcContent());
@@ -177,12 +185,12 @@ public class OutputWriter implements AutoCloseable
 
     private void writePanelProbesBedRow(final Probe probe) throws IOException
     {
-        mPanelProbesBedWriter.write(formatBedRow(requireNonNull(probe.region()), probeBedName(probe)));
+        mPanelProbesBedWriter.write(formatBedRow(probe.target().exactRegion(), probeBedName(probe)));
     }
 
     private void writePanelProbesFastaRecord(final Probe probe) throws IOException
     {
-        String label = getProbeLabel(probe);
+        String label = probeFastaLabel(probe);
         String sequence = probe.sequence();
         if(sequence == null)
         {
@@ -285,10 +293,12 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
-        ChrBaseRegion region = probe.region();
-        row.setOrNull(FLD_CHROMOSOME, region == null ? null : region.chromosome());
-        row.setOrNull(FLD_POSITION_START, region == null ? null : region.start());
-        row.setOrNull(FLD_POSITION_END, region == null ? null : region.end());
+        ProbeTarget target = probe.target();
+        ChrBaseRegion start = target.startRegion();
+        ChrBaseRegion end = target.endRegion();
+        row.setOrNull(FLD_TARGET_START, start == null ? null : start.toString());
+        row.setOrNull(FLD_TARGET_INSERT_SEQ, target.insertSequence());
+        row.setOrNull(FLD_TARGET_END, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
@@ -321,15 +331,18 @@ public class OutputWriter implements AutoCloseable
         return format("%s\t%d\t%d\t%s\n", region.chromosome(), region.start() - 1, region.end(), name);
     }
 
-    private static String getProbeLabel(final Probe probe)
+    private String probeFastaLabel(final Probe probe)
     {
+        int id = nextProbeId();
         TargetMetadata metadata = probe.metadata();
-        String label = format("%s:%s", metadata.type().name(), metadata.extraInfo());
-        if(probe.region() != null)
-        {
-            label = format("%s:%d", label, probe.region().start());
-        }
-        return label;
+        return format("probe%d:%s:%s", id, metadata.type().name(), metadata.extraInfo());
+    }
+
+    private int nextProbeId()
+    {
+        int id = mProbeId;
+        ++mProbeId;
+        return id;
     }
 
     public void writeGeneStats(final List<Genes.GeneStats> geneStats)

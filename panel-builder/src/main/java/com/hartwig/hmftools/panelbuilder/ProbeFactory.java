@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
 import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
@@ -10,6 +11,7 @@ import java.util.OptionalDouble;
 import java.util.function.DoubleSupplier;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.panelbuilder.probequality.ProbeQualityModel;
@@ -34,40 +36,44 @@ public class ProbeFactory
         mQualityModel = qualityModel;
     }
 
-    // Create a probe that corresponds exactly to a region in the reference genome.
+    // Creates a probe from its target region(s)/sequence.
     // Returns empty optional if it's not valid to create a probe at that location.
-    public Optional<Probe> createProbeFromRegion(final ChrBaseRegion region, final TargetMetadata metadata)
+    public Optional<Probe> createProbe(final ProbeTarget target, final TargetMetadata metadata)
     {
-        String sequence = getSequence(region);
-        return createProbe(
-                region, sequence, metadata,
-                () -> getQualityScore(region, sequence, false),
-                () -> calcGcPercent(sequence));
+        String sequence = buildSequence(target);
+        if(sequence.length() != target.baseLength())
+        {
+            return Optional.empty();
+        }
+
+        if(target.isExactRegion())
+        {
+            return createProbe(
+                    target, sequence, metadata,
+                    () -> getQualityScore(target.exactRegion(), sequence, false),
+                    () -> calcGcPercent(sequence));
+        }
+        else
+        {
+            return createProbe(
+                    target, sequence, metadata,
+                    () -> getQualityScore(null, sequence, true),
+                    () -> calcGcPercent(sequence));
+        }
     }
 
-    // Create a probe with a custom sequence.
-    // Returns empty optional if it's not valid to create a probe at that location.
-    public Optional<Probe> createProbeFromSequence(final String sequence, final TargetMetadata metadata)
-    {
-        return createProbe(
-                null, sequence, metadata,
-                () -> getQualityScore(null, sequence, true),
-                () -> calcGcPercent(sequence));
-    }
-
-    private Optional<Probe> createProbe(@Nullable final ChrBaseRegion region, final String sequence, final TargetMetadata metadata,
+    private Optional<Probe> createProbe(final ProbeTarget target, final String sequence, final TargetMetadata metadata,
             final DoubleSupplier getQualityScore, final DoubleSupplier getGcContent)
     {
         // Only check properties which are inconvenient for the caller to check in advance.
         // Everything else is expected to be checked by the caller and will generate an exception.
-        boolean regionValid =
-                region == null || (region.start() >= 1 && region.end() <= mRefGenome.getChromosomeLength(region.chromosome()));
+        boolean regionsValid = target.regions().stream().allMatch(this::isRegionValid);
         boolean sequenceValid = isDnaSequenceNormal(sequence);
-        boolean valid = regionValid && sequenceValid;
+        boolean valid = regionsValid && sequenceValid;
         if(valid)
         {
             return Optional.of(new Probe(
-                    region, sequence, metadata,
+                    target, sequence, metadata,
                     null, null,
                     getQualityScore.getAsDouble(), getGcContent.getAsDouble()));
         }
@@ -75,6 +81,27 @@ public class ProbeFactory
         {
             return Optional.empty();
         }
+    }
+
+    private boolean isRegionValid(final ChrBaseRegion region)
+    {
+        return region.hasValidPositions() && region.end() <= mRefGenome.getChromosomeLength(region.chromosome());
+    }
+
+    private String buildSequence(final ProbeTarget target)
+    {
+        String start = target.startRegion() == null ? "" : getSequence(target.startRegion());
+        if(target.startOrientation() == Orientation.REVERSE)
+        {
+            start = reverseComplementBases(start);
+        }
+        String insert = target.insertSequence() == null ? "" : target.insertSequence();
+        String end = target.endRegion() == null ? "" : getSequence(target.endRegion());
+        if(target.endOrientation() == Orientation.REVERSE)
+        {
+            end = reverseComplementBases(end);
+        }
+        return start + insert + end;
     }
 
     private String getSequence(final ChrBaseRegion region)

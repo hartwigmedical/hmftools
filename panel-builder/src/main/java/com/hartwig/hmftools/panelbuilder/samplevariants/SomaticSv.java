@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -38,6 +37,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
+import com.hartwig.hmftools.panelbuilder.ProbeTarget;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -131,20 +131,20 @@ public class SomaticSv implements Variant
     }
 
     @Override
-    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
+    public ProbeTarget generateProbeTarget()
     {
         if(mVariant.type() == StructuralVariantType.SGL)
         {
             return buildSglProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
-                    PROBE_LENGTH, refGenome);
+                    PROBE_LENGTH);
         }
         else
         {
             return buildSvProbe(
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
                     mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
-                    PROBE_LENGTH, refGenome);
+                    PROBE_LENGTH);
         }
     }
 

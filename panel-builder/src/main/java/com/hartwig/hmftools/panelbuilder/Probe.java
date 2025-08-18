@@ -2,14 +2,10 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
-        // null if the probe sequence doesn't correspond to a single location in the reference genome.
-        // This is the case when designing probes to capture variants.
-        @Nullable ChrBaseRegion region,
+        ProbeTarget target,
         String sequence,
         TargetMetadata metadata,
         // null if the probe hasn't been evaluated yet.
@@ -22,13 +18,9 @@ public record Probe(
 {
     public Probe
     {
-        if(region != null && !region.hasValidPositions())
+        if(target.baseLength() != sequence.length())
         {
-            throw new IllegalArgumentException("Invalid region");
-        }
-        if(region != null && sequence.length() != region.baseLength())
-        {
-            throw new IllegalArgumentException("sequence length should match probe region length");
+            throw new IllegalArgumentException("sequence length should match target length");
         }
         if(!isDnaSequenceNormal(sequence))
         {
@@ -57,11 +49,11 @@ public record Probe(
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
     {
-        return new Probe(region, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
+        return new Probe(target, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
     }
 
     public Probe withRejectionReason(final String value)
     {
-        return new Probe(region, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
+        return new Probe(target, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
     }
 }

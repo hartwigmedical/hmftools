@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
@@ -54,7 +53,7 @@ public class CandidateProbeGeneratorTest
         Set<ChrBaseRegion> expectedRegions = IntStream.rangeClosed(region.start(), region.end() - PROBE_LENGTH + 1)
                 .mapToObj(start -> new ChrBaseRegion(region.chromosome(), start, start + PROBE_LENGTH - 1))
                 .collect(Collectors.toSet());
-        List<ChrBaseRegion> actualRegions = actual.stream().map(Probe::region).toList();
+        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.target().exactRegion()).toList();
 
         // Check the full set of probes is as expected.
         assertEquals(expectedRegions, new HashSet<>(actualRegions));
@@ -78,7 +77,7 @@ public class CandidateProbeGeneratorTest
     public void testCoverOneSubregionChromosomeBounds()
     {
         List<Probe> actual = mGenerator.coverOneSubregion(new ChrBaseRegion("1", 1, 1000), METADATA).toList();
-        int minStart = actual.stream().mapToInt(probe -> requireNonNull(probe.region()).start()).min().orElseThrow();
+        int minStart = actual.stream().mapToInt(probe -> probe.target().exactRegion().start()).min().orElseThrow();
         assertEquals(1, minStart);
     }
 
@@ -92,7 +91,7 @@ public class CandidateProbeGeneratorTest
                 .toList();
 
         List<Probe> actual = mGenerator.allOverlapping(region, METADATA).toList();
-        List<ChrBaseRegion> actualRegions = actual.stream().map(Probe::region).toList();
+        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.target().exactRegion()).toList();
 
         assertEquals(expectedRegions, actualRegions);
 

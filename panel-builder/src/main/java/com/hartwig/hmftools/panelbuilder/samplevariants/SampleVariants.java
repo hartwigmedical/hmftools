@@ -25,13 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
+import com.hartwig.hmftools.panelbuilder.ProbeTarget;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 import com.hartwig.hmftools.panelbuilder.UserInputError;
 
@@ -45,7 +46,6 @@ import org.apache.logging.log4j.Logger;
 public class SampleVariants
 {
     private final SampleVariantsConfig mConfig;
-    private final RefGenomeInterface mRefGenome;
     private final ProbeGenerator mProbeGenerator;
     private final PanelData mPanelData;
 
@@ -56,11 +56,9 @@ public class SampleVariants
 
     private static final Logger LOGGER = LogManager.getLogger(SampleVariants.class);
 
-    public SampleVariants(final SampleVariantsConfig config, final RefGenomeInterface refGenome, final ProbeGenerator probeGenerator,
-            PanelData panelData)
+    public SampleVariants(final SampleVariantsConfig config, final ProbeGenerator probeGenerator, PanelData panelData)
     {
         mConfig = config;
-        mRefGenome = refGenome;
         mProbeGenerator = probeGenerator;
         mPanelData = panelData;
     }
@@ -273,25 +271,25 @@ public class SampleVariants
     {
         LOGGER.trace("Generating probe for variant: {}", variant);
 
-        VariantProbeData probeData = variant.generateProbe(mRefGenome);
+        ProbeTarget target = variant.generateProbeTarget();
 
         // Only do the coverage check for variant where the probe is similar to the ref genome.
         // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
         // so the variant probe is not needed.
         // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
-        boolean isNovel = isVariantProbeNovel(probeData);
-        boolean covered = !isNovel && probeData.regions().stream().allMatch(mPanelData::isCovered);
+        boolean isNovel = isVariantProbeNovel(target);
+        PanelCoverage coverage = isNovel ? null : mPanelData;
 
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probeWithSequence(probeData.sequence(), probeData.regions(), metadata, evalCriteria, covered);
+        return mProbeGenerator.probe(target, metadata, evalCriteria, coverage);
     }
 
-    private static boolean isVariantProbeNovel(final VariantProbeData data)
+    private static boolean isVariantProbeNovel(final ProbeTarget target)
     {
-        ChrBaseRegion start = data.start();
-        ChrBaseRegion end = data.end();
-        int insertLength = data.insert() == null ? 0 : data.insert().length();
+        ChrBaseRegion start = target.startRegion();
+        ChrBaseRegion end = target.endRegion();
+        int insertLength = target.insertSequence() == null ? 0 : target.insertSequence().length();
         if(start == null && end == null)
         {
             // Unknown region, assume novel sequence.
@@ -305,8 +303,8 @@ public class SampleVariants
                 if(start.start() > end.start())
                 {
                     // Ensure start and end are ordered correctly to calculate the delete length.
-                    start = data.end();
-                    end = data.start();
+                    start = target.endRegion();
+                    end = target.startRegion();
                 }
                 // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
                 int deleteLength = max(end.start() - start.end() - 1, 0);

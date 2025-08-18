@@ -3,45 +3,43 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.panelbuilder.ProbeTarget;
 
 public class VariantProbeBuilder
 {
-    public static VariantProbeData buildMutationProbe(final String chromosome, int position, final String ref, final String alt,
-            int probeLength, final RefGenomeInterface refGenome)
+    public static ProbeTarget buildMutationProbe(final String chromosome, int position, final String ref, final String alt,
+            int probeLength)
     {
         int altLength = alt.length();
         int refLength = ref.length();
         int startLength = probeLength / 2 - altLength / 2;
 
         ChrBaseRegion startRegion = regionEndingAt(chromosome, position - 1, startLength);
-        String startBases = refGenome.getBaseString(startRegion.chromosome(), startRegion.start(), startRegion.end());
-        int endBaseLength = probeLength - startBases.length() - altLength;
+        int endBaseLength = probeLength - startRegion.baseLength() - altLength;
 
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
-        String endBases = refGenome.getBaseString(endRegion.chromosome(), endRegion.start(), endRegion.end());
 
-        String sequence = startBases + alt + endBases;
+        ProbeTarget probeTarget = ProbeTarget.simpleMutation(startRegion, alt, endRegion);
 
-        if(sequence.length() != probeLength)
+        if(probeTarget.baseLength() != probeLength)
         {
-            throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d): %s",
-                    chromosome, position, ref, alt, sequence.length(), sequence));
+            throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d)",
+                    chromosome, position, ref, alt, probeTarget.baseLength()));
         }
 
-        return new VariantProbeData(sequence, startRegion, alt, endRegion);
+        return probeTarget;
     }
 
-    public static VariantProbeData buildSvProbe(final String chrStart, int positionStart, byte orientStart, final String chrEnd,
-            int positionEnd, byte orientEnd, final String insertSequence, int probeLength, final RefGenomeInterface refGenome)
+    public static ProbeTarget buildSvProbe(final String chrStart, int positionStart, byte orientStart, final String chrEnd,
+            int positionEnd, byte orientEnd, final String insertSequence, int probeLength)
     {
         int halfProbeLength = probeLength / 2;
         int insSeqLength = insertSequence.length();
@@ -55,27 +53,26 @@ public class VariantProbeBuilder
         // -1 to -1 - alt insert sequence then ref
 
         ChrBaseRegion startRegion;
-        String basesStart;
+        Orientation startOrient;
         ChrBaseRegion endRegion;
-        String basesEnd;
+        Orientation endOrient;
 
         if(orientStart == ORIENT_FWD)
         {
             startRegion = regionEndingAt(chrStart, positionStart, halfNonInsSeqLength);
-            basesStart = refGenome.getBaseString(startRegion.chromosome(), startRegion.start(), startRegion.end());
+            startOrient = Orientation.FORWARD;
 
-            int endBaseLength = probeLength - basesStart.length() - insSeqLength;
+            int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
 
             if(orientEnd == ORIENT_REV)
             {
                 endRegion = regionStartingAt(chrEnd, positionEnd, endBaseLength);
-                basesEnd = refGenome.getBaseString(endRegion.chromosome(), endRegion.start(), endRegion.end());
+                endOrient = Orientation.FORWARD;
             }
             else
             {
                 endRegion = regionEndingAt(chrEnd, positionEnd, endBaseLength);
-                basesEnd = refGenome.getBaseString(endRegion.chromosome(), endRegion.start(), endRegion.end());
-                basesEnd = reverseComplementBases(basesEnd);
+                endOrient = Orientation.REVERSE;
             }
         }
         else
@@ -84,48 +81,39 @@ public class VariantProbeBuilder
             {
                 // swap ends and treat as +1/-1
                 startRegion = regionEndingAt(chrEnd, positionEnd, halfNonInsSeqLength);
-                basesStart = refGenome.getBaseString(startRegion.chromosome(), startRegion.start(), startRegion.end());
+                startOrient = Orientation.FORWARD;
 
-                int endBaseLength = probeLength - basesStart.length() - insSeqLength;
+                int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
                 endRegion = regionStartingAt(chrStart, positionStart, endBaseLength);
             }
             else
             {
                 // -1/-1 - start with the reversed bases from the end breakend
                 startRegion = regionStartingAt(chrEnd, positionEnd, halfNonInsSeqLength);
-                basesStart = refGenome.getBaseString(startRegion.chromosome(), startRegion.start(), startRegion.end());
-                basesStart = reverseComplementBases(basesStart);
+                startOrient = Orientation.REVERSE;
 
-                int endBaseLength = probeLength - basesStart.length() - insSeqLength;
+                int endBaseLength = probeLength - startRegion.baseLength() - insSeqLength;
                 endRegion = regionStartingAt(chrStart, positionStart, endBaseLength);
             }
-            basesEnd = refGenome.getBaseString(endRegion.chromosome(), endRegion.start(), endRegion.end());
+            endOrient = Orientation.FORWARD;
         }
 
-        String sequence = basesStart + insertSequence + basesEnd;
+        ProbeTarget target = ProbeTarget.structuralVariant(startRegion, startOrient, insertSequence, endRegion, endOrient);
 
-        if(sequence.length() != probeLength)
+        if(target.baseLength() != probeLength)
         {
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new VariantProbeData(sequence, startRegion, insertSequence, endRegion);
+        return target;
     }
 
-    public static VariantProbeData buildSglProbe(final String chromosome, int position, byte orientation, final String insertSequence,
-            int probeLength, final RefGenomeInterface refGenome)
+    public static ProbeTarget buildSglProbe(final String chromosome, int position, byte orientation, final String insertSequence,
+            int probeLength)
     {
         int halfProbeLength = probeLength / 2;
         int insSeqLength = min(insertSequence.length(), halfProbeLength);
         int refBaseLength = probeLength - insSeqLength;
-
-        // +1 take as-is
-        // -1 to +1 - a DUP
-
-        // +1 to +1 - start normal, add insert and then reverse compliment of the other side
-        // -1 to -1 - alt insert sequence then ref
-
-        String sequence;
 
         ChrBaseRegion startRegion = null;
         ChrBaseRegion endRegion = null;
@@ -134,23 +122,21 @@ public class VariantProbeBuilder
         if(orientation == ORIENT_FWD)
         {
             startRegion = regionEndingAt(chromosome, position, refBaseLength);
-            String refBases = refGenome.getBaseString(startRegion.chromosome(), startRegion.start(), startRegion.end());
             insert = insertSequence.substring(0, insSeqLength);
-            sequence = refBases + insert;
         }
         else
         {
             insert = insertSequence.substring(insertSequence.length() - insSeqLength);
             endRegion = regionStartingAt(chromosome, position, refBaseLength);
-            String refBases = refGenome.getBaseString(endRegion.chromosome(), endRegion.start(), endRegion.end());
-            sequence = insert + refBases;
         }
 
-        if(sequence.length() != probeLength)
+        ProbeTarget probeTarget = ProbeTarget.simpleMutation(startRegion, insert, endRegion);
+
+        if(probeTarget.baseLength() != probeLength)
         {
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return new VariantProbeData(sequence, startRegion, insert, endRegion);
+        return probeTarget;
     }
 }

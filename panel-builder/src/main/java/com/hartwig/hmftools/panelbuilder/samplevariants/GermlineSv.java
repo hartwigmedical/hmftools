@@ -11,9 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.panelbuilder.ProbeTarget;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,12 +46,12 @@ public class GermlineSv implements Variant
     }
 
     @Override
-    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
+    public ProbeTarget generateProbeTarget()
     {
         return buildSvProbe(
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence,
-                PROBE_LENGTH, refGenome);
+                PROBE_LENGTH);
     }
 
     @Override

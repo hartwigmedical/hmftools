@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
-
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -44,20 +41,6 @@ public record ProbeGenerationResult(
         );
     }
 
-    // Convenience method for creating a result from covering a target region with exactly one probe.
-    public static ProbeGenerationResult coverTarget(final TargetRegion candidateTarget, final Probe probe)
-    {
-        TargetRegion covered = new TargetRegion(
-                regionIntersection(candidateTarget.region(), requireNonNull(probe.region())).orElseThrow(),
-                candidateTarget.metadata());
-        return new ProbeGenerationResult(
-                List.of(probe),
-                List.of(candidateTarget),
-                List.of(covered),
-                emptyList()
-        );
-    }
-
     // Convenience method for creating a result from a candidate target which got no probes since it was already covered.
     public static ProbeGenerationResult alreadyCoveredTarget(final TargetRegion candidateTarget)
     {
@@ -77,16 +60,19 @@ public record ProbeGenerationResult(
                 emptyList(),
                 List.of(target),
                 emptyList(),
-                List.of(RejectedRegion.rejectTarget(target, rejectionReason)));
+                List.of(new RejectedRegion(target.region(), target.metadata(), rejectionReason)));
     }
 
     // Convenience method for creating a result from rejecting multiple entire target regions.
     public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets, final String rejectionReason)
     {
+        List<RejectedRegion> rejectedRegions = targets.stream()
+                .map(target -> new RejectedRegion(target.region(), target.metadata(), rejectionReason))
+                .toList();
         return new ProbeGenerationResult(
                 emptyList(),
                 List.copyOf(targets),
                 emptyList(),
-                targets.stream().map(target -> RejectedRegion.rejectTarget(target, rejectionReason)).toList());
+                rejectedRegions);
     }
 }

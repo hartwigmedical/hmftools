@@ -13,11 +13,11 @@ import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuild
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.panelbuilder.ProbeTarget;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -108,11 +108,11 @@ public class SomaticMutation implements Variant
     }
 
     @Override
-    public VariantProbeData generateProbe(final RefGenomeInterface refGenome)
+    public ProbeTarget generateProbeTarget()
     {
         return buildMutationProbe(
                 mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
-                PROBE_LENGTH, refGenome);
+                PROBE_LENGTH);
     }
 
     @Override
