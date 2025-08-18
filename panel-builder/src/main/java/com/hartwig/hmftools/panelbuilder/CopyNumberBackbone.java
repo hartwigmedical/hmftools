@@ -113,7 +113,7 @@ public class CopyNumberBackbone
                 return new AmberSite(new BasePosition(chromosome, position), gnomadFreq);
             }).toList();
 
-            LOGGER.info("Loaded {} Amber sites from {}", sites.size(), path);
+            LOGGER.debug("Loaded {} Amber sites from {}", sites.size(), path);
             return sites;
         }
     }

@@ -77,7 +77,6 @@ public class PanelBuilderApplication
         generateCustomRegionProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
-        generateMsiProbes();
         generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
@@ -139,19 +138,6 @@ public class PanelBuilderApplication
         else
         {
             LOGGER.info("CDR3 not requested; skipping CDR3 probe generation");
-        }
-    }
-
-    private void generateMsiProbes()
-    {
-        if(mConfig.msiSitesFile() == null)
-        {
-            LOGGER.info("MSI sites file not provided; skipping MSI probes");
-        }
-        else
-        {
-            MsiSites.generateProbes(mConfig.msiSitesFile(), mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData.
         }
     }
 

@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static java.util.Objects.requireNonNull;
-
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN;
@@ -14,11 +9,11 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+// TODO: how do we input multiple custom regions files?
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
@@ -28,8 +23,6 @@ public class CustomRegions
             CUSTOM_REGION_QUALITY_MIN, CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE);
     private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.MaxQuality();
 
-    private static final String FLD_EXTRA_INFO = "ExtraInfo";
-
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
     public static void generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
@@ -37,7 +30,7 @@ public class CustomRegions
     {
         LOGGER.info("Generating custom region probes");
 
-        List<CustomRegion> customRegions = loadCustomRegionsFile(customRegionFile);
+        List<CustomRegion> customRegions = CustomRegion.readFromFile(customRegionFile);
 
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
@@ -51,40 +44,6 @@ public class CustomRegions
         panelData.addResult(result);
 
         LOGGER.info("Done generating custom region probes");
-    }
-
-    private record CustomRegion(
-            ChrBaseRegion region,
-            // Arbitrary descriptor for the user.
-            String extraInfo
-    )
-    {
-    }
-
-    private static List<CustomRegion> loadCustomRegionsFile(final String filePath)
-    {
-        LOGGER.debug("Loading custom regions file: {}", filePath);
-
-        try(DelimFileReader reader = new DelimFileReader(filePath))
-        {
-            int chromosomeIdx = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
-            int posStartIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_START));
-            int posEndIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_END));
-            int extraInfoIdx = requireNonNull(reader.getColumnIndex(FLD_EXTRA_INFO));
-
-            List<CustomRegion> regions = reader.stream().map(row ->
-            {
-                String chromosome = row.get(chromosomeIdx);
-                int start = row.getInt(posStartIdx);
-                int end = row.getInt(posEndIdx);
-                String extraInfo = row.get(extraInfoIdx);
-                ChrBaseRegion baseRegion = new ChrBaseRegion(chromosome, start, end);
-                return new CustomRegion(baseRegion, extraInfo);
-            }).toList();
-
-            LOGGER.info("Loaded {} custom regions from {}", regions.size(), filePath);
-            return regions;
-        }
     }
 
     private static void checkRegionBounds(final List<CustomRegion> customRegions, final Map<String, Integer> chromosomeLengths)

@@ -114,7 +114,7 @@ public class GermlineSv implements Variant
                 })
                 .toList();
 
-        LOGGER.info("Loaded {} germline structural variants", variants.size());
+        LOGGER.debug("Loaded {} germline structural variants", variants.size());
         variants.forEach(variant -> LOGGER.trace("GermlineSv: {}", variant));
 
         return variants;

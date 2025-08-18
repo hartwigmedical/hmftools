@@ -8,8 +8,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.mappability.ProbeQualityProfile.CFG_PROBE_QUALITY_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputId;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_RESOLUTION_KB_DEFAULT;
 
@@ -28,7 +30,6 @@ public record PanelBuilderConfig(
         @Nullable String genesFile,
         @Nullable String amberSitesFile,
         int cnBackboneResolution,
-        @Nullable String msiSitesFile,
         boolean includeCdr3,
         @Nullable String customRegionsFile,
         @Nullable SampleVariantsConfig sampleVariants,
@@ -40,11 +41,9 @@ public record PanelBuilderConfig(
     private static final String CFG_BWA_INDEX_IMAGE_FILE = "bwa_index_image";
     private static final String DESC_BWA_INDEX_IMAGE_FILE = "Reference genome BWA-MEM index GATK image file";
     private static final String CFG_AMBER_SITES_FILE = "amber_sites";
-    private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites file";
+    private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites TSV file";
     private static final String CFG_CN_BACKBONE_RESOLUTION = "cn_backbone_res_kb";
     private static final String DESC_CN_BACKBONE_RESOLUTION = "Approximate spacing between copy number backbone probes, in kb";
-    private static final String CFG_MSI_SITES_FILE = "msi_sites";
-    private static final String DESC_MSI_SITES_FILE = "Microsatellite instability positions file";
     private static final String CFG_TARGET_GENES_FILE = "genes";
     private static final String DESC_TARGET_GENES_FILE = "Gene options and transcript TSV file";
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
@@ -52,7 +51,7 @@ public record PanelBuilderConfig(
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
-    private static final String DESC_VERBOSE_OUTPUT = "Output more information useful for debugging";
+    private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
     public static PanelBuilderConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
@@ -66,7 +65,6 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
                 configBuilder.getValue(CFG_AMBER_SITES_FILE),
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
-                configBuilder.getValue(CFG_MSI_SITES_FILE),
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
                 configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
@@ -86,14 +84,14 @@ public record PanelBuilderConfig(
 
         configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
         configBuilder.addInteger(CFG_CN_BACKBONE_RESOLUTION, DESC_CN_BACKBONE_RESOLUTION, CN_BACKBONE_RESOLUTION_KB_DEFAULT);
-        configBuilder.addPath(CFG_MSI_SITES_FILE, false, DESC_MSI_SITES_FILE);
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
 
         SampleVariantsConfig.registerConfig(configBuilder);
 
-        addOutputOptions(configBuilder);
+        configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        addOutputId(configBuilder);
         configBuilder.addFlag(CFG_VERBOSE_OUTPUT, DESC_VERBOSE_OUTPUT);
 
         addLoggingOptions(configBuilder);

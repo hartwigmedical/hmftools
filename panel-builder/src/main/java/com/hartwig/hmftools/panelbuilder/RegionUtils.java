@@ -154,6 +154,11 @@ public class RegionUtils
         return region;
     }
 
+    public static ChrBaseRegion regionCenteredAt(final BasePosition position, int length)
+    {
+        return ChrBaseRegion.from(position.Chromosome, regionCenteredAt(position.Position, length));
+    }
+
     public static BaseRegion regionEndingAt(int endPosition, int length)
     {
         if(length < 1)

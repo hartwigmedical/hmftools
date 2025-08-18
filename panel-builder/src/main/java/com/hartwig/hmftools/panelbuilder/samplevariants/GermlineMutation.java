@@ -82,7 +82,7 @@ public class GermlineMutation implements Variant
 
         List<GermlineMutation> variants = germlineVariants.stream().map(GermlineMutation::new).toList();
 
-        LOGGER.info("Loaded {} germline mutations", sampleId);
+        LOGGER.debug("Loaded {} germline mutations", sampleId);
         variants.forEach(variant -> LOGGER.trace("GermlineMutation: {}", variant));
 
         return variants;

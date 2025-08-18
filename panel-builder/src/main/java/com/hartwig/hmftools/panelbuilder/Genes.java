@@ -180,7 +180,7 @@ public class Genes
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
 
-            LOGGER.info("Loaded {} genes from {}", genes.size(), filePath);
+            LOGGER.debug("Loaded {} genes from {}", genes.size(), filePath);
             return genes;
         }
     }

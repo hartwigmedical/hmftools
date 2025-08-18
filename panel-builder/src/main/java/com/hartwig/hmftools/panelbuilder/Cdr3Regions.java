@@ -54,7 +54,7 @@ public class Cdr3Regions
                 .filter(IgTcrGene::inPrimaryAssembly)
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
-        LOGGER.info("Loaded {} V/J genes", genes.size());
+        LOGGER.debug("Loaded {} V/J genes", genes.size());
         return genes;
     }
 

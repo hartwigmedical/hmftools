@@ -160,7 +160,7 @@ public class SomaticMutation implements Variant
                     .toList();
         }
 
-        LOGGER.info("Loaded {} somatic mutations", variants.size());
+        LOGGER.debug("Loaded {} somatic mutations", variants.size());
         variants.forEach(variant -> LOGGER.trace("SomaticMutation: {}", variant));
 
         return variants;
