@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.utils;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -39,10 +40,12 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -66,8 +69,8 @@ public class GenerateReferenceSequences
     private final String mResourceDir;
     private final GeneCache mGeneCache;
 
-    private final LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> mGroupedNucleotideSequences_;
-    private final LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> mGroupedAminoAcidSequences_;
+    private final List<HlaSequenceLoci> mNucleotideSequences__;
+    private final List<HlaSequenceLoci> mAminoAcidSequences__;
 
     private final HlaAlleleCache mAlleleCache;
     private final CohortFrequency mAlleleFrequencies_;
@@ -83,8 +86,8 @@ public class GenerateReferenceSequences
         Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
         mGeneCache = new GeneCache(hlaTranscriptMap);
 
-        mGroupedNucleotideSequences_ = Maps.newLinkedHashMap();
-        mGroupedAminoAcidSequences_ = Maps.newLinkedHashMap();
+        mNucleotideSequences__ = Lists.newArrayList();
+        mAminoAcidSequences__ = Lists.newArrayList();
     }
 
     public static void main(@NotNull final String[] args)
@@ -115,15 +118,11 @@ public class GenerateReferenceSequences
     private void rewriteRefData(final File outputDir)
     {
         File nucleotideSequenceFile = new File(outputDir, NUC_REF_FILE);
-        List<HlaSequenceLoci> nucleotideSequences = mGroupedNucleotideSequences_.values().stream()
-                .flatMap(x -> x.stream())
-                .toList();
+        List<HlaSequenceLoci> nucleotideSequences = mNucleotideSequences__;
         writeSequenceData(nucleotideSequenceFile, nucleotideSequences);
 
         File aminoAcidSequenceFile = new File(outputDir, AA_REF_FILE);
-        List<HlaSequenceLoci> aminoAcidSequences = mGroupedAminoAcidSequences_.values().stream()
-                .flatMap(x -> x.stream())
-                .toList();
+        List<HlaSequenceLoci> aminoAcidSequences = mAminoAcidSequences__;
         writeSequenceData(aminoAcidSequenceFile, aminoAcidSequences);
 
         // TODO: GENE_CACHE is null
@@ -131,33 +130,28 @@ public class GenerateReferenceSequences
 //        writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
     }
 
-    private void addSequences(Map<HlaAllele, List<HlaSequenceLoci>> sequences, Map<HlaAllele, List<HlaSequenceLoci>> newSequences)
-    {
-        for(Map.Entry<HlaAllele, List<HlaSequenceLoci>> entry : newSequences.entrySet())
-            sequences.computeIfAbsent(entry.getKey(), k -> Lists.newArrayList()).addAll(entry.getValue());
-    }
-
     private void loadSequenceFiles()
     {
         LL_LOGGER.info("reading nucleotide files");
 
         for(HlaGene gene : mGeneCache.GeneNames)
-            addSequences(mGroupedNucleotideSequences_, nucleotideLoci(new File(mResourceDir, gene.shortName() + "_nuc.txt"), gene));
+            mNucleotideSequences__.addAll(nucleotideLoci(new File(mResourceDir, gene.shortName() + "_nuc.txt"), gene));
 
-        LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> yNucSequences = nucleotideLoci(new File(mResourceDir, "Y_nuc.txt"), HLA_Y);
-        addSequences(mGroupedNucleotideSequences_, yNucSequences);
+        List<HlaSequenceLoci> yNucSequences = nucleotideLoci(new File(mResourceDir, "Y_nuc.txt"), HLA_Y);
+        mNucleotideSequences__.addAll(yNucSequences);
 
         // TODO: We do not include HLA-H seqs?
         // List<HlaSequenceLoci> hNucSequences = nucleotideLoci(mResourceDir + "H_nuc.txt");
         // mNucleotideSequences.addAll(hNucSequences);
 
+        fillWildcards(mNucleotideSequences__);
+
         LL_LOGGER.info("reading protein files");
 
         for(HlaGene gene : mGeneCache.GeneNames)
-            addSequences(mGroupedAminoAcidSequences_, aminoAcidLoci(new File(mResourceDir, gene.shortName() + "_prot.txt"), gene));
+            mAminoAcidSequences__.addAll(aminoAcidLoci(new File(mResourceDir, gene.shortName() + "_prot.txt"), gene));
 
-        HlaSequenceLoci sequenceTemplate = mGroupedAminoAcidSequences_.values().stream()
-                .flatMap(x -> x.stream())
+        final HlaSequenceLoci sequenceTemplate = mAminoAcidSequences__.stream()
                 .filter(x -> x.Allele.matches(DEFLATE_TEMPLATE))
                 .findFirst()
                 .orElse(null);
@@ -166,17 +160,18 @@ public class GenerateReferenceSequences
         // build H and Y amino-acid sequences from their nucleotides
         if(sequenceTemplate != null)
         {
-            yNucSequences.values().stream().flatMap(x -> x.stream()).forEach(x ->
+            yNucSequences.stream().forEach(x ->
             {
                 HlaSequenceLoci aminoAcid = buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate);
-                mGroupedAminoAcidSequences_.computeIfAbsent(
-                        aminoAcid.Allele.asAlleleGroup(), k -> Lists.newArrayList()).add(aminoAcid);
+                mAminoAcidSequences__.add(aminoAcid);
             });
             // hNucSequences.forEach(x -> mAminoAcidSequences.add(buildAminoAcidSequenceFromNucleotides(x, sequenceTemplate)));
         }
+
+        fillWildcards(mAminoAcidSequences__);
     }
 
-    private LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> nucleotideLoci(final File filename, final HlaGene gene)
+    private List<HlaSequenceLoci> nucleotideLoci(final File filename, final HlaGene gene)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
@@ -184,15 +179,10 @@ public class GenerateReferenceSequences
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
 
-        List<HlaSequenceLoci> builtSequences = buildSequences(reducedSequences, false);
-        LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> groupedBuiltSequences = Maps.newLinkedHashMap();
-        for(HlaSequenceLoci seq : builtSequences)
-            groupedBuiltSequences.computeIfAbsent(seq.Allele.asAlleleGroup(), k -> Lists.newArrayList()).add(seq);
-
-        return fillWildcards(groupedBuiltSequences);
+        return buildSequences(reducedSequences, false);
     }
 
-    private LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> aminoAcidLoci(final File filename, final HlaGene gene)
+    private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene gene)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
@@ -204,192 +194,7 @@ public class GenerateReferenceSequences
                 .map(x -> x.getRawSequence().endsWith("X") ? x : x.copyWithAdditionalSequence("X"))
                 .collect(Collectors.toList());
 
-        List<HlaSequenceLoci> builtSequences = buildSequences(reducedSequences, true);
-        LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> groupedBuiltSequences = Maps.newLinkedHashMap();
-        for(HlaSequenceLoci seq : builtSequences)
-            groupedBuiltSequences.computeIfAbsent(seq.Allele.asAlleleGroup(), k -> Lists.newArrayList()).add(seq);
-
-        return fillWildcards(groupedBuiltSequences);
-    }
-
-    private LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> fillWildcards(final LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> sequences)
-    {
-        LinkedHashMap<HlaAllele, List<HlaSequenceLoci>> output = Maps.newLinkedHashMap();
-        for(Map.Entry<HlaAllele, List<HlaSequenceLoci>> entry : sequences.entrySet())
-        {
-            HlaAllele alleleGroup = entry.getKey();
-            List<HlaSequenceLoci> seqs = entry.getValue();
-
-            // TODO:
-            if(seqs.stream().anyMatch(x -> x.Allele.toString().equals("A*01:01:12")))
-            {
-                System.out.println("");
-            }
-
-            List<HlaSequenceLoci> filteredSeqs = Lists.newArrayList();
-            double maxFrequency = -1.0;
-            HlaSequenceLoci maxSeq = null;
-            for(HlaSequenceLoci seq : seqs)
-            {
-                double frequency = mAlleleFrequencies_.getAlleleFrequency(seq.Allele.asFourDigit());
-                if(frequency > maxFrequency)
-                {
-                    maxFrequency = frequency;
-                    maxSeq = seq;
-                }
-
-                if(frequency < WILDCARD_FREQUENCY_CUTOFF)
-                    continue;
-
-                if(seq.hasWildcards())
-                    continue;
-
-                if(seq.Allele.asFourDigit().toString().matches("^.*[^0-9]$"))
-                    continue;
-
-                filteredSeqs.add(seq);
-            }
-
-            // TODO:
-            if(maxSeq == null)
-            {
-                throw new IllegalStateException("maxSeq is null");
-            }
-
-            List<String> consensusSeq = filteredSeqs.isEmpty() ? maxSeq.getSequences() : buildConsensus(filteredSeqs);
-            List<HlaSequenceLoci> newSeqs = seqs.stream().map(x -> fillWithConsensus(consensusSeq, x)).toList();
-            output.put(alleleGroup, newSeqs);
-        }
-
-        return output;
-    }
-
-    private static List<String> buildConsensus(final List<HlaSequenceLoci> sequences)
-    {
-        // TODO:
-        if(sequences.stream().anyMatch(x -> x.Allele.toString().equals("A*01:01:12")))
-        {
-            System.out.println("");
-        }
-
-        int maxLength = sequences.stream().mapToInt(x -> x.length()).max().getAsInt();
-
-        // reverse the sequence building step
-        final char sep = '@';
-        List<StringBuilder> reversedSequences = Lists.newArrayList();
-        for(int i = 0; i < sequences.size(); i++)
-            reversedSequences.add(new StringBuilder());
-
-        for(int i = 0; i < maxLength; i++)
-        {
-            final int index = i;
-            List<String> loci = sequences.stream()
-                    .map(x -> x.getSequences())
-                    .map(x -> index >= x.size() ? null : x.get(index))
-                    .toList();
-
-            int maxLociLength = loci.stream().mapToInt(x -> x == null ? 0 : x.length()).max().getAsInt();
-            for(int j = 0; j < loci.size(); j++)
-            {
-                String locus = loci.get(j);
-                if(locus == null)
-                    continue;
-
-                reversedSequences.get(j).append(locus);
-                if(locus.length() < maxLociLength)
-                    reversedSequences.get(j).append(DEL_STR.repeat(maxLociLength - locus.length()));
-
-                reversedSequences.get(j).append(sep);
-            }
-        }
-
-        // now build consensus
-        maxLength = reversedSequences.stream().mapToInt(x -> x.length()).max().getAsInt();
-        StringBuilder consensusSeqBuilder = new StringBuilder();
-        for(int i = 0; i < maxLength; i++)
-        {
-            Character consensusChar = null;
-            boolean containsSep = false;
-            for(int j = 0; j < reversedSequences.size(); j++)
-            {
-                StringBuilder seq = reversedSequences.get(j);
-                if(i >= seq.length())
-                    continue;
-
-                // TODO:
-                if(seq.charAt(i) == sep)
-                    containsSep = true;
-
-                if(consensusChar == null)
-                {
-                    consensusChar = seq.charAt(i);
-                    continue;
-                }
-
-                if(!consensusChar.equals(seq.charAt(i)))
-                {
-                    consensusChar = WILDCARD;
-                    break;
-                }
-            }
-
-            // TODO:
-            if(consensusChar == null)
-            {
-                throw new IllegalStateException("consensusChar is null");
-            }
-
-            // TODO:
-            if(containsSep && !consensusChar.equals(sep))
-            {
-                throw new IllegalStateException("consensusChar is " + consensusChar + " but containsSep " + sep);
-            }
-
-            consensusSeqBuilder.append(consensusChar);
-        }
-
-        List<String> consensusSeqs = Lists.newArrayList();
-        for(String seq : consensusSeqBuilder.toString().split("[" + sep + "]"))
-        {
-            if(seq.equals(DEL_STR))
-            {
-                consensusSeqs.add(seq);
-                continue;
-            }
-
-            consensusSeqs.add(seq.replaceAll("[.]+$", ""));
-        }
-
-        return consensusSeqs;
-    }
-
-    private static HlaSequenceLoci fillWithConsensus(final List<String> consensus, final HlaSequenceLoci sequence)
-    {
-        // TODO:
-        if(sequence.Allele.toString().equals("A*01:01:12"))
-        {
-            System.out.println("");
-        }
-
-        List<String> newSeqs = Lists.newArrayList();
-        for(int i = 0; i < sequence.length(); i++)
-        {
-            if(i >= consensus.size())
-            {
-                newSeqs.add(sequence.sequence(i));
-                continue;
-            }
-
-            if(sequence.sequence(i).equals(WILD_STR) && !consensus.get(i).equals(WILD_STR))
-            {
-                newSeqs.add(consensus.get(i));
-                continue;
-            }
-
-            newSeqs.add(sequence.sequence(i));
-        }
-
-        return new HlaSequenceLoci(sequence.Allele, newSeqs);
+        return buildSequences(reducedSequences, true);
     }
 
     private List<HlaSequenceLoci> buildSequences(final List<HlaSequence> sequences, boolean isProteinFile)
@@ -415,6 +220,146 @@ public class GenerateReferenceSequences
         }
 
         return newSequences;
+    }
+
+    private Map<String, List<HlaSequenceLoci>> getConsensusSeqs(final List<HlaSequenceLoci> seqs)
+    {
+        Map<String, List<HlaSequenceLoci>> groupedSeqs = Maps.newHashMap();
+        for(HlaSequenceLoci seq : seqs)
+        {
+            String key = seq.Allele.asAlleleGroup().toString();
+            groupedSeqs.computeIfAbsent(key, k -> Lists.newArrayList()).add(seq);
+        }
+
+        Map<String, List<HlaSequenceLoci>> groupedConsensusSeqs = Maps.newHashMap();
+        for(Map.Entry<String, List<HlaSequenceLoci>> entry : groupedSeqs.entrySet())
+        {
+            String alleleGroup = entry.getKey();
+            List<HlaSequenceLoci> consensusSeqs = Lists.newArrayList();
+            groupedConsensusSeqs.put(alleleGroup, consensusSeqs);
+            Set<String> seenFourDigitAlleles = Sets.newHashSet();
+            HlaSequenceLoci maxSeq = null;
+            double maxFreq = -1.0;
+            for(HlaSequenceLoci seq : entry.getValue())
+            {
+                HlaAllele fourDigit = seq.Allele.asFourDigit();
+                if(seenFourDigitAlleles.contains(fourDigit.toString()))
+                    continue;
+
+                seenFourDigitAlleles.add(fourDigit.toString());
+
+                double freq = mAlleleFrequencies_.getAlleleFrequency(fourDigit);
+                if(freq > maxFreq)
+                {
+                    maxFreq = freq;
+                    maxSeq = seq;
+                }
+
+                if(freq < WILDCARD_FREQUENCY_CUTOFF)
+                    continue;
+
+                if(fourDigit.toString().matches("^.*[^0-9]$"))
+                    continue;
+
+                if(seq.hasWildcards())
+                    continue;
+
+                if(seq.getSequences().stream().anyMatch(xs -> xs.contains(WILD_STR)))
+                    continue;
+
+                consensusSeqs.add(seq);
+            }
+
+            // TODO: remove
+            if(maxSeq == null)
+            {
+                throw new IllegalStateException("maxSeq is null");
+            }
+
+            if(consensusSeqs.isEmpty())
+                consensusSeqs.add(maxSeq);
+        }
+
+        return groupedConsensusSeqs;
+    }
+
+    private void fillWildcards(final List<HlaSequenceLoci> seqs)
+    {
+        Map<String, List<HlaSequenceLoci>> groupedConsensusSeqs = getConsensusSeqs(seqs);
+
+        List<HlaSequenceLoci> newSeqs = Lists.newArrayList();
+        for(HlaSequenceLoci seqLoci : seqs)
+        {
+            List<HlaSequenceLoci> consensusSeqs = groupedConsensusSeqs.get(seqLoci.Allele.asAlleleGroup().toString());
+            List<String> seq = seqLoci.getSequences();
+            List<String> newSeq = Lists.newArrayList();
+            for(int i = 0; i < seq.size(); ++i)
+            {
+                String locus = seq.get(i);
+                final int locusIdx = i;
+                List<String> consensusLocus = consensusSeqs.stream()
+                        .filter(xs -> locusIdx < xs.length())
+                        .map(xs -> xs.sequence(locusIdx))
+                        .toList();
+
+                if(consensusLocus.isEmpty())
+                {
+                    newSeq.add(locus);
+                    continue;
+                }
+
+                StringBuilder newLocus = new StringBuilder();
+                for(int j = 0; j < locus.length(); ++j)
+                {
+                    char base = locus.charAt(j);
+                    if(base != WILDCARD)
+                    {
+                        newLocus.append(base);
+                        continue;
+                    }
+
+                    final int baseIdx = j;
+                    List<Character> consensusBase = consensusLocus.stream()
+                            .filter(xs -> baseIdx < xs.length())
+                            .map(xs -> xs.charAt(baseIdx))
+                            .toList();
+
+                    if(consensusBase.isEmpty())
+                    {
+                        newLocus.append(WILDCARD);
+                        continue;
+                    }
+
+                    if(consensusBase.size() == 1 && consensusBase.get(0).equals(WILDCARD))
+                    {
+                        newLocus.append(WILDCARD);
+                        continue;
+                    }
+
+                    Set<Character> uniqConsensusBase = Sets.newHashSet(consensusBase);
+                    if(uniqConsensusBase.size() >= 2)
+                    {
+                        newLocus.append(WILDCARD);
+                        continue;
+                    }
+
+                    newLocus.append(consensusBase.get(0));
+                }
+
+                newSeq.add(newLocus.toString());
+            }
+
+            newSeqs.add(new HlaSequenceLoci(seqLoci.Allele, newSeq));
+        }
+
+        // TODO: remove
+        if(seqs.size() != newSeqs.size())
+        {
+            throw new IllegalStateException("seqs.size() != newSeqs.size()");
+        }
+
+        seqs.clear();
+        seqs.addAll(newSeqs);
     }
 
     private static void writeSequenceData(final File filename_, final Iterable<HlaSequenceLoci> sequenceData)
@@ -496,7 +441,7 @@ public class GenerateReferenceSequences
 
             int segmentInsertCount = 0;
 
-            writer.write(String.format("%03d", 0));
+            writer.write(format("%03d", 0));
 
             for(int i = 1; i < sequenceMaxLengths.size(); ++i)
             {
@@ -506,7 +451,7 @@ public class GenerateReferenceSequences
                 if((i % 10) == 0)
                 {
                     String padding = padString("", 7 + (maxInsertLen - 1) * segmentInsertCount);
-                    writer.write(String.format("%s%03d", padding, i));
+                    writer.write(format("%s%03d", padding, i));
                     segmentInsertCount = 0;
                 }
             }
@@ -532,7 +477,7 @@ public class GenerateReferenceSequences
                         else if(transData.CodingEnd < exon.Start)
                             break;
 
-                        writer.write(String.format("%d: %d - %d\t",
+                        writer.write(format("%d: %d - %d\t",
                                 exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
                     }
                 }
@@ -547,7 +492,7 @@ public class GenerateReferenceSequences
                         else if(transData.CodingStart > exon.End)
                             break;
 
-                        writer.write(String.format("%d: %d - %d\t",
+                        writer.write(format("%d: %d - %d\t",
                                 exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
                     }
                 }
