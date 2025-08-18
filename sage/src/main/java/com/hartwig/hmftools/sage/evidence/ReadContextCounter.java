@@ -57,6 +57,7 @@ import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isHighBaseQual;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.isMediumBaseQual;
 
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -117,6 +118,7 @@ public class ReadContextCounter
     private final ReadSupportCounts mCounts;
     private int mSimpleAltMatches;
     private int mHighQualStrongSupport;
+    private int mMediumQualStrongSupport;
 
     private final StrandBiasData mAltFragmentStrandBias;
     private final StrandBiasData mNonAltFragmentStrandBias;
@@ -175,6 +177,7 @@ public class ReadContextCounter
         mCounts = new ReadSupportCounts();
         mSimpleAltMatches = 0;
         mHighQualStrongSupport = 0;
+        mMediumQualStrongSupport = 0;
 
         mJitterData = new JitterData();
 
@@ -228,6 +231,7 @@ public class ReadContextCounter
 
     public int simpleAltMatches() { return mSimpleAltMatches; }
     public int strongHighQualSupport() { return mHighQualStrongSupport; }
+    public int strongMediumQualSupport() { return mMediumQualStrongSupport; }
 
     public int depth() { return mCounts.Total; }
 
@@ -606,8 +610,13 @@ public class ReadContextCounter
         mCounts.addSupport(support, 1);
         mQualities.addSupport(support, (int)quality);
 
-        if(supportsAltStrong && isHighBaseQual(baseQuality))
-            ++mHighQualStrongSupport;
+        if(supportsAltStrong)
+        {
+            if(isHighBaseQual(baseQuality))
+                ++mHighQualStrongSupport;
+            else if(isMediumBaseQual(baseQuality))
+                ++mMediumQualStrongSupport;
+        }
 
         if(mFragmentLengthData != null && (support == REF || supportsAlt))
         {

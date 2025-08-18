@@ -132,6 +132,11 @@ public class QualityCalculator
         return BaseQualAdjustment.isHighBaseQual((byte)baseQual, SEQUENCING_TYPE);
     }
 
+    public static boolean isMediumBaseQual(final double baseQual)
+    {
+        return BaseQualAdjustment.isMediumBaseQual((byte)baseQual, SEQUENCING_TYPE);
+    }
+
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
     public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)

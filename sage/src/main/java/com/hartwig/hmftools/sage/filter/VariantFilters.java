@@ -301,7 +301,13 @@ public class VariantFilters
             return true;
         }
 
-        int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+        int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
+        double modifiedAltMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltMediumBaseQualityTotal();
+        double modifiedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltMediumBaseQualityTotal;
+        int mediumSupportContribution = (int)(strongNonMediumSupport * modifiedAltMediumBaseQualityTotal/modifiedAltNonMediumBaseQualityTotal);
+        int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
+
+        int qualPerRead = (int)round(modifiedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
@@ -313,7 +319,7 @@ public class VariantFilters
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
 
-        double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
+        double prob = 1 - distribution.cumulativeProbability(adjustedStrongSupport - 1);
 
         if(isGermline)
         {
@@ -576,7 +582,7 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+        return primaryTumor.strongHighQualSupport() < strongSupportThreshold;
     }
 
     private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)
@@ -609,20 +615,6 @@ public class VariantFilters
         }
 
         return false;
-    }
-
-    private boolean exceedsAltFragmentLength(final ReadContextCounter primaryTumor)
-    {
-        int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
-        double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
-        int altSupport = primaryTumor.altSupport();
-        int nonAltCount = primaryTumor.fragmentLengths().nonAltCount();
-
-        if(avgNonAltLength == 0 || maxAltLength == 0 || nonAltCount < 10 || maxAltLength >= avgNonAltLength)
-            return false;
-
-        double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);
-        return ratioFactor < ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
     }
 
     // germline and paired tumor-germline tests
