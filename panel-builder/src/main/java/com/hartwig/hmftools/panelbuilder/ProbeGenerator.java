@@ -438,7 +438,7 @@ public class ProbeGenerator
                     ChrBaseRegion probeRegion = probe.target().exactRegion();
                     if(coverage != null && coverage.isCovered(probeRegion))
                     {
-                        return ProbeGenerationResult.alreadyCoveredTarget(candidateTargetRegion);
+                        return ProbeGenerationResult.alreadyCoveredTargets(List.of(candidateTargetRegion));
                     }
                     else
                     {
@@ -451,7 +451,7 @@ public class ProbeGenerator
                 .orElseGet(() ->
                 {
                     String rejectionReason = "No valid probe in region meeting criteria " + evalCriteria;
-                    return ProbeGenerationResult.rejectTarget(candidateTargetRegion, rejectionReason);
+                    return ProbeGenerationResult.rejectTargets(List.of(candidateTargetRegion), rejectionReason);
                 });
     }
 

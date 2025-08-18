@@ -46,20 +46,9 @@ public class ProbeFactory
             return Optional.empty();
         }
 
-        if(target.isExactRegion())
-        {
-            return createProbe(
-                    target, sequence, metadata,
-                    () -> getQualityScore(target.exactRegion(), sequence, false),
-                    () -> calcGcPercent(sequence));
-        }
-        else
-        {
-            return createProbe(
-                    target, sequence, metadata,
-                    () -> getQualityScore(null, sequence, true),
-                    () -> calcGcPercent(sequence));
-        }
+        return createProbe(target, sequence, metadata,
+                () -> getQualityScore(target.exactRegionOrNull(), sequence, !target.isExactRegion()),
+                () -> calcGcPercent(sequence));
     }
 
     private Optional<Probe> createProbe(final ProbeTarget target, final String sequence, final TargetMetadata metadata,

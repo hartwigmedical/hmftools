@@ -41,26 +41,10 @@ public record ProbeGenerationResult(
         );
     }
 
-    // Convenience method for creating a result from a candidate target which got no probes since it was already covered.
-    public static ProbeGenerationResult alreadyCoveredTarget(final TargetRegion candidateTarget)
-    {
-        return new ProbeGenerationResult(emptyList(), List.of(candidateTarget), emptyList(), emptyList());
-    }
-
     // Convenience method for creating a result from candidate targets which got no probes since they were already covered.
     public static ProbeGenerationResult alreadyCoveredTargets(final List<TargetRegion> targets)
     {
         return new ProbeGenerationResult(emptyList(), List.copyOf(targets), emptyList(), emptyList());
-    }
-
-    // Convenience method for creating a result from rejecting an entire target region.
-    public static ProbeGenerationResult rejectTarget(final TargetRegion target, final String rejectionReason)
-    {
-        return new ProbeGenerationResult(
-                emptyList(),
-                List.of(target),
-                emptyList(),
-                List.of(new RejectedRegion(target.region(), target.metadata(), rejectionReason)));
     }
 
     // Convenience method for creating a result from rejecting multiple entire target regions.

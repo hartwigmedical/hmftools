@@ -26,7 +26,7 @@ public record ProbeTarget(
 {
     public ProbeTarget
     {
-        boolean valid1 = startRegion != null && insertSequence == null && endRegion == null;
+        boolean valid1 = startRegion != null && startOrientation == null && insertSequence == null && endRegion == null;
         boolean valid2 = insertSequence != null && (startRegion != null || endRegion != null);
         if(!(valid1 || valid2))
         {

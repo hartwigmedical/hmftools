@@ -59,17 +59,32 @@ public class ProbeGenerationResultTest
         assertEquals(expected, actual);
     }
 
-    // TODO: test others
+    @Test
+    public void testAlreadyCoveredTarget()
+    {
+        TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
+        TargetRegion target = new TargetRegion(
+                new ChrBaseRegion("1", 10, 20),
+                metadata);
+        ProbeGenerationResult actual = ProbeGenerationResult.alreadyCoveredTargets(List.of(target));
+        ProbeGenerationResult expected = new ProbeGenerationResult(
+                emptyList(),
+                List.of(target),
+                emptyList(),
+                emptyList()
+        );
+        assertEquals(expected, actual);
+    }
 
     @Test
-    public void testRejectTarget()
+    public void testRejectTargets()
     {
         TargetMetadata metadata = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
         TargetRegion target = new TargetRegion(
                 new ChrBaseRegion("1", 10, 20),
                 metadata);
         String reason = "rejected";
-        ProbeGenerationResult actual = ProbeGenerationResult.rejectTarget(target, reason);
+        ProbeGenerationResult actual = ProbeGenerationResult.rejectTargets(List.of(target), reason);
         ProbeGenerationResult expected = new ProbeGenerationResult(
                 emptyList(),
                 List.of(target),
