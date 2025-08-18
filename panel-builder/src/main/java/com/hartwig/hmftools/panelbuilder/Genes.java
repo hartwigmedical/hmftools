@@ -45,6 +45,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 // Probes covering (regions of) selected genes.
 // Methodology for gene regions:
@@ -173,15 +174,27 @@ public class Genes
                 boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
                 boolean promoter = row.getBoolean(FLD_INCLUDE_PROMOTER);
-                String extraTranscriptsStr = row.get(FLD_EXTRA_TRANSCRIPTS);
-                List<String> extraTranscripts =
-                        extraTranscriptsStr.isEmpty() ? emptyList() : Arrays.asList(extraTranscriptsStr.split(","));
+                String extraTranscriptsStr = row.getOrNull(FLD_EXTRA_TRANSCRIPTS);
+                List<String> extraTranscripts = parseGeneExtraTranscripts(extraTranscriptsStr);
+
                 GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream, promoter);
                 return new GeneDefinition(geneName, options, extraTranscripts);
             }).toList();
 
             LOGGER.debug("Loaded {} genes from {}", genes.size(), filePath);
             return genes;
+        }
+    }
+
+    private static List<String> parseGeneExtraTranscripts(@Nullable final String field)
+    {
+        if(field == null)
+        {
+            return emptyList();
+        }
+        else
+        {
+            return Arrays.asList(field.strip().split(","));
         }
     }
 
