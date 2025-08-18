@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.wisp.common;
 
-import static java.lang.String.format;
-
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,8 +39,8 @@ public final class CommonUtils
 
         if(sequence.length() != probeLength)
         {
-            throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d): %s",
-                    chromosome, position, ref, alt, sequence.length(), sequence));
+            CT_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
+                    chromosome, position, ref, alt, sequence.length(), sequence);
         }
 
         return sequence;
