@@ -13,7 +13,7 @@ import com.hartwig.hmftools.panelbuilder.CustomRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: about 25% of these are rejected
+// TODO: about 20% of the existing panel MSI sites are rejected. figure out how to proceed
 // Regions around microsatellite instability sites.
 public class MsiSites
 {

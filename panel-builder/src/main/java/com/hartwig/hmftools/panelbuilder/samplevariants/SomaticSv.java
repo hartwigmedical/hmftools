@@ -104,7 +104,6 @@ public class SomaticSv implements Variant
         return max(mVariant.startTumorVariantFragmentCount(), mVariant.endTumorVariantFragmentCount());
     }
 
-    // TODO: use in extra info
     @Nullable
     private String gene()
     {
@@ -184,13 +183,16 @@ public class SomaticSv implements Variant
     {
         if(mVariant.type() == StructuralVariantType.SGL)
         {
-            return format("%s:%d:%d %s", mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type());
+            return format("%s:%d:%d %s %s",
+                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.type(),
+                    Optional.ofNullable(gene()).orElse(""));
         }
         else
         {
-            return format("%s:%d:%d - %s:%d:%d %s",
+            return format("%s:%d:%d - %s:%d:%d %s %s",
                     mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.type());
+                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.type(),
+                    Optional.ofNullable(gene()).orElse(""));
         }
     }
 

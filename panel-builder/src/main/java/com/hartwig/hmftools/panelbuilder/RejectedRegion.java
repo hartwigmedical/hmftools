@@ -2,7 +2,7 @@ package com.hartwig.hmftools.panelbuilder;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-// TODO: this should include rejected sequences for variant probes
+// TODO: should this include rejected sequences for variant probes?
 // Regions which was requested to be covered by probes but couldn't be due to probe selection criteria.
 // Just for output and debugging purposes.
 public record RejectedRegion(

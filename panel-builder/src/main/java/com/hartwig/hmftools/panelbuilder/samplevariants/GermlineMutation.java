@@ -28,7 +28,6 @@ public class GermlineMutation implements Variant
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineMutation.class);
 
-    // TODO: use in extra info
     private String gene()
     {
         return mVariant.gene();
@@ -63,7 +62,8 @@ public class GermlineMutation implements Variant
     @Override
     public String toString()
     {
-        return format("%s:%s %s>%s %s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), mVariant.type());
+        return format("%s:%s %s>%s %s %s",
+                mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), mVariant.type(), gene());
     }
 
     public static List<GermlineMutation> load(final String sampleId, final String purpleDir)

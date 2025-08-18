@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SUB
 import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -95,7 +96,6 @@ public class SomaticMutation implements Variant
         return !isSubclonal;
     }
 
-    // TODO: use in extra info
     private String gene()
     {
         return mVariantDecorator.variantImpact().GeneName;
@@ -131,9 +131,9 @@ public class SomaticMutation implements Variant
     @Override
     public String toString()
     {
-        return format("%s:%s %s>%s %s",
+        return format("%s:%s %s>%s %s %s",
                 mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
-                mVariantDecorator.type());
+                mVariantDecorator.type(), Optional.ofNullable(gene()).orElse(""));
     }
 
     // Hash code for "randomly" ordering variants while maintaining determinism for comparison purposes.

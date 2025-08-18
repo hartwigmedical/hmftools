@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
@@ -33,7 +34,6 @@ public class GermlineSv implements Variant
         mBreakends = breakends;
     }
 
-    // TODO: use in extra info
     private String gene()
     {
         return mVariant.GeneName;
@@ -71,10 +71,10 @@ public class GermlineSv implements Variant
     @Override
     public String toString()
     {
-        return format("%s:%d:%d - %s:%d:%d %s",
+        return format("%s:%d:%d - %s:%d:%d %s %s",
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
                 mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd,
-                mVariant.Type);
+                mVariant.Type, Optional.ofNullable(gene()).orElse(""));
     }
 
     public static List<GermlineSv> load(final String sampleId, final String linxGermlineDir)
