@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
 
@@ -35,14 +38,14 @@ class MicrosatelliteRead
     private RefGenomeMicrosatellite mRefGenomeMicrosatellite;
     private ConsensusType mConsensusType;
 
-    public boolean shouldDropRead;
+    private boolean mShouldDropRead;
 
-    private int numAligned;
-    private int numInserted;
-    private int numDeleted;
+    private int mNumAligned;
+    private int mNumInserted;
+    private int mNumDeleted;
 
-    private int numMatchedBefore;
-    private int numMatchedAfter;
+    private int mNumMatchedBefore;
+    private int mNumMatchedAfter;
 
     private MicrosatelliteRead()
     {
@@ -54,17 +57,18 @@ class MicrosatelliteRead
         mRefGenomeMicrosatellite = null;
         mConsensusType = null;
 
-        shouldDropRead = false;
+        mShouldDropRead = false;
 
-        numAligned = 0;
-        numInserted = 0;
-        numDeleted = 0;
-
-        numMatchedBefore = 0;
-        numMatchedAfter = 0;
+        mNumAligned = 0;
+        mNumInserted = 0;
+        mNumDeleted = 0;
+        mNumMatchedBefore = 0;
+        mNumMatchedAfter = 0;
     }
 
-    private void analyse(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, @Nullable final ConsensusMarker consensusMarker)
+    public boolean shouldDropRead() { return mShouldDropRead; }
+
+    private void analyse(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         clear();
 
@@ -74,7 +78,7 @@ class MicrosatelliteRead
         if(record.getAlignmentStart() > refGenomeMicrosatellite.referenceStart()
         || record.getAlignmentEnd() < refGenomeMicrosatellite.referenceEnd())
         {
-            shouldDropRead = true;
+            mShouldDropRead = true;
         }
         else
         {
@@ -82,19 +86,14 @@ class MicrosatelliteRead
         }
 
         // check that we got the flanking bases aligned
-        if(numMatchedBefore < MIN_FLANKING_BASE_MATCHES || numMatchedAfter < MIN_FLANKING_BASE_MATCHES)
+        if(mNumMatchedBefore < MIN_FLANKING_BASE_MATCHES || mNumMatchedAfter < MIN_FLANKING_BASE_MATCHES)
         {
-            shouldDropRead = true;
-            // sLogger.trace("read: {} not enough flanking bases aligned(before: {}, after: {}), dropping read",
-            //         record, numMatchedBefore, numMatchedAfter);
+            mShouldDropRead = true;
         }
 
-        if(!shouldDropRead)
+        if(!mShouldDropRead)
         {
-            if(consensusMarker == null)
-                mConsensusType = NONE;
-            else
-                mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
+            mConsensusType = consensusMarker.consensusType(refGenomeMicrosatellite, record);
         }
         else
         {
@@ -102,14 +101,14 @@ class MicrosatelliteRead
         }
 
         // do some validation and logging
-        if(!shouldDropRead)
+        if(!mShouldDropRead)
         {
-            int readRepeatLength = numAligned + numInserted;
-            if(readRepeatLength != refGenomeMicrosatellite.baseLength() - numDeleted + numInserted)
+            int readRepeatLength = mNumAligned + mNumInserted;
+            if(readRepeatLength != refGenomeMicrosatellite.baseLength() - mNumDeleted + mNumInserted)
             {
                 sLogger.error("read({}) {}, incorrect read repeat length({}) numAligned({}) numInserted({}) numDeleted({}) " +
                                 "homopolymer({})",
-                        record, record.getCigarString(), readRepeatLength, numAligned, numInserted, numDeleted, refGenomeMicrosatellite.genomeRegion);
+                        record, record.getCigarString(), readRepeatLength, mNumAligned, mNumInserted, mNumDeleted, refGenomeMicrosatellite.genomeRegion);
             }
         }
     }
@@ -118,9 +117,9 @@ class MicrosatelliteRead
 
     public int readRepeatLength()
     {
-        Validate.isTrue(!shouldDropRead);
+        Validate.isTrue(!mShouldDropRead);
         // calculate the repeat length
-        int readRepeatLength = numAligned + numInserted;
+        int readRepeatLength = mNumAligned + mNumInserted;
 
         return readRepeatLength;
     }
@@ -134,7 +133,7 @@ class MicrosatelliteRead
 
     @Nullable
     public static MicrosatelliteRead from(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, @Nullable final ConsensusMarker consensusMarker)
+            final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         MicrosatelliteRead instance = THREAD_INSTANCE.get();
         instance.analyse(refGenomeMicrosatellite, record, consensusMarker);
@@ -148,30 +147,29 @@ class MicrosatelliteRead
     {
         // check if this alignment spans the repeat
         // TODO: check for substitution??
-        int numAlignedToMs = Math.min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceEnd() + 1) -
-                Math.max(startRefPos, mRefGenomeMicrosatellite.referenceStart());
+        int numAlignedToMs = min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceEnd() + 1) -
+                max(startRefPos, mRefGenomeMicrosatellite.referenceStart());
 
         if(numAlignedToMs > 0)
         {
             // this is in the repeat section
-            numAligned += numAlignedToMs;
+            mNumAligned += numAlignedToMs;
         }
 
-        int numAlignedToFlankingStart = Math.min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceStart()) -
-                Math.max(startRefPos, mRefGenomeMicrosatellite.referenceStart() - MIN_FLANKING_BASE_MATCHES);
+        int numAlignedToFlankingStart = min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceStart()) -
+                max(startRefPos, mRefGenomeMicrosatellite.referenceStart() - MIN_FLANKING_BASE_MATCHES);
 
         if(numAlignedToFlankingStart > 0)
         {
-            numMatchedBefore += numAlignedToFlankingStart;
+            mNumMatchedBefore += numAlignedToFlankingStart;
         }
 
-        int numAlignedToFlankingEnd =
-                Math.min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceEnd() + 1 + MIN_FLANKING_BASE_MATCHES) -
-                        Math.max(startRefPos, mRefGenomeMicrosatellite.referenceEnd() + 1);
+        int numAlignedToFlankingEnd = min(startRefPos + e.getLength(), mRefGenomeMicrosatellite.referenceEnd() + 1 + MIN_FLANKING_BASE_MATCHES)
+                - max(startRefPos, mRefGenomeMicrosatellite.referenceEnd() + 1);
 
         if(numAlignedToFlankingEnd > 0)
         {
-            numMatchedAfter += numAlignedToFlankingEnd;
+            mNumMatchedAfter += numAlignedToFlankingEnd;
         }
     }
 
@@ -187,7 +185,7 @@ class MicrosatelliteRead
                 // the inserted bases must be a multiple of the repeat unit
                 if(record.getReadBases()[readIndex + i] != mRefGenomeMicrosatellite.unit[i % mRefGenomeMicrosatellite.unit.length])
                 {
-                    shouldDropRead = true;
+                    mShouldDropRead = true;
                     // should drop this base
                     sLogger.trace("read: {} inserted bases: {} vs ms unit: {} mismatch, dropping read",
                             record, record.getReadString().substring(readIndex, readIndex + e.getLength()),
@@ -196,13 +194,13 @@ class MicrosatelliteRead
                 }
             }
 
-            numInserted += e.getLength();
+            mNumInserted += e.getLength();
         }
         else if(refPos + MIN_FLANKING_BASE_MATCHES >= mRefGenomeMicrosatellite.referenceStart() &&
                 refPos - MIN_FLANKING_BASE_MATCHES <= mRefGenomeMicrosatellite.referenceEnd() + 1)
         {
             // there is an insert very close to the homopolymer, drop this read
-            shouldDropRead = true;
+            mShouldDropRead = true;
         }
     }
 
@@ -212,14 +210,14 @@ class MicrosatelliteRead
         if(startRefPos >= mRefGenomeMicrosatellite.referenceStart() && endRefPos <= mRefGenomeMicrosatellite.referenceEnd())
         {
             // the whole delete is inside the repeat, this is nice simple case
-            numDeleted += e.getLength();
+            mNumDeleted += e.getLength();
         }
         else if((startRefPos < mRefGenomeMicrosatellite.referenceStart() && endRefPos >= mRefGenomeMicrosatellite.referenceStart() - 1) ||
                 (startRefPos <= mRefGenomeMicrosatellite.referenceEnd() + 1 && endRefPos > mRefGenomeMicrosatellite.referenceEnd()))
         {
             // if the delete cross over the start or the end, drop the read
             // also drop if the delete is just before the start of the polymer
-            shouldDropRead = true;
+            mShouldDropRead = true;
         }
     }
 
@@ -228,7 +226,7 @@ class MicrosatelliteRead
         // drop this read completely if the soft clip is near the repeat
         if(record.getAlignmentStart() >= mRefGenomeMicrosatellite.referenceStart())
         {
-            shouldDropRead = true;
+            mShouldDropRead = true;
         }
     }
 
@@ -237,7 +235,7 @@ class MicrosatelliteRead
         // drop this read completely if the soft clip is inside the repeat
         if(startRefPosition <= mRefGenomeMicrosatellite.referenceEnd())
         {
-            shouldDropRead = true;
+            mShouldDropRead = true;
         }
     }
 

@@ -17,8 +17,10 @@ public class SbxBamUtils
     public static final byte SBX_SIMPLEX_QUAL = 27;
     public static final byte SBX_DUPLEX_QUAL = 40;
     public static final byte SBX_DUPLEX_MISMATCH_QUAL = 1;
-    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL = 10;
-    public static final byte SBX_DUPLEX_ADJACENT_2_QUAL = 15;
+
+    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH = 15;
+    public static final byte SBX_DUPLEX_ADJACENT_1_QUAL = 20;
+    public static final byte SBX_DUPLEX_ADJACENT_2_3_QUAL = 25;
 
     private static final byte SBX_MEDIUM_QUAL_LOWER = SBX_SIMPLEX_QUAL;
     private static final byte SBX_MEDIUM_QUAL_UPPER = 29;

@@ -26,7 +26,8 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_3_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
@@ -564,7 +565,7 @@ public final class SbxRoutines
         return firstDuplexBaseIndex;
     }
 
-    private static final int[] ADJACENT_INDICES = {-2, -1, 1, 2};
+    private static final int[] ADJACENT_INDICES = {-3, -2, -1, 1, 2, 3};
 
     public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
     {
@@ -657,14 +658,30 @@ public final class SbxRoutines
             }
         }
 
+        String chromosome = record.getReferenceName();
+
         if(duplexMismatchIndices != null)
         {
             // apply duplex adjacent error logic within the duplex region
             for(Integer i : duplexMismatchIndices)
             {
+                boolean matchesRef = false;
+                byte readBase = record.getReadBases()[i];
+                int refPosition = record.getReferencePositionAtReadPosition(i);
+
+                if(refPosition > 0)
+                {
+                    byte refBase = refGenome.getBase(chromosome, refPosition);
+                    matchesRef = readBase == refBase;
+                }
+
                 for(int j = 0; j < ADJACENT_INDICES.length; ++j)
                 {
-                    byte adjustQual = abs(ADJACENT_INDICES[j]) == 1 ? SBX_DUPLEX_ADJACENT_1_QUAL : SBX_DUPLEX_ADJACENT_2_QUAL;
+                    byte adjustQual = abs(ADJACENT_INDICES[j]) == 1 ? SBX_DUPLEX_ADJACENT_1_QUAL : SBX_DUPLEX_ADJACENT_2_3_QUAL;
+
+                    if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && matchesRef)
+                        adjustQual = SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
+
                     int adjustIndex = i + ADJACENT_INDICES[j];
 
                     if(duplexRegionStart >= 0 && (adjustIndex < duplexRegionStart || adjustIndex > duplexRegionEnd))
@@ -683,7 +700,6 @@ public final class SbxRoutines
 
         if(!record.getReadUnmappedFlag())
         {
-            String chromosome = record.getReferenceName();
             replaceXwithM(record);
 
             int refPos = record.getAlignmentStart();

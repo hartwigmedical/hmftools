@@ -34,7 +34,6 @@ import htsjdk.samtools.SAMRecord;
 public class JitterAnalyser
 {
     private final JitterAnalyserConfig mConfig;
-    private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
     private EnumSet<ConsensusType> mConsensusTypes;
@@ -43,18 +42,11 @@ public class JitterAnalyser
     {
         mConfig = config;
 
-        mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
-
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        ConsensusMarker consensusMarker = ConsensusMarker.create(config);
+        ConsensusMarker consensusMarker = ConsensusMarker.create();
         mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
-    }
-
-    public BamSlicerFilter bamSlicerFilter()
-    {
-        return mBamSlicerFilter;
     }
 
     public void processRead(final SAMRecord read)
@@ -77,7 +69,8 @@ public class JitterAnalyser
 
         // now write out all the repeat stats
         if(mConfig.WriteSiteFile)
-            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
+            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(
+                    mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);

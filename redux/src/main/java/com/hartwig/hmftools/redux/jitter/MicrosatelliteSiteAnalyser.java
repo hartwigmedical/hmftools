@@ -34,8 +34,9 @@ public class MicrosatelliteSiteAnalyser
 
     private final EnumMap<ConsensusType, SortedMap<Integer, Integer>> mPassingRepeatLengthCountsByConsensusType;
 
-    public MicrosatelliteSiteAnalyser(final RefGenomeMicrosatellite refGenomeMicrosatellite,
-            @Nullable final ConsensusMarker consensusMarker, boolean storeAllPassingRepeatLengths)
+    public MicrosatelliteSiteAnalyser(
+            final RefGenomeMicrosatellite refGenomeMicrosatellite, final ConsensusMarker consensusMarker,
+            boolean storeAllPassingRepeatLengths)
     {
         mRefGenomeMicrosatellite = refGenomeMicrosatellite;
         mConsensusMarker = consensusMarker;
@@ -107,7 +108,7 @@ public class MicrosatelliteSiteAnalyser
         ConsensusType consensusType = msRead.consensusType();
         mReadRepeatMatchCountsByConsensusType.merge(consensusType, 1, Integer::sum);
 
-        if(msRead.shouldDropRead)
+        if(msRead.shouldDropRead())
         {
             mNumReadRejectedByConsensusType.merge(consensusType, 1, Integer::sum);
             return;

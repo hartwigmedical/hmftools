@@ -22,7 +22,8 @@ public class SampleReadProcessor
     private final List<MicrosatelliteSiteAnalyser> mMicrosatelliteSiteAnalysers;
     private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteAnalyser>> mMicrosatelliteSiteAnalysersByChromosome;
 
-    public SampleReadProcessor(final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
+    public SampleReadProcessor(
+            final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
             @Nullable ConsensusMarker consensusMarker)
     {
         mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
@@ -50,9 +51,7 @@ public class SampleReadProcessor
     public void processRead(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag())
-        {
             return;
-        }
 
         String chromosome = read.getReferenceName();
         int readAlignmentStart = read.getAlignmentStart();
@@ -75,9 +74,7 @@ public class SampleReadProcessor
     public void processRead(final SAMRecord read, final ChrBaseRegion region)
     {
         if(read.getReadUnmappedFlag())
-        {
             return;
-        }
 
         if(!region.containsPosition(read.getAlignmentStart()))
         {

@@ -6,7 +6,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_2_3_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
@@ -231,19 +232,20 @@ public class SbxConsensusTest
         baseQuals[7] = SBX_DUPLEX_MISMATCH_QUAL;
         baseQuals[8] = SBX_DUPLEX_MISMATCH_QUAL;
 
+        readBases = refBases.substring(0, 3) + "T" + refBases.substring(4);
         read = createSamRecord(readBases, position, baseQuals);
         SbxRoutines.finaliseRead(mRefGenome, read);
 
-        assertEquals(SBX_DUPLEX_QUAL, read.getBaseQualities()[0]);
-        assertEquals(SBX_DUPLEX_ADJACENT_2_QUAL, read.getBaseQualities()[1]);
+        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[0]);
+        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[1]);
         assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[2]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[3]);
         assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[4]);
-        assertEquals(SBX_DUPLEX_ADJACENT_2_QUAL, read.getBaseQualities()[5]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[6]);
+        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[5]);
+        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[6]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[7]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[8]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[9]);
+        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[9]);
     }
 
     private static void setDupluxBaseIndex(final SAMRecord record)

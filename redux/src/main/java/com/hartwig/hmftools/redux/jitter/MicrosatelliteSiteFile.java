@@ -58,7 +58,8 @@ public class MicrosatelliteSiteFile
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
-    public static void write(final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
+    public static void write(
+            final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
             final EnumSet<ConsensusType> consensusTypes)
     {
         Comparator<MicrosatelliteSiteAnalyser> comparator =
