@@ -24,7 +24,7 @@ public class SampleReadProcessor
 
     public SampleReadProcessor(
             final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
-            @Nullable ConsensusMarker consensusMarker)
+            final ConsensusMarker consensusMarker)
     {
         mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
                 .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker, config.WriteSiteFile))

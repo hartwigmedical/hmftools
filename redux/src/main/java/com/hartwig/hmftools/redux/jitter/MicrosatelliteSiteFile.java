@@ -62,8 +62,7 @@ public class MicrosatelliteSiteFile
             final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
             final EnumSet<ConsensusType> consensusTypes)
     {
-        Comparator<MicrosatelliteSiteAnalyser> comparator =
-                Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite().chromosome())
+        Comparator<MicrosatelliteSiteAnalyser> comparator = Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite().chromosome())
                         .thenComparingInt(o -> o.refGenomeMicrosatellite().referenceStart())
                         .thenComparing(o -> o.refGenomeMicrosatellite().referenceEnd());
 
@@ -96,7 +95,7 @@ public class MicrosatelliteSiteFile
             row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
             row.set(CONSENSUS_TYPE, consensusType.name());
             row.set(NUM_READS, repeatAnalyser.readRepeatMatchCount(consensusType));
-            row.set(NUM_READS_REJECTED, repeatAnalyser.numReadRejected(consensusType));
+            row.set(NUM_READS_REJECTED, repeatAnalyser.numReadRejected());
             row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT, JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
                     JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION, JitterAnalyserConstants.MIN_PASSING_SITE_READS));
 

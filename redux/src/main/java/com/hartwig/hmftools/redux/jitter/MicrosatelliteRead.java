@@ -4,9 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.LOW_BASE_QUAL_FLANKING_BASES;
 import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -75,8 +78,15 @@ class MicrosatelliteRead
         mRefGenomeMicrosatellite = refGenomeMicrosatellite;
 
         // this read needs to wholly contain the homopolymer to be counted
-        if(record.getAlignmentStart() > refGenomeMicrosatellite.referenceStart()
-        || record.getAlignmentEnd() < refGenomeMicrosatellite.referenceEnd())
+        int msPosStart = refGenomeMicrosatellite.referenceStart();
+        int msPosEnd = refGenomeMicrosatellite.referenceEnd();
+
+        if(record.getAlignmentStart() > msPosStart - LOW_BASE_QUAL_FLANKING_BASES
+        || record.getAlignmentEnd() < msPosEnd + LOW_BASE_QUAL_FLANKING_BASES)
+        {
+            mShouldDropRead = true;
+        }
+        else if(!hasValidBaseQualities(refGenomeMicrosatellite, record))
         {
             mShouldDropRead = true;
         }
@@ -100,6 +110,7 @@ class MicrosatelliteRead
             mConsensusType = NONE;
         }
 
+        /*
         // do some validation and logging
         if(!mShouldDropRead)
         {
@@ -111,6 +122,30 @@ class MicrosatelliteRead
                         record, record.getCigarString(), readRepeatLength, mNumAligned, mNumInserted, mNumDeleted, refGenomeMicrosatellite.genomeRegion);
             }
         }
+        */
+    }
+
+    private boolean hasValidBaseQualities(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+    {
+        int refPosStart = refGenomeMicrosatellite.referenceStart() - LOW_BASE_QUAL_FLANKING_BASES;
+        int refPosEnd = refGenomeMicrosatellite.referenceEnd() + LOW_BASE_QUAL_FLANKING_BASES;
+
+        int readIndexStart = record.getReadPositionAtReferencePosition(refPosStart);
+        int readIndexEnd = record.getReadPositionAtReferencePosition(refPosEnd);
+
+        if(readIndexStart < 0 || readIndexEnd >= record.getBaseQualities().length)
+            return false;
+
+        for(int i = readIndexStart; i <= readIndexEnd; ++i)
+        {
+            if(BaseQualAdjustment.isUncertainBaseFromQual(record.getBaseQualities()[i]))
+                return false;
+
+            if(BaseQualAdjustment.isMediumBaseQual(record.getBaseQualities()[i], SEQUENCING_TYPE))
+                return false;
+        }
+
+        return true;
     }
 
     public ConsensusType consensusType() { return mConsensusType; }
@@ -131,15 +166,11 @@ class MicrosatelliteRead
 
     public int jitter() { return numRepeatUnits() - mRefGenomeMicrosatellite.numRepeat; }
 
-    @Nullable
     public static MicrosatelliteRead from(
             final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         MicrosatelliteRead instance = THREAD_INSTANCE.get();
         instance.analyse(refGenomeMicrosatellite, record, consensusMarker);
-        if(instance.consensusType() == null)
-            return null;
-
         return instance;
     }
 
