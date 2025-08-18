@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportableStatus;
 
 public final class AmplificationDrivers
 {
@@ -30,6 +32,7 @@ public final class AmplificationDrivers
         List<DriverCatalog> result = Lists.newArrayList();
 
         Map<String,DriverGene> amplificationDriverGenes = panel.amplificationTargets().stream()
+                .filter(x -> x.reportAmplification())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
 
         boolean isHighCopyNoise = qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
@@ -38,19 +41,19 @@ public final class AmplificationDrivers
         {
             DriverGene driverGene = amplificationDriverGenes.get(geneCopyNumber.geneName());
 
-            if(driverGene == null)
-                continue;
-
             if(isHighCopyNoise && !supportedByOneSV(geneCopyNumber))
                 continue;
 
-            double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
+            double ampCopyNumberThreshold = driverGene != null ?
+                    ploidy * driverGene.amplificationRatio() : DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
 
             double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
                     ? ampCopyNumberThreshold * 0.5 :  ampCopyNumberThreshold;
 
             if(geneCopyNumber.minCopyNumber() > geneCopyNummberThreshold)
             {
+                geneCopyNumber.setDriverType(DriverType.AMP);
+                geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
                 result.add(createAmpDriver(driverGene, geneCopyNumber));
                 continue;
             }
@@ -60,6 +63,8 @@ public final class AmplificationDrivers
             {
                 if(geneCopyNumber.maxCopyNumber() > geneCopyNummberThreshold)
                 {
+                    geneCopyNumber.setDriverType(DriverType.PARTIAL_AMP);
+                    geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
                     result.add(createPartialAmpDriver(driverGene, geneCopyNumber));
                 }
             }

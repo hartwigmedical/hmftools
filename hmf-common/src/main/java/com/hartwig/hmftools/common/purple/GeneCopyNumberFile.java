@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverType;
 
 public final class GeneCopyNumberFile
 {
@@ -99,6 +100,8 @@ public final class GeneCopyNumberFile
                 .add(FORMAT.format(geneCopyNumber.MinMinorAlleleCopyNumber))
                 .add(String.valueOf(geneCopyNumber.DepthWindowCount))
                 .add(FORMAT.format(geneCopyNumber.GcContent))
+                .add(String.valueOf(geneCopyNumber.reportableStatus()))
+                .add(String.valueOf(geneCopyNumber.driverType()))
                 .toString();
     }
 
@@ -127,7 +130,8 @@ public final class GeneCopyNumberFile
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
         int dwcIndex = fieldsIndexMap.get("depthWindowCount");
         int gcIndex = fieldsIndexMap.get("gcContent");
-        // Integer rsIndex = fieldsIndexMap.get("reportableStatus");
+        Integer reportableIndex = fieldsIndexMap.get("reportableStatus");
+        Integer driverIndex = fieldsIndexMap.get("driverType");
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -144,6 +148,16 @@ public final class GeneCopyNumberFile
                     Integer.parseInt(values[dwcIndex]), Double.parseDouble(values[gcIndex]),
                     SegmentSupport.valueOf(values[minRegionStartSupIndex]), SegmentSupport.valueOf(values[minRegionEndSupIndex]),
                     CopyNumberMethod.valueOf(values[minRegionMethodIndex]));
+
+            if(reportableIndex != null)
+            {
+                geneCopyNumber.setReportableStatus(ReportableStatus.valueOf(values[reportableIndex]));
+            }
+
+            if(driverIndex != null)
+            {
+                geneCopyNumber.setDriverType(DriverType.valueOf(values[driverIndex]));
+            }
 
             geneCopyNumbers.add(geneCopyNumber);
         }

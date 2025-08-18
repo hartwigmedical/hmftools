@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
+import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
+import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
@@ -14,7 +17,9 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
+import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -23,6 +28,7 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.ReportableStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -90,35 +96,34 @@ public class PurpleInterpreter
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
 
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
-        List<PurpleVariant> additionalSuspectSomaticVariants =
-                SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
-        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
+
+        List<PurpleVariant> additionalSuspectSomaticVariants = SomaticVariantSelector.selectInterestingUnreportedVariants(
+                allSomaticVariants, reportableSomaticVariants, driverGenes);
+
+        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting",
+                additionalSuspectSomaticVariants.size());
 
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
         List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
-        List<PurpleVariant> additionalSuspectGermlineVariants =
-                GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
+        List<PurpleVariant> additionalSuspectGermlineVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(
+                allGermlineVariants);
+
         if(additionalSuspectGermlineVariants != null)
         {
             LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
                     additionalSuspectGermlineVariants.size());
         }
 
-        List<PurpleGainDeletion> allSomaticGainsDels =
-                extractAllGainsDels(purple.purityContext().qc().status(), purple.purityContext().gender(), purple.purityContext()
-                        .bestFit()
-                        .ploidy(), purple.purityContext().targeted(), purple.allSomaticGeneCopyNumbers());
+        List<PurpleGainDeletion> allSomaticGainsDels = extractAllGainsDels(purple.allSomaticGeneCopyNumbers());
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
-        List<PurpleGainDeletion> nearReportableSomaticGains =
-                CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(), purple.purityContext()
-                        .bestFit()
-                        .ploidy(), allSomaticGainsDels, driverGenes);
+        List<PurpleGainDeletion> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(
+                purple.allSomaticGeneCopyNumbers(), purple.purityContext().bestFit().ploidy(), allSomaticGainsDels, driverGenes);
         LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
                 nearReportableSomaticGains.size());
 
-        List<PurpleGainDeletion> additionalSuspectSomaticGainsDels =
-                CopyNumberSelector.selectInterestingUnreportedGainsDels(allSomaticGainsDels, reportableSomaticGainsDels);
+        List<PurpleGainDeletion> additionalSuspectSomaticGainsDels = CopyNumberSelector.selectInterestingUnreportedGainsDels(
+                allSomaticGainsDels, reportableSomaticGainsDels);
         LOGGER.info(" Found an additional {} somatic gains/deletions that are potentially interesting",
                 additionalSuspectSomaticGainsDels.size());
 
@@ -341,57 +346,37 @@ public class PurpleInterpreter
         return reportable;
     }
 
-    private static List<PurpleGainDeletion> extractAllGainsDels(
-            final Set<PurpleQCStatus> qcStatus, final Gender gender, double ploidy, boolean isTargetRegions,
-            final List<GeneCopyNumber> allGeneCopyNumbers)
+    private static List<PurpleGainDeletion> extractAllGainsDels(final List<GeneCopyNumber> allGeneCopyNumbers)
     {
         List<DriverCatalog> allGainDels = Lists.newArrayList();
 
         for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
         {
-            // logic from DeletionDrivers
+            if(geneCopyNumber.reportableStatus() != ReportableStatus.NONE)
+            {
+                DriverType type = geneCopyNumber.driverType();
 
+                DriverCategory category;
+                LikelihoodMethod likelihoodMethod;
+                boolean biallelic;
 
+                if(type == DriverType.AMP || type == DriverType.PARTIAL_AMP)
+                {
+                    likelihoodMethod = LikelihoodMethod.AMP;
+                    category = ONCO;
+                    biallelic = false;
+                }
+                else
+                {
+                    likelihoodMethod = LikelihoodMethod.DEL;
+                    category = TSG;
+                    biallelic = type == DriverType.DEL;
+                }
 
-
-            // logic from AmplicationDrivers
+                DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, geneCopyNumber);
+                allGainDels.add(driverCatalog);
+            }
         }
-
-        /*
-        List<DriverGene> allGenes = Lists.newArrayList();
-
-        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
-        {
-            allGenes.add(ImmutableDriverGene.builder()
-                    .gene(geneCopyNumber.geneName())
-                    .reportMissenseAndInframe(false)
-                    .reportNonsenseAndFrameshift(false)
-                    .reportSplice(false)
-                    .reportDeletion(true)
-                    .reportDisruption(false)
-                    .reportAmplification(true)
-                    .reportSomaticHotspot(false)
-                    .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
-                    .likelihoodType(DriverCategory.ONCO)
-                    .reportPGX(false)
-                    .build());
-        }
-
-        DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
-
-        DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
-
-        List<DriverCatalog> allGainDels = Lists.newArrayList();
-
-        allGainDels.addAll(AmplificationDrivers.findAmplifications(
-                qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
-
-        allGainDels.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
-        */
-
 
         return somaticGainsDelsFromDrivers(allGainDels);
     }

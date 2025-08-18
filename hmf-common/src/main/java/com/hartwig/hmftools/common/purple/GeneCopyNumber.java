@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 public class GeneCopyNumber implements GenomeRegion
@@ -34,6 +35,9 @@ public class GeneCopyNumber implements GenomeRegion
     public final SegmentSupport MinRegionEndSupport;
     public final CopyNumberMethod MinRegionMethod;
 
+    private DriverType mDriverType;
+    private ReportableStatus mReportableStatus;
+
     public GeneCopyNumber(
             final String chromosome, final int positionStart, final int positionEnd, final String geneName, final String transName,
             final boolean isCanonical, final String chromosomeBand, final double maxCopyNumber, final double minCopyNumber,
@@ -60,6 +64,10 @@ public class GeneCopyNumber implements GenomeRegion
         MinRegionStartSupport = minRegionStartSupport;
         MinRegionEndSupport = minRegionEndSupport;
         MinRegionMethod = minRegionMethod;
+
+        mDriverType = DriverType.UNKNOWN;
+        mReportableStatus = ReportableStatus.NONE;
+
     }
 
     public String chromosome() { return Chromosome; }
@@ -76,7 +84,11 @@ public class GeneCopyNumber implements GenomeRegion
         return MinRegionEnd - MinRegionStart + 1;
     }
 
-    // ReportableStatus reportableStatus();
+    public void setDriverType(final DriverType type) { mDriverType = type; }
+    public DriverType driverType() { return mDriverType; }
+
+    public ReportableStatus reportableStatus() { return mReportableStatus; }
+    public void setReportableStatus(final ReportableStatus status) { mReportableStatus = status; }
 
     public int totalRegions()
     {

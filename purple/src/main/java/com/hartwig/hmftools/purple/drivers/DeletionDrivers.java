@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.ReportableStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -30,15 +31,6 @@ public class DeletionDrivers
 
     private static final Set<SegmentSupport> MERE = Sets.newHashSet(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE);
 
-    private final Set<PurpleQCStatus> mQcStatus;
-    private final Map<String, DriverGene> mDeletionTargets;
-
-    public DeletionDrivers(final Set<PurpleQCStatus> qcStatus, final DriverGenePanel panel)
-    {
-        mQcStatus = qcStatus;
-        mDeletionTargets = panel.deletionTargets().stream().collect(Collectors.toMap(DriverGene::gene, x -> x));
-    }
-
     public static int deletedGenes(final List<GeneCopyNumber> geneCopyNumbers)
     {
         return (int) geneCopyNumbers.stream()
@@ -47,20 +39,25 @@ public class DeletionDrivers
                 .count();
     }
 
-    public List<DriverCatalog> deletions(final List<GeneCopyNumber> geneCopyNumbers, boolean isTargetRegions)
+    public static List<DriverCatalog> findDeletions(
+            final Set<PurpleQCStatus> qcStatus, final DriverGenePanel panel, final List<GeneCopyNumber> geneCopyNumbers,
+            boolean isTargetRegions)
     {
         List<DriverCatalog> drivers = Lists.newArrayList();
 
-        boolean checkQcStatus = mQcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)
-                || mQcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+        boolean checkQcStatus = qcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)
+                || qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
+
+        Map<String,DriverGene> deletionGenes = panel.deletionTargets().stream()
+                .filter(x -> x.reportDeletion() || x.reportHetDeletion())
+                .collect(Collectors.toMap(DriverGene::gene, x -> x));
 
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
             if(geneCopyNumber.minCopyNumber() >= MAX_COPY_NUMBER_DEL)
                 continue;
 
-            if(!mDeletionTargets.containsKey(geneCopyNumber.geneName()))
-                continue;
+            DriverGene driverGene = deletionGenes.get(geneCopyNumber.geneName());
 
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
             boolean isShort = geneCopyNumber.minRegionBases() < SHORT_DEL_LENGTH;
@@ -88,18 +85,22 @@ public class DeletionDrivers
                 }
             }
 
-            drivers.add(createDelDriver(geneCopyNumber));
+            geneCopyNumber.setDriverType(DriverType.DEL);
+            geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
+
+            if(driverGene != null)
+                drivers.add(createDelDriver(driverGene, geneCopyNumber));
         }
 
         return drivers;
     }
 
-    static boolean supportedByTwoSVs(final GeneCopyNumber geneCopyNumber)
+    private static boolean supportedByTwoSVs(final GeneCopyNumber geneCopyNumber)
     {
         return geneCopyNumber.MinRegionStartSupport.isSV() && geneCopyNumber.MinRegionEndSupport.isSV();
     }
 
-    static boolean supportedByOneSVAndMere(final GeneCopyNumber geneCopyNumber)
+    private static boolean supportedByOneSVAndMere(final GeneCopyNumber geneCopyNumber)
     {
         if(MERE.contains(geneCopyNumber.MinRegionStartSupport) && geneCopyNumber.MinRegionEndSupport.isSV())
         {
@@ -114,9 +115,8 @@ public class DeletionDrivers
         return false;
     }
 
-    private DriverCatalog createDelDriver(final GeneCopyNumber geneCopyNumber)
+    private static DriverCatalog createDelDriver(final DriverGene driverGene, final GeneCopyNumber geneCopyNumber)
     {
-        DriverGene driverGene = mDeletionTargets.get(geneCopyNumber.geneName());
         return createCopyNumberDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, geneCopyNumber);
     }
 }
