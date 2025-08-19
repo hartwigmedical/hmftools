@@ -24,7 +24,7 @@ public class SageConstants
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
 
     // read evidence
-    public static final int MATCHING_BASE_QUALITY = 20;
+    public static final byte MATCHING_BASE_QUALITY = 20;
     public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
     public static final int FLANK_LOW_QUAL_MISMATCHES = 3;
     public static final double SC_READ_EVENTS_FACTOR = 12;

@@ -48,6 +48,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PE
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -488,53 +490,6 @@ public class VariantFilters
         double avgBaseQuality = primaryTumor.averageAltBaseQuality();
 
         return Doubles.lessThan(avgBaseQuality, threshold);
-    }
-
-    private boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
-    {
-        if(!primaryTumor.isIndel())
-            return false;
-
-        UltimaVariantData ultimaData = primaryTumor.ultimaData();
-        final List<Integer> homopolymerLengths = ultimaData.homopolymerLengths();
-
-        // TODO: make constants and generally improve
-        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
-            return false;
-
-        for(int i = 0; i < homopolymerLengths.size(); i++)
-        {
-            int length = homopolymerLengths.get(i);
-
-            double avgQual = ultimaData.homopolymerAvgQuals().get(i);
-
-            if(length == 1 && avgQual < 24)
-                return true;
-            else if(length == 2 && avgQual < 22)
-                return true;
-            else if(length == 3 && avgQual < 18)
-                return true;
-            else if(length == 4 && avgQual < 18)
-                return true;
-            else if(length == 5 && avgQual < 16)
-                return true;
-            else if(length == 6 && avgQual < 14)
-                return true;
-            else if(length == 7 && avgQual < 12)
-                return true;
-            else if(avgQual < 10)
-                return true;
-            else if(length >= 15)
-                return true;
-        }
-        return false;
-    }
-
-    private boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
-    {
-        // TODO: make constants
-        int threshold = nearbyVariant ? 28 : 18;
-        return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
