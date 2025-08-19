@@ -129,7 +129,7 @@ public final class GeneCopyNumberFile
         int minRegionMethodIndex = fieldsIndexMap.get("minRegionMethod");
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
         int dwcIndex = fieldsIndexMap.get("depthWindowCount");
-        int gcIndex = fieldsIndexMap.get("gcContent");
+        Integer gcIndex = fieldsIndexMap.get("gcContent");
         Integer reportableIndex = fieldsIndexMap.get("reportableStatus");
         Integer driverIndex = fieldsIndexMap.get("driverType");
 
@@ -139,16 +139,19 @@ public final class GeneCopyNumberFile
         {
             String[] values = line.split(TSV_DELIM, -1);
 
+            double gcContent = gcIndex != null ? Double.parseDouble(values[gcIndex]) : 0; // introduced in Purple v4.2
+
             GeneCopyNumber geneCopyNumber = new GeneCopyNumber(
                     values[chrIndex], Integer.parseInt(values[startIndex]), Integer.parseInt(values[endIndex]),
                     values[geneIndex], values[transIdIndex], Boolean.parseBoolean(values[canonicalIndex]), values[chrBandIndex],
                     Double.parseDouble(values[maxCnIndex]), Double.parseDouble(values[minCnIndex]), Double.parseDouble(values[mmACnIndex]),
                     Integer.parseInt(values[somRegionsIndex]), Integer.parseInt(values[minRegionIndex]),
                     Integer.parseInt(values[minRegionStartIndex]), Integer.parseInt(values[minRegionEndIndex]),
-                    Integer.parseInt(values[dwcIndex]), Double.parseDouble(values[gcIndex]),
+                    Integer.parseInt(values[dwcIndex]), gcContent,
                     SegmentSupport.valueOf(values[minRegionStartSupIndex]), SegmentSupport.valueOf(values[minRegionEndSupIndex]),
                     CopyNumberMethod.valueOf(values[minRegionMethodIndex]));
 
+            // introduced in Purple v4.3
             if(reportableIndex != null)
             {
                 geneCopyNumber.setReportableStatus(ReportableStatus.valueOf(values[reportableIndex]));
