@@ -110,8 +110,7 @@ object BlastnUtil
         }
     }
 
-    fun runBwaMem(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
-                  expectedValueCutoff: Double)
+    fun runBwaMem(sequences: Map<Int, String>, numThreads: Int)
             : Multimap<Int, BwaMemMatch>
     {
         loadAlignerLibrary(null);

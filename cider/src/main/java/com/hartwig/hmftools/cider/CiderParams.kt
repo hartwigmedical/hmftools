@@ -27,8 +27,6 @@ data class CiderParams(
     val maxReadCountPerGene: Int,
     val primerCsv: String?,
     val primerMismatchMax: Int,
-    val blast: String?,
-    val blastDb: String?
 )
 {
     constructor(configBuilder: ConfigBuilder): this(
@@ -46,17 +44,8 @@ data class CiderParams(
         maxLowQualBaseFraction = configBuilder.getDecimal(ARG_MAX_LOW_QUAL_BASE_FRACTION),
         maxReadCountPerGene = configBuilder.getInteger(ARG_MAX_READS_PER_GENE),
         primerCsv = configBuilder.getValue(ARG_PRIMER_CSV),
-        primerMismatchMax = configBuilder.getInteger(ARG_PRIMER_MISMATCH_MAX),
-        blast = configBuilder.getValue(ARG_BLAST, null),
-        blastDb = configBuilder.getValue(ARG_BLAST_DB, null)
+        primerMismatchMax = configBuilder.getInteger(ARG_PRIMER_MISMATCH_MAX)
     )
-    {
-        if ((blast == null) != (blastDb == null))
-        {
-            sLogger.error("invalid parameters: requires both -blast and -blast_db to be configBuilder.red together")
-            throw IllegalArgumentException("Invalid blast configBuilder.ration")
-        }
-    }
 
     companion object
     {
@@ -77,8 +66,6 @@ data class CiderParams(
         const val ARG_MAX_READS_PER_GENE = "max_reads_per_gene"
         const val ARG_PRIMER_CSV = "primer_csv"
         const val ARG_PRIMER_MISMATCH_MAX = "primer_mismatch_max"
-        const val ARG_BLAST = "blast"
-        const val ARG_BLAST_DB = "blast_db"
 
         private val sLogger = LogManager.getLogger(CiderParams::class.java)
 
@@ -111,8 +98,6 @@ data class CiderParams(
                 "Maximum number of mismatch bases for matching primer sequence",
                 0
             )
-            configBuilder.addPath(ARG_BLAST, false, "Location of blast installation")
-            configBuilder.addPath(ARG_BLAST_DB, false, "Location of blast database")
         }
     }
 }

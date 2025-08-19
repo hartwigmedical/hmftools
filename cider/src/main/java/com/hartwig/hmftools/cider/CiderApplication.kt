@@ -102,7 +102,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val blastnAnnotations: Collection<BlastnAnnotation>
 
-        if (mParams.blast != null)
+        if (true)
         {
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
@@ -111,7 +111,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
             System.gc()
 
             val blastnAnnotator = BlastnAnnotator()
-            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, mParams.blast!!, mParams.blastDb!!, filteredVdjs, mParams.outputDir, mParams.threadCount)
+            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, filteredVdjs, mParams.outputDir, mParams.threadCount)
         }
         else
         {

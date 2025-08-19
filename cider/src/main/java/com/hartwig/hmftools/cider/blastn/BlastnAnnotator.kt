@@ -67,7 +67,7 @@ class BlastnAnnotator
         }
     }
 
-    fun runAnnotate(sampleId: String, blastDir: String, blastDb: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
+    fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
             : Collection<BlastnAnnotation>
     {
         // assign a key to each VDJ, such that we can keep track of them
@@ -86,9 +86,8 @@ class BlastnAnnotator
 
         // run blastn on those
         val blastnResults = BlastnUtil.runBwaMem(
-            sampleId, blastDir, blastDb,
             blastnRunDataMap.mapValues { runData -> runData.value.querySeq },
-            outputDir, numThreads, BLASTN_MAX_EVALUE)
+             numThreads)
 
         // put all into an identity hash multimap
         val vdjToBlastnMatch: Multimap<BlastnRunData, BlastnUtil.BwaMemMatch> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
