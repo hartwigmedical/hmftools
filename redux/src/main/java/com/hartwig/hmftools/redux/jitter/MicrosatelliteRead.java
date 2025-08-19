@@ -109,20 +109,6 @@ class MicrosatelliteRead
         {
             mConsensusType = NONE;
         }
-
-        /*
-        // do some validation and logging
-        if(!mShouldDropRead)
-        {
-            int readRepeatLength = mNumAligned + mNumInserted;
-            if(readRepeatLength != refGenomeMicrosatellite.baseLength() - mNumDeleted + mNumInserted)
-            {
-                sLogger.error("read({}) {}, incorrect read repeat length({}) numAligned({}) numInserted({}) numDeleted({}) " +
-                                "homopolymer({})",
-                        record, record.getCigarString(), readRepeatLength, mNumAligned, mNumInserted, mNumDeleted, refGenomeMicrosatellite.genomeRegion);
-            }
-        }
-        */
     }
 
     private boolean hasValidBaseQualities(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)

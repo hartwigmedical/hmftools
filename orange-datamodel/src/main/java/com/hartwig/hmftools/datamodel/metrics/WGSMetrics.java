@@ -25,7 +25,7 @@ public interface WGSMetrics
 
     double pctExcDupe();
 
-    double pctExcUnpaired();
+    double pctExcUnpaired(); // this is actually unmapped not unpaired percent
 
     double pctExcBaseQ();
 

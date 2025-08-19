@@ -160,7 +160,7 @@ public class OffTargetFragments
             ReadId = read.getReadName();
             Local = isLocalConcordantFragment;
 
-            if(!isLocalConcordantFragment)
+            if(!isLocalConcordantFragment || !read.getReadPairedFlag())
             {
                 AlignmentStart = read.getAlignmentStart();
                 AlignmentEnd = read.getAlignmentEnd();

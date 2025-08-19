@@ -12,7 +12,7 @@ public class ReadGroup
     public final int MaxReadStart;
     public final List<int[]> CombinedAlignedBaseCoords;
 
-    public ReadGroup(final SAMRecord read, final int maxReadStart, boolean isConsensus)
+    public ReadGroup(final int maxReadStart, boolean isConsensus)
     {
         IsConsensus = isConsensus;
         CombinedAlignedBaseCoords = Lists.newArrayListWithCapacity(2);
