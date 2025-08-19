@@ -30,6 +30,7 @@
         <module>orange</module>
         <module>orange-datamodel</module>
         <module>paddle</module>
+        <module>panel-builder</module>
         <module>patient-db</module>
         <module>purple</module>
         <module>pave</module>
