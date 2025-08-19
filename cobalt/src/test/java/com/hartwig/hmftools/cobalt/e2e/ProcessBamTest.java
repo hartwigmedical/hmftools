@@ -22,7 +22,6 @@ import com.hartwig.hmftools.cobalt.CobaltApplication;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.purple.Gender;
 
 import org.apache.commons.io.FileUtils;
@@ -105,7 +104,7 @@ public class ProcessBamTest
         // Normalised again by dividing by mean so that the mean is 1.0:
         // mean = 3.5/3 = 7/6, so (0.5, 2.0, 1.0_) => (1/7, 4/7, 2/7)*3.0
         // 0.5 / 7/6 = 3/7, 2.0 / 7/6 = 12/7, 1.0 / 7/6 = 6/7
-        double oneSeventh = 1.0/7.0;
+        double oneSeventh = 1.0 / 7.0;
         assertEquals(3.0 * 1.0 * oneSeventh, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(3.0 * 4.0 * oneSeventh, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(3.0 * 2.0 * oneSeventh, ratios.get(3).tumorGCRatio(), 0.01);
@@ -124,8 +123,9 @@ public class ProcessBamTest
         gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
         GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
         gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, mappability0));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset+ 1000, regionOffset + 1_000, MIN_MAPPABLE_PERCENTAGE));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset+ 2000, regionOffset + 2_000, mappability2));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1,
+                regionOffset + 1000, regionOffset + 1_000, MIN_MAPPABLE_PERCENTAGE));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, mappability2));
         gcFileWriter.write(gcProfile);
 
         runCobalt();
@@ -181,15 +181,15 @@ public class ProcessBamTest
         runCobalt();
         // Upper and lower limits for gc ratio are 0.26 and 0.68 respectively
         List<CobaltRatio> ratios = ratioResults.get(_1);
-        for (int i=1; i < 26; i++)
+        for(int i = 1; i < 26; i++)
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
-        for (int i=26; i < 68; i++)
+        for(int i = 26; i < 68; i++)
         {
             assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
-        for (int i=69; i < ratios.size(); i++)
+        for(int i = 69; i < ratios.size(); i++)
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
@@ -295,11 +295,29 @@ public class ProcessBamTest
         double mean = 1.688;
 
         List<CobaltRatio> ratios = ratioResults.get(_1);
-        checkTumorRatio(-1.0, 0, 1, 2, 3, 4,5 );
-        checkTumorRatio(1.0/mean, 6,7,8 );
+        // 1-1000 0 reads, 1001-6000 blocked out because of gc bucket smoothing
+        checkTumorRatio(-1.0, 0, 1, 2, 3, 4, 5);
+
+        // 6001-11_000 gc 0.41 and read depths 11, 11, 11, 21, 51
+        checkTumorRatio(1.0 / mean, 6, 7, 8);
+        checkTumorRatio(21.0 / 11.0 / mean, 9);
+        checkTumorRatio(51.0 / 11.0 / mean, 10);
+
+        // 12_001-16_000 gc 0.42 and read depths 12, 12, 12, 22, 52
+        checkTumorRatio(1.0 / mean, 11, 12, 13);
+        checkTumorRatio(22.0 / 12.0 / mean, 14);
+        checkTumorRatio(52.0 / 12.0 / mean, 15);
+
+        // 46_001-51_000 gc 0.42 and read depths 19, 19, 19, 29, 59
+        checkTumorRatio(1.0 / mean, 46, 47, 48);
+        checkTumorRatio(29.0 / 19.0 / mean, 49);
+        checkTumorRatio(59.0 / 19.0 / mean, 50);
+
+        // 51_001-56_000 blocked out because of gc bucket smoothing
+        checkTumorRatio(-1.0, 51, 52, 53, 54, 55);
     }
 
-    private void checkTumorRatio(double expected, int...indices)
+    private void checkTumorRatio(double expected, int... indices)
     {
         List<CobaltRatio> ratios = ratioResults.get(_1);
         for(final int index : indices)
@@ -416,22 +434,21 @@ public class ProcessBamTest
         File bamFile = new File(tempDir, sample + ".sorted.bam");
         final int regionOffset = 1_000;
 
-        RefGenomeInterface genome = new CobaltTestGenome();
         File gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
         GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-//        gcFileWriter.addSection(new GcFileSection(_1, regionOffset, regionOffset + 40_000, genome));
+        //        gcFileWriter.addSection(new GcFileSection(_1, regionOffset, regionOffset + 40_000, genome));
         gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + 2_000, 0.5));
-//        gcFileWriter.addSection(new GcFileSection(_2, regionOffset, regionOffset + 600_000, genome));
+        //        gcFileWriter.addSection(new GcFileSection(_2, regionOffset, regionOffset + 600_000, genome));
         gcFileWriter.write(gcProfile);
 
         File panelNormalisation = new File(tempDir, "ThePanel.tsv");
         PanelFileWriter panelWriter = new PanelFileWriter();
         panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 2_000, 1.00));
-//        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 200_000, regionOffset + 300_000, 1.001));
-//        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 400_000, regionOffset + 500_000, 1.001));
-//        panelWriter.addSection(new PanelFileSection(_2, regionOffset, regionOffset + 600_000, 1.001));
-//        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 200_000, regionOffset + 300_000, 1.001));
-//        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 400_000, regionOffset + 500_000, 1.001));
+        //        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 200_000, regionOffset + 300_000, 1.001));
+        //        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 400_000, regionOffset + 500_000, 1.001));
+        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset, regionOffset + 600_000, 1.001));
+        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 200_000, regionOffset + 300_000, 1.001));
+        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 400_000, regionOffset + 500_000, 1.001));
         panelWriter.write(panelNormalisation);
 
         File outputDir = new File(tempDir, "output");
