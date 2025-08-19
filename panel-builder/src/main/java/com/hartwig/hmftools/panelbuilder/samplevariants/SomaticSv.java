@@ -352,19 +352,19 @@ public class SomaticSv implements Variant
 
     private static boolean matchesDelRegion(final StructuralVariantData svData, final GeneCopyNumber geneCopyNumber)
     {
-        if(svData.startOrientation() == ORIENT_FWD && abs(svData.startPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(svData.startOrientation() == ORIENT_FWD && abs(svData.startPosition() - geneCopyNumber.MinRegionStart) <= 1)
         {
             return true;
         }
-        if(svData.endOrientation() == ORIENT_FWD && abs(svData.endPosition() - geneCopyNumber.minRegionStart()) <= 1)
+        if(svData.endOrientation() == ORIENT_FWD && abs(svData.endPosition() - geneCopyNumber.MinRegionStart) <= 1)
         {
             return true;
         }
-        if(svData.startOrientation() == ORIENT_REV && abs(svData.startPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(svData.startOrientation() == ORIENT_REV && abs(svData.startPosition() - geneCopyNumber.MinRegionEnd) <= 1)
         {
             return true;
         }
-        if(svData.endOrientation() == ORIENT_REV && abs(svData.endPosition() - geneCopyNumber.minRegionEnd()) <= 1)
+        if(svData.endOrientation() == ORIENT_REV && abs(svData.endPosition() - geneCopyNumber.MinRegionEnd) <= 1)
         {
             return true;
         }
