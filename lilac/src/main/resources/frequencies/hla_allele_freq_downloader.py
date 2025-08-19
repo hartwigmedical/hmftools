@@ -22,7 +22,6 @@ import pandas as pd
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)-5s] %(message)s", datefmt="%H:%M:%S")
-logging.addLevelName(logging.WARNING,  "WARN ")
 
 
 class PopulationStandard(Enum):
@@ -317,7 +316,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--hla_level", default=AlleleGroup.DIGITS_2,
+        "--hla_level", default=AlleleGroup.DIGITS_4,
         help="Optional. HLA locus type. Valid values: " + ",".join([str(enum.value) for enum in AlleleGroup])
     )
 

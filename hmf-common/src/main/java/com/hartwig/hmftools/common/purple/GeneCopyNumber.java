@@ -5,51 +5,97 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
+import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneCopyNumber extends TranscriptRegion
+public class GeneCopyNumber implements GenomeRegion
 {
-    double maxCopyNumber();
+    public final String Chromosome;
+    public final int PositionStart;
+    public final int PositionEnd;
+    public final String GeneName;
+    public final String TransName;
+    public final boolean IsCanonical;
 
-    double minCopyNumber();
+    public final String ChromosomeBand;
 
-    int somaticRegions();
+    public final double MaxCopyNumber;
+    public final double MinCopyNumber;
+    public final double MinMinorAlleleCopyNumber;
 
-    int minRegions();
+    public final int SomaticRegions;
+    public final int MinRegions;
+    public final int MinRegionStart;
+    public final int MinRegionEnd;
 
-    int minRegionStart();
+    public final int DepthWindowCount;
+    public final double GcContent;
 
-    int minRegionEnd();
+    public final SegmentSupport MinRegionStartSupport;
+    public final SegmentSupport MinRegionEndSupport;
+    public final CopyNumberMethod MinRegionMethod;
 
-    int depthWindowCount();
+    private DriverType mDriverType;
+    private ReportableStatus mReportableStatus;
 
-    double gcContent();
-
-    default int minRegionBases()
+    public GeneCopyNumber(
+            final String chromosome, final int positionStart, final int positionEnd, final String geneName, final String transName,
+            final boolean isCanonical, final String chromosomeBand, final double maxCopyNumber, final double minCopyNumber,
+            final double minMinorAlleleCopyNumber, final int somaticRegions, final int minRegions, final int minRegionStart,
+            final int minRegionEnd, final int depthWindowCount, final double gcContent, final SegmentSupport minRegionStartSupport,
+            final SegmentSupport minRegionEndSupport, final CopyNumberMethod minRegionMethod)
     {
-        return minRegionEnd() - minRegionStart() + 1;
+        Chromosome = chromosome;
+        PositionStart = positionStart;
+        PositionEnd = positionEnd;
+        GeneName = geneName;
+        TransName = transName;
+        IsCanonical = isCanonical;
+        ChromosomeBand = chromosomeBand;
+        MaxCopyNumber = maxCopyNumber;
+        MinCopyNumber = minCopyNumber;
+        MinMinorAlleleCopyNumber = minMinorAlleleCopyNumber;
+        SomaticRegions = somaticRegions;
+        MinRegions = minRegions;
+        MinRegionStart = minRegionStart;
+        MinRegionEnd = minRegionEnd;
+        DepthWindowCount = depthWindowCount;
+        GcContent = gcContent;
+        MinRegionStartSupport = minRegionStartSupport;
+        MinRegionEndSupport = minRegionEndSupport;
+        MinRegionMethod = minRegionMethod;
+
+        mDriverType = DriverType.UNKNOWN;
+        mReportableStatus = ReportableStatus.NONE;
+
     }
 
-    SegmentSupport minRegionStartSupport();
+    public String chromosome() { return Chromosome; }
+    public int start() { return PositionStart; }
+    public int end() { return PositionEnd; }
 
-    SegmentSupport minRegionEndSupport();
+    // convenience for existing code
+    public String geneName() { return GeneName; }
+    public double maxCopyNumber() { return MaxCopyNumber; }
+    public double minCopyNumber() { return MinCopyNumber; }
 
-    CopyNumberMethod minRegionMethod();
-
-    double minMinorAlleleCopyNumber();
-
-    default int totalRegions()
+    public int minRegionBases()
     {
-        return somaticRegions();
+        return MinRegionEnd - MinRegionStart + 1;
     }
 
-    static Map<String, List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)
+    public void setDriverType(final DriverType type) { mDriverType = type; }
+    public DriverType driverType() { return mDriverType; }
+
+    public ReportableStatus reportableStatus() { return mReportableStatus; }
+    public void setReportableStatus(final ReportableStatus status) { mReportableStatus = status; }
+
+    public int totalRegions()
+    {
+        return SomaticRegions;
+    }
+
+    public static Map<String, List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)
     {
         final Map<String, List<GeneCopyNumber>> geneCopyNumberMap = Maps.newHashMap();
 

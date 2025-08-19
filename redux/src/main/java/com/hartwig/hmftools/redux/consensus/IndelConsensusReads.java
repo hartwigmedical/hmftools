@@ -3,12 +3,11 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
@@ -19,8 +18,6 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -41,7 +38,6 @@ public class IndelConsensusReads
 
         if(!hasCigarMismatch)
         {
-            // SAMRecord selectedConsensusRead = reads.get(0);
             int baseLength = templateRead.getReadBases().length;
             consensusState.setBaseLength(baseLength);
             consensusState.setBoundaries(templateRead);
@@ -148,7 +144,7 @@ public class IndelConsensusReads
         for(int i = 0; i < selectedElement.getLength(); ++i)
         {
             boolean hasMismatch = false;
-            int maxQual = 0;
+            int maxQual = -1;
             byte firstBase = NO_BASE;
 
             for(int r = 0; r < readCount; ++r)
@@ -235,7 +231,11 @@ public class IndelConsensusReads
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
 
-                byte[] consensusBaseAndQual;
+                BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                        locationBases, locationQuals, consensusState.Chromosome, basePosition, isDualStrand, isFirstInPair);
+
+                /*
+                BaseQualPair consensusBaseAndQual;
 
                 if(isDualStrand && basePosition != INVALID_POSITION)
                 {
@@ -248,9 +248,10 @@ public class IndelConsensusReads
                     consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                             locationBases, locationQuals, consensusState.Chromosome, basePosition);
                 }
+                */
 
-                consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
+                consensusState.Bases[baseIndex] = consensusBaseAndQual.Base;
+                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual.Qual;
             }
 
             if(consensusState.IsForward)

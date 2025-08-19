@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.redux.JitterModelParams.REPEAT_UNIT_3_
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 
 public final class JitterConstants

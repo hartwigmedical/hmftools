@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_READ_VS_REF_DIFF;
@@ -120,9 +121,19 @@ public class ReadContextMatcher
 
         if(allowMismatches)
         {
+            Set<Integer> excludedBases = Sets.newHashSet();
+
+            // CHECK: Set allowMismatches=False for Ultima only?
+            if(isUltima())
+            {
+                for(int i = readContext.CoreIndexStart; i <= readContext.CoreIndexEnd; i++)
+                {
+                    excludedBases.add(i);
+                }
+            }
+
             if(mContext.variant().isIndel())
             {
-                Set<Integer> excludedBases = Sets.newHashSet();
                 int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
                 int lowQualIndexUpper = determineIndelLowQualRefReadDiffIndex(readContext);
                 excludedBases.add(lowQualIndexLower);
@@ -145,6 +156,15 @@ public class ReadContextMatcher
             {
                 // just the alt bases themselves - for both ref and read
                 int altRange = mContext.variant().altLength() - 1;
+
+                if(isUltima()) // CHECK: Ultima only?
+                {
+                    for(int i = 0; i <= altRange; ++i)
+                    {
+                        excludedBases.add(mContext.VarIndex + i);
+                    }
+                }
+
                 mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
 
                 int refIndex = mContext.leftCoreLength();

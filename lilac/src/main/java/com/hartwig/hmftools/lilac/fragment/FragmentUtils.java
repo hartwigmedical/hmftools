@@ -14,29 +14,24 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
-public class FragmentUtils
+public final class FragmentUtils
 {
-    public static List<Fragment> mergeFragmentsById(final List<Fragment> fragments)
+    private FragmentUtils() {}
+
+    public static List<Fragment> mergeFragmentsById(final Iterable<Fragment> fragments)
     {
         // merge paired reads but keep any single reads as well
         final List<Fragment> mergedFragments = Lists.newArrayList(); // by readId
 
-        Map<String,List<Fragment>> readGroupFrags = Maps.newHashMap();
+        Map<String, List<Fragment>> readGroupFrags = Maps.newHashMap();
 
         for(Fragment fragment : fragments)
         {
-            List<Fragment> idFrags = readGroupFrags.get(fragment.id());
-
-            if(idFrags == null)
-            {
-                idFrags = Lists.newArrayList();
-                readGroupFrags.put(fragment.id(), idFrags);
-            }
-
+            List<Fragment> idFrags = readGroupFrags.computeIfAbsent(fragment.id(), k -> Lists.newArrayList());
             idFrags.add(fragment);
         }
 
-        for(Map.Entry<String,List<Fragment>> readGroup : readGroupFrags.entrySet())
+        for(Map.Entry<String, List<Fragment>> readGroup : readGroupFrags.entrySet())
         {
             List<Fragment> idFrags = readGroup.getValue();
 
@@ -64,10 +59,10 @@ public class FragmentUtils
         return mergedFragments;
     }
 
-    public static List<Integer> expandIndices(final List<Integer> aminoAcidLoci)
+    public static List<Integer> expandIndices(final Iterable<Integer> aminoAcidLoci)
     {
         List<Integer> nucleotideLoci = Lists.newArrayList();
-        aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
+        aminoAcidLoci.forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
         return nucleotideLoci;
     }
 
@@ -93,7 +88,8 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
+        Fragment newFragment = new Fragment(
+		fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
 
         for(int i = 1; i < fragment.reads().size(); ++i)
         {
@@ -111,7 +107,7 @@ public class FragmentUtils
         String second = bases.get(1);
         String third = bases.get(2);
 
-        if(first == DEL_STR && second == DEL_STR && third == DEL_STR)
+        if(first.equals(DEL_STR) && second.equals(DEL_STR) && third.equals(DEL_STR))
             return DEL_STR;
 
         return Codons.aminoAcidFromBases(first + second + third);

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
@@ -63,7 +63,7 @@ public class JitterModelParamsFile
         {
             JitterModelParams params = new JitterModelParams(
                     row.get(Column.unit),
-                    hasConsensusType ? ConsensusType.valueOf(row.get(Column.consensusType)) : ConsensusType.IGNORE,
+                    hasConsensusType ? ConsensusType.valueOf(row.get(Column.consensusType)) : ConsensusType.NONE,
                     row.getDouble(Column.optimalScaleRepeat4),
                     row.getDouble(Column.optimalScaleRepeat5),
                     row.getDouble(Column.optimalScaleRepeat6),

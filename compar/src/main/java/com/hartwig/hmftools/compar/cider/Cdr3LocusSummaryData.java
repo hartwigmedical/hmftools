@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.compar.common.Category.CDR3_LOCUS_SUMMARY;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
@@ -24,6 +23,8 @@ public class Cdr3LocusSummaryData implements ComparableItem
 {
     public final Cdr3LocusSummary Cdr3LocusSummary;
 
+    protected static final String PASS_SEQUENCES_FIELD = capitalize(Cdr3LocusSummaryFile.Column.passSequences.name());
+
     public Cdr3LocusSummaryData(final Cdr3LocusSummary cdr3LocusSummary)
     {
         Cdr3LocusSummary = cdr3LocusSummary;
@@ -40,7 +41,7 @@ public class Cdr3LocusSummaryData implements ComparableItem
 
     public static List<String> comparedFieldNames()
     {
-        return List.of(capitalize(Cdr3LocusSummaryFile.Column.passSequences.name()));
+        return List.of(PASS_SEQUENCES_FIELD);
     }
 
     @Override
@@ -71,7 +72,7 @@ public class Cdr3LocusSummaryData implements ComparableItem
         final Cdr3LocusSummary other = ((Cdr3LocusSummaryData) comparableItem).Cdr3LocusSummary;
 
         final List<String> diffs = new ArrayList<>();
-        checkDiff(diffs, Cdr3LocusSummaryFile.Column.passSequences.name(), Cdr3LocusSummary.passSequences(), other.passSequences(), thresholds);
+        checkDiff(diffs, PASS_SEQUENCES_FIELD, Cdr3LocusSummary.passSequences(), other.passSequences(), thresholds);
 
         return createMismatchFromDiffs(this, comparableItem, diffs, matchLevel, includeMatches);
     }

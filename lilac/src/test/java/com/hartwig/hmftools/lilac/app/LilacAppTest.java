@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.lilac.app;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
@@ -14,6 +10,9 @@ import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.disableLogging;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.PASS;
@@ -331,7 +330,7 @@ public class LilacAppTest
             int endLocus = startLocus + length;
 
             fragments.add(createFragment(
-                    String.format("READ_%03d", ++mReadIdCounter), longGeneName(sequenceLoci.Allele.Gene),
+                    String.format("READ_%03d", ++mReadIdCounter), sequenceLoci.Allele.Gene,
                     sequenceLoci.sequence(), startLocus, endLocus));
 
             startLocus += gap;
@@ -340,7 +339,7 @@ public class LilacAppTest
         return fragments;
     }
 
-    private void loadTestReferenceData(final ReferenceData refData)
+    private static void loadTestReferenceData(final ReferenceData refData)
     {
         final List<String> nucleotides = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream("/test_allele_nucleotides.csv")))

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.umi;
 
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIFF;
 
 import java.util.Comparator;
 

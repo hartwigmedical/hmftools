@@ -3,15 +3,17 @@ package com.hartwig.hmftools.redux.bqr;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
+import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
-import static com.hartwig.hmftools.common.redux.BqrReadType.extractReadType;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
-import static com.hartwig.hmftools.redux.common.Constants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,11 +25,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.redux.BqrKey;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.CigarElement;
@@ -46,23 +50,25 @@ public class BqrRegionReader implements CigarHandler
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
     private final Map<BqrKey, Integer> mKeyCountsMap;
+
+    private int mNextPurgePosition;
     private int mPurgeIndex;
     private int mMaxIndex;
 
-    private BaseQualityDataCollection[] mBaseQualityData; // base-qual data by position for this region
+    private BaseQualityData[] mBaseQualityData; // base-qual data by position for this region
 
     private final PerformanceCounter mPerfCounter;
-    private int mReadCounter;
 
-    private BqrReadType mCurrentReadType;
-    private final SequencingType mSequencingType;
+    private long mTotalReadsUsed;
+    private int mTotalAltsFiltered;
 
-    private static final int BASE_DATA_POS_BUFFER = 100;
+    private ConsensusType mCurrentReadType;
+
     public static final int REF_BASE_REGION_SIZE = 100000;
+    private static final int BASE_DATA_PURGE_POS_BUFFER = 10;
+    private static final int BASE_DATA_PURGE_POS_CHECK = 1000;
 
-    public BqrRegionReader(
-            final SequencingType sequencingType, final RefGenomeInterface refGenome, final BaseQualityResults results,
-            final List<ChrBaseRegion> allRegions)
+    public BqrRegionReader(final RefGenomeInterface refGenome, final BaseQualityResults results, final List<ChrBaseRegion> allRegions)
     {
         mRefGenome = refGenome;
         mResults = results;
@@ -72,20 +78,24 @@ public class BqrRegionReader implements CigarHandler
         mCurrentRefSequence = null;
         mHasActiveRegion = false;
 
-        mCurrentReadType = BqrReadType.NONE;
-        mSequencingType = sequencingType;
+        mCurrentReadType = ConsensusType.NONE;
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
         mKeyCountsMap = Maps.newHashMap();
         mPurgeIndex = 0;
+        mNextPurgePosition = 0;
         mMaxIndex = 0;
 
         mPerfCounter = new PerformanceCounter("BaseQualBuild");
-        mReadCounter = 0;
+
+        mTotalReadsUsed = 0;
+        mTotalAltsFiltered = 0;
     }
 
     public boolean isActive() { return mHasActiveRegion; }
+    public long totalReadsUsed() { return mTotalReadsUsed; }
+    public int totalAltsFiltered() { return mTotalAltsFiltered; }
 
     public void initialise(final ChrBaseRegion region)
     {
@@ -139,18 +149,25 @@ public class BqrRegionReader implements CigarHandler
         if(!mCurrentRefSequence.IsValid)
             return;
 
+        mNextPurgePosition = refBaseStart + BASE_DATA_PURGE_POS_CHECK;
+
         if(mBaseQualityData == null || mBaseQualityData.length != mCurrentRefSequence.length())
         {
-            mBaseQualityData = new BaseQualityDataCollection[mCurrentRefSequence.length()];
+            mBaseQualityData = new BaseQualityData[mCurrentRefSequence.length()];
         }
 
+        RD_LOGGER.trace("bqr starting  new sub-region({})", mCurrentRefSequence);
+
         mPerfCounter.reset();
+        mPerfCounter.start();
     }
 
     private void processCompletedLocalRegion()
     {
         if(mBaseQualityData == null)
             return;
+
+        RD_LOGGER.trace("bqr completed sub-region({})", mCurrentRefSequence);
 
         buildQualityCounts();
 
@@ -164,7 +181,7 @@ public class BqrRegionReader implements CigarHandler
 
         mKeyCountsMap.clear();
         mQualityCounts.clear();
-        mReadCounter = 0;
+        mNextPurgePosition = 0;
         mPurgeIndex = 0;
         mMaxIndex = 0;
 
@@ -192,12 +209,10 @@ public class BqrRegionReader implements CigarHandler
     {
         for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
-            BaseQualityDataCollection bqDataCollection = mBaseQualityData[i];
+            BaseQualityData baseQualityData = mBaseQualityData[i];
 
-            if(bqDataCollection == null)
-                continue;
-
-            buildSummaryData(bqDataCollection);
+            if(baseQualityData != null)
+                convertToKeyCounts(baseQualityData);
         }
 
         for(Map.Entry<BqrKey, Integer> entry : mKeyCountsMap.entrySet())
@@ -208,15 +223,7 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
-    private void buildSummaryData(final BaseQualityDataCollection bqDataCollection)
-    {
-        if(bqDataCollection != null)
-        {
-            bqDataCollection.DataMap.values().forEach(x -> buildSummaryData(x));
-        }
-    }
-
-    private void buildSummaryData(final BaseQualityData bqData)
+    private void convertToKeyCounts(final BaseQualityData bqData)
     {
         if(bqData == null)
             return;
@@ -224,10 +231,15 @@ public class BqrRegionReader implements CigarHandler
         if(bqData.hasIndel())
             return;
 
-        Map<BqrKey, Integer> keyCounts = bqData.formKeyCounts();
+        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts();
 
-        for(Map.Entry<BqrKey, Integer> entry : keyCounts.entrySet())
+        mTotalAltsFiltered += bqData.filteredAltCount();
+
+        for(Map.Entry<BqrKey,Integer> entry : keyCounts.entrySet())
         {
+            if(!entry.getKey().isValid())
+                continue;
+
             Integer count = mKeyCountsMap.get(entry.getKey());
             mKeyCountsMap.put(entry.getKey(), count != null ? count + entry.getValue() : entry.getValue());
         }
@@ -243,15 +255,13 @@ public class BqrRegionReader implements CigarHandler
         if(record.getMappingQuality() < BQR_MIN_MAP_QUAL)
             return;
 
-        ++mReadCounter;
-
         setShortFragmentBoundaries(record);
 
-        mCurrentReadType = extractReadType(record, mSequencingType);
+        mCurrentReadType = extractConsensusType(record);
 
         CigarHandler.traverseCigar(record, this);
 
-        if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
+        if(record.getAlignmentStart() >= mNextPurgePosition)
         {
             purgeBaseDataList(record.getAlignmentStart());
         }
@@ -263,6 +273,9 @@ public class BqrRegionReader implements CigarHandler
 
     private void setShortFragmentBoundaries(final SAMRecord record)
     {
+        if(!record.getReadPairedFlag())
+            return;
+
         // ensure we don’t read past insert size on 3’ end of short fragments
         mMinReadStartPosition = SHORT_FRAG_BOUNDARY_NONE;
         mMaxReadEndPosition = SHORT_FRAG_BOUNDARY_NONE;
@@ -315,14 +328,29 @@ public class BqrRegionReader implements CigarHandler
 
         byte ref = mCurrentRefSequence.base(position);
         byte[] trinucleotideContext = mCurrentRefSequence.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
         bqData.setHasIndel();
     }
+
+    // debug only
+    private static final boolean LOG_READ_INFO = false;
+    private static final List<String> LOG_TNCS = List.of(); // "AAA"
+    private static final List<Byte> LOG_QUAL = List.of((byte)10,(byte)40); // (byte)10, (byte)15
+    private static final List<Byte> LOG_POSITIONS = List.of();
+    private static final List<ConsensusType> LOG_CONSENSUS_TYPES = List.of(SINGLE);
 
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
     {
         byte[] trinucleotideContext = new byte[3];
+        boolean readPosStrand = !record.getReadNegativeStrandFlag();
+        boolean readUsed = false;
+
+        int duplexBaseIndex = -1;
+        if(isSbx() && mCurrentReadType == DUAL)
+        {
+            duplexBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
+        }
 
         for(int i = 0; i < cigarElement.getLength(); i++)
         {
@@ -350,68 +378,84 @@ public class BqrRegionReader implements CigarHandler
 
             byte quality = record.getBaseQualities()[readIndex];
 
-            if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
+            if(BaseQualAdjustment.isUncertainBaseFromQual(quality))
+                continue;
+
+            if(isUltima() && quality < ULTIMA_MAX_QUAL)
                 continue;
 
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
+            readUsed = true;
 
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
-            baseQualityData.processReadBase(alt, quality);
+            ConsensusType consensusType = mCurrentReadType;
+
+            if(duplexBaseIndex >= 0 && consensusType == DUAL && !SbxBamUtils.inDuplexRegion(readPosStrand, duplexBaseIndex, readIndex))
+                consensusType = SINGLE;
+
+            if(LOG_READ_INFO)
+            {
+                String tncStr = new String(trinucleotideContext);
+
+                if((LOG_QUAL.isEmpty() || LOG_QUAL.contains(quality))
+                && (LOG_POSITIONS.isEmpty() || LOG_POSITIONS.contains(position))
+                && (LOG_CONSENSUS_TYPES.isEmpty() || LOG_CONSENSUS_TYPES.contains(consensusType))
+                && (LOG_TNCS.isEmpty() || LOG_TNCS.contains(tncStr)))
+                {
+                    RD_LOGGER.debug("BQR: read({}) position({}:{}) context({}) alt({}) qual({}) readType({}) posStrand({})",
+                            record.getReadName(), mPartitionOverlapRegion.Chromosome, position, tncStr, alt, quality, consensusType, readPosStrand);
+                }
+            }
+
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+            baseQualityData.processReadBase(consensusType, alt, quality, readPosStrand);
         }
+
+        if(readUsed)
+            ++mTotalReadsUsed;
     }
 
     private void purgeBaseDataList(int currentReadStartPos)
     {
         for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
         {
-            BaseQualityDataCollection bqData = mBaseQualityData[mPurgeIndex];
+            int position = mCurrentRefSequence.position(mPurgeIndex);
+
+            if(position <= 0)
+            {
+                RD_LOGGER.error("invalid calc position({}) purgeIndex({} -> {}) readPos({}) refSeq({})",
+                        position, mPurgeIndex, mMaxIndex, currentReadStartPos, mCurrentRefSequence);
+                System.exit(1);
+            }
+
+            if(position >= currentReadStartPos - BASE_DATA_PURGE_POS_BUFFER)
+                break;
+
+            BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
 
             if(bqData == null)
                 continue;
 
-            if(bqData.Position >= currentReadStartPos - BASE_DATA_POS_BUFFER)
-                break;
-
-            buildSummaryData(bqData);
+            convertToKeyCounts(bqData);
             mBaseQualityData[mPurgeIndex] = null;
         }
+
+        mNextPurgePosition = currentReadStartPos + BASE_DATA_PURGE_POS_CHECK;
     }
 
     @VisibleForTesting
-    public BaseQualityData getOrCreateBaseQualData(
-            int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+    public BaseQualityData getOrCreateBaseQualData(int position, final byte ref, final byte[] trinucleotideContext)
     {
         int posIndex = mCurrentRefSequence.index(position);
-        BaseQualityDataCollection bqDataCollection = mBaseQualityData[posIndex];
+        BaseQualityData baseQualityData = mBaseQualityData[posIndex];
 
-        if(bqDataCollection == null)
+        if(baseQualityData == null)
         {
-            bqDataCollection = new BaseQualityDataCollection(position);
-            mBaseQualityData[posIndex] = bqDataCollection;
+            baseQualityData = new BaseQualityData(trinucleotideContext);
+            mBaseQualityData[posIndex] = baseQualityData;
             mMaxIndex = posIndex;
         }
 
-        BaseQualityData bqData = bqDataCollection.DataMap.get(readType);
-
-        if(bqData == null)
-        {
-            bqData = new BaseQualityData(ref, trinucleotideContext, readType);
-            bqDataCollection.DataMap.put(readType, bqData);
-        }
-
-        return bqData;
-    }
-
-    private class BaseQualityDataCollection
-    {
-        public final int Position;
-        public final Map<BqrReadType, BaseQualityData> DataMap;
-
-        public BaseQualityDataCollection(final int position)
-        {
-            Position = position;
-            DataMap = Maps.newHashMap();
-        }
+        return baseQualityData;
     }
 
     @VisibleForTesting
@@ -420,6 +464,11 @@ public class BqrRegionReader implements CigarHandler
         mPartitionOverlapRegion = region;
         mCurrentRefSequence = new RefSequence(region.Chromosome, region.start(), region.end(), refGenome);
 
-        mBaseQualityData = new BaseQualityDataCollection[mCurrentRefSequence.length()];
+        mBaseQualityData = new BaseQualityData[mCurrentRefSequence.length()];
+
+        mKeyCountsMap.clear();
+        mQualityCounts.clear();
+        mPurgeIndex = 0;
+        mMaxIndex = 0;
     }
 }

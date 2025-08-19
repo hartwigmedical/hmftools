@@ -4,11 +4,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendUltimaCore;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.ultimaLongRepeatFilter;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -17,10 +22,13 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.quality.ArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
+import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -48,6 +56,9 @@ public class VariantReadContextBuilder
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
 
+            if(!aboveMinBasQual(readContext, read, varReadIndex))
+                return null;
+
             // enforce ref base padding for trinucleotide generation
             if(readContext.variantRefIndex() <= 0 || readContext.variantRefIndex() >= readContext.refBases().length() - 1)
                 return null;
@@ -64,7 +75,8 @@ public class VariantReadContextBuilder
             // set max ref repeat for use in MSI calcs and VCF output
             setMaxRefRepeat(readContext);
 
-            readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
+            if(isIllumina())
+                readContext.setArtefactContext(IlluminaArtefactContext.buildContext(readContext));
 
             return readContext;
         }
@@ -78,7 +90,8 @@ public class VariantReadContextBuilder
         }
     }
 
-    private VariantReadContext buildContext(
+    @VisibleForTesting
+    public VariantReadContext buildContext(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final RefSequence refSequence)
     {
         /* Routine:
@@ -127,6 +140,9 @@ public class VariantReadContextBuilder
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
             return null;
 
+        if(isUltima() && ultimaLongRepeatFilter(variant, read, varIndexInRead, homology))
+            return null;
+
         final byte[] readBases = read.getReadBases();
 
         RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
@@ -148,6 +164,29 @@ public class VariantReadContextBuilder
 
         if(readCigarInfo == null || !readCigarInfo.isValid())
             return null;
+
+        // for ultima we expand core so that homopolymers are not cut off in the read or the ref
+        if(isUltima())
+        {
+            // TODO: handle this better by passing in append mode status explicitly
+            boolean inAppendMode = read.getReadName().equals("CANDIDATE"); // hacky, we should do this properly
+            // long inserts with S elements won't work properly in append mode with core extension
+            boolean skippableLongInsert = inAppendMode && isLongInsert(variant);
+            UltimaCoreExtender.UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(read.getReadBases(), refSequence,
+                    softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
+                    softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
+                    readCigarInfo, mFlankSize, inAppendMode);
+
+            if(!skippableLongInsert && (ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid()))
+                return null;
+
+            if(ultimaCoreInfo != null)
+            {
+                readCoreStart = ultimaCoreInfo.ReadCoreStart;
+                readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
+                readCigarInfo = ultimaCoreInfo.CigarInfo;
+            }
+        }
 
         int readPositionStart = readCigarInfo.ReadAlignmentStart; // may have been adjusted
         readFlankStart = readCigarInfo.FlankIndexStart;
@@ -197,6 +236,29 @@ public class VariantReadContextBuilder
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar, coreIndexStart,
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
+    }
+
+    private static boolean aboveMinBasQual(final VariantReadContext readContext, final SAMRecord read, final int varReadIndex)
+    {
+        int indexStart = varReadIndex - readContext.leftCoreLength();
+        int indexEnd = varReadIndex + readContext.rightCoreLength();
+
+        if(readContext.variant().isIndel())
+        {
+            indexStart -= readContext.leftFlankLength();
+            indexEnd += readContext.rightFlankLength();
+        }
+
+        if(indexStart < 0 || indexEnd >= read.getBaseQualities().length)
+            return false;
+
+        for(int i = indexStart; i <= indexEnd; ++i)
+        {
+            if(BaseQualAdjustment.isUncertainBaseFromQual(read.getBaseQualities()[i]))
+                return false;
+        }
+
+        return true;
     }
 
     private class SoftClipReadAdjustment

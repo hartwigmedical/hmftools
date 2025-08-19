@@ -28,7 +28,13 @@ public class ChordApplication
             ChordDataPrep prep = new ChordDataPrep(mConfig);
             prep.run();
 
-            ChordModel model = ChordModel.fromResources();
+            ChordModel model;
+            if(mConfig.ChordModelFile == null)
+            {
+                model = new ChordModel(mConfig.OutputDir + "/CHORD.tmp.rds", true);
+            } else {
+                model = new ChordModel(mConfig.ChordModelFile, false);
+            }
 
             String mutContextsPath = prep.mOutputFile;
             String predictionsPath = ChordOutput.predictionsFile(mConfig);

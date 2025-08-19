@@ -1,15 +1,23 @@
 package com.hartwig.hmftools.common.redux;
 
 import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
+
 public class BaseQualAdjustment
 {
-    public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
-    public static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
+    // zero is not handled by some downstream tools
+    // this low value also denotes an adjustment (eg by Redux) to indicate that the corresponding base is completely uncertain
+    public static final byte BASE_QUAL_MINIMUM = 1;
 
-    public static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
+    private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
+    private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
 
     public static byte adjustBaseQual(final double baseQual) { return adjustBaseQual(STANDARD_BASE_QUALS, baseQual); }
 
@@ -35,6 +43,8 @@ public class BaseQualAdjustment
         return (byte)STANDARD_BASE_QUALS[0];
     }
 
+    public static byte maxQual(final byte qual1, final byte qual2) { return (byte)max(qual1, qual2); }
+
     public static double phredQualToProbability(byte quality)
     {
         return pow(10, -quality / 10.0);
@@ -46,4 +56,24 @@ public class BaseQualAdjustment
     }
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
+
+    public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
+    {
+        if(sequencingType == SequencingType.ILLUMINA)
+            return IlluminaBamUtils.isHighBaseQual(qual);
+        else if(sequencingType == SequencingType.SBX)
+            return SbxBamUtils.isHighBaseQual(qual);
+        else
+            return UltimaBamUtils.isHighBaseQual(qual);
+    }
+
+    public static boolean isMediumBaseQual(final byte qual, final SequencingType sequencingType)
+    {
+        if(sequencingType == SequencingType.SBX)
+            return SbxBamUtils.isMediumBaseQual(qual);
+        else
+            return false;
+    }
+
+    public static boolean isUncertainBaseFromQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
 }

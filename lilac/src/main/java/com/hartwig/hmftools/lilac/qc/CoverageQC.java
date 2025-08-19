@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.SOLUTION;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,8 @@ import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-public class CoverageQC {
+public class CoverageQC
+{
 
     public final int ATypes;
     public final int BTypes;
@@ -28,7 +30,6 @@ public class CoverageQC {
     public final int UnmatchedFragments;
     public final int UninformativeFragments;
     public final int HlaYFragments;
-
 
     // winning solution breakdown
     public final int UniqueFragments; //
@@ -77,15 +78,14 @@ public class CoverageQC {
         PercentWildcard = 1.0 * wildcardFragments / FittedFragments;
     }
 
-    public static CoverageQC create(
-            final List<Fragment> fragments, final ComplexCoverage winner)
+    public static CoverageQC create(final Collection<Fragment> fragments, final ComplexCoverage winner)
     {
-        List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).collect(Collectors.toList());
-        int aTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_A)).collect(Collectors.toSet()).size();
-        int bTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_B)).collect(Collectors.toSet()).size();
-        int cTypes = alleles.stream().filter(x -> x.Gene.equals(GENE_C)).collect(Collectors.toSet()).size();
+        List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).toList();
+        int aTypes = alleles.stream().filter(x -> x.Gene == HLA_A).collect(Collectors.toSet()).size();
+        int bTypes = alleles.stream().filter(x -> x.Gene == HLA_B).collect(Collectors.toSet()).size();
+        int cTypes = alleles.stream().filter(x -> x.Gene == HLA_C).collect(Collectors.toSet()).size();
 
-        if (aTypes == 0 || bTypes == 0 || cTypes == 0)
+        if(aTypes == 0 || bTypes == 0 || cTypes == 0)
         {
             LL_LOGGER.warn("  UNMATCHED ALLELE: {} A alleles, {} B alleles, {} C alleles", aTypes, bTypes, cTypes);
         }
@@ -140,7 +140,7 @@ public class CoverageQC {
                 winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage);
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList(
                 "ATypes", "BTypes", "CTypes",

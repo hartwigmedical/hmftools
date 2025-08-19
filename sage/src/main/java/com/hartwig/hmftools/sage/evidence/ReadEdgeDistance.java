@@ -14,12 +14,14 @@ import htsjdk.samtools.SAMRecord;
 public class ReadEdgeDistance
 {
     private final int mVariantPosition;
-    
-    private int mMaxDistanceFromEdge; // includes any soft-clipped bases
-    private int mMaxDistanceFromEdgeAlt;
 
-    private int mTotalDistanceFromEdge;
-    private int mTotalDistanceFromEdgeAlt;
+    // all distances are recorded as a percentage of the read length from which they were taken
+
+    private double mMaxDistanceFromEdge; // includes any soft-clipped bases
+    private double mMaxDistanceFromEdgeAlt;
+
+    private double mTotalDistanceFromEdge;
+    private double mTotalDistanceFromEdgeAlt;
     private int mUpdates;
     private int mUpdatesAlt;
 
@@ -40,11 +42,11 @@ public class ReadEdgeDistance
         return indelLength == 0 ? variantPosition : variantPosition +  indelLength / 2;
     }
 
-    public int maxAltDistanceFromEdge() { return mMaxDistanceFromEdgeAlt; }
-    public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
+    public double maxAltDistanceFromEdge() { return mMaxDistanceFromEdgeAlt; }
+    public double maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
 
-    public int avgDistanceFromEdge() { return mUpdates > 0 ? (int)round(mTotalDistanceFromEdge / (double)mUpdates) : 0; }
-    public int avgAltDistanceFromEdge() { return mUpdatesAlt > 0 ? (int)round(mTotalDistanceFromEdgeAlt / (double) mUpdatesAlt) : 0; }
+    public double avgDistanceFromEdge() { return mUpdates > 0 ? mTotalDistanceFromEdge / mUpdates : 0; }
+    public double avgAltDistanceFromEdge() { return mUpdatesAlt > 0 ? mTotalDistanceFromEdgeAlt / mUpdatesAlt : 0; }
 
     public void update(final SAMRecord record, final FragmentData fragmentData, boolean altSupport)
     {
@@ -78,17 +80,18 @@ public class ReadEdgeDistance
             minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
         }
 
+        double readLengthPercentage = minDistance / (double)record.getReadLength();
         ++mUpdates;
-        mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
+        mMaxDistanceFromEdge = max(readLengthPercentage, mMaxDistanceFromEdge);
 
         if(altSupport)
         {
-            mMaxDistanceFromEdgeAlt = max(minDistance, mMaxDistanceFromEdgeAlt);
-            mTotalDistanceFromEdgeAlt += minDistance;
+            mMaxDistanceFromEdgeAlt = max(readLengthPercentage, mMaxDistanceFromEdgeAlt);
+            mTotalDistanceFromEdgeAlt += readLengthPercentage;
             ++mUpdatesAlt;
         }
 
-        mTotalDistanceFromEdge += minDistance;
+        mTotalDistanceFromEdge += readLengthPercentage;
     }
 
     private static final int NO_READ_EDGE_DISTANCE = -1;

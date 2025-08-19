@@ -4,10 +4,12 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_MAX_DEPTH;
-import static com.hartwig.hmftools.redux.common.Constants.CONSENSUS_PREFIX;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_MAX_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
@@ -40,7 +42,6 @@ public class ConsensusReads
     private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
-    private final NonStandardBaseBuilder mNonStandardBaseBuilder;
 
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
@@ -48,17 +49,9 @@ public class ConsensusReads
     public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
         mRefGenome = new RefGenome(refGenome);
-        mNonStandardBaseBuilder = NonStandardBaseBuilder.fromSequencingType(sequencingType, mRefGenome);
-        if(mNonStandardBaseBuilder == null)
-        {
-            mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats);
-            mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
-        }
-        else
-        {
-            mBaseBuilder = null;
-            mIndelConsensusReads = null;
-        }
+
+        mBaseBuilder = new BaseBuilder(mRefGenome, consensusStats, sequencingType);
+        mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
 
         mConsensusStats = consensusStats;
         mValidateConsensusReads = false;
@@ -122,11 +115,7 @@ public class ConsensusReads
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
         }
 
-        if(mNonStandardBaseBuilder != null)
-        {
-            mNonStandardBaseBuilder.buildConsensusRead(readsView, consensusState, hasIndels);
-        }
-        else if(hasIndels)
+        if(hasIndels)
         {
             mIndelConsensusReads.buildIndelComponents(readsView, consensusState, templateRead);
 
@@ -158,6 +147,14 @@ public class ConsensusReads
         consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
 
+        if(isSbx())
+        {
+            int firstDuplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(readsView);
+
+            if(firstDuplexBaseIndex >= 0)
+                consensusRead.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
+        }
+
         if(mValidateConsensusReads)
         {
             ValidationReason validReason = isValidConsensusRead(consensusRead);
@@ -172,13 +169,7 @@ public class ConsensusReads
 
     public void setChromosomeLength(int chromosomeLength)
     {
-        if(mBaseBuilder != null)
-        {
-            mBaseBuilder.setChromosomLength(chromosomeLength);
-            return;
-        }
-
-        mNonStandardBaseBuilder.setChromosomeLength(chromosomeLength);
+        mBaseBuilder.setChromosomLength(chromosomeLength);
     }
 
     private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)

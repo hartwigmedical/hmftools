@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
-import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 
 import java.util.Collections;
 import java.util.List;
@@ -156,7 +156,7 @@ public class BamReader
 
         if(isConsensusRead)
         {
-            isDualStrand = extractUmiType(read) == DUAL;
+            isDualStrand = extractConsensusType(read) == DUAL;
 
             // lower the duplicate count to reflect the use of consensus reads - since 2 duplicates would usually result in one being
             // marked as primary and the other as duplicate, whereas now both are duplicates plus a new consensus read are expected

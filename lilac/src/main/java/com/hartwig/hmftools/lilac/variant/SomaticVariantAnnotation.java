@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,10 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
-import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -31,13 +33,13 @@ public class SomaticVariantAnnotation
     private final LilacConfig mConfig;
 
     // variant loci are grouped by the genes they nominally fall within
-    private final Map<String,List<Integer>> mGeneVariantLoci;
+    private final Map<HlaGene, List<Integer>> mGeneVariantLoci;
 
     private final List<SomaticVariant> mSomaticVariants;
 
-    private final Map<String,TranscriptData> mHlaTranscriptData;
+    private final Map<HlaGene, TranscriptData> mHlaTranscriptData;
 
-    public SomaticVariantAnnotation(final LilacConfig config, final Map<String,TranscriptData> transcriptData)
+    public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene, TranscriptData> transcriptData)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
@@ -69,8 +71,8 @@ public class SomaticVariantAnnotation
 
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
 
-    public final List<AlleleCoverage> assignAlleleCoverage(
-            final SomaticVariant variant, final List<Fragment> fragments, final List<HlaSequenceLoci> winners)
+    public List<AlleleCoverage> assignAlleleCoverage(
+            final SomaticVariant variant, final Collection<Fragment> fragments, final Iterable<HlaSequenceLoci> winners)
     {
         List<AlleleCoverage> coverages = Lists.newArrayList();
 
@@ -154,7 +156,7 @@ public class SomaticVariantAnnotation
         if(maxUnique > 0 && maxUnique >= fragments.size() / 2)
             return coverages.stream().filter(x -> x.UniqueCoverage == maxUnique).collect(Collectors.toList());
 
-        int maxWildcard = coverages.stream().mapToInt(x -> (int)x.WildCoverage).max().orElse(0);
+        int maxWildcard = coverages.stream().mapToInt(x -> (int) x.WildCoverage).max().orElse(0);
 
         if(maxWildcard > 0)
             return coverages.stream().filter(x -> (int)x.WildCoverage == maxWildcard).collect(Collectors.toList());
@@ -223,7 +225,7 @@ public class SomaticVariantAnnotation
                 if(inHlaCodingRegion(variant))
                 {
                     variants.add(new SomaticVariant(
-                            variant.gene(), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
+                            HlaGene.fromString(variant.gene()), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
                             variant.filter(), variant.canonicalCodingEffect(), variant.context()));
                 }
             }

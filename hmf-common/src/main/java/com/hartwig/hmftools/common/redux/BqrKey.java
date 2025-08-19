@@ -3,15 +3,18 @@ package com.hartwig.hmftools.common.redux;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+
 public class BqrKey
 {
     public final byte Ref;
     public final byte Alt;
     public final byte[] TrinucleotideContext;
     public final byte Quality;
-    public final BqrReadType ReadType;
+    public final ConsensusType ReadType;
 
-    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
+    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final ConsensusType readType)
     {
         Ref = ref;
         Alt = alt;
@@ -33,12 +36,19 @@ public class BqrKey
         return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext, otherKey.ReadType);
     }
 
-    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext, BqrReadType readType)
+    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext, ConsensusType readType)
     {
         if(Ref != ref || Alt != alt || Quality != quality || ReadType != readType)
             return false;
 
         return Arrays.equals(trinucleotideContext, TrinucleotideContext);
+    }
+
+    public boolean isValid()
+    {
+        return TrinucleotideContext.length == 3 && Ref == TrinucleotideContext[1] && Nucleotides.isValidDnaBase(Alt)
+                && Nucleotides.isValidDnaBase(TrinucleotideContext[0]) && Nucleotides.isValidDnaBase(TrinucleotideContext[1])
+                && Nucleotides.isValidDnaBase(TrinucleotideContext[2]);
     }
 
     @Override
@@ -52,6 +62,6 @@ public class BqrKey
     public String toString()
     {
         return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s)",
-            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType);
+            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", Quality, ReadType);
     }
 }

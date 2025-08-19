@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.addGenotypeHeader;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
@@ -32,11 +33,12 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.SageCommon;
-import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
+import com.hartwig.hmftools.sage.quality.BqrCache;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -171,12 +173,15 @@ public class SageAppendApplication
 
         SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig.Common, Collections.emptyList());
+        BqrCache bqrCache = new BqrCache(mConfig.Common, Collections.emptyList());
 
-        if(!baseQualityRecalibration.isValid())
+        if(!bqrCache.isValid())
             System.exit(1);
 
-        final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        if(isUltima())
+            UltimaUtils.setMaxRawQual(bqrCache.maxRawQual());
+
+        final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
                 mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterParamsDir : null,

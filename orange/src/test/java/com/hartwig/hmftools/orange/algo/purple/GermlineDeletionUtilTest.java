@@ -38,7 +38,7 @@ public class GermlineDeletionUtilTest
         GermlineDeletion partialDeletionHetInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 600, 800);
         List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(2.0, maxCopyNumber, EPSILON);
     }
@@ -54,7 +54,7 @@ public class GermlineDeletionUtilTest
         GermlineDeletion partialDeletionHetInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 600, 800);
         List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(0.8D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 0.8D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(1.1, maxCopyNumber, EPSILON);
     }
@@ -71,7 +71,7 @@ public class GermlineDeletionUtilTest
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 600, 800);
         List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHomInTumor1, partialDeletionHomInTumor2);
 
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(2.0, maxCopyNumber, EPSILON);
     }
@@ -84,7 +84,7 @@ public class GermlineDeletionUtilTest
         TranscriptData transcript = getTestTranscript();
         GermlineDeletion fullDeletionHetInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 100, 1000);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
                 GermlineDeletionUtil.getSomaticMaxCopyNumber(Lists.newArrayList(fullDeletionHetInTumor), geneCopyNumber, transcript);
         assertEquals(1.1, maxCopyNumber, EPSILON);
@@ -98,7 +98,7 @@ public class GermlineDeletionUtilTest
         TranscriptData transcript = getTestTranscript();
         GermlineDeletion fullDeletionHomInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
                 GermlineDeletionUtil.getSomaticMaxCopyNumber(Lists.newArrayList(fullDeletionHomInTumor), geneCopyNumber, transcript);
         assertEquals(0.1, maxCopyNumber, EPSILON);
@@ -112,7 +112,7 @@ public class GermlineDeletionUtilTest
         TranscriptData transcript = getTestTranscript();
         GermlineDeletion fullDeletionHomInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, -0.1D, 100, 1000);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
                 GermlineDeletionUtil.getSomaticMaxCopyNumber(Lists.newArrayList(fullDeletionHomInTumor), geneCopyNumber, transcript);
         assertEquals(0, maxCopyNumber, EPSILON);
@@ -129,7 +129,7 @@ public class GermlineDeletionUtilTest
         GermlineDeletion partialDeletionHomInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 701, 1000);
         List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHomInTumor2);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(1.1, maxCopyNumber, EPSILON);
     }
@@ -221,9 +221,9 @@ public class GermlineDeletionUtilTest
     @Test
     public void testFindCopyNumberForGene()
     {
-        GeneCopyNumber geneCopyNumberToFind = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).build();
-        GeneCopyNumber otherGeneCopyNumber1 = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE2).build();
-        GeneCopyNumber otherGeneCopyNumber2 = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE3).build();
+        GeneCopyNumber geneCopyNumberToFind = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE);
+        GeneCopyNumber otherGeneCopyNumber1 = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE2);
+        GeneCopyNumber otherGeneCopyNumber2 = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE3);
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList(otherGeneCopyNumber1, geneCopyNumberToFind, otherGeneCopyNumber2);
         GeneCopyNumber foundGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(TEST_GENE, geneCopyNumbers);
         assertEquals(geneCopyNumberToFind, foundGeneCopyNumber);

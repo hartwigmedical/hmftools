@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.sage;
 
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
+
 import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,6 +40,9 @@ public class GermlineMVLHFactoryTest
                 .reportDeletion(true)
                 .reportDisruption(true)
                 .reportAmplification(false)
+                .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
+                .reportHetDeletion(false)
+                .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(true)
                 .likelihoodType(DriverCategory.TSG)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
@@ -53,6 +59,9 @@ public class GermlineMVLHFactoryTest
                 .reportDeletion(false)
                 .reportDisruption(false)
                 .reportAmplification(true)
+                .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
+                .reportHetDeletion(false)
+                .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .likelihoodType(DriverCategory.ONCO)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)

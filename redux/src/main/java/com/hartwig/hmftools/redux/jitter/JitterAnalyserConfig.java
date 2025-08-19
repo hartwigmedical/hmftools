@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
@@ -11,7 +13,7 @@ import java.util.EnumSet;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -22,7 +24,6 @@ public class JitterAnalyserConfig
     public final String SampleId;
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
-    public final SequencingType Sequencing;
     public final boolean UsesDuplexUMIs;
 
     public final String RefGenomeMsiFile;
@@ -50,16 +51,16 @@ public class JitterAnalyserConfig
     public static final String JITTER_WRITE_SITE_FILE = "write_msi_site_file";
     public static final String JITTER_WRITE_SITE_FILE_DESC = "Write MSI site file (useful for debugging)";
 
-    public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
+    public static final int DEFAULT_MIN_MAPPING_QUALITY = BQR_MIN_MAP_QUAL;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
 
-    private JitterAnalyserConfig(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
-            final SequencingType sequencing, boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
+    private JitterAnalyserConfig(
+            final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
+            boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
         SampleId = sampleId;
         RefGenomeFile = refGenomeFile;
         RefGenVersion = refGenVersion;
-        Sequencing = sequencing;
         UsesDuplexUMIs = usesDuplexUMIs;
         OutputDir = outputDir;
 
@@ -78,7 +79,7 @@ public class JitterAnalyserConfig
         if(!configBuilder.hasValue(JITTER_MSI_SITES_FILE))
             return null;
 
-        return new JitterAnalyserConfig(sampleId, refGenomeFile, refGenVersion, sequencing, usesDuplexUMIs, outputDir, configBuilder);
+        return new JitterAnalyserConfig(sampleId, refGenomeFile, refGenVersion, usesDuplexUMIs, outputDir, configBuilder);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -93,25 +94,25 @@ public class JitterAnalyserConfig
 
     public static EnumSet<ConsensusType> consensusTypes(final JitterAnalyserConfig config)
     {
-        SequencingType sequencingType = config.Sequencing;
         EnumSet<ConsensusType> consensusTypes = Sets.newEnumSet(Collections.emptyList(), ConsensusType.class);
 
         consensusTypes.add(ConsensusType.NONE);
 
-        if(sequencingType == ILLUMINA && config.UsesDuplexUMIs)
+        if(SEQUENCING_TYPE == ILLUMINA && config.UsesDuplexUMIs)
         {
             consensusTypes.add(ConsensusType.SINGLE);
             consensusTypes.add(ConsensusType.DUAL);
         }
-        else if(sequencingType == SBX)
+        else if(SEQUENCING_TYPE == SBX)
+        {
+            consensusTypes.add(ConsensusType.SINGLE);
+            consensusTypes.add(ConsensusType.DUAL);
+        }
+        else if(SEQUENCING_TYPE == ULTIMA)
         {
             consensusTypes.add(ConsensusType.DUAL);
         }
-        else if(sequencingType == ULTIMA)
-        {
-            consensusTypes.add(ConsensusType.DUAL);
-        }
-        else if(sequencingType == BIOMODAL)
+        else if(SEQUENCING_TYPE == BIOMODAL)
         {
             consensusTypes.add(ConsensusType.DUAL);
         }

@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrKey;
-import com.hartwig.hmftools.common.redux.BqrReadType;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 
@@ -114,7 +114,7 @@ public class BqrAdjustment
             if(bqrRecord.Key.Quality < mConfig.BqrQualThreshold)
                 continue;
 
-            if(bqrRecord.Key.ReadType == BqrReadType.DUAL)
+            if(bqrRecord.Key.ReadType == ConsensusType.DUAL)
                 continue;
 
             BqrKey noAltKey = new BqrKey(key.Ref, NO_KEY_VALUE, key.TrinucleotideContext, key.Quality, key.ReadType);

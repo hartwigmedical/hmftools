@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.common.redux.JitterModelParamsFile;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.RExecutor;
 
 import htsjdk.samtools.SAMRecord;
@@ -34,7 +34,6 @@ import htsjdk.samtools.SAMRecord;
 public class JitterAnalyser
 {
     private final JitterAnalyserConfig mConfig;
-    private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
     private EnumSet<ConsensusType> mConsensusTypes;
@@ -43,18 +42,11 @@ public class JitterAnalyser
     {
         mConfig = config;
 
-        mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
-
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        ConsensusMarker consensusMarker = ConsensusMarker.create(config);
+        ConsensusMarker consensusMarker = ConsensusMarker.create();
         mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
-    }
-
-    public BamSlicerFilter bamSlicerFilter()
-    {
-        return mBamSlicerFilter;
     }
 
     public void processRead(final SAMRecord read)
@@ -77,17 +69,18 @@ public class JitterAnalyser
 
         // now write out all the repeat stats
         if(mConfig.WriteSiteFile)
-            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
+            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(
+                    mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
-        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile, mConfig);
+        writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);
 
         // draw a chart of the 9 ms profiles
         if(mConfig.WritePlots)
             drawMicrosatelliteCharts(mConfig.OutputDir, mConfig.SampleId, statsTableFile);
 
         // now perform the fitting
-        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers, mConfig.MaxSingleSiteAltContribution);
+        List<JitterModelParams> jitterModelParamsList = fitJitterModels(microsatelliteSiteAnalysers);
 
         JitterModelParamsFile.write(JitterModelParamsFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), jitterModelParamsList);
     }
@@ -100,8 +93,7 @@ public class JitterAnalyser
     }
 
     private void writeMicrosatelliteStatsTable(
-            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final String filename,
-            final JitterAnalyserConfig config)
+            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final String filename)
     {
         // write two tables, one with real variant filter, one without
 
@@ -112,8 +104,7 @@ public class JitterAnalyser
             for(MicrosatelliteSelector s : createMicrosatelliteSelectorsForCharts())
             {
                 JitterCountsTable msStatsTable = buildJitterCountsTable(
-                        s.unitName(), consensusType, config.MaxSingleSiteAltContribution,
-                        microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
+                        s.unitName(), consensusType, microsatelliteSiteAnalysers.stream().filter(s::select).collect(Collectors.toList()));
                 msStatsTables.add(msStatsTable);
             }
         }
@@ -122,7 +113,7 @@ public class JitterAnalyser
     }
 
     static JitterCountsTable buildJitterCountsTable(
-            final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc,
+            final String repeatUnit, final ConsensusType consensusType,
             final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
     {
         // In order to filter out outliers, we perform the stats summation in a loop
@@ -134,7 +125,7 @@ public class JitterAnalyser
 
         while(true)
         {
-            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, consensusType, maxSingleAltSiteContributionPerc);
+            JitterCountsTable newTable = new JitterCountsTable(repeatUnit, consensusType);
 
             for(MicrosatelliteSiteAnalyser microsatelliteSiteAnalyser : microsatelliteSiteAnalysers)
             {
@@ -190,13 +181,11 @@ public class JitterAnalyser
         selectors.add(MicrosatelliteSelector.fromUnitLength(3));
         selectors.add(MicrosatelliteSelector.fromUnitLength(4));
         selectors.add(MicrosatelliteSelector.fromUnitLength(5));
-        //selectors.add(MicrosatelliteSelector.fromUnitLengthRange(3, 5));
 
         return selectors;
     }
 
-    private List<JitterModelParams> fitJitterModels(
-            final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers, final double maxSingleSiteAltContribution)
+    private List<JitterModelParams> fitJitterModels(final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers)
     {
         // create nine summary / pivot table
         // {A/T, C/G, AT/TA, AG/GA/CT/TC, AC/CA/GT/TG, CG/GC, any 3 base, any 4 base, any 5 base}
@@ -215,7 +204,7 @@ public class JitterAnalyser
             for(MicrosatelliteSelector selector : selectors)
             {
                 JitterCountsTable msStatsTable = buildJitterCountsTable(
-                        selector.unitName(), consensusType, maxSingleSiteAltContribution,
+                        selector.unitName(), consensusType,
                         microsatelliteSiteAnalysers.stream().filter(selector::select).collect(Collectors.toList()));
 
                 JitterModelFitter fitter = new JitterModelFitter(msStatsTable);

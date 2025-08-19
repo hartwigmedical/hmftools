@@ -61,7 +61,7 @@ public class GermlineDrivers
                 }
                 else
                 {
-                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                    if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
                     {
                         driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
                     }
@@ -94,10 +94,10 @@ public class GermlineDrivers
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
-                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.chromosomeBand())
+                .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.ChromosomeBand)
                 .gene(gene)
-                .transcript(geneCopyNumber != null ? geneCopyNumber.transName() : "")
-                .isCanonical(geneCopyNumber != null ? geneCopyNumber.isCanonical() : true)
+                .transcript(geneCopyNumber != null ? geneCopyNumber.TransName : "")
+                .isCanonical(geneCopyNumber != null ? geneCopyNumber.IsCanonical : true)
                 .driver(DriverType.GERMLINE_MUTATION)
                 .category(category)
                 .driverLikelihood(1)

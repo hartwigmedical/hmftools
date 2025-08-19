@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.redux;
 
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 
 public class JitterModelParams
 {
     public final String RepeatUnit;
-    public final com.hartwig.hmftools.common.sequencing.ConsensusType ConsensusType;
+    public final com.hartwig.hmftools.common.bam.ConsensusType ConsensusType;
     public final double OptimalScaleRepeat4;
     public final double OptimalScaleRepeat5;
     public final double OptimalScaleRepeat6;

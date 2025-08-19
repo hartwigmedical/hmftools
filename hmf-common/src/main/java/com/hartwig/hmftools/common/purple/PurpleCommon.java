@@ -17,6 +17,9 @@ public final class PurpleCommon
     public static final String PURPLE_PURITY_SUFFIX = ".purple.purity.tsv";
     public static final String PURPLE_QC_SUFFIX = ".purple.qc";
 
+    public static final double DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO = 3;
+    public static final double DEFAULT_DRIVER_HET_DELETION_THRESHOLD = 0.6;
+
     public static String purpleSomaticVcfFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;

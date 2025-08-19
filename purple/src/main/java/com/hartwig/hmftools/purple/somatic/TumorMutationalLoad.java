@@ -12,12 +12,12 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LI
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.purple.PurpleConstants.CODING_BASES_PER_GENOME;
 import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF;
-import static com.hartwig.hmftools.purple.TargetRegionsData.TMB_GENE_EXCLUSIONS;
+import static com.hartwig.hmftools.purple.targeted.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.TargetRegionsData;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 public class TumorMutationalLoad
 {

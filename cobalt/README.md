@@ -28,7 +28,7 @@ male sex chromosomes in addition to the following exceptions:
 | `TETRASOMY_9P`               | 9P               | 1.5                |
 
 ### Depth window consolidation
-Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
+Sparse information in COBALT may cause a noisy fit for low pass WGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
 least 8 per bucket. The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000).   This formula allows
 consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadDepth >> 8. We should
 never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 

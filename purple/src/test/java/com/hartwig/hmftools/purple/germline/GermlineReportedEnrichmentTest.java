@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
@@ -276,6 +278,9 @@ public class GermlineReportedEnrichmentTest
                 .reportGermlineVariant(variantReporting)
                 .likelihoodType(DriverCategory.TSG)
                 .reportAmplification(false)
+                .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
+                .reportHetDeletion(true)
+                .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .reportSplice(false)
                 .reportGermlineDisruption(ANY)

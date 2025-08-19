@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartiti
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.processFullyUnmappedReads;
 import static com.hartwig.hmftools.redux.write.PartitionInfo.partitionInfoStr;
@@ -48,10 +48,7 @@ public class ReduxApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        if(!mConfig.JitterMsiOnly)
-        {
-            RD_LOGGER.info("sample({}) starting duplicate marking", mConfig.SampleId);
-        }
+        mConfig.logRoutineTypes();
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -69,6 +66,11 @@ public class ReduxApplication
 
         if(mConfig.UnmapRegions.enabled())
         {
+            if(mConfig.UnmapAltDecoys)
+            {
+                mConfig.UnmapRegions.addNonStandardContigs(mConfig.RefGenome);
+            }
+
             List<Thread> unmappingThreadTasks = Lists.newArrayList();
             List<RegionUnmapper> readUnmappers = createThreadTasks(mConfig, fileWriterCache, unmappingThreadTasks);
 
@@ -126,9 +128,10 @@ public class ReduxApplication
             }
         }
 
-        baseQualRecalibration.finalise();
+        if(baseQualRecalibration.enabled())
+            baseQualRecalibration.finalise();
 
-        if(mConfig.JitterMsiOnly)
+        if(mConfig.BqrAndJitterMsiOnly)
         {
             RD_LOGGER.info("Redux jitter complete, mins({})", runTimeMinsStr(startTimeMs));
             return;
@@ -157,7 +160,8 @@ public class ReduxApplication
             RD_LOGGER.warn("unsorted BAM write count({}) via sorted BAM writers", sortedBamUnsortedWriteCount);
         }
 
-        combinedStats.logStats();
+        if(!mConfig.SkipDuplicateMarking)
+            combinedStats.logStats();
 
         if(mConfig.UnmapRegions.enabled())
         {

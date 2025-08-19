@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.lilac.seq;
 
+import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
+import static com.hartwig.hmftools.lilac.LilacConstants.EXON_CHUNK_SIZE;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public final class HlaExonSequences
 {
@@ -24,10 +26,10 @@ public final class HlaExonSequences
         ExonSequences = ImmutableList.copyOf(exonSequences);
     }
 
-    public static HlaExonSequences create(final Map<String, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
+    public static HlaExonSequences create(final Map<HlaGene, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
     {
         HlaAllele allele = sequence.Allele;
-        List<Integer> exonBoundaries = geneExonBoundaries.get(longGeneName(allele.Gene));
+        List<Integer> exonBoundaries = geneExonBoundaries.get(allele.Gene);
         List<String> acids = sequence.getSequences();
         List<List<String>> exonAcids = Lists.newArrayList();
 
@@ -38,7 +40,20 @@ public final class HlaExonSequences
                 break;
 
             int toIndex = min(exonBoundary + 1, acids.size());
-            exonAcids.add(acids.subList(index, toIndex));
+            List<String> exonAcid = acids.subList(index, toIndex);
+
+            List<List<String>> chunks = Lists.newArrayList();
+            int chunkCount = (int) ceil(((double) exonAcid.size()) / EXON_CHUNK_SIZE);
+            int chunkSize = (int) ceil(((double) exonAcid.size()) / chunkCount);
+            int start = 0;
+            while(start < exonAcid.size())
+            {
+                int end = min(start + chunkSize, exonAcid.size());
+                chunks.add(exonAcid.subList(start, end));
+                start = end;
+            }
+
+            exonAcids.addAll(chunks);
             index = exonBoundary + 1;
         }
 

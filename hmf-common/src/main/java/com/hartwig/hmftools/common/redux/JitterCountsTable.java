@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +20,7 @@ public class JitterCountsTable
     // ref num unit to rows
     private final List<JitterTableRow> mRows = new ArrayList<>();
 
-    public JitterCountsTable(final String repeatUnit, final ConsensusType consensusType, final double maxSingleAltSiteContributionPerc)
+    public JitterCountsTable(final String repeatUnit, final ConsensusType consensusType)
     {
         RepeatUnit = repeatUnit;
         ConsensusType = consensusType;

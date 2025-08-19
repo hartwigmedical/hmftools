@@ -46,8 +46,8 @@ public class GeneCopyNumberData implements ComparableItem
         List<String> values = Lists.newArrayList();
         values.add(format("%.2f", CopyNumber.minCopyNumber()));
         values.add(format("%.2f", CopyNumber.maxCopyNumber()));
-        values.add(format("%d", CopyNumber.minRegionStart()));
-        values.add(format("%d", CopyNumber.minRegionEnd()));
+        values.add(format("%d", CopyNumber.MinRegionStart));
+        values.add(format("%d", CopyNumber.MinRegionEnd));
         return values;
     }
 

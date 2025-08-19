@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.driver.panel;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
 
 import com.hartwig.hmftools.common.driver.DriverCategory;
 
@@ -18,6 +20,9 @@ public final class DriverGeneTestFactory
                 .reportDeletion(false)
                 .reportDisruption(false)
                 .reportAmplification(false)
+                .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
+                .reportHetDeletion(false)
+                .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .reportGermlineVariant(NONE)
                 .reportGermlineHotspot(NONE)

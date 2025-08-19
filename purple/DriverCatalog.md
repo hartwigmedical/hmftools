@@ -17,7 +17,7 @@ reportSplice | TRUE/FALSE |  Report if any canonical splice acceptor or donor va
 reportAmplification | TRUE/FALSE | Report amplification if min gene copy number > 3x sample ploidy and partial amplification if max gene copy number > 3x sample ploidy (for genes on chrX for males 1.5x sample ploidy is used). (Note if qcstatus = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV).
 reportDeletion | TRUE/FALSE | Report if gene copy number < 0.5 (Note - If qcStatus in {WARN_DELETED_GENES,WARN_HIGH_COPY_NUMBER_NOISE} deletions must also be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases)
 reportDisruption | TRUE/FALSE | LINX will report ‘HOM DISRUPTION' where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain), or simply DISRUPTION for other structural variants which may disrupt the structure of the canonical transcript.
-reeportSomaticHotspot | TRUE/FALSE | Report somatic hotspot mutation regardless of other rules
+reportSomaticHotspot | TRUE/FALSE | Report somatic hotspot mutation regardless of other rules
 likelihoodType | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
 reportGermlineVariant	| WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report any germline variants that meet pathogenic criteria based on specified tumor status
 reportGermlineHotspot | WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report hotspot germline pathogenic variants based on specified tumor status

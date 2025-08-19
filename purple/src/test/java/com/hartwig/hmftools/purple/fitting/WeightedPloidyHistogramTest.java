@@ -63,38 +63,24 @@ public class WeightedPloidyHistogramTest
     @Test
     public void testHistogramConstruction()
     {
-        final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
-        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
-        double[] histogram = victim.histogram(ploidies);
+        List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
 
-        assertEquals(1, histogram[victim.bucket(0.18)], 0.1);
-        assertEquals(328, histogram[victim.bucket(0.97)], 0.1);
-        assertEquals(320, histogram[victim.bucket(1)], 0.1);
-        assertEquals(100, histogram[victim.bucket(1.8)], 0.1);
-    }
+        double maxPloidy = 4;
+        WeightedPloidyHistogram ploidyHistogram = new WeightedPloidyHistogram(maxPloidy, 0.02);
+        double[] histogram = ploidyHistogram.histogram(ploidies);
 
-    @Test
-    public void testHistogramConstructionWithNoOffset()
-    {
-        final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05);
-        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
-        double[] histogram = victim.histogram(ploidies);
+        assertEquals(3, histogram[ploidyHistogram.bucket(0.5)], 0.1);
+        assertEquals(24, histogram[ploidyHistogram.bucket(1)], 0.1);
+        assertEquals(8, histogram[ploidyHistogram.bucket(2)], 0.1);
+        assertEquals(5, histogram[ploidyHistogram.bucket(3)], 0.1);
 
-        assertEquals(2, histogram[victim.bucket(0.20)], 0.1);
-        assertEquals(6, histogram[victim.bucket(0.25)], 0.1);
-        assertEquals(38, histogram[victim.bucket(0.3)], 0.1);
-    }
+        ploidyHistogram = new WeightedPloidyHistogram(maxPloidy, 0.05);
+        histogram = ploidyHistogram.histogram(ploidies);
 
-    @Test
-    public void testHistogramConstructionWithOffset()
-    {
-        final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.05, 0.02);
-        final List<WeightedPloidy> ploidies = readResource("ploidies.tsv");
-        double[] histogram = victim.histogram(ploidies);
-
-        assertEquals(1, histogram[victim.bucket(0.17)], 0.1);
-        assertEquals(1, histogram[victim.bucket(0.22)], 0.1);
-        assertEquals(16, histogram[victim.bucket(0.27)], 0.1);
+        assertEquals(65, histogram[ploidyHistogram.bucket(1.0)], 0.1);
+        assertEquals(20, histogram[ploidyHistogram.bucket(2.0)], 0.1);
+        assertEquals(8, histogram[ploidyHistogram.bucket(3.0)], 0.1);
+        assertEquals(0, histogram[ploidyHistogram.bucket(4.0)], 0.1);
     }
 
     @Test

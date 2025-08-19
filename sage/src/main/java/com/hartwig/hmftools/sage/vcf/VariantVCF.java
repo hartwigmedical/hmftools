@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.vcf;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_READ_EDGE_DISTANCE_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
@@ -37,7 +37,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DES
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
@@ -193,7 +193,7 @@ public class VariantVCF implements AutoCloseable
                 MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Float, MAX_READ_EDGE_DISTANCE_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL_FLAG, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_FLAG_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
@@ -226,7 +226,7 @@ public class VariantVCF implements AutoCloseable
         // add in alphabetical order
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_EDGE_DISTANCE_PERC, 2, VCFHeaderLineType.Float, AVG_EDGE_DISTANCE_PERC_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
@@ -260,7 +260,7 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, CONSENSUS_TAG_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
     }
 
     @Override

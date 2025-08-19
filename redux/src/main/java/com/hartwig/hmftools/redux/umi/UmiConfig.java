@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.redux.umi;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.DEFAULT_MAX_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIFF;
 import static com.hartwig.hmftools.redux.umi.UmiType.SINGLE;
 import static com.hartwig.hmftools.redux.umi.UmiType.TSO500_DUPEX_DELIM;
 import static com.hartwig.hmftools.redux.umi.UmiType.TWIST_DUPEX_DELIM;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.redux.common.Constants;
+import com.hartwig.hmftools.redux.ReduxConstants;
 
 public class UmiConfig
 {
@@ -160,6 +160,6 @@ public class UmiConfig
         configBuilder.addFlag(UMI_BASE_DIFF_STATS, "Record base difference stats");
 
         configBuilder.addConfigItem(
-                UMI_DUPLEX_DELIM, false, "UMI duplex delimiter", String.valueOf(Constants.DEFAULT_DUPLEX_UMI_DELIM));
+                UMI_DUPLEX_DELIM, false, "UMI duplex delimiter", String.valueOf(ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM));
     }
 }

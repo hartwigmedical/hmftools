@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -50,10 +48,11 @@ public final class LilacConstants
     // scoring of allele combinations
     public static final double MIN_POPULATION_FREQUENCY = 0.0001;
 
-    public static final double DEFAULT_FREQUENCY_SCORE_PENALTY = 0.009;
+    public static final double DEFAULT_FREQUENCY_SCORE_PENALTY = 0.0009;
     public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
 
     public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
+    public static final int EXON_CHUNK_SIZE = 46;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
     // QC thresholds
@@ -66,27 +65,20 @@ public final class LilacConstants
     public static final double WARN_LOW_COVERAGE_DEPTH = 10;
     public static final int DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS = 300;
 
-    public static final String HLA_PREFIX = "HLA-";
     public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
-
-    // MHC class 1 constants
-    public static final String GENE_A = "A";
-    public static final String GENE_B = "B";
-    public static final String GENE_C = "C";
-    public static final String GENE_Y = "Y";
-    public static final String GENE_H = "H";
-
-    public static final String HLA_A = longGeneName(GENE_A);
-    public static final String HLA_B = longGeneName(GENE_B);
-    public static final String HLA_C = longGeneName(GENE_C);
+    public static final String HLA_PREFIX = "HLA-";
 
     public static final List<String> CLASS_1_EXCLUDED_ALLELES = Lists.newArrayList(
             "A*31:135", "A*33:191", "A*02:783", "B*07:282",
 
             // Similar to HLA-Y
-            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237");
+            "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237",
+
+            // Similar to HLA-H
+            "B*40:278");
 
     // common INDEL associated with allele C*04:09N
+    // TODO(mkcmkc): If we update the resources change to "C*04:09L"
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
 
     public static final int SPLICE_VARIANT_BUFFER = 5;

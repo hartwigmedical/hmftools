@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.BAM_INDEX_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.FILE_ID;
+import static com.hartwig.hmftools.redux.ReduxConstants.FILE_ID;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -242,6 +242,7 @@ public class FileWriterCache
     public boolean finaliseBams()
     {
         mReadDataWriter.close();
+
         if(mFullUnmappedWriter != null)
             mFullUnmappedWriter.close();
 

@@ -3,7 +3,9 @@ package com.hartwig.hmftools.redux.write;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
 
@@ -12,7 +14,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.bqr.BaseQualityResults;
 import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
 import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
@@ -52,10 +53,10 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mBqrProcessor = new BqrRegionReader(config.Sequencing, config.RefGenome, bqr.results(), bqr.regions());
+        mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
 
-        mRecomputeFragCoords = mReadDataWriter.enabled() && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse)
-                || (config.Sequencing == ILLUMINA && config.UMIs.Enabled));
+        mRecomputeFragCoords = mReadDataWriter.enabled()
+                && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (isIllumina() && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -102,7 +103,7 @@ public abstract class BamWriter
         }
     }
 
-    public void writeSecondaryRead(final SAMRecord read)
+    public void writeNonDuplicateRead(final SAMRecord read)
     {
         writeRead(read, FragmentStatus.UNSET, "", "");
     }
@@ -167,7 +168,13 @@ public abstract class BamWriter
 
     public void captureReadInfo(final SAMRecord read)
     {
-        if(mJitterAnalyser != null && mJitterAnalyser.bamSlicerFilter().passesFilters(read))
+        if(read.getDuplicateReadFlag() || read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+            return;
+
+        if(read.getMappingQuality() < BQR_MIN_MAP_QUAL)
+            return;
+
+        if(mJitterAnalyser != null)
             mJitterAnalyser.processRead(read);
 
         if(mBqrProcessor.isActive())

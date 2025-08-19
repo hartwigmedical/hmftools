@@ -37,7 +37,7 @@ public final class AminoAcidQualEnrichment
                 .collect(Collectors.toList());
 
         unfilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
-        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts, RAW_REF_AMINO_ACID_COUNTS.get(context.geneName())));
+        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts, RAW_REF_AMINO_ACID_COUNTS.get(context.Gene)));
 
         return unfilteredAminoAcidFragments;
     }

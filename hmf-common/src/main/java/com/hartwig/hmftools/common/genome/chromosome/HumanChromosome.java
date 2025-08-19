@@ -110,13 +110,13 @@ public enum HumanChromosome implements Chromosome
     @Override
     public String toString() { return mName; }
 
-    public static boolean isShortArm(final String chromosome)
+    public static boolean hasShortArm(final String chromosome)
     {
         return chromosome.equals("13") || chromosome.equals("14") || chromosome.equals("15")
                 || chromosome.equals("21") || chromosome.equals("22");
     }
 
-    public boolean isShortArm() { return isShortArm(mName); }
+    public boolean hasShortArm() { return hasShortArm(mName); }
 
     private static boolean isNumeric(String str)
     {

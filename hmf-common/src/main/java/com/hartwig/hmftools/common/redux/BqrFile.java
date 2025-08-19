@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,7 +106,7 @@ public final class BqrFile
                 byte alt = values[altIndex].getBytes()[0];
                 byte ref = values[refIndex].getBytes()[0];
                 String triContext = values[tncIndex];
-                BqrReadType readType = readTypeIndex != null ? BqrReadType.valueOf(values[readTypeIndex]) : BqrReadType.NONE;
+                ConsensusType readType = readTypeIndex != null ? ConsensusType.valueOf(values[readTypeIndex]) : ConsensusType.NONE;
 
                 int count = Integer.parseInt(values[countIndex]);
                 byte origQuality = (byte)Integer.parseInt(values[origQualIndex]);

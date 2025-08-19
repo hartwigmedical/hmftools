@@ -1,33 +1,24 @@
 package com.hartwig.hmftools.common.region;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosomal;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-public class TaggedRegion extends BaseRegion
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 {
-    private static class TaggedChromosomeRegion extends ChrBaseRegion
+    private static final Logger LOGGER = LogManager.getLogger(TaggedRegion.class);
+
+    public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(final String bedFile)
     {
-        String tag;
-
-        public TaggedChromosomeRegion(final Chromosome chromosome, final int posStart, final int posEnd, final String tag)
-        {
-            super(chromosome.toString(), posStart, posEnd);
-            this.tag = tag;
-        }
-
-        TaggedRegion toTaggedRegion()
-        {
-            return new TaggedRegion(start(), end(), tag);
-        }
-    }
-
-    public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(String bedFile)
-    {
-        Function<String, TaggedChromosomeRegion> factory = s ->
+        Function<String, TaggedRegion> factory = s ->
         {
             BedLine line = new BedLine(s);
             Chromosome chromosome = line.chromosome();
@@ -35,17 +26,25 @@ public class TaggedRegion extends BaseRegion
             {
                 return null;
             }
-            return new TaggedChromosomeRegion(chromosome, line.start(), line.end(), line.dataValueOrBlank(3));
+            return new TaggedRegion(chromosome.toString(), line.start(), line.end(), line.dataValueOrBlank(3));
         };
-        Function<TaggedChromosomeRegion, TaggedRegion> converter = TaggedChromosomeRegion::toTaggedRegion;
-        return BedFileReader.loadBedFileChrMap(bedFile, true, factory, converter);
+        try
+        {
+            List<TaggedRegion> fromBed = BedFileReader.loadBedFile(bedFile, true, factory);
+            return Chromosomal.toPerChromosomeLists(fromBed);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load BED file({}): {}", bedFile, e.toString());
+            return null;
+        }
     }
 
     public final String mTag;
 
-    public TaggedRegion(final int posStart, final int posEnd, final String mTag)
+    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
     {
-        super(posStart, posEnd);
+        super(chromosome, posStart, posEnd);
         this.mTag = mTag;
     }
 

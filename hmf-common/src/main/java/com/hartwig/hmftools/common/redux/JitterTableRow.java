@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.redux;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.sequencing.ConsensusType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
 
 public class JitterTableRow
 {

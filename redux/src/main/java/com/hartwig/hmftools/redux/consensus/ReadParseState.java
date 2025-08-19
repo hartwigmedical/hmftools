@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.redux.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import static htsjdk.samtools.CigarOperator.I;
 

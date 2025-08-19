@@ -33,15 +33,16 @@ public class PurpleTestUtils
     }
 
     public static ImmutablePurpleCopyNumber.Builder createCopyNumber(
-            final String chromosome, final int start, final int end, final double copyNumber)
+            final String chromosome, final int start, final int end, final double copyNumber,
+            final SegmentSupport startSupport, final SegmentSupport endSupport)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
                 .averageTumorCopyNumber(copyNumber)
-                .segmentStartSupport(SegmentSupport.NONE)
-                .segmentEndSupport(SegmentSupport.NONE)
+                .segmentStartSupport(startSupport)
+                .segmentEndSupport(endSupport)
                 .method(CopyNumberMethod.UNKNOWN)
                 .bafCount(0)
                 .depthWindowCount(1)
@@ -50,6 +51,12 @@ public class PurpleTestUtils
                 .maxStart(start)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
+    }
+
+    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(
+            final String chromosome, final int start, final int end, final double copyNumber)
+    {
+        return createCopyNumber(chromosome, start, end, copyNumber, SegmentSupport.NONE, SegmentSupport.NONE);
     }
 
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(
