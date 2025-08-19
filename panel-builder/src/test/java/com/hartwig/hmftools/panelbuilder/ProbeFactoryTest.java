@@ -18,7 +18,7 @@ public class ProbeFactoryTest
 {
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
 
-    private ProbeFactory mFactory;
+    private final ProbeFactory mFactory;
 
     public ProbeFactoryTest()
     {
@@ -37,32 +37,32 @@ public class ProbeFactoryTest
     @Test
     public void testCreateProbeExactRegion()
     {
-        ProbeTarget target = ProbeTarget.exactRegion(new ChrBaseRegion("1", 1, 10));
-        Optional<Probe> actual = mFactory.createProbe(target, METADATA);
-        Optional<Probe> expected = Optional.of(new Probe(target, "AAAAAAAAAA", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0));
+        SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 10));
+        Optional<Probe> actual = mFactory.createProbe(def, METADATA);
+        Optional<Probe> expected = Optional.of(new Probe(def, "AAAAAAAAAA", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0));
         assertEquals(expected, actual);
     }
 
     @Test
     public void testCreateProbeVariant()
     {
-        ProbeTarget target = ProbeTarget.structuralVariant(
+        SequenceDefinition def = SequenceDefinition.structuralVariant(
                 new ChrBaseRegion("1", 1, 10),
                 Orientation.FORWARD,
                 "GCGCGCGCGC",
                 new ChrBaseRegion("2", 1, 10),
                 Orientation.REVERSE);
-        Optional<Probe> actual = mFactory.createProbe(target, METADATA);
+        Optional<Probe> actual = mFactory.createProbe(def, METADATA);
         Optional<Probe> expected =
-                Optional.of(new Probe(target, "AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0.5));
+                Optional.of(new Probe(def, "AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0.5));
         assertEquals(expected, actual);
     }
 
     @Test
     public void testCreateProbeOutOfBounds()
     {
-        ProbeTarget target = ProbeTarget.exactRegion(new ChrBaseRegion("1", 1, 100));
-        Optional<Probe> actual = mFactory.createProbe(target, METADATA);
+        SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 100));
+        Optional<Probe> actual = mFactory.createProbe(def, METADATA);
         assertEquals(actual, Optional.empty());
     }
 }

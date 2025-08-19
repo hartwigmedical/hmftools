@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Test;
 
-public class ProbeTargetTest
+public class SequenceDefinitionTest
 {
     public static final ChrBaseRegion REGION1 = new ChrBaseRegion("1", 1, 10);
     public static final ChrBaseRegion REGION2 = new ChrBaseRegion("2", 21, 30);
@@ -22,22 +22,22 @@ public class ProbeTargetTest
     @Test
     public void testConstructor()
     {
-        new ProbeTarget(REGION1, null, null, null, null);
-        new ProbeTarget(REGION1, null, INSERT, null, null);
-        new ProbeTarget(null, null, INSERT, REGION2, null);
-        new ProbeTarget(REGION1, null, INSERT, REGION2, null);
+        new SequenceDefinition(REGION1, null, null, null, null);
+        new SequenceDefinition(REGION1, null, INSERT, null, null);
+        new SequenceDefinition(null, null, INSERT, REGION2, null);
+        new SequenceDefinition(REGION1, null, INSERT, REGION2, null);
 
-        assertThrows(IllegalArgumentException.class, () -> new ProbeTarget(null, null, null, null, null));
-        assertThrows(IllegalArgumentException.class, () -> new ProbeTarget(REGION1, null, null, REGION2, null));
-        assertThrows(IllegalArgumentException.class, () -> new ProbeTarget(null, null, null, REGION2, null));
-        assertThrows(IllegalArgumentException.class, () -> new ProbeTarget(null, null, INSERT, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, null, null, REGION2, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, null, REGION2, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, INSERT, null, null));
     }
 
     @Test
     public void testExactRegion()
     {
-        ProbeTarget actual = ProbeTarget.exactRegion(REGION1);
-        ProbeTarget expected = new ProbeTarget(REGION1, null, null, null, null);
+        SequenceDefinition actual = SequenceDefinition.exactRegion(REGION1);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, null, null, null, null);
         assertEquals(expected, actual);
         assertTrue(actual.isExactRegion());
         assertEquals(REGION1, actual.exactRegion());
@@ -49,8 +49,8 @@ public class ProbeTargetTest
     @Test
     public void testSimpleMutation()
     {
-        ProbeTarget actual = ProbeTarget.simpleMutation(REGION1, INSERT, REGION2);
-        ProbeTarget expected = new ProbeTarget(REGION1, Orientation.FORWARD, INSERT, REGION2, Orientation.FORWARD);
+        SequenceDefinition actual = SequenceDefinition.simpleMutation(REGION1, INSERT, REGION2);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, REGION2, Orientation.FORWARD);
         assertEquals(expected, actual);
         assertFalse(actual.isExactRegion());
         assertThrows(IllegalArgumentException.class, actual::exactRegion);
@@ -62,8 +62,9 @@ public class ProbeTargetTest
     @Test
     public void testStructuralVariant()
     {
-        ProbeTarget actual = ProbeTarget.structuralVariant(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
-        ProbeTarget expected = new ProbeTarget(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
+        SequenceDefinition actual =
+                SequenceDefinition.structuralVariant(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
         assertEquals(expected, actual);
         assertFalse(actual.isExactRegion());
         assertThrows(IllegalArgumentException.class, actual::exactRegion);

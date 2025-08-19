@@ -183,10 +183,8 @@ public class PanelBuilderApplication
     private void printPanelStats()
     {
         long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.sequence().length()).sum();
-        long targetBases = mPanelData.coveredTargetRegions().stream().mapToLong(target -> target.region().baseLength()).sum();
         LOGGER.info("Panel stats:");
         LOGGER.info("  Probe bases: {}", probeBases);
-        LOGGER.info("  Target bases: {}", targetBases);
     }
 
     public static void main(@NotNull final String[] args)

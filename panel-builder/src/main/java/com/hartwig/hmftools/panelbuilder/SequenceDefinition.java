@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 //       probe = start
 //   - 1 or 2 reference genome regions and a custom insert sequence (the case for variant probes).
 //       probe = start + insert + end
-public record ProbeTarget(
+public record SequenceDefinition(
         @Nullable ChrBaseRegion startRegion,
         // If REVERSE then start region is reverse complemented.
         @Nullable Orientation startOrientation,
@@ -24,7 +24,7 @@ public record ProbeTarget(
         @Nullable Orientation endOrientation
 )
 {
-    public ProbeTarget
+    public SequenceDefinition
     {
         boolean valid1 = startRegion != null && startOrientation == null && insertSequence == null && endRegion == null;
         boolean valid2 = insertSequence != null && (startRegion != null || endRegion != null);
@@ -50,22 +50,23 @@ public record ProbeTarget(
         }
     }
 
-    public static ProbeTarget exactRegion(final ChrBaseRegion region)
+    public static SequenceDefinition exactRegion(final ChrBaseRegion region)
     {
-        return new ProbeTarget(region, null, null, null, null);
+        return new SequenceDefinition(region, null, null, null, null);
     }
 
-    public static ProbeTarget simpleMutation(final ChrBaseRegion startRegion, final String insertSequence, final ChrBaseRegion endRegion)
+    public static SequenceDefinition simpleMutation(final ChrBaseRegion startRegion, final String insertSequence,
+            final ChrBaseRegion endRegion)
     {
         Orientation startOrientation = startRegion == null ? null : Orientation.FORWARD;
         Orientation endOrientation = endRegion == null ? null : Orientation.FORWARD;
-        return new ProbeTarget(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
+        return new SequenceDefinition(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
     }
 
-    public static ProbeTarget structuralVariant(final ChrBaseRegion startRegion, final Orientation startOrientation,
+    public static SequenceDefinition structuralVariant(final ChrBaseRegion startRegion, final Orientation startOrientation,
             final String insertSequence, final ChrBaseRegion endRegion, final Orientation endOrientation)
     {
-        return new ProbeTarget(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
+        return new SequenceDefinition(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
     }
 
     public List<ChrBaseRegion> regions()

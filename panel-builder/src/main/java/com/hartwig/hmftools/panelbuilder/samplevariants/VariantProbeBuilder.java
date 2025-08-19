@@ -10,11 +10,11 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.panelbuilder.ProbeTarget;
+import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 
 public class VariantProbeBuilder
 {
-    public static ProbeTarget buildMutationProbe(final String chromosome, int position, final String ref, final String alt,
+    public static SequenceDefinition buildMutationProbe(final String chromosome, int position, final String ref, final String alt,
             int probeLength)
     {
         int altLength = alt.length();
@@ -27,18 +27,18 @@ public class VariantProbeBuilder
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
 
-        ProbeTarget probeTarget = ProbeTarget.simpleMutation(startRegion, alt, endRegion);
+        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, alt, endRegion);
 
-        if(probeTarget.baseLength() != probeLength)
+        if(definition.baseLength() != probeLength)
         {
             throw new IllegalArgumentException(format("variant(%s:%d %s->%s) invalid sequenceLength(%d)",
-                    chromosome, position, ref, alt, probeTarget.baseLength()));
+                    chromosome, position, ref, alt, definition.baseLength()));
         }
 
-        return probeTarget;
+        return definition;
     }
 
-    public static ProbeTarget buildSvProbe(final String chrStart, int positionStart, byte orientStart, final String chrEnd,
+    public static SequenceDefinition buildSvProbe(final String chrStart, int positionStart, byte orientStart, final String chrEnd,
             int positionEnd, byte orientEnd, final String insertSequence, int probeLength)
     {
         int halfProbeLength = probeLength / 2;
@@ -98,17 +98,18 @@ public class VariantProbeBuilder
             endOrient = Orientation.FORWARD;
         }
 
-        ProbeTarget target = ProbeTarget.structuralVariant(startRegion, startOrient, insertSequence, endRegion, endOrient);
+        SequenceDefinition definition =
+                SequenceDefinition.structuralVariant(startRegion, startOrient, insertSequence, endRegion, endOrient);
 
-        if(target.baseLength() != probeLength)
+        if(definition.baseLength() != probeLength)
         {
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return target;
+        return definition;
     }
 
-    public static ProbeTarget buildSglProbe(final String chromosome, int position, byte orientation, final String insertSequence,
+    public static SequenceDefinition buildSglProbe(final String chromosome, int position, byte orientation, final String insertSequence,
             int probeLength)
     {
         int halfProbeLength = probeLength / 2;
@@ -130,13 +131,13 @@ public class VariantProbeBuilder
             endRegion = regionStartingAt(chromosome, position, refBaseLength);
         }
 
-        ProbeTarget probeTarget = ProbeTarget.simpleMutation(startRegion, insert, endRegion);
+        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, insert, endRegion);
 
-        if(probeTarget.baseLength() != probeLength)
+        if(definition.baseLength() != probeLength)
         {
             throw new IllegalArgumentException("Invalid probe");
         }
 
-        return probeTarget;
+        return definition;
     }
 }

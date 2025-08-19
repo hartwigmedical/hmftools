@@ -37,7 +37,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.panelbuilder.ProbeTarget;
+import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -130,7 +130,7 @@ public class SomaticSv implements Variant
     }
 
     @Override
-    public ProbeTarget generateProbeTarget()
+    public SequenceDefinition generateProbe()
     {
         if(mVariant.type() == StructuralVariantType.SGL)
         {

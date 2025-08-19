@@ -15,9 +15,9 @@ public class ProbeGenerationResultTest
 {
     public static Probe probe(final ChrBaseRegion region, final TargetMetadata metadata)
     {
-        ProbeTarget target = ProbeTarget.exactRegion(region);
+        SequenceDefinition definition = SequenceDefinition.exactRegion(region);
         String sequence = MockRefGenome.generateRandomBases(region.baseLength());
-        return new Probe(target, sequence, metadata, null, null, 0, 0)
+        return new Probe(definition, sequence, metadata, null, null, 0, 0)
                 .withEvalCriteria(new ProbeEvaluator.Criteria(1.0, 0.5, 0.1))
                 .withRejectionReason(null);
     }

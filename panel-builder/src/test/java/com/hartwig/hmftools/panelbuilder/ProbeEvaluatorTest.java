@@ -15,7 +15,7 @@ public class ProbeEvaluatorTest
 {
     private static final ProbeEvaluator.Criteria CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.5, 0.1);
 
-    private static final ProbeTarget TARGET = ProbeTarget.exactRegion(new ChrBaseRegion("1", 1, 10));
+    private static final SequenceDefinition DEFINITION = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 10));
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
 
     private static final double EPSILON = 1e-6;
@@ -37,7 +37,7 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesAcceptable()
     {
-        Probe probe = new Probe(TARGET, "ACGTACGTAC", METADATA, null, null, 1, 0.5);
+        Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 1, 0.5);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
@@ -53,7 +53,7 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = new Probe(TARGET, "AAAAAAAAAA", METADATA, null, null, 1, 0);
+        Probe probe = new Probe(DEFINITION, "AAAAAAAAAA", METADATA, null, null, 1, 0);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
@@ -69,7 +69,7 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectQuality()
     {
-        Probe probe = new Probe(TARGET, "ACGTACGTAC", METADATA, null, null, 0.1, 0.5);
+        Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 0.1, 0.5);
         Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());

@@ -11,7 +11,7 @@ import org.junit.Test;
 public class ProbeTest
 {
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
-    private static final ProbeTarget TARGET = ProbeTarget.exactRegion(new ChrBaseRegion("1", 100, 129));
+    private static final SequenceDefinition DEFINITION = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 100, 129));
     private static final String SEQUENCE = "ACGTACGTACACGTACGTACACGTACGTAC";
     private static final ProbeEvaluator.Criteria EVAL_CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 
@@ -20,7 +20,7 @@ public class ProbeTest
     {
         double qualityScore = 0.1;
         double gcContent = 0.2;
-        Probe probe = new Probe(TARGET, SEQUENCE, METADATA, null, null, qualityScore, gcContent);
+        Probe probe = new Probe(DEFINITION, SEQUENCE, METADATA, null, null, qualityScore, gcContent);
 
         probe = probe.withEvalCriteria(EVAL_CRITERIA);
         assertEquals(EVAL_CRITERIA, probe.evalCriteria());
@@ -29,13 +29,13 @@ public class ProbeTest
         probe = probe.withRejectionReason(rejectionReason);
         assertEquals(rejectionReason, probe.rejectionReason());
 
-        assertEquals(new Probe(TARGET, SEQUENCE, METADATA, EVAL_CRITERIA, rejectionReason, qualityScore, gcContent), probe);
+        assertEquals(new Probe(DEFINITION, SEQUENCE, METADATA, EVAL_CRITERIA, rejectionReason, qualityScore, gcContent), probe);
     }
 
     @Test
     public void testEvalAccepted()
     {
-        Probe probe = new Probe(TARGET, SEQUENCE, METADATA, null, null, 1.0, 0.45);
+        Probe probe = new Probe(DEFINITION, SEQUENCE, METADATA, null, null, 1.0, 0.45);
 
         assertFalse(probe.evaluated());
         assertFalse(probe.accepted());
@@ -50,7 +50,7 @@ public class ProbeTest
     @Test
     public void testEvalRejected()
     {
-        Probe probe = new Probe(TARGET, SEQUENCE, METADATA, null, null, 0.1, 0.45);
+        Probe probe = new Probe(DEFINITION, SEQUENCE, METADATA, null, null, 0.1, 0.45);
 
         assertFalse(probe.evaluated());
         assertFalse(probe.accepted());

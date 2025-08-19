@@ -36,33 +36,33 @@ public class ProbeFactory
         mQualityModel = qualityModel;
     }
 
-    // Creates a probe from its target region(s)/sequence.
+    // Creates a probe from its region(s)/sequence.
     // Returns empty optional if it's not valid to create a probe at that location.
-    public Optional<Probe> createProbe(final ProbeTarget target, final TargetMetadata metadata)
+    public Optional<Probe> createProbe(final SequenceDefinition definition, final TargetMetadata metadata)
     {
-        String sequence = buildSequence(target);
-        if(sequence.length() != target.baseLength())
+        String sequence = buildSequence(definition);
+        if(sequence.length() != definition.baseLength())
         {
             return Optional.empty();
         }
 
-        return createProbe(target, sequence, metadata,
-                () -> getQualityScore(target.exactRegionOrNull(), sequence, !target.isExactRegion()),
+        return createProbe(definition, sequence, metadata,
+                () -> getQualityScore(definition.exactRegionOrNull(), sequence, !definition.isExactRegion()),
                 () -> calcGcPercent(sequence));
     }
 
-    private Optional<Probe> createProbe(final ProbeTarget target, final String sequence, final TargetMetadata metadata,
+    private Optional<Probe> createProbe(final SequenceDefinition definition, final String sequence, final TargetMetadata metadata,
             final DoubleSupplier getQualityScore, final DoubleSupplier getGcContent)
     {
         // Only check properties which are inconvenient for the caller to check in advance.
         // Everything else is expected to be checked by the caller and will generate an exception.
-        boolean regionsValid = target.regions().stream().allMatch(this::isRegionValid);
+        boolean regionsValid = definition.regions().stream().allMatch(this::isRegionValid);
         boolean sequenceValid = isDnaSequenceNormal(sequence);
         boolean valid = regionsValid && sequenceValid;
         if(valid)
         {
             return Optional.of(new Probe(
-                    target, sequence, metadata,
+                    definition, sequence, metadata,
                     null, null,
                     getQualityScore.getAsDouble(), getGcContent.getAsDouble()));
         }
@@ -77,16 +77,16 @@ public class ProbeFactory
         return region.hasValidPositions() && region.end() <= mRefGenome.getChromosomeLength(region.chromosome());
     }
 
-    private String buildSequence(final ProbeTarget target)
+    private String buildSequence(final SequenceDefinition definition)
     {
-        String start = target.startRegion() == null ? "" : getSequence(target.startRegion());
-        if(target.startOrientation() == Orientation.REVERSE)
+        String start = definition.startRegion() == null ? "" : getSequence(definition.startRegion());
+        if(definition.startOrientation() == Orientation.REVERSE)
         {
             start = reverseComplementBases(start);
         }
-        String insert = target.insertSequence() == null ? "" : target.insertSequence();
-        String end = target.endRegion() == null ? "" : getSequence(target.endRegion());
-        if(target.endOrientation() == Orientation.REVERSE)
+        String insert = definition.insertSequence() == null ? "" : definition.insertSequence();
+        String end = definition.endRegion() == null ? "" : getSequence(definition.endRegion());
+        if(definition.endOrientation() == Orientation.REVERSE)
         {
             end = reverseComplementBases(end);
         }

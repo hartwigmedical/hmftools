@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
-        ProbeTarget target,
+        SequenceDefinition definition,
         String sequence,
         TargetMetadata metadata,
         // null if the probe hasn't been evaluated yet.
@@ -18,9 +18,9 @@ public record Probe(
 {
     public Probe
     {
-        if(target.baseLength() != sequence.length())
+        if(definition.baseLength() != sequence.length())
         {
-            throw new IllegalArgumentException("sequence length should match target length");
+            throw new IllegalArgumentException("sequence length should match definition length");
         }
         if(!isDnaSequenceNormal(sequence))
         {
@@ -49,11 +49,11 @@ public record Probe(
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
     {
-        return new Probe(target, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
+        return new Probe(definition, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
     }
 
     public Probe withRejectionReason(final String value)
     {
-        return new Probe(target, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
+        return new Probe(definition, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
     }
 }

@@ -135,7 +135,7 @@ public class ProbeGenerator
         // This requires sorted by position, but it's already in that order.
         allPlausibleProbes.forEach(probe ->
         {
-            BaseRegion probeRegion = probe.target().exactRegion().baseRegion();
+            BaseRegion probeRegion = probe.definition().exactRegion().baseRegion();
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
             if(prev != null && probeRegion.start() <= prev.end() + 1)
             {
@@ -171,17 +171,18 @@ public class ProbeGenerator
         // algorithm found it was optimal to not cover with probes (this occurs on the edges; we allow some edge bases to be uncovered, but
         // they will likely still be captured during sequencing).
         String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + evalCriteria;
-        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.target().exactRegion().baseRegion());
+        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().exactRegion().baseRegion());
         Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
                 .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata, rejectionReason))
                 .toList();
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
-        List<TargetRegion> coveredTargetRegions = mergeOverlapAndAdjacentRegions(probes.stream().map(probe -> probe.target().exactRegion()))
-                .stream()
-                .map(covered -> new TargetRegion(regionIntersection(covered, uncoveredRegion).orElseThrow(), metadata))
-                .toList();
+        List<TargetRegion> coveredTargetRegions =
+                mergeOverlapAndAdjacentRegions(probes.stream().map(probe -> probe.definition().exactRegion()))
+                        .stream()
+                        .map(covered -> new TargetRegion(regionIntersection(covered, uncoveredRegion).orElseThrow(), metadata))
+                        .toList();
 
         // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for one
         // target region. Candidate target must be added by the caller.
@@ -221,7 +222,7 @@ public class ProbeGenerator
             BaseRegion originalProbe = tiling.get(i);
             BaseRegion prevProbe = finalProbes.isEmpty()
                     ? null
-                    : finalProbes.get(finalProbes.size() - 1).target().exactRegion().baseRegion();
+                    : finalProbes.get(finalProbes.size() - 1).definition().exactRegion().baseRegion();
             // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
             BaseRegion nextProbe = i + 1 < tiling.size() ? tiling.get(i + 1) : null;
 
@@ -312,7 +313,7 @@ public class ProbeGenerator
         List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
         if(!tiling.isEmpty() && couldPlaceProbe[0])
         {
-            int tilingStart = finalProbes.get(0).target().exactRegion().start();
+            int tilingStart = finalProbes.get(0).definition().exactRegion().start();
             if(tilingStart > acceptableSubregion.start())
             {
                 permittedUncoveredRegions.add(new BaseRegion(acceptableSubregion.start(), tilingStart));
@@ -320,7 +321,7 @@ public class ProbeGenerator
         }
         if(!tiling.isEmpty() && couldPlaceProbe[tiling.size() - 1])
         {
-            int tilingEnd = finalProbes.get(finalProbes.size() - 1).target().exactRegion().end();
+            int tilingEnd = finalProbes.get(finalProbes.size() - 1).definition().exactRegion().end();
             if(tilingEnd < acceptableSubregion.end())
             {
                 permittedUncoveredRegions.add(new BaseRegion(tilingEnd, acceptableSubregion.end()));
@@ -435,7 +436,7 @@ public class ProbeGenerator
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
-                    ChrBaseRegion probeRegion = probe.target().exactRegion();
+                    ChrBaseRegion probeRegion = probe.definition().exactRegion();
                     if(coverage != null && coverage.isCovered(probeRegion))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(List.of(candidateTargetRegion));
@@ -464,8 +465,8 @@ public class ProbeGenerator
                 .flatMap(position ->
                 {
                     ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
-                    ProbeTarget target = ProbeTarget.exactRegion(probeRegion);
-                    Optional<Probe> probe = mProbeFactory.createProbe(target, metadata);
+                    SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegion);
+                    Optional<Probe> probe = mProbeFactory.createProbe(definition, metadata);
                     if(probe.isPresent())
                     {
                         // Store the target position so it can be retrieved later once the final probe is selected.
@@ -488,7 +489,7 @@ public class ProbeGenerator
         return bestCandidate
                 .map(probe ->
                 {
-                    BasePosition position = probeToPosition.get(probe.target().exactRegion());
+                    BasePosition position = probeToPosition.get(probe.definition().exactRegion());
                     ChrBaseRegion region = ChrBaseRegion.from(position);
                     if(coverage.isCovered(region))
                     {
@@ -516,22 +517,22 @@ public class ProbeGenerator
             throw new IllegalArgumentException("region length must be equal to probe length");
         }
 
-        ProbeTarget target = ProbeTarget.exactRegion(region);
-        return probe(target, metadata, evalCriteria, coverage);
+        SequenceDefinition definition = SequenceDefinition.exactRegion(region);
+        return probe(definition, metadata, evalCriteria, coverage);
     }
 
-    public ProbeGenerationResult probe(final ProbeTarget target, final TargetMetadata metadata, final ProbeEvaluator.Criteria evalCriteria,
-            @Nullable PanelCoverage coverage)
+    public ProbeGenerationResult probe(final SequenceDefinition definition, final TargetMetadata metadata,
+            final ProbeEvaluator.Criteria evalCriteria, @Nullable PanelCoverage coverage)
     {
-        List<TargetRegion> targetRegions = target.regions().stream().map(region -> new TargetRegion(region, metadata)).toList();
+        List<TargetRegion> targetRegions = definition.regions().stream().map(region -> new TargetRegion(region, metadata)).toList();
 
-        if(coverage != null && target.regions().stream().allMatch(coverage::isCovered))
+        if(coverage != null && definition.regions().stream().allMatch(coverage::isCovered))
         {
             return ProbeGenerationResult.alreadyCoveredTargets(targetRegions);
         }
         else
         {
-            return mProbeFactory.createProbe(target, metadata)
+            return mProbeFactory.createProbe(definition, metadata)
                     .map(probe ->
                     {
                         probe = mProbeEvaluator.evaluateProbe(probe, evalCriteria);

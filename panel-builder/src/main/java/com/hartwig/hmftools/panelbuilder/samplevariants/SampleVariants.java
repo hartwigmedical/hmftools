@@ -32,7 +32,7 @@ import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
-import com.hartwig.hmftools.panelbuilder.ProbeTarget;
+import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 import com.hartwig.hmftools.panelbuilder.UserInputError;
 
@@ -271,25 +271,25 @@ public class SampleVariants
     {
         LOGGER.trace("Generating probe for variant: {}", variant);
 
-        ProbeTarget target = variant.generateProbeTarget();
+        SequenceDefinition definition = variant.generateProbe();
 
         // Only do the coverage check for variant where the probe is similar to the ref genome.
         // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
         // so the variant probe is not needed.
         // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
-        boolean isNovel = isVariantProbeNovel(target);
+        boolean isNovel = isVariantProbeNovel(definition);
         PanelCoverage coverage = isNovel ? null : mPanelData;
 
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probe(target, metadata, evalCriteria, coverage);
+        return mProbeGenerator.probe(definition, metadata, evalCriteria, coverage);
     }
 
-    private static boolean isVariantProbeNovel(final ProbeTarget target)
+    private static boolean isVariantProbeNovel(final SequenceDefinition definition)
     {
-        ChrBaseRegion start = target.startRegion();
-        ChrBaseRegion end = target.endRegion();
-        int insertLength = target.insertSequence() == null ? 0 : target.insertSequence().length();
+        ChrBaseRegion start = definition.startRegion();
+        ChrBaseRegion end = definition.endRegion();
+        int insertLength = definition.insertSequence() == null ? 0 : definition.insertSequence().length();
         if(start == null && end == null)
         {
             // Unknown region, assume novel sequence.
@@ -303,8 +303,8 @@ public class SampleVariants
                 if(start.start() > end.start())
                 {
                     // Ensure start and end are ordered correctly to calculate the delete length.
-                    start = target.endRegion();
-                    end = target.startRegion();
+                    start = definition.endRegion();
+                    end = definition.startRegion();
                 }
                 // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
                 int deleteLength = max(end.start() - start.end() - 1, 0);

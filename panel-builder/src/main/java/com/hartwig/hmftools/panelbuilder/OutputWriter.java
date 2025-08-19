@@ -52,9 +52,9 @@ public class OutputWriter implements AutoCloseable
     private static final String BED_EXT = ".bed";
     private static final String FASTA_EXT = ".fasta";
 
-    private static final String FLD_TARGET_START = "StartRegion";
-    private static final String FLD_TARGET_INSERT_SEQ = "InsertSequence";
-    private static final String FLD_TARGET_END = "EndRegion";
+    private static final String FLD_START_REGION = "StartRegion";
+    private static final String FLD_INSERT_SEQ = "InsertSequence";
+    private static final String FLD_END_REGION = "EndRegion";
     private static final String FLD_SEQUENCE = "Sequence";
     private static final String FLD_QUALITY_SCORE = "QualityScore";
     private static final String FLD_GC_CONTENT = "GCContent";
@@ -65,7 +65,7 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_PROBE_COUNT = "ProbeCount";
 
     private static final List<String> PANEL_PROBES_COLUMNS = List.of(
-            FLD_TARGET_START, FLD_TARGET_INSERT_SEQ, FLD_TARGET_END, FLD_SEQUENCE,
+            FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT);
 
@@ -75,7 +75,7 @@ public class OutputWriter implements AutoCloseable
             FLD_REJECT_REASON);
 
     private static final List<String> CANDIDATE_PROBES_COLUMNS = List.of(
-            FLD_TARGET_START, FLD_TARGET_INSERT_SEQ, FLD_TARGET_END, FLD_SEQUENCE,
+            FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
             FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
@@ -145,7 +145,7 @@ public class OutputWriter implements AutoCloseable
 
         // Must be sorted for BED files since some tools expect sorted order.
         probes = probes.stream().sorted(Comparator.comparing(
-                probe -> probe.target().exactRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                probe -> probe.definition().exactRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
         for(Probe probe : probes)
         {
@@ -154,13 +154,13 @@ public class OutputWriter implements AutoCloseable
             {
                 throw new IllegalArgumentException("Should only be writing accepted probes");
             }
-            if(probe.target().baseLength() != PROBE_LENGTH || probe.sequence().length() != PROBE_LENGTH)
+            if(probe.definition().baseLength() != PROBE_LENGTH || probe.sequence().length() != PROBE_LENGTH)
             {
                 throw new IllegalArgumentException("Should only be writing probes of length " + PROBE_LENGTH);
             }
 
             mPanelProbesTsvWriter.writeRow(probe);
-            if(probe.target().isExactRegion())
+            if(probe.definition().isExactRegion())
             {
                 writePanelProbesBedRow(probe);
             }
@@ -170,12 +170,12 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        ProbeTarget target = probe.target();
-        ChrBaseRegion start = target.startRegion();
-        ChrBaseRegion end = target.endRegion();
-        row.setOrNull(FLD_TARGET_START, start == null ? null : start.toString());
-        row.setOrNull(FLD_TARGET_INSERT_SEQ, target.insertSequence());
-        row.setOrNull(FLD_TARGET_END, end == null ? null : end.toString());
+        SequenceDefinition definition = probe.definition();
+        ChrBaseRegion start = definition.startRegion();
+        ChrBaseRegion end = definition.endRegion();
+        row.setOrNull(FLD_START_REGION, start == null ? null : start.toString());
+        row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
+        row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_QUALITY_SCORE, probe.qualityScore());
         row.set(FLD_GC_CONTENT, probe.gcContent());
@@ -185,7 +185,7 @@ public class OutputWriter implements AutoCloseable
 
     private void writePanelProbesBedRow(final Probe probe) throws IOException
     {
-        mPanelProbesBedWriter.write(formatBedRow(probe.target().exactRegion(), probeBedName(probe)));
+        mPanelProbesBedWriter.write(formatBedRow(probe.definition().exactRegion(), probeBedName(probe)));
     }
 
     private void writePanelProbesFastaRecord(final Probe probe) throws IOException
@@ -293,12 +293,12 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeCandidateProbesRow(final Probe probe, DelimFileWriter.Row row)
     {
-        ProbeTarget target = probe.target();
-        ChrBaseRegion start = target.startRegion();
-        ChrBaseRegion end = target.endRegion();
-        row.setOrNull(FLD_TARGET_START, start == null ? null : start.toString());
-        row.setOrNull(FLD_TARGET_INSERT_SEQ, target.insertSequence());
-        row.setOrNull(FLD_TARGET_END, end == null ? null : end.toString());
+        SequenceDefinition definition = probe.definition();
+        ChrBaseRegion start = definition.startRegion();
+        ChrBaseRegion end = definition.endRegion();
+        row.setOrNull(FLD_START_REGION, start == null ? null : start.toString());
+        row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
+        row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());

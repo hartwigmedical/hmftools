@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
-import com.hartwig.hmftools.panelbuilder.ProbeTarget;
+import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +46,7 @@ public class GermlineSv implements Variant
     }
 
     @Override
-    public ProbeTarget generateProbeTarget()
+    public SequenceDefinition generateProbe()
     {
         return buildSvProbe(
                 mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,

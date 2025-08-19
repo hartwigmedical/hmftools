@@ -32,7 +32,7 @@ public class PanelData implements PanelCoverage
     @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
-        return mData.probes().stream().flatMap(probe -> probe.target().regions().stream());
+        return mData.probes().stream().flatMap(probe -> probe.definition().regions().stream());
     }
 
     public void addResult(final ProbeGenerationResult result)

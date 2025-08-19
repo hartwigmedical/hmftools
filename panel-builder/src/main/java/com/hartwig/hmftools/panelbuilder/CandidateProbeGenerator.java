@@ -40,7 +40,7 @@ public class CandidateProbeGenerator
         if(region.baseLength() < PROBE_LENGTH)
         {
             // This method is designed to find probes contained within the region, which requires the region fit at least one probe.
-            throw new IllegalArgumentException("target must be larger than a probe");
+            throw new IllegalArgumentException("region must be larger than a probe");
         }
 
         BasePosition initialPosition = regionCentre(region);
@@ -58,8 +58,8 @@ public class CandidateProbeGenerator
     //   - Can't end after `maxProbeEnd`
     //   - Can't end after end of chromosome
     // Useful because we prefer to select probes which are closest to the target position or centre of a region.
-    private Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart,
-            int maxProbeEnd, final TargetMetadata metadata)
+    private Stream<Probe> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart, int maxProbeEnd,
+            final TargetMetadata metadata)
     {
         if(maxProbeEnd - minProbeStart + 1 < PROBE_LENGTH)
         {
@@ -82,9 +82,9 @@ public class CandidateProbeGenerator
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset ->
                 {
-                    ProbeTarget target =
-                            ProbeTarget.exactRegion(probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
-                    return mProbeFactory.createProbe(target, metadata);
+                    SequenceDefinition definition = SequenceDefinition.exactRegion(
+                            probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
+                    return mProbeFactory.createProbe(definition, metadata);
                 })
                 .flatMap(Optional::stream);
     }
@@ -99,8 +99,8 @@ public class CandidateProbeGenerator
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
                 .mapToObj(start ->
                 {
-                    ProbeTarget target = ProbeTarget.exactRegion(probeRegionStartingAt(region.chromosome(), start));
-                    return mProbeFactory.createProbe(target, metadata);
+                    SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegionStartingAt(region.chromosome(), start));
+                    return mProbeFactory.createProbe(definition, metadata);
                 })
                 .flatMap(Optional::stream);
     }

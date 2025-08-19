@@ -10,7 +10,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
-import com.hartwig.hmftools.panelbuilder.ProbeTarget;
+import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +40,7 @@ public class GermlineMutation implements Variant
     }
 
     @Override
-    public ProbeTarget generateProbeTarget()
+    public SequenceDefinition generateProbe()
     {
         return buildMutationProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), PROBE_LENGTH);
     }
