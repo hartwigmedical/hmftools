@@ -38,12 +38,17 @@ FileWriterUtils
     public static void addOutputOptions(final ConfigBuilder configBuilder, boolean checkExists)
     {
         addOutputDir(configBuilder, checkExists);
-        configBuilder.addConfigItem(OUTPUT_ID, OUTPUT_ID_DESC);
+        addOutputId(configBuilder);
     }
 
     public static void addOutputDir(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+    }
+
+    public static void addOutputId(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(OUTPUT_ID, OUTPUT_ID_DESC);
     }
 
     public static void addOutputDir(final ConfigBuilder configBuilder, boolean checkExists)
