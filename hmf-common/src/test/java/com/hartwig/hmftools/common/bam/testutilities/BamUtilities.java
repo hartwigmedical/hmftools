@@ -12,7 +12,7 @@ public class BamUtilities
     {
         File refGenomeFile = new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
-        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(101_000));
+        BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(60_000));
         int regionOffset = 1_001;
         //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
             for (int i=0; i<11; i++)
@@ -29,6 +29,7 @@ public class BamUtilities
                 regionOffset += 1000;
                 depths.addRange(regionOffset, regionOffset + 1_000, 50 +i);
                 regionOffset += 1000;
+                System.out.println(regionOffset);
                 bamRecipe.add(depths);
             }
 //        for (int i=0; i<100; i++)
