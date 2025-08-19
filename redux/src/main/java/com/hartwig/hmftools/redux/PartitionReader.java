@@ -406,6 +406,11 @@ public class PartitionReader
 
             postProcessPrimaryRead(duplicateGroup);
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+
+            if(mConfig.LogDuplicateGroupSize > 0 && duplicateGroup.readCount() >= mConfig.LogDuplicateGroupSize)
+            {
+                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.readCount(), duplicateGroup.fragmentCoordinates());
+            }
         }
 
         postProcessSingleReads(fragmentCoordReads.SingleReads);

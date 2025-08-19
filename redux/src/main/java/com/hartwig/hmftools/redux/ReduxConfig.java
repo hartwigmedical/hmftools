@@ -128,6 +128,7 @@ public class ReduxConfig
     public final boolean DropDuplicates;
     public final boolean SkipFullyUnmappedReads;
     public final int WriteReadBaseLength;
+    public final int LogDuplicateGroupSize;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -161,6 +162,7 @@ public class ReduxConfig
     private static final String RUN_CHECKS = "run_checks";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
+    private static final String LOG_DUPLICATE_GROUP_SIZE = "log_dup_group_size";
 
     public ReduxConfig(final ConfigBuilder configBuilder)
     {
@@ -308,6 +310,7 @@ public class ReduxConfig
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
+        LogDuplicateGroupSize = configBuilder.getInteger(LOG_DUPLICATE_GROUP_SIZE);
 
         if(RunChecks)
         {
@@ -426,6 +429,7 @@ public class ReduxConfig
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR ");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
+        configBuilder.addInteger(LOG_DUPLICATE_GROUP_SIZE, "Log duplicate groups of size or larger", 0);
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
@@ -483,6 +487,7 @@ public class ReduxConfig
         WriteStats = false;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+        LogDuplicateGroupSize = 0;
 
         mReadChecker = new ReadChecker(false);
     }

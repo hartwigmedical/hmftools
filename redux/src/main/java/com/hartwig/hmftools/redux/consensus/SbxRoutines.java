@@ -665,35 +665,39 @@ public final class SbxRoutines
             // apply duplex adjacent error logic within the duplex region
             for(Integer i : duplexMismatchIndices)
             {
-                boolean matchesRef = false;
-                byte readBase = record.getReadBases()[i];
+                boolean lowQualMatchesRef = false;
                 int refPosition = record.getReferencePositionAtReadPosition(i);
+                byte lowQualRefBase = refPosition > 0 ? refGenome.getBase(chromosome, refPosition) : DNA_N_BYTE;
 
                 if(refPosition > 0)
                 {
-                    byte refBase = refGenome.getBase(chromosome, refPosition);
-                    matchesRef = readBase == refBase;
+                    byte lowQualReadBase = record.getReadBases()[i];
+                    lowQualMatchesRef = lowQualReadBase == lowQualRefBase;
                 }
 
                 for(int j = 0; j < ADJACENT_INDICES.length; ++j)
                 {
                     byte adjustQual = abs(ADJACENT_INDICES[j]) == 1 ? SBX_DUPLEX_ADJACENT_1_QUAL : SBX_DUPLEX_ADJACENT_2_3_QUAL;
-
-                    if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && matchesRef)
-                        adjustQual = SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
-
                     int adjustIndex = i + ADJACENT_INDICES[j];
+
+                    if(adjustIndex < 0 || adjustIndex > lastReadIndex)
+                        continue;
+
+                        // if dist to qual 0 = 1 and duplex base = qual 0 ref base, then set qual = 15
+                    // if dist to qual 0 = 1 and duplex base != qual 0 ref base, then set qual = 20
+                    if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && lowQualMatchesRef)
+                    {
+                        if(record.getReadBases()[adjustIndex] == lowQualRefBase)
+                            adjustQual = SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
+                    }
 
                     if(duplexRegionStart >= 0 && (adjustIndex < duplexRegionStart || adjustIndex > duplexRegionEnd))
                         continue;
 
-                    if(adjustIndex >= 0 && adjustIndex <= lastReadIndex)
-                    {
-                        byte indexQual = newBaseQuals[adjustIndex];
+                    byte indexQual = newBaseQuals[adjustIndex];
 
-                        if(indexQual > adjustQual && indexQual != SBX_SIMPLEX_QUAL)
-                            newBaseQuals[adjustIndex] = adjustQual;
-                    }
+                    if(indexQual > adjustQual && indexQual != SBX_SIMPLEX_QUAL)
+                        newBaseQuals[adjustIndex] = adjustQual;
                 }
             }
         }

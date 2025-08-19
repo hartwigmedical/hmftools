@@ -232,7 +232,7 @@ public class SbxConsensusTest
         baseQuals[7] = SBX_DUPLEX_MISMATCH_QUAL;
         baseQuals[8] = SBX_DUPLEX_MISMATCH_QUAL;
 
-        readBases = refBases.substring(0, 3) + "T" + refBases.substring(4);
+        readBases = refBases.substring(0, 3) + "T" + refBases.substring(4, 9) + "T"; // last base doesn't match the ref
         read = createSamRecord(readBases, position, baseQuals);
         SbxRoutines.finaliseRead(mRefGenome, read);
 
@@ -245,7 +245,7 @@ public class SbxConsensusTest
         assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[6]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[7]);
         assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[8]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[9]);
+        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[9]);
     }
 
     private static void setDupluxBaseIndex(final SAMRecord record)
