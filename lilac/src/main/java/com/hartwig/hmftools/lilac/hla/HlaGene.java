@@ -4,6 +4,10 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_2;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.MhcClass_;
 
 public enum HlaGene
@@ -15,9 +19,10 @@ public enum HlaGene
     HLA_Y(CLASS_1, true),
     HLA_H(CLASS_1, true),
 
-    HLA_DQB1(CLASS_2, false),
+    HLA_DQB1(CLASS_2, false);
 
-    NONE(CLASS_1, false); // used for debugging
+    // TODO: do not include in headers...
+//    NONE(CLASS_1, false); // used for debugging
 
     private final MhcClass_ mMhcClass;
     private final boolean mIsPseudo;
@@ -52,17 +57,34 @@ public enum HlaGene
 
     public String longName()
     {
-        if(this == NONE)
-            return "";
+        // TODO:
+//        if(this == NONE)
+//            return "";
 
         return super.toString().replace("_", "-");
     }
 
     public String shortName()
     {
-        if(this == NONE)
-            return "";
+        // TODO:
+//        if(this == NONE)
+//            return "";
 
         return super.toString().substring(HLA_PREFIX.length());
+    }
+
+    public static List<String> getShortNames(final LilacConfig config)
+    {
+        List<String> geneStrings = Lists.newArrayList();
+        for(HlaGene gene : values())
+        {
+            if(gene.isPseudo())
+                continue;
+
+            if(config.ClassType == null || config.ClassType == gene.mhcClass())
+                geneStrings.add(gene.shortName());
+        }
+
+        return geneStrings;
     }
 }

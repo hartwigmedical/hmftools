@@ -146,15 +146,9 @@ public final class SequenceCount
 
     public int depth(final int locus) { return mSeqCountsByLoci.get(locus).size(); }
 
-    public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
+    public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences_(
             final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
     {
-        // TODO:
-        if(true)
-        {
-            throw new NotImplementedException("");
-        }
-
         Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         for(Map.Entry<HlaGene, SequenceCount> geneEntry : geneCountsMap.entrySet())
         {
@@ -164,6 +158,9 @@ public final class SequenceCount
             Map<Integer, Set<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(geneExtraSeqLoci);
             geneHetLociMap.put(gene, hetLociMap);
         }
+
+        if(!geneHetLociMap.containsKey(HLA_A) || !geneHetLociMap.containsKey(HLA_B) || !geneHetLociMap.containsKey(HLA_C))
+            return geneHetLociMap;
 
         // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
         // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.

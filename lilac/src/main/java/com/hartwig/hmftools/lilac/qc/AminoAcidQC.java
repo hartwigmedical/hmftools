@@ -38,7 +38,7 @@ public class AminoAcidQC
     }
 
     public static AminoAcidQC create(
-            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci,
+            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci_,
             final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes, int totalFragments)
     {
         int unused = 0;
@@ -57,7 +57,7 @@ public class AminoAcidQC
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
-            Set<String> hlaYSequences = hlaYSequenceLoci.stream()
+            Set<String> hlaYSequences_ = hlaYSequenceLoci_ == null ? null : hlaYSequenceLoci_.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
             if(actualSequences.stream().anyMatch(x -> x.equals(WILD_STR)))
@@ -71,7 +71,7 @@ public class AminoAcidQC
                 if(actualSequences.contains(aminoAcid))
                     continue;
 
-                if(hlaYSequences.contains(aminoAcid))
+                if(hlaYSequences_ != null && hlaYSequences_.contains(aminoAcid))
                     continue;
 
                 int count = entry.getCount();

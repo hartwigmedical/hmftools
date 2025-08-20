@@ -310,6 +310,7 @@ public class LilacConfig
 
         registerCommonConfig(configBuilder);
 
+        configBuilder.addConfigItem(MHC_CLASS_, false, "MHC class type");
         configBuilder.addInteger(MIN_BASE_QUAL, "Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);

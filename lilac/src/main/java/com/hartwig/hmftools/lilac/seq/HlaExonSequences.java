@@ -33,6 +33,12 @@ public final class HlaExonSequences
         List<String> acids = sequence.getSequences();
         List<List<String>> exonAcids = Lists.newArrayList();
 
+        // TODO:
+        if(exonBoundaries == null)
+        {
+            System.out.println("");
+        }
+
         int index = 0;
         for(int exonBoundary : exonBoundaries)
         {

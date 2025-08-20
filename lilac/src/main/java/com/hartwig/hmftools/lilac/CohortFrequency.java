@@ -13,11 +13,13 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class CohortFrequency
 {
-    private final Map<HlaAllele, Double> mAlleleFrequencies;
+    private final MhcClass_ mClassType;
+    private final Map<HlaAllele, Double> mAlleleFrequencies_;
 
-    public CohortFrequency(final String freqFile)
+    public CohortFrequency(final MhcClass_ classType, final String freqFile)
     {
-        mAlleleFrequencies = Maps.newHashMap();
+        mClassType = classType;
+        mAlleleFrequencies_ = Maps.newHashMap();
 
         if(!freqFile.isEmpty())
             loadData(freqFile);
@@ -25,12 +27,12 @@ public class CohortFrequency
 
     public Map<HlaAllele, Double> getAlleleFrequencies()
     {
-        return mAlleleFrequencies;
+        return mAlleleFrequencies_;
     }
 
     public double getAlleleFrequency(final HlaAllele allele)
     {
-        Double frequency = mAlleleFrequencies.get(allele);
+        Double frequency = mAlleleFrequencies_.get(allele);
         return frequency != null ? frequency : 0.0;
     }
 
@@ -55,10 +57,14 @@ public class CohortFrequency
 
                 String alleleStr = items[0];
                 double frequency = Double.parseDouble(items[1]);
-                mAlleleFrequencies.put(HlaAllele.fromString(alleleStr), frequency);
+                HlaAllele allele = HlaAllele.fromString(alleleStr);
+                if(mClassType != null && allele.Gene.mhcClass() != mClassType)
+                    continue;
+
+                mAlleleFrequencies_.put(allele, frequency);
             }
 
-            LL_LOGGER.info("loaded {} allele frequencies from file({})", mAlleleFrequencies.size(), filename);
+            LL_LOGGER.info("loaded {} allele frequencies from file({})", mAlleleFrequencies_.size(), filename);
         }
         catch (IOException e)
         {
