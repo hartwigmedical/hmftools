@@ -455,6 +455,9 @@ public class ReadContextCounter
                 logReadEvidence(record, matchType, readVarIndex, modifiedQuality);
                 countAltSupportMetrics(record, fragmentData);
 
+                if(readSupport == FULL && JitterMatch.hasValidBaseQuals(mReadContext, mMatcher, record, readVarIndex))
+                    mJitterData.addValidQualFullSupport();
+
                 return readMatchInfo.ExactMatch && matchType.FullAltSupport ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
             }
         }
