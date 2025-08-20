@@ -43,6 +43,7 @@ import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
+import static htsjdk.samtools.CigarOperator.X;
 
 import java.util.Collections;
 import java.util.List;
@@ -573,6 +574,8 @@ public final class SbxRoutines
         List<Integer> duplexMismatchIndices = null;
         int readLength = record.getBaseQualities().length;
         int lastReadIndex = readLength - 1;
+        String chromosome = record.getReferenceName();
+        byte[] newBaseQuals = record.getBaseQualities();
 
         ConsensusType consensusType = extractConsensusType(record);
         Integer firstDuplexBaseIndex = null;
@@ -606,8 +609,6 @@ public final class SbxRoutines
                 duplexRegionEnd = lastReadIndex;
             }
         }
-
-        byte[] newBaseQuals = record.getBaseQualities();
 
         for(int i = 0; i < readLength; ++i)
         {
@@ -658,13 +659,89 @@ public final class SbxRoutines
             }
         }
 
-        String chromosome = record.getReferenceName();
+        List<CigarElement> cigarElements = record.getCigar().getCigarElements();
+        boolean requiresCigarUpdate = false;
+
+        Map<Integer,Byte> duplexMismatchRefBase = null; // ref base at all mis-match indices/locations
+
+        if(!record.getReadUnmappedFlag())
+        {
+            int refPos = record.getAlignmentStart();
+            int readIndex = 0;
+            byte[] readBases = record.getReadBases();
+            int nmDiff = 0;
+            int alignmentScoreDiff = 0;
+
+            for(int i = 0; i < cigarElements.size(); ++i)
+            {
+                CigarElement element = cigarElements.get(i);
+
+                if(element.getOperator() == X)
+                {
+                    // replace with M
+                    cigarElements = Lists.newArrayList(cigarElements);
+                    requiresCigarUpdate = true;
+                    element = new CigarElement(element.getLength(), M);
+                    cigarElements.set(i, element);
+                }
+
+                if(element.getOperator() != M)
+                {
+                    if(element.getOperator().consumesReadBases())
+                        readIndex += element.getLength();
+
+                    if(element.getOperator().consumesReferenceBases())
+                        refPos += element.getLength();
+
+                    continue;
+                }
+
+                for(int j = 0; j < element.getLength(); j++, readIndex++, refPos++)
+                {
+                    if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                        continue;
+
+                    if(duplexMismatchRefBase == null)
+                        duplexMismatchRefBase = Maps.newHashMap();
+
+                    byte refBase = refGenome.getBase(chromosome, refPos);
+
+                    duplexMismatchRefBase.put(readIndex, refBase);
+
+                    byte readBase = readBases[readIndex];
+                    if(refBase == readBase)
+                        continue;
+
+                    readBases[readIndex] = refBase;
+                    nmDiff--;
+                    alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
+                }
+            }
+
+            Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+            if(oldNumMutations != null && nmDiff != 0)
+            {
+                int newNumMutations = oldNumMutations + nmDiff;
+                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+            }
+
+            Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+            if(oldAlignmentScore != null && alignmentScoreDiff != 0)
+            {
+                int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
+                record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
+            }
+        }
+
+        if(requiresCigarUpdate)
+            record.setCigar(new Cigar(cigarElements));
 
         if(duplexMismatchIndices != null)
         {
             // apply duplex adjacent error logic within the duplex region
-            for(Integer i : duplexMismatchIndices)
+            for(Integer readIndex : duplexMismatchIndices)
             {
+                /*
                 boolean lowQualMatchesRef = false;
                 int refPosition = record.getReferencePositionAtReadPosition(i);
                 byte lowQualRefBase = refPosition > 0 ? refGenome.getBase(chromosome, refPosition) : DNA_N_BYTE;
@@ -674,20 +751,23 @@ public final class SbxRoutines
                     byte lowQualReadBase = record.getReadBases()[i];
                     lowQualMatchesRef = lowQualReadBase == lowQualRefBase;
                 }
+                */
+
+                Byte misMatchRefBase = duplexMismatchRefBase != null ? duplexMismatchRefBase.get(readIndex) : null;
 
                 for(int j = 0; j < ADJACENT_INDICES.length; ++j)
                 {
                     byte adjustQual = abs(ADJACENT_INDICES[j]) == 1 ? SBX_DUPLEX_ADJACENT_1_QUAL : SBX_DUPLEX_ADJACENT_2_3_QUAL;
-                    int adjustIndex = i + ADJACENT_INDICES[j];
+                    int adjustIndex = readIndex + ADJACENT_INDICES[j];
 
                     if(adjustIndex < 0 || adjustIndex > lastReadIndex)
                         continue;
 
                         // if dist to qual 0 = 1 and duplex base = qual 0 ref base, then set qual = 15
                     // if dist to qual 0 = 1 and duplex base != qual 0 ref base, then set qual = 20
-                    if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && lowQualMatchesRef)
+                    if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && misMatchRefBase != null)
                     {
-                        if(record.getReadBases()[adjustIndex] == lowQualRefBase)
+                        if(record.getReadBases()[adjustIndex] == misMatchRefBase)
                             adjustQual = SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
                     }
 
