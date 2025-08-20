@@ -741,18 +741,6 @@ public final class SbxRoutines
             // apply duplex adjacent error logic within the duplex region
             for(Integer readIndex : duplexMismatchIndices)
             {
-                /*
-                boolean lowQualMatchesRef = false;
-                int refPosition = record.getReferencePositionAtReadPosition(i);
-                byte lowQualRefBase = refPosition > 0 ? refGenome.getBase(chromosome, refPosition) : DNA_N_BYTE;
-
-                if(refPosition > 0)
-                {
-                    byte lowQualReadBase = record.getReadBases()[i];
-                    lowQualMatchesRef = lowQualReadBase == lowQualRefBase;
-                }
-                */
-
                 Byte misMatchRefBase = duplexMismatchRefBase != null ? duplexMismatchRefBase.get(readIndex) : null;
 
                 for(int j = 0; j < ADJACENT_INDICES.length; ++j)
@@ -763,8 +751,7 @@ public final class SbxRoutines
                     if(adjustIndex < 0 || adjustIndex > lastReadIndex)
                         continue;
 
-                        // if dist to qual 0 = 1 and duplex base = qual 0 ref base, then set qual = 15
-                    // if dist to qual 0 = 1 and duplex base != qual 0 ref base, then set qual = 20
+                    // for the immediately adjacent base, if it matches the ref at the mismatch base, use a different adjusted qual
                     if(adjustQual == SBX_DUPLEX_ADJACENT_1_QUAL && misMatchRefBase != null)
                     {
                         if(record.getReadBases()[adjustIndex] == misMatchRefBase)
