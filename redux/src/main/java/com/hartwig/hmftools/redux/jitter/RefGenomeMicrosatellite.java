@@ -2,30 +2,21 @@ package com.hartwig.hmftools.redux.jitter;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import htsjdk.samtools.util.StringUtil;
 
 public class RefGenomeMicrosatellite
 {
-    public static final Logger sLogger = LogManager.getLogger(RefGenomeMicrosatellite.class);
+    public final ChrBaseRegion Region;
+    public final byte[] Unit;
+    public final int RepeatCount;
+    public double mMappability;
 
-    public final ChrBaseRegion genomeRegion;
-    public final byte[] unit;
-    public final int numRepeat;
-    public double mappability = Double.NaN;
-
-    public RefGenomeMicrosatellite(final ChrBaseRegion genomeRegion, final byte[] unit)
+    public RefGenomeMicrosatellite(final ChrBaseRegion region, final byte[] unit)
     {
-        this.genomeRegion = genomeRegion;
-        this.unit = unit;
-        this.numRepeat = genomeRegion.baseLength() / unit.length;
-    }
-
-    public RefGenomeMicrosatellite(final ChrBaseRegion genomeRegion, byte unit)
-    {
-        this(genomeRegion, new byte[] { unit });
+        Region = region;
+        Unit = unit;
+        RepeatCount = region.baseLength() / unit.length;
+        mMappability = Double.NaN;
     }
 
     public RefGenomeMicrosatellite(final String chromosome, int start, int end, final byte[] unit)
@@ -33,39 +24,30 @@ public class RefGenomeMicrosatellite
         this(new ChrBaseRegion(chromosome, start, end), unit);
     }
 
-    public RefGenomeMicrosatellite(final String chromosome, int start, int end, final byte unit)
-    {
-        this(new ChrBaseRegion(chromosome, start, end), unit);
-    }
-
     public String chromosome()
     {
-        return genomeRegion.chromosome();
+        return Region.chromosome();
     }
-
     public int referenceStart()
     {
-        return genomeRegion.start();
+        return Region.start();
     }
-
     public int referenceEnd()
     {
-        return genomeRegion.end();
+        return Region.end();
     }
 
-    public int baseLength()
-    {
-        return genomeRegion.baseLength();
-    }
+    public double mappability() { return mMappability; }
+    public void setMappability(double mappability) { mMappability = mappability; }
 
     public String unitString()
     {
-        return StringUtil.bytesToString(unit);
+        return StringUtil.bytesToString(Unit);
     }
 
     @Override
     public String toString()
     {
-        return genomeRegion.toString() + ' ' + numRepeat + " x " + unitString();
+        return Region.toString() + ' ' + RepeatCount + "x" + unitString();
     }
 }

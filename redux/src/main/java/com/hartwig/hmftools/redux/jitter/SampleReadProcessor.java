@@ -40,7 +40,7 @@ public class SampleReadProcessor
 
             Collection<Pair<BaseRegion, MicrosatelliteSiteAnalyser>> entries = analysers
                     .stream()
-                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().genomeRegion.baseRegion(), analyser))
+                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().Region.baseRegion(), analyser))
                     .collect(Collectors.toList());
 
             mMicrosatelliteSiteAnalysersByChromosome.put(chromosome, new ImmutableIntervalTree<>(entries));

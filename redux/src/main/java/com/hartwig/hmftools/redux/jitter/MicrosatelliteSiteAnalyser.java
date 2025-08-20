@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -103,7 +102,7 @@ public class MicrosatelliteSiteAnalyser
         ConsensusType consensusType = msRead.consensusType();
         mReadRepeatMatchCountsByConsensusType.merge(consensusType, 1, Integer::sum);
 
-        if(msRead.shouldDropRead())
+        if(!msRead.isValidRead())
         {
             ++mNumReadRejected;
             return;

@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
@@ -144,7 +143,7 @@ public class JitterAnalyser
 
                 // get all the read counts into a row object
                 JitterTableRow row = new JitterTableRow(
-                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat, newTable.RepeatUnit, newTable.ConsensusType);
+                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().RepeatCount, newTable.RepeatUnit, newTable.ConsensusType);
 
                 for(Map.Entry<Integer, Integer> entry : microsatelliteSiteAnalyser.passingJitterCounts(consensusType).entrySet())
                 {
