@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PEN
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.replaceXwithM;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
@@ -731,10 +730,37 @@ public final class SbxRoutines
                 int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
                 record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
             }
-        }
 
-        if(requiresCigarUpdate)
-            record.setCigar(new Cigar(cigarElements));
+            if(requiresCigarUpdate)
+            {
+                int index = 0;
+                while(index < cigarElements.size() - 1)
+                {
+                    CigarElement element = cigarElements.get(index);
+
+                    int nextIndex = index + 1;
+                    while(nextIndex < cigarElements.size())
+                    {
+                        CigarElement nextElement = cigarElements.get(nextIndex);
+
+                        if(element.getOperator() == M && nextElement.getOperator() == M)
+                        {
+                            element = new CigarElement(element.getLength() + nextElement.getLength(), M);
+                            cigarElements.set(index, element);
+                            cigarElements.remove(nextElement);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    ++index;
+                }
+
+                record.setCigar(new Cigar(cigarElements));
+            }
+        }
 
         if(duplexMismatchIndices != null)
         {
@@ -766,62 +792,6 @@ public final class SbxRoutines
                     if(indexQual > adjustQual && indexQual != SBX_SIMPLEX_QUAL)
                         newBaseQuals[adjustIndex] = adjustQual;
                 }
-            }
-        }
-
-        if(!record.getReadUnmappedFlag())
-        {
-            replaceXwithM(record);
-
-            int refPos = record.getAlignmentStart();
-            int readIndex = 0;
-            byte[] readBases = record.getReadBases();
-            int nmDiff = 0;
-            int alignmentScoreDiff = 0;
-
-            for(CigarElement element : record.getCigar().getCigarElements())
-            {
-                if(element.getOperator() != M)
-                {
-                    if(element.getOperator().consumesReadBases())
-                        readIndex += element.getLength();
-
-                    if(element.getOperator().consumesReferenceBases())
-                        refPos += element.getLength();
-
-                    continue;
-                }
-
-                for(int i = 0; i < element.getLength(); i++, readIndex++, refPos++)
-                {
-                    if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
-                        continue;
-
-                    newBaseQuals[readIndex] = SBX_DUPLEX_MISMATCH_QUAL;
-
-                    byte refBase = refGenome.getBase(chromosome, refPos);
-                    byte readBase = readBases[readIndex];
-                    if(refBase == readBase)
-                        continue;
-
-                    readBases[readIndex] = refBase;
-                    nmDiff--;
-                    alignmentScoreDiff += BWA_MISMATCH_PENALTY + BWA_MATCH_SCORE;
-                }
-            }
-
-            Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-            if(oldNumMutations != null && nmDiff != 0)
-            {
-                int newNumMutations = oldNumMutations + nmDiff;
-                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
-            }
-
-            Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
-            if(oldAlignmentScore != null && alignmentScoreDiff != 0)
-            {
-                int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
-                record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
             }
         }
 

@@ -259,6 +259,36 @@ public class SbxConsensusTest
         assertEquals("2M3I2M1D3M", read.getCigarString());
     }
 
+    @Test
+    public void testReplaceXWithMCigar()
+    {
+        // test a conversion of an X to M - not sure if this will occur in actual BAMs
+        int position = 1;
+        String readBases = REF_BASES.substring(position, 11);
+        byte[] baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
+
+        SAMRecord read = createSamRecord(readBases, position, baseQuals);
+        read.setCigarString("10X");
+
+        SbxRoutines.finaliseRead(mRefGenome, read);
+        assertEquals("10M", read.getCigarString());
+
+        // multiple
+        read = createSamRecord(readBases, position, baseQuals);
+        read.setCigarString("2X3I2X1D3X");
+
+        SbxRoutines.finaliseRead(mRefGenome, read);
+        assertEquals("2M3I2M1D3M", read.getCigarString());
+
+        // requires collapsing
+        read = createSamRecord(readBases, position, baseQuals);
+        read.setCigarString("2X2M2X2M2X");
+
+        SbxRoutines.finaliseRead(mRefGenome, read);
+        assertEquals("10M", read.getCigarString());
+
+    }
+
     private static void setDupluxBaseIndex(final SAMRecord record)
     {
         int firstDuplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(List.of(record));
