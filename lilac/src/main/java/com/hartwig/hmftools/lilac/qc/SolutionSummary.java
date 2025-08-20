@@ -97,7 +97,7 @@ public class SolutionSummary
 
             if(ReferenceCoverage != null)
             {
-                for(int i = 0; i < 6; ++i)
+                for(int i = 0; i < ReferenceCoverage.getAlleles().size(); ++i)
                 {
                     alleles.add(buildAlleleData(i));
                 }

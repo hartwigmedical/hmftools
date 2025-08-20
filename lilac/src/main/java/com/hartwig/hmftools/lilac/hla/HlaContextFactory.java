@@ -16,19 +16,21 @@ import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 
 public class HlaContextFactory
 {
-    private final NucleotideGeneEnrichment NucleotideGeneEnrichment;
+    private final LilacConfig mConfig;
+    private final NucleotideGeneEnrichment NucleotideGeneEnrichment_;
     private final Map<HlaGene, List<Integer>> GeneBoundaries_;
 
-    public HlaContextFactory(final Map<HlaGene, List<Integer>> geneBoundaries_)
+    public HlaContextFactory(final LilacConfig config, final Map<HlaGene, List<Integer>> geneBoundaries_)
     {
-        NucleotideGeneEnrichment = new NucleotideGeneEnrichment(geneBoundaries_);
+        mConfig = config;
+        NucleotideGeneEnrichment_ = config.ClassType == null || config.ClassType == CLASS_1 ? new NucleotideGeneEnrichment(geneBoundaries_) : null;
         GeneBoundaries_ = geneBoundaries_;
     }
 
     private HlaContext hlaA()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getAFilterB_(), NucleotideGeneEnrichment.getAFilterC_());
+                NucleotideGeneEnrichment_.getAFilterB_(), NucleotideGeneEnrichment_.getAFilterC_());
 
         return new HlaContext(HLA_A, GeneBoundaries_.get(HLA_A), expectedAlleles);
     }
@@ -36,7 +38,7 @@ public class HlaContextFactory
     private HlaContext hlaB()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getBFilterA_(), NucleotideGeneEnrichment.getBFilterC_());
+                NucleotideGeneEnrichment_.getBFilterA_(), NucleotideGeneEnrichment_.getBFilterC_());
 
         return new HlaContext(HLA_B, GeneBoundaries_.get(HLA_B), expectedAlleles);
     }
@@ -44,22 +46,22 @@ public class HlaContextFactory
     private HlaContext hlaC()
     {
         ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getCFilterA_(), NucleotideGeneEnrichment.getCFilterB_());
+                NucleotideGeneEnrichment_.getCFilterA_(), NucleotideGeneEnrichment_.getCFilterB_());
 
         return new HlaContext(HLA_C, GeneBoundaries_.get(HLA_C), expectedAlleles);
     }
 
-    public List<HlaContext> contexts(final LilacConfig config)
+    public List<HlaContext> contexts()
     {
         List<HlaContext> output = Lists.newArrayList();
-        if(config.ClassType == null || config.ClassType == CLASS_1)
+        if(mConfig.ClassType == null || mConfig.ClassType == CLASS_1)
         {
             output.add(hlaA());
             output.add(hlaB());
             output.add(hlaC());
         }
 
-        if(config.ClassType == null || config.ClassType == CLASS_2)
+        if(mConfig.ClassType == null || mConfig.ClassType == CLASS_2)
         {
             for(HlaGene gene : HlaGene.values())
             {

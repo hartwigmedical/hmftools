@@ -80,7 +80,7 @@ public class GenerateReferenceSequences
         File alleleFrequenciesFile = new File(parseOutputDir(configBuilder), ALLELE_FREQUENCIES_FILENAME.toString());
 
         mAlleleCache = new HlaAlleleCache();
-        mAlleleFrequencies_ = new CohortFrequency(alleleFrequenciesFile.toString());
+        mAlleleFrequencies_ = new CohortFrequency(null, alleleFrequenciesFile.toString());
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
         Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
