@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
-import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT;
+import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT_;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -76,10 +76,10 @@ public class LilacAppendRna
 
         for(LilacAllele allele : solutionAlleles)
         {
-            List<HlaSequenceLoci> alleleAaSequences = mRefData.AminoAcidSequences_.stream()
+            List<HlaSequenceLoci> alleleAaSequences = mRefData.AminoAcidSequences__.stream()
                     .filter(x -> allele.allele().equals(x.Allele.toString())).collect(Collectors.toList());
 
-            List<HlaSequenceLoci> alleleNucSequences = mRefData.NucleotideSequences_.stream()
+            List<HlaSequenceLoci> alleleNucSequences = mRefData.NucleotideSequences__.stream()
                     .filter(x -> allele.allele().equals(x.Allele.asFourDigit().toString())).collect(Collectors.toList());
 
             if(alleleNucSequences.isEmpty() || alleleAaSequences.isEmpty())
@@ -113,7 +113,7 @@ public class LilacAppendRna
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
 
         ComplexCoverage rnaCoverage = extractRnaCoverage(
-                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, aminoAcidPipeline,
+                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT_, aminoAcidPipeline,
                 fragAlleleMapper, winningAlleles, aminoAcidSequences, nucleotideSequences);
 
         /*
@@ -130,7 +130,7 @@ public class LilacAppendRna
 
     public static ComplexCoverage extractRnaCoverage(
             final String rnaBam, final LilacConfig config, final ReferenceData referenceData,
-            final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
+            final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment_,
             final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
             final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
@@ -143,7 +143,8 @@ public class LilacAppendRna
 
         List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
 
-        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
+        if(nucleotideGeneEnrichment_ != null)
+            nucleotideGeneEnrichment_.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

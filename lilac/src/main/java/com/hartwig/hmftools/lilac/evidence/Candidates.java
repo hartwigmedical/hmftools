@@ -32,18 +32,6 @@ public final class Candidates
 
     public Candidates(final List<HlaSequenceLoci> nucleotideSequences, final List<HlaSequenceLoci> aminoAcidSequences)
     {
-        // TODO:
-        if(nucleotideSequences.stream().filter(x -> x.Allele.Gene == HlaGene.HLA_DQB1).count() == 0L)
-        {
-            throw new NotImplementedException("nucleotideSequences is empty for HLA_DQB1");
-        }
-
-        // TODO:
-        if(aminoAcidSequences.stream().filter(x -> x.Allele.Gene == HlaGene.HLA_DQB1).count() == 0L)
-        {
-            throw new NotImplementedException("aminoAcidSequences is empty for HLA_DQB1");
-        }
-
         mNucleotideSequences = nucleotideSequences;
         mAminoAcidSequences = aminoAcidSequences;
     }
@@ -51,12 +39,6 @@ public final class Candidates
     public List<HlaAllele> unphasedCandidates(
 	    final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
     {
-        // TODO:
-        if(context.Gene == HlaGene.HLA_DQB1)
-        {
-            System.out.println("");
-        }
-
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
@@ -65,11 +47,6 @@ public final class Candidates
 
         List<HlaSequenceLoci> geneCandidates = mAminoAcidSequences.stream()
                 .filter(x -> x.Allele.Gene == context.Gene).collect(Collectors.toList());
-
-        if(geneCandidates.isEmpty() && context.Gene == HlaGene.HLA_DQB1)
-        {
-            throw new RuntimeException("no gene candidates for HLA_DQB1");
-        }
 
         LL_LOGGER.debug("gene({}) {} candidates before filtering", context.geneName(), geneCandidates.size());
 
@@ -121,6 +98,9 @@ public final class Candidates
     public static List<HlaSequenceLoci> filterSequencesByMinSupport(final Collection<HlaSequenceLoci> candidates,
             final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, final SequenceCount rawAminoAcidCounts)
     {
+        // TODO:
+        HlaGene gene = Lists.newArrayList(candidates).get(0).Allele.Gene;
+
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
         candidateSequences.addAll(candidates);

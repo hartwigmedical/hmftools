@@ -187,7 +187,7 @@ public class ComplexBuilder
         mUniqueGroupAlleles.addAll(uniqueGroupAlleles);
     }
 
-    public List<HlaComplex> buildComplexes(final List<FragmentAlleles> refFragAlleles, final List<HlaAllele> recoveredAlleles)
+    public List<HlaComplex> buildComplexes(final List<FragmentAlleles> refFragAlleles, final Set<HlaAllele> recoveredAlleles_)
     {
         // filter out any wildcards
         Set<HlaAllele> wildcardAlleles = findWildcardAlleles(refFragAlleles);
@@ -223,7 +223,7 @@ public class ComplexBuilder
             Map<HlaGene, List<HlaAllele>> geneTopCandidates_ = Maps.newHashMap();
             for(Map.Entry<HlaGene, List<HlaComplex>> entry : geneOnlyComplexes_.entrySet())
             {
-                geneTopCandidates_.put(entry.getKey(), rankedGroupCoverage(10, refFragAlleles, entry.getValue(), recoveredAlleles));
+                geneTopCandidates_.put(entry.getKey(), rankedGroupCoverage(10, refFragAlleles, entry.getValue(), recoveredAlleles_));
             }
 
             List<HlaAllele> topCandidates = geneTopCandidates_.values().stream().flatMap(x -> x.stream()).collect(Collectors.toCollection(Lists::newArrayList));
@@ -467,13 +467,13 @@ public class ComplexBuilder
     }
 
     private List<HlaAllele> rankedGroupCoverage(
-            int take, final List<FragmentAlleles> fragAlleles, final List<HlaComplex> complexes, final List<HlaAllele> recoveredAlleles)
+            int take, final List<FragmentAlleles> fragAlleles, final List<HlaComplex> complexes, final Set<HlaAllele> recoveredAlleles_)
     {
         List<ComplexCoverage> complexCoverages = complexes.stream()
                 .map(x -> calcProteinCoverage(fragAlleles, x.Alleles)).collect(Collectors.toList());
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(0, mRefData);
-        complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles, Lists.newArrayList());
+        complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles_, Lists.newArrayList());
 
         // take the top N alleles but no more than 5 that pair with something in the top 10
         Map<HlaAllele,Integer> pairingCount = Maps.newHashMap();

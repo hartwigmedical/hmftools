@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_POPULATION_FREQUENCY;
 import static com.hartwig.hmftools.lilac.LilacConstants.RECOVERY_SCORE_PENALTY;
@@ -15,11 +17,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -47,14 +51,25 @@ public class ComplexCoverageRanking
     }
 
     public List<ComplexCoverage> rankCandidates(
-            final List<ComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final List<ComplexCoverage> complexes, final Set<HlaAllele> recoveredAlleles_, final Collection<HlaSequenceLoci> sequences)
     {
+        // TODO:
+        LL_LOGGER.debug("rankCandidates");
+
         if(complexes.isEmpty())
             return complexes;
 
-        for(ComplexCoverage complexCoverage : complexes)
+        // TODO: multithread this
+        for(int idx = 0; idx < complexes.size(); idx++)
         {
-            calcScore(complexCoverage, recoveredAlleles, sequences);
+            // TODO:
+            if(idx % 100_000 == 0)
+            {
+                LL_LOGGER.debug(format("%.2f%%", (100.0 * idx) / complexes.size()));
+            }
+
+            ComplexCoverage complexCoverage = complexes.get(idx);
+            calcScore(complexCoverage, recoveredAlleles_, sequences);
         }
 
         if(mMaxScoreDifference == 0)
@@ -90,18 +105,18 @@ public class ComplexCoverageRanking
     }
 
     private void calcScore(
-            final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles_, final Collection<HlaSequenceLoci> sequences)
     {
         calcCohortFrequency(complexCoverage);
-        calcRecoveryPenalty(complexCoverage, recoveredAlleles);
+        calcRecoveryPenalty(complexCoverage, recoveredAlleles_);
         calcWildcardPenalty(complexCoverage, sequences);
         calcComplexScore(complexCoverage);
     }
 
-    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
+    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles_)
     {
         int recoveredCount = (int) complexCoverage.getAlleles().stream()
-                .filter(recoveredAlleles::contains)
+                .filter(recoveredAlleles_::contains)
                 .count();
         complexCoverage.setRecoveredCount(recoveredCount);
     }

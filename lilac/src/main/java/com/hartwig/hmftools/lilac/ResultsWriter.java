@@ -119,12 +119,12 @@ public class ResultsWriter
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), rankedComplexes);
+        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), HlaGene.getShortNames(mConfig), rankedComplexes);
     }
 
     public void writeDetailedOutputs(
             final SequenceCount refAminoAcidCounts, final SequenceCount refNucleotideCounts,
-            final AminoAcidFragmentPipeline aminoAcidPipeline, final HlaYCoverage hlaYCoverage)
+            final AminoAcidFragmentPipeline aminoAcidPipeline, final HlaYCoverage hlaYCoverage_)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -134,7 +134,8 @@ public class ResultsWriter
             refAminoAcidCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_AA));
             refNucleotideCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_NUC));
             aminoAcidPipeline.writeCounts(mConfig);
-            hlaYCoverage.writeAlleleCounts(mConfig.Sample);
+            if(hlaYCoverage_ != null)
+                hlaYCoverage_.writeAlleleCounts(mConfig.Sample);
         }
     }
 

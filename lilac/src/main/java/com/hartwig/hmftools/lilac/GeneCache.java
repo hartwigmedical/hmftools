@@ -34,12 +34,6 @@ public class GeneCache
 
     public GeneCache(final Map<HlaGene, TranscriptData> hlaTranscriptMap)
     {
-        // TODO:
-        if(!hlaTranscriptMap.containsKey(HlaGene.HLA_DQB1))
-        {
-            throw new RuntimeException("hlaTranscriptMap odes not contain HLA-DQB1");
-        }
-
         GeneTranscriptMap = hlaTranscriptMap;
 
         // establish other properties and commonly used constants
