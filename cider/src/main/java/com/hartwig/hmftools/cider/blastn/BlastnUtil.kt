@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenom
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
 
@@ -187,6 +188,6 @@ object BlastnUtil
                 ++match
             }
         }
-        return 100 * match.toDouble() / alignedQuerySeq.size
+        return 100 * match.toDouble() / max(refSeq.size, alignedQuerySeq.size)
     }
 }
