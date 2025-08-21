@@ -41,7 +41,7 @@ public class TestTumorBamMetricsDataBuilder
                 .medianCoverage(-1)
                 .madCoverage(-1)
                 .lowMapQualPercent(-1)
-                .unpairedPercent(-1)
+                .unmappedPercent(-1)
                 .lowBaseQualPercent(-1)
                 .overlappingReadPercent(-1)
                 .cappedCoveragePercent(-1)

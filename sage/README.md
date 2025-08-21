@@ -457,13 +457,13 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---------------|---
-hard_min_tumor_qual | 50            | `totalQuality`
+hard_min_tumor_qual | 50            | `RC_CNT[0]+RC_CNT[1]+RC_CNT[3]`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
 filtered_max_germline_alt_support | 3 (or 10 if running TINC)             | Normal `AD[1]`
 
-Note that hotspots are never hard-filtered.
+Note that hotspots are never hard-filtered. Note also that the hard min tumor qual filter applies to a sum of RC_CNT elements, and not to the QUAL value written to the VCF. Occasionally variants slightly below hard_min_tumor_qual will be recovered, if there is evidence of reads with jitter that do not match the read context but on balance probably support the variant.
 
 Variants failing any of the first 4 filters are excluded from this point onwards and have no further processing applied to them. The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample. The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
 
