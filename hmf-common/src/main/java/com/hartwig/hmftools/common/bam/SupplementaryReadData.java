@@ -33,8 +33,8 @@ public class SupplementaryReadData
     public static final char SUPP_POS_STRAND = '+';
     public static final char SUPP_NEG_STRAND = '-';
 
-    public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality,
-            final int nm)
+    public SupplementaryReadData(
+            final String chromosome, final int position, final char strand, final String cigar, final int mapQuality, final int nm)
     {
         Chromosome = chromosome;
         Position = position;
@@ -49,10 +49,8 @@ public class SupplementaryReadData
         this(chromosome, position, strand, cigar, mapQuality, 0);
     }
 
-    public byte orientation()
-    {
-        return Strand == SUPP_POS_STRAND ? ORIENT_FWD : ORIENT_REV;
-    }
+    public byte orientation() { return Strand == SUPP_POS_STRAND ? ORIENT_FWD : ORIENT_REV; }
+    public boolean isForwardOrient() { return Strand == SUPP_POS_STRAND; }
 
     @Nullable
     @VisibleForTesting

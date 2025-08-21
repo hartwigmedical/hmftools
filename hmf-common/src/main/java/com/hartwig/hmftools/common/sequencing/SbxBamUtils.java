@@ -103,6 +103,68 @@ public class SbxBamUtils
         return duplexIndels;
     }
 
+    public static List<Integer> getDuplexIndelIndices(final String ycTagStr)
+    {
+        List<Integer> duplexIndels = null;
+        String[] ycTagComponents = ycTagStr.split("-");
+
+        int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
+        int readIndex = simplexHeadLength;
+
+        String duplexRegion = ycTagComponents[1];
+
+        for(int i = 0; i < duplexRegion.length();)
+        {
+            String intString = parseInt(duplexRegion, i);
+            if(intString != null)
+            {
+                int duplexMatchLength = Integer.parseInt(intString);
+
+                readIndex += duplexMatchLength;
+                i += intString.length();
+                continue;
+            }
+
+            char code = duplexRegion.charAt(i);
+            i++;
+
+            switch(code)
+            {
+                case 'I':
+                case 'L':
+                case 'P':
+                case 'Q':
+                case 'J':
+                case 'O':
+                case 'X':
+                case 'Z':
+
+                    if(duplexIndels == null)
+                        duplexIndels = Lists.newArrayList();
+
+                    duplexIndels.add(readIndex);
+                    break;
+
+                default:
+                    break;
+            }
+
+            ++readIndex;
+        }
+
+        return duplexIndels;
+    }
+
+    public static void reverseDuplexIndelIndices(final List<Integer> duplexIndelIndices, final int readLength)
+    {
+        int maxIndex = readLength - 1;
+
+        for(int i = 0; i < duplexIndelIndices.size(); ++i)
+        {
+            duplexIndelIndices.set(i, maxIndex - duplexIndelIndices.get(i));
+        }
+    }
+
     @Nullable
     private static String parseInt(final String s, int start)
     {

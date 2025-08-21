@@ -286,7 +286,6 @@ public class SbxConsensusTest
 
         SbxRoutines.finaliseRead(mRefGenome, read);
         assertEquals("10M", read.getCigarString());
-
     }
 
     private static void setDupluxBaseIndex(final SAMRecord record)
