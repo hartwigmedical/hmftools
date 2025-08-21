@@ -22,7 +22,8 @@ object BlastnMatchTsvWriter
         refStrand,
         refStart,
         refEnd,
-        refContig
+        refContig,
+        querySeq
     }
 
     enum class MatchType
@@ -89,6 +90,7 @@ object BlastnMatchTsvWriter
                     Column.refStart -> csvPrinter.print(match.refStart)
                     Column.refEnd -> csvPrinter.print(match.refEnd)
                     Column.refContig -> csvPrinter.print(match.refContig)
+                    Column.querySeq -> csvPrinter.print(match.querySeq)
                 }
             }
             csvPrinter.println()

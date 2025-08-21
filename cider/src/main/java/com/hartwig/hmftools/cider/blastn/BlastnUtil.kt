@@ -96,14 +96,15 @@ object BlastnUtil
     }
 
     data class BwaMemMatch(
+        val querySeq: String,
+        val queryAlignStart: Int,
+        val queryAlignEnd: Int,
         val refContig: String,
         val refStart: Int,
         val refEnd: Int,
-        val alignmentScore: Int,
         val strand: Strand,
-        val queryAlignStart: Int,
-        val queryAlignEnd: Int,
-        val percentageIdent: Double
+        val alignmentScore: Int,
+        val percentageIdent: Double,
     ) {
         init {
             require(refStart <= refEnd)
@@ -164,14 +165,15 @@ object BlastnUtil
 //                println("aln " + String(alignedQuerySeq))
                 val percentIdentity = calcPercentIdentity(refSeq, alignedQuerySeq)
                 val resAlignment = BwaMemMatch(
-                    chromosome,
-                    alignment.refStart,
-                    alignment.refEnd,
-                    alignment.alignerScore,
-                    strand,
+                    sequences[key.value]!!,
                     // Convert to 1-indexed for the rest of the code
                     queryAlignStart + 1,
                     queryAlignEnd,
+                    chromosome,
+                    alignment.refStart,
+                    alignment.refEnd,
+                    strand,
+                    alignment.alignerScore,
                     // Match the previous Blastn result, which only showed up to 3 decimal places
                     round(percentIdentity * 1000) / 1000
                 )
