@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.e2e;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.gc.GCProfile.MIN_MAPPABLE_PERCENTAGE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
@@ -18,11 +19,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -42,21 +48,11 @@ public class ProcessBamTest
     @Before
     public void setup() throws Exception
     {
-        tempDir = new File("/Users/timlavers/work/junk/rubbish"); // TODO
-
+        tempDir = FileUtils.getTempDirectory();
         outputDir = new File(tempDir, "output");
         outputDir.mkdirs();
         FileUtils.cleanDirectory(outputDir);
     }
-
-    /*
-    Things to test:
-     - sex chromosomes
-     - GC normalisation
-     - counting of reads that lie across windows
-     - gc bucket smoothing
-     - filtering of regions of extreme gc
-     */
 
     @Test
     public void singleWindow() throws Exception
@@ -218,7 +214,7 @@ public class ProcessBamTest
     }
 
     @Test
-    public void gcWindowsAreSmoothed() throws Exception
+    public void gcNormalisation() throws Exception
     {
         // 1 chr of length 60_000
         // 1001-2000, 2001-3000, 3001-4000   : gc 0.40, depth 10
@@ -294,7 +290,6 @@ public class ProcessBamTest
         // Count = 45, so mean = 1.688
         double mean = 1.688;
 
-        List<CobaltRatio> ratios = ratioResults.get(_1);
         // 1-1000 0 reads, 1001-6000 blocked out because of gc bucket smoothing
         checkTumorRatio(-1.0, 0, 1, 2, 3, 4, 5);
 
@@ -317,6 +312,46 @@ public class ProcessBamTest
         checkTumorRatio(-1.0, 51, 52, 53, 54, 55);
     }
 
+    @Test
+    public void segmentation() throws Exception
+    {
+        // chr1 and chr2 both of length 101_000
+        // 1:1001-40_000 depth approximately 10
+        // 1:40_001-70_000 depth approximately 100
+        // 1:70_001-100_000 depth approximately 10
+        // 2:1001-40_000 depth approximately 100
+        // 2:40_001-70_000 depth approximately 10
+        // 2:70_001-100_000 depth approximately 100
+        // GC ration 0.5 throughout.
+        // Each window is depth +-5% (random) of the value it approximates.
+        // If we have constant read depths then the segmentation algorithm assigns a cost of 0
+        // to segment creation, with the result that many segments are created instead of the
+        // few expected ones. (The segment cost is associated with the variance of the values being segmented.)
+        sample = "multiple_segments";
+        bamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardMultiChromosomeGCFile(100_000, _1, _2);
+        createStandardMultipleChromosomePanelFile(100_000, 1.0001, _1, _2);
+        runCobalt();
+
+        String segmentsFile = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
+
+        ListMultimap<Chromosome, PCFPosition> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
+        System.out.println(pcfData);
+        assertEquals(2, pcfData.keySet().size());
+        List<PCFPosition> chr1Positions = pcfData.asMap().get(_1).stream().toList();
+        // The R program that does segmentation puts a spurious 1-window segment
+        // at the start of each chromosome.
+        assertEquals(6, chr1Positions.size());
+        assertEquals(1, chr1Positions.get(0).Position);
+        assertEquals(1001, chr1Positions.get(1).Position);
+        assertEquals(2001, chr1Positions.get(2).Position);
+        assertEquals(41001, chr1Positions.get(3).Position);
+        assertEquals(71001, chr1Positions.get(4).Position);
+        assertEquals(101001, chr1Positions.get(5).Position);
+    }
+
     private void checkTumorRatio(double expected, int... indices)
     {
         List<CobaltRatio> ratios = ratioResults.get(_1);
@@ -333,7 +368,7 @@ public class ProcessBamTest
         regionOffset = 1_000;
 
         createStandardChr1GCFile(2_000);
-        createStandardChr1PanelFile(2_000, 1.00);
+        createStandardChr1PanelFile(2_000, 1.000001);
     }
 
     private void setupForThreeWindowBam() throws IOException
@@ -348,20 +383,37 @@ public class ProcessBamTest
         createStandardChr1PanelFile(4_000, 1.0000001);
     }
 
-    private void createStandardChr1PanelFile(final int length, final double relativeEnrichment) throws IOException
+    private void createStandardMultipleChromosomePanelFile(final int length, final double relativeEnrichment,
+            HumanChromosome... chromosomes) throws IOException
     {
         panelNormalisation = new File(tempDir, "ThePanel.tsv");
         PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + length, relativeEnrichment));
+        for(HumanChromosome chr : chromosomes)
+        {
+            panelWriter.addSection(new PanelFileSection(chr, regionOffset, regionOffset + length, relativeEnrichment));
+        }
         panelWriter.write(panelNormalisation);
+    }
+
+    private void createStandardChr1PanelFile(final int length, final double relativeEnrichment) throws IOException
+    {
+        createStandardMultipleChromosomePanelFile(length, relativeEnrichment, _1);
+    }
+
+    private void createStandardMultiChromosomeGCFile(final int length, HumanChromosome... chromosomes) throws IOException
+    {
+        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
+        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        for(HumanChromosome chr : chromosomes)
+        {
+            gcFileWriter.addSection(new ConstantGcFileSection(chr, regionOffset, regionOffset + length, 0.5));
+        }
+        gcFileWriter.write(gcProfile);
     }
 
     private void createStandardChr1GCFile(final int length) throws IOException
     {
-        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + length, 0.5));
-        gcFileWriter.write(gcProfile);
+        createStandardMultiChromosomeGCFile(length, _1);
     }
 
     private File getBam(String sample)
@@ -382,7 +434,7 @@ public class ProcessBamTest
         args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
         args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
         args[index++] = String.format("-%s", PCF_GAMMA);
-        args[index++] = String.format("%d", 1);
+        args[index++] = String.format("%d", 50);
         args[index++] = String.format("-%s", OUTPUT_DIR);
         args[index] = String.format("%s", outputDir.getAbsolutePath());
 
@@ -392,106 +444,5 @@ public class ProcessBamTest
         assertTrue(ratioFile.exists());
         assertTrue(ratioFile.isFile());
         ratioResults = CobaltRatioFile.readWithGender(ratioFile.getAbsolutePath(), Gender.FEMALE, true);
-    }
-
-    @Test
-    public void basic() throws Exception
-    {
-        // Example0 BAM has:
-        // 1:10_000_001-10_100_000 depth 100
-        // 1:10_200_001-10_300_000 depth 100
-        // 1:10_400_001-10_500_000 depth 100
-        // 2:10_000_001-10_100_000 depth 100
-        // 2:10_200_001-10_300_000 depth 100
-        // 2:10_400_001-10_500_000 depth 100
-
-        // Example2 BAM has:
-        // 1:10_000_001-10_100_000 depth 100
-        // 1:10_200_001-10_300_000 depth 100
-        // 1:10_400_001-10_500_000 depth 100
-        // 2:10_000_001-10_100_000 depth 50
-        // 2:10_200_001-10_300_000 depth 50
-        // 2:10_400_001-10_500_000 depth 50
-
-        // Example3 BAM has:
-        // 1:10_000_001-10_200_000 depth 100
-        // 1:10_200_001-10_400_000 depth 10
-        // 1:10_400_001-10_600_000 depth 100
-
-        // Example4 BAM has same form as Example3 but has random bases.
-
-        // Example6
-        // 1 chr of length 12000
-        //1:2001-5000 depth 100
-        //1:5001-8000 depth 10
-        //1:8001-11000 depth 100
-
-        // Example7
-        // 1 chr of length 3000
-        //1:1001-2000 depth 100
-        String sample = "Example7";
-        File tempDir = new File("/Users/timlavers/work/junk/rubbish");
-        File bamFile = new File(tempDir, sample + ".sorted.bam");
-        final int regionOffset = 1_000;
-
-        File gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        //        gcFileWriter.addSection(new GcFileSection(_1, regionOffset, regionOffset + 40_000, genome));
-        gcFileWriter.addSection(new ConstantGcFileSection(_1, regionOffset, regionOffset + 2_000, 0.5));
-        //        gcFileWriter.addSection(new GcFileSection(_2, regionOffset, regionOffset + 600_000, genome));
-        gcFileWriter.write(gcProfile);
-
-        File panelNormalisation = new File(tempDir, "ThePanel.tsv");
-        PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset + 2_000, 1.00));
-        //        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 200_000, regionOffset + 300_000, 1.001));
-        //        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 400_000, regionOffset + 500_000, 1.001));
-        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset, regionOffset + 600_000, 1.001));
-        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 200_000, regionOffset + 300_000, 1.001));
-        //        panelWriter.addSection(new PanelFileSection(_2, regionOffset + 400_000, regionOffset + 500_000, 1.001));
-        panelWriter.write(panelNormalisation);
-
-        File outputDir = new File(tempDir, "output");
-        outputDir.mkdirs();
-        FileUtils.cleanDirectory(outputDir);
-
-        File debugDir = new File(tempDir, "debug");
-        debugDir.mkdirs();
-        FileUtils.cleanDirectory(debugDir);
-
-        String[] args = new String[12];
-        int index = 0;
-        args[index++] = String.format("-%s", TUMOR);
-        args[index++] = String.format("%s", sample);
-        args[index++] = String.format("-%s", TUMOR_BAM);
-        args[index++] = String.format("%s", bamFile.getAbsolutePath());
-        args[index++] = String.format("-%s", GC_PROFILE);
-        args[index++] = String.format("%s", gcProfile.getAbsolutePath());
-        args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
-        args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
-        args[index++] = String.format("-%s", "pcf_gamma");
-        args[index++] = String.format("%d", 1);
-        args[index++] = String.format("-%s", OUTPUT_DIR);
-        args[index] = String.format("%s", outputDir.getAbsolutePath());
-
-        CobaltApplication.main(args);
-
-        System.out.println("Output directory: " + outputDir.getAbsolutePath());
-
-        File[] filesWritten = outputDir.listFiles();
-        System.out.println("Written " + filesWritten.length + " files");
-
-        File ratioFile = new File(outputDir, sample + ".cobalt.ratio.tsv.gz");
-        assertTrue(ratioFile.exists());
-        assertTrue(ratioFile.isFile());
-        Map<Chromosome, List<CobaltRatio>> ratioResults = CobaltRatioFile.readWithGender(ratioFile.getAbsolutePath(), Gender.FEMALE, true);
-
-        assertEquals(1, ratioResults.size());
-/*
-chromosome	position	referenceReadDepth	tumorReadDepth	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio	referenceGCContent	tumorGCContent
-chr1	1	-1	0	-1	-1	-1	-1	-1
-chr1	1001	-1	100	-1	1	-1	-1	0.5
-chr1	2001	-1	0	-1	-1	-1	-1	-1
- */
     }
 }
