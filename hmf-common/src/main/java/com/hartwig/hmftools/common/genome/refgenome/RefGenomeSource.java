@@ -63,6 +63,9 @@ public class RefGenomeSource implements RefGenomeInterface
     @Override
     public String getBaseString(final String chromosome, int posStart, int posEnd)
     {
+        if(posStart < 1 || posEnd < posStart)
+            return null;
+
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBaseString();
     }
 
@@ -83,6 +86,9 @@ public class RefGenomeSource implements RefGenomeInterface
     @Override
     public byte[] getBases(final String chromosome, int posStart, int posEnd)
     {
+        if(posStart < 1 || posEnd < posStart)
+            return null;
+
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
     }
 

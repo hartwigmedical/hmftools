@@ -235,9 +235,8 @@ public final class SbxRoutines
         List<CigarElement> cigarElements;
 
         int leftSoftClipLength = readCigarElements.get(0).getOperator() == S ? readCigarElements.get(0).getLength() : 0;
-
-        int suppSoftIndexStart = -1;
-        int suppSoftIndexEnd = -1;
+        int lastElement = readCigarElements.size() - 1;
+        int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
 
         if(suppData != null)
         {
@@ -248,18 +247,12 @@ public final class SbxRoutines
             if(suppData.isForwardOrient() == record.getReadNegativeStrandFlag())
                 Collections.reverse(suppElements);
 
-            int lastElement = readCigarElements.size() - 1;
-            int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
-
             if(leftSoftClipLength > rightSoftClipLength)
             {
                 List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, leftSoftClipLength, true);
                 cigarElements.addAll(trimmedSuppElements);
 
                 cigarElements.addAll(readCigarElements.subList(1, lastElement + 1)); // remove soft-clip from original
-
-                suppSoftIndexStart = 0;
-                suppSoftIndexEnd = leftSoftClipLength - 1;
             }
             else
             {
@@ -267,9 +260,6 @@ public final class SbxRoutines
 
                 List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, rightSoftClipLength, false);
                 cigarElements.addAll(trimmedSuppElements);
-
-                suppSoftIndexEnd = record.getReadBases().length - 1;;
-                suppSoftIndexStart = suppSoftIndexEnd - rightSoftClipLength + 1;
             }
         }
         else
@@ -326,8 +316,21 @@ public final class SbxRoutines
             }
         }
 
-        if(suppSoftIndexStart >= 0)
+        if(suppData != null)
         {
+            int suppSoftIndexStart, suppSoftIndexEnd;
+
+            if(leftSoftClipLength > rightSoftClipLength)
+            {
+                suppSoftIndexStart = 0;
+                suppSoftIndexEnd = leftSoftClipLength - 1;
+            }
+            else
+            {
+                suppSoftIndexEnd = annotatedBases.size() - 1;
+                suppSoftIndexStart = suppSoftIndexEnd - rightSoftClipLength + 1;
+            }
+
             for(int i = suppSoftIndexStart; i <= suppSoftIndexEnd; ++i)
             {
                 annotatedBases.get(i).setInSoftClip();
@@ -845,7 +848,13 @@ public final class SbxRoutines
 
                 for(int j = 0; j < element.getLength(); j++, readIndex++, refPos++)
                 {
+                    if(readIndex >= newBaseQuals.length)
+                        break;
+
                     if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                        continue;
+
+                    if(refPos < 1)
                         continue;
 
                     if(duplexMismatchRefBase == null)
