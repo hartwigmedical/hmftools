@@ -13,9 +13,15 @@ public interface ComparableItem
 
     boolean matches(final ComparableItem other);
 
-    boolean reportable();
+    default boolean reportable()
+    {
+        return true;
+    }
 
-    boolean isPass();
+    default boolean isPass()
+    {
+        return true;
+    }
 
     Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
             final boolean includeMatches);

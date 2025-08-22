@@ -8,6 +8,7 @@ public enum Category
 {
     PURITY,
     DRIVER,
+    COBALT_RATIO,
     COPY_NUMBER,
     GENE_COPY_NUMBER,
     SOMATIC_VARIANT,

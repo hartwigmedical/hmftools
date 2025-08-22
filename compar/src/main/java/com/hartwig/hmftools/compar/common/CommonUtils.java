@@ -34,6 +34,7 @@ import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
+import com.hartwig.hmftools.compar.cobalt.CobaltRatioComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
@@ -102,6 +103,9 @@ public class CommonUtils
 
             case DRIVER:
                 return new DriverComparer(config);
+
+            case COBALT_RATIO:
+                return new CobaltRatioComparer(config);
 
             case COPY_NUMBER:
                 return new CopyNumberComparer(config);

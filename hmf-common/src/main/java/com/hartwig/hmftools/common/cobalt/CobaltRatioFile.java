@@ -32,7 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class CobaltRatioFile
 {
-    enum Column
+    public enum Column
     {
         chromosome,
         position,
@@ -48,6 +48,7 @@ public final class CobaltRatioFile
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
+    private static final String EXTENSION_UNZIPPED = ".cobalt.ratio.tsv";
 
     // old column names for backwards compatibility
     private static final String COL_REF_READ_COUNT  = "referenceReadCount";
@@ -63,10 +64,16 @@ public final class CobaltRatioFile
     }
 
     @NotNull
+    public static String generateFilenameUnzipped(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + EXTENSION_UNZIPPED;
+    }
+
+    @NotNull
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
         // some old samples have unzipped ratio files, so check for these
-        String filename = generateFilename(basePath, sample);
+        String filename = generateFilenameUnzipped(basePath, sample);
 
         if(Files.exists(Paths.get(filename)))
             return filename;
@@ -101,7 +108,7 @@ public final class CobaltRatioFile
     }
 
     private static final int DEFAULT_READ_LENGTH = 151;
-    private static final double READ_DEPTH_INVALID = -1;
+    public static final double READ_DEPTH_INVALID = -1;
 
     private static double convertReadCount(final double readCount)
     {
