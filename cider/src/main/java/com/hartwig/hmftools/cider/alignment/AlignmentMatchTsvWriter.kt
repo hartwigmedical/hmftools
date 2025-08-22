@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cider.blastn
+package com.hartwig.hmftools.cider.alignment
 
 import com.hartwig.hmftools.cider.CiderFormatter
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
@@ -6,7 +6,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.File
 
-object BlastnMatchTsvWriter
+object AlignmentMatchTsvWriter
 {
     enum class Column
     {
@@ -34,7 +34,7 @@ object BlastnMatchTsvWriter
         full
     }
 
-    private const val FILE_EXTENSION = ".cider.blastn_match.tsv.gz"
+    private const val FILE_EXTENSION = ".cider.alignment_match.tsv.gz"
 
     @JvmStatic
     fun generateFilename(basePath: String, sample: String): String
@@ -43,7 +43,7 @@ object BlastnMatchTsvWriter
     }
 
     @JvmStatic
-    fun write(basePath: String, sample: String, blastnAnnotations: Collection<BlastnAnnotation>)
+    fun write(basePath: String, sample: String, alignmentAnnotations: Collection<AlignmentAnnotation>)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -54,19 +54,19 @@ object BlastnMatchTsvWriter
             .build()
 
         csvFormat.print(FileWriterUtils.createBufferedWriter(filePath)).use { printer: CSVPrinter ->
-            for (ann in blastnAnnotations)
+            for (ann in alignmentAnnotations)
             {
                 writeVDJSequence(printer, ann)
             }
         }
     }
 
-    private fun writeVDJSequence(csvPrinter: CSVPrinter, blastnAnnotation: BlastnAnnotation)
+    private fun writeVDJSequence(csvPrinter: CSVPrinter, alignmentAnnotation: AlignmentAnnotation)
     {
-        val typeMatch = listOf(Triple(MatchType.V, blastnAnnotation.vGene, blastnAnnotation.vMatch),
-            Triple(MatchType.D, blastnAnnotation.dGene, blastnAnnotation.dMatch),
-            Triple(MatchType.J, blastnAnnotation.jGene, blastnAnnotation.jMatch),
-            Triple(MatchType.full, null, blastnAnnotation.fullMatch))
+        val typeMatch = listOf(Triple(MatchType.V, alignmentAnnotation.vGene, alignmentAnnotation.vMatch),
+            Triple(MatchType.D, alignmentAnnotation.dGene, alignmentAnnotation.dMatch),
+            Triple(MatchType.J, alignmentAnnotation.jGene, alignmentAnnotation.jMatch),
+            Triple(MatchType.full, null, alignmentAnnotation.fullMatch))
 
         for ((type, gene, match) in typeMatch)
         {
@@ -77,8 +77,8 @@ object BlastnMatchTsvWriter
             {
                 when (c)
                 {
-                    Column.cdr3Seq -> csvPrinter.print(blastnAnnotation.vdjSequence.cdr3Sequence)
-                    Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(blastnAnnotation.vdjSequence))
+                    Column.cdr3Seq -> csvPrinter.print(alignmentAnnotation.vdjSequence.cdr3Sequence)
+                    Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(alignmentAnnotation.vdjSequence))
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneName)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())

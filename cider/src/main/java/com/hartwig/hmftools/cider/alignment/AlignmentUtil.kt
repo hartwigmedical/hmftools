@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cider.blastn
+package com.hartwig.hmftools.cider.alignment
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
@@ -18,7 +18,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
 
-object BlastnUtil
+object AlignmentUtil
 {
     // For the scoring function, the match/mismatch score 1/-4 optimizes the scoring for 100% identical sequences and 1/-1 for 75% identical
     // sequences. The default for NCBI Blastn is 2/-3, which is optimal for 89% identical sequences. BWA uses 1/-4.
@@ -72,6 +72,7 @@ object BlastnUtil
         return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, if (isPrimaryAssembly(assembly)) null else assembly)
     }
 
+    // TODO: get rid of this?
     fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
                   expectedValueCutoff: Double)
             : Multimap<Int, BlastnMatch>
@@ -112,10 +113,10 @@ object BlastnUtil
         }
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, numThreads: Int)
-            : Multimap<Int, BwaMemMatch>
+    fun runBwaMem(sequences: Map<Int, String>, numThreads: Int): Multimap<Int, BwaMemMatch>
     {
-        loadAlignerLibrary(null);
+        loadAlignerLibrary(null)
+        // TODO
         val refGenomeFasta = "/Users/reecejones/GenomicData/GRCh38/GRCh38_masked_exclusions_alts_hlas.fasta"
         val refGenome = loadRefGenome(refGenomeFasta);
         val index = BwaMemIndex(refGenomeFasta + ".img.hmftools-bwa-jni")
@@ -160,9 +161,6 @@ object BlastnUtil
                 val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.size - alignment.seqStart }
                 require(queryAlignStart <= queryAlignEnd)
                 val alignedQuerySeq = querySeq.copyOfRange(queryAlignStart, queryAlignEnd)
-//                println("ref " + String(refSeq))
-//                println("que " + String(querySeq))
-//                println("aln " + String(alignedQuerySeq))
                 val percentIdentity = calcPercentIdentity(refSeq, alignedQuerySeq)
                 val resAlignment = BwaMemMatch(
                     sequences[key.value]!!,
@@ -174,8 +172,7 @@ object BlastnUtil
                     alignment.refEnd,
                     strand,
                     alignment.alignerScore,
-                    // Match the previous Blastn result, which only showed up to 3 decimal places
-                    round(percentIdentity * 1000) / 1000
+                    percentIdentity
                 )
                 results.put(key.value, resAlignment)
             }

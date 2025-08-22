@@ -3,9 +3,9 @@ package com.hartwig.hmftools.cider
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
-import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
-import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
-import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.alignment.AlignmentAnnotation
+import com.hartwig.hmftools.cider.alignment.AlignmentAnnotator
+import com.hartwig.hmftools.cider.alignment.AlignmentStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
@@ -100,25 +100,25 @@ class CiderApplication(configBuilder: ConfigBuilder)
         }
 
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
-        val blastnAnnotations: Collection<BlastnAnnotation>
+        val alignmentAnnotations: Collection<AlignmentAnnotation>
 
         if (true)
         {
-            // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
+            // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
 
-            // perform a GC collection before running blastn. This is to reduce memory used by JVM
+            // perform a GC collection before running alignment. This is to reduce memory used by JVM
             System.gc()
 
-            val blastnAnnotator = BlastnAnnotator()
-            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, filteredVdjs, mParams.outputDir, mParams.threadCount)
+            val alignmentAnnotator = AlignmentAnnotator()
+            alignmentAnnotations = alignmentAnnotator.runAnnotate(mParams.sampleId, filteredVdjs, mParams.outputDir, mParams.threadCount)
         }
         else
         {
-            blastnAnnotations = emptyList()
+            alignmentAnnotations = emptyList()
         }
 
-        var vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, blastnAnnotations, primerMatchList)
+        var vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, alignmentAnnotations, primerMatchList)
 
         // apply hard filters
         vdjAnnotations = vdjAnnotations.filter { vdjAnnotation -> passesHardFilters(vdjAnnotation) }
@@ -253,17 +253,17 @@ class CiderApplication(configBuilder: ConfigBuilder)
         // filter out sequences that are too short and only has V or J
         if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.MIN_LENGTH))
         {
-            if (vdjAnnotation.blastnAnnotation == null)
+            if (vdjAnnotation.alignmentAnnotation == null)
             {
-                // if blastn is not run, we use NO_V_ANCHOR / NO_J_ANCHOR
+                // if alignment is not run, we use NO_V_ANCHOR / NO_J_ANCHOR
                 if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_V_ANCHOR) ||
                     vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_J_ANCHOR))
                 {
                     return false
                 }
             }
-            else if (vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.V_ONLY ||
-                    vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.J_ONLY)
+            else if (vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.V_ONLY ||
+                    vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.J_ONLY)
             {
                 return false
             }

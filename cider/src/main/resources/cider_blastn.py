@@ -342,7 +342,7 @@ def process_blastn_result(df: pd.DataFrame, gene_finder: GeneFinder) -> pd.DataF
             else:
                 return "NO_VDJ_ALIGNMENT"
 
-    seq_gene_df["blastnStatus"] = seq_gene_df.fillna("").apply(blastn_status, axis=1).fillna("NO_ALIGNMENT")
+    seq_gene_df["alignmentStatus"] = seq_gene_df.fillna("").apply(blastn_status, axis=1).fillna("NO_ALIGNMENT")
 
     # now we can merge this back to the original sequence
     return seq_gene_df
@@ -406,7 +406,7 @@ def main():
         "jPIdent",
         "jAlignStart",
         "jAlignEnd",
-        "blastnStatus"], inplace=True, errors='ignore')
+        "alignmentStatus"], inplace=True, errors='ignore')
 
     # strip out the tsv / csv / .gz
     file_prefix = re.sub("(\.[tc]sv\.gz)|(\.[tc]sv)", "", os.path.basename(args.in_tsv))
@@ -441,7 +441,7 @@ def main():
 
     # now merge the results back into the vdj_df
     vdj_df = vdj_df.merge(seq_gene_df, how="left", left_index=True, right_on="qseqid").drop("qseqid", axis=1)
-    vdj_df["blastnStatus"] = vdj_df["blastnStatus"].fillna("SKIPPED_BLASTN")
+    vdj_df["alignmentStatus"] = vdj_df["alignmentStatus"].fillna("SKIPPED_ALIGN")
 
     # fix the V D J aligned positions to be in terms of the full seq
     for s in ['v', 'd', 'j']:

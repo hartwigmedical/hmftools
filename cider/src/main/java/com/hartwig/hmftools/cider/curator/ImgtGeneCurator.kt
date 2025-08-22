@@ -8,8 +8,8 @@ import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
-import com.hartwig.hmftools.cider.blastn.BlastnUtil
-import com.hartwig.hmftools.cider.blastn.BlastnUtil.PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.alignment.AlignmentUtil
+import com.hartwig.hmftools.cider.alignment.AlignmentUtil.PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ
@@ -479,7 +479,7 @@ class ImgtGeneCurator
             var key = 0
             val keyToGeneDataMap: Map<Int, ImgtGeneData> = imgtGeneDataList.associateBy { ++key }
 
-            val blastnResults: Multimap<Int, BlastnMatch> = BlastnUtil.runBlastn(
+            val blastnResults: Multimap<Int, BlastnMatch> = AlignmentUtil.runBlastn(
                 "imgt", blastn, blastDb,
                 keyToGeneDataMap.mapValues { geneData -> geneData.value.sequenceWithoutGaps },
                 workdir, numThreads, BLASTN_EVALUE_CUTOFF)
@@ -503,7 +503,7 @@ class ImgtGeneCurator
 
                 for (match in matches)
                 {
-                    val matchLocation = BlastnUtil.toGenomicLocation(match)
+                    val matchLocation = AlignmentUtil.toGenomicLocation(match)
 
                     if (matchLocation == null)
                     {
@@ -662,7 +662,7 @@ class ImgtGeneCurator
             // we need to correct for the ends to make sure things align properly
             val startExtend = match.queryAlignStart - 1
             val endExtend = match.querySeqLen - match.queryAlignEnd
-            val matchGenomicLoc = BlastnUtil.toGenomicLocation(match)!!
+            val matchGenomicLoc = AlignmentUtil.toGenomicLocation(match)!!
 
             if (startExtend == 0 && endExtend == 0)
             {
