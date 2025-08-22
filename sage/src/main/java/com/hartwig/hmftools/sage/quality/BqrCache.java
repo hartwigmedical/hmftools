@@ -19,6 +19,8 @@ public class BqrCache
     private final Map<String,BqrRecordMap> mSampleRecalibrationMap;
     private boolean mIsValid;
 
+    private byte mMaxRawQual;
+
     public BqrCache(final SageConfig config, final List<String> tumorIds)
     {
         mConfig = config;
@@ -26,6 +28,7 @@ public class BqrCache
 
         mSampleRecalibrationMap = Maps.newHashMap();
         mIsValid = true;
+        mMaxRawQual = 0;
 
         if(mConfig.SkipBqr)
         {
@@ -38,12 +41,12 @@ public class BqrCache
     }
 
     public boolean isValid(){ return mIsValid; }
+    public byte maxRawQual() { return mMaxRawQual; }
 
     public Map<String,BqrRecordMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
 
     private void loadBqrFiles()
     {
-
         Map<String,String> sampleFileNames = Maps.newHashMap();
         String outputDir = mConfig.outputDir();
         mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, BqrFile.generateFilename(outputDir, x)));
@@ -54,16 +57,18 @@ public class BqrCache
             String sampleId = entry.getKey();
             String filename = entry.getValue();
 
-            final List<BqrRecord> counts = BqrFile.read(filename);
+            List<BqrRecord> bqrRecords = BqrFile.read(filename);
 
-            if(counts == null)
+            if(bqrRecords == null)
             {
                 mIsValid = false;
                 return;
             }
 
-            SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, counts.size(), filename);
-            mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(counts));
+            mMaxRawQual = (byte)bqrRecords.stream().mapToInt(x -> x.Key.Quality).max().orElse(0);
+
+            SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, bqrRecords.size(), filename);
+            mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(bqrRecords));
         }
     }
 

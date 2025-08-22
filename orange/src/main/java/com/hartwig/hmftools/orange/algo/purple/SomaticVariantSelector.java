@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.cuppa.CuppaCommon;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
@@ -16,11 +17,11 @@ import org.jetbrains.annotations.Nullable;
 
 final class SomaticVariantSelector
 {
-    static final Set<String> CUPPA_GENES = Sets.newHashSet("ALB", "SFTPB", "SLC34A2");
+    static final Set<String> CUPPA_GENES = Sets.newHashSet(
+            CuppaCommon.INDEL_ALB, CuppaCommon.INDEL_SFTPB, CuppaCommon.INDEL_SLC34A2);
 
-    @NotNull
-    public static List<PurpleVariant> selectInterestingUnreportedVariants(@NotNull List<PurpleVariant> allSomaticVariants,
-            @NotNull List<PurpleVariant> reportedSomaticVariants, @NotNull List<DriverGene> driverGenes)
+    public static List<PurpleVariant> selectInterestingUnreportedVariants(
+            final List<PurpleVariant> allSomaticVariants, final List<PurpleVariant> reportedSomaticVariants, final List<DriverGene> driverGenes)
     {
         List<PurpleVariant> filtered = Lists.newArrayList();
         for(PurpleVariant variant : allSomaticVariants)
@@ -35,7 +36,7 @@ final class SomaticVariantSelector
                 boolean isUnreportedSpliceVariant = isUnreportedSpliceVariant(variant, driverGenes);
 
                 if(isAtLeastNearHotspot || isExonicAndHasPhasedReportedVariant || isCuppaRelevantVariant || isSynonymousButReportable
-                        || isUnreportedSpliceVariant)
+                || isUnreportedSpliceVariant)
                 {
                     filtered.add(variant);
                 }
@@ -44,8 +45,7 @@ final class SomaticVariantSelector
         return filtered;
     }
 
-    private static boolean hasReportedVariantWithPhase(@NotNull List<PurpleVariant> reportedVariants,
-            @Nullable List<Integer> targetPhaseSets)
+    private static boolean hasReportedVariantWithPhase(final List<PurpleVariant> reportedVariants, @Nullable List<Integer> targetPhaseSets)
     {
         if(targetPhaseSets == null)
         {
@@ -64,7 +64,7 @@ final class SomaticVariantSelector
         return false;
     }
 
-    private static boolean hasMatchingPhase(@NotNull List<Integer> localPhaseSets, @NotNull List<Integer> targetPhaseSets)
+    private static boolean hasMatchingPhase(final List<Integer> localPhaseSets, final List<Integer> targetPhaseSets)
     {
         for(Integer localPhaseSet : localPhaseSets)
         {
@@ -76,16 +76,18 @@ final class SomaticVariantSelector
         return false;
     }
 
-    private static boolean isExonic(@NotNull PurpleVariant variant) {
+    private static boolean isExonic(final PurpleVariant variant) {
         return variant.canonicalImpact().affectedExon() != null;
     }
 
-    private static boolean isRelevantForCuppa(@NotNull PurpleVariant variant)
+    private static boolean isRelevantForCuppa(final PurpleVariant variant)
     {
-        return variant.type() == PurpleVariantType.INDEL && CUPPA_GENES.contains(variant.gene()) && variant.repeatCount() <= 6;
+        return variant.type() == PurpleVariantType.INDEL
+            && CUPPA_GENES.contains(variant.gene())
+            && variant.repeatCount() <= CuppaCommon.INDEL_MAX_REPEAT_COUNT;
     }
 
-    private static boolean isSynonymousWithReportableWorstImpact(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes)
+    private static boolean isSynonymousWithReportableWorstImpact(final PurpleVariant variant, final List<DriverGene> driverGenes)
     {
         if(variant.canonicalImpact().codingEffect() != PurpleCodingEffect.SYNONYMOUS)
         {
@@ -105,7 +107,7 @@ final class SomaticVariantSelector
         return nonsenseOrFrameshift || splice || missense;
     }
 
-    private static boolean isUnreportedSpliceVariant(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes)
+    private static boolean isUnreportedSpliceVariant(final PurpleVariant variant, final List<DriverGene> driverGenes)
     {
         if(variant.canonicalImpact().inSpliceRegion())
         {
@@ -119,7 +121,7 @@ final class SomaticVariantSelector
     }
 
     @Nullable
-    private static DriverGene findDriverGene(@NotNull List<DriverGene> driverGenes, @NotNull String geneToFind)
+    private static DriverGene findDriverGene(final List<DriverGene> driverGenes, @NotNull String geneToFind)
     {
         for(DriverGene driverGene : driverGenes)
         {

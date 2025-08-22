@@ -31,7 +31,7 @@ class HlaAlleleFreqNormaliser:
         logging.info("Parsing column values...")
 
         df["sample_size"] = df["sample_size"].str.replace(",", "").astype(int)
-        df["allele_frequency"] = df["allele_frequency"].str.replace("(*)", "").astype(float)
+        df["allele_frequency"] = df["allele_frequency"].astype(str).str.replace("(*)", "").astype(float)
         df["study_weight"] = np.minimum(df["sample_size"], HlaAlleleFreqNormaliser.SAMPLE_SIZE_CAP)
         df["approx_observations"] = df["allele_frequency"] * df["sample_size"]
 

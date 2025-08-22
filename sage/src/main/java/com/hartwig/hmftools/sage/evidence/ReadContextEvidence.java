@@ -109,9 +109,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
         BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
-        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome, mMsiJitterCalcs);
+        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mMsiJitterCalcs);
 
-        List<ReadContextCounter> allReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
+        List<ReadContextCounter> allReadCounters = mFactory.create(candidates, mConfig, mRefGenome, qualityCalculator, sample);
 
         // read contexts will always be valid for calling, but may be invalid for appending evidence
         mReadCounters = allReadCounters.stream().filter(x -> x.readContext().isValid()).collect(Collectors.toList());

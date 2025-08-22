@@ -268,7 +268,7 @@ public class RefGenomeMicrosatellitesFinder
                     populateMappability(r, mGcProfiles);
 
                     // put all into multimap
-                    mAllMicrosatelliteSites.put(new UnitRepeatKey(UnitKey.fromUnit(r.unitString()), r.numRepeat), r);
+                    mAllMicrosatelliteSites.put(new UnitRepeatKey(UnitKey.fromUnit(r.unitString()), r.RepeatCount), r);
                 });
 
         // now do downsampling
@@ -519,9 +519,8 @@ public class RefGenomeMicrosatellitesFinder
     private static void populateMappability(
             final RefGenomeMicrosatellite refGenomeMicrosatellite, final Map<String,List<GCProfile>> gcProfileMap)
     {
-        // populate the mappability
         List<GCProfile> gcProfiles = gcProfileMap.get(refGenomeMicrosatellite.chromosome());
-        int siteMid = refGenomeMicrosatellite.genomeRegion.start() + (refGenomeMicrosatellite.genomeRegion.baseLength()) / 2;
+        int siteMid = refGenomeMicrosatellite.Region.start() + (refGenomeMicrosatellite.Region.baseLength()) / 2;
 
         GCProfile endKey = ImmutableGCProfile.builder().from(gcProfiles.get(0)).end(siteMid).build();
 
@@ -537,13 +536,13 @@ public class RefGenomeMicrosatellitesFinder
         if(index < gcProfiles.size())
         {
             GCProfile gcProfile = gcProfiles.get(index);
-            Validate.isTrue(gcProfile.overlaps(refGenomeMicrosatellite.genomeRegion.genomeRegion()));
-            refGenomeMicrosatellite.mappability = gcProfile.mappablePercentage();
+            Validate.isTrue(gcProfile.overlaps(refGenomeMicrosatellite.Region.genomeRegion()));
+            refGenomeMicrosatellite.setMappability(gcProfile.mappablePercentage());
         }
         else
         {
-            refGenomeMicrosatellite.mappability = 0.0;
-            MSI_LOGGER.warn("microsatellite site: {} gc profile not found.", refGenomeMicrosatellite.genomeRegion);
+            refGenomeMicrosatellite.setMappability(0);
+            MSI_LOGGER.warn("microsatellite site({}) gc profile not found", refGenomeMicrosatellite.Region);
         }
     }
 
@@ -606,7 +605,7 @@ public class RefGenomeMicrosatellitesFinder
         {
             for(RefGenomeMicrosatellite r : allList)
             {
-                if(r.mappability < mappabilityCutoff)
+                if(r.mappability() < mappabilityCutoff)
                 {
                     continue;
                 }
@@ -615,7 +614,7 @@ public class RefGenomeMicrosatellitesFinder
                 for(BaseRegion region : regionsToKeep.get(r.chromosome()))
                 {
                     if(positionsOverlap(
-                            r.genomeRegion.start(), r.genomeRegion.end(),
+                            r.Region.start(), r.Region.end(),
                             region.start() - bedRegionExpansion, region.end() + bedRegionExpansion))
                     {
                         isInBed = true;

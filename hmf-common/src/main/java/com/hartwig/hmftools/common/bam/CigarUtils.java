@@ -339,57 +339,6 @@ public final class CigarUtils
         return NO_POSITION_INFO;
     }
 
-    @Nullable
-    public static List<CigarElement> replaceXwithM(final List<CigarElement> cigarElements)
-    {
-        boolean includesMismatchCigarOp = cigarElements.stream().anyMatch(el -> el.getOperator() == X);
-
-        if(!includesMismatchCigarOp)
-            return null;
-
-        List<CigarElement> newCigarElements = Lists.newArrayList();
-        CigarElement lastElement = null;
-
-        for(CigarElement element : cigarElements)
-        {
-            if(element.getOperator() == M && lastElement != null && lastElement.getOperator() == M)
-            {
-                lastElement = new CigarElement(lastElement.getLength() + element.getLength(), M);
-                newCigarElements.set(newCigarElements.size() - 1, lastElement);
-                continue;
-            }
-
-            if(element.getOperator() != X)
-            {
-                lastElement = element;
-                newCigarElements.add(element);
-                continue;
-            }
-
-            if(lastElement == null || lastElement.getOperator() != M)
-            {
-                lastElement = new CigarElement(element.getLength(), M);
-                newCigarElements.add(lastElement);
-                continue;
-            }
-
-            lastElement = new CigarElement(lastElement.getLength() + element.getLength(), M);
-            newCigarElements.set(newCigarElements.size() - 1, lastElement);
-        }
-
-        return newCigarElements;
-    }
-
-    public static void replaceXwithM(final SAMRecord record)
-    {
-        List<CigarElement> newCigarElements = replaceXwithM(record.getCigar().getCigarElements());
-
-        if(newCigarElements == null) // nothing was changed
-            return;
-
-        record.setCigar(new Cigar(newCigarElements));
-    }
-
     public static List<CigarElement> collapseCigarOps(final List<CigarOperator> ops)
     {
         List<CigarElement> elems = Lists.newArrayList();

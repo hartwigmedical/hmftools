@@ -395,11 +395,10 @@ public class JitterTest
         VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
         ReadContextCounter readContextCounter = createReadCounter(0, readContext);
 
-        JitterData jitterData = new JitterData();
+        JitterData jitterData = readContextCounter.jitter();
 
         // lengthened is noise
-        jitterData.setValues(10, 10);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(10, 10, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -407,8 +406,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // shortened is noise
-        jitterData.setValues(5, 35);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(5, 35, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -416,8 +414,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // both noise
-        jitterData.setValues(5, 2);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(5, 2, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -425,8 +422,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // shortened too high
-        jitterData.setValues(21, 1);
-        readContextCounter.readSupportCounts().Full = 10;
+        jitterData.setValues(21, 1, 10);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -434,8 +430,7 @@ public class JitterTest
         assertEquals(1, jitterData.qualBoost(), 0.01);
 
         // again for lengthened
-        jitterData.setValues(1, 60);
-        readContextCounter.readSupportCounts().Full = 2;
+        jitterData.setValues(1, 60, 2);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -443,8 +438,7 @@ public class JitterTest
         assertEquals(1, jitterData.qualBoost(), 0.01);
 
         // combined
-        jitterData.setValues(126, 126);
-        readContextCounter.readSupportCounts().Full = 35;
+        jitterData.setValues(126, 126, 35);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 

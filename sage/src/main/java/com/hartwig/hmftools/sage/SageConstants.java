@@ -23,20 +23,8 @@ public class SageConstants
     public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
 
-    // base quality recalibration
-    public static final double BQR_DUAL_AF_LOW = 0.01;
-    public static final double BQR_DUAL_AF_HIGH = 0.075;
-    public static final int BQR_DUAL_AD = 2;
-
-    public static final double BQR_NON_DUAL_AF_LOW = 0.05;
-    public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
-    public static final int BQR_NON_DUAL_AD = 3;
-
-    public static final int BQR_SAMPLE_SIZE = 2_000_000;
-    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
-
     // read evidence
-    public static final int MATCHING_BASE_QUALITY = 20;
+    public static final byte MATCHING_BASE_QUALITY = 20;
     public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
     public static final int FLANK_LOW_QUAL_MISMATCHES = 3;
     public static final double SC_READ_EVENTS_FACTOR = 12;
@@ -82,6 +70,10 @@ public class SageConstants
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
+
+    // CHECK: whehther or how to set these
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY = 20;
+    public static final int ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
 
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5

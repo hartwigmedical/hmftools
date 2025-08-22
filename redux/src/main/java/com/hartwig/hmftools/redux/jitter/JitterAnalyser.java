@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamSlicerFilter;
 import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterModelParams;
@@ -34,7 +33,6 @@ import htsjdk.samtools.SAMRecord;
 public class JitterAnalyser
 {
     private final JitterAnalyserConfig mConfig;
-    private final BamSlicerFilter mBamSlicerFilter;
     private final SampleReadProcessor mSampleReadProcessor;
 
     private EnumSet<ConsensusType> mConsensusTypes;
@@ -43,18 +41,11 @@ public class JitterAnalyser
     {
         mConfig = config;
 
-        mBamSlicerFilter = new BamSlicerFilter(config.MinMappingQuality, false, false, false);
-
         List<RefGenomeMicrosatellite> refGenomeMicrosatellites = loadRefGenomeMicrosatellites();
-        ConsensusMarker consensusMarker = ConsensusMarker.create(config);
+        ConsensusMarker consensusMarker = ConsensusMarker.create();
         mSampleReadProcessor = new SampleReadProcessor(config, refGenomeMicrosatellites, consensusMarker);
 
         mConsensusTypes = null;
-    }
-
-    public BamSlicerFilter bamSlicerFilter()
-    {
-        return mBamSlicerFilter;
     }
 
     public void processRead(final SAMRecord read)
@@ -77,7 +68,8 @@ public class JitterAnalyser
 
         // now write out all the repeat stats
         if(mConfig.WriteSiteFile)
-            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
+            MicrosatelliteSiteFile.write(MicrosatelliteSiteFile.generateFilename(
+                    mConfig.OutputDir, mConfig.SampleId), microsatelliteSiteAnalysers, consensusTypes());
 
         final String statsTableFile = JitterCountsTableFile.generateFilename(mConfig.OutputDir, mConfig.SampleId);
         writeMicrosatelliteStatsTable(microsatelliteSiteAnalysers, statsTableFile);
@@ -151,7 +143,7 @@ public class JitterAnalyser
 
                 // get all the read counts into a row object
                 JitterTableRow row = new JitterTableRow(
-                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().numRepeat, newTable.RepeatUnit, newTable.ConsensusType);
+                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().RepeatCount, newTable.RepeatUnit, newTable.ConsensusType);
 
                 for(Map.Entry<Integer, Integer> entry : microsatelliteSiteAnalyser.passingJitterCounts(consensusType).entrySet())
                 {

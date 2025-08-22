@@ -28,12 +28,12 @@ public class MicrosatelliteSelector
         {
             if(mUnitLengthMax == null)
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length == mUnitLengthMin;
+                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length == mUnitLengthMin;
             }
             else
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length >= mUnitLengthMin &&
-                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().unit.length <= mUnitLengthMax;
+                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length >= mUnitLengthMin &&
+                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length <= mUnitLengthMax;
             }
         }
         return false;

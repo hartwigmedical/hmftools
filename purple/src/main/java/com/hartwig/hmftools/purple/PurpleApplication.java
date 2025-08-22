@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.driver.AmplificationDrivers;
-import com.hartwig.hmftools.common.driver.DeletionDrivers;
+import com.hartwig.hmftools.purple.drivers.AmplificationDrivers;
+import com.hartwig.hmftools.purple.drivers.DeletionDrivers;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -52,6 +53,8 @@ import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeCopyNumbers;
 import com.hartwig.hmftools.purple.fitting.BestFit;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.fitting.PurityPloidyFitter;
@@ -70,6 +73,10 @@ import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumbers;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsDataSource;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -368,6 +375,10 @@ public class PurpleApplication
             TargetRegionsCopyNumberFile.write(fileName, copyNumberData);
         }
 
+        ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers);
+        String fileName = ChromosomeArmCopyNumbersFile.generateFilename(mConfig.OutputDir, tumorId);
+        ChromosomeArmCopyNumbersFile.write(fileName, ccm.data());
+
         if(mConfig.RunDrivers)
         {
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);
@@ -427,9 +438,8 @@ public class PurpleApplication
 
             somaticDriverCatalog.addAll(ampDrivers);
 
-            DeletionDrivers delDriverFinder = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
-
-            List<DriverCatalog> delDrivers = delDriverFinder.deletions(geneCopyNumbers, mConfig.TargetRegionsMode);
+            List<DriverCatalog> delDrivers = DeletionDrivers.findDeletions(
+                    purityContext.qc().status(), mReferenceData.DriverGenes, geneCopyNumbers, mConfig.TargetRegionsMode);
 
             somaticDriverCatalog.addAll(delDrivers);
 

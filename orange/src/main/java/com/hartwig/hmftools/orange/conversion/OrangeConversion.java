@@ -51,7 +51,7 @@ public final class OrangeConversion
                 .pctExcAdapter(0.0)
                 .pctExcMapQ(metricsSummary.lowMapQualPercent())
                 .pctExcDupe(metricsSummary.duplicatePercent())
-                .pctExcUnpaired(metricsSummary.unpairedPercent())
+                .pctExcUnpaired(metricsSummary.unmappedPercent())
                 .pctExcBaseQ(metricsSummary.lowBaseQualPercent())
                 .pctExcOverlap(metricsSummary.overlappingReadPercent())
                 .pctExcCapped(metricsSummary.cappedCoveragePercent())

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.utils;
 
 import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
@@ -154,6 +156,9 @@ public class GeneTestUtils
                 .reportDeletion(false)
                 .reportDisruption(true)
                 .reportAmplification(false)
+                .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
+                .reportHetDeletion(false)
+                .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(false)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)

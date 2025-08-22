@@ -9,11 +9,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 
 import java.util.Collection;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
@@ -63,15 +63,12 @@ public class BqrRegionReader implements CigarHandler
     private int mTotalAltsFiltered;
 
     private ConsensusType mCurrentReadType;
-    private final SequencingType mSequencingType;
 
     public static final int REF_BASE_REGION_SIZE = 100000;
     private static final int BASE_DATA_PURGE_POS_BUFFER = 10;
     private static final int BASE_DATA_PURGE_POS_CHECK = 1000;
 
-    public BqrRegionReader(
-            final SequencingType sequencingType, final RefGenomeInterface refGenome, final BaseQualityResults results,
-            final List<ChrBaseRegion> allRegions)
+    public BqrRegionReader(final RefGenomeInterface refGenome, final BaseQualityResults results, final List<ChrBaseRegion> allRegions)
     {
         mRefGenome = refGenome;
         mResults = results;
@@ -82,7 +79,6 @@ public class BqrRegionReader implements CigarHandler
         mHasActiveRegion = false;
 
         mCurrentReadType = ConsensusType.NONE;
-        mSequencingType = sequencingType;
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
@@ -277,6 +273,9 @@ public class BqrRegionReader implements CigarHandler
 
     private void setShortFragmentBoundaries(final SAMRecord record)
     {
+        if(!record.getReadPairedFlag())
+            return;
+
         // ensure we don’t read past insert size on 3’ end of short fragments
         mMinReadStartPosition = SHORT_FRAG_BOUNDARY_NONE;
         mMaxReadEndPosition = SHORT_FRAG_BOUNDARY_NONE;
@@ -379,10 +378,10 @@ public class BqrRegionReader implements CigarHandler
 
             byte quality = record.getBaseQualities()[readIndex];
 
-            if(quality <= BASE_QUAL_MINIMUM) // no recalibration for the minimum value
+            if(BaseQualAdjustment.isUncertainBaseFromQual(quality))
                 continue;
 
-            if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
+            if(isUltima() && quality < ULTIMA_MAX_QUAL)
                 continue;
 
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);

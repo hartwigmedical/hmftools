@@ -1,35 +1,34 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
+import static com.hartwig.hmftools.common.driver.DriverCategory.ONCO;
+import static com.hartwig.hmftools.common.driver.DriverCategory.TSG;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.driver.AmplificationDrivers;
-import com.hartwig.hmftools.common.driver.DeletionDrivers;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
-import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGenePanel;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
+import com.hartwig.hmftools.common.purple.ReportableStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -56,33 +55,27 @@ import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
-    @NotNull
     private final PurpleVariantFactory purpleVariantFactory;
-    @NotNull
     private final GermlineGainDeletionFactory germlineGainDelFactory;
-    @NotNull
     private final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory;
-    @NotNull
     private final List<DriverGene> driverGenes;
-    @NotNull
     private final LinxRecord linx;
-    @NotNull
     private final ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer;
+
     @Nullable
     private final ChordData chord;
     boolean convertGermlineToSomatic;
 
-    public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
-            @NotNull final GermlineGainDeletionFactory germlineGainDeletionFactory,
-            @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
-            @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx,
-            @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer,
+    public PurpleInterpreter(final PurpleVariantFactory purpleVariantFactory,
+            final GermlineGainDeletionFactory germlineGainDeletionFactory,
+            final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
+            final List<DriverGene> driverGenes, final LinxRecord linx,
+            ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer,
             @Nullable final ChordData chord,
             boolean convertGermlineToSomatic)
     {
@@ -96,43 +89,41 @@ public class PurpleInterpreter
         this.convertGermlineToSomatic = convertGermlineToSomatic;
     }
 
-    @NotNull
-    public PurpleRecord interpret(@NotNull PurpleData purple)
+    public PurpleRecord interpret(final PurpleData purple)
     {
         LOGGER.info("Analysing purple data");
 
         List<PurpleVariant> allSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
 
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
-        List<PurpleVariant> additionalSuspectSomaticVariants =
-                SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
-        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
+
+        List<PurpleVariant> additionalSuspectSomaticVariants = SomaticVariantSelector.selectInterestingUnreportedVariants(
+                allSomaticVariants, reportableSomaticVariants, driverGenes);
+
+        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting",
+                additionalSuspectSomaticVariants.size());
 
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
         List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
-        List<PurpleVariant> additionalSuspectGermlineVariants =
-                GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
+        List<PurpleVariant> additionalSuspectGermlineVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(
+                allGermlineVariants);
+
         if(additionalSuspectGermlineVariants != null)
         {
             LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
                     additionalSuspectGermlineVariants.size());
         }
 
-        List<PurpleGainDeletion> allSomaticGainsDels =
-                extractAllGainsDels(purple.purityContext().qc().status(), purple.purityContext().gender(), purple.purityContext()
-                        .bestFit()
-                        .ploidy(), purple.purityContext().targeted(), purple.allSomaticGeneCopyNumbers());
+        List<PurpleGainDeletion> allSomaticGainsDels = extractAllGainsDels(purple.allSomaticGeneCopyNumbers());
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
-        List<PurpleGainDeletion> nearReportableSomaticGains =
-                CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(), purple.purityContext()
-                        .bestFit()
-                        .ploidy(), allSomaticGainsDels, driverGenes);
+        List<PurpleGainDeletion> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(
+                purple.allSomaticGeneCopyNumbers(), purple.purityContext().bestFit().ploidy(), allSomaticGainsDels, driverGenes);
         LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
                 nearReportableSomaticGains.size());
 
-        List<PurpleGainDeletion> additionalSuspectSomaticGainsDels =
-                CopyNumberSelector.selectInterestingUnreportedGainsDels(allSomaticGainsDels, reportableSomaticGainsDels);
+        List<PurpleGainDeletion> additionalSuspectSomaticGainsDels = CopyNumberSelector.selectInterestingUnreportedGainsDels(
+                allSomaticGainsDels, reportableSomaticGainsDels);
         LOGGER.info(" Found an additional {} somatic gains/deletions that are potentially interesting",
                 additionalSuspectSomaticGainsDels.size());
 
@@ -204,11 +195,10 @@ public class PurpleInterpreter
                 .build();
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<GermlineDeletion> implyDeletionsFromBreakends(@NotNull List<GermlineDeletion> allGermlineDeletions,
-            @Nullable List<LinxBreakend> reportableGermlineBreakends, @NotNull List<StructuralVariant> allPurpleGermlineSvs,
-            @Nullable List<LinxSvAnnotation> allLinxGermlineSvAnnotations, @NotNull List<DriverGene> driverGenes)
+    static List<GermlineDeletion> implyDeletionsFromBreakends(final List<GermlineDeletion> allGermlineDeletions,
+            @Nullable List<LinxBreakend> reportableGermlineBreakends, final List<StructuralVariant> allPurpleGermlineSvs,
+            @Nullable List<LinxSvAnnotation> allLinxGermlineSvAnnotations, final List<DriverGene> driverGenes)
     {
         if(reportableGermlineBreakends == null || allLinxGermlineSvAnnotations == null)
         {
@@ -253,8 +243,8 @@ public class PurpleInterpreter
         return impliedDeletions;
     }
 
-    private static boolean wouldBeReportableGermlineDeletion(@NotNull String gene, @NotNull GermlineStatus tumorStatus,
-            @NotNull List<DriverGene> driverGenes)
+    private static boolean wouldBeReportableGermlineDeletion(
+            final String gene, final GermlineStatus tumorStatus, final List<DriverGene> driverGenes)
     {
         Optional<DriverGene> optionalDriverGene = driverGenes.stream().filter(d -> d.gene().equals(gene)).findFirst();
         if(optionalDriverGene.isEmpty())
@@ -282,8 +272,8 @@ public class PurpleInterpreter
     }
 
     @Nullable
-    private static StructuralVariant findBySvId(@NotNull List<StructuralVariant> allPurpleSvs,
-            @NotNull List<LinxSvAnnotation> allLinxSvAnnotations, int svIdToFind)
+    private static StructuralVariant findBySvId(final List<StructuralVariant> allPurpleSvs,
+            final List<LinxSvAnnotation> allLinxSvAnnotations, int svIdToFind)
     {
         LinxSvAnnotation match = null;
         int index = 0;
@@ -312,7 +302,7 @@ public class PurpleInterpreter
         return null;
     }
 
-    private static boolean hasGermlineDeletionInGene(@NotNull List<GermlineDeletion> germlineDeletions, @NotNull String geneToFind)
+    private static boolean hasGermlineDeletionInGene(final List<GermlineDeletion> germlineDeletions, final String geneToFind)
     {
         for(GermlineDeletion deletion : germlineDeletions)
         {
@@ -325,8 +315,7 @@ public class PurpleInterpreter
         return false;
     }
 
-    @NotNull
-    private static List<PurpleGainDeletion> selectReportablegainDels(@NotNull Map<PurpleGainDeletion, Boolean> fullDelToReportability)
+    private static List<PurpleGainDeletion> selectReportablegainDels(final Map<PurpleGainDeletion, Boolean> fullDelToReportability)
     {
         List<PurpleGainDeletion> reportable = Lists.newArrayList();
         for(Map.Entry<PurpleGainDeletion, Boolean> entry : fullDelToReportability.entrySet())
@@ -341,9 +330,8 @@ public class PurpleInterpreter
         return reportable;
     }
 
-    @NotNull
     private static List<PurpleLossOfHeterozygosity> selectReportableLossOfHeterozygosities(
-            @NotNull Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability)
+            final Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability)
     {
         List<PurpleLossOfHeterozygosity> reportable = Lists.newArrayList();
         for(Map.Entry<PurpleLossOfHeterozygosity, Boolean> entry : lossOfHeterozygosityToReportability.entrySet())
@@ -358,48 +346,44 @@ public class PurpleInterpreter
         return reportable;
     }
 
-    @NotNull
-    private static List<PurpleGainDeletion> extractAllGainsDels(@NotNull Set<PurpleQCStatus> qcStatus, @NotNull Gender gender, double ploidy,
-            boolean isTargetRegions, @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
+    private static List<PurpleGainDeletion> extractAllGainsDels(final List<GeneCopyNumber> allGeneCopyNumbers)
     {
-        List<DriverGene> allGenes = Lists.newArrayList();
-        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
-        {
-            allGenes.add(ImmutableDriverGene.builder()
-                    .gene(geneCopyNumber.geneName())
-                    .reportMissenseAndInframe(false)
-                    .reportNonsenseAndFrameshift(false)
-                    .reportSplice(false)
-                    .reportDeletion(true)
-                    .reportDisruption(false)
-                    .reportAmplification(true)
-                    .reportSomaticHotspot(false)
-                    .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
-                    .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
-                    .likelihoodType(DriverCategory.ONCO)
-                    .reportPGX(false)
-                    .build());
-        }
-
-        DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
-        DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
-
         List<DriverCatalog> allGainDels = Lists.newArrayList();
 
-        allGainDels.addAll(AmplificationDrivers.findAmplifications(
-                qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
+        {
+            if(geneCopyNumber.reportableStatus() != ReportableStatus.NONE)
+            {
+                DriverType type = geneCopyNumber.driverType();
 
-        allGainDels.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
+                DriverCategory category;
+                LikelihoodMethod likelihoodMethod;
+                boolean biallelic;
+
+                if(type == DriverType.AMP || type == DriverType.PARTIAL_AMP)
+                {
+                    likelihoodMethod = LikelihoodMethod.AMP;
+                    category = ONCO;
+                    biallelic = false;
+                }
+                else
+                {
+                    likelihoodMethod = LikelihoodMethod.DEL;
+                    category = TSG;
+                    biallelic = type == DriverType.DEL;
+                }
+
+                DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, geneCopyNumber);
+                allGainDels.add(driverCatalog);
+            }
+        }
 
         return somaticGainsDelsFromDrivers(allGainDels);
     }
 
     private static final Set<DriverType> AMP_DEL_TYPES = Sets.newHashSet(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL);
 
-    @NotNull
-    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(@NotNull List<DriverCatalog> drivers)
+    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
         List<PurpleGainDeletion> gainsDels = Lists.newArrayList();
 
@@ -416,8 +400,7 @@ public class PurpleInterpreter
         return gainsDels;
     }
 
-    @NotNull
-    private static PurpleGainDeletion toGainDel(@NotNull DriverCatalog driver)
+    private static PurpleGainDeletion toGainDel(final DriverCatalog driver)
     {
         return ImmutablePurpleGainDeletion.builder()
                 .chromosome(driver.chromosome())
@@ -431,8 +414,7 @@ public class PurpleInterpreter
                 .build();
     }
 
-    @NotNull
-    private static PurpleFit createFit(@NotNull PurpleData purple)
+    private static PurpleFit createFit(final PurpleData purple)
     {
         return ImmutablePurpleFit.builder()
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
@@ -446,8 +428,7 @@ public class PurpleInterpreter
                 .build();
     }
 
-    @NotNull
-    private static PurpleCharacteristics createCharacteristics(@NotNull PurpleData purple)
+    private static PurpleCharacteristics createCharacteristics(final PurpleData purple)
     {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
@@ -463,9 +444,8 @@ public class PurpleInterpreter
                 .build();
     }
 
-    @NotNull
-    private static ChromosomalRearrangements createChromosomalRearrangements(@NotNull PurpleData purple,
-            @NotNull ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
+    private static ChromosomalRearrangements createChromosomalRearrangements(
+            final PurpleData purple, final ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer)
     {
         return ImmutableChromosomalRearrangements.builder()
                 .hasTrisomy1q(chromosomalRearrangementsDeterminer.determine1qTrisomy(purple.allSomaticCopyNumbers()))

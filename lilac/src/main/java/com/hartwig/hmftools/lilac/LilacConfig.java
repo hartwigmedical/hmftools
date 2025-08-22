@@ -74,12 +74,6 @@ public class LilacConfig
 
     public final MhcClass ClassType;
 
-    /*
-    public final int MinEvidenceSupport;
-    public final double MinEvidenceFactor;
-    public final double MinHighQualEvidenceFactor;
-    public final int MinDepthFilter;
-    */
     public final double HlaYPercentThreshold;
 
     public final int MinFragmentsPerAllele;
@@ -238,6 +232,7 @@ public class LilacConfig
     }
 
     public boolean tumorOnly() { return ReferenceBam.isEmpty() && !TumorBam.isEmpty(); }
+    public String alleleCallingBam() { return !ReferenceBam.isEmpty() ? ReferenceBam : TumorBam; }
 
     private static String checkFileExists(final String filename)
     {
@@ -250,12 +245,6 @@ public class LilacConfig
     {
         LL_LOGGER.info("sample({}) inputs: referenceBam({}) tumorBam({}) somaticVCF({}) geneCopyNumber({}) rnaBam({})",
                 Sample, !ReferenceBam.isEmpty(), !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty(), !RnaBam.isEmpty());
-
-        /*
-        LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
-                + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
-                MinBaseQual, MinEvidence, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, TopScoreThreshold);
-        */
 
         if(RunValidation)
         {
@@ -292,7 +281,7 @@ public class LilacConfig
         MinFragmentsPerAllele = DEFAULT_FRAGS_PER_ALLELE;
         MinFragmentsToRemoveSingle = DEFAULT_FRAGS_REMOVE_SGL;
         TopScoreThreshold = DEFAULT_TOP_SCORE_THRESHOLD;
-        FatalTotalLowCoveragePositions = DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS;
+        FatalTotalLowCoveragePositions = DEFAULT_FATAL_TOTAL_LOW_COVERAGE_POSITIONS * 2;
         HlaYPercentThreshold = DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 
         CopyNumberFile = "";

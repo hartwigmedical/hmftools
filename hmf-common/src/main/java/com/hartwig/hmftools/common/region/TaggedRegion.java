@@ -16,7 +16,7 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 {
     private static final Logger LOGGER = LogManager.getLogger(TaggedRegion.class);
 
-    public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(String bedFile)
+    public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(final String bedFile)
     {
         Function<String, TaggedRegion> factory = s ->
         {

@@ -52,6 +52,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualRecalibration;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
@@ -220,6 +222,11 @@ public class SageConfig
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(isUltima() && configBuilder.hasValue(UltimaQualRecalibration.CFG_FILENAME))
+        {
+            UltimaUtils.loadBqrCache(configBuilder.getValue(UltimaQualRecalibration.CFG_FILENAME));
+        }
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
@@ -393,6 +400,7 @@ public class SageConfig
         QualityConfig.registerConfig(configBuilder);
         configBuilder.addFlag(SKIP_BQR, "Disable base quality recalibration");
         SequencingType.registerConfig(configBuilder);
+        UltimaQualRecalibration.registerConfig(configBuilder);
 
         configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");

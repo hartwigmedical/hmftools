@@ -325,7 +325,7 @@ using the [hla_allele_freq_downloader.py](./src/main/resources/frequencies/hla_a
 python hla_allele_freq_downloader.py \
   --output_dir /output_dir/ \
   --locus A,B,C \
-  --hla_level 4 \
+  --hla_level 2 \
   --hla_locus_type Classical \
   --population_standard g
 ```
@@ -378,7 +378,7 @@ alleles fulfilling the below criteria:
 As a fallback, if no 4-digit alleles fulfill the above criteria, we select the most common. This usually occurs when all alleles in the 
 group have wildcards. Note, in case of this fallback condition, the most common allele is by definition the consensus sequence.
 
-A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being are assigned if alleles in the 
+A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being assigned if alleles in the 
 2-digit group have conflicting nucleotides. For example, for the first few nucleotides of `A*34`:
 
 ```

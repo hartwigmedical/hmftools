@@ -53,9 +53,6 @@ public class SoftFilterTest
 
     private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
 
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME, MSI_JITTER_CALCS);
-
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
 

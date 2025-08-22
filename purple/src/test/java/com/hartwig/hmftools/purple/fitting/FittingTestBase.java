@@ -19,7 +19,9 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.purple.AmberData;
@@ -66,7 +68,7 @@ public class FittingTestBase
 
         mRegionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, mAmberData.AverageTumorDepth);
 
-        mReferenceData = new ReferenceData(mConfig);
+        mReferenceData = new ReferenceData();
 
         mSampleData = new SampleData(REF_SAMPLE_ID, SAMPLE_ID, mAmberData, mCobaltData, mSvCache, mSomaticCache);
 
@@ -91,5 +93,16 @@ public class FittingTestBase
         cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 3000, 1, 0.5));
         cobaltRatios.add(FittingTestUtils.createCobaltRatio(chr1, 4000, 0.5, 0.5));
         mCobaltData.Ratios.put(chr1, cobaltRatios);
+    }
+
+    protected FittedPurity createFittedPurity(double purity, double score, double ploidy)
+    {
+        return ImmutableFittedPurity.builder()
+                .purity(purity)
+                .normFactor(0.95)
+                .score(score)
+                .diploidProportion(1.0)
+                .ploidy(ploidy)
+                .somaticPenalty(0).build();
     }
 }

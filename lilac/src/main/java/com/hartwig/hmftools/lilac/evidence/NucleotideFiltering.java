@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.lilac.evidence;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -28,7 +27,7 @@ public class NucleotideFiltering
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final List<HlaSequenceLoci> candidates, final List<Fragment> fragments)
+            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final List<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -36,6 +35,10 @@ public class NucleotideFiltering
         for(int boundary : mAminoAcidBoundaries)
         {
             int nucleotideStart = boundary * 3;
+            if(localSpanCount(gene, fragments, Lists.newArrayList(nucleotideStart, nucleotideStart + 1, nucleotideStart + 2))
+                    < MIN_DEPTH_FILTER)
+                continue;
+
             final List<String> startSequences = nucleotideSequence(fragments, Lists.newArrayList(nucleotideStart));
             final List<String> endSequences = nucleotideSequence(fragments, Lists.newArrayList(nucleotideStart + 1, nucleotideStart + 2));
 
@@ -54,31 +57,39 @@ public class NucleotideFiltering
                 && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
     }
 
-    private List<String> nucleotideSequence(final List<Fragment> fragments, final List<Integer> nucleotideIndices)
+    private static List<String> nucleotideSequence(final Iterable<Fragment> fragments, final Collection<Integer> nucleotideIndices)
     {
-        Map<String, Integer> sequenceCounts = Maps.newHashMap();
-
-        int totalCount = 0;
+        Set<String> nucleotideSequences = Sets.newHashSet();
         for(Fragment fragment : fragments)
         {
             if(!fragment.containsAllNucleotideLoci(nucleotideIndices))
                 continue;
 
             String nucleotides = fragment.nucleotides(nucleotideIndices);
-            sequenceCounts.merge(nucleotides, 1, Integer::sum);
-            totalCount++;
+            nucleotideSequences.add(nucleotides);
         }
 
-        int minNucleotideCount = max(MIN_EVIDENCE_SUPPORT, (int)ceil(totalCount * MIN_EVIDENCE_FACTOR));
-
-        return sequenceCounts.entrySet().stream()
-                .filter(x -> x.getValue() >= minNucleotideCount)
-                .map(x -> x.getKey())
-                .collect(Collectors.toList());
-
+        return Lists.newArrayList(nucleotideSequences);
     }
 
-    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final List<Integer> refNucleotideHetLoci)
+    private static int localSpanCount(final HlaGene gene, final Iterable<Fragment> fragments, final Collection<Integer> nucleotideIndices)
+    {
+        int count = 0;
+        for(Fragment fragment : fragments)
+        {
+            if(fragment.readGene() != gene)
+                continue;
+
+            if(!fragment.containsAllNucleotideLoci(nucleotideIndices))
+                continue;
+
+            count++;
+        }
+
+        return count;
+    }
+
+    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final Collection<Integer> refNucleotideHetLoci)
     {
         // convert from amino acid exon boundaries to nucleotides for each gene
         Map<HlaGene, List<Integer>> hetLociMap = Maps.newHashMap();
@@ -97,7 +108,7 @@ public class NucleotideFiltering
             }
 
             hetLociMap.put(gene,
-                    refNucleotideHetLoci.stream().filter(x -> nucleotideExonBoundaries.contains(x)).collect(Collectors.toList()));
+                    refNucleotideHetLoci.stream().filter(nucleotideExonBoundaries::contains).collect(Collectors.toList()));
 
         }
 

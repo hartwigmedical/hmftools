@@ -25,11 +25,14 @@ public class PartitionStats
         ProcessTime = 0;
     }
 
-    public void processRead(final SAMRecord read, final ChrBaseRegion partition, boolean isConsensusRead)
+    public void processRead(final SAMRecord read, final ChrBaseRegion partition, boolean isConsensusRead, boolean expectDuplicates)
     {
         if(isConsensusRead)
         {
-            --DuplicateReads;
+            if(expectDuplicates)
+                --DuplicateReads;
+            else
+                ++TotalReads;
         }
         else
         {

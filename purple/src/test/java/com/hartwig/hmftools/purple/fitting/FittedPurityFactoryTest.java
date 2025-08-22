@@ -31,6 +31,8 @@ public class FittedPurityFactoryTest extends FittingTestBase
     private FittedPurityFactory factory;
     private List<FittedPurity> results;
     private FittedPurity first, second, third;
+    private List<FittingRegion> regions = Lists.newArrayList();
+    private int regionStart = 1000;
 
     @Before
     public void setup()
@@ -39,6 +41,8 @@ public class FittedPurityFactoryTest extends FittingTestBase
         executorService = Executors.newFixedThreadPool(1);
         mCobaltChromosomes = male();
         mRegionFitCalculator = new RegionFitCalculator(mCobaltChromosomes, mConfig.Fitting, 10);
+        regions.clear();
+        regionStart = 1000;
     }
 
     @After
@@ -86,9 +90,11 @@ public class FittedPurityFactoryTest extends FittingTestBase
     public void singleObservedRegionNoStructuralVariants() throws Exception
     {
         List<FittingRegion> regions = Lists.newArrayList();
-        regions.add(observedRegion(1, 1000, 100, 0.5, 1.0, 0.0));
+        regions.add(observedRegion(1, 1000, 100, 0.5, 1.0, 1.0));
         createFactoryAndRun(regions);
 
+        // With just one region the algorithm assigns the same score to the data below
+        // with various different purity values.
         assertEquals(605, results.size());
         assertEquals(2.0, first.ploidy(), EPSILON);
         assertEquals(1.0, first.normFactor(), EPSILON);
@@ -96,17 +102,122 @@ public class FittedPurityFactoryTest extends FittingTestBase
     }
 
     @Test
-    public void twoRegions() throws Exception
+    public void singleObservedRegionHighBaf() throws Exception
     {
         List<FittingRegion> regions = Lists.newArrayList();
-        regions.add(observedRegion(1, 1000, 100, 0.5, 1.0, 1.0));
-        regions.add(observedRegion(1001, 2000, 100, 0.5, 1.0, 1.0));
+        regions.add(observedRegion(1, 1000, 100, 1.0, 1.0, 0.0));
         createFactoryAndRun(regions);
 
         assertEquals(605, results.size());
-        assertEquals(2.0, first.ploidy(), EPSILON);
+        assertEquals(1.0, first.ploidy(), EPSILON);
+    }
+
+    @Test
+    public void ploidy1() throws Exception
+    {
+        addMultipleRegionsWithBaf(1.0, 1.0);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(1.0, first.ploidy(), EPSILON);
         assertEquals(1.0, first.normFactor(), EPSILON);
+
+        setup();
+        addMultipleRegionsWithBaf(1.0, 0.5);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(1.0, first.ploidy(), EPSILON);
+        assertEquals(1.0, first.normFactor(), EPSILON);
+    }
+
+    @Test
+    public void ploidy2() throws Exception
+    {
+        addMultipleRegionsWithBaf(0.5);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(2.0, first.ploidy(), EPSILON);
+        assertEquals(0.5, first.normFactor(), EPSILON);
         assertEquals(1.0, first.diploidProportion(), EPSILON);
+
+        setup();
+        addMultipleRegionsWithBaf(0.5, 0.5);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(2.0, first.ploidy(), EPSILON);
+        assertEquals(0.5, first.normFactor(), EPSILON);
+        assertEquals(1.0, first.diploidProportion(), EPSILON);
+
+        setup();
+        addMultipleRegionsWithBaf( 0.25, 1.0);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(2.0, first.ploidy(), EPSILON);
+        assertEquals(0.5, first.normFactor(), EPSILON);
+        assertEquals(1.0, first.diploidProportion(), EPSILON);
+    }
+
+    @Test
+    public void ploidy3() throws Exception
+    {
+        addMultipleRegionsWithBaf(0.666666667);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(3.0, first.ploidy(), EPSILON);
+        assertEquals(0.333333333333, first.normFactor(), EPSILON);
+        assertEquals(0.0, first.diploidProportion(), EPSILON);
+    }
+
+    @Test
+    public void ploidy4() throws Exception
+    {
+        addMultipleRegionsWithBaf( 0.75, 1.0);
+        createFactoryAndRun(regions);
+
+        assertEquals(1.0, first.purity(), EPSILON);
+        assertEquals(4.0, first.ploidy(), EPSILON);
+        assertEquals(0.25, first.normFactor(), EPSILON);
+        assertEquals(0.0, first.diploidProportion(), EPSILON);
+    }
+
+    @Test
+    public void twoBafRegions() throws Exception
+    {
+        addMultipleRegionsWithBaf(0.666666667); // ploidy 3 ?
+        addMultipleRegionsWithBaf(0.5); // ploidy 2 ?
+        createFactoryAndRun(regions);
+
+        assertEquals(0.6, first.purity(), EPSILON);
+        assertEquals(4.0, first.ploidy(), EPSILON);
+        assertEquals(0.3125, first.normFactor(), EPSILON);
+        assertEquals(0.0, first.diploidProportion(), EPSILON);
+    }
+
+    private void addMultipleRegionsWithBaf(double baf)
+    {
+        addMultipleRegionsWithBaf( baf, 1.0);
+    }
+
+    private void addMultipleRegionsWithBaf(double baf, double observedNormalRatio)
+    {
+        // By having non-constant observedTumorRatio we get a solution
+        // with purity 1.0. If we have constant observedTumorRatio
+        // then the algorithm can't differentiate the solutions with different purities.
+        addRegion( baf, 0.49, observedNormalRatio);
+        addRegion( baf, 0.51, observedNormalRatio);
+        addRegion( baf, 0.49, observedNormalRatio);
+        addRegion( baf, 0.51, observedNormalRatio);
+    }
+
+    private void addRegion(double observedBaf, double observedTumorRatio, double observedNormalRatio)
+    {
+        regions.add(observedRegion(regionStart, regionStart + 1000, 100, observedBaf, observedTumorRatio, observedNormalRatio));
+        regionStart += 1000;
     }
 
     private FittingRegion observedRegion(int start, int end, int bafCount, double observedBAF, double observedTumorRatio, double observedNormalRatio)
@@ -115,7 +226,7 @@ public class FittedPurityFactoryTest extends FittingTestBase
                 chr1, start, end, true, SegmentSupport.NONE, bafCount, observedBAF, 10,
                 observedTumorRatio, observedNormalRatio, observedNormalRatio, DIPLOID, false,
                 0.5, 0, 0, 0, 0, 0,
-                0, 2, 2, 0.5, 0, 0.5);
+                0, 2, 2, 0.0, 0, 0.0);
     }
 
     private void createFactoryAndRun(List<? extends FittingRegion> regions) throws Exception

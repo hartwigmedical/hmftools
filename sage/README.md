@@ -9,7 +9,7 @@ Key features include:
   - Modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, strand bias, failed fragment collapse) without hard cutoffs
   - Explicit sample-specific modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatellites while ignoring common sequencing errors
   - No cutoff for homopolymer repeat length for improved INDEL handling 
-  - [Phasing](#6-phasing) of somatic + somatic and somatic + germline variants over whole read length
+  - [Phasing](#7-phasing) of somatic + somatic and somatic + germline variants over whole read length
   - Native MNV handling 
   - Joint calling, including allowing both multiple tumor and reference samples to be analysed concurrently
   - Support for diverse calling scenarios including somatic tumor-normal, somatic tumor only, germline, etc.
@@ -18,9 +18,9 @@ Key features include:
 
 ## Append mode
 
-SAGE also supports the ability append additional reference samples to an existing SAGE VCF file. A typical use case would be to analyse previously called variants in RNA or other dditional longitudinal samples for monitoring without having to rerun all samples through SAGE.
+SAGE also supports the ability append additional reference samples to an existing SAGE VCF file. A typical use case would be to analyse previously called variants in RNA or other additional longitudinal samples for monitoring without having to rerun all samples through SAGE.
 
-In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
+In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#5-normal-counts-and-quality) steps.
 The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
@@ -220,7 +220,7 @@ SAGE is designed to jointly call any number of samples.  1 or more 'tumor' sampl
 By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  Two common alternatives are:
 
 - If no germline filtering is desired set ref_sample_count = 0.
-- If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
+- If the patient has a bone marrow donor and reference samples for both patient and donor are available, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
 
 Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please see more details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
@@ -370,7 +370,7 @@ Longer insertions or duplications may be aligned by BWA as a soft clipping inste
 
 For each candidate, SAGE tallies the ref/alt support and total quality and selects the most frequently found read context of each variant. As each variant can potentially have multiple read contexts due to sequencing errors or sub-clonal populations, SAGE also allows additional read contexts as candidates IF there are at least max(25% max support,3) reads with FULL support for that read context.  Multiple read contexts may be possible for example where a germline HET SNV overlaps read context with a germline HOM SNV or when a somatic subclonal SNV overlaps read context with a somatic clonal SNV. 
 
-A candidate will be dropped at this stage if it is only identified on one fragment. Candidate inesrts with any 'N' base in the alt sequence are also dropped.
+A candidate will be dropped at this stage if it is only identified on one fragment. Candidate inserts with any 'N' base in the alt sequence are also dropped.
 
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
@@ -457,13 +457,13 @@ To reduce processing the following hard filters are applied:
 
 Filter | Default Value | Field
 ---|---------------|---
-hard_min_tumor_qual | 50            | `totalQuality`
+hard_min_tumor_qual | 50            | `RC_CNT[0]+RC_CNT[1]+RC_CNT[3]`
 hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `AD[1]`
 jitter p-score | 0.05 | see description of jitter p-score below
 filtered_max_germline_alt_support | 3 (or 10 if running TINC)             | Normal `AD[1]`
 
-Note that hotspots are never hard-filtered.
+Note that hotspots are never hard-filtered. Note also that the hard min tumor qual filter applies to a sum of RC_CNT elements, and not to the QUAL value written to the VCF. Occasionally variants slightly below hard_min_tumor_qual will be recovered, if there is evidence of reads with jitter that do not match the read context but on balance probably support the variant.
 
 Variants failing any of the first 4 filters are excluded from this point onwards and have no further processing applied to them. The filtered_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size, and is not applied in the absence of a provided reference sample. The filtered_max_normal_alt_support does not apply to germline variants in the same local phase set as passing somatic variants.
 
@@ -531,7 +531,7 @@ jitter | 0.00025 | 0.00025 | 0.00025 | 0.00025 | p-score of `FULL`, `SHORTENED` 
 
 6. If `MED` > 33% of read length (20% for `HOTSPOT`/`PANEL`) or variant is 10+ base insert, we never filter. Otherwise, p-score is calculated as `MED[alt]/MED[all] ^ AD`
 
-7. `MQF` is an overall site-wide map qual factor, evaulated as: `AMMQ - 25 - 2*max(AMQ[ALL]-AMQ[ALT], 0) - phred(pscore(readStrandBias)) - phred(pscore(AED)) - repeatPenalty`, where `repeatPenalty` is 3 per repeat count if the core contains a non-homopolymer repeat of at least 15 bases.
+7. `MQF` is an overall site-wide map qual factor, evaluated as: `AMMQ - 25 - 2*max(AMQ[ALL]-AMQ[ALT], 0) - phred(pscore(readStrandBias)) - phred(pscore(AED)) - repeatPenalty`, where `repeatPenalty` is 3 per repeat count if the core contains a non-homopolymer repeat of at least 15 bases.
 
 8. Not applied for indels using the modelled microsatellite error rate
 
@@ -691,6 +691,8 @@ Performance
 - **High depth regions** - Phasing may be slow in very high depth regions
 
 # Version History and Download Links
+- [4.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v4.1)
+- [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v4.0)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.4.4)
 - [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)

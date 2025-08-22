@@ -169,7 +169,7 @@ public class LilacApplication
 
         boolean allValid = true;
 
-        String referenceBam = mConfig.tumorOnly() ? mConfig.TumorBam : mConfig.ReferenceBam;
+        String referenceBam = mConfig.alleleCallingBam();
 
         LL_LOGGER.info("finding read support in {} bam {}", mConfig.tumorOnly() ? "tumor" : "reference", referenceBam);
 
@@ -628,7 +628,8 @@ public class LilacApplication
         }
     }
 
-    private void extractRnaCoverage(final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+    private void extractRnaCoverage(
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
             final List<HlaSequenceLoci> winningNucSequences)
     {
         mRnaCoverage = LilacAppendRna.extractRnaCoverage(
@@ -697,7 +698,7 @@ public class LilacApplication
 
         int totalLowCoveragePositions = aLowCoveragePositions + bLowCoveragePositions + cLowCoveragePositions;
 
-        if(!mConfig.ReferenceBam.isEmpty() && totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
+        if(totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
         {
             LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene(A={}, B={}, C={}) total({}) exceeds threshold({})",
                     WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
@@ -722,6 +723,7 @@ public class LilacApplication
         File stackSampleFile = lilacConfig.OutputDir.isEmpty()
                 ? null
                 : new File(new File(lilacConfig.OutputDir), format("%s.lilac.stacks", lilacConfig.Sample));
+
         try(StackSampler stackSampler = stackSampleFile == null || lilacConfig.StackSampleRate <= 0
                 ? null
                 : new StackSampler(lilacConfig.StackSampleRate, stackSampleFile))

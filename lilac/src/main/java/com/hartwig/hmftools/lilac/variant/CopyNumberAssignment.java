@@ -39,7 +39,7 @@ public class CopyNumberAssignment
                     .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene.fromString(x.geneName()))).toList();
 
             List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
+                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.MinMinorAlleleCopyNumber))
                     .collect(Collectors.toList());
 
             mSampleCopyNumberData.put(config.Sample, cnDataList);

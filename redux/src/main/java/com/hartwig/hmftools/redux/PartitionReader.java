@@ -188,7 +188,7 @@ public class PartitionReader
 
     public static boolean shouldFilterRead(final SAMRecord read)
     {
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous Redux-generated BAMs runs
             return true;
 
         if(read.getSupplementaryAlignmentFlag())
@@ -321,10 +321,13 @@ public class PartitionReader
 
         preprocessSamRecord(read);
 
-        if(read.isSecondaryAlignment())
+        if(read.isSecondaryAlignment() || mConfig.SkipDuplicateMarking)
         {
+            if(mConfig.SkipDuplicateMarking)
+                finaliseRead(read);
+
             mBamWriter.setBoundaryPosition(readStart, false);
-            mBamWriter.writeSecondaryRead(read);
+            mBamWriter.writeNonDuplicateRead(read);
             return;
         }
 
@@ -333,7 +336,6 @@ public class PartitionReader
             mBamWriter.setBoundaryPosition(readStart, false);
 
             mReadCache.processRead(read);
-
             processReadGroups(mReadCache.popReads());
         }
         catch(Exception e)
@@ -344,7 +346,6 @@ public class PartitionReader
         }
     }
 
-    private static final double LOG_PERF_TIME_SEC = 1;
     private static final int LOG_PERF_FRAG_COUNT = 3000;
 
     private void processReadGroups(final FragmentCoordReads fragmentCoordReads)
@@ -405,6 +406,11 @@ public class PartitionReader
 
             postProcessPrimaryRead(duplicateGroup);
             mBamWriter.writeDuplicateGroup(duplicateGroup);
+
+            if(mConfig.LogDuplicateGroupSize > 0 && duplicateGroup.readCount() >= mConfig.LogDuplicateGroupSize)
+            {
+                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.readCount(), duplicateGroup.fragmentCoordinates());
+            }
         }
 
         postProcessSingleReads(fragmentCoordReads.SingleReads);

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.drivers;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.isShortArm;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.hasShortArm;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -67,7 +67,7 @@ public class AmplificationDrivers
 
         double samplePloidy = mDataCache.samplePloidy();
 
-        if(!isShortArm(dgData.GeneInfo.Chromosome))
+        if(!hasShortArm(dgData.GeneInfo.Chromosome))
         {
             if(chromosomeCopyNumber / samplePloidy > 2)
             {

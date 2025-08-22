@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.filter;
 
 import static com.hartwig.hmftools.sage.SageCallConfig.RUN_TINC;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FIL
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
+import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MIN_AVG_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -60,8 +63,18 @@ public class FilterConfig
         HardMinTumorQual = configBuilder.getInteger(HARD_MIN_TUMOR_QUAL);
         HardMinTumorVaf = configBuilder.getDecimal(HARD_MIN_TUMOR_VAF);
         HardMinTumorRawAltSupport = configBuilder.getInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT);
-        MinAvgBaseQual = configBuilder.getInteger(MIN_AVG_BASE_QUAL);
-        MinAvgBaseQualHotspot = configBuilder.getInteger(MIN_AVG_BASE_QUAL_HOTSPOT);
+
+        if(isUltima())
+        {
+            MinAvgBaseQual = ULTIMA_MIN_AVG_BASE_QUALITY;
+            MinAvgBaseQualHotspot = ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT;
+        }
+        else
+        {
+            MinAvgBaseQual = configBuilder.getInteger(MIN_AVG_BASE_QUAL);
+            MinAvgBaseQualHotspot = configBuilder.getInteger(MIN_AVG_BASE_QUAL_HOTSPOT);
+        }
+
         SoftHotspotFilter = new SoftFilterConfig(configBuilder, "hotspot", DEFAULT_HOTSPOT_FILTER);
         SoftPanelFilter = new SoftFilterConfig(configBuilder, "panel", DEFAULT_PANEL_FILTER);
         SoftHighConfidenceFilter = new SoftFilterConfig(configBuilder, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);

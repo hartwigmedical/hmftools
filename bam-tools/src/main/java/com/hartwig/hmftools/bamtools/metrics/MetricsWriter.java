@@ -128,7 +128,7 @@ public class MetricsWriter
                     .madCoverage(metrics.statistics().MedianAbsoluteDeviation)
                     .lowMapQualPercent(metrics.calcFilteredPercentage(LOW_MAP_QUAL))
                     .duplicatePercent(metrics.calcFilteredPercentage(DUPLICATE))
-                    .unpairedPercent(metrics.calcFilteredPercentage(MATE_UNMAPPED))
+                    .unmappedPercent(metrics.calcFilteredPercentage(MATE_UNMAPPED))
                     .lowBaseQualPercent(metrics.calcFilteredPercentage(LOW_BASE_QUAL))
                     .overlappingReadPercent(metrics.calcFilteredPercentage(OVERLAPPED))
                     .cappedCoveragePercent(metrics.calcFilteredPercentage(MAX_COVERAGE))

@@ -41,7 +41,6 @@ public class BaseCoverage
         int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
         // the order in which the filters are applied matters and matches Picard CollectWgsMetrics
-
         if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
             if(!isConsensusRead)
@@ -58,13 +57,13 @@ public class BaseCoverage
         else
         {
             // lower duplicate data to account for additionally marked duplicate - see previous comments in BamReader
-            if(isConsensusRead)
+            if(isConsensusRead && mConfig.expectDuplicates())
                 mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] -= alignedBases;
         }
 
-        if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
+        if(read.getReadPairedFlag() && read.getMateUnmappedFlag())
         {
-            mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += alignedBases;
+            mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += read.getReadBases().length;
             return;
         }
 
