@@ -20,16 +20,14 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.MhcClass_;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.read.Read;
-
-import org.apache.commons.lang3.NotImplementedException;
 
 public class Fragment
 {
     private final List<Read> mReads;
-    private final HlaGene mReadGene; // mapped gene
-    private final Set<HlaGene> mGenes; // other potentially applicable genes
+    private final HlaGene_ mReadGene; // mapped gene
+    private final Set<HlaGene_> mGenes; // other potentially applicable genes
 
     // initial nucleotide values
     private final NavigableMap<Integer, Nucleotide> mRawNucleotidesByLoci;
@@ -44,7 +42,7 @@ public class Fragment
 
     private FragmentScope mScope;
 
-    public Fragment(final Read read, final HlaGene readGene, final Set<HlaGene> genes, final List<Integer> nucleotideLoci,
+    public Fragment(final Read read, final HlaGene_ readGene, final Set<HlaGene_> genes, final List<Integer> nucleotideLoci,
             final List<Byte> nucleotidesQualities, final List<String> nucleotidesBases)
     {
         this(read, readGene, genes,
@@ -54,7 +52,7 @@ public class Fragment
     }
 
     public Fragment(
-            final Read read, final HlaGene readGene, final Set<HlaGene> genes, final Iterable<Nucleotide> nucleotides)
+            final Read read, final HlaGene_ readGene, final Set<HlaGene_> genes, final Iterable<Nucleotide> nucleotides)
     {
         // TODO:
         if(!genes.contains(readGene))
@@ -98,10 +96,10 @@ public class Fragment
     }
 
     public String readInfo() { return mReads.get(0).readInfo(); }
-    public Set<HlaGene> genes() { return mGenes; }
-    public void addGene(final HlaGene gene) { mGenes.add(gene); }
-    public HlaGene readGene() { return mReadGene; }
-    public boolean containsGene(final HlaGene gene) { return mGenes.contains(gene); }
+    public Set<HlaGene_> genes() { return mGenes; }
+    public void addGene(final HlaGene_ gene) { mGenes.add(gene); }
+    public HlaGene_ readGene() { return mReadGene; }
+    public boolean containsGene(final HlaGene_ gene) { return mGenes.contains(gene); }
 
     public NavigableMap<Integer, Nucleotide> nucleotidesByLoci() { return mNucleotidesByLoci; }
     public NavigableMap<Integer, Nucleotide> rawNucleotidesByLoci() { return mRawNucleotidesByLoci; }

@@ -53,6 +53,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.sun.jdi.ClassType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,7 +73,7 @@ public class LilacConfig
     public final String SampleDataDir;
     public final String OutputDir;
 
-    public final MhcClass_ ClassType;
+    public final GeneSelector Genes;
 
     public final double HlaYPercentThreshold;
 
@@ -105,7 +106,7 @@ public class LilacConfig
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
-    public static final String MHC_CLASS_ = "mhc_class";
+    public static final String GENES = "genes";
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";

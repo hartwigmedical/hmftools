@@ -16,7 +16,7 @@ public class CohortFrequency
     private final MhcClass_ mClassType;
     private final Map<HlaAllele, Double> mAlleleFrequencies_;
 
-    public CohortFrequency(final MhcClass_ classType, final String freqFile)
+    public CohortFrequency(final GeneSelector genes, final String freqFile)
     {
         mClassType = classType;
         mAlleleFrequencies_ = Maps.newHashMap();

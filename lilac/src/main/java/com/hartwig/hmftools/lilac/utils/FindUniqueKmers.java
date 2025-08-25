@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
 import java.io.File;
@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -54,7 +54,7 @@ public class FindUniqueKmers
         mAlleleCache = new HlaAlleleCache();
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, null);
+        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, null);
         mGeneCache = new GeneCache(hlaTranscriptMap);
 
         mAminoAcidSequences = Lists.newArrayList();

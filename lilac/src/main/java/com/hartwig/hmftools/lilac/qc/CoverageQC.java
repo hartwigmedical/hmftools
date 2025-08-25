@@ -17,7 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public class CoverageQC
 {
@@ -56,7 +56,7 @@ public class CoverageQC
      */
 
 
-    public CoverageQC(final Map<HlaGene, Integer> countsByGene_, int totalFragments, int unmatched, int uninformative, int hlaY,
+    public CoverageQC(final Map<HlaGene_, Integer> countsByGene_, int totalFragments, int unmatched, int uninformative, int hlaY,
             int uniqueFragments, int sharedFragments, int wildcardFragments)
     {
         CountsByGene_ = countsByGene_;

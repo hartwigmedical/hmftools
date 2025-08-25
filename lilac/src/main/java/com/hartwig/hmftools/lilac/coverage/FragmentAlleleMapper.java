@@ -27,21 +27,21 @@ import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
 public class FragmentAlleleMapper
 {
-    private final Map<HlaGene, Map<Integer,Set<String>>> mGeneAminoAcidHetLociMap;
-    private final Map<HlaGene, List<Integer>> mRefNucleotideHetLoci;
+    private final Map<HlaGene_, Map<Integer, Set<String>>> mGeneAminoAcidHetLociMap;
+    private final Map<HlaGene_, List<Integer>> mRefNucleotideHetLoci;
     private final List<Set<String>> mRefNucleotides;
 
     private final Map<HlaAllele,List<Fragment>> mStopLossAlleleFragments;
 
     public FragmentAlleleMapper(
-            final Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap,
-            final Map<HlaGene, List<Integer>> refNucleotideHetLoci, final List<Set<String>> refNucleotides)
+            final Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap,
+            final Map<HlaGene_, List<Integer>> refNucleotideHetLoci, final List<Set<String>> refNucleotides)
     {
         mGeneAminoAcidHetLociMap = Maps.newHashMap();
         mGeneAminoAcidHetLociMap.putAll(geneAminoAcidHetLociMap);
@@ -51,7 +51,7 @@ public class FragmentAlleleMapper
         mStopLossAlleleFragments = Maps.newHashMap();
     }
 
-    public void setHetAminoAcidLoci(final Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap)
+    public void setHetAminoAcidLoci(final Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap)
     {
         mGeneAminoAcidHetLociMap.clear();
         mGeneAminoAcidHetLociMap.putAll(geneAminoAcidHetLociMap);
@@ -119,7 +119,7 @@ public class FragmentAlleleMapper
             // was this fragment homozygous in the context of all genes
             boolean hasHetLoci = false;
 
-            for(Map.Entry<HlaGene, Map<Integer, Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+            for(Map.Entry<HlaGene_, Map<Integer, Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
             {
                 if(!fragment.genes().contains(geneEntry.getKey()))
                     continue;
@@ -150,7 +150,7 @@ public class FragmentAlleleMapper
             final Fragment fragment, final List<HlaSequenceLoci> aminoAcidSequences, final List<HlaSequenceLoci> nucleotideSequences)
     {
         // look first for nucleotide support at the exon boundaries, then for amino acid support - full or wild
-        Map<HlaGene, List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
+        Map<HlaGene_, List<Integer>> fragNucleotideLociMap = Maps.newHashMap();
 
         mRefNucleotideHetLoci.entrySet().forEach(x -> fragNucleotideLociMap.put(x.getKey(), fragment.nucleotidesByLoci()
                         .values()
@@ -206,17 +206,17 @@ public class FragmentAlleleMapper
     private Map<HlaAllele, SequenceMatchType> findNucleotideMatches(
             final Fragment fragment, final List<HlaSequenceLoci> nucleotideSequences)
     {
-        Map<HlaGene, List<Integer>> fragGeneLociMap = Maps.newHashMap();
-        Map<HlaGene, List<String>> fragGeneSequenceMap = Maps.newHashMap();
+        Map<HlaGene_, List<Integer>> fragGeneLociMap = Maps.newHashMap();
+        Map<HlaGene_, List<String>> fragGeneSequenceMap = Maps.newHashMap();
 
         Map<HlaAllele, SequenceMatchType> alleleMatches = Maps.newHashMap();
 
         // also attempt to retrieve amino acids from low-qual nucleotides
         Map<Integer, String> missedNucleotides = Maps.newHashMap();
 
-        for(Map.Entry<HlaGene, List<Integer>> entry : mRefNucleotideHetLoci.entrySet())
+        for(Map.Entry<HlaGene_, List<Integer>> entry : mRefNucleotideHetLoci.entrySet())
         {
-            HlaGene gene = entry.getKey();
+            HlaGene_ gene = entry.getKey();
             List<Integer> refNucleotideLoci = entry.getValue();
 
             List<Integer> fragmentMatchedLoci = fragment.nucleotidesByLoci()
@@ -344,10 +344,10 @@ public class FragmentAlleleMapper
     {
         Map<HlaAllele,SequenceMatchType> alleleMatches = Maps.newHashMap();
 
-        Map<HlaGene, List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
-        Map<HlaGene, List<String>> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
+        Map<HlaGene_, List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
+        Map<HlaGene_, List<String>> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
 
-        for(Map.Entry<HlaGene, Map<Integer, Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
+        for(Map.Entry<HlaGene_, Map<Integer, Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
         {
             Map<Integer, Set<String>> hetLociSeqMap = geneEntry.getValue();
 

@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.utils.SuffixTree;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -49,7 +49,7 @@ public class NucleotideFragmentFactory
         mReferenceData.AminoAcidSequencesWithDeletes.forEach(x -> mDeleteSuffixTrees.put(x, new SuffixTree(x.sequence())));
     }
 
-    public Fragment createFragment(final Read read, final HlaGene geneName, final byte geneStrand)
+    public Fragment createFragment(final Read read, final HlaGene_ geneName, final byte geneStrand)
     {
         if(read.ReadIndexStart < 0 || read.ReadIndexEnd < read.ReadIndexStart || read.PositionEnd < read.PositionStart)
             return null;
@@ -122,7 +122,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment checkMatchedInsertDeleteSequence(
-            final Read record, final HlaGene geneName,
+            final Read record, final HlaGene_ geneName,
             final String aminoAcids, int matchRangeAllowedStart, int matchRangeAllowedEnd,
             final LinkedHashMap<HlaSequenceLoci, SuffixTree> sequenceMap)
     {
@@ -158,7 +158,7 @@ public class NucleotideFragmentFactory
     }
 
     private Fragment createIndelFragment(
-            final Read record, final HlaGene geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
+            final Read record, final HlaGene_ geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);
         List<Integer> aminoAcidLoci = formRange(startLoci, endLoci);
@@ -201,7 +201,7 @@ public class NucleotideFragmentFactory
                 String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
-    public Fragment createAlignmentFragments(final Read record, final HlaGene geneName, final byte geneStrand)
+    public Fragment createAlignmentFragments(final Read record, final HlaGene_ geneName, final byte geneStrand)
     {
         List<Fragment> fragments = record.alignmentsOnly().stream()
                 .filter(Objects::nonNull)
@@ -248,11 +248,11 @@ public class NucleotideFragmentFactory
         return mMinBaseQuality;
     }
 
-    public static Map<HlaGene, int[]> calculateGeneCoverage(final Iterable<Fragment> fragments)
+    public static Map<HlaGene_, int[]> calculateGeneCoverage(final Iterable<Fragment> fragments)
     {
-        final Map<HlaGene, int[]> geneBaseDepth = Maps.newHashMap();
+        final Map<HlaGene_, int[]> geneBaseDepth = Maps.newHashMap();
 
-        for(HlaGene geneName : GENE_CACHE.GeneNames)
+        for(HlaGene_ geneName : GENE_CACHE.GeneNames)
         {
             int geneNucleotideCount = GENE_CACHE.NucleotideLengths.get(geneName);
             geneBaseDepth.put(geneName, new int[geneNucleotideCount]);
@@ -271,5 +271,4 @@ public class NucleotideFragmentFactory
 
         return geneBaseDepth;
     }
-
 }

@@ -10,11 +10,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.GeneSelector;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public class HlaComplexFile
 {
-    public static String header(final List<String> genes)
+    public static String header(final GeneSelector genes)
     {
         StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
@@ -29,16 +30,16 @@ public class HlaComplexFile
         sb.add("UniqueCoverage");
         sb.add("SharedCoverage");
         sb.add("WildCoverage");
-        for(String gene : genes)
+        for(HlaGene_ gene : genes.genes())
         {
-            sb.add(gene + "_1");
-            sb.add(gene + "_2");
+            sb.add(gene.shortName() + "_1");
+            sb.add(gene.shortName() + "_2");
         }
 
         return sb.toString();
     }
 
-    public static void writeToFile(final String fileName, final List<String> genes, final List<ComplexCoverage> coverages)
+    public static void writeToFile(final String fileName, final GeneSelector genes, final List<ComplexCoverage> coverages)
     {
         try
         {

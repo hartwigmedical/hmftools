@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariant
 {
-    public final HlaGene Gene;
+    public final HlaGene_ Gene;
     public final String Chromosome;
     public final int Position;
     public final String Ref;
@@ -18,7 +18,7 @@ public class SomaticVariant
     public final VariantContext Context;
 
     public SomaticVariant(
-            final HlaGene gene, final String chromosome, final int position, final String ref, final String alt,
+            final HlaGene_ gene, final String chromosome, final int position, final String ref, final String alt,
             final String filter, final CodingEffect canonicalCodingEffect, final VariantContext context)
     {
         Gene = gene;

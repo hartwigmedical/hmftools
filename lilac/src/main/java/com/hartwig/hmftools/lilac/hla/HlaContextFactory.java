@@ -2,9 +2,9 @@ package com.hartwig.hmftools.lilac.hla;
 
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_2;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
 
 import java.util.List;
 import java.util.Map;
@@ -18,12 +18,12 @@ public class HlaContextFactory
 {
     private final LilacConfig mConfig;
     private final NucleotideGeneEnrichment NucleotideGeneEnrichment_;
-    private final Map<HlaGene, List<Integer>> GeneBoundaries_;
+    private final Map<HlaGene_, List<Integer>> GeneBoundaries_;
 
-    public HlaContextFactory(final LilacConfig config, final Map<HlaGene, List<Integer>> geneBoundaries_)
+    public HlaContextFactory(final LilacConfig config, final Map<HlaGene_, List<Integer>> geneBoundaries_)
     {
         mConfig = config;
-        NucleotideGeneEnrichment_ = config.ClassType == null || config.ClassType == CLASS_1 ? new NucleotideGeneEnrichment(geneBoundaries_) : null;
+        NucleotideGeneEnrichment_ = config.Genes.coversMhcClass1() ? new NucleotideGeneEnrichment(geneBoundaries_) : null;
         GeneBoundaries_ = geneBoundaries_;
     }
 
@@ -54,22 +54,19 @@ public class HlaContextFactory
     public List<HlaContext> contexts()
     {
         List<HlaContext> output = Lists.newArrayList();
-        if(mConfig.ClassType == null || mConfig.ClassType == CLASS_1)
+        if(mConfig.Genes.coversMhcClass1())
         {
             output.add(hlaA());
             output.add(hlaB());
             output.add(hlaC());
         }
 
-        if(mConfig.ClassType == null || mConfig.ClassType == CLASS_2)
+        for(HlaGene_ gene : mConfig.Genes.genes())
         {
-            for(HlaGene gene : HlaGene.values())
-            {
-                if(gene.isPseudo() || gene.mhcClass() != CLASS_2)
-                    continue;
+            if(gene.isPseudo() || gene.mhcClass() != CLASS_2)
+                continue;
 
-                output.add(new HlaContext(gene, GeneBoundaries_.get(gene), new ExpectedAlleles(null)));
-            }
+            output.add(new HlaContext(gene, GeneBoundaries_.get(gene), new ExpectedAlleles(null)));
         }
 
         return output;

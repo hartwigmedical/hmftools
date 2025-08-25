@@ -4,15 +4,13 @@ import java.util.List;
 
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 public class HlaContext
 {
-    public final HlaGene Gene;
+    public final HlaGene_ Gene;
     public final List<Integer> AminoAcidBoundaries;
     public final ExpectedAlleles ExpectedAlleles;
 
-    public HlaContext(final HlaGene gene, final List<Integer> aminoAcidBoundaries, final ExpectedAlleles expectedAlleles)
+    public HlaContext(final HlaGene_ gene, final List<Integer> aminoAcidBoundaries, final ExpectedAlleles expectedAlleles)
     {
         // TODO:
         if(aminoAcidBoundaries == null)

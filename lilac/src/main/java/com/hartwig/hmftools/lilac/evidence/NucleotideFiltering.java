@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class NucleotideFiltering
@@ -27,7 +27,7 @@ public class NucleotideFiltering
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final List<Fragment> fragments)
+            final HlaGene_ gene, final Collection<HlaSequenceLoci> candidates, final List<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -72,7 +72,7 @@ public class NucleotideFiltering
         return Lists.newArrayList(nucleotideSequences);
     }
 
-    private static int localSpanCount(final HlaGene gene, final Iterable<Fragment> fragments, final Collection<Integer> nucleotideIndices)
+    private static int localSpanCount(final HlaGene_ gene, final Iterable<Fragment> fragments, final Collection<Integer> nucleotideIndices)
     {
         int count = 0;
         for(Fragment fragment : fragments)
@@ -89,12 +89,12 @@ public class NucleotideFiltering
         return count;
     }
 
-    public static Map<HlaGene, List<Integer>> calcNucleotideHeterogygousLoci(final Collection<Integer> refNucleotideHetLoci)
+    public static Map<HlaGene_, List<Integer>> calcNucleotideHeterogygousLoci(final Collection<Integer> refNucleotideHetLoci)
     {
         // convert from amino acid exon boundaries to nucleotides for each gene
-        Map<HlaGene, List<Integer>> hetLociMap = Maps.newHashMap();
+        Map<HlaGene_, List<Integer>> hetLociMap = Maps.newHashMap();
 
-        for(HlaGene gene : GENE_CACHE.GeneNames)
+        for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
             List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
 
