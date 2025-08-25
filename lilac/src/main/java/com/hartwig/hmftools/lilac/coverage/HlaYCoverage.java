@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMEN
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
 
@@ -54,7 +54,7 @@ public class HlaYCoverage
 
     // TODO: only build this for CLASS1
     public HlaYCoverage(
-            final List<HlaSequenceLoci> hlaYSequences, final Map<HlaGene, Map<Integer,Set<String>>> geneAminoAcidHetLociMap,
+            final List<HlaSequenceLoci> hlaYSequences, final Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap,
             final LilacConfig config)
     {
         mHlaYSequences = hlaYSequences;
@@ -96,7 +96,7 @@ public class HlaYCoverage
         return maxAllele;
     }
 
-    public void updateAminoAcidLoci(final Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap)
+    public void updateAminoAcidLoci(final Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap)
     {
         mAminoAcidHetLoci.clear();
         mAminoAcidHetLoci.addAll(geneAminoAcidHetLociMap.get(HLA_A).keySet());

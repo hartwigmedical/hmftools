@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.MhcClass_;
 
-public enum HlaGene
+public enum HlaGene_
 {
     HLA_A(CLASS_1, false),
     HLA_B(CLASS_1, false),
@@ -19,18 +19,28 @@ public enum HlaGene
     HLA_Y(CLASS_1, true),
     HLA_H(CLASS_1, true),
 
-    HLA_DQB1(CLASS_2, false);
+    HLA_DQB1(CLASS_2, false),
+    HLA_DPA1(CLASS_2, false),
+    HLA_DPB1(CLASS_2, false),
+    HLA_DQA1(CLASS_2, false),
+    HLA_DRB1(CLASS_2, false),
 
-    // TODO: do not include in headers...
-//    NONE(CLASS_1, false); // used for debugging
+    NONE(CLASS_1, false, true); // used for debugging
 
     private final MhcClass_ mMhcClass;
     private final boolean mIsPseudo;
+    private final boolean mIsDebug;
 
-    HlaGene(final MhcClass_ mhcClass, boolean isPseudo)
+    HlaGene_(final MhcClass_ mhcClass, boolean isPseudo)
+    {
+        this(mhcClass, isPseudo, false);
+    }
+
+    HlaGene_(final MhcClass_ mhcClass, boolean isPseudo, boolean isDebug)
     {
         mMhcClass = mhcClass;
         mIsPseudo = isPseudo;
+        mIsDebug = isDebug;
     }
 
     public MhcClass_ mhcClass()
@@ -43,7 +53,12 @@ public enum HlaGene
         return mIsPseudo;
     }
 
-    public static HlaGene fromString(final String s)
+    public boolean isDebug()
+    {
+        return mIsDebug;
+    }
+
+    public static HlaGene_ fromString(final String s)
     {
         String gene = s.startsWith(HLA_PREFIX) ? s.substring(HLA_PREFIX.length()) : s;
         return valueOf("HLA_" + gene);
@@ -57,34 +72,17 @@ public enum HlaGene
 
     public String longName()
     {
-        // TODO:
-//        if(this == NONE)
-//            return "";
+        if(this == NONE)
+            return "";
 
         return super.toString().replace("_", "-");
     }
 
     public String shortName()
     {
-        // TODO:
-//        if(this == NONE)
-//            return "";
+        if(this == NONE)
+            return "";
 
         return super.toString().substring(HLA_PREFIX.length());
-    }
-
-    public static List<String> getShortNames(final LilacConfig config)
-    {
-        List<String> geneStrings = Lists.newArrayList();
-        for(HlaGene gene : values())
-        {
-            if(gene.isPseudo())
-                continue;
-
-            if(config.ClassType == null || config.ClassType == gene.mhcClass())
-                geneStrings.add(gene.shortName());
-        }
-
-        return geneStrings;
     }
 }

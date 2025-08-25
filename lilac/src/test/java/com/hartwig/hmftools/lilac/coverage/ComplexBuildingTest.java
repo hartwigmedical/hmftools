@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.coverage;
 
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
 
 import static org.junit.Assert.assertEquals;
 

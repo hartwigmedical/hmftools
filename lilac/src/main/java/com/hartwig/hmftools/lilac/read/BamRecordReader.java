@@ -34,7 +34,7 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
 import htsjdk.samtools.SAMRecord;
@@ -43,7 +43,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class BamRecordReader implements BamReader
 {
-    private final Map<HlaGene, GeneCodingRegions> mGeneCodingRegions;
+    private final Map<HlaGene_, GeneCodingRegions> mGeneCodingRegions;
 
     private final String mBamFile;
     private final SamReader mSamReader;
@@ -59,7 +59,7 @@ public class BamRecordReader implements BamReader
 
     private static final int MAX_DISTANCE = 1000;
 
-    public BamRecordReader(final String bamFile, final LilacConfig config, final Map<HlaGene, TranscriptData> transcripts,
+    public BamRecordReader(final String bamFile, final LilacConfig config, final Map<HlaGene_, TranscriptData> transcripts,
             final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
@@ -73,7 +73,7 @@ public class BamRecordReader implements BamReader
 
         mGeneCodingRegions = Maps.newHashMap();
 
-        for(HlaGene geneName : GENE_CACHE.GeneNames)
+        for(HlaGene_ geneName : GENE_CACHE.GeneNames)
         {
             TranscriptData transcriptData = transcripts.get(geneName);
             mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
@@ -115,7 +115,7 @@ public class BamRecordReader implements BamReader
     {
         final List<Fragment> fragments = Lists.newArrayList();
 
-        for(HlaGene geneName : GENE_CACHE.GeneNames)
+        for(HlaGene_ geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 
@@ -200,7 +200,7 @@ public class BamRecordReader implements BamReader
         return false;
     }
 
-    private Map<String, Fragment> createFragments(final HlaGene geneName, final byte geneStrand, final Iterable<Read> codingRecords)
+    private Map<String, Fragment> createFragments(final HlaGene_ geneName, final byte geneStrand, final Iterable<Read> codingRecords)
     {
         Map<String, Fragment> readIdFragments = Maps.newHashMap();
 
@@ -305,7 +305,7 @@ public class BamRecordReader implements BamReader
         // slice the BAM for the variant, get the mates if they are within the same gene's coding region,
         // then create and filter fragments
 
-        for(HlaGene geneName : GENE_CACHE.GeneNames)
+        for(HlaGene_ geneName : GENE_CACHE.GeneNames)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
 

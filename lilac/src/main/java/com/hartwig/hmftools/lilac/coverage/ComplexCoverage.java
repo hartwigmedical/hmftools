@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public final class ComplexCoverage implements Comparable<ComplexCoverage>
 {
@@ -104,7 +104,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
-        for(HlaGene gene : GENE_CACHE.GeneNames)
+        for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
             List<AlleleCoverage> geneCoverage = existingCoverage.stream()
                     .filter(x -> x.Allele.Gene == gene)

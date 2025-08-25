@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -197,8 +197,8 @@ public class ComplexBuilder
         unsupportedWildcards.forEach(x -> mConfirmedProteinAlleles.remove(x));
         unsupportedWildcards.forEach(x -> mUniqueProteinAlleles.remove(x));
 
-        Map<HlaGene, List<HlaComplex>> geneOnlyComplexes_ = Maps.newHashMap();
-        for(HlaGene gene : GENE_CACHE.GeneNames)
+        Map<HlaGene_, List<HlaComplex>> geneOnlyComplexes_ = Maps.newHashMap();
+        for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
             if(gene.isPseudo())
                 continue;
@@ -216,12 +216,12 @@ public class ComplexBuilder
                     .filter(x -> mUniqueProteinAlleles.contains(x))
                     .collect(Collectors.toList());
 
-            Map<HlaGene, Integer> geneOnlyComplexeSizes_ = geneOnlyComplexes_.entrySet().stream().collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue().size()));
+            Map<HlaGene_, Integer> geneOnlyComplexeSizes_ = geneOnlyComplexes_.entrySet().stream().collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue().size()));
             LL_LOGGER.info("candidate permutations exceeds threshold, candidates({}) common({})",
                     geneOnlyComplexeSizes_, commonAlleles.size());
 
-            Map<HlaGene, List<HlaAllele>> geneTopCandidates_ = Maps.newHashMap();
-            for(Map.Entry<HlaGene, List<HlaComplex>> entry : geneOnlyComplexes_.entrySet())
+            Map<HlaGene_, List<HlaAllele>> geneTopCandidates_ = Maps.newHashMap();
+            for(Map.Entry<HlaGene_, List<HlaComplex>> entry : geneOnlyComplexes_.entrySet())
             {
                 geneTopCandidates_.put(entry.getKey(), rankedGroupCoverage(10, refFragAlleles, entry.getValue(), recoveredAlleles_));
             }
@@ -268,7 +268,7 @@ public class ComplexBuilder
     }
 
     public static List<HlaComplex> buildComplexesByGene(
-            final HlaGene gene_, final List<HlaAllele> unfilteredGroups, final List<HlaAllele> unfilteredCandidates)
+            final HlaGene_ gene_, final List<HlaAllele> unfilteredGroups, final List<HlaAllele> unfilteredCandidates)
     {
         List<HlaAllele> confirmedGroups = takeN(unfilteredGroups.stream().filter(x -> x.Gene == gene_).collect(Collectors.toList()), 2);
         List<HlaAllele> candidates = unfilteredCandidates.stream().filter(x -> x.Gene == gene_).collect(Collectors.toList());
@@ -371,7 +371,7 @@ public class ComplexBuilder
     private static List<HlaAllele> filterWithUniqueGroups(
             final List<HlaAllele> alleles, final List<HlaAllele> confirmedGroups, final List<HlaAllele> recoveredAlleles)
     {
-        Map<HlaGene, List<HlaAllele>> map = Maps.newHashMap();
+        Map<HlaGene_, List<HlaAllele>> map = Maps.newHashMap();
 
         GENE_CACHE.GeneNames.forEach(x -> map.put(x, confirmedGroups.stream().filter(y -> y.Gene == x).collect(Collectors.toList())));
 
@@ -394,14 +394,14 @@ public class ComplexBuilder
     private static List<HlaAllele> getTopLowConfGroups(
             List<AlleleCoverage> uniqueGroups, List<AlleleCoverage> lowConfGroups)
     {
-        Map<HlaGene, Integer> groupCountsPerGene = Maps.newHashMap();
+        Map<HlaGene_, Integer> groupCountsPerGene = Maps.newHashMap();
         for(AlleleCoverage alleleCoverage : uniqueGroups)
             groupCountsPerGene.merge(alleleCoverage.Allele.Gene, 1, Integer::sum);
 
         List<AlleleCoverage> topLowConfGroups = Lists.newArrayList();
         for(AlleleCoverage alleleCoverage : lowConfGroups)
         {
-            HlaGene gene = alleleCoverage.Allele.Gene;
+            HlaGene_ gene = alleleCoverage.Allele.Gene;
             groupCountsPerGene.putIfAbsent(gene, 0);
 
             if(groupCountsPerGene.get(gene) < DIPLOID_ALLELE_COUNT)
@@ -430,7 +430,7 @@ public class ComplexBuilder
         List<AlleleCoverage> results = Lists.newArrayList();
 
         // take at most 2 alleles for each gene, and at most 1 unique protein if more than 1 unique group is provided
-        for(HlaGene gene : GENE_CACHE.GeneNames)
+        for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
             List<AlleleCoverage> geneCoverage = unique.stream().filter(x -> x.Allele.Gene == gene).collect(Collectors.toList());
 

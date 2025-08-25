@@ -4,15 +4,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
-import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES_;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.disableLogging;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.PASS;
@@ -31,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.GeneCache;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.LilacApplication;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
@@ -71,10 +70,10 @@ public class LilacAppTest
         if(GENE_CACHE != null)
             return;
 
-        GENE_CACHE = new GeneCache(loadHlaTranscripts(V37));
-        A_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
-        B_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
-        C_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
+        GENE_CACHE = new GeneCache(loadHlaTranscripts(V37, GeneSelector.MHC_CLASS_1));
+        GENE_EXON_BOUNDARIES_.put(HLA_A, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
+        GENE_EXON_BOUNDARIES_.put(HLA_B, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
+        GENE_EXON_BOUNDARIES_.put(HLA_C, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
     }
 
     @Test
@@ -143,7 +142,7 @@ public class LilacAppTest
         LilacQC qcMetrics = lilac.getSummaryMetrics();
 
         assertTrue(qcMetrics.Status.contains(PASS));
-        assertNull(qcMetrics.HlaYAllele);
+        assertNull(qcMetrics.HlaYAllele_);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertTrue(qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
         assertEquals(fragCount * GENE_CACHE.ExpectAlleleCount - 150, qcMetrics.CoverageQC.TotalFragments);
@@ -223,7 +222,7 @@ public class LilacAppTest
 
         // C*01:01 will cause unmatched haplotypes
         assertTrue(qcMetrics.Status.contains(WARN_UNMATCHED_HAPLOTYPE));
-        assertNull(qcMetrics.HlaYAllele);
+        assertNull(qcMetrics.HlaYAllele_);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertEquals(5, qcMetrics.HaplotypeQC.UnmatchedHaplotypes.size());
         assertEquals(370, qcMetrics.CoverageQC.TotalFragments);
@@ -299,7 +298,7 @@ public class LilacAppTest
 
         // C*01:01 will cause unmatched haplotypes
         assertTrue(qcMetrics.Status.contains(PASS));
-        assertNull(qcMetrics.HlaYAllele);
+        assertNull(qcMetrics.HlaYAllele_);
         assertEquals(0, qcMetrics.AminoAcidQC.UnusedAminoAcids);
         assertFalse(qcMetrics.HaplotypeQC.UnmatchedHaplotypes.isEmpty());
         assertTrue(qcMetrics.CoverageQC.PercentWildcard > 0);
@@ -311,7 +310,7 @@ public class LilacAppTest
     {
         List<Fragment> fragments = Lists.newArrayList();
 
-        HlaSequenceLoci sequenceLoci = refData.NucleotideSequences.stream().filter(x -> x.Allele.matches(allele)).findFirst().orElse(null);
+        HlaSequenceLoci sequenceLoci = refData.NucleotideSequences__.stream().filter(x -> x.Allele.matches(allele)).findFirst().orElse(null);
 
         if(sequenceLoci == null)
         {
@@ -344,17 +343,17 @@ public class LilacAppTest
                 ReferenceData.class.getResourceAsStream("/test_allele_nucleotides.csv")))
                 .lines().collect(Collectors.toList());
 
-        refData.loadSequenceFile(nucleotides, refData.NucleotideSequences, false);
+        refData.loadSequenceFile(nucleotides, refData.NucleotideSequences__, false);
 
         final List<String> aminoAcids = new BufferedReader(new InputStreamReader(
                 ReferenceData.class.getResourceAsStream("/test_allele_amino_acids.csv")))
                 .lines().collect(Collectors.toList());
 
-        refData.loadSequenceFile(aminoAcids, refData.AminoAcidSequences, true);
+        refData.loadSequenceFile(aminoAcids, refData.AminoAcidSequences__, true);
 
         for(String alleleStr : COMMON_ALLELES)
         {
-            HlaSequenceLoci seqLoci = refData.AminoAcidSequences.stream().filter(x -> x.Allele.matches(alleleStr)).findFirst().orElse(null);
+            HlaSequenceLoci seqLoci = refData.AminoAcidSequences__.stream().filter(x -> x.Allele.matches(alleleStr)).findFirst().orElse(null);
 
             if(seqLoci == null)
             {

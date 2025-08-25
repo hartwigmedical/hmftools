@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.MhcClass_;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -22,7 +22,7 @@ public class NucleotideGeneEnrichment
     private final int mAcMinUniqueProteinExonBoundary_;
     private final int mBcMinUniqueProteinExonBoundary_;
 
-    public NucleotideGeneEnrichment(final Map<HlaGene, List<Integer>> geneBoundaries_)
+    public NucleotideGeneEnrichment(final Map<HlaGene_, List<Integer>> geneBoundaries_)
     {
         // determine the minimum unique exon boundary for each pair
         mAbMinUniqueProteinExonBoundary_ = getMinUniqueBoundary(geneBoundaries_.get(HLA_A), geneBoundaries_.get(HLA_B));
@@ -97,7 +97,7 @@ public class NucleotideGeneEnrichment
         }
     }
 
-    private static boolean considerAddingGene(final Fragment fragment, final HlaGene gene, int maxFragmentNucleotideLocus)
+    private static boolean considerAddingGene(final Fragment fragment, final HlaGene_ gene, int maxFragmentNucleotideLocus)
     {
         if(fragment.containsGene(gene))
             return false;
@@ -107,7 +107,7 @@ public class NucleotideGeneEnrichment
     }
 
     private static boolean checkAddAdditionalGene(
-            final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene otherGene, int geneComboUniqueAminoAcidBoundary)
+            final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene_ otherGene, int geneComboUniqueAminoAcidBoundary)
     {
         if(!fragment.containsGene(otherGene))
             return false;

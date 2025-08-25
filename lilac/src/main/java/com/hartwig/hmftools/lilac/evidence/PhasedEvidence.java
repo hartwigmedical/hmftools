@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class PhasedEvidence implements Comparable<PhasedEvidence>
@@ -235,7 +235,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
     }
 
     public static void logInconsistentEvidence(
-	    final HlaGene gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
+	    final HlaGene_ gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
     {
         List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.Allele.Gene == gene).collect(Collectors.toList());
 

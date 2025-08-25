@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.WILD_ONLY;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildLoci;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.buildTargetSequences;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createFragment;
@@ -23,7 +23,7 @@ import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.junit.Test;
@@ -40,10 +40,10 @@ public class FragmentAllelesTest
         List<String> emptyNucs = Lists.newArrayList();
         List<Byte> emptyQuals = Lists.newArrayList();
         List<Integer> emptyLoci = Lists.newArrayList();
-        Set<HlaGene> aGenes = Sets.newHashSet(HLA_A);
-        Set<HlaGene> bGenes = Sets.newHashSet(HLA_B);
+        Set<HlaGene_> aGenes = Sets.newHashSet(HLA_A);
+        Set<HlaGene_> bGenes = Sets.newHashSet(HLA_B);
 
-        final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        final Map<HlaGene_, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         Map<Integer, Set<String>> geneALociMap = Maps.newLinkedHashMap();
         geneALociMap.put(0, Sets.newHashSet("A"));
         geneALociMap.put(1, Sets.newHashSet("B"));
@@ -51,7 +51,7 @@ public class FragmentAllelesTest
         geneALociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(HLA_A, geneALociMap);
 
-        Map<HlaGene, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
+        Map<HlaGene_, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
         List<HlaSequenceLoci> candidateNucSequences = Lists.newArrayList();
         List<Set<String>> refNucleotides = Lists.newArrayList();
 
@@ -128,9 +128,9 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq1 = new HlaSequenceLoci(allele1, Lists.newArrayList("A", "P", "C", "D"));
         List<HlaSequenceLoci> sequences = Lists.newArrayList(seq1);
 
-        Set<HlaGene> aGenes = Sets.newHashSet(HLA_A);
+        Set<HlaGene_> aGenes = Sets.newHashSet(HLA_A);
 
-        final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        final Map<HlaGene_, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         Map<Integer, Set<String>> geneALociMap = Maps.newLinkedHashMap();
         geneALociMap.put(0, Sets.newHashSet("A"));
         geneALociMap.put(1, Sets.newHashSet("P"));
@@ -138,7 +138,7 @@ public class FragmentAllelesTest
         geneALociMap.put(3, Sets.newHashSet("D"));
         geneHetLociMap.put(HLA_A, geneALociMap);
 
-        Map<HlaGene, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
+        Map<HlaGene_, List<Integer>> refNucleotideHetLoci = Maps.newHashMap();
         List<HlaSequenceLoci> candidateNucSequences = Lists.newArrayList();
         List<Set<String>> refNucleotides = Lists.newArrayList();
 

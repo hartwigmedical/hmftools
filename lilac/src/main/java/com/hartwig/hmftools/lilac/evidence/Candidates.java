@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
@@ -98,9 +98,6 @@ public final class Candidates
     public static List<HlaSequenceLoci> filterSequencesByMinSupport(final Collection<HlaSequenceLoci> candidates,
             final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, final SequenceCount rawAminoAcidCounts)
     {
-        // TODO:
-        HlaGene gene = Lists.newArrayList(candidates).get(0).Allele.Gene;
-
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
         candidateSequences.addAll(candidates);

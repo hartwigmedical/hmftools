@@ -2,14 +2,12 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
-import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES_;
 import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
 import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +27,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 import com.hartwig.hmftools.lilac.util.ThrowOnUnstubbed;
@@ -53,7 +51,7 @@ public class NucleotideTest
     {
         buildGeneCache();
 
-        NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
+        NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(GENE_EXON_BOUNDARIES_);
 
         List<Integer> indices = Lists.newArrayList();
         indices.add(337);
@@ -149,7 +147,7 @@ public class NucleotideTest
 
     private static void assertGene(
             final NucleotideGeneEnrichment enricher,
-            final Set<HlaGene> expectedGenes, final HlaGene alignedGene, final List<Integer> aminoAcideIndices)
+            final Set<HlaGene_> expectedGenes, final HlaGene_ alignedGene, final List<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
 
@@ -157,7 +155,7 @@ public class NucleotideTest
         assertTrue(namesMatch(fragment.genes(), expectedGenes));
     }
 
-    private static Fragment create(final HlaGene gene, final List<Integer> indices)
+    private static Fragment create(final HlaGene_ gene, final List<Integer> indices)
     {
         List<Byte> qualities = Lists.newArrayListWithCapacity(indices.size());
         List<String> nucleotides = Lists.newArrayListWithCapacity(indices.size());

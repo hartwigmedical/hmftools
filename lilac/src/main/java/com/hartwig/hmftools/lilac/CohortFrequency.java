@@ -13,12 +13,12 @@ import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public class CohortFrequency
 {
-    private final MhcClass_ mClassType;
+    private final GeneSelector mGenes;
     private final Map<HlaAllele, Double> mAlleleFrequencies_;
 
-    public CohortFrequency(final MhcClass_ classType, final String freqFile)
+    public CohortFrequency(final GeneSelector genes, final String freqFile)
     {
-        mClassType = classType;
+        mGenes = genes;
         mAlleleFrequencies_ = Maps.newHashMap();
 
         if(!freqFile.isEmpty())
@@ -58,7 +58,7 @@ public class CohortFrequency
                 String alleleStr = items[0];
                 double frequency = Double.parseDouble(items[1]);
                 HlaAllele allele = HlaAllele.fromString(alleleStr);
-                if(mClassType != null && allele.Gene.mhcClass() != mClassType)
+                if(!mGenes.contains(allele.Gene))
                     continue;
 
                 mAlleleFrequencies_.put(allele, frequency);

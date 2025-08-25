@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public class CopyNumberData
 {
-    public final HlaGene Gene;
+    public final HlaGene_ Gene;
     public final double MinCopyNumber;
     public final double MinMinorAlleleCopyNumber;
 
-    public CopyNumberData(final HlaGene gene, final double minCopyNumber, final double minMinorAlleleCopyNumber)
+    public CopyNumberData(final HlaGene_ gene, final double minCopyNumber, final double minMinorAlleleCopyNumber)
     {
         Gene = gene;
         MinCopyNumber = minCopyNumber;

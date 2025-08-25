@@ -21,7 +21,7 @@ import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
@@ -53,7 +53,7 @@ import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.GeneCache;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -83,7 +83,7 @@ public class GenerateReferenceSequences
         mAlleleFrequencies_ = new CohortFrequency(null, alleleFrequenciesFile.toString());
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
+        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
         mGeneCache = new GeneCache(hlaTranscriptMap);
 
         mNucleotideSequences__ = Lists.newArrayList();
@@ -134,7 +134,7 @@ public class GenerateReferenceSequences
     {
         LL_LOGGER.info("reading nucleotide files");
 
-        for(HlaGene gene : mGeneCache.GeneNames)
+        for(HlaGene_ gene : mGeneCache.GeneNames)
             mNucleotideSequences__.addAll(nucleotideLoci(new File(mResourceDir, gene.shortName() + "_nuc.txt"), gene));
 
         List<HlaSequenceLoci> yNucSequences = nucleotideLoci(new File(mResourceDir, "Y_nuc.txt"), HLA_Y);
@@ -148,7 +148,7 @@ public class GenerateReferenceSequences
 
         LL_LOGGER.info("reading protein files");
 
-        for(HlaGene gene : mGeneCache.GeneNames)
+        for(HlaGene_ gene : mGeneCache.GeneNames)
             mAminoAcidSequences__.addAll(aminoAcidLoci(new File(mResourceDir, gene.shortName() + "_prot.txt"), gene));
 
         final HlaSequenceLoci sequenceTemplate = mAminoAcidSequences__.stream()
@@ -171,7 +171,7 @@ public class GenerateReferenceSequences
         fillWildcards(mAminoAcidSequences__);
     }
 
-    private List<HlaSequenceLoci> nucleotideLoci(final File filename, final HlaGene gene)
+    private List<HlaSequenceLoci> nucleotideLoci(final File filename, final HlaGene_ gene)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
@@ -182,7 +182,7 @@ public class GenerateReferenceSequences
         return buildSequences(reducedSequences, false);
     }
 
-    private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene gene)
+    private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene_ gene)
     {
         List<HlaSequence> sequences = HlaSequenceFile.readDefintionFile(filename, gene);
 
@@ -460,7 +460,7 @@ public class GenerateReferenceSequences
             writer.newLine();
 
             // then actual transcript positions for the exon boundaries
-            for(HlaGene gene : mGeneCache.GeneNames)
+            for(HlaGene_ gene : mGeneCache.GeneNames)
             {
                 TranscriptData transData = mGeneCache.GeneTranscriptMap.get(gene);
                 String geneStr = padString(gene.shortName(), alleleNameLength);

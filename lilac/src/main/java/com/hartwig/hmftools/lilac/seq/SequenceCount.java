@@ -6,9 +6,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,7 +32,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
@@ -146,13 +146,13 @@ public final class SequenceCount
 
     public int depth(final int locus) { return mSeqCountsByLoci.get(locus).size(); }
 
-    public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences_(
-            final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
+    public static Map<HlaGene_, Map<Integer, Set<String>>> extractHeterozygousLociSequences_(
+            final Map<HlaGene_, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
     {
-        Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
-        for(Map.Entry<HlaGene, SequenceCount> geneEntry : geneCountsMap.entrySet())
+        Map<HlaGene_, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
+        for(Map.Entry<HlaGene_, SequenceCount> geneEntry : geneCountsMap.entrySet())
         {
-            HlaGene gene = geneEntry.getKey();
+            HlaGene_ gene = geneEntry.getKey();
             SequenceCount sequenceCounts = geneEntry.getValue();
             List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene == gene).toList();
             Map<Integer, Set<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(geneExtraSeqLoci);
