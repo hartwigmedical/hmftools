@@ -17,7 +17,7 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public class CopyNumberAssignment
 {
@@ -36,10 +36,10 @@ public class CopyNumberAssignment
         try
         {
             List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                    .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene.fromString(x.geneName()))).toList();
+                    .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene_.fromString(x.geneName()))).toList();
 
             List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.MinMinorAlleleCopyNumber))
+                    .map(x -> new CopyNumberData(HlaGene_.fromString(x.geneName()), x.minCopyNumber(), x.MinMinorAlleleCopyNumber))
                     .collect(Collectors.toList());
 
             mSampleCopyNumberData.put(config.Sample, cnDataList);
@@ -83,7 +83,7 @@ public class CopyNumberAssignment
             AlleleCoverage tumorCoverage1 = tumorCoverage.getAlleleCoverage().get(index);
             AlleleCoverage tumorCoverage2 = tumorCoverage.getAlleleCoverage().get(index + 1);
 
-            HlaGene gene = refCoverage1.Allele.Gene;
+            HlaGene_ gene = refCoverage1.Allele.Gene;
             CopyNumberData cnData = cnDataList.stream().filter(x -> x.Gene == gene).findFirst().orElse(null);
 
             if(cnData == null)

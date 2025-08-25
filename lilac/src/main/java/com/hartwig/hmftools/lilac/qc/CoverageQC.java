@@ -17,12 +17,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public class CoverageQC
 {
 
-    public final Map<HlaGene, Integer> CountsByGene_;
+    public final Map<HlaGene_, Integer> CountsByGene_;
 
     public final int TotalFragments; // fragment with at least 1 sufficient map-qual base
 
@@ -56,7 +56,7 @@ public class CoverageQC
      */
 
 
-    public CoverageQC(final Map<HlaGene, Integer> countsByGene_, int totalFragments, int unmatched, int uninformative, int hlaY,
+    public CoverageQC(final Map<HlaGene_, Integer> countsByGene_, int totalFragments, int unmatched, int uninformative, int hlaY,
             int uniqueFragments, int sharedFragments, int wildcardFragments)
     {
         CountsByGene_ = countsByGene_;
@@ -78,8 +78,8 @@ public class CoverageQC
     public static CoverageQC create(final Collection<Fragment> fragments, final ComplexCoverage winner)
     {
         List<HlaAllele> alleles = winner.getAlleleCoverage().stream().map(x -> x.Allele).toList();
-        Map<HlaGene, Integer> countsByGene_ = Maps.newHashMap();
-        for(HlaGene gene : GENE_CACHE.GeneNames)
+        Map<HlaGene_, Integer> countsByGene_ = Maps.newHashMap();
+        for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
             if(gene.isPseudo())
                 continue;

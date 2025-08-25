@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 
 public class HlaAllele implements Comparable<HlaAllele>
 {
-    public final HlaGene Gene;
+    public final HlaGene_ Gene;
     public final String AlleleGroup;
     public final String Protein;
     public final String Synonymous;
@@ -24,7 +24,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     private boolean mHasWildcards;
 
     public HlaAllele(
-            final HlaGene gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
+            final HlaGene_ gene, final String alleleGroup, final String protein, final String synonymous, final String synonymousNonCoding,
             final HlaAllele fourDigit, final HlaAllele group)
     {
         Gene = gene;
@@ -59,7 +59,7 @@ public class HlaAllele implements Comparable<HlaAllele>
     public static HlaAllele fromString(final String line)
     {
         int starIndex = line.indexOf('*');
-        HlaGene gene = HlaGene.fromString(line.substring(0, starIndex));
+        HlaGene_ gene = HlaGene_.fromString(line.substring(0, starIndex));
         String contigRemainder = line.substring(starIndex + 1);
         String[] contigSplit = contigRemainder.split(":");
 

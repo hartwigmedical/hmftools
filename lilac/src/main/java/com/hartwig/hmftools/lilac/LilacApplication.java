@@ -59,7 +59,7 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
@@ -204,7 +204,7 @@ public class LilacApplication
             LOW_BASE_QUAL_THRESHOLD = medianBaseQuality;
         }
 
-        final Map<HlaGene, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
+        final Map<HlaGene_, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
         if(!hasSufficientGeneDepth(geneBaseDepth))
         {
             mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
@@ -296,7 +296,7 @@ public class LilacApplication
         mRefAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, refAminoAcidFrags);
         mRefNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, refAminoAcidFrags);
 
-        Map<HlaGene, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
+        Map<HlaGene_, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
                 Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
 
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences__.stream()
@@ -305,7 +305,7 @@ public class LilacApplication
         List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences__.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap_ =
+        Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap_ =
                 extractHeterozygousLociSequences_(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper_ = new FragmentAlleleMapper(
@@ -441,7 +441,7 @@ public class LilacApplication
                 .filter(x -> winningAlleles.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
-        LL_LOGGER.info("{}", HlaComplexFile.header(HlaGene.getShortNames(mConfig)));
+        LL_LOGGER.info("{}", HlaComplexFile.header(mConfig.Genes));
 
         for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
@@ -692,11 +692,11 @@ public class LilacApplication
         return false;
     }
 
-    private boolean hasSufficientGeneDepth(final Map<HlaGene, int[]> geneBaseDepth)
+    private boolean hasSufficientGeneDepth(final Map<HlaGene_, int[]> geneBaseDepth)
     {
-        Map<HlaGene, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();
+        Map<HlaGene_, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();
         int totalLowCoveragePositions = 0;
-        for(Map.Entry<HlaGene, int[]> entry : geneBaseDepth.entrySet())
+        for(Map.Entry<HlaGene_, int[]> entry : geneBaseDepth.entrySet())
         {
             int count = (int) Arrays.stream(entry.getValue()).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
             geneLowCoveragePositionCounts.put(entry.getKey(), count);

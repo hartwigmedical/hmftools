@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
@@ -54,10 +54,10 @@ public final class LilacTestUtils
     public static Fragment createFragment(final String id)
     {
         return new Fragment(
-                createReadRecord(id), HlaGene.NONE, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                createReadRecord(id), HlaGene_.NONE, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 
-    public static Fragment createFragment(final String id, final HlaGene gene, final String sequence, int locusStart, int locusEnd)
+    public static Fragment createFragment(final String id, final HlaGene_ gene, final String sequence, int locusStart, int locusEnd)
     {
         List<Integer> loci = formRange(locusStart, locusEnd);
         List<String> sequences = buildTargetSequences(sequence, loci);

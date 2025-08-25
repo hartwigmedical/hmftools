@@ -11,7 +11,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 public final class HlaExonSequences
 {
@@ -26,7 +26,7 @@ public final class HlaExonSequences
         ExonSequences = ImmutableList.copyOf(exonSequences);
     }
 
-    public static HlaExonSequences create(final Map<HlaGene, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
+    public static HlaExonSequences create(final Map<HlaGene_, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
     {
         HlaAllele allele = sequence.Allele;
         List<Integer> exonBoundaries = geneExonBoundaries.get(allele.Gene);

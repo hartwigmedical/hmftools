@@ -23,7 +23,7 @@ import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -33,13 +33,13 @@ public class SomaticVariantAnnotation
     private final LilacConfig mConfig;
 
     // variant loci are grouped by the genes they nominally fall within
-    private final Map<HlaGene, List<Integer>> mGeneVariantLoci;
+    private final Map<HlaGene_, List<Integer>> mGeneVariantLoci;
 
     private final List<SomaticVariant> mSomaticVariants;
 
-    private final Map<HlaGene, TranscriptData> mHlaTranscriptData;
+    private final Map<HlaGene_, TranscriptData> mHlaTranscriptData;
 
-    public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene, TranscriptData> transcriptData)
+    public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene_, TranscriptData> transcriptData)
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
@@ -225,7 +225,7 @@ public class SomaticVariantAnnotation
                 if(inHlaCodingRegion(variant))
                 {
                     variants.add(new SomaticVariant(
-                            HlaGene.fromString(variant.gene()), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
+                            HlaGene_.fromString(variant.gene()), variant.chromosome(), variant.position(), variant.ref(), variant.alt(),
                             variant.filter(), variant.canonicalCodingEffect(), variant.context()));
                 }
             }

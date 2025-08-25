@@ -38,7 +38,7 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
@@ -119,7 +119,7 @@ public class ResultsWriter
         solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
         summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), HlaGene.getShortNames(mConfig), rankedComplexes);
+        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mConfig.Genes, rankedComplexes);
     }
 
     public void writeDetailedOutputs(
@@ -150,7 +150,7 @@ public class ResultsWriter
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
-    public void writeFailedSampleFileOutputs(final Map<HlaGene, int[]> geneBaseDepth, int medianBaseQuality)
+    public void writeFailedSampleFileOutputs(final Map<HlaGene_, int[]> geneBaseDepth, int medianBaseQuality)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -167,7 +167,7 @@ public class ResultsWriter
             throw new NotImplementedException("");
         }
 
-        Map<HlaGene, Integer> countsByGene = Map.of(HlaGene.HLA_A, 0, HlaGene.HLA_B, 0, HlaGene.HLA_C, 0);
+        Map<HlaGene_, Integer> countsByGene = Map.of(HlaGene_.HLA_A, 0, HlaGene_.HLA_B, 0, HlaGene_.HLA_C, 0);
         CoverageQC coverageQC = new CoverageQC(
                 countsByGene, 0, 0, 0, 0, 0, 0, 0);
 

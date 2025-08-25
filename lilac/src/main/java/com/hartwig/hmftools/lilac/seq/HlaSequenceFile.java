@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +63,7 @@ public class HlaSequenceFile
         return new HlaSequenceLoci(allele, sequences);
     }
 
-    public static List<HlaSequence> readDefintionFile(final File filename_, final HlaGene gene)
+    public static List<HlaSequence> readDefintionFile(final File filename_, final HlaGene_ gene)
     {
         if(filename_ == null)
             return Lists.newArrayList();

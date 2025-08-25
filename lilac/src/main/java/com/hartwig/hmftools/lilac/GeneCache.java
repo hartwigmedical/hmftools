@@ -12,27 +12,27 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.hla.HlaGene_;
 
 import org.apache.commons.lang3.NotImplementedException;
 
 public class GeneCache
 {
-    public final Map<HlaGene, TranscriptData> GeneTranscriptMap;
+    public final Map<HlaGene_, TranscriptData> GeneTranscriptMap;
     public final List<TranscriptData> Transcripts;
 
     // TODO: Load the appropriate genes
-    public final List<HlaGene> GeneNames; // long names matching Ensembl
+    public final List<HlaGene_> GeneNames; // long names matching Ensembl
 
     public final int ExpectAlleleCount;
 
-    public final Map<HlaGene, List<Integer>> AminoAcidExonBoundaries;
+    public final Map<HlaGene_, List<Integer>> AminoAcidExonBoundaries;
     public final int MaxCommonAminoAcidExonBoundary;
 
-    public final Map<HlaGene, List<Integer>> NucleotideExonBoundaries;
-    public final Map<HlaGene, Integer> NucleotideLengths;
+    public final Map<HlaGene_, List<Integer>> NucleotideExonBoundaries;
+    public final Map<HlaGene_, Integer> NucleotideLengths;
 
-    public GeneCache(final Map<HlaGene, TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap)
     {
         GeneTranscriptMap = hlaTranscriptMap;
 
@@ -48,13 +48,13 @@ public class GeneCache
         NucleotideExonBoundaries = Maps.newHashMap();
         NucleotideLengths = Maps.newHashMap();
 
-        for(HlaGene geneName : GeneNames)
+        for(HlaGene_ geneName : GeneNames)
             setExonBoundaryValues(geneName, GeneTranscriptMap.get(geneName));
 
         MaxCommonAminoAcidExonBoundary = findMaxCommonAminoAcidBoundary();
     }
 
-    private void setExonBoundaryValues(final HlaGene geneName, final TranscriptData transcriptData)
+    private void setExonBoundaryValues(final HlaGene_ geneName, final TranscriptData transcriptData)
     {
         boolean forwardStrand = transcriptData.posStrand();
 
