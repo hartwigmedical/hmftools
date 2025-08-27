@@ -253,22 +253,23 @@ public class BlastnRunner
                 }
 
                 int qseqid = row.getInt(BlastColumns.qseqid);
-                BlastnMatch blastnMatch = new BlastnMatch(row.getInt(BlastColumns.qlen),
-                        row.get(BlastColumns.stitle),
-                        row.getDouble(BlastColumns.pident),
+                BlastnMatch blastnMatch = new BlastnMatch(
+                        row.getInt(BlastColumns.qlen),      // Length of the query sequence
+                        row.get(BlastColumns.stitle),       // ref contig name
+                        row.getDouble(BlastColumns.pident), // percent of identical positions
                         row.getDouble(BlastColumns.qcovs),
-                        row.getInt(BlastColumns.length),
+                        row.getInt(BlastColumns.length),    // length of aligned subsequence
                         row.getInt(BlastColumns.mismatch),
                         row.getInt(BlastColumns.gapopen),
-                        row.getInt(BlastColumns.qstart),
-                        row.getInt(BlastColumns.qend),
-                        row.getInt(BlastColumns.sstart),
-                        row.getInt(BlastColumns.send),
+                        row.getInt(BlastColumns.qstart),    // index of start of alignment within query sequence (1 = first base)
+                        row.getInt(BlastColumns.qend),      // index of end of alignment within query sequence
+                        row.getInt(BlastColumns.sstart),    // start of alignment in ref
+                        row.getInt(BlastColumns.send),      // end of alignment in ref
                         Strand.valueOf(row.getInt(BlastColumns.sframe)),
                         row.getDouble(BlastColumns.evalue),
                         row.getDouble(BlastColumns.bitscore),
-                        row.get(BlastColumns.qseq),
-                        row.get(BlastColumns.sseq));
+                        row.get(BlastColumns.qseq),         // aligned subsequence of query sequence
+                        row.get(BlastColumns.sseq));        // aligned sequence in ref
 
                 blastnResults.put(qseqid, blastnMatch);
             }
