@@ -113,13 +113,11 @@ object AlignmentUtil
         }
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, numThreads: Int): Multimap<Int, BwaMemMatch>
+    fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, numThreads: Int):
+            Multimap<Int, BwaMemMatch>
     {
-        loadAlignerLibrary(null)
-        // TODO
-        val refGenomeFasta = "/Users/reecejones/GenomicData/GRCh38/GRCh38_masked_exclusions_alts_hlas.fasta"
-        val refGenome = loadRefGenome(refGenomeFasta);
-        val index = BwaMemIndex(refGenomeFasta + ".img.hmftools-bwa-jni")
+        val refGenome = loadRefGenome(refGenomeFastaPath);
+        val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)
         aligner.setNThreadsOption(numThreads)
         aligner.setFlagOption(aligner.getFlagOption() or BwaMemAligner.MEM_F_ALL)

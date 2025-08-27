@@ -11,6 +11,7 @@ import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatchTsv
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatcher
+import com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
@@ -37,7 +38,7 @@ import kotlin.system.exitProcess
 
 class CiderApplication(configBuilder: ConfigBuilder)
 {
-    private val mParams = CiderParams(configBuilder)
+    private val mParams = CiderParams.fromConfigBuilder(configBuilder)
 
     @Throws(IOException::class, InterruptedException::class)
     fun run(args: Array<String>): Int
@@ -102,7 +103,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val alignmentAnnotations: Collection<AlignmentAnnotation>
 
-        if (true)
+        if (mParams.alignmentRefGenomePath != null && mParams.alignmentBwaIndexImagePath != null)
         {
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
@@ -110,8 +111,13 @@ class CiderApplication(configBuilder: ConfigBuilder)
             // perform a GC collection before running alignment. This is to reduce memory used by JVM
             System.gc()
 
+            loadAlignerLibrary(mParams.bwaLibPath)
+
             val alignmentAnnotator = AlignmentAnnotator()
-            alignmentAnnotations = alignmentAnnotator.runAnnotate(mParams.sampleId, filteredVdjs, mParams.outputDir, mParams.threadCount)
+            alignmentAnnotations = alignmentAnnotator.runAnnotate(
+                mParams.sampleId, filteredVdjs,
+                mParams.alignmentRefGenomePath, mParams.alignmentBwaIndexImagePath,
+                mParams.outputDir, mParams.threadCount)
         }
         else
         {

@@ -65,9 +65,11 @@ class AlignmentAnnotator
         }
     }
 
-    fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
+    fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, refGenomeFastaPath: String, refGenomeIndexPath: String, outputDir: String, numThreads: Int)
             : Collection<AlignmentAnnotation>
     {
+        sLogger.info("Running alignment annotation")
+
         // assign a key to each VDJ, such that we can keep track of them
         var key = 0
         val alignmentRunDataMap : MutableMap<Int, AlignmentRunData> = HashMap()
@@ -84,7 +86,7 @@ class AlignmentAnnotator
 
         val alignmentResults = AlignmentUtil.runBwaMem(
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
-             numThreads)
+             refGenomeFastaPath, refGenomeIndexPath, numThreads)
 
         // put all into an identity hash multimap
         val vdjToMatch: Multimap<AlignmentRunData, AlignmentUtil.BwaMemMatch> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }

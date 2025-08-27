@@ -32,6 +32,8 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 
 ### Optional Arguments
 
+TODO
+
 | Argument                   | Default | Description                                                                                             |
 |----------------------------|---------|---------------------------------------------------------------------------------------------------------|
 | write_cider_bam            | Off     | If specified, write a small bam file of all the extracted reads.                                        |
@@ -97,15 +99,15 @@ Each V only anchored read is also checked for partial overlap with each J only a
 Each collapsed sequence is either marked as PASS or one or more of the following filters 
 - **PARTIAL** - Only has V or J
 - **NO_VDJ_ALIGNMENT** - Sequence is not aligned to any V/D/J gene
-- **NO_V_ANCHOR** - No candidate V anchor found. Only applied if BLASTN is not used. 
-- **NO_J_ANCHOR** - No candidate J anchor found. Only applied if BLASTN is not used.
-- **POOR_V_ANCHOR** - V anchor is found by BLOSUM match with negative similarity score. Only applied if BLASTN is not used.
-- **POOR_J_ANCHOR** - J anchor is found by BLOSUM match with negative similarity score. Only applied if BLASTN is not used.
+- **NO_V_ANCHOR** - No candidate V anchor found. Only applied if alignment is not used. 
+- **NO_J_ANCHOR** - No candidate J anchor found. Only applied if alignment is not used.
+- **POOR_V_ANCHOR** - V anchor is found by BLOSUM match with negative similarity score. Only applied if alignment is not used.
+- **POOR_J_ANCHOR** - J anchor is found by BLOSUM match with negative similarity score. Only applied if alignment is not used.
 - **DUPLICATE** - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
 - **CDR3_DELETED** - A V and J anchor are found, but the CDR3 portion of the sequence (including conserved C,W,F) is fully deleted
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
-- **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0) OR BLASTN matches to reference contig.
+- **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0) OR alignment matches to reference contig.
 - **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read. 
 
 Note that sequences with "no anchor" may represent partial rearrangements.
@@ -120,7 +122,7 @@ The full set of fields output are:
 | cdr3AA                                | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                              | 
 | locus                                 | Ig/TCR locus of the sequence                                                                                                                        |
 | Filter                                | PASS if viable CDR3 sequence or one or more filter reasons  (see above)                                                                             |
-| blastnStatus                          | SKIPPED_BLASTN, V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT                                                    |
+| alignmentStatus                       | SKIPPED_ALIGN, V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT                                                     |
 | minHighQualBaseReads                  | number of reads in the least supported base in the CDR3 region or for the first 63 bases of the candidate CDR3 sequence if only one anchor is found |
 | assignedReads                         | Total reads assigned to candidate sequence.                                                                                                         | 
 | vAlignedReads                         | # of reads initially aligned to V gene                                                                                                              | 
@@ -152,12 +154,12 @@ The full set of fields output are:
 | fullSeq                               | Full consensus sequence in nucleotides                                                                                                              | 
 | support                               | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded)                                                                     |
 
-blastnStatus are
-- **SKIPPED_BLASTN** - cider did not query this sequence through BLASTN, it could be blastn is not configured to run, or this sequence matches reference.
+alignmentStatus are
+- **SKIPPED_ALIGN** - cider did not query this sequence through alignment, it could be alignment is not configured to run, or this sequence matches reference.
 - **V_D_J, V_J** - fully rearranged sequence
 - **V_D, D_J, V_ONLY, D_ONLY, J_ONLY** - partially rearranged sequence
 - **NO_REARRANGEMENT** - no rearrangement. This sequence matches a sequence in the reference genome.
-- **NO_VDJ_ALIGNMENT** - blastn cannot align this sequence to any V/D/J gene.
+- **NO_VDJ_ALIGNMENT** - cannot align this sequence to any V/D/J gene.
 
 ### Locus summary output
 In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_stats.tsv` with the following columns
@@ -171,14 +173,14 @@ In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_s
 | sequences     | Number of sequences found.                                                                                        | 
 | passSequences | Number of PASS sequences found.                                                                                   | 
 
-### BLASTN annotation logic
+### Alignment annotation logic
 
 When the command line arguments `-blast` and `-blast_db` are supplied, CIDER uses [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK62051/def-item/blast/)
 to query each sequence found against the human genome (GCF_000001405.39_top_level). It uses this information to assign V, D, J alleles and also
 weed out false positives. This requires BLASTN to be set up. See [Setting up BLASTN](#setting-up-blastn)
 
 Following briefly describe the annotation logic:
-1. CIDER would run blastn locally and query the sequences against the human genome database. We use match/mismatch/gapopen/gapextend scores of
+1. CIDER would run alignment and query the sequences against the human genome database. We use match/mismatch/gapopen/gapextend scores of
    1/-4/-5/-2 and word size of 9.
 2. For each VDJ sequence, filter alignments to find the V, D, J gene matches. The rules to choose the alignment is follows:
    + If there is one alignment with >= 95% identity that can encompass the whole sequence we will select it
@@ -191,6 +193,8 @@ Following briefly describe the annotation logic:
 4. If there is a V or J gene, the D gene locus must match either the V or the J locus. Otherwise the D alignment is removed. We also
   allow TRA and TRD to match one another.
 5. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
+
+TODO
 
 ## Setting up BLASTN
 To set up BLASTN, do the following:
@@ -231,8 +235,8 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 ### Other:
 - Downsampling may cause bias between locus.
 - Support AIRR format output.
-- BLASTN annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
-- BLASTN annotation for D gene requires more lenient BLAST parameters.
+- Alignment annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
+- Alignment annotation for D gene requires more lenient alignment parameters.
 
 ## Performance Characteristics
 These are indicative performance characteristics on a 12 core machines running with 4 threads.
