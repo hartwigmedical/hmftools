@@ -45,7 +45,7 @@ public final class CobaltRatioFile
         tumorGCContent
     }
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
+    public static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
     private static final String EXTENSION_UNZIPPED = ".cobalt.ratio.tsv";
