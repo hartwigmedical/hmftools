@@ -4,12 +4,15 @@ import static java.lang.Math.log10;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import htsjdk.samtools.SAMRecord;
+
 public class BaseQualAdjustment
 {
     public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
     public static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
 
     public static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
+    public static final int QUAL_PHRED_OFFSET = 33;
 
     public static byte adjustBaseQual(final double baseQual) { return adjustBaseQual(STANDARD_BASE_QUALS, baseQual); }
 
@@ -33,6 +36,16 @@ public class BaseQualAdjustment
         }
 
         return (byte)STANDARD_BASE_QUALS[0];
+    }
+
+    public static byte[] extractTagQualValues(final String qualValuesStr)
+    {
+        byte[] qualValues = qualValuesStr.getBytes();
+        for(int i = 0; i < qualValues.length; ++i)
+        {
+            qualValues[i] -= QUAL_PHRED_OFFSET;
+        }
+        return qualValues;
     }
 
     public static double phredQualToProbability(byte quality)

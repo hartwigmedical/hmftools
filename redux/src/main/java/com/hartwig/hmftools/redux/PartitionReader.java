@@ -3,10 +3,12 @@ package com.hartwig.hmftools.redux;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.extractTagQualValues;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.fillQualZeroMismatchesWithRef;
 import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexIndels;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
@@ -202,6 +204,29 @@ public class PartitionReader
         {
             stripDuplexIndels(mConfig.RefGenome, read);
         }
+
+        if(mConfig.BqsrReverse)
+        {
+            reverseBqsrQuals(read);
+        }
+    }
+
+    private void reverseBqsrQuals(final SAMRecord read)
+    {
+        String originalQualsStr = read.getStringAttribute(BQSR_ORIGINAL_QUALS);
+
+        if(originalQualsStr == null)
+            return;
+
+        final byte[] originalQuals = extractTagQualValues(originalQualsStr);
+        final byte[] baseQuals = read.getBaseQualities();
+
+        for(int i = 0; i < baseQuals.length; ++i)
+        {
+            baseQuals[i] = originalQuals[i];
+        }
+
+        read.setBaseQualities(baseQuals);
     }
 
     private void postProcessSingleReads(final List<ReadInfo> singleReads)

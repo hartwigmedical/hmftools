@@ -46,6 +46,7 @@ public final class SamRecordUtils
     public static final String UMI_ATTRIBUTE = "UI"; // the UMI group ID
     public static final String CONSENSUS_INFO_DELIM = ";";
     public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
+    public static final String BQSR_ORIGINAL_QUALS = "OQ";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // the read was unmapped
     public static final String UNMAPP_COORDS_DELIM = ":";

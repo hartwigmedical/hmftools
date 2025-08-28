@@ -88,6 +88,7 @@ public class ReduxConfig
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
     public final boolean JitterMsiOnly;
+    public final boolean BqsrReverse;
 
     public final ReadUnmapper UnmapRegions;
     public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
@@ -141,6 +142,7 @@ public class ReduxConfig
     private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
     private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
+    private static final String BQSR_REVERSE = "bqsr_reverse";
 
     // dev and options
     public static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -213,6 +215,7 @@ public class ReduxConfig
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
         SkipFullyUnmappedReads = configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
         FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
+        BqsrReverse = configBuilder.hasFlag(BQSR_REVERSE);
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(Sequencing, configBuilder);
 
@@ -347,6 +350,7 @@ public class ReduxConfig
         configBuilder.addFlag(PARALLEL_CONCATENATION, "Parallel final BAM concatenation");
         configBuilder.addFlag(SKIP_FULL_UNMAPPED_READS, "Skip processing existing fully unmapped reads");
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
+        configBuilder.addFlag(BQSR_REVERSE, "Revert to pre-BQSR base quals");
         configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
 
         addOutputOptions(configBuilder);
@@ -403,6 +407,7 @@ public class ReduxConfig
         SkipUnmapping = false;
         LogReadType = NONE;
         FailOnMissingSuppMateCigar = false;
+        BqsrReverse = false;
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
