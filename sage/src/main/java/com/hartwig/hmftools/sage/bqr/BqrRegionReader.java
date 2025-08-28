@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConse
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
@@ -329,6 +330,11 @@ public class BqrRegionReader implements CigarHandler
         bqData.setHasIndel();
     }
 
+    // debug only
+    private static final boolean LOG_READ_INFO = false;
+    private static final List<String> LOG_TNCS = List.of("AAA");
+    private static final List<Byte> LOG_QUAL = List.of((byte)11);
+
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
     {
@@ -367,6 +373,17 @@ public class BqrRegionReader implements CigarHandler
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
             baseQualityData.processReadBase(alt, quality);
+
+            if(LOG_READ_INFO && LOG_QUAL.contains(quality))
+            {
+                String tncStr = new String(trinucleotideContext);
+
+                if(LOG_TNCS.contains(tncStr))
+                {
+                    SG_LOGGER.debug("BQR: read({}) position({}:{}) context({}) alt({}) qual({}) readType({})",
+                            record.getReadName(), mRegion.Chromosome, position, tncStr, alt, quality, mCurrentReadType);
+                }
+            }
 
             if(mWriteReadData && ref != alt)
                 mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, mCurrentReadType);

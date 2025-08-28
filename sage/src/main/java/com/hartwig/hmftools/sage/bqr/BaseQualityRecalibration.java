@@ -317,8 +317,7 @@ public class BaseQualityRecalibration
         {
             for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
-                regionTasks.add(new ChrBaseRegion(
-                        region.Chromosome, region.start() - REGION_SIZE, region.end() + REGION_SIZE - 1));
+                regionTasks.add(new ChrBaseRegion(region.Chromosome, region.start(), region.end()));
             }
 
             return regionTasks;
