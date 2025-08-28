@@ -48,6 +48,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PE
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -301,7 +303,13 @@ public class VariantFilters
             return true;
         }
 
-        int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+        int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
+        double modifiedAltMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltMediumBaseQualityTotal();
+        double modifiedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltMediumBaseQualityTotal;
+        int mediumSupportContribution = (int)(strongNonMediumSupport * modifiedAltMediumBaseQualityTotal/modifiedAltNonMediumBaseQualityTotal);
+        int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
+
+        int qualPerRead = (int)round(modifiedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
@@ -313,7 +321,7 @@ public class VariantFilters
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
 
-        double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
+        double prob = 1 - distribution.cumulativeProbability(adjustedStrongSupport - 1);
 
         if(isGermline)
         {
@@ -484,53 +492,6 @@ public class VariantFilters
         return Doubles.lessThan(avgBaseQuality, threshold);
     }
 
-    private boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
-    {
-        if(!primaryTumor.isIndel())
-            return false;
-
-        UltimaVariantData ultimaData = primaryTumor.ultimaData();
-        final List<Integer> homopolymerLengths = ultimaData.homopolymerLengths();
-
-        // TODO: make constants and generally improve
-        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
-            return false;
-
-        for(int i = 0; i < homopolymerLengths.size(); i++)
-        {
-            int length = homopolymerLengths.get(i);
-
-            double avgQual = ultimaData.homopolymerAvgQuals().get(i);
-
-            if(length == 1 && avgQual < 24)
-                return true;
-            else if(length == 2 && avgQual < 22)
-                return true;
-            else if(length == 3 && avgQual < 18)
-                return true;
-            else if(length == 4 && avgQual < 18)
-                return true;
-            else if(length == 5 && avgQual < 16)
-                return true;
-            else if(length == 6 && avgQual < 14)
-                return true;
-            else if(length == 7 && avgQual < 12)
-                return true;
-            else if(avgQual < 10)
-                return true;
-            else if(length >= 15)
-                return true;
-        }
-        return false;
-    }
-
-    private boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
-    {
-        // TODO: make constants
-        int threshold = nearbyVariant ? 28 : 18;
-        return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
-    }
-
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
     {
         if(primaryTumor.readContext().MaxRepeat == null)
@@ -576,7 +537,7 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+        return primaryTumor.strongHighQualSupport() < strongSupportThreshold;
     }
 
     private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)
@@ -609,20 +570,6 @@ public class VariantFilters
         }
 
         return false;
-    }
-
-    private boolean exceedsAltFragmentLength(final ReadContextCounter primaryTumor)
-    {
-        int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
-        double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
-        int altSupport = primaryTumor.altSupport();
-        int nonAltCount = primaryTumor.fragmentLengths().nonAltCount();
-
-        if(avgNonAltLength == 0 || maxAltLength == 0 || nonAltCount < 10 || maxAltLength >= avgNonAltLength)
-            return false;
-
-        double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);
-        return ratioFactor < ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
     }
 
     // germline and paired tumor-germline tests

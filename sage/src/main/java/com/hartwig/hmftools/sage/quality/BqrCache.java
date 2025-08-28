@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,8 +10,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.seqtech.UltimaQualRecalibration;
-import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 
 public class BqrCache
 {
@@ -40,9 +37,6 @@ public class BqrCache
         else
         {
             loadBqrFiles();
-
-            if(isUltima())
-                UltimaUtils.setMaxRawQual(mMaxRawQual);
         }
     }
 

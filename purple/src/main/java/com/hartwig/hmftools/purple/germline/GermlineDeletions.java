@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.driver.DeletionDrivers.MAX_COPY_NUMBER_DEL;
+import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;

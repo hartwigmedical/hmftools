@@ -23,7 +23,7 @@ public final class BamMetricsTestFactory
                 .madCoverage(0)
                 .lowMapQualPercent(0D)
                 .duplicatePercent(0D)
-                .unpairedPercent(0D)
+                .unmappedPercent(0D)
                 .lowBaseQualPercent(0D)
                 .overlappingReadPercent(0D)
                 .cappedCoveragePercent(0D)

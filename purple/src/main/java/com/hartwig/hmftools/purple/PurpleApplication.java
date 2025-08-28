@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.driver.AmplificationDrivers;
-import com.hartwig.hmftools.common.driver.DeletionDrivers;
+import com.hartwig.hmftools.purple.drivers.AmplificationDrivers;
+import com.hartwig.hmftools.purple.drivers.DeletionDrivers;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
@@ -73,6 +73,10 @@ import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumbers;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsDataSource;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -434,9 +438,8 @@ public class PurpleApplication
 
             somaticDriverCatalog.addAll(ampDrivers);
 
-            DeletionDrivers delDriverFinder = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
-
-            List<DriverCatalog> delDrivers = delDriverFinder.deletions(geneCopyNumbers, mConfig.TargetRegionsMode);
+            List<DriverCatalog> delDrivers = DeletionDrivers.findDeletions(
+                    purityContext.qc().status(), mReferenceData.DriverGenes, geneCopyNumbers, mConfig.TargetRegionsMode);
 
             somaticDriverCatalog.addAll(delDrivers);
 

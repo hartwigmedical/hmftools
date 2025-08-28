@@ -23,47 +23,47 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Read a CSV / TSV file. If the file name ends with .gz, it will apply gzip reading.
- *
+ * <p>
  * Example usage:
- *  try (DelimFileReader reader = new DelimFileReader(filename))
- *  {
- *      reader.setDelimiter(",");
- *      return reader.stream().map(row -> ImmutableMedianRatio.builder()
- *                  .chromosome(row.get(CHROMOSOME))
- *                  .medianRatio(row.getDouble(MEDIAN_RATIO))
- *                  .count(row.getInt(COUNT)).build())
- *              .collect(Collectors.toList());
- *  }
- *
+ * try (DelimFileReader reader = new DelimFileReader(filename))
+ * {
+ * reader.setDelimiter(",");
+ * return reader.stream().map(row -> ImmutableMedianRatio.builder()
+ * .chromosome(row.get(CHROMOSOME))
+ * .medianRatio(row.getDouble(MEDIAN_RATIO))
+ * .count(row.getInt(COUNT)).build())
+ * .collect(Collectors.toList());
+ * }
+ * <p>
  * It is also possible to iterate row by row:
- *
- *  try (DelimFileReader reader = new DelimFileReader(filename))
- *  {
- *      for(DelimFileReader.Row row : reader)
- *      {
- *          String id = row.get("id");
- *          String tag = row.getOrNull("tag");
- *          int count = row.getInt("count");
- *          boolean isValid = row.getBoolean("isValid");
- *          Double rate = row.getDoubleOrNull("rate");
- *      }
- *  }
- *
- *  Or use enum instead of String as column identifier:
- *
- *  enum Column { id, tag, count, isValid, rate }
- *
- *  try (DelimFileReader reader = new DelimFileReader(filename))
- *  {
- *      for(DelimFileReader.Row row : reader)
- *      {
- *          String id = row.get(Column.id);
- *          String tag = row.getOrNull(Column.tag);
- *          int count = row.getInt(Column.count);
- *          boolean isValid = row.getBoolean(Column.isValid);
- *          Double rate = row.getDoubleOrNull(Column.rate);
- *      }
- *  }
+ * <p>
+ * try (DelimFileReader reader = new DelimFileReader(filename))
+ * {
+ * for(DelimFileReader.Row row : reader)
+ * {
+ * String id = row.get("id");
+ * String tag = row.getOrNull("tag");
+ * int count = row.getInt("count");
+ * boolean isValid = row.getBoolean("isValid");
+ * Double rate = row.getDoubleOrNull("rate");
+ * }
+ * }
+ * <p>
+ * Or use enum instead of String as column identifier:
+ * <p>
+ * enum Column { id, tag, count, isValid, rate }
+ * <p>
+ * try (DelimFileReader reader = new DelimFileReader(filename))
+ * {
+ * for(DelimFileReader.Row row : reader)
+ * {
+ * String id = row.get(Column.id);
+ * String tag = row.getOrNull(Column.tag);
+ * int count = row.getInt(Column.count);
+ * boolean isValid = row.getBoolean(Column.isValid);
+ * Double rate = row.getDoubleOrNull(Column.rate);
+ * }
+ * }
  */
 
 @SuppressWarnings("unused")
@@ -71,7 +71,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
 {
     private String mDelim = TSV_DELIM;
     private final BufferedReader mReader;
-    private Map<String,Integer> mColumnIndexMap = null;
+    private Map<String, Integer> mColumnIndexMap = null;
     private List<String> mColumnNames = null;
 
     public DelimFileReader(final BufferedReader reader)
@@ -136,7 +136,9 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
     public List<String> getColumnNames()
     {
         if(mColumnIndexMap == null)
+        {
             setColumnNames();
+        }
 
         return mColumnNames;
     }
@@ -157,14 +159,38 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
-    public boolean hasColumn(final String column) { return mColumnIndexMap.containsKey(column); }
-    public boolean hasColumn(final Enum<?> column) { return hasColumn(column.name()); }
+    public boolean hasColumn(final String column)
+    {
+        return mColumnIndexMap.containsKey(column);
+    }
+
+    public boolean hasColumn(final Enum<?> column)
+    {
+        return hasColumn(column.name());
+    }
 
     // return null if the column is not found
     @Nullable
-    public Integer getColumnIndex(final String column) { return mColumnIndexMap.get(column); }
+    public Integer getColumnIndex(final String column)
+    {
+        return mColumnIndexMap.get(column);
+    }
+
     @Nullable
-    public Integer getColumnIndex(final Enum<?> column) { return getColumnIndex(column.name()); }
+    public Integer getColumnIndex(final Enum<?> column)
+    {
+        return getColumnIndex(column.name());
+    }
+
+    public Integer getColumnIndex(final Enum<?> column, final String oldNameForColumn)
+    {
+        Integer columnIndex = getColumnIndex(column.name());
+        if(columnIndex == null)
+        {
+            return getColumnIndex(oldNameForColumn);
+        }
+        return columnIndex;
+    }
 
     @Override
     public void close()
@@ -223,10 +249,10 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
                     // Split the line on the delimiter. This algorithm is about twice as fast as String.split().
                     String[] values = new String[mColumnIndexMap.size()];
                     int fieldBegin = 0;
-                    for (int i = 0; i < values.length; ++i)
+                    for(int i = 0; i < values.length; ++i)
                     {
                         int delimIdx = line.indexOf(mDelim, fieldBegin);
-                        if (delimIdx < 0)
+                        if(delimIdx < 0)
                         {
                             delimIdx = line.length();
                         }
@@ -280,7 +306,9 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             String v = parseRawValue(column);
             if(valueIndicatesNull(v))
+            {
                 return null;
+            }
             return v;
         }
 
@@ -361,6 +389,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return get(column.name());
         }
+
         public @Nullable String getOrNull(final Enum<?> column)
         {
             return getOrNull(column.name());
@@ -370,6 +399,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getInt(column.name());
         }
+
         public @Nullable Integer getIntOrNull(final Enum<?> column)
         {
             return getIntOrNull(column.name());
@@ -379,6 +409,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getBoolean(column.name());
         }
+
         public @Nullable Boolean getBooleanOrNull(final Enum<?> column)
         {
             return getBooleanOrNull(column.name());
@@ -388,6 +419,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getChar(column.name());
         }
+
         public @Nullable Character getCharOrNull(final Enum<?> column)
         {
             return getCharOrNull(column.name());
@@ -397,6 +429,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getByte(column.name());
         }
+
         public @Nullable Byte getByteOrNull(final Enum<?> column)
         {
             return getByteOrNull(column.name());
@@ -406,6 +439,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getDouble(column.name());
         }
+
         public @Nullable Double getDoubleOrNull(final Enum<?> column)
         {
             return getDoubleOrNull(column.name());
@@ -415,6 +449,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             return getLong(column.name());
         }
+
         public @Nullable Long getLongOrNull(final Enum<?> column)
         {
             return getLongOrNull(column.name());
@@ -437,7 +472,9 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         {
             String v = mValues[columnIndex];
             if(valueIndicatesNull(v))
+            {
                 return null;
+            }
             return v;
         }
 

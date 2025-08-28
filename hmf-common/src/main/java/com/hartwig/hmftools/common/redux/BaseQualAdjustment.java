@@ -12,7 +12,9 @@ import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 
 public class BaseQualAdjustment
 {
-    public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
+    // zero is not handled by some downstream tools
+    // this low value also denotes an adjustment (eg by Redux) to indicate that the corresponding base is completely uncertain
+    public static final byte BASE_QUAL_MINIMUM = 1;
 
     private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
     private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
@@ -72,4 +74,6 @@ public class BaseQualAdjustment
         else
             return false;
     }
+
+    public static boolean isUncertainBaseFromQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
 }

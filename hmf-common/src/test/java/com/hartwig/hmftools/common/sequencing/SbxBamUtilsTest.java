@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.sequencing;
 
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
@@ -17,41 +19,21 @@ public class SbxBamUtilsTest
     public void testGetDuplexIndelsNoDuplexIndels()
     {
         String ycTagStr = "0-100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
+        List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
-        assertEquals(100, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
-    }
+        assertNull(duplexIndelIndices);
 
-    @Test
-    public void testGetDuplexIndelsNoDuplexIndelsWithSimplexHead()
-    {
-        String ycTagStr = "10-100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
+        ycTagStr = "10-100I100-0";
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
-        assertEquals(110, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
-    }
+        assertEquals(1, duplexIndelIndices.size());
+        assertTrue(duplexIndelIndices.contains(110));
 
-    @Test
-    public void testGetDuplexIndelsSingleDuplexIndel()
-    {
-        String ycTagStr = "0-100I100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
+        ycTagStr = "20-10A10I20-0";
 
-        assertEquals(201, duplexIndels.size());
-        assertTrue(duplexIndels.subList(0, 100).stream().noneMatch(x -> x));
-        assertTrue(duplexIndels.get(100));
-        assertTrue(duplexIndels.subList(101, 201).stream().noneMatch(x -> x));
-    }
+        duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
-    @Test
-    public void testGetDuplexIndelsSingleNonDuplexIndel()
-    {
-        String ycTagStr = "0-100A100-0";
-        List<Boolean> duplexIndels = getDuplexIndels(ycTagStr);
-
-        assertEquals(201, duplexIndels.size());
-        assertTrue(duplexIndels.stream().noneMatch(x -> x));
+        assertEquals(1, duplexIndelIndices.size());
+        assertTrue(duplexIndelIndices.contains(41));
     }
 }

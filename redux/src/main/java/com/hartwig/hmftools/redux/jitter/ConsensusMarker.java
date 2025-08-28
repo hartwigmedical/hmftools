@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_C
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.S;
@@ -31,20 +32,15 @@ public abstract class ConsensusMarker
 {
     public abstract ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record);
 
-    @Nullable
-    public static ConsensusMarker create(final JitterAnalyserConfig config)
+    public static ConsensusMarker create()
     {
-        SequencingType sequencingType = config.Sequencing;
-        if(sequencingType == ILLUMINA && config.UsesDuplexUMIs)
-            return new IlluminaDuplexUMIsConsensusMarker();
-
-        if(sequencingType == SBX)
+        if(SEQUENCING_TYPE == SBX)
             return new SBXConsensusMarker();
 
-        if(sequencingType == BIOMODAL)
+        if(SEQUENCING_TYPE == BIOMODAL)
             return new BiomodalConsensusMarker();
 
-        return null;
+        return new StandardConsensusMarker();
     }
 
     private static final int INVALID_INDEX = -1;
@@ -130,7 +126,7 @@ public abstract class ConsensusMarker
         return Pair.of(startReadIdx - 1, endReadIdx + 1);
     }
 
-    public static class IlluminaDuplexUMIsConsensusMarker extends ConsensusMarker
+    public static class StandardConsensusMarker extends ConsensusMarker
     {
         @Override
         public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)

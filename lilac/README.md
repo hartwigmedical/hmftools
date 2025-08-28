@@ -378,7 +378,7 @@ alleles fulfilling the below criteria:
 As a fallback, if no 4-digit alleles fulfill the above criteria, we select the most common. This usually occurs when all alleles in the 
 group have wildcards. Note, in case of this fallback condition, the most common allele is by definition the consensus sequence.
 
-A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being are assigned if alleles in the 
+A consensus sequence is then created from the selected 4-digit allele sequences, with wildcards being assigned if alleles in the 
 2-digit group have conflicting nucleotides. For example, for the first few nucleotides of `A*34`:
 
 ```

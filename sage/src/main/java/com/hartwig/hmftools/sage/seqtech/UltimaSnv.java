@@ -27,12 +27,13 @@ class UltimaSnv extends UltimaQualModel
     {
         super(UltimaModelType.SNV);
 
-        byte refBase = (byte) variant.ref().charAt(0);
-        byte altBase = (byte) variant.alt().charAt(0);
+        // the ref bases start 1 base prior to the variant
+        // byte refBase = (byte)variant.ref().charAt(0);
+        byte refBase = refBases[refVarIndex];
+        byte altBase = (byte)variant.alt().charAt(0);
         byte leftBase = refBases[refVarIndex - 1];
         byte rightBase = refBases[refVarIndex + 1];
 
-        // SNVs and MNVs
         if(leftBase == rightBase && (leftBase == refBase || leftBase == altBase))
         {
             // both straddling bases match either the ref or alt, so no need to check for HP adjustment
@@ -49,9 +50,9 @@ class UltimaSnv extends UltimaQualModel
         UltimaHomopolymerDeletion leftDeletion = null;
         UltimaHomopolymerDeletion rightDeletion = null;
 
-        boolean leftMatchesRef = refBases[refVarIndex - 1] == refBases[refVarIndex];
+        boolean leftMatchesRef = refBases[refVarIndex - 1] == refBase;
         boolean leftMatchesAlt = refBases[refVarIndex - 1] == altBase;
-        boolean rightMatchesRef = refBases[refVarIndex + 1] == refBases[refVarIndex];
+        boolean rightMatchesRef = refBases[refVarIndex + 1] == refBase;
         boolean rightMatchesAlt = refBases[refVarIndex + 1] == altBase;
         boolean leftSideDelete = (leftMatchesRef && !leftMatchesAlt) || rightMatchesAlt;
 
@@ -86,7 +87,8 @@ class UltimaSnv extends UltimaQualModel
         else
         {
             // HP deletion
-            leftDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
+            leftDeletion = UltimaHomopolymerDeletion.fromMnv(refBases[1], altBase, leftReadBase, rightReadBase);
+            // leftDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
         }
 
         int upperHpLength = 0;
@@ -117,7 +119,8 @@ class UltimaSnv extends UltimaQualModel
         }
         else
         {
-            rightDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
+            rightDeletion = UltimaHomopolymerDeletion.fromMnv(refBases[1], altBase, leftReadBase, rightReadBase);
+            // rightDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
         }
 
         mLeftAdjust = leftAdjust;
@@ -126,13 +129,16 @@ class UltimaSnv extends UltimaQualModel
         mRightDeletion = rightDeletion;
     }
 
+    @Override
+    public boolean canCompute()
+    {
+        return (mLeftAdjust != null || mLeftDeletion != null) && (mRightAdjust != null || mRightDeletion != null);
+    }
+
     public byte calculateQual(final SAMRecord record, int varReadIndex)
     {
-        if(mLeftAdjust == null && mLeftDeletion == null || mRightAdjust == null && mRightDeletion == null)
-        {
-            // ULTIMA TODO: use BQR qual if this is the only UQM for this variant - ie fall back to other models
-            return BQR_CACHE.maxRawQual();
-        }
+        if(!canCompute())
+            return ULTIMA_INVALID_QUAL;
 
         int leftQual = 0;
 

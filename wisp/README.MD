@@ -144,6 +144,7 @@ PatientId | Id of Patient
 SampleId | Id of sample 
 TumorPurity | Purity of primary tissue biopsy 
 TumorPloidy | Ploidy of primary tissue biopsy
+SNV_MRD | MRD detected by SNV method (TRUE/FALSE)
 TotalVariants | Total number of variants evaluated for SNV TF estimate 
 CalcVariants | # sites passing all filters for SNV TF estimate 
 OutlierVariants | A list of variants excluded from the analysis as outliers due to high AD (potentially artefacts or CHIP variants)
@@ -159,6 +160,7 @@ ClonalPeakVariants | # sites found in clonal peak (VAF_PEAK clonality method)
 ClonalDropoutRate | % of sites estimated to be dropped (LOW_COUNT clonality method) 
 DualSNVPValue | P-value likelihood of tumor presence in sample based on DUAL_STRAND SNV support (may be lower than global estimate due to lower error rates for DUAL_STRAND) 
 SNVLod | Estimated minimum tumor fraction limit of detection based on number of fragments overlapping included SNV sites 
+DualSNVLod | Estimated minimum tumor fraction limit of detection based on number of DUAL fragments overlapping included SNV sites
 TotalFragments  | Total depth of coverage across all included SNV sites 
 TotalDual  | Depth of DUAL_STRAND coverage across all included SNV sites 
 AlleleFragments | Fragments supporting ALT across all included SNV sites 
@@ -173,14 +175,19 @@ ErrorRate | Error rate used in SNV TF estimate (weighted average of included var
 RawBQRErrorRate | Average empirical error rate for the sample. 
 BqrThreshold | Minimum raw base quality used to filter .sites (either 0,38,42,45 is chosen based on whichever has the lowest LOD) 
 BQRExtraInfo | Error rates and calculated LOD per BQR filter threshold. 
-LOHPurity | Estimated purity from LOH 
+LOH_MRD | MRD detected by LOH method (TRUE/FALSE)
+LOHPurity | Estimated purity from LOH after clonal adjustment
+LOHRawPurity | Estimated raw purity from LOH 
+LOHRegionCount | Total number of unique LOH regions used in algortihm
 LOHSiteCount | Total number of sites used in LOH algorithm 
 LOHPercent | Percentage of primary sample BAF points with LOH 
-LOHMeanCopyNumber | Mean copy number across all LOH BAF points 
+LOHLod  | Estimated LOD based on number of LOH points
+LOHAvgCN | Average tumor copy number of LOH poiunts
 LOHMedianAF | Weighted median AF across LOH points 
 LOHMeanAF | MeanAF across LOH poiints 
 LOHPValue  | Probability of tumor presence based on LOH algorithm 
 LOHFragments | Total allele fragments used in LOH algorithm 
+LOH_MRD | MRD detected by SNV method (TRUE/FALSE)
 CopyNumberPurity  | Estimate of cfDNA tumor fraction from copy number (CNA) 
 CopyNumberPurityLow  | Lower bound of CNA cfDNA tumor fraction estimate 
 CopyNumberPurityHigh | Upper bound of CNA cfDNA tumor fraction estimate 

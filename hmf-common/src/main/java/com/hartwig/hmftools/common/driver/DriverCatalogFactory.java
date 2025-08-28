@@ -58,10 +58,10 @@ public final class DriverCatalogFactory
     {
         return ImmutableDriverCatalog.builder()
                 .chromosome(geneCopyNumber.chromosome())
-                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .chromosomeBand(geneCopyNumber.ChromosomeBand)
                 .gene(geneCopyNumber.geneName())
-                .transcript(geneCopyNumber.transName())
-                .isCanonical(geneCopyNumber.isCanonical())
+                .transcript(geneCopyNumber.TransName)
+                .isCanonical(geneCopyNumber.IsCanonical)
                 .missense(0)
                 .nonsense(0)
                 .inframe(0)

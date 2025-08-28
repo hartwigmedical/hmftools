@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -29,20 +28,21 @@ public class MicrosatelliteSiteAnalyser
 
     private final EnumMap<ConsensusType, Map<Integer, Integer>> mPassingJitterCountsByConsensusType;
     private final EnumMap<ConsensusType, Integer> mReadRepeatMatchCountsByConsensusType;
-    private final EnumMap<ConsensusType, Integer> mNumReadRejectedByConsensusType;
+    private int mNumReadRejected;
     private int mPassingReadRepeatMatchCount;
 
     private final EnumMap<ConsensusType, SortedMap<Integer, Integer>> mPassingRepeatLengthCountsByConsensusType;
 
-    public MicrosatelliteSiteAnalyser(final RefGenomeMicrosatellite refGenomeMicrosatellite,
-            @Nullable final ConsensusMarker consensusMarker, boolean storeAllPassingRepeatLengths)
+    public MicrosatelliteSiteAnalyser(
+            final RefGenomeMicrosatellite refGenomeMicrosatellite, final ConsensusMarker consensusMarker,
+            boolean storeAllPassingRepeatLengths)
     {
         mRefGenomeMicrosatellite = refGenomeMicrosatellite;
         mConsensusMarker = consensusMarker;
 
         mPassingJitterCountsByConsensusType = Maps.newEnumMap(ConsensusType.class);
         mReadRepeatMatchCountsByConsensusType = Maps.newEnumMap(ConsensusType.class);
-        mNumReadRejectedByConsensusType = Maps.newEnumMap(ConsensusType.class);
+        mNumReadRejected = 0;
         mPassingReadRepeatMatchCount = 0;
 
         mPassingRepeatLengthCountsByConsensusType = storeAllPassingRepeatLengths ? Maps.newEnumMap(ConsensusType.class) : null;
@@ -63,10 +63,7 @@ public class MicrosatelliteSiteAnalyser
         return mReadRepeatMatchCountsByConsensusType.values().stream().mapToInt(x -> x).sum();
     }
 
-    public int numReadRejected(final ConsensusType consensusType)
-    {
-        return mNumReadRejectedByConsensusType.getOrDefault(consensusType, 0);
-    }
+    public int numReadRejected() { return mNumReadRejected; }
 
     public Map<Integer, Integer> passingJitterCounts(final ConsensusType consensusType)
     {
@@ -101,15 +98,13 @@ public class MicrosatelliteSiteAnalyser
             return;
 
         MicrosatelliteRead msRead = MicrosatelliteRead.from(mRefGenomeMicrosatellite, read, mConsensusMarker);
-        if(msRead == null)
-            return;
 
         ConsensusType consensusType = msRead.consensusType();
         mReadRepeatMatchCountsByConsensusType.merge(consensusType, 1, Integer::sum);
 
-        if(msRead.shouldDropRead)
+        if(!msRead.isValidRead())
         {
-            mNumReadRejectedByConsensusType.merge(consensusType, 1, Integer::sum);
+            ++mNumReadRejected;
             return;
         }
 

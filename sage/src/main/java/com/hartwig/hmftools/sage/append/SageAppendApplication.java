@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.addGenotypeHeader;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
@@ -37,6 +38,7 @@ import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -175,6 +177,9 @@ public class SageAppendApplication
 
         if(!bqrCache.isValid())
             System.exit(1);
+
+        if(isUltima())
+            UltimaUtils.setMaxRawQual(bqrCache.maxRawQual());
 
         final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 

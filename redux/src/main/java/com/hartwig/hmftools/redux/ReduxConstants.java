@@ -28,7 +28,7 @@ public class ReduxConstants
     // SBX-specfic
     public static final double SBX_CONSENSUS_BASE_THRESHOLD = 0.5;
 
-    public static byte INVALID_BASE_QUAL = -1;
+    public static final byte INVALID_BASE_QUAL = -1;
 
     // consensus building
     public static int CONSENSUS_MAX_DEPTH = 100;

@@ -48,7 +48,7 @@ public class GermlineGainDeletionFactoryTest
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 800, 1000);
         List<GermlineDeletion> deletions = Lists.newArrayList(reportablePartialHom1, reportablePartialHom2);
 
-        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
+        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
 
         Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
         PurpleGainDeletion gainDel = map.keySet().iterator().next();
@@ -69,7 +69,7 @@ public class GermlineGainDeletionFactoryTest
         // Gene runs from 150 to 950
         GermlineDeletion reportableFullHom =
                 GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
-        GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(1D).build();
+        GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 1D);
 
         Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
         PurpleGainDeletion gainDel = map.keySet().iterator().next();
@@ -100,7 +100,7 @@ public class GermlineGainDeletionFactoryTest
         List<GermlineDeletion> deletions =
                 Lists.newArrayList(reportablePartial1, reportablePartial2, reportablePartial3, reportablePartial4);
 
-        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
+        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 1D, 4D);
 
         Map<PurpleGainDeletion, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
         PurpleGainDeletion gainDel = map.keySet().iterator().next();

@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -22,8 +21,9 @@ public class SampleReadProcessor
     private final List<MicrosatelliteSiteAnalyser> mMicrosatelliteSiteAnalysers;
     private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteAnalyser>> mMicrosatelliteSiteAnalysersByChromosome;
 
-    public SampleReadProcessor(final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
-            @Nullable ConsensusMarker consensusMarker)
+    public SampleReadProcessor(
+            final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
+            final ConsensusMarker consensusMarker)
     {
         mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
                 .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker, config.WriteSiteFile))
@@ -40,7 +40,7 @@ public class SampleReadProcessor
 
             Collection<Pair<BaseRegion, MicrosatelliteSiteAnalyser>> entries = analysers
                     .stream()
-                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().genomeRegion.baseRegion(), analyser))
+                    .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().Region.baseRegion(), analyser))
                     .collect(Collectors.toList());
 
             mMicrosatelliteSiteAnalysersByChromosome.put(chromosome, new ImmutableIntervalTree<>(entries));
@@ -50,9 +50,7 @@ public class SampleReadProcessor
     public void processRead(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag())
-        {
             return;
-        }
 
         String chromosome = read.getReferenceName();
         int readAlignmentStart = read.getAlignmentStart();
@@ -75,9 +73,7 @@ public class SampleReadProcessor
     public void processRead(final SAMRecord read, final ChrBaseRegion region)
     {
         if(read.getReadUnmappedFlag())
-        {
             return;
-        }
 
         if(!region.containsPosition(read.getAlignmentStart()))
         {

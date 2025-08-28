@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -100,6 +101,7 @@ public class ReduxConfig
     public final ReadUnmapper UnmapRegions;
     public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
     public final boolean UnmapAltDecoys;
+    public final boolean SkipDuplicateMarking;
 
     public final String OutputBam;
     public final String OutputDir;
@@ -126,6 +128,7 @@ public class ReduxConfig
     public final boolean DropDuplicates;
     public final boolean SkipFullyUnmappedReads;
     public final int WriteReadBaseLength;
+    public final int LogDuplicateGroupSize;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -147,6 +150,7 @@ public class ReduxConfig
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
     private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
+    private static final String SKIP_DUPLICATE_MARKING = "skip_duplicate_marking";
     private static final String SKIP_UNMAPPING = "skip_unmapping";
     private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
     private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
@@ -158,6 +162,7 @@ public class ReduxConfig
     private static final String RUN_CHECKS = "run_checks";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
+    private static final String LOG_DUPLICATE_GROUP_SIZE = "log_dup_group_size";
 
     public ReduxConfig(final ConfigBuilder configBuilder)
     {
@@ -241,7 +246,9 @@ public class ReduxConfig
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
 
+        SkipDuplicateMarking = configBuilder.hasFlag(SKIP_DUPLICATE_MARKING);
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
+        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
         if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
         {
@@ -270,9 +277,6 @@ public class ReduxConfig
 
         UnmapAltDecoys = configBuilder.hasFlag(UNMAP_NON_ALT_DECOY);
 
-        String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
-        RD_LOGGER.info("duplicate logic: {}", duplicateLogic);
-
         BamStringency = BamUtils.validationStringency(configBuilder);
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
@@ -280,7 +284,6 @@ public class ReduxConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
 
-        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
         Threads = parseThreads(configBuilder);
         PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
@@ -307,6 +310,7 @@ public class ReduxConfig
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
+        LogDuplicateGroupSize = configBuilder.getInteger(LOG_DUPLICATE_GROUP_SIZE);
 
         if(RunChecks)
         {
@@ -347,6 +351,35 @@ public class ReduxConfig
         return filename;
     }
 
+    public void logRoutineTypes()
+    {
+        StringJoiner sj = new StringJoiner(" ");
+
+        if(SkipDuplicateMarking)
+        {
+            sj.add("disabled");
+        }
+        else
+        {
+            if(UMIs.Enabled)
+            {
+                sj.add("UMIs");
+
+                if(UMIs.Duplex)
+                    sj.add("duplex");
+            }
+            else
+            {
+                sj.add(format("method(%s)", FormConsensus ? "consensus" : "max base-qual"));
+            }
+
+            if(DropDuplicates)
+                sj.add("drop-duplicates");
+        }
+
+        RD_LOGGER.info("duplicate marking: {}", sj.toString());
+    }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
@@ -369,6 +402,7 @@ public class ReduxConfig
         BamToolName.addConfig(configBuilder);
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
+        configBuilder.addFlag(SKIP_DUPLICATE_MARKING, "Skip duplicate marking routine");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         configBuilder.addFlag(BQR_JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
@@ -395,6 +429,7 @@ public class ReduxConfig
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR ");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
+        configBuilder.addInteger(LOG_DUPLICATE_GROUP_SIZE, "Log duplicate groups of size or larger", 0);
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
@@ -438,6 +473,7 @@ public class ReduxConfig
         MultiBam = false;
         KeepInterimBams = false;
         SkipFullyUnmappedReads = false;
+        SkipDuplicateMarking = false;
         SkipUnmapping = false;
         UnmapAltDecoys = false;
         LogReadType = NONE;
@@ -451,6 +487,7 @@ public class ReduxConfig
         WriteStats = false;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+        LogDuplicateGroupSize = 0;
 
         mReadChecker = new ReadChecker(false);
     }

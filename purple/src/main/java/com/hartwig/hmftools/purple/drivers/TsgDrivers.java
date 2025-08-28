@@ -56,7 +56,7 @@ public class TsgDrivers extends SomaticVariantDriverFinder
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
                 if(geneCopyNumbers.size() == 1
-                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
                 {
                     DriverCatalog driverRecord = createTsgDriver(
                             geneVariants, variantTypeCounts, variantTypeCountsBiallelic, geneCopyNumber, dndsLikelihood);
@@ -88,10 +88,10 @@ public class TsgDrivers extends SomaticVariantDriverFinder
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(topVariant.chromosome())
-                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .chromosomeBand(geneCopyNumber.ChromosomeBand)
                 .gene(geneCopyNumber.geneName())
-                .transcript(geneCopyNumber.transName())
-                .isCanonical(geneCopyNumber.isCanonical())
+                .transcript(geneCopyNumber.TransName)
+                .isCanonical(geneCopyNumber.IsCanonical)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
                 .driverLikelihood(1)

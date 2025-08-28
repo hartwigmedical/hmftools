@@ -53,7 +53,7 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
         mJitterAnalyser = jitterAnalyser;
-        mBqrProcessor = new BqrRegionReader(SEQUENCING_TYPE, config.RefGenome, bqr.results(), bqr.regions());
+        mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
 
         mRecomputeFragCoords = mReadDataWriter.enabled()
                 && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (isIllumina() && config.UMIs.Enabled));
@@ -103,7 +103,7 @@ public abstract class BamWriter
         }
     }
 
-    public void writeSecondaryRead(final SAMRecord read)
+    public void writeNonDuplicateRead(final SAMRecord read)
     {
         writeRead(read, FragmentStatus.UNSET, "", "");
     }

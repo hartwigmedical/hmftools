@@ -43,7 +43,7 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
                     row.set(Column.start, refGenomeMicrosatellite.referenceStart());
                     row.set(Column.end, refGenomeMicrosatellite.referenceEnd());
                     row.set(Column.unit, refGenomeMicrosatellite.unitString());
-                    row.set(Column.mappability, refGenomeMicrosatellite.mappability);
+                    row.set(Column.mappability, refGenomeMicrosatellite.mappability());
                 });
     }
 

@@ -123,15 +123,6 @@ public class ReadContextMatcher
         {
             Set<Integer> excludedBases = Sets.newHashSet();
 
-            // CHECK: Set allowMismatches=False for Ultima only?
-            if(isUltima())
-            {
-                for(int i = readContext.CoreIndexStart; i <= readContext.CoreIndexEnd; i++)
-                {
-                    excludedBases.add(i);
-                }
-            }
-
             if(mContext.variant().isIndel())
             {
                 int lowQualIndexLower = determineIndelLowQualLowerIndex(readContext);
@@ -156,14 +147,6 @@ public class ReadContextMatcher
             {
                 // just the alt bases themselves - for both ref and read
                 int altRange = mContext.variant().altLength() - 1;
-
-                if(isUltima()) // CHECK: Ultima only?
-                {
-                    for(int i = 0; i <= altRange; ++i)
-                    {
-                        excludedBases.add(mContext.VarIndex + i);
-                    }
-                }
 
                 mLowQualExclusionRead = new LowQualExclusion(mContext.VarIndex, mContext.VarIndex + altRange);
 
@@ -273,7 +256,10 @@ public class ReadContextMatcher
 
     public ReadMatchInfo determineReadMatchInfo(final SAMRecord record, final int readVarIndex)
     {
-        ReadMatchInfo readMatchInfo = determineReadMatchInfo(record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
+        ReadMatchInfo readMatchInfo = determineReadMatchInfo(
+                record.getReadBases(),
+                isUltima() ? null : record.getBaseQualities(), // cannot use standard base quals for Ultima
+                readVarIndex, false);
 
         if(readMatchInfo == NO_MATCH && mIsReference && isSimpleAltMatch(mContext.variant(), record, readVarIndex))
             return new ReadMatchInfo(SIMPLE_ALT, true);

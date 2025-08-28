@@ -5,6 +5,7 @@ import java.util.List;
 public class JitterAnalyserConstants
 {
     public static final int MIN_FLANKING_BASE_MATCHES = 5;
+    public static final int LOW_BASE_QUAL_FLANKING_BASES = 1;
 
     public static final int MAX_MICROSAT_UNIT_LENGTH = 5;
     public static final int MIN_MICROSAT_UNIT_COUNT = 4;

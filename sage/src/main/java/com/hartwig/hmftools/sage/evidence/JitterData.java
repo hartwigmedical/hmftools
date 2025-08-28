@@ -23,6 +23,7 @@ public class JitterData
 {
     private int mLengthened;
     private int mShortened;
+    private int mValidQualFullSupport;
     private double mQualBoost;
     private boolean mFilterOnNoise;
     private boolean mHardFilterOnNoise;
@@ -31,6 +32,8 @@ public class JitterData
     {
         mLengthened = 0;
         mShortened = 0;
+        mValidQualFullSupport = 0;
+
         mQualBoost = 1;
         mFilterOnNoise = false;
         mHardFilterOnNoise = false;
@@ -47,6 +50,9 @@ public class JitterData
     public int shortened() { return mShortened; }
     public int lengthened() { return mLengthened; }
     public int[] summary() { return new int[] { mShortened, mLengthened }; }
+
+    public void addValidQualFullSupport() { ++mValidQualFullSupport; }
+    public int validQualFullSupport() { return mValidQualFullSupport; }
 
     public double qualBoost() { return mQualBoost; }
     public boolean hardFilterOnNoise() { return mHardFilterOnNoise; }
@@ -82,7 +88,7 @@ public class JitterData
         if(readContextCounter.readContext().MaxRepeat == null)
             return;
 
-        int fullSupport = readContextCounter.readSupportCounts().Full;
+        int fullSupport = readContextCounter.jitter().validQualFullSupport();
 
         boolean isPanelVariant = readContextCounter.tier() == VariantTier.PANEL || readContextCounter.tier() == VariantTier.HOTSPOT;
 
@@ -227,10 +233,11 @@ public class JitterData
     }
 
     @VisibleForTesting
-    public void setValues(int shortened, int lengthened)
+    public void setValues(int shortened, int lengthened, int fullSupport)
     {
         mShortened = shortened;
         mLengthened = lengthened;
+        mValidQualFullSupport = fullSupport;
         mQualBoost = 1;
         mFilterOnNoise = false;
         mHardFilterOnNoise = false;

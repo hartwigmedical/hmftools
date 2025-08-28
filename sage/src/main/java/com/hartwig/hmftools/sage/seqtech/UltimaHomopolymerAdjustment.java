@@ -13,17 +13,11 @@ public class UltimaHomopolymerAdjustment extends UltimaQualModel
 {
     private final int mHpStartIndex;
     private final int mHpEndIndex;
-    private final int mRefAdjustCount;
+    private final int mRefAdjustCount; // bases to adjust to get back to the ref
 
     public UltimaHomopolymerAdjustment(final int hpStartIndex, final int hpEndIndex, final int refAdjustCount)
     {
         super(UltimaModelType.HOMOPOLYMER_ADJUSTMENT);
-
-        // TODO: Do we keep this around after testing?
-        if(hpEndIndex < hpStartIndex)
-        {
-            throw new IllegalArgumentException("Homopolymer end index is before start index.");
-        }
 
         mHpStartIndex = hpStartIndex;
         mHpEndIndex = hpEndIndex;
@@ -40,12 +34,10 @@ public class UltimaHomopolymerAdjustment extends UltimaQualModel
     {
         return mHpStartIndex;
     }
-
     public int hpEndIndex()
     {
         return mHpEndIndex;
     }
-
     public int refAdjustCount()
     {
         return mRefAdjustCount;

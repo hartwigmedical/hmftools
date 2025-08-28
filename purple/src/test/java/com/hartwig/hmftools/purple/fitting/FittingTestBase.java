@@ -68,7 +68,7 @@ public class FittingTestBase
 
         mRegionFitCalculator = new RegionFitCalculator(cobaltChromosomes, mConfig.Fitting, mAmberData.AverageTumorDepth);
 
-        mReferenceData = new ReferenceData(mConfig);
+        mReferenceData = new ReferenceData();
 
         mSampleData = new SampleData(REF_SAMPLE_ID, SAMPLE_ID, mAmberData, mCobaltData, mSvCache, mSomaticCache);
 

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVAL
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -50,7 +52,7 @@ public final class UltimaUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
-        if(indexStart < 0)
+        if(indexStart < 0 || indexStart >= record.getReadBases().length)
             return ULTIMA_INVALID_QUAL;
 
         byte[] tpValues = extractTpValues(record);
@@ -111,7 +113,6 @@ public final class UltimaUtils
 
     protected static int findHomopolymerLength(final byte[] refBases, final byte compareBase, int startIndex, boolean searchUp)
     {
-        // byte repeatBase = refBases[startIndex];
         int repeatCount = 0;
 
         int i = startIndex;
@@ -239,5 +240,53 @@ public final class UltimaUtils
             return true;  // Ultima gets confused near variants of this type
 
         return false;
+    }
+
+    // variant filters
+    public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
+    {
+        if(!primaryTumor.isIndel())
+            return false;
+
+        UltimaVariantData ultimaData = primaryTumor.ultimaData();
+        final List<Integer> homopolymerLengths = ultimaData.homopolymerLengths();
+
+        // TODO: make constants and generally improve
+        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
+            return false;
+
+        for(int i = 0; i < homopolymerLengths.size(); i++)
+        {
+            int length = homopolymerLengths.get(i);
+
+            double avgQual = ultimaData.homopolymerAvgQuals().get(i);
+
+            if(length == 1 && avgQual < 24)
+                return true;
+            else if(length == 2 && avgQual < 22)
+                return true;
+            else if(length == 3 && avgQual < 18)
+                return true;
+            else if(length == 4 && avgQual < 18)
+                return true;
+            else if(length == 5 && avgQual < 16)
+                return true;
+            else if(length == 6 && avgQual < 14)
+                return true;
+            else if(length == 7 && avgQual < 12)
+                return true;
+            else if(avgQual < 10)
+                return true;
+            else if(length >= 15)
+                return true;
+        }
+        return false;
+    }
+
+    public static boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
+    {
+        // TODO: make constants
+        int threshold = nearbyVariant ? 28 : 18;
+        return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
     }
 }

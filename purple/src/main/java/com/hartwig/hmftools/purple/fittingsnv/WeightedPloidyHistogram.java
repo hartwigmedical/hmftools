@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 public class WeightedPloidyHistogram
 {
 
-    private final double maxPloidy;
-    private final double binWidth;
-    private final double offset;
+    public final double MaxPloidy;
+    public final double BinWidth;
+    public final double Offset;
 
     public WeightedPloidyHistogram(final double maxPloidy, final double binWidth)
     {
@@ -22,19 +22,19 @@ public class WeightedPloidyHistogram
 
     public WeightedPloidyHistogram(final double maxPloidy, final double binWidth, final double offset)
     {
-        this.maxPloidy = maxPloidy;
-        this.binWidth = binWidth;
-        this.offset = offset;
+        MaxPloidy = maxPloidy;
+        BinWidth = binWidth;
+        Offset = offset;
     }
 
     public int bucket(double ploidy)
     {
-        return (int) Math.round((ploidy - offset) / binWidth);
+        return (int) Math.round((ploidy - Offset) / BinWidth);
     }
 
     public double ploidy(int bucket)
     {
-        return bucket * binWidth + offset;
+        return bucket * BinWidth + Offset;
     }
 
     public double[] histogram(@NotNull final Collection<? extends WeightedPloidy> ploidies)
@@ -44,7 +44,7 @@ public class WeightedPloidyHistogram
 
     public double[] modelHistogram(final List<PeakModelData> peakModels)
     {
-        int maxBucket = bucket(maxPloidy);
+        int maxBucket = bucket(MaxPloidy);
         double[] result = new double[maxBucket + 1];
 
         for(PeakModelData peakModelData : peakModels)
@@ -57,13 +57,11 @@ public class WeightedPloidyHistogram
         }
 
         return result;
-
-        // return histogram(peakModelData, PeakModelData::bucket, PeakModelData::bucketWeight);
     }
 
     private <T> double[] histogram(@NotNull final Collection<T> elements, Function<T, Double> ploidy, Function<T, Double> weight)
     {
-        int maxBucket = bucket(maxPloidy);
+        int maxBucket = bucket(MaxPloidy);
         double[] result = new double[maxBucket + 1];
 
         for(final T element : elements)

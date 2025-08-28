@@ -2,6 +2,8 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.String.format;
 
+import static htsjdk.samtools.CigarOperator.S;
+
 import htsjdk.samtools.CigarOperator;
 
 public class SbxAnnotatedBase
@@ -14,6 +16,9 @@ public class SbxAnnotatedBase
 
     private byte mQual;
     private boolean mDeleted;
+    private boolean mInSoftClip; // true if derived from a soft-clip but has been replaced by the aligned supplementary data
+
+    protected final static byte INVALID_BASE = -1;
 
     public SbxAnnotatedBase(int readIndex, int refPos, final CigarOperator op, byte readBase, byte qual, boolean isDuplexIndel)
     {
@@ -25,32 +30,31 @@ public class SbxAnnotatedBase
 
         mQual = qual;
         mDeleted = false;
+        mInSoftClip = false;
     }
 
-    public boolean isReadBase()
-    {
-        return Op.consumesReadBases();
-    }
-
+    public boolean isReadBase() { return Op.consumesReadBases(); }
     public boolean isRefBase()
     {
         return Op.consumesReferenceBases();
     }
-
     public void deleteBase()
     {
         mDeleted = true;
     }
-
     public boolean deleted()
     {
         return mDeleted;
     }
-
     public byte qual()
     {
         return mQual;
     }
+
+    public void setInSoftClip() { mInSoftClip = true; }
+
+    public boolean inSoftClip() { return Op == S || mInSoftClip; }
+    public CigarOperator originalOperator() { return mInSoftClip ? S : Op; }
 
     public boolean setQual(byte qual)
     {
@@ -92,7 +96,7 @@ public class SbxAnnotatedBase
     @Override
     public String toString()
     {
-        return format("%d:%d %c@%d cigar(%s) duplexIndel(%s) deleted(%s)",
-                ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted);
+        return format("%d:%d %c@%d cigar(%s) duplexIndel(%s) deleted(%s) softClip(%s)",
+                ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted, mInSoftClip);
     }
 }

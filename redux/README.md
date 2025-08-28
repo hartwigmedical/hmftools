@@ -100,7 +100,7 @@ java -jar redux.jar
 
 Due to the incompleteness and repetitiveness of the human genome and idiosyncratic errors in sequencing, there are certain regions that have
 reads aligned to them, often with very high coverage, which recurrently cause issues in downstream tools. Key examples include PolyG
-regions, long PolyA/T repeats, long dinucleotide repeats, ribosomal regions on short arms of Chr21 and chr22 and many centromeric regions.
+regions, long PolyA/T repeats, long dinucleotide repeats, ribosomal regions on short arms of chr21 and chr22 and many centromeric regions.
 One key case is that duplicate fragments with one read consisting mainly of homopolymers will not be properly marked as duplicates as the
 homopolymer read may be mapped to numerous places in the genome
 

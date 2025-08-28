@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
@@ -253,7 +254,7 @@ public class VariantReadContextBuilder
 
         for(int i = indexStart; i <= indexEnd; ++i)
         {
-            if(read.getBaseQualities()[i] <= BASE_QUAL_MINIMUM)
+            if(BaseQualAdjustment.isUncertainBaseFromQual(read.getBaseQualities()[i]))
                 return false;
         }
 
