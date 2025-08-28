@@ -2,19 +2,15 @@ package com.hartwig.hmftools.common.bam.testutilities;
 
 import java.io.File;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-
 import org.apache.commons.lang3.RandomUtils;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-
-public class BamUtilities
+public class BamMaker
 {
     public static void main(String[] args) throws Exception
     {
-        File refGenomeFile =
-                new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
-        RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
+//        File refGenomeFile =
+//                new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
+//        RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
         BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(101_000));
         int regionOffset = 1;
         //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
