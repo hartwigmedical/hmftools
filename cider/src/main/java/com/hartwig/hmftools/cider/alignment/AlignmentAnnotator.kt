@@ -39,7 +39,7 @@ class AlignmentAnnotator
     {
         vdjGenes = ArrayListMultimap.create()
 
-        // since we use V38 for blast
+        // since we use V38 for alignment annotation
         val igTcrGenes = IgTcrGeneFile.read(CiderConstants.BLAST_REF_GENOME_VERSION)
             .map { o -> fromCommonIgTcrGene(o) }
 
@@ -76,7 +76,7 @@ class AlignmentAnnotator
 
         for (vdj in vdjList)
         {
-            val querySeqRange = blastnQuerySeqRange(vdj)
+            val querySeqRange = alignmentQuerySeqRange(vdj)
             val alignmentRunData = AlignmentRunData(vdj,
                 key++,
                 querySeqRange,
@@ -312,14 +312,14 @@ class AlignmentAnnotator
 
         private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
-        fun blastnQuerySeqRange(vdj: VDJSequence) : IntRange
+        fun alignmentQuerySeqRange(vdj: VDJSequence) : IntRange
         {
             val fullSeq = vdj.layout.consensusSequenceString()
             val vdjSeq = vdj.sequence
-            return blastnQuerySeqRange(vdjSeq, fullSeq)
+            return alignmentQuerySeqRange(vdjSeq, fullSeq)
         }
 
-        fun blastnQuerySeqRange(vdjSeq: String, fullSeq: String): IntRange
+        fun alignmentQuerySeqRange(vdjSeq: String, fullSeq: String): IntRange
         {
             val i = fullSeq.indexOf(vdjSeq)
             require(i >= 0)
