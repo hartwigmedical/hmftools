@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.segmentation;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import java.util.List;
 import java.util.Set;
 
 public class SegmenterTest extends SegmentationTestBase
@@ -79,7 +80,7 @@ public class SegmenterTest extends SegmentationTestBase
         );
         assertEquals(
             segmentation(d(2, 3, 1, 12, 13, 11)),
-            new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(java.util.Arrays.asList(5))
+            new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(List.of(5))
         );
     }
 

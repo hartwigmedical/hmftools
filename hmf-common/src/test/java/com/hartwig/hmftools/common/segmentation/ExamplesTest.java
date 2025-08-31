@@ -78,7 +78,8 @@ public class ExamplesTest extends SegmentationTestBase
     {
         // This takes about a minute to run as there are 108000 points in the file.
         // This is about as large a file as we can expect to process.
-        String filename = "COREDB011374T.chr1p.ratios.tsv";
+        // Processing of this input failed with an early version of the code.
+        String filename = "chr1p.ratios.tsv";
         /*
         R output:
         $Lengde
@@ -114,7 +115,7 @@ given by R are incorrect (have a look at the data).
     @Test
     public void chr10p()
     {
-        String filename = "COREDB011374T.chr10p.ratios.tsv";
+        String filename = "chr10p.ratios.tsv";
         double[] doubles = readDoubles(filename, "logRatio");
         /*
         The segmentation we calculate is:
@@ -123,7 +124,7 @@ This is close to but not the same as calculated by R.
 The cost of the two solutions is the same though.
          */
         Segmenter calculation = new Segmenter(doubles, 50.0, true);
-        Segmentation rResult = buildSegmentationForROutput("r_output_1.txt", doubles);
+        Segmentation rResult = buildSegmentationForROutput(doubles);
         double calculatedCost = rResult.cost(calculation.pcf().getMeans()[0]); // Using the first mean as a proxy for segmentPenalty
         double rCost = rResult.cost(calculation.pcf().getMeans()[0]);
         assertEquals(calculatedCost, rCost, 1e-10);
@@ -141,7 +142,7 @@ The cost of the two solutions is the same though.
     @Test
     public void chr10q()
     {
-        String filename = "COREDB011374T.chr10q.ratios.tsv";
+        String filename = "chr10q.ratios.tsv";
         assertEquals(
                 new PCF(
                         new int[] { 24, 104, 5, 39, 2849, 174, 72458, 15, 6684 },
@@ -161,16 +162,9 @@ The cost of the two solutions is the same though.
         );
     }
 
-    /**
-     * Builds a segmentation from R output.
-     *
-     * @param rIntervalLengthsFile The file containing the interval lengths from R
-     * @param ratios               The ratios to segment
-     * @return A segmentation
-     */
-    private Segmentation buildSegmentationForROutput(String rIntervalLengthsFile, double[] ratios)
+    private Segmentation buildSegmentationForROutput(double[] ratios)
     {
-        List<Integer> intervalLengths = extractIntervalLengths(rIntervalLengthsFile);
+        List<Integer> intervalLengths = extractIntervalLengths();
         int sum = 0;
         for(int length : intervalLengths)
         {
@@ -191,16 +185,10 @@ The cost of the two solutions is the same though.
         return new Segmentation(intervals);
     }
 
-    /**
-     * Extracts interval lengths from a file.
-     *
-     * @param filename The file containing the interval lengths
-     * @return A list of interval lengths
-     */
-    private List<Integer> extractIntervalLengths(String filename)
+    private List<Integer> extractIntervalLengths()
     {
         List<Integer> integers = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new FileReader(loadFileFromResources(filename))))
+        try(BufferedReader reader = new BufferedReader(new FileReader(loadFileFromResources("r_output_1.txt"))))
         {
             String line;
             while((line = reader.readLine()) != null)
@@ -214,51 +202,29 @@ The cost of the two solutions is the same though.
         }
         catch(IOException e)
         {
-            throw new RuntimeException("Error reading file: " + filename, e);
+            throw new RuntimeException("Error reading file: " + "r_output_1.txt", e);
         }
         return integers;
     }
 
-    /**
-     * Calculates the PCF for a file.
-     *
-     * @param filename  The name of the file
-     * @param gamma     The gamma parameter (default 50.0)
-     * @param normalise Whether to normalise the segment penalty (default false)
-     * @param column    The column to use (default "ratio")
-     * @return The PCF
-     */
     private PCF pcfForFile(String filename, double gamma, boolean normalise, String column)
     {
         double[] rounded = readDoubles(filename, column);
         return new Segmenter(rounded, gamma, normalise).pcf();
     }
 
-    /**
-     * Calculates the PCF for a file with default parameters.
-     *
-     * @param filename The name of the file
-     * @return The PCF
-     */
     private PCF pcfForFile(String filename)
     {
         return pcfForFile(filename, 50.0, false, "ratio");
     }
 
-    /**
-     * Reads doubles from a file.
-     *
-     * @param filename The name of the file
-     * @param column   The column to read
-     * @return An array of doubles
-     */
     private double[] readDoubles(String filename, String column)
     {
         List<String[]> data = readResourcesFile(filename);
 
         // Find the column index
         int columnIndex = -1;
-        if(data.size() > 0)
+        if(!data.isEmpty())
         {
             String[] header = data.get(0);
             for(int i = 0; i < header.length; i++)
