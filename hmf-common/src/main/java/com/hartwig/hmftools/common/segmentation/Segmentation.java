@@ -3,16 +3,16 @@ package com.hartwig.hmftools.common.segmentation;
 import java.util.Arrays;
 import java.util.List;
 
-public class Segmentation
+class Segmentation
 {
     private final List<double[]> segments;
 
-    public Segmentation(List<double[]> segments)
+    Segmentation(List<double[]> segments)
     {
         this.segments = segments;
     }
 
-    public double[] completeSeries()
+    double[] completeSeries()
     {
         int length = 0;
         for(double[] segment : segments)
@@ -31,7 +31,7 @@ public class Segmentation
         return result;
     }
 
-    public PCF pcf()
+    PiecewiseConstantFit pcf()
     {
         int cursor = 0;
         int[] lengths = new int[segments.size()];
@@ -45,10 +45,10 @@ public class Segmentation
             cursor += segment.length;
             means[index] = round(Stats.mean(segment));
         }
-        return new PCF(lengths, starts, means);
+        return new PiecewiseConstantFit(lengths, starts, means);
     }
 
-    public double cost(double gamma)
+    double cost(double gamma)
     {
         double sum = 0;
         for(double[] segment : segments)
@@ -56,23 +56,6 @@ public class Segmentation
             sum += segmentCost(segment);
         }
         return sum + gamma * segments.size();
-    }
-
-    public double alternativeCost(double gamma)
-    {
-        double part1 = 0.0;
-        double part2 = 0.0;
-        for(double[] segment : segments)
-        {
-            double segmentSum = 0.0;
-            for(double d : segment)
-            {
-                part1 += d * d;
-                segmentSum += d;
-            }
-            part2 += (segmentSum * segmentSum) / segment.length;
-        }
-        return part1 - part2 + gamma * segments.size();
     }
 
     @Override
@@ -89,22 +72,6 @@ public class Segmentation
         }
         sb.append("]");
         return sb.toString();
-    }
-
-    private double segmentCost(double[] segment)
-    {
-        double mean = Stats.mean(segment);
-        double sum = 0.0;
-        for(double value : segment)
-        {
-            sum += Math.pow(value - mean, 2);
-        }
-        return sum;
-    }
-
-    private double round(double value)
-    {
-        return Math.round(value * 1000) / 1000.0;
     }
 
     @Override
@@ -144,5 +111,21 @@ public class Segmentation
             result = result * 31 + Arrays.hashCode(segment);
         }
         return result;
+    }
+
+    private double segmentCost(double[] segment)
+    {
+        double mean = Stats.mean(segment);
+        double sum = 0.0;
+        for(double value : segment)
+        {
+            sum += Math.pow(value - mean, 2);
+        }
+        return sum;
+    }
+
+    private double round(double value)
+    {
+        return Math.round(value * 1000) / 1000.0;
     }
 }

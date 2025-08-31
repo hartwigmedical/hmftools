@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.common.segmentation;
 
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.junit.Test;
+
 public class GammaTest extends SegmentationTestBase
 {
-    
     @Test
-    public void compareWithR() {
+    public void compareWithR()
+    {
         assertEquals(0.2361, gammaForFile("ratios1.tsv"), 0.0001);
         assertEquals(0.3325, gammaForFile("ratios4.tsv"), 0.0001);
         assertEquals(0.0, gammaForFile("ratios5.csv"), 0.0001);
@@ -17,7 +18,8 @@ public class GammaTest extends SegmentationTestBase
     }
 
     @Test
-    public void filterWidthTest() {
+    public void filterWidthTest()
+    {
         assertEquals(-1, Gamma.filterWidth(0));
         assertEquals(1, Gamma.filterWidth(1));
         assertEquals(1, Gamma.filterWidth(2));
@@ -35,50 +37,41 @@ public class GammaTest extends SegmentationTestBase
         assertEquals(51, Gamma.filterWidth(10000));
     }
 
-    /**
-     * Calculates the gamma value for a file.
-     *
-     * @param filename The name of the file
-     * @param gamma The gamma parameter (default 50.0)
-     * @param normalise Whether to normalise the segment penalty (default true)
-     * @param column The column to use (default "ratio")
-     * @return The gamma value
-     */
-    private double gammaForFile(String filename, double gamma, boolean normalise, String column) {
+    private double gammaForFile(String filename, double gamma, boolean normalise, String column)
+    {
         List<String[]> data = readResourcesFile(filename);
-        
+
         // Find the column index
         int columnIndex = -1;
-        if (data.size() > 0) {
+        if(!data.isEmpty())
+        {
             String[] header = data.get(0);
-            for (int i = 0; i < header.length; i++) {
-                if (header[i].equals(column)) {
+            for(int i = 0; i < header.length; i++)
+            {
+                if(header[i].equals(column))
+                {
                     columnIndex = i;
                     break;
                 }
             }
         }
-        
-        if (columnIndex == -1) {
+        if(columnIndex == -1)
+        {
             throw new IllegalArgumentException("Column " + column + " not found in file " + filename);
         }
-        
+
         // Extract the values
         double[] doubles = new double[data.size() - 1]; // Exclude header
-        for (int i = 1; i < data.size(); i++) {
+        for(int i = 1; i < data.size(); i++)
+        {
             doubles[i - 1] = Double.parseDouble(data.get(i)[columnIndex]);
         }
-        
+
         return round4(new Gamma(doubles, gamma, normalise).getSegmentPenalty());
     }
-    
-    /**
-     * Calculates the gamma value for a file with default parameters.
-     *
-     * @param filename The name of the file
-     * @return The gamma value
-     */
-    private double gammaForFile(String filename) {
+
+    private double gammaForFile(String filename)
+    {
         return gammaForFile(filename, 50.0, true, "ratio");
     }
 }

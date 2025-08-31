@@ -2,34 +2,8 @@ package com.hartwig.hmftools.common.segmentation;
 
 import java.util.Arrays;
 
-public class PCF
+public record PiecewiseConstantFit(int[] lengths, int[] startPositions, double[] means)
 {
-    private final int[] lengths;
-    private final int[] startPositions;
-    private final double[] means;
-
-    public PCF(int[] lengths, int[] startPositions, double[] means)
-    {
-        this.lengths = lengths;
-        this.startPositions = startPositions;
-        this.means = means;
-    }
-
-    public int[] getLengths()
-    {
-        return lengths;
-    }
-
-    public int[] getStartPositions()
-    {
-        return startPositions;
-    }
-
-    public double[] getMeans()
-    {
-        return means;
-    }
-
     @Override
     public boolean equals(Object o)
     {
@@ -42,7 +16,7 @@ public class PCF
             return false;
         }
 
-        PCF pcf = (PCF) o;
+        PiecewiseConstantFit pcf = (PiecewiseConstantFit) o;
 
         if(!Arrays.equals(lengths, pcf.lengths))
         {
@@ -62,5 +36,15 @@ public class PCF
         result = 31 * result + Arrays.hashCode(startPositions);
         result = 31 * result + Arrays.hashCode(means);
         return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "PiecewiseConstantFit{" +
+                "lengths=" + Arrays.toString(lengths) +
+                ", startPositions=" + Arrays.toString(startPositions) +
+                ", means=" + Arrays.toString(means) +
+                '}';
     }
 }

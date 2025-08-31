@@ -10,29 +10,25 @@ import java.util.List;
 
 import org.junit.Test;
 
-/**
- * Tests for PCF algorithm on example files.
- */
 public class ExamplesTest extends SegmentationTestBase
 {
-
     @Test
     public void minima()
     {
         assertEquals(
-                new PCF(new int[] { 16 }, new int[] { 0 }, d(0.883)),
+                new PiecewiseConstantFit(new int[] { 16 }, new int[] { 0 }, d(0.883)),
                 pcfForFile("ratios1.tsv")
         );
         assertEquals(
-                new PCF(new int[] { 36 }, new int[] { 0 }, d(0.902)),
+                new PiecewiseConstantFit(new int[] { 36 }, new int[] { 0 }, d(0.902)),
                 pcfForFile("ratios2.tsv")
         );
         assertEquals(
-                new PCF(new int[] { 75 }, new int[] { 0 }, d(0.899)),
+                new PiecewiseConstantFit(new int[] { 75 }, new int[] { 0 }, d(0.899)),
                 pcfForFile("ratios3.tsv")
         );
         assertEquals(
-                new PCF(new int[] { 109 }, new int[] { 0 }, d(0.889)),
+                new PiecewiseConstantFit(new int[] { 109 }, new int[] { 0 }, d(0.889)),
                 pcfForFile("ratios4.tsv")
         );
     }
@@ -43,12 +39,12 @@ public class ExamplesTest extends SegmentationTestBase
         String filename = "ratios_tii_9p.tsv"; // COREDB010001TII
         // Note that the R code gives the wrong mean for the first segment. It gives -0.156017.
         assertEquals(
-                new PCF(new int[] { 86, 4, 19 }, new int[] { 0, 86, 90 }, d(-0.153, -0.764, -0.193)),
+                new PiecewiseConstantFit(new int[] { 86, 4, 19 }, new int[] { 0, 86, 90 }, d(-0.153, -0.764, -0.193)),
                 pcfForFile(filename, 35.0, true, "logRatio")
         );
         // Note that the R code incorrectly has a length-1 segment at the beginning.
         assertEquals(
-                new PCF(
+                new PiecewiseConstantFit(
                         new int[] { 7, 2, 77, 4, 3, 16 },
                         new int[] { 0, 7, 9, 86, 90, 93 },
                         d(-0.159, -0.594, -0.141, -0.764, 0.123, -0.252)
@@ -64,11 +60,11 @@ public class ExamplesTest extends SegmentationTestBase
         // Assertions made by comparing with the output from the R code and excel (as the R code
         // always adds a spurious length 1 segment).
         assertEquals(
-                new PCF(new int[] { 109 }, new int[] { 0 }, d(-0.227)),
+                new PiecewiseConstantFit(new int[] { 109 }, new int[] { 0 }, d(-0.227)),
                 pcfForFile(filename, 50.0, true, "logRatio")
         );
         assertEquals(
-                new PCF(new int[] { 86, 7, 16 }, new int[] { 0, 86, 93 }, d(-0.195, -0.604, -0.236)),
+                new PiecewiseConstantFit(new int[] { 86, 7, 16 }, new int[] { 0, 86, 93 }, d(-0.195, -0.604, -0.236)),
                 pcfForFile(filename, 18.0, true, "logRatio")
         );
     }
@@ -100,16 +96,16 @@ Our's agrees with this excep that the first two length-1 segments
 given by R are incorrect (have a look at the data).
          */
 
-        PCF calculated = pcfForFile(filename, 50.0, true, "logRatio");
-        assertEquals(146, calculated.getLengths().length);
-        assertEquals(7, calculated.getLengths()[0]);
-        assertEquals(4, calculated.getLengths()[1]);
-        assertEquals(3, calculated.getLengths()[2]);
-        assertEquals(54, calculated.getLengths()[3]);
+        PiecewiseConstantFit calculated = pcfForFile(filename, 50.0, true, "logRatio");
+        assertEquals(146, calculated.lengths().length);
+        assertEquals(7, calculated.lengths()[0]);
+        assertEquals(4, calculated.lengths()[1]);
+        assertEquals(3, calculated.lengths()[2]);
+        assertEquals(54, calculated.lengths()[3]);
 
-        assertEquals(2767, calculated.getLengths()[141]);
-        assertEquals(2, calculated.getLengths()[143]);
-        assertEquals(1, calculated.getLengths()[145]);
+        assertEquals(2767, calculated.lengths()[141]);
+        assertEquals(2, calculated.lengths()[143]);
+        assertEquals(1, calculated.lengths()[145]);
     }
 
     @Test
@@ -125,12 +121,12 @@ The cost of the two solutions is the same though.
          */
         Segmenter calculation = new Segmenter(doubles, 50.0, true);
         Segmentation rResult = buildSegmentationForROutput(doubles);
-        double calculatedCost = rResult.cost(calculation.pcf().getMeans()[0]); // Using the first mean as a proxy for segmentPenalty
-        double rCost = rResult.cost(calculation.pcf().getMeans()[0]);
+        double calculatedCost = rResult.cost(calculation.pcf().means()[0]); // Using the first mean as a proxy for segmentPenalty
+        double rCost = rResult.cost(calculation.pcf().means()[0]);
         assertEquals(calculatedCost, rCost, 1e-10);
 
         assertEquals(
-                new PCF(
+                new PiecewiseConstantFit(
                         new int[] { 35543, 89, 51 },
                         new int[] { 0, 35543, 35632 },
                         d(-0.007, 1.394, 2.459)
@@ -144,7 +140,7 @@ The cost of the two solutions is the same though.
     {
         String filename = "chr10q.ratios.tsv";
         assertEquals(
-                new PCF(
+                new PiecewiseConstantFit(
                         new int[] { 24, 104, 5, 39, 2849, 174, 72458, 15, 6684 },
                         new int[] { 0, 24, 128, 133, 172, 3021, 3195, 75653, 75668 },
                         d(5.135, 0.264, 6.383, 1.076, -0.021, 0.961, -0.016, 2.88, -0.016)
@@ -157,7 +153,7 @@ The cost of the two solutions is the same though.
     public void chr13()
     {
         assertEquals(
-                new PCF(new int[] { 108, 25, 48 }, new int[] { 0, 108, 133 }, d(0.546, 0.185, 0.519)),
+                new PiecewiseConstantFit(new int[] { 108, 25, 48 }, new int[] { 0, 108, 133 }, d(0.546, 0.185, 0.519)),
                 pcfForFile("ratios_chr13_1.tsv", 50.0, true, "ratio")
         );
     }
@@ -207,13 +203,13 @@ The cost of the two solutions is the same though.
         return integers;
     }
 
-    private PCF pcfForFile(String filename, double gamma, boolean normalise, String column)
+    private PiecewiseConstantFit pcfForFile(String filename, double gamma, boolean normalise, String column)
     {
         double[] rounded = readDoubles(filename, column);
         return new Segmenter(rounded, gamma, normalise).pcf();
     }
 
-    private PCF pcfForFile(String filename)
+    private PiecewiseConstantFit pcfForFile(String filename)
     {
         return pcfForFile(filename, 50.0, false, "ratio");
     }

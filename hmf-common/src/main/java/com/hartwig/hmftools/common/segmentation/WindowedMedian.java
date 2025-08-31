@@ -6,7 +6,7 @@ import java.util.PriorityQueue;
 /**
  * Efficiently computes running medians using two heaps.
  */
-public class WindowedMedian
+class WindowedMedian
 {
     // maxHeap contains the smaller half of elements (including the median if windowSize is odd)
     // minHeap contains the larger half of elements
@@ -14,7 +14,7 @@ public class WindowedMedian
     private final PriorityQueue<Double> minHeap;
     private final double[] result;
 
-    public WindowedMedian(double[] data, int windowSize)
+    WindowedMedian(double[] data, int windowSize)
     {
         if(windowSize % 2 != 1)
         {
@@ -63,7 +63,7 @@ public class WindowedMedian
         }
     }
 
-    public double[] getMedians()
+    double[] getMedians()
     {
         return result;
     }

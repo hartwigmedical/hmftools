@@ -10,7 +10,6 @@ import java.util.List;
 
 public class SegmentationTestBase
 {
-
     public double[] d(Number... values)
     {
         double[] result = new double[values.length];
@@ -21,7 +20,7 @@ public class SegmentationTestBase
         return result;
     }
 
-    protected Segmentation segmentation(double[]... arrays)
+    Segmentation segmentation(double[]... arrays)
     {
         return new Segmentation(java.util.Arrays.asList(arrays));
     }
@@ -61,7 +60,6 @@ public class SegmentationTestBase
         {
             throw new RuntimeException("Error reading file: " + filename, e);
         }
-
         return result;
     }
 
@@ -73,15 +71,5 @@ public class SegmentationTestBase
     public static double round10(double value)
     {
         return Math.round(value * 10_000_000_000L) / 10_000_000_000.0;
-    }
-
-    public static double[] round10(double[] array)
-    {
-        double[] result = new double[array.length];
-        for(int i = 0; i < array.length; i++)
-        {
-            result[i] = round10(array[i]);
-        }
-        return result;
     }
 }

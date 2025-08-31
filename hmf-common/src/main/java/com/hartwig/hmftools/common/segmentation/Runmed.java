@@ -2,10 +2,10 @@ package com.hartwig.hmftools.common.segmentation;
 
 /**
  * Java implementation of R's runmed function.
- * The R function has options for dealing with the endpoints but in copynumber the only
- * option used is "median".
+ * The R function has options for dealing with the endpoints but in
+ * copynumber the only option used is "median".
  * <p>
- * https://github.com/SurajGupta/r-source/blob/master/src/library/stats/R/runmed.R
+ * <a href="https://github.com/SurajGupta/r-source/blob/master/src/library/stats/R/runmed.R">...</a>
  */
 public class Runmed
 {
@@ -36,14 +36,12 @@ public class Runmed
 
     public static double[] smoothEnds(double[] y, int k)
     {
-        // Validate k
-        int kInt = k;
-        if(kInt < 0 || kInt % 2 == 0)
+        if(k < 0 || k % 2 == 0)
         {
             throw new IllegalArgumentException("bandwidth 'k' must be >= 1 and odd!");
         }
 
-        int halfK = kInt / 2;
+        int halfK = k / 2;
         if(halfK < 1)
         {
             return y.clone(); // Nothing to do if k < 3
@@ -87,7 +85,7 @@ public class Runmed
         { //...a...b...
             if(c < b)
             {
-                return a < c ? c : a;
+                return Math.max(a, c);
             }
             else
             {
@@ -98,7 +96,7 @@ public class Runmed
         { //...b...a...
             if(c < a)
             {
-                return c < b ? b : c;
+                return Math.max(c, b);
             }
             else
             {

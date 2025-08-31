@@ -8,18 +8,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+/**
+ * Given a list of doubles and a segmentation penalty this class finds the least cost
+ * segmentation of the doubles using a dynamic programming algorithm described in
+ * "Copynumber: Eﬃcient algorithms for single- and multi-track copy number segmentation"
+ * Nilsen et al. BMC Genomics 2012,13:591 <a href="http://www.biomedcentral.com/1471-2164/13/591">...</a>
+ * <p>
+ * A solution by exhaustive search is provided too, to assist in testing.
+ */
 public class Segmenter
 {
     private final double[] y;
-    private final Segmentation leastCostSegmentation;
-    private final double segmentPenalty;
+    final Segmentation leastCostSegmentation;
+    public final double segmentPenalty;
 
     public Segmenter(double[] y, double gamma, boolean normalise)
     {
         this.y = y;
 
-        // Here we calculate leastCost(s,e) for each e in [0,..,y.size - 1]
-        // and s in [0,..,e]. For any such pair, the least cost is:
+        // Here we calculate leastCost(s,e) for each e in [0, ..., y.size - 1]
+        // and s in [0, ..., e]. For any such pair, the least cost is:
         // leastCost(s,e) = leastCostOfSegmentingTo(s-1) + segmentPenalty + intervalCost(s,e)
         // The least cost segmentation corresponds to the leastCostOfSegmentingTo(y.size - 1)
         Map<Integer, Double> leastCostEndingAt = new HashMap<>();
@@ -27,7 +37,6 @@ public class Segmenter
         // We record the segment endpoints so that we can recover the least cost segmentation itself.
         List<Integer> leastCostSegmentEndpoints = new ArrayList<>(); // there's only one possible segment of length 1
         segmentPenalty = new Gamma(y, gamma, normalise).getSegmentPenalty();
-        System.out.println("Segment penalty: " + segmentPenalty);
         List<Double> partialSumsFromIndexToCurrentEnd = new ArrayList<>();
         for(int end = 0; end < y.length; end++)
         {
@@ -70,12 +79,15 @@ public class Segmenter
         this(y, 50.0, false);
     }
 
-    public PCF pcf()
+    public PiecewiseConstantFit pcf()
     {
         return leastCostSegmentation.pcf();
     }
 
-    public Segmentation cheapestSegmentationByExhaustiveSearch()
+    /**
+     * For testing only.
+     */
+    Segmentation cheapestSegmentationByExhaustiveSearch()
     {
         Set<Segmentation> allSegmentations = allPossibleSegmentations();
         Segmentation cheapest = null;
@@ -92,12 +104,7 @@ public class Segmenter
         return cheapest;
     }
 
-    public PCF pcfByExhaustiveSearch()
-    {
-        return cheapestSegmentationByExhaustiveSearch().pcf();
-    }
-
-    public Set<Segmentation> allPossibleSegmentations()
+    Set<Segmentation> allPossibleSegmentations()
     {
         if(y.length == 1)
         {
@@ -117,7 +124,7 @@ public class Segmenter
         return result;
     }
 
-    public Segmentation segmentBy(List<Integer> segmentEndpointIndices)
+    Segmentation segmentBy(List<Integer> segmentEndpointIndices)
     {
         if(!isIncreasing(segmentEndpointIndices))
         {
@@ -160,7 +167,6 @@ public class Segmenter
         return true;
     }
 
-
     private static List<double[]> splitByIndexes(double[] array, Set<Integer> indexes)
     {
         for(int index : indexes)
@@ -179,9 +185,9 @@ public class Segmenter
         Pair<double[], double[]> headTail = splitAt(array, greatestIndex);
         Set<Integer> remainingIndexes = new HashSet<>(indexes);
         remainingIndexes.remove(greatestIndex);
-        List<double[]> headSplits = splitByIndexes(headTail.getFirst(), remainingIndexes);
+        List<double[]> headSplits = splitByIndexes(headTail.getLeft(), remainingIndexes);
         List<double[]> result = new ArrayList<>(headSplits);
-        result.add(headTail.getSecond());
+        result.add(headTail.getRight());
         return result;
     }
 
@@ -204,7 +210,7 @@ public class Segmenter
                 right[i - index] = array[i];
             }
         }
-        return new Pair<>(left, right);
+        return Pair.of(left, right);
     }
 
     private static <T> Set<Set<T>> powerSet(Set<T> set)
@@ -225,27 +231,5 @@ public class Segmenter
             }
         }
         return result;
-    }
-
-    private static class Pair<F, S>
-    {
-        private final F first;
-        private final S second;
-
-        public Pair(F first, S second)
-        {
-            this.first = first;
-            this.second = second;
-        }
-
-        public F getFirst()
-        {
-            return first;
-        }
-
-        public S getSecond()
-        {
-            return second;
-        }
     }
 }

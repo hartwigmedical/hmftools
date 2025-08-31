@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PCFFileTest
+public class PiecewiseConstantFitFileTest
 {
     private static final int WINDOW = 1000;
     private static final String BASE_PATH = Resources.getResource("pcf").getPath();

@@ -4,30 +4,25 @@ import static org.junit.Assert.assertArrayEquals;
 
 import org.junit.Test;
 
-public class WindowedMedianTest
+public class WindowedMedianTest extends SegmentationTestBase
 {
     @Test
     public void compareWithR()
     {
-        check(new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, 1);
-        check(new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, 3);
-        check(new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, new double[] { 1.0, 2.0, 3.0, 4.0, 5.0 }, 5);
+        check(d(1, 2, 3, 4, 5), d(1, 2, 3, 4, 5), 1);
+        check(d(1, 2, 3, 4, 5), d(1, 2, 3, 4, 5), 3);
+        check(d(1, 2, 3, 4, 5), d(1, 2, 3, 4, 5), 5);
 
-        check(new double[] { 1.0, 3.0, 5.0, 2.0, 8.0, 7.0 }, new double[] { 1.0, 3.0, 5.0, 2.0, 8.0, 7.0 }, 1);
-        check(new double[] { 1.0, 3.0, 5.0, 2.0, 8.0, 7.0 }, new double[] { 1.0, 3.0, 3.0, 5.0, 7.0, 7.0 }, 3);
-        check(new double[] { 1.0, 3.0, 5.0, 2.0, 8.0, 7.0 }, new double[] { 1.0, 3.0, 3.0, 5.0, 8.0, 7.0 }, 5);
+        check(d(1, 3, 5, 2, 8, 7), d(1, 3, 5, 2, 8, 7), 1);
+        check(d(1, 3, 5, 2, 8, 7), d(1, 3, 3, 5, 7, 7), 3);
+        check(d(1, 3, 5, 2, 8, 7), d(1, 3, 3, 5, 8, 7), 5);
 
-        check(new double[] { 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 }, new double[] { 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                9.0 }, 1);
-        check(new double[] { 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 }, new double[] { 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                9.0 }, 3);
-        check(new double[] { 1.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 }, new double[] { 1.0, 0.0, 1.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                9.0 }, 5);
+        check(d(1, 0, 0, 4, 5, 6, 7, 8, 9), d(1, 0, 0, 4, 5, 6, 7, 8, 9), 1);
+        check(d(1, 0, 0, 4, 5, 6, 7, 8, 9), d(1, 0, 0, 4, 5, 6, 7, 8, 9), 3);
+        check(d(1, 0, 0, 4, 5, 6, 7, 8, 9), d(1, 0, 1, 4, 5, 6, 7, 8, 9), 5);
 
-        check(new double[] { 1.0, 0.0, -1.0, 2.0, 5.0, 6.0, 1.0, 8.0, 9.0 }, new double[] { 1.0, 0.0, 0.0, 2.0, 5.0, 5.0, 6.0, 8.0,
-                9.0 }, 3);
-        check(new double[] { 1.0, 0.0, -1.0, 2.0, 5.0, 6.0, 1.0, 8.0, 9.0 }, new double[] { 1.0, 0.0, 1.0, 2.0, 2.0, 5.0, 6.0, 8.0,
-                9.0 }, 5);
+        check(d(1, 0, -1, 2, 5, 6, 1, 8, 9), d(1, 0, 0, 2, 5, 5, 6, 8, 9), 3);
+        check(d(1, 0, -1, 2, 5, 6, 1, 8, 9), d(1, 0, 1, 2, 2, 5, 6, 8, 9), 5);
     }
 
     private void check(double[] data, double[] expected, int windowSize)

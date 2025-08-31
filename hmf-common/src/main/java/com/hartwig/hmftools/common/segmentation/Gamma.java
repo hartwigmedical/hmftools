@@ -3,11 +3,11 @@ package com.hartwig.hmftools.common.segmentation;
 /**
  * Calculates a segment penalty based on an array of values.
  */
-public class Gamma
+class Gamma
 {
     private final double segmentPenalty;
 
-    public Gamma(double[] y, double gamma, boolean normalise)
+    Gamma(double[] y, double gamma, boolean normalise)
     {
         if(y.length == 0)
         {
@@ -32,22 +32,12 @@ public class Gamma
         }
     }
 
-    public Gamma(double[] y, double gamma)
-    {
-        this(y, gamma, false);
-    }
-
-    public Gamma(double[] y)
-    {
-        this(y, 50.0, false);
-    }
-
-    public double getSegmentPenalty()
+    double getSegmentPenalty()
     {
         return segmentPenalty;
     }
 
-    public static int filterWidth(int n)
+    static int filterWidth(int n)
     {
         return n >= 51 ? 51 : (n % 2 == 0 ? n - 1 : n);
     }
