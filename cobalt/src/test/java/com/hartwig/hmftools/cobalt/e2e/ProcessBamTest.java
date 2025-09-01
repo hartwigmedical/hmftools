@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.genome.gc.GCProfile.MIN_MAPPABLE_PERCENTAGE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
@@ -352,6 +354,98 @@ public class ProcessBamTest
         assertEquals(101001, chr1Positions.get(5).Position);
     }
 
+    @Test
+    public void wholeGenomeFemale() throws Exception
+    {
+        // The bam has reads for chr1, chr2 and chrX.
+        // Each chromosome has length 3000.
+        // 1:1-1000 depth 100
+        // 1:1001-2001 depth 110
+        // 2:1-1000 depth 110
+        // 2:1001-2001 depth 100
+        // X:1-1000 depth 120
+        // X:1001-2001 depth 120
+        // GC ratio 0.5 throughout.
+        sample = "female";
+        bamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardMultiChromosomeGCFile(3_000, _1, _2, _X);
+        runCobalt(false);
+
+        // There is only one GC bucket, and it has median read depth 105
+        // (the sex chromosomes don't contribute to this median).
+        List<CobaltRatio> ratios1 = ratioResults.get(_1);
+        assertEquals(3, ratios1.size());
+        assertEquals(100.0/105.0, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0/105.0, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios1.get(2).tumorGCRatio(), 0.01);
+
+        List<CobaltRatio> ratios2 = ratioResults.get(_2);
+        assertEquals(3, ratios2.size());
+        assertEquals(110.0/105.0, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0/105.0, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios2.get(2).tumorGCRatio(), 0.01);
+
+        List<CobaltRatio> ratiosX = ratioResults.get(_X);
+        assertEquals(3, ratiosX.size());
+        assertEquals(120.0/105.0, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(120.0/105.0, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratiosX.get(2).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void wholeGenomeMale() throws Exception
+    {
+        // The bam has reads for chr1, chr2, chrX and chrY.
+        // Each chromosome has length 3000.
+        // 1:1-1000 depth 100
+        // 1:1001-2001 depth 110
+        // 1:2001-3001 depth 104
+        // 2:1-1000 depth 110
+        // 2:1001-2001 depth 100
+        // 2:2001-3001 depth 104
+        // X:1-1000 depth 60
+        // X:1001-2001 depth 60
+        // X:2001-3001 depth 50
+        // Y:1-1000 depth 40
+        // Y:1001-2001 depth 40
+        // Y:2001-3001 depth 50
+        // GC ratio 0.5 throughout.
+        sample = "male";
+        bamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardMultiChromosomeGCFile(3_000, _1, _2, _X, _Y);
+        runCobalt(false);
+
+        // There is only one GC bucket, and it has median read depth 104
+        // (the sex chromosomes don't contribute to this median).
+        List<CobaltRatio> ratios1 = ratioResults.get(_1);
+        assertEquals(3, ratios1.size());
+        assertEquals(100.0/104.0, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0/104.0, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios1.get(2).tumorGCRatio(), 0.01);
+
+        List<CobaltRatio> ratios2 = ratioResults.get(_2);
+        assertEquals(3, ratios2.size());
+        assertEquals(110.0/104.0, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0/104.0, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios2.get(2).tumorGCRatio(), 0.01);
+
+        List<CobaltRatio> ratiosX = ratioResults.get(_X);
+        assertEquals(3, ratiosX.size());
+        assertEquals(60.0/104.0, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(60.0/104.0, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0/104.0, ratiosX.get(2).tumorGCRatio(), 0.01);
+
+        List<CobaltRatio> ratiosY = ratioResults.get(_Y);
+        assertEquals(3, ratiosY.size());
+        assertEquals(40.0/104.0, ratiosY.get(0).tumorGCRatio(), 0.01);
+        assertEquals(40.0/104.0, ratiosY.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0/104.0, ratiosY.get(2).tumorGCRatio(), 0.01);
+    }
+
     private void checkTumorRatio(double expected, int... indices)
     {
         List<CobaltRatio> ratios = ratioResults.get(_1);
@@ -423,7 +517,12 @@ public class ProcessBamTest
 
     private void runCobalt() throws Exception
     {
-        String[] args = new String[12];
+        runCobalt(true);
+    }
+
+    private void runCobalt(boolean targeted) throws Exception
+    {
+        String[] args = targeted ? new String[12] : new String[10];
         int index = 0;
         args[index++] = String.format("-%s", TUMOR);
         args[index++] = String.format("%s", sample);
@@ -431,12 +530,15 @@ public class ProcessBamTest
         args[index++] = String.format("%s", bamFile.getAbsolutePath());
         args[index++] = String.format("-%s", GC_PROFILE);
         args[index++] = String.format("%s", gcProfile.getAbsolutePath());
-        args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
-        args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
         args[index++] = String.format("-%s", PCF_GAMMA);
         args[index++] = String.format("%d", 50);
         args[index++] = String.format("-%s", OUTPUT_DIR);
-        args[index] = String.format("%s", outputDir.getAbsolutePath());
+        args[index++] = String.format("%s", outputDir.getAbsolutePath());
+        if (targeted)
+        {
+            args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
+            args[index] = String.format("%s", panelNormalisation.getAbsolutePath());
+        }
 
         CobaltApplication.main(args);
 

@@ -1,14 +1,15 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RegionDepth extends ChrBaseRegion
 {
-    public final int mChromosomeIndex;
+    public final HumanChromosome mChromosomeIndex;
     private final int depth;
 
-    public RegionDepth(final int chromosome, final int posStart, final int posEnd, final int depth)
+    public RegionDepth(final HumanChromosome chromosome, final int posStart, final int posEnd, final int depth)
     {
         super("chr" + chromosome , posStart, posEnd);
         Preconditions.checkArgument(depth >= 0);

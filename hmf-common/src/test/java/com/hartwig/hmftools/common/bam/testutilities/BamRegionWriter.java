@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.bam.testutilities;
 
 import java.util.function.Function;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -15,11 +16,11 @@ public class BamRegionWriter extends ChrBaseRegion
     private int readLength = 100;
     private int stepLength = 10;
     private int depthAtEachStep = 1;
-    private int chromosomeIndex;
+    private HumanChromosome chromosomeIndex;
 
-    public BamRegionWriter(int chromosome, final int readsStart, final int readsStop)
+    public BamRegionWriter(HumanChromosome chromosome, final int readsStart, final int readsStop)
     {
-        super("chr" + (chromosome + 1), readsStart, readsStop);
+        super("chr" + (chromosome), readsStart, readsStop);
         this.chromosomeIndex = chromosome;
     }
 

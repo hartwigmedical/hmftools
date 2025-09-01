@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public interface ChromosomeLengths
 {
-    int chromosomeLength(String chromosomeName);
+    int chromosomeLength(HumanChromosome chromosomeName);
 }
 
 class RefGenomeBackedChromosomeLengths implements ChromosomeLengths
@@ -17,9 +20,9 @@ class RefGenomeBackedChromosomeLengths implements ChromosomeLengths
     }
 
     @Override
-    public int chromosomeLength(final String chromosomeName)
+    public int chromosomeLength(final HumanChromosome chromosome)
     {
-        return refGenomeInterface.getChromosomeLength(chromosomeName);
+        return refGenomeInterface.getChromosomeLength(V38.versionedChromosome(chromosome));
     }
 }
 
@@ -33,7 +36,7 @@ class ConstantChromosomeLengths implements ChromosomeLengths
     }
 
     @Override
-    public int chromosomeLength(final String chromosomeName)
+    public int chromosomeLength(final HumanChromosome chromosome)
     {
         return length;
     }

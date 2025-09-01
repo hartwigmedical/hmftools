@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import htsjdk.samtools.SAMFileWriter;
 
 public abstract class ChromosomeRegionDepths
 {
-    public final int mChromosome;
+    public final HumanChromosome mChromosome;
     private final List<RegionDepth> ranges = new ArrayList<>();
 
-    public ChromosomeRegionDepths(final int mChromosome)
+    public ChromosomeRegionDepths(final HumanChromosome mChromosome)
     {
         this.mChromosome = mChromosome;
     }

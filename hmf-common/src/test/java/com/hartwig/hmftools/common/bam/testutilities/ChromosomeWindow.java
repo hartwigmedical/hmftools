@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 
@@ -8,7 +11,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-public record ChromosomeWindow(int chromosome, int start, int end)
+public record ChromosomeWindow(HumanChromosome chromosome, int start, int end)
 {
     public ChromosomeWindow next(int step)
     {
@@ -17,7 +20,7 @@ public record ChromosomeWindow(int chromosome, int start, int end)
 
     public String chromosomeName()
     {
-        return "chr" + (chromosome + 1);
+        return V38.versionedChromosome(chromosome);
     }
 
     public Pair<BaseRegion,BaseRegion> toACGTBasesRegion()

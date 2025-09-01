@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+
 import htsjdk.samtools.SAMFileWriter;
 
 public class RepeatingACGTChromosomeRegionDepths extends ChromosomeRegionDepths
 {
-    public RepeatingACGTChromosomeRegionDepths(final int mChromosome)
+    public RepeatingACGTChromosomeRegionDepths(final HumanChromosome mChromosome)
     {
         super(mChromosome);
     }

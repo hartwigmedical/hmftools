@@ -27,20 +27,21 @@ public class PairedRecordsBuilder
         // flags: 1 (paired), 2, (read mapped in proper pair), 32 (mate reverse strand), 64 (1st in pair)
         read1.setFlags(99);
         int chrIndex = header.getSequenceIndex(baseRegionPair.getLeft().chromosome());
+        int mateChrIndex = header.getSequenceIndex(baseRegionPair.getRight().chromosome());
         read1.setReferenceIndex(chrIndex);
         read1.setAlignmentStart(readRegion.start());
         read1.setReadBases(readRegion.mBases);
         read1.setMateAlignmentStart(mateRegion.start());
-        read1.setMateReferenceIndex(mateRegion.mChromosomeIndex);
+        read1.setMateReferenceIndex(mateChrIndex);
 
         SAMRecord read2 = createRecord(length, false);
         // flags 1, 2, 16 (read reverse strand), 128 (2nd in pair)
         read2.setFlags(147);
-        read2.setReferenceIndex(mateRegion.mChromosomeIndex);
+        read2.setReferenceIndex(mateChrIndex);
         read2.setAlignmentStart(mateRegion.start());
         read2.setReadBases(mateRegion.mBases);
         read2.setMateAlignmentStart(readRegion.start());
-        read2.setMateReferenceIndex(readRegion.mChromosomeIndex);
+        read2.setMateReferenceIndex(chrIndex);
 
         return Pair.of(read1, read2);
     }
