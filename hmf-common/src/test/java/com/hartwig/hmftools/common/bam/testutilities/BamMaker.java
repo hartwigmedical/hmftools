@@ -20,32 +20,32 @@ public class BamMaker
                 new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna");
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
 
-       BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(3000));
+       BamRecipe bamRecipe = new BamRecipe(new ConstantChromosomeLengths(101_000));
         int regionOffset = 1;
 //        BamRecipe bamRecipe = new BamRecipe(new RefGenomeBackedChromosomeLengths(refGenomeSource));
-        ChromosomeRegionDepths chr1Depths = new GCRatioChromosomeRegionDepths(_1, 0.5);
-        ChromosomeRegionDepths chr2Depths = new GCRatioChromosomeRegionDepths(_2, 0.5);
-        ChromosomeRegionDepths chrXDepths = new GCRatioChromosomeRegionDepths(_X, 0.5);
-        ChromosomeRegionDepths chrYDepths = new GCRatioChromosomeRegionDepths(_Y, 0.5);
-        chr1Depths.addRange(regionOffset, regionOffset + 1000, 100);
-        chr2Depths.addRange(regionOffset, regionOffset + 1000, 110);
-        chrXDepths.addRange(regionOffset, regionOffset + 1000, 60);
-        chrYDepths.addRange(regionOffset, regionOffset + 1000, 40);
-        regionOffset += 1000;
-        chr1Depths.addRange(regionOffset, regionOffset + 1000, 110);
-        chr2Depths.addRange(regionOffset, regionOffset + 1000, 100);
-        chrXDepths.addRange(regionOffset, regionOffset + 1000, 60);
-        chrYDepths.addRange(regionOffset, regionOffset + 1000, 40);
-        regionOffset += 1000;
-        chr1Depths.addRange(regionOffset, regionOffset + 1000, 104);
-        chr2Depths.addRange(regionOffset, regionOffset + 1000, 104);
-        chrXDepths.addRange(regionOffset, regionOffset + 1000, 50);
-        chrYDepths.addRange(regionOffset, regionOffset + 1000, 50);
+//        ChromosomeRegionDepths chr1Depths = new GCRatioChromosomeRegionDepths(_1, 0.5);
+//        ChromosomeRegionDepths chr2Depths = new GCRatioChromosomeRegionDepths(_2, 0.5);
+//        ChromosomeRegionDepths chrXDepths = new GCRatioChromosomeRegionDepths(_X, 0.5);
+//        ChromosomeRegionDepths chrYDepths = new GCRatioChromosomeRegionDepths(_Y, 0.5);
+//        chr1Depths.addRange(regionOffset, regionOffset + 1000, 100);
+//        chr2Depths.addRange(regionOffset, regionOffset + 1000, 110);
+//        chrXDepths.addRange(regionOffset, regionOffset + 1000, 60);
+//        chrYDepths.addRange(regionOffset, regionOffset + 1000, 40);
+//        regionOffset += 1000;
+//        chr1Depths.addRange(regionOffset, regionOffset + 1000, 110);
+//        chr2Depths.addRange(regionOffset, regionOffset + 1000, 100);
+//        chrXDepths.addRange(regionOffset, regionOffset + 1000, 60);
+//        chrYDepths.addRange(regionOffset, regionOffset + 1000, 40);
+//        regionOffset += 1000;
+//        chr1Depths.addRange(regionOffset, regionOffset + 1000, 104);
+//        chr2Depths.addRange(regionOffset, regionOffset + 1000, 104);
+//        chrXDepths.addRange(regionOffset, regionOffset + 1000, 50);
+//        chrYDepths.addRange(regionOffset, regionOffset + 1000, 50);
 
-        bamRecipe.add(chr1Depths);
-        bamRecipe.add(chr2Depths);
-        bamRecipe.add(chrXDepths);
-        bamRecipe.add(chrYDepths);
+//        bamRecipe.add(chr1Depths);
+//        bamRecipe.add(chr2Depths);
+//        bamRecipe.add(chrXDepths);
+//        bamRecipe.add(chrYDepths);
 
         /*
         ChromosomeRegionDepths chr1Depths = new GCRatioChromosomeRegionDepths(_1, 0.5);
@@ -77,14 +77,14 @@ public class BamMaker
         bamRecipe.add(chr1Depths);
         bamRecipe.add(chr2Depths);
         */
-        //        for (int i=0; i<100; i++)
-        //        {
-        //            double ratio = 1.0 * i / 100.0;
-        //            ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(0, ratio);
-        //            depths.addRange(regionOffset, regionOffset + 1_000, 1);
-        //            regionOffset += 1000;
-        //            bamRecipe.add(depths);
-        //        }
+                for (int i=0; i<100; i++)
+                {
+                    double ratio = 1.0 * i / 100.0;
+                    ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(_1, ratio);
+                    depths.addRange(regionOffset, regionOffset + 1_000, 10);
+                    regionOffset += 1000;
+                    bamRecipe.add(depths);
+                }
         //        ChromosomeRegionDepths chr1Depths = new GCRatioChromosomeRegionDepths(0, 0.20);
         //        chr1Depths.addRange(regionOffset, regionOffset + 1_000, 10);
         //        chr1Depths.addRange(regionOffset + 1000, regionOffset + 2_000, 100);

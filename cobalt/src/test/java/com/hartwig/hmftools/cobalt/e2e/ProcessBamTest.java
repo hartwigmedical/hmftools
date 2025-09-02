@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static com.hartwig.hmftools.common.genome.gc.GCProfile.MIN_MAPPABLE_PERCENTAGE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -41,15 +43,20 @@ public class ProcessBamTest
     private File tempDir;
     private String sample;
     private int regionOffset;
-    private File bamFile;
+    private File tumorBamFile;
+    private File referenceBamFile;
     private File gcProfile;
     private File panelNormalisation;
     private File outputDir;
-    private Map<Chromosome, List<CobaltRatio>> ratioResults;
+    private Map<Chromosome, List<CobaltRatio>> tumorRatioResults;
 
     @Before
     public void setup() throws Exception
     {
+        sample = null;
+        tumorBamFile = null;
+        referenceBamFile = null;
+        tumorRatioResults = null;
         tempDir = FileUtils.getTempDirectory();
         outputDir = new File(tempDir, "output");
         outputDir.mkdirs();
@@ -57,22 +64,33 @@ public class ProcessBamTest
     }
 
     @Test
-    public void singleWindow() throws Exception
+    public void tumorOnly() throws Exception
     {
-        setupForSingleWindowBam();
+        setupForSingleWindowBamTumorOnly();
 
         runCobalt();
 
-        assertEquals(1, ratioResults.size());
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        assertEquals(1, tumorRatioResults.size());
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         assertEquals(3, ratios.size());
+        assertEquals("chr1", ratios.get(0).chromosome());
         assertEquals(1, ratios.get(0).position());
+        assertEquals(-1.0, ratios.get(0).referenceReadDepth(), 0.01);
         assertEquals(0.0, ratios.get(0).tumorReadDepth(), 0.01);
+        assertEquals(1.0, ratios.get(0).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
 
+        assertEquals("chr1", ratios.get(1).chromosome());
         assertEquals(1001, ratios.get(1).position());
+        assertEquals(-1.0, ratios.get(1).referenceReadDepth(), 0.01);
         assertEquals(100.0, ratios.get(1).tumorReadDepth(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(1).referenceGcContent(), 0.01);
         assertEquals(0.5, ratios.get(1).tumorGcContent(), 0.01);
 
         assertEquals(2001, ratios.get(2).position());
@@ -81,11 +99,91 @@ public class ProcessBamTest
     }
 
     @Test
+    public void germlineOnly() throws Exception
+    {
+        setupForSingleWindowBamGermlineOnly();
+
+        runCobalt();
+
+        assertEquals(1, tumorRatioResults.size());
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        assertEquals(3, ratios.size());
+        assertEquals("chr1", ratios.get(0).chromosome());
+        assertEquals(1, ratios.get(0).position());
+        assertEquals(0.0, ratios.get(0).referenceReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
+
+        assertEquals("chr1", ratios.get(1).chromosome());
+        assertEquals(1001, ratios.get(1).position());
+        assertEquals(100.0, ratios.get(1).referenceReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(1).tumorReadDepth(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01);
+        assertEquals(0.5, ratios.get(1).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(1).tumorGcContent(), 0.01);
+
+        assertEquals(2001, ratios.get(2).position());
+        assertEquals(0.0, ratios.get(2).referenceReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorGcContent(), 0.01);
+    }
+
+    @Test
+    public void tumorAndGermline() throws Exception
+    {
+        setupForSingleWindowBamTumorAndGermline();
+
+        runCobalt();
+
+        assertEquals(1, tumorRatioResults.size());
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        assertEquals(3, ratios.size());
+        assertEquals("chr1", ratios.get(0).chromosome());
+        assertEquals(1, ratios.get(0).position());
+        assertEquals(0.0, ratios.get(0).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios.get(0).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
+
+        assertEquals("chr1", ratios.get(1).chromosome());
+        assertEquals(1001, ratios.get(1).position());
+        assertEquals(100.0, ratios.get(1).referenceReadDepth(), 0.01);
+        assertEquals(100.0, ratios.get(1).tumorReadDepth(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01);
+        assertEquals(0.5, ratios.get(1).referenceGcContent(), 0.01);
+        assertEquals(0.5, ratios.get(1).tumorGcContent(), 0.01);
+
+        assertEquals(2001, ratios.get(2).position());
+        assertEquals(0.0, ratios.get(2).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios.get(2).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGCDiploidRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(2).referenceGcContent(), 0.01);
+        assertEquals(-1.0, ratios.get(2).tumorGcContent(), 0.01);
+    }
+
+    @Test
     public void panelNormalisationIsApplied() throws Exception
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
-        setupForThreeWindowBam();
+        setupForThreeWindowBamTumorOnly();
 
         // Overwrite the normalisation profile
         panelNormalisation = new File(tempDir, "ThePanel.tsv");
@@ -96,7 +194,7 @@ public class ProcessBamTest
         panelWriter.write(panelNormalisation);
 
         runCobalt();
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
 
         // ratio -> ratio/relativeEnrichment: (1.0, 1.0, 1.0)/(2.0, 0.5, 1.0) = (0.5, 2.0, 1.0)
         // Normalised again by dividing by mean so that the mean is 1.0:
@@ -113,7 +211,7 @@ public class ProcessBamTest
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
-        setupForThreeWindowBam();
+        setupForThreeWindowBamTumorOnly();
 
         // Overwrite the gc profile
         double mappability0 = MIN_MAPPABLE_PERCENTAGE + 0.01;
@@ -128,7 +226,7 @@ public class ProcessBamTest
 
         runCobalt();
 
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(3).tumorGCRatio(), 0.01);
@@ -142,7 +240,7 @@ public class ProcessBamTest
         // 1:2201-3201 depth 100
         // 1:3201-4201 depth 50
         sample = "three_windows_with_offset";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 1_200;
 
         createStandardChr1GCFile(5_000);
@@ -154,7 +252,7 @@ public class ProcessBamTest
         // window 2001-3000 has 0.2 * 10 + 0.8 * 100 = 82
         // window 3001-4000 has 0.2 * 100 + 0.8 * 50 = 60
         // window 4001-5000 has 0.2 * 50 = 10
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         assertEquals(8.0, ratios.get(1).tumorReadDepth(), 0.01);
         assertEquals(82.0, ratios.get(2).tumorReadDepth(), 0.01);
         assertEquals(60.0, ratios.get(3).tumorReadDepth(), 0.01);
@@ -162,15 +260,15 @@ public class ProcessBamTest
     }
 
     @Test
-    public void regionsOfExtremeGCAreFilteredOut() throws Exception
+    public void regionsOfExtremeGCAreFilteredOutInTargetedMode() throws Exception
     {
         // 1 chr of length 101_000
         // 1:1001-2001 depth 1, gc ratio = 0.00
         // 1:2001-3001 depth 1, gc ratio = 0.01
         // 1:3001-4001 depth 1, gc ratio = 0.02
         // etc
-        sample = "increasing_gc_per_window";
-        bamFile = getBam(sample);
+        sample = "increasing_gc_per_window_depth_1";
+        tumorBamFile = getBam(sample);
         regionOffset = 1000;
 
         createStandardChr1GCFile(101_000);
@@ -178,7 +276,7 @@ public class ProcessBamTest
 
         runCobalt();
         // Upper and lower limits for gc ratio are 0.26 and 0.68 respectively
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         for(int i = 1; i < 26; i++)
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
@@ -198,7 +296,7 @@ public class ProcessBamTest
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
-        setupForThreeWindowBam();
+        setupForThreeWindowBamTumorOnly();
 
         // Overwrite the gc profile
         gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
@@ -209,7 +307,7 @@ public class ProcessBamTest
 
         runCobalt();
 
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(3).tumorGCRatio(), 0.01);
@@ -230,7 +328,7 @@ public class ProcessBamTest
         // 54_001-55_000                               : gc 0.50, depth 30
         // 55_001-56_000                               : gc 0.50, depth 60
         sample = "gc_40_to_50";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 1_000;
 
         createStandardChr1GCFile(60_000);
@@ -293,25 +391,25 @@ public class ProcessBamTest
         double mean = 1.688;
 
         // 1-1000 0 reads, 1001-6000 blocked out because of gc bucket smoothing
-        checkTumorRatio(-1.0, 0, 1, 2, 3, 4, 5);
+        checkChr1TumorRatio(-1.0, 0, 1, 2, 3, 4, 5);
 
         // 6001-11_000 gc 0.41 and read depths 11, 11, 11, 21, 51
-        checkTumorRatio(1.0 / mean, 6, 7, 8);
-        checkTumorRatio(21.0 / 11.0 / mean, 9);
-        checkTumorRatio(51.0 / 11.0 / mean, 10);
+        checkChr1TumorRatio(1.0 / mean, 6, 7, 8);
+        checkChr1TumorRatio(21.0 / 11.0 / mean, 9);
+        checkChr1TumorRatio(51.0 / 11.0 / mean, 10);
 
         // 12_001-16_000 gc 0.42 and read depths 12, 12, 12, 22, 52
-        checkTumorRatio(1.0 / mean, 11, 12, 13);
-        checkTumorRatio(22.0 / 12.0 / mean, 14);
-        checkTumorRatio(52.0 / 12.0 / mean, 15);
+        checkChr1TumorRatio(1.0 / mean, 11, 12, 13);
+        checkChr1TumorRatio(22.0 / 12.0 / mean, 14);
+        checkChr1TumorRatio(52.0 / 12.0 / mean, 15);
 
         // 46_001-51_000 gc 0.42 and read depths 19, 19, 19, 29, 59
-        checkTumorRatio(1.0 / mean, 46, 47, 48);
-        checkTumorRatio(29.0 / 19.0 / mean, 49);
-        checkTumorRatio(59.0 / 19.0 / mean, 50);
+        checkChr1TumorRatio(1.0 / mean, 46, 47, 48);
+        checkChr1TumorRatio(29.0 / 19.0 / mean, 49);
+        checkChr1TumorRatio(59.0 / 19.0 / mean, 50);
 
         // 51_001-56_000 blocked out because of gc bucket smoothing
-        checkTumorRatio(-1.0, 51, 52, 53, 54, 55);
+        checkChr1TumorRatio(-1.0, 51, 52, 53, 54, 55);
     }
 
     @Test
@@ -330,7 +428,7 @@ public class ProcessBamTest
         // to segment creation, with the result that many segments are created instead of the
         // few expected ones. (The segment cost is associated with the variance of the values being segmented.)
         sample = "multiple_segments";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 0;
 
         createStandardMultiChromosomeGCFile(100_000, _1, _2);
@@ -367,7 +465,7 @@ public class ProcessBamTest
         // X:1001-2001 depth 120
         // GC ratio 0.5 throughout.
         sample = "female";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 0;
 
         createStandardMultiChromosomeGCFile(3_000, _1, _2, _X);
@@ -375,22 +473,22 @@ public class ProcessBamTest
 
         // There is only one GC bucket, and it has median read depth 105
         // (the sex chromosomes don't contribute to this median).
-        List<CobaltRatio> ratios1 = ratioResults.get(_1);
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(3, ratios1.size());
-        assertEquals(100.0/105.0, ratios1.get(0).tumorGCRatio(), 0.01);
-        assertEquals(110.0/105.0, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / 105.0, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / 105.0, ratios1.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios1.get(2).tumorGCRatio(), 0.01);
 
-        List<CobaltRatio> ratios2 = ratioResults.get(_2);
+        List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(3, ratios2.size());
-        assertEquals(110.0/105.0, ratios2.get(0).tumorGCRatio(), 0.01);
-        assertEquals(100.0/105.0, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / 105.0, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / 105.0, ratios2.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios2.get(2).tumorGCRatio(), 0.01);
 
-        List<CobaltRatio> ratiosX = ratioResults.get(_X);
+        List<CobaltRatio> ratiosX = tumorRatioResults.get(_X);
         assertEquals(3, ratiosX.size());
-        assertEquals(120.0/105.0, ratiosX.get(0).tumorGCRatio(), 0.01);
-        assertEquals(120.0/105.0, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(120.0 / 105.0, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(120.0 / 105.0, ratiosX.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratiosX.get(2).tumorGCRatio(), 0.01);
     }
 
@@ -413,7 +511,7 @@ public class ProcessBamTest
         // Y:2001-3001 depth 50
         // GC ratio 0.5 throughout.
         sample = "male";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 0;
 
         createStandardMultiChromosomeGCFile(3_000, _1, _2, _X, _Y);
@@ -421,56 +519,99 @@ public class ProcessBamTest
 
         // There is only one GC bucket, and it has median read depth 104
         // (the sex chromosomes don't contribute to this median).
-        List<CobaltRatio> ratios1 = ratioResults.get(_1);
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(3, ratios1.size());
-        assertEquals(100.0/104.0, ratios1.get(0).tumorGCRatio(), 0.01);
-        assertEquals(110.0/104.0, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / 104.0, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / 104.0, ratios1.get(1).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios1.get(2).tumorGCRatio(), 0.01);
 
-        List<CobaltRatio> ratios2 = ratioResults.get(_2);
+        List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(3, ratios2.size());
-        assertEquals(110.0/104.0, ratios2.get(0).tumorGCRatio(), 0.01);
-        assertEquals(100.0/104.0, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / 104.0, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / 104.0, ratios2.get(1).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios2.get(2).tumorGCRatio(), 0.01);
 
-        List<CobaltRatio> ratiosX = ratioResults.get(_X);
+        List<CobaltRatio> ratiosX = tumorRatioResults.get(_X);
         assertEquals(3, ratiosX.size());
-        assertEquals(60.0/104.0, ratiosX.get(0).tumorGCRatio(), 0.01);
-        assertEquals(60.0/104.0, ratiosX.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0/104.0, ratiosX.get(2).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / 104.0, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / 104.0, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / 104.0, ratiosX.get(2).tumorGCRatio(), 0.01);
 
-        List<CobaltRatio> ratiosY = ratioResults.get(_Y);
+        List<CobaltRatio> ratiosY = tumorRatioResults.get(_Y);
         assertEquals(3, ratiosY.size());
-        assertEquals(40.0/104.0, ratiosY.get(0).tumorGCRatio(), 0.01);
-        assertEquals(40.0/104.0, ratiosY.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0/104.0, ratiosY.get(2).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / 104.0, ratiosY.get(0).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / 104.0, ratiosY.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / 104.0, ratiosY.get(2).tumorGCRatio(), 0.01);
     }
 
-    private void checkTumorRatio(double expected, int... indices)
+    @Test
+    public void regionsOfExtremeGCAreFilteredOutInWholeGenomeMode() throws Exception
     {
-        List<CobaltRatio> ratios = ratioResults.get(_1);
+        // 1 chr of length 101_000
+        // 1:1-1000 depth 10, gc ratio = 0.00
+        // 1:1001-2000 depth 10, gc ratio = 0.01
+        // 1:2001-3000 depth 10, gc ratio = 0.02
+        // etc
+        sample = "increasing_gc_per_window_depth_10";
+        tumorBamFile = getBam(sample);
+        regionOffset = 1000;
+
+        createStandardChr1GCFile(101_000);
+
+        runCobalt(false);
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        for(int i = 0; i < 25; i++)
+        {
+            assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
+        for(int i = 25; i < 68; i++)
+        {
+            assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
+        for(int i = 69; i < ratios.size(); i++)
+        {
+            assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
+        }
+    }
+
+    private void checkChr1TumorRatio(double expected, int... indices)
+    {
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
         for(final int index : indices)
         {
             assertEquals(expected, ratios.get(index).tumorGCRatio(), 0.01);
         }
     }
 
-    private void setupForSingleWindowBam() throws IOException
+    private void setupForSingleWindowBamTumorOnly() throws IOException
+    {
+        setupForSingleWindowBamTumorAndGermline();
+        referenceBamFile = null;
+    }
+
+    private void setupForSingleWindowBamGermlineOnly() throws IOException
+    {
+        setupForSingleWindowBamTumorAndGermline();
+        tumorBamFile = null;
+    }
+
+    private void setupForSingleWindowBamTumorAndGermline() throws IOException
     {
         sample = "one_window";
-        bamFile = getBam(sample);
+        referenceBamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 1_000;
 
         createStandardChr1GCFile(2_000);
         createStandardChr1PanelFile(2_000, 1.000001);
     }
 
-    private void setupForThreeWindowBam() throws IOException
+    private void setupForThreeWindowBamTumorOnly() throws IOException
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
         sample = "three_windows";
-        bamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
         regionOffset = 1_000;
 
         createStandardChr1GCFile(4_000);
@@ -522,19 +663,38 @@ public class ProcessBamTest
 
     private void runCobalt(boolean targeted) throws Exception
     {
-        String[] args = targeted ? new String[12] : new String[10];
+        int argCount = 10;
+        if(targeted)
+        {
+            argCount += 2;
+        }
+        if(tumorBamFile != null && referenceBamFile != null)
+        {
+            argCount += 4;
+        }
+        String[] args = new String[argCount];
         int index = 0;
-        args[index++] = String.format("-%s", TUMOR);
-        args[index++] = String.format("%s", sample);
-        args[index++] = String.format("-%s", TUMOR_BAM);
-        args[index++] = String.format("%s", bamFile.getAbsolutePath());
         args[index++] = String.format("-%s", GC_PROFILE);
         args[index++] = String.format("%s", gcProfile.getAbsolutePath());
         args[index++] = String.format("-%s", PCF_GAMMA);
         args[index++] = String.format("%d", 50);
         args[index++] = String.format("-%s", OUTPUT_DIR);
         args[index++] = String.format("%s", outputDir.getAbsolutePath());
-        if (targeted)
+        if(tumorBamFile != null)
+        {
+            args[index++] = String.format("-%s", TUMOR);
+            args[index++] = String.format("%s", sample);
+            args[index++] = String.format("-%s", TUMOR_BAM);
+            args[index++] = String.format("%s", tumorBamFile.getAbsolutePath());
+        }
+        if(referenceBamFile != null)
+        {
+            args[index++] = String.format("-%s", REFERENCE);
+            args[index++] = String.format("%s", sample);
+            args[index++] = String.format("-%s", REFERENCE_BAM);
+            args[index++] = String.format("%s", referenceBamFile.getAbsolutePath());
+        }
+        if(targeted)
         {
             args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
             args[index] = String.format("%s", panelNormalisation.getAbsolutePath());
@@ -545,6 +705,6 @@ public class ProcessBamTest
         File ratioFile = new File(outputDir, sample + ".cobalt.ratio.tsv.gz");
         assertTrue(ratioFile.exists());
         assertTrue(ratioFile.isFile());
-        ratioResults = CobaltRatioFile.readWithGender(ratioFile.getAbsolutePath(), Gender.FEMALE, true);
+        tumorRatioResults = CobaltRatioFile.readWithGender(ratioFile.getAbsolutePath(), Gender.FEMALE, true);
     }
 }
