@@ -73,7 +73,7 @@ public final class CobaltRatioFile
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
         // some old samples have unzipped ratio files, so check for these
-        String filename = generateFilenameUnzipped(basePath, sample);
+        String filename = generateFilename(basePath, sample);
 
         if(Files.exists(Paths.get(filename)))
             return filename;
