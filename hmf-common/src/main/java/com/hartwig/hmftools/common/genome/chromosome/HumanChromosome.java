@@ -63,9 +63,15 @@ public enum HumanChromosome implements Chromosome
     }
 
     @Override
-    public boolean isAllosome() { return !mIsAutosome; }
+    public boolean isAllosome()
+    {
+        return !mIsAutosome;
+    }
 
-    public boolean matches(final String chromosome) { return fromString(chromosome) == this; }
+    public boolean matches(final String chromosome)
+    {
+        return fromString(chromosome) == this;
+    }
 
     public static Chromosome valueOf(final GenomePosition position)
     {
@@ -80,7 +86,9 @@ public enum HumanChromosome implements Chromosome
     public static HumanChromosome fromString(final String chromosome)
     {
         if(chromosome.toLowerCase().startsWith(CHR_PREFIX))
+        {
             return HumanChromosome.valueOf(ENUM_PREFIX + chromosome.substring(3));
+        }
 
         return HumanChromosome.valueOf(ENUM_PREFIX + chromosome);
     }
@@ -108,7 +116,15 @@ public enum HumanChromosome implements Chromosome
     }
 
     @Override
-    public String toString() { return mName; }
+    public String toString()
+    {
+        return mName;
+    }
+
+    public String shortName()
+    {
+        return mName;
+    }
 
     public static boolean hasShortArm(final String chromosome)
     {
@@ -116,7 +132,10 @@ public enum HumanChromosome implements Chromosome
                 || chromosome.equals("21") || chromosome.equals("22");
     }
 
-    public boolean hasShortArm() { return hasShortArm(mName); }
+    public boolean hasShortArm()
+    {
+        return hasShortArm(mName);
+    }
 
     private static boolean isNumeric(String str)
     {
@@ -166,7 +185,8 @@ public enum HumanChromosome implements Chromosome
         }
     }
 
-    public static List<ChrBaseRegion> formHumanChromosomeRegions(final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)
+    public static List<ChrBaseRegion> formHumanChromosomeRegions(final SpecificRegions specificRegions,
+            final RefGenomeVersion refGenomeVersion)
     {
         List<ChrBaseRegion> inputRegions = Lists.newArrayList();
 
@@ -177,7 +197,9 @@ public enum HumanChromosome implements Chromosome
             String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
 
             if(specificRegions.excludeChromosome(chromosomeStr))
+            {
                 continue;
+            }
 
             inputRegions.add(new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome)));
         }

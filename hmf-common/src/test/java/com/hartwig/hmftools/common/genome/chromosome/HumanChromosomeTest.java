@@ -32,6 +32,15 @@ public class HumanChromosomeTest
         assertEquals(HumanChromosome._Y, HumanChromosome.fromString("chrY"));
     }
 
+    @Test
+    public void shortNameTest()
+    {
+        assertEquals("1", HumanChromosome._1.shortName());
+        assertEquals("21", HumanChromosome._21.shortName());
+        assertEquals("X", HumanChromosome._X.shortName());
+        assertEquals("Y", HumanChromosome._Y.shortName());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testUnknownChromosome()
     {
