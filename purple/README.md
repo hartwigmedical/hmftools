@@ -526,15 +526,17 @@ cohortFrequency|the deleted segment is observed in > 3 samples in our cohort
 
 ### 10. Determine a QC Status for the tumor
 
-PURPLE will set a FAIL QC status in 2 cases: 
+PURPLE will set a FAIL QC status in 3 cases: 
 - FAIL_CONTAMINATION - if measured contamination in the tumor (by Amber) is >10%
 - FAIL_NO_TUMOR - if no evidence of tumor is found in the sample
+- FAIL_TINC - if measured tumor in normal contamination (by Sage) is >= 25%
 
 PURPLE may also report a warning if one of the following conditions is met:
 - WARN_DELETED_GENES - if the number of homozygously deleted genes (excluding chr Y) in the sample is > 280.   This sometimes occurs in samples with very high MB scale GC Bias, and particularly affects high GC content regions such as CHR 19.   It may also indicate a poor fit.
 - WARN_HIGH_COPY_NUMBER_NOISE - if the number of copy number segments unsupported on both sides is >220.   This can occur due to GC bias on both MB scale and KB scale and also due to other artefacts which may cause short regions to appear highly amplified.
 - WARN_GENDER_MISMATCH - if amber and cobalt report different genders
 - WARN_LOW_PURITY - if purity is less than 20%
+- WARN_TINC - if measured tumor in normal contamination (by Sage) is nonzero but below our FAIL threshold (25%)
 
 If no warning or fail criteria is met, PURPLE will set qcStatus = PASS
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,9 +19,12 @@ import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
+import com.hartwig.hmftools.purple.exclusions.ExcludedRegionsFile;
+import com.hartwig.hmftools.purple.exclusions.SuppliedExcludedRegions;
 
 import org.apache.commons.cli.ParseException;
 
@@ -29,15 +32,19 @@ public class CobaltData
 {
     public final CobaltChromosomes CobaltChromosomes;
 
-    public final Map<Chromosome,List<CobaltRatio>> Ratios;
-    public final Multimap<Chromosome,PCFPosition> TumorSegments;
-    public final Multimap<Chromosome,PCFPosition> ReferenceSegments;
+    public final Map<Chromosome, List<CobaltRatio>> Ratios;
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
+    public final Multimap<Chromosome, PCFPosition> ReferenceSegments;
 
-    public final Gender gender() { return CobaltChromosomes.gender(); }
+    public final Gender gender()
+    {
+        return CobaltChromosomes.gender();
+    }
 
     public CobaltData(
             final String referenceId, final String tumorId, final String cobaltDirectory,
-            final Gender amberGender, final boolean tumorOnlyMode, final boolean germlineOnlyMode)
+            final Gender amberGender, final boolean tumorOnlyMode, final boolean germlineOnlyMode,
+            final String excludedRegionsFile)
             throws ParseException, IOException
     {
         if(tumorId != null)
@@ -63,7 +70,17 @@ public class CobaltData
         }
 
         PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-        Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
+        Map<Chromosome, List<CobaltRatio>> rawRatios =
+                CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
+        if(excludedRegionsFile != null)
+        {
+            final List<ChrBaseRegion> excludedRegions = new ExcludedRegionsFile(excludedRegionsFile).regions();
+            Ratios = new SuppliedExcludedRegions(excludedRegions).maskIntersectingRatios(rawRatios);
+        }
+        else
+        {
+            Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
+        }
 
         if(referenceId != null)
         {
@@ -83,13 +100,6 @@ public class CobaltData
 
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);
         CobaltChromosomes = new CobaltChromosomes(medianRatios, !tumorOnlyMode);
-    }
-
-    public void clearCache()
-    {
-        Ratios.clear();
-        TumorSegments.clear();
-        ReferenceSegments.clear();
     }
 
     @VisibleForTesting

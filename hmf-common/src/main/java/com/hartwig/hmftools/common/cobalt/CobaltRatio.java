@@ -27,6 +27,11 @@ public record CobaltRatio(
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
     }
 
+    public CobaltRatio mask()
+    {
+        return new CobaltRatio(chromosome, position, referenceReadDepth, -1.0, -1.0, -1.0, tumorReadDepth, -1.0, -1.0);
+    }
+
     public ChrBaseRegion window()
     {
         return new ChrBaseRegion(chromosome, position, position + 1000 - 1);
@@ -40,6 +45,6 @@ public record CobaltRatio(
     @Override
     public String toString()
     {
-        return "CobaltRatio(" + chromosome + ", "+ position + ")";
+        return "CobaltRatio(" + chromosome + ", " + position + ")";
     }
 }

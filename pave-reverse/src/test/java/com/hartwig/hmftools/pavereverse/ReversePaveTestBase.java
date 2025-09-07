@@ -27,7 +27,7 @@ public class ReversePaveTestBase
 {
     private File ensemblDataDir = Paths.get("src","test","resources","ensembl").toFile();
     public final ReversePave reversePave;
-    public final RefGenomeInterface genome = new TinyGenome();
+    public final RefGenomeInterface genome = new SmallGenome();
     protected final String braf = "BRAF";
     protected final String brafCanonical = "ENST00000646891";
     protected final String zyx = "ZYX";

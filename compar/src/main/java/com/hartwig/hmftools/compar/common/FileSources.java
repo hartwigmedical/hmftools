@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
@@ -38,6 +40,7 @@ public class FileSources
     public final String Source;
     public final String Linx;
     public final String LinxGermline;
+    public final String Cobalt;
     public final String Purple;
     public final String Cuppa;
     public final String Lilac;
@@ -65,7 +68,7 @@ public class FileSources
     private static final String GERMLINE_BAM_METRICS = "germline_bam_metrics_dir";
     private static final String SNP_GENOTYPE = "snp_genotype_dir";
 
-    public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
+    public FileSources(final String source, final String linx, final String cobalt, final String purple, final String linxGermline, final String cuppa,
             final String lilac, final String chord, final String peach, final String virus, final String somaticVcf,
             final String somaticUnfilteredVcf, final String tumorFlagstat, final String germlineFlagstat, final String tumorBamMetrics,
             final String germlineBamMetrics, final String snpGenotype, final String cider, final String teal)
@@ -73,6 +76,7 @@ public class FileSources
         Source = source;
         Linx = linx;
         LinxGermline = linxGermline;
+        Cobalt = cobalt;
         Purple = purple;
         Cuppa = cuppa;
         Lilac = lilac;
@@ -95,6 +99,7 @@ public class FileSources
         return new FileSources(
                 fileSources.Source,
                 convertWildcardSamplePath(fileSources.Linx, sampleId, germlineSampleId),
+                convertWildcardSamplePath(fileSources.Cobalt, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Purple, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.LinxGermline, sampleId, germlineSampleId),
                 convertWildcardSamplePath(fileSources.Cuppa, sampleId, germlineSampleId),
@@ -132,6 +137,7 @@ public class FileSources
 
             addPathConfig(configBuilder, LINX_DIR_CFG, LINX_DIR_DESC, sourceName);
             addPathConfig(configBuilder, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, COBALT_DIR_CFG, COBALT_DIR_DESC, sourceName);
             addPathConfig(configBuilder, PURPLE_DIR_CFG, PURPLE_DIR_DESC, sourceName);
             addPathConfig(configBuilder, LILAC_DIR_CFG, LILAC_DIR_DESC, sourceName);
             addPathConfig(configBuilder, CHORD_DIR_CFG, CHORD_DIR_DESC, sourceName);
@@ -180,6 +186,7 @@ public class FileSources
         String linxGermlineDir = getDirectory(
                 configBuilder, sampleDir, PipelineToolDirectories.LINX_GERMLINE_DIR, LINX_GERMLINE_DIR_CFG, sourceName);
 
+        String cobaltDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.COBALT_DIR, COBALT_DIR_CFG, sourceName);
         String purpleDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PURPLE_DIR, PURPLE_DIR_CFG, sourceName);
         String cuppaDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CUPPA_DIR, CUPPA_DIR_CFG, sourceName);
         String lilacDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LILAC_DIR, LILAC_DIR_CFG, sourceName);
@@ -198,7 +205,7 @@ public class FileSources
         String ciderDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CIDER_DIR, CIDER_DIR_CFG, sourceName);
         String tealDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.TEAL_DIR, TEAL_DIR_CFG, sourceName);
 
-        return new FileSources(sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
+        return new FileSources(sourceName, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
                 somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
                 ciderDir, tealDir);
     }
