@@ -8,8 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
@@ -54,7 +57,7 @@ public final class AmplificationDrivers
             {
                 geneCopyNumber.setDriverType(DriverType.AMP);
                 geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
-                result.add(createAmpDriver(driverGene, geneCopyNumber));
+                result.add(createAmpDriver(geneCopyNumber));
                 continue;
             }
 
@@ -65,7 +68,7 @@ public final class AmplificationDrivers
                 {
                     geneCopyNumber.setDriverType(DriverType.PARTIAL_AMP);
                     geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
-                    result.add(createPartialAmpDriver(driverGene, geneCopyNumber));
+                    result.add(createPartialAmpDriver(geneCopyNumber));
                 }
             }
         }
@@ -78,13 +81,13 @@ public final class AmplificationDrivers
         return geneCopyNumber.MinRegionStartSupport.isSV() || geneCopyNumber.MinRegionEndSupport.isSV();
     }
 
-    private static DriverCatalog createAmpDriver(final DriverGene driverGene, final GeneCopyNumber geneCopyNumber)
+    private static DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber)
     {
-        return createCopyNumberDriver(driverGene.likelihoodType(), DriverType.AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
+        return createCopyNumberDriver(DriverCategory.ONCO, DriverType.AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
     }
 
-    private static DriverCatalog createPartialAmpDriver(final DriverGene driverGene, final GeneCopyNumber geneCopyNumber)
+    private static DriverCatalog createPartialAmpDriver(final GeneCopyNumber geneCopyNumber)
     {
-        return createCopyNumberDriver(driverGene.likelihoodType(), DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
+        return createCopyNumberDriver(DriverCategory.ONCO, DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
     }
 }
