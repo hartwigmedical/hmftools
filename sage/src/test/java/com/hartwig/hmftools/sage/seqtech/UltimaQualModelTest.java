@@ -192,7 +192,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 18);
-        assertEquals(BQR_CACHE.outOfCycleT0Qual(), calcQual);
+        assertEquals(30, calcQual);
 
         read.setReadNegativeStrandFlag(true);
 

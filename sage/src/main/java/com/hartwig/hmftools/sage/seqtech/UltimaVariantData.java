@@ -51,6 +51,7 @@ public class UltimaVariantData
 
     public void addReadSupportInfo(final SAMRecord record, final int readVarIndex)
     {
+        // pass in in ReadContextMatcher and call ReadContextMatcher.
         String recordCore = record.getReadString()
                 .substring(readVarIndex - mReadContext.leftCoreLength(), readVarIndex + mReadContext.rightCoreLength() + 1);
 

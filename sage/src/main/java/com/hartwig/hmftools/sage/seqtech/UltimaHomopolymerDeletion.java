@@ -45,7 +45,7 @@ class UltimaHomopolymerDeletion extends UltimaQualModel
 
     public static UltimaHomopolymerDeletion fromDelete(final byte deletedBase, final byte refBase, final byte postDeleteRefBase)
     {
-        boolean inCyclePosStrand = isBaseInCycle(refBase, refBase, postDeleteRefBase);
+        boolean inCyclePosStrand = isBaseInCycle(refBase, postDeleteRefBase, deletedBase);
         boolean inCycleNegStrand = isBaseInCycle(swapDnaBase(postDeleteRefBase), swapDnaBase(refBase), swapDnaBase(deletedBase));
 
         return new UltimaHomopolymerDeletion(

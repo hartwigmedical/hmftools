@@ -38,7 +38,7 @@ public enum JitterMatch
         int readIndex = flankReadIndexStart;
 
         int permittedLowQualRangeLower = readContext.VarIndex;
-        int permittedLowQualRangeUpper = altIndexUpper;
+        int permittedLowQualRangeUpper = altIndexUpper + 1;
 
         final byte[] readQuals = record.getBaseQualities();
 

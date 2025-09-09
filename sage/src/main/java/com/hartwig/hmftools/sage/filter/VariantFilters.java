@@ -254,11 +254,6 @@ public class VariantFilters
             filters.add(SoftFilter.JITTER);
         }
 
-        if(belowMinAverageBaseQuality(primaryTumor, tier))
-        {
-            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
-        }
-
         if(isUltima())
         {
             if(belowExpectedHpQuals(primaryTumor))
@@ -270,6 +265,10 @@ public class VariantFilters
             {
                 filters.add(SoftFilter.MIN_AVG_T0_QUAL);
             }
+        }
+        else if(belowMinAverageBaseQuality(primaryTumor, tier))
+        {
+            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
         }
     }
 

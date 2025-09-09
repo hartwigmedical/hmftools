@@ -52,8 +52,8 @@ public class QualityCalculator
 
     public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)
     {
-        // more events are permitted for longer reads
-        return (int)round(max(0, numEvents - 1) * readLength * readMapQualEventsPenalty);
+        // penalise events as a function of read length
+        return (int)round(max(0, numEvents - 1) / readLength * readMapQualEventsPenalty);
     }
 
     public static int modifiedMapQuality(

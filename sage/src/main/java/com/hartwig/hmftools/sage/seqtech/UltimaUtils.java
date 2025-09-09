@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 
@@ -26,8 +27,6 @@ public final class UltimaUtils
 
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
-
-    private static final int LONG_LENGTH = 20;
 
     // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
     private static final int HALF_PHRED_SCORE_SCALING = 3;
@@ -227,16 +226,19 @@ public final class UltimaUtils
         return true;
     }
 
+    private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
+    private static final List<String> DI_NUC_HOMOPOLYMERS = List.of("TA", "AT");
+
     public static boolean ultimaLongRepeatFilter(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final Microhomology homology)
     {
-        if(isMsiIndelOfType(variant, List.of("A", "C", "G", "T")) && homology != null && homology.Length >= LONG_LENGTH - 5)
+        if(isMsiIndelOfType(variant, SINGLE_HOMOPOLYMERS) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN - 5)
             return true; // Ultima cannot call variants of this type
 
-        if(isMsiIndelOfType(variant, List.of("TA", "AT")) && homology != null && homology.Length >= LONG_LENGTH)
+        if(isMsiIndelOfType(variant, DI_NUC_HOMOPOLYMERS) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN)
             return true; // Ultima cannot call variants of this type
 
-        if(isAdjacentToLongHomopolymer(read, varIndexInRead, LONG_LENGTH))
+        if(isAdjacentToLongHomopolymer(read, varIndexInRead, ULTIMA_MAX_HP_LEN))
             return true;  // Ultima gets confused near variants of this type
 
         return false;

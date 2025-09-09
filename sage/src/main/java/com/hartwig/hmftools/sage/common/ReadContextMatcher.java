@@ -257,9 +257,7 @@ public class ReadContextMatcher
     public ReadMatchInfo determineReadMatchInfo(final SAMRecord record, final int readVarIndex)
     {
         ReadMatchInfo readMatchInfo = determineReadMatchInfo(
-                record.getReadBases(),
-                isUltima() ? null : record.getBaseQualities(), // cannot use standard base quals for Ultima
-                readVarIndex, false);
+                record.getReadBases(), record.getBaseQualities(), readVarIndex, false);
 
         if(readMatchInfo == NO_MATCH && mIsReference && isSimpleAltMatch(mContext.variant(), record, readVarIndex))
             return new ReadMatchInfo(SIMPLE_ALT, true);
@@ -438,17 +436,6 @@ public class ReadContextMatcher
         return isPartial ? BaseMatchType.INCOMPLETE : flankMatchType;
     }
 
-    /*
-    private static boolean matches(
-            final byte[] bases, final byte[] readBases, final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
-            final int compareLength, final int maxLowQualMismatches, final LowQualExclusion lowQualExclusion)
-    {
-        return matchType(
-                bases, readBases, readQuals, baseIndexStart, readIndexStart, compareLength,
-                maxLowQualMismatches, lowQualExclusion) == BaseMatchType.MATCH;
-    }
-    */
-
     private static BaseMatchType matchType(
             final byte[] bases, final byte[] readBases, @Nullable final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
             final int compareLength, final int maxLowQualMismatches, @Nullable final LowQualExclusion lowQualExclusion)
@@ -463,6 +450,8 @@ public class ReadContextMatcher
         if(baseIndexEnd >= bases.length || readIndexEnd >= readBases.length)
             return BaseMatchType.INCOMPLETE;
 
+        final byte[] baseQuals = isUltima() ? null : readQuals; // cannot use standard base quals for Ultima
+
         int mismatchCount = 0;
 
         for(int i = baseIndexStart, j = readIndexStart; i <= baseIndexEnd && j <= readIndexEnd; ++i, ++j)
@@ -470,13 +459,13 @@ public class ReadContextMatcher
             if(bases[i] == readBases[j])
                 continue;
 
-            if(readQuals == null)
+            if(baseQuals == null)
                 return BaseMatchType.MISMATCH;
 
             if(lowQualExclusion != null && lowQualExclusion.coversIndex(i))
                 return BaseMatchType.MISMATCH;
 
-            if(readQuals[j] < MATCHING_BASE_QUALITY)
+            if(baseQuals[j] < MATCHING_BASE_QUALITY)
             {
                 ++mismatchCount;
 
