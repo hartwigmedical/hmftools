@@ -27,8 +27,6 @@ public final class IlluminaRoutines
             final boolean[] isFirstInPair, final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position,
             final RefGenome refGenome)
     {
-        int readCount = isFirstInPair.length;
-
         int firstInPairCount = 0;
         int secondInPairCount = 0;
 
