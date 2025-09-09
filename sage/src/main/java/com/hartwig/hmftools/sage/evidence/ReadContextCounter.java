@@ -8,8 +8,6 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
-import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
@@ -69,7 +67,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
-import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
@@ -88,7 +85,6 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.seqtech.SbxUtils;
-import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
 import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
@@ -239,7 +235,7 @@ public class ReadContextCounter
     public QualCounters qualCounters() { return mQualCounters; }
 
     public int baseQualityTotal() { return mQualCounters.baseQualityTotal(); }
-    public int altBaseQualityTotal() { return mQualCounters.altRecalibratedBaseQualityTotal(); }
+    public int altBaseQualityTotal() { return mQualCounters.recalibratedAltBaseQualityTotal(); }
 
     public long mapQualityTotal() { return mQualCounters.mapQualityTotal(); }
     public long altMapQualityTotal() { return mQualCounters.altMapQualityTotal(); }
@@ -294,7 +290,7 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned;
-        return supportCount > 0 ? mQualCounters.altRecalibratedBaseQualityTotal() / (double)supportCount : 0;
+        return supportCount > 0 ? mQualCounters.recalibratedAltBaseQualityTotal() / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }

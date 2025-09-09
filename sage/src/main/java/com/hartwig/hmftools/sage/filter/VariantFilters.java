@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
-import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
@@ -51,7 +50,6 @@ import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFil
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +63,6 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -303,12 +300,12 @@ public class VariantFilters
         }
 
         int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
-        double modifiedAltMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltMediumBaseQualityTotal();
-        double modifiedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltMediumBaseQualityTotal;
-        int mediumSupportContribution = (int)(strongNonMediumSupport * modifiedAltMediumBaseQualityTotal/modifiedAltNonMediumBaseQualityTotal);
+        double recalibratedAltMediumBaseQualityTotal = primaryTumor.qualCounters().recalibratedStrongAltMediumBaseQualityTotal();
+        double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().recalibratedStrongAltBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
+        int mediumSupportContribution = (int)(strongNonMediumSupport * recalibratedAltMediumBaseQualityTotal/recalibratedAltNonMediumBaseQualityTotal);
         int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
 
-        int qualPerRead = (int)round(modifiedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
+        int qualPerRead = (int)round(recalibratedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty

@@ -10,24 +10,30 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 
 public class QualCounters
 {
-    private int mRecalibratedBaseQualityTotal;
-    private int mAltRecalibratedBaseQualityTotal;
     private int mAltBaseQualityTotal;
+
+    private int mRecalibratedBaseQualityTotal;
+    private int mRecalibratedAltBaseQualityTotal;
+
+    private double mRecalibratedStrongAltBaseQualityTotal;
+    private double mRecalibratedStrongAltMediumBaseQualityTotal;
+
     private double mModifiedAltBaseQualityTotal;
-    private double mModifiedAltMediumBaseQualityTotal;
 
     private int mMapQualityTotal;
     private int mAltMapQualityTotal;
     private double mModifiedAltMapQualityTotal;
+
     private int mLowQualAltSupportCount;
 
     public QualCounters()
     {
         mRecalibratedBaseQualityTotal = 0;
-        mAltRecalibratedBaseQualityTotal = 0;
+        mRecalibratedAltBaseQualityTotal = 0;
         mAltBaseQualityTotal = 0;
         mModifiedAltBaseQualityTotal = 0;
-        mModifiedAltMediumBaseQualityTotal = 0;
+        mRecalibratedStrongAltBaseQualityTotal = 0;
+        mRecalibratedStrongAltMediumBaseQualityTotal = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
         mModifiedAltMapQualityTotal = 0;
@@ -43,15 +49,17 @@ public class QualCounters
         {
             mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
 
+            mRecalibratedStrongAltBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+
             if(isMediumBaseQual(qualityScores.CalcBaseQuality))
-                mModifiedAltMediumBaseQualityTotal += qualityScores.ModifiedBaseQuality;
+                mRecalibratedStrongAltMediumBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
             mModifiedAltMapQualityTotal += qualityScores.ModifiedMapQuality;
         }
 
         if(matchType.SupportsAlt)
         {
-            mAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+            mRecalibratedAltBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
             mAltBaseQualityTotal += (int)round(qualityScores.CalcBaseQuality);
             mAltMapQualityTotal += mapQuality;
         }
@@ -64,10 +72,14 @@ public class QualCounters
     }
 
     public int baseQualityTotal() { return mRecalibratedBaseQualityTotal; }
-    public int altRecalibratedBaseQualityTotal() { return mAltRecalibratedBaseQualityTotal; }
     public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
+
+    public int recalibratedAltBaseQualityTotal() { return mRecalibratedAltBaseQualityTotal; }
+    public double recalibratedStrongAltMediumBaseQualityTotal() { return mRecalibratedStrongAltMediumBaseQualityTotal; }
+    public double recalibratedStrongAltBaseQualityTotal() { return mRecalibratedStrongAltBaseQualityTotal; }
+
     public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }
-    public double modifiedAltMediumBaseQualityTotal() { return mModifiedAltMediumBaseQualityTotal; }
+
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
     public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }
@@ -76,6 +88,6 @@ public class QualCounters
     public String toString()
     {
         return format("baseQualTotal(%d alt=%d) mapQualTotal(%d alt=%d)",
-                mRecalibratedBaseQualityTotal, mAltRecalibratedBaseQualityTotal, mMapQualityTotal, mAltMapQualityTotal);
+                mRecalibratedBaseQualityTotal, mRecalibratedAltBaseQualityTotal, mMapQualityTotal, mAltMapQualityTotal);
     }
 }

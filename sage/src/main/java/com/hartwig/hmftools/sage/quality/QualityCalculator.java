@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.minQual;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
+import static com.hartwig.hmftools.sage.seqtech.SbxUtils.indelCoreQuality;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -24,6 +26,7 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.seqtech.SbxUtils;
 import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 
 import htsjdk.samtools.SAMRecord;
@@ -157,7 +160,9 @@ public class QualityCalculator
                 return min(artefactAdjustedQual, readContextCounter.qualCache().msiIndelErrorQual());
             }
 
-            double avgCoreQuality = averageCoreQuality(readContextCounter.readContext(), record, readIndex);
+            double avgCoreQuality = isSbx() ?
+                    SbxUtils.indelCoreQuality(readContextCounter.readContext(), record, readIndex) :
+                    averageCoreQuality(readContextCounter.readContext(), record, readIndex);
 
             if(readContextCounter.qualCache().usesMsiIndelErrorQual())
                 return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual());
@@ -176,11 +181,11 @@ public class QualityCalculator
         int varLength = readContextCounter.variant().ref().length();
 
         // take the minimum base qual for MNVs
-        double minBaseQual = record.getBaseQualities()[readIndex];
+        byte minBaseQual = record.getBaseQualities()[readIndex];
 
         for(int i = readIndex + 1; i < readIndex + varLength; ++i)
         {
-            minBaseQual = min(minBaseQual, record.getBaseQualities()[i]);
+            minBaseQual = minQual(minBaseQual, record.getBaseQualities()[i]);
         }
 
         return minBaseQual;
