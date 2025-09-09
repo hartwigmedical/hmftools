@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.getStraddlingReadBases;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.INVALID_BASE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
 
@@ -357,19 +358,12 @@ public class UltimaRealignedQualModelBuilder
             String alt = String.valueOf((char) firstAltBase);
 
             SimpleVariant variant = new SimpleVariant(chromosome, delHomopolymer.VariantPos, ref, alt);
-            byte[] coreBases = Arrays.subsetArray(
-                    readContext.readBasesBytes(),
-                    readContext.VarIndex + varReadIndexOffset - 1,
-                    readContext.VarIndex + varReadIndexOffset + 1);
 
-            // common scenario, we want to pass in the base after the variant, not the SNV base itself, for the right straddle base
-            if(varReadIndexOffset == -1 && !readContext.variant().isIndel())
-            {
-                coreBases[2] = readContext.readBasesBytes()[readContext.VarIndex + varReadIndexOffset + 2];
-            }
+            int adjustedVarReadIndex = readContext.VarIndex + varReadIndexOffset;
+            byte[] straddlingBases = getStraddlingReadBases(variant, readContext.readBasesBytes(), adjustedVarReadIndex);
 
             int varIndex = varReadIndexOffset + readContext.VarIndex;
-            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, coreBases, refMasks);
+            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, straddlingBases, refMasks);
 
             UltimaRealignedQualModel realignedQualModel = new UltimaRealignedQualModel(
                     variant, baseQualModel, varReadIndexOffset, varIndex,
@@ -397,16 +391,14 @@ public class UltimaRealignedQualModelBuilder
             String alt = (char)firstAltBase + insBasesString;
 
             SimpleVariant variant = new SimpleVariant(chromosome, insHomopolymer.VariantPos, ref, alt);
-            byte[] straddlingReadBases = Arrays.subsetArray(
-                    readContext.readBasesBytes(),
-                    readContext.VarIndex + varReadIndexOffset - 1,
-                    readContext.VarIndex + varReadIndexOffset + 1);
 
-            int varIndex = varReadIndexOffset + readContext.VarIndex;
-            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, straddlingReadBases, refMasks);
+            int adjustedVarReadIndex = readContext.VarIndex + varReadIndexOffset;
+            byte[] straddlingBases = getStraddlingReadBases(variant, readContext.readBasesBytes(), varReadIndexOffset);
+
+            UltimaQualModel baseQualModel = ultimaQualModelBuilder.buildContext(variant, straddlingBases, refMasks);
 
             UltimaRealignedQualModel realignedQualModel = new UltimaRealignedQualModel(
-                    variant, baseQualModel, varReadIndexOffset, varIndex,
+                    variant, baseQualModel, varReadIndexOffset, adjustedVarReadIndex,
                     insHomopolymer.VariantPos - readContext.CorePositionStart);
 
             realignedQualModels.add(realignedQualModel);

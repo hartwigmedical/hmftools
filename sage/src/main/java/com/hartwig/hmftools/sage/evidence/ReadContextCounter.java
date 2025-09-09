@@ -87,6 +87,7 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.quality.ReadContextQualCache;
 import com.hartwig.hmftools.sage.common.NumberEvents;
+import com.hartwig.hmftools.sage.seqtech.SbxUtils;
 import com.hartwig.hmftools.sage.seqtech.UltimaRealignedQualModels;
 import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 import com.hartwig.hmftools.sage.vis.VariantVis;
@@ -404,8 +405,7 @@ public class ReadContextCounter
         {
             calcBaseQuality = mQualityCalculator.calculateBaseQuality(this, readVarIndex, record);
 
-            // CHECK: what is the meaning of neg / invalid qual, what scenarios, why only added in Ultima - see check below too
-            if(calcBaseQuality < 0)
+            if(calcBaseQuality == INVALID_BASE_QUAL)
             {
                 addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
                 return UNRELATED;
@@ -654,13 +654,8 @@ public class ReadContextCounter
 
         ConsensusType consensusType = extractConsensusType(record);
 
-        if(consensusType == DUAL && isSbx())
-        {
-            int duplexBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
-
-            if(!SbxBamUtils.inDuplexRegion(!record.getReadNegativeStrandFlag(), duplexBaseIndex, readVarIndex))
-                consensusType = SINGLE;
-        }
+        if(isSbx())
+            consensusType = SbxUtils.determineConsensusType(mReadContext, readVarIndex, record);
 
         // add to total and variant support if applicable
         ++mConsensusTypeCounts[consensusType.ordinal()];

@@ -29,7 +29,7 @@ public final class UltimaUtils
     private static final byte TP_ZERO_BASE_QUAL = 0;
 
     // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
-    private static final int HALF_PHRED_SCORE_SCALING = 3;
+    protected static final int HALF_PHRED_SCORE_SCALING = 3;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 

@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELE
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_TRANSITION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.OTHER;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.SNV;
+import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.getStraddlingReadBases;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 
 import static org.junit.Assert.assertEquals;
@@ -77,7 +78,7 @@ public class UltimaQualModelTest
         setRefBases(refBases);
         // delete of 1 base
         SimpleVariant variant = new SimpleVariant(CHR_1, 19, "AT", "A");
-        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        UltimaQualModel model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_ADJUSTMENT, model.type());
 
@@ -103,7 +104,7 @@ public class UltimaQualModelTest
         // delete of 3 bases
         variant = new SimpleVariant(CHR_1, 19, "ATTT", "A");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(HOMOPOLYMER_ADJUSTMENT, model.type());
 
         readBases = BUFFER_REF_BASES + "ATCGTCGT";
@@ -128,7 +129,7 @@ public class UltimaQualModelTest
         // insert of 2 bases
         variant = new SimpleVariant(CHR_1, 19, "A", "ATT");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(HOMOPOLYMER_ADJUSTMENT, model.type());
 
         readBases = BUFFER_REF_BASES + "ATTTTTTCGTCGT";
@@ -151,7 +152,7 @@ public class UltimaQualModelTest
         // C>CA in TT C GTC, insert of base which doesn't match the existing context
         variant = new SimpleVariant(CHR_1, 24, "C", "CA");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(HOMOPOLYMER_ADJUSTMENT, model.type());
 
         readBases = BUFFER_REF_BASES + "ATTTTCAGTCGT" + BUFFER_REF_BASES;
@@ -179,7 +180,7 @@ public class UltimaQualModelTest
         // the whole HP must be deleted
         SimpleVariant variant = new SimpleVariant(CHR_1, 19, "ATTTT", "A");
 
-        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        UltimaQualModel model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_DELETION, model.type());
 
@@ -202,7 +203,7 @@ public class UltimaQualModelTest
         // test out of cycle deletions
         variant = new SimpleVariant(CHR_1, 25, "GA", "G");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_DELETION, model.type());
 
@@ -230,7 +231,7 @@ public class UltimaQualModelTest
         // a deletion which crosses 2 HPs
         SimpleVariant variant = new SimpleVariant(CHR_1, 21, "TTTAA", "T");
 
-        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        UltimaQualModel model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_TRANSITION, model.type());
 
@@ -258,7 +259,7 @@ public class UltimaQualModelTest
         // as before but with longer, lopsided transitional delete
         variant = new SimpleVariant(CHR_1, 20, "TTTTA", "T");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(HOMOPOLYMER_TRANSITION, model.type());
 
         //                              0123456
@@ -293,7 +294,7 @@ public class UltimaQualModelTest
         // C>T in ACA > ATA, matches neither side's ref so reverts to max qual
         SimpleVariant variant = new SimpleVariant(CHR_1, 22, "C", "T");
 
-        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        UltimaQualModel model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertNotNull(model);
         assertEquals(SNV, model.type());
 
@@ -314,7 +315,7 @@ public class UltimaQualModelTest
         // C>T in CCG > CTG, left contraction, right insertion/expansion
         variant = new SimpleVariant(CHR_1, 22, "C", "T");
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
 
         readBases = BUFFER_REF_BASES + "AGCTGAG";
 
@@ -339,7 +340,7 @@ public class UltimaQualModelTest
         refBases = BUFFER_REF_BASES + "AG" + "GCT" + "AG" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
 
         //                              0123456
         readBases = BUFFER_REF_BASES + "AGGTTAG" + BUFFER_REF_BASES;
@@ -364,7 +365,7 @@ public class UltimaQualModelTest
         refBases = BUFFER_REF_BASES + "AG" + "TCA" + "AG" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
 
         //                              0123456
         readBases = BUFFER_REF_BASES + "AGTTAAG" + BUFFER_REF_BASES;
@@ -390,7 +391,7 @@ public class UltimaQualModelTest
         refBases = BUFFER_REF_BASES + "AG" + "GCC" + "AG" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
 
         readBases = BUFFER_REF_BASES + "AGGTCAG";
 
@@ -420,7 +421,7 @@ public class UltimaQualModelTest
         refBases = BUFFER_REF_BASES + "TTT" + "TCC" + "CCC" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
 
         //                              012345678
         readBases = BUFFER_REF_BASES + "TTTTTCCCC" + BUFFER_REF_BASES;
@@ -479,7 +480,7 @@ public class UltimaQualModelTest
         // test 1: 4xA -> 3xA contraction on left, 1xG ins on right, ie a left shift
         SimpleVariant variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        UltimaQualModel model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        UltimaQualModel model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(BASE_SHIFT, model.type());
 
         UltimaBaseShift baseShiftModel = (UltimaBaseShift)model;
@@ -510,7 +511,7 @@ public class UltimaQualModelTest
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(BASE_SHIFT, model.type());
 
         baseShiftModel = (UltimaBaseShift)model;
@@ -531,7 +532,7 @@ public class UltimaQualModelTest
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(BASE_SHIFT, model.type());
 
         baseShiftModel = (UltimaBaseShift)model;
@@ -551,7 +552,7 @@ public class UltimaQualModelTest
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(BASE_SHIFT, model.type());
 
         baseShiftModel = (UltimaBaseShift)model;
@@ -569,7 +570,7 @@ public class UltimaQualModelTest
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(BASE_SHIFT, model.type());
 
         baseShiftModel = (UltimaBaseShift)model;
@@ -577,17 +578,35 @@ public class UltimaQualModelTest
         assertNotNull(baseShiftModel.rightDeletion());
         assertTrue(baseShiftModel.isRightShift());
 
-        // test 6: invalid
+        // test 6:
+        // ref: TAGG AT GGAA
+        // alt: TAGG GA GGAA - 2xG -> 3xG ins on left, 1xT del on right
+        varRefBases = "AT";
+        varAltBases = "GA";
+        refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
+
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
+        assertEquals(BASE_SHIFT, model.type());
+
+        baseShiftModel = (UltimaBaseShift)model;
+        assertNotNull(baseShiftModel.leftAdjust());
+        assertNotNull(baseShiftModel.rightDeletion());
+        assertTrue(baseShiftModel.isRightShift());
+
+        // test 7: invalid
         varRefBases = "AT";
         varAltBases = "CG";
         refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
         setRefBases(refBases);
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(OTHER, model.type());
 
-        // test 6: invalid
+        // test 8: invalid
         varRefBases = "ATC";
         varAltBases = "TAG";
         refBases = BUFFER_REF_BASES + leftRefBases + varRefBases + rightRefBases + BUFFER_REF_BASES;
@@ -595,7 +614,7 @@ public class UltimaQualModelTest
 
         variant = new SimpleVariant(CHR_1, 23, varRefBases, varAltBases);
 
-        model = mModelBuilder.buildContext(variant, buildCoreBases(refBases, variant));
+        model = mModelBuilder.buildContext(variant, getStraddlingBases(refBases, variant));
         assertEquals(OTHER, model.type());
     }
 
@@ -615,26 +634,26 @@ public class UltimaQualModelTest
         return record;
     }
 
-    private static byte[] buildCoreBases(final String refBases, final SimpleVariant variant)
+    private static byte[] getStraddlingBases(final String refBases, final SimpleVariant variant)
     {
-        byte[] coreBases = new byte[3];
         int refVarIndex = variant.position() - 1;
-        coreBases[0] = (byte)refBases.charAt(refVarIndex - 1);
-        if(variant.refLength() > 1 && variant.altLength() > 1)  // MNV
+
+        byte[] straddlingBases = new byte[2];
+
+        if(variant.isInsert())
+            return straddlingBases;
+
+        straddlingBases[0] = (byte)refBases.charAt(refVarIndex - 1);
+
+        if(variant.isDelete())
         {
-            coreBases[1] = (byte)variant.alt().charAt(0);
-            coreBases[2] = (byte)variant.alt().charAt(1);
+            straddlingBases[1] = (byte)refBases.charAt(refVarIndex + variant.refLength());
         }
-        else if(variant.refLength() > 1 || variant.altLength() > 1) // indel
+        else
         {
-            coreBases[1] = (byte)refBases.charAt(refVarIndex);
-            coreBases[2] = (byte)refBases.charAt(refVarIndex + variant.refLength());
+            straddlingBases[1] = (byte)refBases.charAt(refVarIndex + variant.altLength());
         }
-        else  // SNV
-        {
-            coreBases[1] = (byte)variant.alt().charAt(0);
-            coreBases[2] = (byte)refBases.charAt(refVarIndex + 1);
-        }
-        return coreBases;
+
+        return straddlingBases;
     }
 }
