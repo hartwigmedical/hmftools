@@ -274,7 +274,7 @@ public class VariantFilters
         return tier == HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
-                && primaryTumor.altBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
+                && primaryTumor.qualCounters().altRecalibratedBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
     }
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
@@ -300,8 +300,8 @@ public class VariantFilters
         }
 
         int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
-        double recalibratedAltMediumBaseQualityTotal = primaryTumor.qualCounters().recalibratedStrongAltMediumBaseQualityTotal();
-        double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().recalibratedStrongAltBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
+        double recalibratedAltMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltMediumRecalibratedBaseQualityTotal();
+        double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltRecalibratedBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
         int mediumSupportContribution = (int)(strongNonMediumSupport * recalibratedAltMediumBaseQualityTotal/recalibratedAltNonMediumBaseQualityTotal);
         int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
 
@@ -355,7 +355,7 @@ public class VariantFilters
     private static double calcMapQualFactor(
             final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
     {
-        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
+        double avgAltFinalMapQuality = primaryTumor.qualCounters().altFinalMapQualityTotal() / (double)strongSupport;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / (double)depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / (double)altSupport;
@@ -366,7 +366,7 @@ public class VariantFilters
 
         if(highlyPolymorphicSite)
         {
-            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
+            avgAltFinalMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
 
             if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
                 mapQualDiffPenalty = 0;
@@ -419,7 +419,7 @@ public class VariantFilters
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
-        double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
+        double mapQualFactor = avgAltFinalMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
                 - edgeDistancePenalty - repeatPenalty;
 
         return mapQualFactor;
@@ -434,7 +434,7 @@ public class VariantFilters
     {
         int depth = primaryTumor.depth();
 
-        double baseQualAvg = primaryTumor.baseQualityTotal() / (double)depth;
+        double baseQualAvg = primaryTumor.qualCounters().recalibratedBaseQualityTotal() / (double)depth;
 
         int supportCount = primaryTumor.strongAltSupport();
 

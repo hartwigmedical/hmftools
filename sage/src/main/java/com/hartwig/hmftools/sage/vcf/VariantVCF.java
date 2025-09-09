@@ -42,10 +42,10 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
@@ -232,10 +232,10 @@ public class VariantVCF implements AutoCloseable
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
+                AVG_FINAL_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_FINAL_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
+                AVG_FINAL_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_FINAL_ALT_MAP_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
 

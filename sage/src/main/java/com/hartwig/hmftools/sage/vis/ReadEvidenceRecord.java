@@ -99,12 +99,12 @@ public class ReadEvidenceRecord implements Comparable<ReadEvidenceRecord>
             return -1;
         }
 
-        if(Qualities.ModifiedQuality == other.Qualities.ModifiedQuality)
+        if(Qualities.CombinedQuality == other.Qualities.CombinedQuality)
         {
             return -intCompare(Read.getMappingQuality(), other.Read.getMappingQuality());
         }
 
-        return Qualities.ModifiedQuality > other.Qualities.ModifiedQuality ? -1 : 1;
+        return Qualities.CombinedQuality > other.Qualities.CombinedQuality ? -1 : 1;
     }
 
     public enum Orientation

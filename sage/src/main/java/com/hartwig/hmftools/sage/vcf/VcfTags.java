@@ -38,11 +38,11 @@ public final class VcfTags
     public static final String READ_STRAND_BIAS = "RSB";
     public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
-    public static final String AVG_MODIFIED_BASE_QUAL = "AMBQ";
-    public static final String AVG_MODIFIED_BASE_QUAL_DESC = "Average modified map quality";
+    public static final String AVG_FINAL_BASE_QUAL = "AMBQ";
+    public static final String AVG_FINAL_BASE_QUAL_DESC = "Average calculated map quality";
 
-    public static final String AVG_MODIFIED_ALT_MAP_QUAL = "AMMQ";
-    public static final String AVG_MODIFIED_ALT_MAP_QUAL_DESC = "Average alt support modified map quality";
+    public static final String AVG_FINAL_ALT_MAP_QUAL = "AMMQ";
+    public static final String AVG_FINAL_ALT_MAP_QUAL_DESC = "Average alt support calculated map quality";
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESC = "Mixed Somatic and Germline variants";

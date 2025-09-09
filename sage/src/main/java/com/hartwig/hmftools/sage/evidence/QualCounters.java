@@ -10,33 +10,32 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 
 public class QualCounters
 {
-    private int mAltBaseQualityTotal;
+    private int mAltSeqTechBaseQualityTotal;
 
     private int mRecalibratedBaseQualityTotal;
-    private int mRecalibratedAltBaseQualityTotal;
+    private int mAltRecalibratedBaseQualityTotal;
+    private double mStrongAltRecalibratedBaseQualityTotal;
+    private double mStrongAltMediumRecalibratedBaseQualityTotal;
 
-    private double mRecalibratedStrongAltBaseQualityTotal;
-    private double mRecalibratedStrongAltMediumBaseQualityTotal;
-
-    private double mModifiedAltBaseQualityTotal;
+    private double mAltFinalBaseQualityTotal;
 
     private int mMapQualityTotal;
     private int mAltMapQualityTotal;
-    private double mModifiedAltMapQualityTotal;
+    private double mAltFinalMapQualityTotal;
 
     private int mLowQualAltSupportCount;
 
     public QualCounters()
     {
         mRecalibratedBaseQualityTotal = 0;
-        mRecalibratedAltBaseQualityTotal = 0;
-        mAltBaseQualityTotal = 0;
-        mModifiedAltBaseQualityTotal = 0;
-        mRecalibratedStrongAltBaseQualityTotal = 0;
-        mRecalibratedStrongAltMediumBaseQualityTotal = 0;
+        mAltRecalibratedBaseQualityTotal = 0;
+        mAltSeqTechBaseQualityTotal = 0;
+        mAltFinalBaseQualityTotal = 0;
+        mStrongAltRecalibratedBaseQualityTotal = 0;
+        mStrongAltMediumRecalibratedBaseQualityTotal = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
-        mModifiedAltMapQualityTotal = 0;
+        mAltFinalMapQualityTotal = 0;
         mLowQualAltSupportCount = 0;
     }
 
@@ -47,47 +46,47 @@ public class QualCounters
 
         if(matchType.FullAltSupport)
         {
-            mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
+            mAltFinalBaseQualityTotal += qualityScores.FinalBaseQuality;
 
-            mRecalibratedStrongAltBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+            mStrongAltRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
-            if(isMediumBaseQual(qualityScores.CalcBaseQuality))
-                mRecalibratedStrongAltMediumBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+            if(isMediumBaseQual(qualityScores.SeqTechBaseQuality))
+                mStrongAltMediumRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
-            mModifiedAltMapQualityTotal += qualityScores.ModifiedMapQuality;
+            mAltFinalMapQualityTotal += qualityScores.FinalMapQuality;
         }
 
         if(matchType.SupportsAlt)
         {
-            mRecalibratedAltBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
-            mAltBaseQualityTotal += (int)round(qualityScores.CalcBaseQuality);
+            mAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
+            mAltSeqTechBaseQualityTotal += (int)round(qualityScores.SeqTechBaseQuality);
             mAltMapQualityTotal += mapQuality;
         }
     }
 
     public void update(final QualityScores qualityScores)
     {
-        mAltBaseQualityTotal += (int)round(qualityScores.CalcBaseQuality);
+        mAltSeqTechBaseQualityTotal += (int)round(qualityScores.SeqTechBaseQuality);
         mLowQualAltSupportCount += 1;
     }
 
-    public int baseQualityTotal() { return mRecalibratedBaseQualityTotal; }
-    public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
+    public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
+    public int altSeqTechBaseQualityTotal() { return mAltSeqTechBaseQualityTotal; }
 
-    public int recalibratedAltBaseQualityTotal() { return mRecalibratedAltBaseQualityTotal; }
-    public double recalibratedStrongAltMediumBaseQualityTotal() { return mRecalibratedStrongAltMediumBaseQualityTotal; }
-    public double recalibratedStrongAltBaseQualityTotal() { return mRecalibratedStrongAltBaseQualityTotal; }
+    public int altRecalibratedBaseQualityTotal() { return mAltRecalibratedBaseQualityTotal; }
+    public double strongAltMediumRecalibratedBaseQualityTotal() { return mStrongAltMediumRecalibratedBaseQualityTotal; }
+    public double strongAltRecalibratedBaseQualityTotal() { return mStrongAltRecalibratedBaseQualityTotal; }
 
-    public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }
+    public double altFinalBaseQualityTotal() { return mAltFinalBaseQualityTotal; }
 
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
-    public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }
+    public double altFinalMapQualityTotal() { return mAltFinalMapQualityTotal; }
     public int lowQualAltSupportCount() { return mLowQualAltSupportCount; }
 
     public String toString()
     {
         return format("baseQualTotal(%d alt=%d) mapQualTotal(%d alt=%d)",
-                mRecalibratedBaseQualityTotal, mRecalibratedAltBaseQualityTotal, mMapQualityTotal, mAltMapQualityTotal);
+                mRecalibratedBaseQualityTotal, mAltRecalibratedBaseQualityTotal, mMapQualityTotal, mAltMapQualityTotal);
     }
 }

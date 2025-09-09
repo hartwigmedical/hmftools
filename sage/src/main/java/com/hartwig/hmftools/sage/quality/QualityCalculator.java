@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.minQual;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_M
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_0;
 import static com.hartwig.hmftools.sage.SageConstants.READ_EDGE_PENALTY_1;
-import static com.hartwig.hmftools.sage.seqtech.SbxUtils.indelCoreQuality;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -59,7 +59,55 @@ public class QualityCalculator
         return (int)round(max(0, numEvents - 1) / readLength * readMapQualEventsPenalty);
     }
 
-    public static int modifiedMapQuality(
+    public QualityScores calculateQualityScores(
+            final ReadContextCounter readContextCounter, int readVarIndex, final SAMRecord record, double numberOfEvents)
+    {
+        double seqTechBaseQuality = calcSequencingTechBaseQuality(readContextCounter, readVarIndex, record);
+
+        if(seqTechBaseQuality == INVALID_BASE_QUAL)
+            return QualityScores.INVALID_QUAL_SCORES;
+
+        double recalibratedBaseQuality = seqTechBaseQuality;
+
+        if(isUltima())
+        {
+            if(readContextCounter.isSnv())
+            {
+                double bqrQual = readContextCounter.qualCache().getQual(
+                        UltimaUtils.maxRawQual(), SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
+
+                recalibratedBaseQuality = min(seqTechBaseQuality, bqrQual);
+            }
+        }
+        else
+        {
+            if(!readContextCounter.isIndel() && readContextCounter.artefactContext() == null)
+            {
+                recalibratedBaseQuality = recalibratedBaseQuality(readContextCounter, readVarIndex, record);
+            }
+        }
+
+        int mapQuality = record.getMappingQuality();
+        boolean isImproperPair = isImproperPair(record);
+
+        int penalisedMapQuality = calcMapQuality(
+                mConfig, readContextCounter.variant(), mapQuality, record.getReadBases().length, numberOfEvents, isImproperPair);
+
+        double penalisedBaseQuality = recalibratedBaseQuality;
+
+        if(!readContextCounter.useMsiErrorRate())
+            penalisedBaseQuality -= mConfig.BaseQualityFixedPenalty;
+
+        int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readVarIndex, record);
+        penalisedBaseQuality -= readEdgePenalty;
+
+        double combinedQuality = max(0, min(penalisedMapQuality, penalisedBaseQuality));
+
+        return new QualityScores(
+                seqTechBaseQuality, recalibratedBaseQuality, max(0, penalisedMapQuality), max(0.0, penalisedBaseQuality), combinedQuality);
+    }
+
+    private static int calcMapQuality(
             final QualityConfig config, final BasePosition position, int mapQuality, int readLength, double readEvents, boolean isImproperPair)
     {
         if(isHighlyPolymorphic(position))
@@ -75,61 +123,6 @@ public class QualityCalculator
         return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
 
-    public QualityScores calculateQualityScores(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double calcBaseQuality)
-    {
-        double baseQuality;
-
-        boolean recalibrateBaseQuality;
-
-        if(!isUltima())
-        {
-            recalibrateBaseQuality = !(readContextCounter.isIndel() || readContextCounter.artefactContext() != null);
-        }
-        else
-        {
-            recalibrateBaseQuality = readContextCounter.isSnv();
-        }
-
-        if(recalibrateBaseQuality)
-        {
-            if(isUltima())
-            {
-                double bqrQual = readContextCounter.qualCache().getQual(
-                        UltimaUtils.maxRawQual(), SamRecordUtils.extractConsensusType(record), 0, !record.getReadNegativeStrandFlag());
-
-                baseQuality = min(calcBaseQuality, bqrQual);
-            }
-            else
-            {
-                baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
-            }
-        }
-        else
-        {
-            baseQuality = calcBaseQuality;
-        }
-
-        int mapQuality = record.getMappingQuality();
-        boolean isImproperPair = isImproperPair(record);
-
-        int modifiedMapQuality = modifiedMapQuality(
-                mConfig, readContextCounter.variant(), mapQuality, record.getReadBases().length, numberOfEvents, isImproperPair);
-
-        double modifiedBaseQuality = baseQuality;
-
-        if(!readContextCounter.useMsiErrorRate())
-            modifiedBaseQuality -= mConfig.BaseQualityFixedPenalty;
-
-        int readEdgePenalty = readEdgeDistancePenalty(readContextCounter, readBaseIndex, record);
-        modifiedBaseQuality -= readEdgePenalty;
-
-        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
-
-        return new QualityScores(
-                calcBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
-    }
-
     public static boolean isHighBaseQual(final double baseQual)
     {
         return BaseQualAdjustment.isHighBaseQual((byte)baseQual, SEQUENCING_TYPE);
@@ -140,9 +133,7 @@ public class QualityCalculator
         return BaseQualAdjustment.isMediumBaseQual((byte)baseQual, SEQUENCING_TYPE);
     }
 
-    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
-
-    public static double calculateBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    private static double calcSequencingTechBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
         if(isUltima())
         {
@@ -191,9 +182,10 @@ public class QualityCalculator
         return minBaseQual;
     }
 
-    private double recalibratedBaseQuality(
-            final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
+    private double recalibratedBaseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record)
     {
+        int variantLength = readContextCounter.variant().refLength();
+
         ConsensusType consensusType = SamRecordUtils.extractConsensusType(record);
         boolean posOrientRead = !record.getReadNegativeStrandFlag();
 
@@ -214,7 +206,7 @@ public class QualityCalculator
         }
 
         // MNV case
-        int maxIndex = min(startReadIndex + length, record.getBaseQualities().length) - 1;
+        int maxIndex = min(startReadIndex + variantLength, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
         double quality = Integer.MAX_VALUE;

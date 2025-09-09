@@ -32,10 +32,10 @@ import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_BASE_QUAL_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.RAW_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
@@ -533,7 +533,7 @@ public class VariantVis
         CssBuilder verticalSpacerDivStyle = CssBuilder.EMPTY.height(CssSize.em(1)).padding(CssSize.ZERO).margin(CssSize.ZERO);
 
         List<ReadTableColumn> columns = Lists.newArrayList(
-                MATE_TYPE_COL, MAP_QUAL_COL, FINAL_QUAL_COL, MOD_BASE_QUAL_COL, MOD_MAP_QUAL_COL, RAW_BASE_QUAL_COL, ORIENTATION_COL);
+                MATE_TYPE_COL, MAP_QUAL_COL, FINAL_QUAL_COL, FINAL_BASE_QUAL_COL, FINAL_MAP_QUAL_COL, SEQ_TECH_BASE_QUAL_COL, ORIENTATION_COL);
 
         List<DomContent> tableRows = Lists.newArrayList();
 
