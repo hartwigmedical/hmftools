@@ -466,7 +466,7 @@ public class VariantFilters
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        double avgBaseQuality = primaryTumor.averageAltBaseQuality();
+        double avgBaseQuality = primaryTumor.averageAltSeqTechBaseQuality();
 
         return Doubles.lessThan(avgBaseQuality, threshold);
     }

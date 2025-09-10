@@ -19,13 +19,13 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
@@ -317,7 +317,9 @@ public class VariantVis
 
         List<String> headers = Lists.newArrayList("SAMPLE", "RAW_QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
         headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextMatch::name).collect(Collectors.toList()));
-        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_RAW_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT", MIN_COORDS_COUNT, UMI_TYPE_COUNTS));
+        headers.addAll(Lists.newArrayList(
+                AVG_RECALIBRATED_BASE_QUAL, AVG_SEQ_TECH_BASE_QUAL, AVG_READ_MAP_QUALITY, FRAG_STRAND_BIAS,
+                READ_STRAND_BIAS, "JIT", MIN_COORDS_COUNT, UMI_TYPE_COUNTS));
 
         List<DomContent> headerColumns = Lists.newArrayList();
         for(int i = 0; i < headers.size(); i++)
@@ -375,7 +377,7 @@ public class VariantVis
 
             columnElems.addAll(Lists.newArrayList(
                     td(String.valueOf((int) counter.averageAltRecalibratedBaseQuality())),
-                    td(String.valueOf((int) counter.averageAltBaseQuality())),
+                    td(String.valueOf((int) counter.averageAltSeqTechBaseQuality())),
                     td(format("%d", avgAltMapQuality)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),

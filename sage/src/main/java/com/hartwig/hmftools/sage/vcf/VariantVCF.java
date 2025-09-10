@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
@@ -40,8 +38,10 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL;
@@ -224,7 +224,7 @@ public class VariantVCF implements AutoCloseable
         // call from Sage append as well for new samples, and this handles the additional in later versions of new genotype fields
 
         // add in alphabetical order
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RECALIBRATED_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_RECALIBRATED_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_EDGE_DISTANCE_PERC, 2, VCFHeaderLineType.Float, AVG_EDGE_DISTANCE_PERC_DESC));
 
@@ -237,11 +237,11 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 AVG_FINAL_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_FINAL_ALT_MAP_QUAL_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_READ_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_READ_MAP_QUALITY_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_COUNT, 1, VCFHeaderLineType.Integer, MIN_COORDS_COUNT_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_SEQ_TECH_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_SEQ_TECH_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));

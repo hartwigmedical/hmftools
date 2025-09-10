@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
@@ -352,6 +352,8 @@ public class SomaticVariants
         return purityResult;
     }
 
+    private static final String RECAL_ABQ_OLD_TAG = "ABQ";
+
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
         List<FilterReason> filters = Lists.newArrayList();
@@ -363,7 +365,9 @@ public class SomaticVariants
             AllelicDepth refAllelicDepth = AllelicDepth.fromGenotype(refGenotype);
             double germlineAF = refAllelicDepth.alleleFrequency();
 
-            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(AVG_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+            String recalBqTag = refGenotype.hasAnyAttribute(AVG_RECALIBRATED_BASE_QUAL) ? AVG_RECALIBRATED_BASE_QUAL : RECAL_ABQ_OLD_TAG;
+
+            double germlineABQ = Double.parseDouble(refGenotype.getAnyAttribute(recalBqTag).toString().split(CSV_DELIM)[1]);
 
             if(germlineAF >= MAX_GERMLINE_AF && germlineABQ >= HIGH_GERMLINE_QUAL_THRESHOLD)
                 filters.add(GERMLINE_AF);

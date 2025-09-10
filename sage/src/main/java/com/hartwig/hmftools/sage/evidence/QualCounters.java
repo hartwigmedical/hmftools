@@ -19,7 +19,7 @@ public class QualCounters
 
     private double mAltFinalBaseQualityTotal;
 
-    private int mMapQualityTotal;
+    private int mMapQualityTotal; // raw read map qual
     private int mAltMapQualityTotal;
     private double mAltFinalMapQualityTotal;
 
@@ -82,6 +82,7 @@ public class QualCounters
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
     public double altFinalMapQualityTotal() { return mAltFinalMapQualityTotal; }
+
     public int lowQualAltSupportCount() { return mLowQualAltSupportCount; }
 
     public String toString()

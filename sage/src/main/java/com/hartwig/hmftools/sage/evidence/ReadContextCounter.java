@@ -276,7 +276,7 @@ public class ReadContextCounter
     @Nullable
     public VariantVis variantVis() { return mVariantVis; }
 
-    public double averageAltBaseQuality()
+    public double averageAltSeqTechBaseQuality()
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core + mCounts.Realigned + mQualCounters.lowQualAltSupportCount();
