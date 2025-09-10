@@ -632,13 +632,15 @@ public final class SbxRoutines
         if(baseCountsByQual.isEmpty()) // all reads have invalid qual
             return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
 
-        if(simplexCount > 0 && duplexCount == 0 && lowQuallReads == 0)
+        if(simplexCount > 0 && duplexCount == 0)
         {
             int[] baseCounts = baseCountsByQual.get(RAW_SIMPLEX_QUAL);
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
+            int totalReadCount = simplexCount + lowQuallReads;
+
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * totalReadCount)
                 return new BaseQualPair(maxBase, RAW_SIMPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, SIMPLEX_NO_CONSENSUS_QUAL);

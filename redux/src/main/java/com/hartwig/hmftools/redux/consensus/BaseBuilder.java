@@ -2,6 +2,9 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
@@ -65,7 +68,9 @@ public class BaseBuilder
         {
             // check bases at this index - work on the premise that most bases will agree
             boolean hasMismatch = false;
-            int maxQual = -1;
+            byte maxQual = -1;
+            int uncertainQualCount = 0;
+
             byte firstBase = NO_BASE;
 
             for(int r = 0; r < readCount; ++r)
@@ -99,13 +104,20 @@ public class BaseBuilder
                 else
                     hasMismatch |= locationBases[r] != firstBase;
 
-                maxQual = max(locationQuals[r], maxQual);
+                maxQual = maxQual(locationQuals[r], maxQual);
+
+                if(isUncertainBaseQual(locationQuals[r]))
+                    ++uncertainQualCount;
             }
 
             if(!hasMismatch)
             {
                 consensusState.Bases[baseIndex] = firstBase;
-                consensusState.BaseQualities[baseIndex] = (byte)maxQual;
+
+                if(uncertainQualCount >= 0.5 * locationQuals.length)
+                    consensusState.BaseQualities[baseIndex] = BASE_QUAL_MINIMUM;
+                else
+                    consensusState.BaseQualities[baseIndex] = maxQual;
             }
             else
             {

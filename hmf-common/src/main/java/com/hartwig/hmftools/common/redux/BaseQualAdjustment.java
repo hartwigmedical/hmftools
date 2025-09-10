@@ -17,6 +17,8 @@ public class BaseQualAdjustment
     // this low value also denotes an adjustment (eg by Redux) to indicate that the corresponding base is completely uncertain
     public static final byte BASE_QUAL_MINIMUM = 1;
 
+    public static final byte LOW_BASE_QUAL_THRESHOLD = 26;
+
     private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
     private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
 
@@ -59,6 +61,8 @@ public class BaseQualAdjustment
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
 
+    public static boolean isLowBaseQual(final byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
+
     public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
     {
         if(sequencingType == SequencingType.ILLUMINA)
@@ -77,5 +81,5 @@ public class BaseQualAdjustment
             return false;
     }
 
-    public static boolean isUncertainBaseFromQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
+    public static boolean isUncertainBaseQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
 }

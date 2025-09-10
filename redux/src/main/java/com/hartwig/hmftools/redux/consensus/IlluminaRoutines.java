@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
@@ -123,7 +124,7 @@ public final class IlluminaRoutines
         return createBaseQualPair(refBase, qual);
     }
 
-    public static BaseQualPair checkCommonBaseAndQual(
+    private static BaseQualPair checkCommonBaseAndQual(
             final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position, final RefGenome refGenome)
     {
         if(locationBases.length == 1)
@@ -135,8 +136,12 @@ public final class IlluminaRoutines
         // most common scenario is 2 reads with differing bases
         if(locationBases.length == 2)
         {
-            int minQual = min(locationQuals[0], locationQuals[1]);
             int maxQual = max(locationQuals[0], locationQuals[1]);
+
+            if(locationBases[0] == locationBases[1])
+                return createBaseQualPair(locationBases[0], maxQual);
+
+            int minQual = min(locationQuals[0], locationQuals[1]);
             double calcQual = (double)maxQual * max(BASE_QUAL_MINIMUM, maxQual - minQual) / maxQual;
 
             if(locationQuals[0] > locationQuals[1])
