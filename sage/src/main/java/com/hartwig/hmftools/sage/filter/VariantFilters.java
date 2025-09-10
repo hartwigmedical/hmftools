@@ -466,23 +466,6 @@ public class VariantFilters
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(isUltima())
-        {
-            // CHECK: Ultima diffs and make constants?
-            if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() == 1
-            && primaryTumor.readContext().MaxRepeat.Count >= 5)
-            {
-                threshold -= 5;
-            }
-
-            if(primaryTumor.readStrandBiasAlt().minBias() < STRAND_BIAS_CHECK_THRESHOLD
-            &&!(primaryTumor.readStrandBiasNonAlt().minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS
-                    &&(primaryTumor.readStrandBiasAlt().bias() < 0.5) == (primaryTumor.readStrandBiasNonAlt().bias() < 0.5)))
-            {
-                threshold += 10;
-            }
-        }
-
         double avgBaseQuality = primaryTumor.averageAltBaseQuality();
 
         return Doubles.lessThan(avgBaseQuality, threshold);

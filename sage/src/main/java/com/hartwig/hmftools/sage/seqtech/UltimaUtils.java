@@ -227,7 +227,7 @@ public final class UltimaUtils
     }
 
     private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
-    private static final List<String> DI_NUC_HOMOPOLYMERS = List.of("TA", "AT");
+    private static final List<String> DI_NUCLEOTIDES = List.of("TA", "AT");
 
     public static boolean ultimaLongRepeatFilter(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final Microhomology homology)
@@ -235,7 +235,7 @@ public final class UltimaUtils
         if(isMsiIndelOfType(variant, SINGLE_HOMOPOLYMERS) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN - 5)
             return true; // Ultima cannot call variants of this type
 
-        if(isMsiIndelOfType(variant, DI_NUC_HOMOPOLYMERS) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN)
+        if(isMsiIndelOfType(variant, DI_NUCLEOTIDES) && homology != null && homology.Length >= ULTIMA_MAX_HP_LEN)
             return true; // Ultima cannot call variants of this type
 
         if(isAdjacentToLongHomopolymer(read, varIndexInRead, ULTIMA_MAX_HP_LEN))
