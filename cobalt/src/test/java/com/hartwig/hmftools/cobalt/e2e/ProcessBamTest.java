@@ -545,6 +545,74 @@ public class ProcessBamTest
     }
 
     @Test
+    public void wholeGenomeDepth0Region() throws Exception
+    {
+        // The tumor bam has reads for chr1, chr2 and chrX.
+        // Each chromosome has length 10_000.
+        // 1-3000 depth 10 for each chromosome
+        // 3001-7000 depth 0 for each chromosome
+        // 7001-10_000 depth 12 for each chromosome
+        // The reference bam has reads for the same chromosomes and length 10_000 for each chromosome.
+        // 1-2000 depth 5 for each chromosome
+        // 2001-6000 depth 0 for each chromosome
+        // 6001-10_000 depth 6 for each chromosome
+        // GC ratio 0.5 throughout, for both tumor and reference.
+
+        sample = "depth_0_region";
+        referenceBamFile = getBam(sample + "_R");
+        tumorBamFile = getBam(sample + "_T");
+        regionOffset = 0;
+        createStandardMultiChromosomeGCFile(10_000, _1, _2, _X);
+
+        runCobalt(false);
+        // Reference read depths are (5*2, 0*4, 6*4)*3. Mean of the non-zero values is 17/3.
+        // Tumor read depths are (10*3, 0*4, 12*3)*3. Mean of the non-zero values is 11.0.
+        double refGCMean = 17.0/3.0;
+        double tumorGCMean = 11.0;
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
+        assertEquals(10, ratios1.size());
+        assertEquals(5.0, ratios1.get(0).referenceReadDepth(), 0.01);
+        assertEquals(10.0, ratios1.get(0).tumorReadDepth(), 0.01);
+        assertEquals(5.0/refGCMean, ratios1.get(0).referenceGCRatio(), 0.01);
+        assertEquals(10.0/tumorGCMean, ratios1.get(0).tumorGCRatio(), 0.01);
+
+        assertEquals(5.0, ratios1.get(1).referenceReadDepth(), 0.01);
+        assertEquals(10.0, ratios1.get(1).tumorReadDepth(), 0.01);
+        assertEquals(5.0/refGCMean, ratios1.get(1).referenceGCRatio(), 0.01);
+        assertEquals(10.0/tumorGCMean, ratios1.get(1).tumorGCRatio(), 0.01);
+
+        assertEquals(0.0, ratios1.get(2).referenceReadDepth(), 0.01);
+        assertEquals(10.0, ratios1.get(2).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios1.get(2).referenceGCRatio(), 0.01);
+        assertEquals(10.0/tumorGCMean, ratios1.get(2).tumorGCRatio(), 0.01);
+
+        assertEquals(0.0, ratios1.get(3).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios1.get(3).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios1.get(3).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios1.get(3).tumorGCRatio(), 0.01);
+
+        assertEquals(0.0, ratios1.get(4).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios1.get(4).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios1.get(4).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios1.get(4).tumorGCRatio(), 0.01);
+
+        assertEquals(0.0, ratios1.get(5).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios1.get(5).tumorReadDepth(), 0.01);
+        assertEquals(-1.0, ratios1.get(5).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios1.get(5).tumorGCRatio(), 0.01);
+
+        assertEquals(6.0, ratios1.get(6).referenceReadDepth(), 0.01);
+        assertEquals(0.0, ratios1.get(6).tumorReadDepth(), 0.01);
+        assertEquals(6.0/refGCMean, ratios1.get(6).referenceGCRatio(), 0.01);
+        assertEquals(-1.0, ratios1.get(6).tumorGCRatio(), 0.01);
+
+        assertEquals(6.0, ratios1.get(7).referenceReadDepth(), 0.01);
+        assertEquals(12.0, ratios1.get(7).tumorReadDepth(), 0.01);
+        assertEquals(6.0/refGCMean, ratios1.get(7).referenceGCRatio(), 0.01);
+        assertEquals(12.0/tumorGCMean, ratios1.get(7).tumorGCRatio(), 0.01);
+    }
+
+    @Test
     public void regionsOfExtremeGCAreFilteredOutInWholeGenomeMode() throws Exception
     {
         // 1 chr of length 101_000
