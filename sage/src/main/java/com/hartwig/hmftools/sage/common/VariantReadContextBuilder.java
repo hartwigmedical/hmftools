@@ -253,7 +253,7 @@ public class VariantReadContextBuilder
 
         for(int i = indexStart; i <= indexEnd; ++i)
         {
-            if(BaseQualAdjustment.isUncertainBaseFromQual(read.getBaseQualities()[i]))
+            if(BaseQualAdjustment.isUncertainBaseQual(read.getBaseQualities()[i]))
                 return false;
         }
 
