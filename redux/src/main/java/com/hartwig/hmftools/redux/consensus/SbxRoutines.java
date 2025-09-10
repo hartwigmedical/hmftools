@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.reverseDuplexIndelIndices;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.SbxAnnotatedBase.INVALID_BASE;
@@ -89,6 +90,14 @@ public final class SbxRoutines
             return;
 
         // not expecting to see hard-clips but remove any if present
+
+        if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
+        {
+            RD_LOGGER.error("hard-clipped reads not supported in SBX: {}", readToString(record));
+            System.exit(1);
+        }
+
+        /*
         int leftHardClipLength = leftHardClipLength(record);
         int rightHardClipLength = rightHardClipLength(record);
 
@@ -114,6 +123,7 @@ public final class SbxRoutines
                 --index;
             }
         }
+        */
 
         if(duplexIndelIndices.isEmpty())
             return;
@@ -237,6 +247,7 @@ public final class SbxRoutines
         int leftSoftClipLength = readCigarElements.get(0).getOperator() == S ? readCigarElements.get(0).getLength() : 0;
         int lastElement = readCigarElements.size() - 1;
         int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
+        int leftClipSuppInsertedBases = 0;
 
         if(suppData != null)
         {
@@ -251,6 +262,8 @@ public final class SbxRoutines
             {
                 List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, leftSoftClipLength, true);
                 cigarElements.addAll(trimmedSuppElements);
+
+                leftClipSuppInsertedBases = trimmedSuppElements.stream().filter(x -> x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
 
                 cigarElements.addAll(readCigarElements.subList(1, lastElement + 1)); // remove soft-clip from original
             }
@@ -271,6 +284,9 @@ public final class SbxRoutines
         byte[] bases = record.getReadBases();
         int readIndex = 0;
         int refPos = record.getAlignmentStart() - leftSoftClipLength;
+
+        // adjust the inferred ref start position for any inserts in the soft-clip bases
+        refPos += leftClipSuppInsertedBases;
 
         for(CigarElement element : cigarElements)
         {
@@ -589,7 +605,7 @@ public final class SbxRoutines
         // count bases by qual type and apply rules
         Map<Byte,int[]> baseCountsByQual = Maps.newHashMap();
 
-        int lowQuallReads = 0;
+        int lowQualCount = 0;
         int simplexCount = 0;
         int duplexCount = 0;
 
@@ -607,7 +623,7 @@ public final class SbxRoutines
             }
             else
             {
-                ++lowQuallReads;
+                ++lowQualCount;
                 continue;
             }
 
@@ -638,7 +654,7 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            int totalReadCount = simplexCount + lowQuallReads;
+            int totalReadCount = simplexCount + lowQualCount;
 
             if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * totalReadCount)
                 return new BaseQualPair(maxBase, RAW_SIMPLEX_QUAL);
@@ -652,7 +668,7 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQuallReads))
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQualCount))
                 return new BaseQualPair(maxBase, RAW_DUPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, DUPLEX_NO_CONSENSUS_QUAL);
