@@ -13,10 +13,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
 import com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+@Ignore
 public class CobaltBatchLocal
 {
     String bamBase = "/Users/timlavers/work/scratch/datasets/pmhaem/bam/";
