@@ -168,7 +168,7 @@ public class ObservedRegionFactoryTest
 
         List<ObservedRegion> lor = factory.formObservedRegions(List.of(segmentA, segmentB, segmentC), amberMap, cobaltRatios);
         assertEquals(3, lor.size());
-        assertEquals(GermlineStatus.UNKNOWN, lor.get(0).germlineStatus());
+        assertEquals(GermlineStatus.HET_DELETION, lor.get(0).germlineStatus());
         assertEquals(GermlineStatus.HOM_DELETION, lor.get(1).germlineStatus());
         assertEquals(GermlineStatus.DIPLOID, lor.get(2).germlineStatus());
     }
@@ -216,8 +216,8 @@ public class ObservedRegionFactoryTest
 
         List<ObservedRegion> lor = factory.formObservedRegions(List.of(segmentA, segmentB, segmentC), amberMap, cobaltRatios);
         assertEquals(3, lor.size());
-        assertEquals(GermlineStatus.UNKNOWN, lor.get(0).germlineStatus());
-        assertEquals(GermlineStatus.UNKNOWN, lor.get(1).germlineStatus());
+        assertEquals(GermlineStatus.HET_DELETION, lor.get(0).germlineStatus());
+        assertEquals(GermlineStatus.HOM_DELETION, lor.get(1).germlineStatus());
         assertEquals(GermlineStatus.DIPLOID, lor.get(2).germlineStatus());
         assertEquals(5000, lor.get(2).minStart());
     }

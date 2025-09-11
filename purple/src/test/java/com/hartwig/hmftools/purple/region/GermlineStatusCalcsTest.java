@@ -23,7 +23,7 @@ public class GermlineStatusCalcsTest
     @Test
     public void testAutosome()
     {
-        assertStatus("1", 0.00, UNKNOWN);
+        assertStatus("1", 0.00, HOM_DELETION);
         assertStatus("1", 0.09, HOM_DELETION);
         assertStatus("1", 0.10, HET_DELETION);
         assertStatus("1", 0.84, HET_DELETION);
@@ -37,7 +37,7 @@ public class GermlineStatusCalcsTest
     @Test
     public void testX()
     {
-        assertStatus("X", 0.00, UNKNOWN);
+        assertStatus("X", 0.00, HOM_DELETION);
 
         assertStatus("X", 0.049, HOM_DELETION, HOM_DELETION);
         assertStatus("X", 0.05, HET_DELETION, HOM_DELETION);
@@ -65,7 +65,7 @@ public class GermlineStatusCalcsTest
     @Test
     public void testY()
     {
-        assertStatus("Y", 0.00, UNKNOWN);
+        assertStatus("Y", 0.00, HOM_DELETION);
         assertStatus("Y", 0.049, HOM_DELETION);
         assertStatus("Y", 0.05, HET_DELETION);
         assertStatus("Y", 0.424, HET_DELETION);
