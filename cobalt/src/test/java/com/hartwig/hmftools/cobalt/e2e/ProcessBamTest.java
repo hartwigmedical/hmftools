@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._15;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._16;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
@@ -22,10 +23,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
@@ -632,8 +633,43 @@ public class ProcessBamTest
         15	22178113	22178233	22178001-22179000
         15	22184975	22185095	22184001-22185000, 22185001-22186000
         15	22194891	22195011	22194001-22195000, 22195001-22196000
+
+        The chr16 regions are:
+        16	31962255	31962375	31962001-31963000
+        16	32052154	32052274	32052001-32053000
+        16	32066232	32066352	32066001-32067000
+        16	32848026	32848146	32848001-32849000
+        16	32903768	32903888	32903001-32904000
+        16	32915408	32915528	32915001-32916000
+        16	32995377	32995497	32995001-32996000
+        16	33009496	33009616	33009001-33010000
+        16	33803089	33803209	33803001-33804000
+        16	33827533	33827653	33827001-33828000
+        16	33844788	33844908	33844001-33845000
+        16	33938345	33938465	33938001-33939000
+        16	33949974	33950094	33949001-33950000, 33950001-33951000
+        16	34013397	34013517	34013001-34014000
          */
-        Set<Integer> chr15Exclusions = new HashSet<>();
+
+        sample = "pseudo_ig_regions";
+        referenceBamFile = getBam(sample);
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+        int chr15Length = 101_991_189;
+        int chr16Length = 90_338_345;
+        Map<HumanChromosome,Integer> lengthsMap = new HashMap<>();
+        lengthsMap.put(_15, rounded1000(chr15Length));
+        lengthsMap.put(_16, rounded1000(chr16Length));
+        createStandardMultiChromosomeGCFile(lengthsMap);
+
+        runCobalt(false);
+
+        // We check that for each of the expected masked regions, the ratio is -1.0,
+        // but for the surrounding windows, the ratio is 1.0.
+        // A more ambitious test would be to check every single window.
+        // This is complicated by some regions of 'N' bases between the Ig
+        // pseudo gene regions on chr 15.
+        List<Integer> chr15Exclusions = new ArrayList<>();
         chr15Exclusions.add(19964001);
         chr15Exclusions.add(19972001);
         chr15Exclusions.add(19987001);
@@ -643,31 +679,51 @@ public class ProcessBamTest
         chr15Exclusions.add(22194001);
         chr15Exclusions.add(22185001);
         chr15Exclusions.add(22195001);
-        sample = "pseudo_ig_regions";
-        referenceBamFile = getBam(sample);
-        tumorBamFile = getBam(sample);
-        regionOffset = 0;
-        int chrLength = 101_991_189;
-        createStandardMultiChromosomeGCFile((chrLength / 1000) * 1000, _15);
+        checkWindowsAreMaskedButNeighoursAreNot(chr15Exclusions, _15);
 
-        runCobalt(false);
+        List<Integer> chr16Exclusions = new ArrayList<>();
+        chr16Exclusions.add(31962001);
+        chr16Exclusions.add(32052001);
+        chr16Exclusions.add(32066001);
+        chr16Exclusions.add(32848001);
+        chr16Exclusions.add(32903001);
+        chr16Exclusions.add(32915001);
+        chr16Exclusions.add(32995001);
+        chr16Exclusions.add(33009001);
+        chr16Exclusions.add(33803001);
+        chr16Exclusions.add(33827001);
+        chr16Exclusions.add(33844001);
+        chr16Exclusions.add(33938001);
+        chr16Exclusions.add(33949001);
+        chr16Exclusions.add(34013001);
+        chr16Exclusions.add(33950001);
+        checkWindowsAreMaskedButNeighoursAreNot(chr16Exclusions, _16);
+    }
 
-        for(Integer position : chr15Exclusions)
+    private void checkWindowsAreMaskedButNeighoursAreNot(final List<Integer> exclusions, final HumanChromosome humanChromosome)
+    {
+        for(Integer position : exclusions)
         {
+            System.out.println(position + " - " + humanChromosome);
             // The window at this position should be masked.
-            int windowStart = (position / 1000) * 1000 + 1;
-            assertEquals(-1.0, retrieveRatio(_15, windowStart).tumorGCRatio(), 0.01);
+            int windowStart = rounded1000(position) + 1;
+            assertEquals(-1.0, retrieveRatio(humanChromosome, windowStart).tumorGCRatio(), 0.01);
 
             // The previous window should not be masked, unless it in the masked set.
             int previousWindowStart = windowStart - 1000;
-            double expectedRatio = chr15Exclusions.contains(previousWindowStart) ? -1.0 : 1.0;
-            assertEquals(expectedRatio, retrieveRatio(_15, previousWindowStart).tumorGCRatio(), 0.01);
+            double expectedRatio = exclusions.contains(previousWindowStart) ? -1.0 : 1.0;
+            assertEquals(expectedRatio, retrieveRatio(humanChromosome, previousWindowStart).tumorGCRatio(), 0.01);
 
             // The next window should not be masked, unless it is in the masked set.
             int nextWindowStart = windowStart - 1000;
-            expectedRatio = chr15Exclusions.contains(nextWindowStart) ? -1.0 : 1.0;
-            assertEquals(expectedRatio, retrieveRatio(_15, nextWindowStart).tumorGCRatio(), 0.01);
+            expectedRatio = exclusions.contains(nextWindowStart) ? -1.0 : 1.0;
+            assertEquals(expectedRatio, retrieveRatio(humanChromosome, nextWindowStart).tumorGCRatio(), 0.01);
         }
+    }
+
+    private static int rounded1000(final Integer position)
+    {
+        return (position / 1000) * 1000;
     }
 
     @Test
@@ -772,10 +828,21 @@ public class ProcessBamTest
 
     private void createStandardMultiChromosomeGCFile(final int length, HumanChromosome... chromosomes) throws IOException
     {
-        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
-        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        Map<HumanChromosome,Integer> lengthsMap = new HashMap<>();
         for(HumanChromosome chr : chromosomes)
         {
+            lengthsMap.put(chr, length);
+        }
+        createStandardMultiChromosomeGCFile(lengthsMap);
+    }
+
+    private void createStandardMultiChromosomeGCFile(Map<HumanChromosome, Integer> lengthsMap) throws IOException
+    {
+        gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
+        GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
+        for(HumanChromosome chr : lengthsMap.keySet())
+        {
+            int length = lengthsMap.get(chr);
             gcFileWriter.addSection(new ConstantGcFileSection(chr, regionOffset, regionOffset + length, 0.5));
         }
         gcFileWriter.write(gcProfile);
