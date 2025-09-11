@@ -155,6 +155,7 @@ public class PrepRead
     public Cigar cigar() { return mRecord.getCigar(); }
     public boolean isReadReversed() { return ( mRecord.getFlags() & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return firstInPair(mRecord); }
+    public boolean isPaired() { return mRecord.getReadPairedFlag(); }
     public boolean isSupplementaryAlignment() { return (mRecord.getFlags() & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isUnmapped() { return (mRecord.getFlags() & SAMFlag.READ_UNMAPPED.intValue()) != 0; }
 

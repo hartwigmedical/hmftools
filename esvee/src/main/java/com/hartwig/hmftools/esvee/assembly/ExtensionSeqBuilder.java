@@ -347,7 +347,7 @@ public class ExtensionSeqBuilder
 
             if(totalQuals != null)
             {
-                // take the bases with the highest qual totals
+                // take the bases with the highest qual totals, but favour high over medium
                 int maxQual = 0;
                 int maxBaseIndex = 0;
                 for(int b = 0; b < totalQuals.length; ++b)
