@@ -177,7 +177,7 @@ public class PurpleApplication
 
         final CobaltData cobaltData = new CobaltData(
                 referenceId, tumorId, sampleDataFiles.CobaltDirectory, amberData.PatientGender,
-                mConfig.tumorOnlyMode(), mConfig.germlineMode(), mConfig.ExcludedRegionsFile);
+                mConfig.tumorOnlyMode(), mConfig.germlineMode());
 
         // load structural and somatic variants
         final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);

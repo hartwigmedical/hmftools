@@ -68,7 +68,7 @@ public class ChrBaseRegionTest
     @Test
     public void findIntersectingRegionsDifferentChromosome()
     {
-        Assert.assertTrue(theRegion.findOverlaps(of(cbr(900, 1100, "chrZ"))).isEmpty());
+        Assert.assertTrue(theRegion.findOverlaps(of(cbr(900, 1100, "chr13"))).isEmpty());
     }
 
     @Test
@@ -143,7 +143,13 @@ public class ChrBaseRegionTest
 
         assertFalse(theRegion.overlaps(cbr(2001, 2050, theRegion.chromosome())));
 
-        assertFalse(theRegion.overlaps(cbr(1050, 1950, "ChrU")));
+        assertFalse(theRegion.overlaps(cbr(1050, 1950, "Chr1")));
+    }
+
+    @Test
+    public void overlapsIsFlexibleWithChromosomePrefixTest()
+    {
+        checkIntersects(theRegion, cbr(950, 1000, "chr" + theRegion.chromosome()));
     }
 
     private ChrBaseRegion cbr(int start, int end, String chromosome)

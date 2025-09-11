@@ -37,7 +37,6 @@ public class PurpleConfig
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
-    public final String ExcludedRegionsFile;
     public final Map<VariantTier, Integer> TierQualFilters;
     public final int Threads;
 
@@ -53,7 +52,6 @@ public class PurpleConfig
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
     public static final String TIER_FILTERS = "tier_filters";
     public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
-    public static final String EXCLUDED_REGIONS_FILE = "excluded_regions_file";
 
     public PurpleConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -69,7 +67,6 @@ public class PurpleConfig
         {
             mIsValid = false;
         }
-        ExcludedRegionsFile = configBuilder.getValue(EXCLUDED_REGIONS_FILE);
 
         String outputDir = configBuilder.getValue(OUTPUT_DIR);
         String sampleDir;
@@ -175,7 +172,6 @@ public class PurpleConfig
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
         configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
-        configBuilder.addPath(EXCLUDED_REGIONS_FILE, false, "Excluded regions file");
 
         FittingConfig.addConfig(configBuilder);
         SomaticFitConfig.addConfig(configBuilder);
