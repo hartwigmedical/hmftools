@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -165,12 +164,12 @@ public final class SequenceCompare
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches)
     {
-        return compareSequences(
+        return compareSequencesMismatchSpec(
                 firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
                 secondIndexEnd, secondRepeats, maxMismatches, true, true);
     }
 
-    public static int compareSequences(
+    private static int compareSequencesMismatchSpec(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches, boolean checkForwards, boolean repeatsAreMismatches)
@@ -456,36 +455,8 @@ public final class SequenceCompare
         return true;
     }
 
-    // unused matching routines
-    public static int calcReadSequenceMismatches(
-            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
-            final Read read, final int readJunctionIndex, final int maxMismatches)
-    {
-        int readStartIndex = isForward ? readJunctionIndex : 0;
-        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
 
-        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
-        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
-        // so the comparison offset in the extension sequence is
-        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
-
-        if(extSeqReadStartIndex < 0)
-        {
-            readStartIndex += -extSeqReadStartIndex;
-            extSeqReadStartIndex = 0;
-        }
-
-        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
-        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
-        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
-
-        // run the comparison heading out from the junction
-        return compareSequences(
-                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
-                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, isForward, false);
-    }
-
+    // NOTE: unused matching routines - remove if not used for new seq-tech routines
     private static boolean hasCompatibleRepeats(
             int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)

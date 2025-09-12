@@ -23,7 +23,7 @@ public final class SvConstants
     }
 
     // sequencing type
-    public static SequencingType Sequencing = SequencingType.ILLUMINA;
+    public static SequencingType SEQUENCING_TYPE = SequencingType.ILLUMINA;
 
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;

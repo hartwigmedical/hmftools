@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
-import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualBaseRepeat;
@@ -225,7 +224,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(2, mismatches);
     }
@@ -266,7 +265,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(4, mismatches);
 
@@ -275,7 +274,7 @@ public class SequenceTest
         firstBases =  "AACGTTTTTAGCTGA";
         secondBases = "AACTTTTTTAGCTGA";
 
-        firstRepeats = findRepeats(secondBases.getBytes());
+        firstRepeats = findRepeats(firstBases.getBytes());
         secondRepeats = findRepeats(secondBases.getBytes());
 
         firstBaseQuals = buildDefaultBaseQuals(secondBases.length());
@@ -291,7 +290,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(1, mismatches);
     }
@@ -331,7 +330,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(8, mismatches);
     }

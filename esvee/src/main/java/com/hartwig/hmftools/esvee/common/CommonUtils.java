@@ -20,6 +20,29 @@ public final class CommonUtils
     public static boolean aboveMinQual(byte qual) { return BaseQualAdjustment.aboveLowBaseQual(qual); }
     public static boolean belowMinQual(byte qual) { return BaseQualAdjustment.isLowBaseQual(qual); }
 
+    public static boolean isHighBaseQual(byte qual) { return BaseQualAdjustment.isHighBaseQual(qual, SvConstants.SEQUENCING_TYPE); }
+
+    public static boolean isHigherBaseQualCategory(byte qual1, byte qual2)
+    {
+        if(qual1 == qual2)
+            return false;
+
+        boolean lowBq1 = BaseQualAdjustment.isLowBaseQual(qual1);
+        boolean lowBq2 = BaseQualAdjustment.isLowBaseQual(qual2);
+
+        if(lowBq1 != lowBq2)
+            return lowBq2;
+
+        boolean highBq1 = isHighBaseQual(qual1);
+        boolean highBq2 = isHighBaseQual(qual2);
+
+        if(highBq1 != highBq2)
+            return highBq1;
+
+        // both medium
+        return qual1 > qual2;
+    }
+
     public static boolean isDiscordantFragment(
             final SAMRecord read, final int maxConcordantFragmentLength, @Nullable final SupplementaryReadData suppData)
     {
