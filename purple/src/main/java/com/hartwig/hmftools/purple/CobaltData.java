@@ -19,12 +19,9 @@ import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
-import com.hartwig.hmftools.purple.exclusions.ExcludedRegionsFile;
-import com.hartwig.hmftools.purple.exclusions.SuppliedExcludedRegions;
 
 import org.apache.commons.cli.ParseException;
 
@@ -43,8 +40,7 @@ public class CobaltData
 
     public CobaltData(
             final String referenceId, final String tumorId, final String cobaltDirectory,
-            final Gender amberGender, final boolean tumorOnlyMode, final boolean germlineOnlyMode,
-            final String excludedRegionsFile)
+            final Gender amberGender, final boolean tumorOnlyMode, final boolean germlineOnlyMode)
             throws ParseException, IOException
     {
         if(tumorId != null)
@@ -70,18 +66,7 @@ public class CobaltData
         }
 
         PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-        Map<Chromosome, List<CobaltRatio>> rawRatios =
-                CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
-        if(excludedRegionsFile != null)
-        {
-            final List<ChrBaseRegion> excludedRegions = new ExcludedRegionsFile(excludedRegionsFile).regions();
-            Ratios = new SuppliedExcludedRegions(excludedRegions).maskIntersectingRatios(rawRatios);
-        }
-        else
-        {
-            Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
-        }
-
+        Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
         if(referenceId != null)
         {
             String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);

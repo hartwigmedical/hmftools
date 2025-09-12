@@ -1,8 +1,10 @@
-package com.hartwig.hmftools.purple.exclusions;
+package com.hartwig.hmftools.cobalt.exclusions;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +41,9 @@ public class ExcludedRegionsFileTest
         lines.add(line("16", 32063475, 32063595, "IG_PSEUDO_REGION"));
         writeExcludedRegionsFile(regionsFile, lines);
 
-        List<ChrBaseRegion> loaded = new ExcludedRegionsFile(regionsFile.getAbsolutePath()).regions();
+        BufferedReader reader = new BufferedReader(new FileReader(regionsFile));
+        List<ChrBaseRegion> loaded = new ExcludedRegionsFile(reader).regions();
+        reader.close();
         assertEquals(3, loaded.size());
         assertEquals("15", loaded.get(0).Chromosome);
         assertEquals(22482842, loaded.get(0).start());

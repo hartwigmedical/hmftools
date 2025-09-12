@@ -4,11 +4,13 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MIN;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_PCF_GAMMA;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
@@ -25,7 +27,17 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDi
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Objects;
+
+import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -62,6 +74,7 @@ public class CobaltConfig
     public final String TumorBamPath;
 
     public final String RefGenomePath;
+    public final RefGenomeVersion RefGenVersion;
     public final String GcProfilePath;
 
     public final int Threads;
@@ -76,6 +89,7 @@ public class CobaltConfig
 
     public final String TumorOnlyDiploidBed;
     public final String TargetRegionNormFile;
+    public List<ChrBaseRegion> mExcludedRegions;
 
     // debug
     public final SpecificRegions SpecificChrRegions;
@@ -95,6 +109,7 @@ public class CobaltConfig
         TumorOnlyDiploidBed = configBuilder.getValue(TUMOR_ONLY_DIPLOID_BED);
         TargetRegionNormFile = configBuilder.getValue(TARGET_REGION_NORM_FILE);
         RefGenomePath = configBuilder.getValue(REF_GENOME);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         // set global constants
         CobaltConstants.GC_RATIO_MIN = configBuilder.getDecimal(GC_RATIO_MIN);
@@ -111,6 +126,8 @@ public class CobaltConfig
         SkipPcfCalc = configBuilder.hasFlag(SKIP_PCF_CALC);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        loadExcludedRegions();
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -123,6 +140,7 @@ public class CobaltConfig
 
         configBuilder.addPath(GC_PROFILE, true, GC_PROFILE_DESC);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC, null);
 
         registerCommonConfig(configBuilder);
 
@@ -179,16 +197,41 @@ public class CobaltConfig
         {
             throw new Exception(String.format("invalid GC-profile file(%s), must be uncompressed", GcProfilePath));
         }
+
+        if(mExcludedRegions == null)
+        {
+            throw new Exception("Excluded regions could not be loaded");
+        }
     }
 
     public Mode mode()
     {
         if(ReferenceId != null && TumorId == null)
+        {
             return Mode.GERMLIHE_ONLY;
+        }
 
         if(ReferenceId == null && TumorId != null)
+        {
             return Mode.TUMOR_ONLY;
+        }
 
         return Mode.TUMOR_GERMLINE;
+    }
+
+    private void loadExcludedRegions()
+    {
+        try
+        {
+            String version = RefGenVersion.is37() ? "37" : "38";
+            String refFile = "/regions/excluded_regions_v" + version + ".tsv";
+            final InputStream resourceStream = Objects.requireNonNull(CobaltConfig.class.getResourceAsStream(refFile));
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream));
+            mExcludedRegions = new ExcludedRegionsFile(reader).regions();
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to load excluded regions: {}", e.toString());
+        }
     }
 }

@@ -148,7 +148,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
 
     public boolean overlaps(final ChrBaseRegion other)
     {
-        if(!Chromosome.equals(other.Chromosome))
+        if(!humanChromosome().equals(other.humanChromosome()))
         {
             return false;
         }
