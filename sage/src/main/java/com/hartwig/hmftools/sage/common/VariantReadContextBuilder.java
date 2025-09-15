@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
@@ -56,7 +55,7 @@ public class VariantReadContextBuilder
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
 
-            if(!aboveMinBasQual(readContext, read, varReadIndex))
+            if(!aboveMinBaseQual(readContext, read, varReadIndex))
                 return null;
 
             // enforce ref base padding for trinucleotide generation
@@ -238,7 +237,7 @@ public class VariantReadContextBuilder
                 readVarIndex, coreIndexEnd, homology, maxRepeat, allRepeats, corePositionStart, corePositionEnd);
     }
 
-    private static boolean aboveMinBasQual(final VariantReadContext readContext, final SAMRecord read, final int varReadIndex)
+    private static boolean aboveMinBaseQual(final VariantReadContext readContext, final SAMRecord read, final int varReadIndex)
     {
         int indexStart = varReadIndex - readContext.leftCoreLength();
         int indexEnd = varReadIndex + readContext.rightCoreLength();
@@ -254,7 +253,7 @@ public class VariantReadContextBuilder
 
         for(int i = indexStart; i <= indexEnd; ++i)
         {
-            if(BaseQualAdjustment.isUncertainBaseFromQual(read.getBaseQualities()[i]))
+            if(BaseQualAdjustment.isUncertainBaseQual(read.getBaseQualities()[i]))
                 return false;
         }
 

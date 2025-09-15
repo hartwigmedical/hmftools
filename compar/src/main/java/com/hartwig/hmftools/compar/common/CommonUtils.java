@@ -3,9 +3,9 @@ package com.hartwig.hmftools.compar.common;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
+import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -44,16 +44,16 @@ import com.hartwig.hmftools.compar.metrics.GermlineBamMetricsComparer;
 import com.hartwig.hmftools.compar.metrics.GermlineFlagstatComparer;
 import com.hartwig.hmftools.compar.metrics.TumorBamMetricsComparer;
 import com.hartwig.hmftools.compar.metrics.TumorFlagstatComparer;
+import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
+import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 import com.hartwig.hmftools.compar.peach.PeachComparer;
 import com.hartwig.hmftools.compar.purple.CopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GeneCopyNumberComparer;
 import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
-import com.hartwig.hmftools.compar.mutation.GermlineVariantComparer;
-import com.hartwig.hmftools.compar.mutation.SomaticVariantComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
-import com.hartwig.hmftools.compar.virus.VirusComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
+import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class CommonUtils
 {
@@ -69,14 +69,18 @@ public class CommonUtils
         for(Category category : Category.values())
         {
             if(!config.Categories.containsKey(category))
+            {
                 continue;
+            }
 
             MatchLevel matchLevel = config.Categories.get(category);
 
             ItemComparer comparer = createComparer(category, config);
 
             if(matchLevel == REPORTABLE && !comparer.hasReportable())
+            {
                 continue;
+            }
 
             comparer.registerThresholds(config.Thresholds);
             comparers.add(comparer);
@@ -176,7 +180,7 @@ public class CommonUtils
     {
         final MatchLevel matchLevel = config.Categories.get(comparer.category());
 
-        Map<String,List<ComparableItem>> sourceItems = Maps.newHashMap();
+        Map<String, List<ComparableItem>> sourceItems = Maps.newHashMap();
 
         for(String sourceName : config.SourceNames)
         {
@@ -211,11 +215,17 @@ public class CommonUtils
         InvalidDataItem invalidDataItem = new InvalidDataItem(comparer.category());
 
         if(!sourceItems.containsKey(REF_SOURCE) && !sourceItems.containsKey(NEW_SOURCE))
+        {
             mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, Collections.EMPTY_LIST));
+        }
         else if(!sourceItems.containsKey(REF_SOURCE))
+        {
             mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, Collections.EMPTY_LIST));
+        }
         else if(!sourceItems.containsKey(NEW_SOURCE))
+        {
             mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, Collections.EMPTY_LIST));
+        }
 
         return false;
     }
@@ -250,7 +260,9 @@ public class CommonUtils
                         Mismatch mismatch = item1.findMismatch(item2, matchLevel, thresholds, includeMatches);
 
                         if(mismatch != null)
+                        {
                             mismatches.add(mismatch);
+                        }
                     }
 
                     break;
@@ -262,11 +274,15 @@ public class CommonUtils
             }
 
             if(!matched)
+            {
                 ++index1;
+            }
         }
 
         if(items1.isEmpty() && items2.isEmpty())
+        {
             return;
+        }
 
         List<String> emptyDiffs = Lists.newArrayList();
 

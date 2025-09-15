@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLAN
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.ConsensusType;
@@ -208,7 +207,7 @@ public class MicrosatelliteRead
 
         for(int i = msFlankReadIndexStart; i <= msFlankReadIndexEnd; ++i)
         {
-            if(BaseQualAdjustment.isUncertainBaseFromQual(record.getBaseQualities()[i]))
+            if(BaseQualAdjustment.isUncertainBaseQual(record.getBaseQualities()[i]))
                 return false;
 
             if(BaseQualAdjustment.isMediumBaseQual(record.getBaseQualities()[i], SEQUENCING_TYPE))

@@ -24,9 +24,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -52,17 +52,17 @@ public class ReferenceData
     public final RefGenomeVersion RefGenVersion;
     public final IndexedFastaSequenceFile RefGenome;
 
-    public final Map<Chromosome,GenomePosition> ChromosomeLengths;
-    public final Map<Chromosome,GenomePosition> Centromeres;
+    public final Map<Chromosome, GenomePosition> ChromosomeLengths;
+    public final Map<Chromosome, GenomePosition> Centromeres;
 
     public final EnsemblDataCache GeneTransCache;
 
     public final DriverGenePanel DriverGenes;
-    public final Map<String,List<String>> OtherReportableTranscripts;
+    public final Map<String, List<String>> OtherReportableTranscripts;
     public final GermlineDeletionFrequency CohortGermlineDeletions;
 
-    public final ListMultimap<Chromosome,VariantHotspot> SomaticHotspots;
-    public final ListMultimap<Chromosome,VariantHotspot> GermlineHotspots;
+    public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
+    public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
 
     public final String GcProfileFilename;
     public final TargetRegionsData TargetRegions;
@@ -170,7 +170,9 @@ public class ReferenceData
         loadGeneTransCache();
 
         if(mIsValid && config.tumorOnlyMode())
+        {
             HlaCommon.populateGeneData(GeneTransCache.getChrGeneDataMap().get(hlaChromosome(RefGenVersion)));
+        }
 
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
@@ -183,7 +185,7 @@ public class ReferenceData
             GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
                     ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             mIsValid = false;
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
@@ -227,7 +229,10 @@ public class ReferenceData
         }
     }
 
-    public boolean isValid() { return mIsValid && TargetRegions.isValid(); }
+    public boolean isValid()
+    {
+        return mIsValid && TargetRegions.isValid();
+    }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {

@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.pavereverse;
+package com.hartwig.hmftools.common.genome.tiny;
 
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
-abstract class SimpleTestGenome implements RefGenomeInterface
+public abstract class SimpleTestGenome implements RefGenomeInterface
 {
     @Override
     public String getBaseString(final String chromosome, final List<int[]> baseRanges)

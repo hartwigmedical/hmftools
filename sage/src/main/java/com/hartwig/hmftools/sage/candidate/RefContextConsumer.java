@@ -3,11 +3,11 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import java.util.List;
 import java.util.Set;
@@ -386,6 +385,9 @@ public class RefContextConsumer
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         int refIndex = mRefSequence.index(refPositionStart);
+        String chromosome = record.getContig();
+
+        // SG_LOGGER.debug("read({})", readToString(record));
 
         for(int i = 0; i < alignmentLength; i++)
         {
@@ -407,7 +409,7 @@ public class RefContextConsumer
 
             if(readByte != refByte)
             {
-                final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+                final RefContext refContext = mRefContextCache.getOrCreateRefContext(chromosome, refPosition);
                 if(refContext == null)
                     continue;
 

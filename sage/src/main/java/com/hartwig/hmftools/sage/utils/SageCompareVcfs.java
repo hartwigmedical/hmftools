@@ -18,8 +18,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.parseIntegerList;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -309,7 +308,7 @@ public class SageCompareVcfs
         compareAttributeField(origVar, newVar, READ_CONTEXT_REPEAT_SEQUENCE, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_REPEAT_COUNT, FieldType.EXACT_INT);
 
-        compareAttributeField(origVar, newVar, AVG_BASE_QUAL, FieldType.DECIMAL);
+        compareAttributeField(origVar, newVar, AVG_RECALIBRATED_BASE_QUAL, FieldType.DECIMAL);
         compareAttributeField(origVar, newVar, MAX_READ_EDGE_DISTANCE, FieldType.DECIMAL);
 
         // compare genotype fields

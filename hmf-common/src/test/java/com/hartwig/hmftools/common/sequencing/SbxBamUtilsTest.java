@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.common.sequencing;
 
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndels;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import java.util.List;
 

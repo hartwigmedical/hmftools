@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V37;
@@ -353,7 +353,7 @@ public class VariantCache
             else
             {
                 // GL_ABQ >= 30 (removes low qual GL_AD variants from distorting the fit)
-                int referenceABQ = Integer.parseInt(variant.RefGenotype.getAnyAttribute(AVG_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+                int referenceABQ = Integer.parseInt(variant.RefGenotype.getAnyAttribute(AVG_RECALIBRATED_BASE_QUAL).toString().split(CSV_DELIM)[1]);
 
                 if(variant.ReferenceAltFrags > 0 && referenceABQ < TINC_GERMLINE_ABQ_MIN)
                     filterReason = FilterReason.LOW_ABQ;

@@ -106,7 +106,7 @@ class UltimaBaseShift extends UltimaQualModel
                 int lowerHpLength = findHomopolymerLength(lowerRefBases, leftRefBase, lowerRefBases.length - 1, false);
                 int newLowerHpLength = lowerHpLength - 1;
 
-                int leftHpEndIndex = 0;
+                int leftHpEndIndex = -1;
                 int leftHpStartIndex = leftHpEndIndex - newLowerHpLength + 1;
                 leftAdjust = new UltimaHomopolymerAdjustment(leftHpStartIndex, leftHpEndIndex, 1);
             }
@@ -121,11 +121,11 @@ class UltimaBaseShift extends UltimaQualModel
 
             if(rightAltBase == nextRightRefBase)
             {
-                // contraction of a longer homopolymer
-                int upperRefBaseStart = variant.positionEnd();
+                // the alt has expanded an existing homopolymer
+                int upperRefBaseStart = variant.positionEnd() + 1;
                 int upperRefBaseEnd = upperRefBaseStart + MAX_HOMOPOLYMER;
                 final byte[] upperRefBases = refGenome.getBases(variant.Chromosome, upperRefBaseStart, upperRefBaseEnd);
-                int upperHpLength = findHomopolymerLength(upperRefBases, rightRefBase, 0, true);
+                int upperHpLength = findHomopolymerLength(upperRefBases, nextRightRefBase, 0, true);
                 int newUpperHpLength = upperHpLength + 1;
 
                 int rightHpEndIndex = rightHpStartIndex + newUpperHpLength - 1;
@@ -148,7 +148,7 @@ class UltimaBaseShift extends UltimaQualModel
                 int upperHpLength = findHomopolymerLength(uppperRefBases, rightRefBase, 0, true);
                 int newUpperHpLength = upperHpLength - 1;
 
-                int rightHpStartIndex = 0;
+                int rightHpStartIndex = mMnvLength;
                 int rightHpEndIndex = rightHpStartIndex + newUpperHpLength - 1;
                 rightAdjust = new UltimaHomopolymerAdjustment(rightHpStartIndex, rightHpEndIndex, 1);
             }
@@ -162,10 +162,10 @@ class UltimaBaseShift extends UltimaQualModel
 
             if(leftAltBase == nextLeftRefBase)
             {
-                int lowerRefBaseEnd = variant.Position;
+                int lowerRefBaseEnd = variant.Position - 1;
                 int upperRefBaseStart = lowerRefBaseEnd - MAX_HOMOPOLYMER;
                 final byte[] lowerRefBases = refGenome.getBases(variant.Chromosome, upperRefBaseStart, lowerRefBaseEnd);
-                int lowerHpLength = findHomopolymerLength(lowerRefBases, leftRefBase, lowerRefBases.length - 1, false);
+                int lowerHpLength = findHomopolymerLength(lowerRefBases, nextLeftRefBase, lowerRefBases.length - 1, false);
                 int newUpperHpLength = lowerHpLength + 1;
 
                 int leftHpStartIndex = leftHpEndIndex - newUpperHpLength + 1;

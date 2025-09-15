@@ -30,7 +30,6 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
-import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
@@ -164,7 +163,6 @@ public class PrepConfig
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        setLowBaseQualThreshold(configBuilder);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 

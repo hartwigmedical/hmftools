@@ -26,23 +26,26 @@ public final class VcfTags
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESC = "Read context improper pair count";
 
-    public static final String AVG_MAP_QUALITY = "AMQ";
-    public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
-
     public static final String MAX_READ_EDGE_DISTANCE = "MED";
     public static final String MAX_READ_EDGE_DISTANCE_DESC = "Max read edge distance";
 
-    public static final String FRAG_STRAND_BIAS = "SB";
+    public static final String FRAG_STRAND_BIAS = "FSB";
     public static final String FRAG_STRAND_BIAS_DESC = "Fragment strand bias - percentage of forward-orientation fragments (ref,alt)";
 
     public static final String READ_STRAND_BIAS = "RSB";
     public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
-    public static final String AVG_MODIFIED_BASE_QUAL = "AMBQ";
-    public static final String AVG_MODIFIED_BASE_QUAL_DESC = "Average modified map quality";
+    public static final String AVG_SEQ_TECH_BASE_QUAL = "ASBQ";
+    public static final String AVG_SEQ_TECH_BASE_QUAL_DESC = "Average sequencing-tech base quality in alt reads";
 
-    public static final String AVG_MODIFIED_ALT_MAP_QUAL = "AMMQ";
-    public static final String AVG_MODIFIED_ALT_MAP_QUAL_DESC = "Average alt support modified map quality";
+    public static final String AVG_FINAL_BASE_QUAL = "AFBQ";
+    public static final String AVG_FINAL_BASE_QUAL_DESC = "Average final base quality";
+
+    public static final String AVG_READ_MAP_QUALITY = "ARMQ";
+    public static final String AVG_READ_MAP_QUALITY_DESC = "Average read map quality (all,alt)";
+
+    public static final String AVG_FINAL_ALT_MAP_QUAL = "AFMQ";
+    public static final String AVG_FINAL_ALT_MAP_QUAL_DESC = "Average alt support final map quality";
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESC = "Mixed Somatic and Germline variants";

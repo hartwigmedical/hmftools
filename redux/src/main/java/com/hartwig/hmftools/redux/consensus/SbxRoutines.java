@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.reverseDuplexIndelIndices;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.SbxAnnotatedBase.INVALID_BASE;
@@ -89,6 +90,14 @@ public final class SbxRoutines
             return;
 
         // not expecting to see hard-clips but remove any if present
+
+        if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
+        {
+            RD_LOGGER.error("hard-clipped reads not supported in SBX: {}", readToString(record));
+            System.exit(1);
+        }
+
+        /*
         int leftHardClipLength = leftHardClipLength(record);
         int rightHardClipLength = rightHardClipLength(record);
 
@@ -114,6 +123,7 @@ public final class SbxRoutines
                 --index;
             }
         }
+        */
 
         if(duplexIndelIndices.isEmpty())
             return;
@@ -235,9 +245,9 @@ public final class SbxRoutines
         List<CigarElement> cigarElements;
 
         int leftSoftClipLength = readCigarElements.get(0).getOperator() == S ? readCigarElements.get(0).getLength() : 0;
-
-        int suppSoftIndexStart = -1;
-        int suppSoftIndexEnd = -1;
+        int lastElement = readCigarElements.size() - 1;
+        int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
+        int leftClipSuppInsertedBases = 0;
 
         if(suppData != null)
         {
@@ -248,18 +258,14 @@ public final class SbxRoutines
             if(suppData.isForwardOrient() == record.getReadNegativeStrandFlag())
                 Collections.reverse(suppElements);
 
-            int lastElement = readCigarElements.size() - 1;
-            int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
-
             if(leftSoftClipLength > rightSoftClipLength)
             {
                 List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, leftSoftClipLength, true);
                 cigarElements.addAll(trimmedSuppElements);
 
-                cigarElements.addAll(readCigarElements.subList(1, lastElement + 1)); // remove soft-clip from original
+                leftClipSuppInsertedBases = trimmedSuppElements.stream().filter(x -> x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
 
-                suppSoftIndexStart = 0;
-                suppSoftIndexEnd = leftSoftClipLength - 1;
+                cigarElements.addAll(readCigarElements.subList(1, lastElement + 1)); // remove soft-clip from original
             }
             else
             {
@@ -267,9 +273,6 @@ public final class SbxRoutines
 
                 List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, rightSoftClipLength, false);
                 cigarElements.addAll(trimmedSuppElements);
-
-                suppSoftIndexEnd = record.getReadBases().length - 1;;
-                suppSoftIndexStart = suppSoftIndexEnd - rightSoftClipLength + 1;
             }
         }
         else
@@ -281,6 +284,9 @@ public final class SbxRoutines
         byte[] bases = record.getReadBases();
         int readIndex = 0;
         int refPos = record.getAlignmentStart() - leftSoftClipLength;
+
+        // adjust the inferred ref start position for any inserts in the soft-clip bases
+        refPos += leftClipSuppInsertedBases;
 
         for(CigarElement element : cigarElements)
         {
@@ -326,8 +332,21 @@ public final class SbxRoutines
             }
         }
 
-        if(suppSoftIndexStart >= 0)
+        if(suppData != null)
         {
+            int suppSoftIndexStart, suppSoftIndexEnd;
+
+            if(leftSoftClipLength > rightSoftClipLength)
+            {
+                suppSoftIndexStart = 0;
+                suppSoftIndexEnd = leftSoftClipLength - 1;
+            }
+            else
+            {
+                suppSoftIndexEnd = annotatedBases.size() - 1;
+                suppSoftIndexStart = suppSoftIndexEnd - rightSoftClipLength + 1;
+            }
+
             for(int i = suppSoftIndexStart; i <= suppSoftIndexEnd; ++i)
             {
                 annotatedBases.get(i).setInSoftClip();
@@ -586,7 +605,7 @@ public final class SbxRoutines
         // count bases by qual type and apply rules
         Map<Byte,int[]> baseCountsByQual = Maps.newHashMap();
 
-        int lowQuallReads = 0;
+        int lowQualCount = 0;
         int simplexCount = 0;
         int duplexCount = 0;
 
@@ -604,7 +623,7 @@ public final class SbxRoutines
             }
             else
             {
-                ++lowQuallReads;
+                ++lowQualCount;
                 continue;
             }
 
@@ -629,13 +648,15 @@ public final class SbxRoutines
         if(baseCountsByQual.isEmpty()) // all reads have invalid qual
             return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
 
-        if(simplexCount > 0 && duplexCount == 0 && lowQuallReads == 0)
+        if(simplexCount > 0 && duplexCount == 0)
         {
             int[] baseCounts = baseCountsByQual.get(RAW_SIMPLEX_QUAL);
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * simplexCount)
+            int totalReadCount = simplexCount + lowQualCount;
+
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * totalReadCount)
                 return new BaseQualPair(maxBase, RAW_SIMPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, SIMPLEX_NO_CONSENSUS_QUAL);
@@ -647,7 +668,7 @@ public final class SbxRoutines
             int maxBaseCount = findMostCommonBaseCount(baseCounts);
             byte maxBase = findMostCommonBase(baseCounts, refBase, maxBaseCount);
 
-            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQuallReads))
+            if(maxBaseCount > SBX_CONSENSUS_BASE_THRESHOLD * (duplexCount + lowQualCount))
                 return new BaseQualPair(maxBase, RAW_DUPLEX_QUAL);
             else
                 return new BaseQualPair(refBase, DUPLEX_NO_CONSENSUS_QUAL);
@@ -845,7 +866,13 @@ public final class SbxRoutines
 
                 for(int j = 0; j < element.getLength(); j++, readIndex++, refPos++)
                 {
+                    if(readIndex >= newBaseQuals.length)
+                        break;
+
                     if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                        continue;
+
+                    if(refPos < 1)
                         continue;
 
                     if(duplexMismatchRefBase == null)

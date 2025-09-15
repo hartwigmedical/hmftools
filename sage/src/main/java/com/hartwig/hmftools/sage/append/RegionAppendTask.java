@@ -4,13 +4,13 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.CandidateSerialisation.PRE_v3_5_FLANK_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 
 import java.util.Collections;
 import java.util.List;
@@ -220,8 +220,8 @@ public class RegionAppendTask implements Callable<Void>
 
             if(vcfTag.equals(MIN_COORDS_COUNT))
                 genotypeBuilder.attribute(MIN_COORDS_COUNT, 0);
-            else if(vcfTag.equals(AVG_RAW_BASE_QUAL))
-                genotypeBuilder.attribute(AVG_RAW_BASE_QUAL, 0);
+            else if(vcfTag.equals(AVG_SEQ_TECH_BASE_QUAL))
+                genotypeBuilder.attribute(AVG_SEQ_TECH_BASE_QUAL, new int[] {0, 0});
             else if(vcfTag.equals(AVG_EDGE_DISTANCE_PERC))
                 genotypeBuilder.attribute(AVG_EDGE_DISTANCE_PERC, new double[] {0, 0});
             else if(vcfTag.equals(UMI_TYPE_COUNTS))

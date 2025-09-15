@@ -6,6 +6,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
@@ -27,7 +29,6 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.util.Arrays;
@@ -224,7 +225,7 @@ public class ExtensionSeqBuilder
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
             byte consensusBase = 0;
-            int consensusMaxQual = 0;
+            byte consensusMaxQual = 0;
             int consensusQualTotal = 0;
 
             // per-base arrays are only used for high-qual mismatches
@@ -261,7 +262,7 @@ public class ExtensionSeqBuilder
                 hasActiveReads = true;
 
                 byte base = read.currentBase();
-                int qual = read.currentQual();
+                byte qual = read.currentQual();
 
                 if(aboveMinQual(qual))
                     currentReadBases[readIndex] = base; // cached here since the read state then moves onto the next base
@@ -310,7 +311,7 @@ public class ExtensionSeqBuilder
                     }
                     else if(base == consensusBase)
                     {
-                        consensusMaxQual = max(qual, consensusMaxQual);
+                        consensusMaxQual = maxQual(qual, consensusMaxQual);
                         consensusQualTotal += qual;
                     }
                     else if(base != consensusBase && belowMinQual(qual))
@@ -410,7 +411,7 @@ public class ExtensionSeqBuilder
         while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingLineBases > 0)
         {
             mBases[extensionIndex] = lineBase;
-            mBaseQuals[extensionIndex] = (byte)LOW_BASE_QUAL_THRESHOLD;
+            mBaseQuals[extensionIndex] = LOW_BASE_QUAL_THRESHOLD;
 
             extensionIndex += mIsForward ? 1 : -1;
 

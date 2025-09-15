@@ -47,13 +47,11 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
-import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Ref;
 import java.util.Collections;
 import java.util.List;
 
@@ -111,7 +109,6 @@ public class AssemblyConfig
     public final List<Junction> SpecificJunctions;
 
     private final List<String> mLogReadIds;
-    private final boolean mCheckLogReadIds;
 
     public final int AssemblyRefBaseWriteMax;
     public final boolean AssemblyDetailedTsv;
@@ -243,7 +240,6 @@ public class AssemblyConfig
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
         setSequencingType(configBuilder);
-        setLowBaseQualThreshold(configBuilder);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -280,7 +276,6 @@ public class AssemblyConfig
         AssemblyDetailedTsv = configBuilder.hasFlag(ASSEMBLY_TSV_DETAILED) || hasFilters;
 
         mLogReadIds = parseLogReadIds(configBuilder);
-        mCheckLogReadIds = !mLogReadIds.isEmpty();
 
         DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
 
@@ -322,12 +317,6 @@ public class AssemblyConfig
     public String outputFilename(final WriteType writeType)
     {
         return formEsveeInputFilename(OutputDir, sampleId(), writeType.fileId(), OutputId);
-    }
-
-    public void logReadId(final SAMRecord record, final String caller)
-    {
-        if(mCheckLogReadIds)
-            logReadId(record.getReadName(), caller);
     }
 
     private void logReadId(final String readId, final String caller)
@@ -428,7 +417,6 @@ public class AssemblyConfig
         PerfLogTime = 0;
         AssemblyDetailedTsv = false;
         mLogReadIds = Collections.emptyList();
-        mCheckLogReadIds = false;
 
         AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;

@@ -32,7 +32,6 @@ import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.redux.BqrKey;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -378,7 +377,7 @@ public class BqrRegionReader implements CigarHandler
 
             byte quality = record.getBaseQualities()[readIndex];
 
-            if(BaseQualAdjustment.isUncertainBaseFromQual(quality))
+            if(BaseQualAdjustment.isUncertainBaseQual(quality))
                 continue;
 
             if(isUltima() && quality < ULTIMA_MAX_QUAL)

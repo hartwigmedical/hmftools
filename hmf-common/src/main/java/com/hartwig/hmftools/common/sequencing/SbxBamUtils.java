@@ -55,54 +55,6 @@ public class SbxBamUtils
             return baseIndex <= duplexBaseIndex;
     }
 
-    public static List<Boolean> getDuplexIndels(final String ycTagStr)
-    {
-        List<Boolean> duplexIndels = Lists.newArrayList();
-        String[] ycTagComponents = ycTagStr.split("-");
-
-        int simplexHeadLength = Integer.parseInt(ycTagComponents[0]);
-        String duplexRegion = ycTagComponents[1];
-        for(int i = 0; i < simplexHeadLength; i++)
-        {
-            duplexIndels.add(false);
-        }
-
-        for(int i = 0; i < duplexRegion.length();)
-        {
-            String intString = parseInt(duplexRegion, i);
-            if(intString != null)
-            {
-                int duplexMatchLength = Integer.parseInt(intString);
-                for(int j = 0; j < duplexMatchLength; j++)
-                {
-                    duplexIndels.add(false);
-                }
-                i += intString.length();
-                continue;
-            }
-
-            char code = duplexRegion.charAt(i);
-            i++;
-            switch(code)
-            {
-                case 'I':
-                case 'L':
-                case 'P':
-                case 'Q':
-                case 'J':
-                case 'O':
-                case 'X':
-                case 'Z':
-                    duplexIndels.add(true);
-                    break;
-                default:
-                    duplexIndels.add(false);
-            }
-        }
-
-        return duplexIndels;
-    }
-
     public static List<Integer> getDuplexIndelIndices(final String ycTagStr)
     {
         List<Integer> duplexIndels = null;

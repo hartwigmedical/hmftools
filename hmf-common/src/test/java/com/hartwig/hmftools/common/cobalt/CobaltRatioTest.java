@@ -33,6 +33,21 @@ public class CobaltRatioTest
     }
 
     @Test
+    public void maskTest()
+    {
+        CobaltRatio masked = ratio.mask();
+        assertEquals(ratio.position(), masked.position());
+        assertEquals(ratio.chromosome(), masked.chromosome());
+        assertEquals(ratio.referenceReadDepth(), masked.referenceReadDepth(), 0.00001);
+        assertEquals(-1.0, masked.referenceGCRatio(), 0.0001);
+        assertEquals(-1.0, masked.referenceGcContent(), 0.0001);
+        assertEquals(-1.0, masked.referenceGCDiploidRatio(), 0.0001);
+        assertEquals(ratio.tumorReadDepth(), masked.tumorReadDepth(), 0.00001);
+        assertEquals(-1.0, masked.tumorGcContent(), 0.00001);
+        assertEquals(-1.0, masked.tumorGCRatio(), 0.00001);
+    }
+
+    @Test
     public void windowTest()
     {
         assertEquals(new ChrBaseRegion(ratio.chromosome(), 1001, 2000), ratio.window());

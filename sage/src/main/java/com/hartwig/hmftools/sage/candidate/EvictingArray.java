@@ -137,6 +137,8 @@ public class EvictingArray
                 ++mMinPositionIndex;
         }
 
+        // SG_LOGGER.debug("position({}) minPosition({}) flushCount({})", position, mMinPosition, flushCount);
+
         if(flushCount >= mCapacity)
             resetMinPosition(position);
     }

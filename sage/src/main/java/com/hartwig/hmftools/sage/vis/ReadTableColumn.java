@@ -74,21 +74,21 @@ public class ReadTableColumn
         Color color = interpolateColors(Color.RED, Color.GREEN, s);
         return new ContentAndStyle(td(rawHtml(renderColoredBox(READ_HEIGHT_PX, color).getSVGElement())), CssBuilder.EMPTY);
     });
-    public static final ReadTableColumn FINAL_QUAL_COL = intValueColumn("FinalQ", (final ReadEvidenceRecord record) ->
+    public static final ReadTableColumn FINAL_QUAL_COL = intValueColumn("combinedQ", (final ReadEvidenceRecord record) ->
     {
-        return record.Qualities == null ? null : (int) Math.round(record.Qualities.ModifiedQuality);
+        return record.Qualities == null ? null : (int) Math.round(record.Qualities.CombinedQuality);
     });
-    public static final ReadTableColumn MOD_BASE_QUAL_COL = intValueColumn("modBQ", (final ReadEvidenceRecord record) ->
+    public static final ReadTableColumn FINAL_BASE_QUAL_COL = intValueColumn("finalBQ", (final ReadEvidenceRecord record) ->
     {
-        return record.Qualities == null ? null : (int) Math.round(record.Qualities.ModifiedBaseQuality);
+        return record.Qualities == null ? null : (int) Math.round(record.Qualities.FinalBaseQuality);
     });
-    public static final ReadTableColumn MOD_MAP_QUAL_COL = intValueColumn("modMQ", (final ReadEvidenceRecord record) ->
+    public static final ReadTableColumn FINAL_MAP_QUAL_COL = intValueColumn("finalMQ", (final ReadEvidenceRecord record) ->
     {
-        return record.Qualities == null ? null : record.Qualities.ModifiedMapQuality;
+        return record.Qualities == null ? null : record.Qualities.FinalMapQuality;
     });
-    public static final ReadTableColumn RAW_BASE_QUAL_COL = intValueColumn("rawBQ", (final ReadEvidenceRecord record) ->
+    public static final ReadTableColumn SEQ_TECH_BASE_QUAL_COL = intValueColumn("seqTechBQ", (final ReadEvidenceRecord record) ->
     {
-        return record.Qualities == null ? null : (int) Math.round(record.Qualities.CalcBaseQuality);
+        return record.Qualities == null ? null : (int) Math.round(record.Qualities.SeqTechBaseQuality);
     });
     public static final ReadTableColumn ORIENTATION_COL = new ReadTableColumn("Orientation", (final ReadEvidenceRecord record) ->
     {

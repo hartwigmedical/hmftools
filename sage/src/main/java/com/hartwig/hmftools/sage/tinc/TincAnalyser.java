@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.parseIntegerList;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -189,7 +189,7 @@ public class TincAnalyser
 
         int altSupport = readCounts.altSupport();
 
-        int[] avgBaseQuals = parseIntegerList(variant.RefGenotype, AVG_BASE_QUAL);
+        int[] avgBaseQuals = parseIntegerList(variant.RefGenotype, AVG_RECALIBRATED_BASE_QUAL);
 
         double baseQualAvg = altSupport > 0 ? avgBaseQuals[1] / (double)altSupport : 0;
         baseQualAvg = variant.calcReducedAltValue(baseQualAvg);

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.redux;
 
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
@@ -15,6 +16,8 @@ public class BaseQualAdjustment
     // zero is not handled by some downstream tools
     // this low value also denotes an adjustment (eg by Redux) to indicate that the corresponding base is completely uncertain
     public static final byte BASE_QUAL_MINIMUM = 1;
+
+    public static final byte LOW_BASE_QUAL_THRESHOLD = 26; // quals below this value are considered low-qual
 
     private static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
     private static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
@@ -44,6 +47,7 @@ public class BaseQualAdjustment
     }
 
     public static byte maxQual(final byte qual1, final byte qual2) { return (byte)max(qual1, qual2); }
+    public static byte minQual(final byte qual1, final byte qual2) { return (byte)min(qual1, qual2); }
 
     public static double phredQualToProbability(byte quality)
     {
@@ -56,6 +60,9 @@ public class BaseQualAdjustment
     }
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
+
+    public static boolean isLowBaseQual(final byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean aboveLowBaseQual(final byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
 
     public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
     {
@@ -75,5 +82,5 @@ public class BaseQualAdjustment
             return false;
     }
 
-    public static boolean isUncertainBaseFromQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
+    public static boolean isUncertainBaseQual(final byte qual) { return qual <= BASE_QUAL_MINIMUM; }
 }

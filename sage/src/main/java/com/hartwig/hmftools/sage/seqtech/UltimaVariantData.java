@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
 import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
@@ -51,8 +53,9 @@ public class UltimaVariantData
 
     public void addReadSupportInfo(final SAMRecord record, final int readVarIndex)
     {
-        String recordCore = record.getReadString()
-                .substring(readVarIndex - mReadContext.leftCoreLength(), readVarIndex + mReadContext.rightCoreLength() + 1);
+        // do an exact match since quals are not applicable
+        String recordCore = record.getReadString().substring(
+                readVarIndex - mReadContext.leftCoreLength(), readVarIndex + mReadContext.rightCoreLength() + 1);
 
         if(recordCore.equals(mReadContext.coreStr()))
         {
@@ -74,13 +77,12 @@ public class UltimaVariantData
             int lookupIndex = firstHomopolymer ? readIndex + hpLength - 1 : readIndex;
             int tpValue = tpValues[lookupIndex];
 
-            char homopolymerBase = (char)record.getReadBases()[readVarIndex];
-
-            byte readQual = baseQuals[readVarIndex];
+            char homopolymerBase = (char)record.getReadBases()[lookupIndex];
+            byte readQual = baseQuals[lookupIndex];
             byte homopolymerQual = BQR_CACHE.calcTpRecalibratedQual(readQual, hpLength, homopolymerBase, tpValue == 0);
 
             if(tpValue > 0 && hpLength > 1)
-                homopolymerQual -= 3;
+                homopolymerQual -= HALF_PHRED_SCORE_SCALING;
 
             homopolyerQuals.add(homopolymerQual);
 
@@ -112,7 +114,7 @@ public class UltimaVariantData
 
             if(t0Qual == BQR_CACHE.maxRawQual())
             {
-                t0Qual = BQR_CACHE.getT0RecalibratedQual(record, readVarIndex);
+                t0Qual = BQR_CACHE.getT0RecalibratedQual(record, lookupIndex);
             }
 
             t0Quals.add(t0Qual);

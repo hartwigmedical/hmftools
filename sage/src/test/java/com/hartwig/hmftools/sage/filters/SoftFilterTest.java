@@ -137,7 +137,6 @@ public class SoftFilterTest
         SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M"); // was 98
         readContextCounter.processRead(read4, 1, null);
 
-        double avgReadLength = 25;
         assertEquals(0.06, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge(), 0.01);
         assertEquals(0.48, readContextCounter.readEdgeDistance().maxDistanceFromEdge(), 0.01);
 

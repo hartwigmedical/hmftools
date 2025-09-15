@@ -38,7 +38,7 @@ public enum JitterMatch
         int readIndex = flankReadIndexStart;
 
         int permittedLowQualRangeLower = readContext.VarIndex;
-        int permittedLowQualRangeUpper = altIndexUpper;
+        int permittedLowQualRangeUpper = altIndexUpper + 1;
 
         final byte[] readQuals = record.getBaseQualities();
 
@@ -49,7 +49,7 @@ public enum JitterMatch
             boolean withinPermittedRange = withinCore
                     && readContextIndex >= permittedLowQualRangeLower && readContextIndex <= permittedLowQualRangeUpper;
 
-            if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseFromQual(readQuals[readIndex]))
+            if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseQual(readQuals[readIndex]))
                 return false;
 
             if(withinCore && isMediumBaseQual(readQuals[readIndex]))
@@ -208,7 +208,7 @@ public enum JitterMatch
             boolean withinPermittedRange = withinCore
                     && readContextIndex >= permittedLowQualRangeLower && readContextIndex <= permittedLowQualRangeUpper;
 
-            if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseFromQual(readQuals[readIndex]))
+            if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseQual(readQuals[readIndex]))
                 return false;
 
             if(withinCore && isMediumBaseQual(readQuals[readIndex]))

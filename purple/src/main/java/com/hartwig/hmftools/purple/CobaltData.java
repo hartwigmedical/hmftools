@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple;
 
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,11 +29,14 @@ public class CobaltData
 {
     public final CobaltChromosomes CobaltChromosomes;
 
-    public final Map<Chromosome,List<CobaltRatio>> Ratios;
-    public final Multimap<Chromosome,PCFPosition> TumorSegments;
-    public final Multimap<Chromosome,PCFPosition> ReferenceSegments;
+    public final Map<Chromosome, List<CobaltRatio>> Ratios;
+    public final Multimap<Chromosome, PCFPosition> TumorSegments;
+    public final Multimap<Chromosome, PCFPosition> ReferenceSegments;
 
-    public final Gender gender() { return CobaltChromosomes.gender(); }
+    public final Gender gender()
+    {
+        return CobaltChromosomes.gender();
+    }
 
     public CobaltData(
             final String referenceId, final String tumorId, final String cobaltDirectory,
@@ -64,7 +67,6 @@ public class CobaltData
 
         PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
         Ratios = CobaltRatioFile.readWithGender(cobaltFilename, tumorOnlyMode ? amberGender : null, !germlineOnlyMode);
-
         if(referenceId != null)
         {
             String referenceSegmentFile = PCFFile.generateRatioFilename(cobaltDirectory, referenceId);
@@ -83,13 +85,6 @@ public class CobaltData
 
         final List<MedianRatio> medianRatios = MedianRatioFactory.create(Ratios);
         CobaltChromosomes = new CobaltChromosomes(medianRatios, !tumorOnlyMode);
-    }
-
-    public void clearCache()
-    {
-        Ratios.clear();
-        TumorSegments.clear();
-        ReferenceSegments.clear();
     }
 
     @VisibleForTesting

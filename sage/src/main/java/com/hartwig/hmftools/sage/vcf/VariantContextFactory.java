@@ -6,8 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
@@ -15,9 +14,10 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
@@ -137,11 +137,11 @@ public final class VariantContextFactory
 
         int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int) round(qualCounters.altMapQualityTotal() / (double)altSupport) : 0;
-        int avgBaseQuality = depth > 0 ? (int)round(qualCounters.baseQualityTotal() / (double)depth) : 0;
+        int avgBaseQuality = depth > 0 ? (int)round(qualCounters.recalibratedBaseQualityTotal() / (double)depth) : 0;
         int avgAltBaseQuality = (int)round(counter.averageAltRecalibratedBaseQuality());
 
-        int avgAltModifiedBaseQuality = strongSupport > 0 ? (int)round(qualCounters.modifiedAltBaseQualityTotal() / (double)strongSupport) : 0;
-        int avgAltModifiedMapQuality = strongSupport > 0 ? (int)round(qualCounters.altModifiedMapQualityTotal() / (double)strongSupport) : 0;
+        int avgAltFinalBaseQuality = strongSupport > 0 ? (int)round(qualCounters.altFinalBaseQualityTotal() / (double)strongSupport) : 0;
+        int avgAltFinalMapQuality = strongSupport > 0 ? (int)round(qualCounters.altFinalMapQualityTotal() / (double)strongSupport) : 0;
 
         // NOTE: any field added to the genotype field should also be added to checkGenotypeFields() above, so that if it is only set in
         // append-mode, that it will also get valid default values
@@ -152,15 +152,15 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
-                .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
-                .attribute(AVG_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
-                .attribute(AVG_RAW_BASE_QUAL, (int)counter.averageAltBaseQuality())
+                .attribute(AVG_READ_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
+                .attribute(AVG_RECALIBRATED_BASE_QUAL, new int[] { avgBaseQuality, avgAltBaseQuality })
+                .attribute(AVG_SEQ_TECH_BASE_QUAL, (int)counter.averageAltSeqTechBaseQuality())
                 .attribute(
                         AVG_EDGE_DISTANCE_PERC, new double[] {
                                 counter.readEdgeDistance().avgDistanceFromEdge(),
                                 counter.readEdgeDistance().avgAltDistanceFromEdge() })
-                .attribute(AVG_MODIFIED_BASE_QUAL, avgAltModifiedBaseQuality)
-                .attribute(AVG_MODIFIED_ALT_MAP_QUAL, avgAltModifiedMapQuality)
+                .attribute(AVG_FINAL_BASE_QUAL, avgAltFinalBaseQuality)
+                .attribute(AVG_FINAL_ALT_MAP_QUAL, avgAltFinalMapQuality)
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasNonAlt().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(

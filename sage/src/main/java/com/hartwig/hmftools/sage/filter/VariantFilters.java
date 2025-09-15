@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
-import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
@@ -51,7 +50,6 @@ import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFil
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +63,6 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.seqtech.UltimaVariantData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -254,11 +251,6 @@ public class VariantFilters
             filters.add(SoftFilter.JITTER);
         }
 
-        if(belowMinAverageBaseQuality(primaryTumor, tier))
-        {
-            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
-        }
-
         if(isUltima())
         {
             if(belowExpectedHpQuals(primaryTumor))
@@ -271,6 +263,10 @@ public class VariantFilters
                 filters.add(SoftFilter.MIN_AVG_T0_QUAL);
             }
         }
+        else if(belowMinAverageBaseQuality(primaryTumor, tier))
+        {
+            filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
+        }
     }
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
@@ -278,7 +274,7 @@ public class VariantFilters
         return tier == HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
-                && primaryTumor.altBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
+                && primaryTumor.qualCounters().altRecalibratedBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
     }
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
@@ -304,12 +300,12 @@ public class VariantFilters
         }
 
         int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
-        double modifiedAltMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltMediumBaseQualityTotal();
-        double modifiedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().modifiedAltBaseQualityTotal() - modifiedAltMediumBaseQualityTotal;
-        int mediumSupportContribution = (int)(strongNonMediumSupport * modifiedAltMediumBaseQualityTotal/modifiedAltNonMediumBaseQualityTotal);
+        double recalibratedAltMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltMediumRecalibratedBaseQualityTotal();
+        double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltRecalibratedBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
+        int mediumSupportContribution = (int)(strongNonMediumSupport * recalibratedAltMediumBaseQualityTotal/recalibratedAltNonMediumBaseQualityTotal);
         int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
 
-        int qualPerRead = (int)round(modifiedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
+        int qualPerRead = (int)round(recalibratedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
@@ -359,7 +355,7 @@ public class VariantFilters
     private static double calcMapQualFactor(
             final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
     {
-        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
+        double avgAltFinalMapQuality = primaryTumor.qualCounters().altFinalMapQualityTotal() / (double)strongSupport;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / (double)depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / (double)altSupport;
@@ -370,7 +366,7 @@ public class VariantFilters
 
         if(highlyPolymorphicSite)
         {
-            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
+            avgAltFinalMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
 
             if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
                 mapQualDiffPenalty = 0;
@@ -423,7 +419,7 @@ public class VariantFilters
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
-        double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
+        double mapQualFactor = avgAltFinalMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
                 - edgeDistancePenalty - repeatPenalty;
 
         return mapQualFactor;
@@ -438,7 +434,7 @@ public class VariantFilters
     {
         int depth = primaryTumor.depth();
 
-        double baseQualAvg = primaryTumor.baseQualityTotal() / (double)depth;
+        double baseQualAvg = primaryTumor.qualCounters().recalibratedBaseQualityTotal() / (double)depth;
 
         int supportCount = primaryTumor.strongAltSupport();
 
@@ -470,24 +466,7 @@ public class VariantFilters
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(isUltima())
-        {
-            // CHECK: Ultima diffs and make constants?
-            if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() == 1
-            && primaryTumor.readContext().MaxRepeat.Count >= 5)
-            {
-                threshold -= 5;
-            }
-
-            if(primaryTumor.readStrandBiasAlt().minBias() < STRAND_BIAS_CHECK_THRESHOLD
-            &&!(primaryTumor.readStrandBiasNonAlt().minBias() < STRAND_BIAS_NON_ALT_MIN_BIAS
-                    &&(primaryTumor.readStrandBiasAlt().bias() < 0.5) == (primaryTumor.readStrandBiasNonAlt().bias() < 0.5)))
-            {
-                threshold += 10;
-            }
-        }
-
-        double avgBaseQuality = primaryTumor.averageAltBaseQuality();
+        double avgBaseQuality = primaryTumor.averageAltSeqTechBaseQuality();
 
         return Doubles.lessThan(avgBaseQuality, threshold);
     }

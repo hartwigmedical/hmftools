@@ -149,14 +149,14 @@ public class TestDataCreator
 //    @Test
     public void produceReducedChrFile() throws IOException
     {
-        File outputDir = new File("/Users/timlavers/work/junk");
+        File outputDir = new File("/Users/timlavers/work/code/hmftools/cobalt/src/test/resources/tinygenome");
 
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(new File("/Users/timlavers/work/data/reference_genome_no_alts/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna")));
-        int start = 4_000_000; //
+        int start = 10_000_000; //
         int end = start + 1_000_000;
-        var chr = refGenomeSource.getBaseString("chr7", start, end);
+        var chr = refGenomeSource.getBaseString("chr2", start, end);
 //        System.out.println(chr.substring(10000, 10100));
-        File chrFile = new File(outputDir, "chr7_part_4.txt");
+        File chrFile = new File(outputDir, "chr2_part_10.txt");
         Files.writeString(chrFile.toPath(), chr, StandardCharsets.UTF_8);
     }
 }

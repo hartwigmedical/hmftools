@@ -21,7 +21,7 @@ public class RefSequence
         final int sequenceEnd = refGenome.getChromosomeLength(chromosome);
 
         Start = max(1, posStart - BUFFER);
-        End = min(sequenceEnd, posEnd) + BUFFER;
+        End = min(sequenceEnd, posEnd + BUFFER);
         Bases = refGenome.getBases(chromosome, Start, End);
         IsValid = true;
     }

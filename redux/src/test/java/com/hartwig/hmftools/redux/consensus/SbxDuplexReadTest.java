@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STR
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.reverseDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
@@ -252,7 +253,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
         read.setBaseQualityString(qualStr);
         read.setMappingQuality(mapq);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
@@ -271,7 +272,7 @@ public class SbxDuplexReadTest
 
         expectedRead.setBaseQualityString(expectedQualStr);
         expectedRead.setMappingQuality(mapq);
-        expectedRead.setAttribute("YC", ycTagStr);
+        expectedRead.setAttribute(SBX_YC_TAG, ycTagStr);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
 
@@ -298,7 +299,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, true, false, null);
         read.setBaseQualityString(qualStr);
         read.setMappingQuality(mapq);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
@@ -317,7 +318,7 @@ public class SbxDuplexReadTest
 
         expectedRead.setBaseQualityString(expectedQualStr);
         expectedRead.setMappingQuality(mapq);
-        expectedRead.setAttribute("YC", ycTagStr);
+        expectedRead.setAttribute(SBX_YC_TAG, ycTagStr);
         expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
         expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
 
@@ -345,7 +346,7 @@ public class SbxDuplexReadTest
 
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
 
         SbxRoutines.stripDuplexIndels(refGenome, read);
 
@@ -359,7 +360,7 @@ public class SbxDuplexReadTest
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
 
         SbxRoutines.stripDuplexIndels(refGenome, read);
 
@@ -372,7 +373,7 @@ public class SbxDuplexReadTest
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
 
         SbxRoutines.stripDuplexIndels(refGenome, read);
 
@@ -390,7 +391,7 @@ public class SbxDuplexReadTest
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
-        read.setAttribute("YC", ycTagStr);
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
 
         SbxRoutines.stripDuplexIndels(refGenome, read);
 

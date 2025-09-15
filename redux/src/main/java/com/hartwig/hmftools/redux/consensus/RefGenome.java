@@ -29,6 +29,9 @@ public class RefGenome
 
     public byte[] getRefBases(final String chromosome, int posStart, int posEnd)
     {
+        if(posStart < 1 || posEnd < posStart)
+            return null;
+
         int chromosomeLength = mChromosomeLengths.getOrDefault(chromosome, 0);
 
         if(posEnd > chromosomeLength)

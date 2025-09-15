@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.common.sequencing;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
@@ -13,14 +10,9 @@ import htsjdk.samtools.SAMRecord;
 public final class UltimaBamUtils
 {
     public static final byte ULTIMA_MAX_QUAL = 35;
-    public static final byte ULTIMA_INVALID_QUAL = -1;
+    public static final int ULTIMA_MAX_HP_LEN = 20;
 
-    /*
-    public static final byte ULTIMA_MAX_QUAL_TP = 40; // to be deprecated
-    public static final byte ULTIMA_TP_0_BOOST = 5;
-    public static final byte ULTIMA_MAX_QUAL_T0 = 40;
-    public static final byte ULTIMA_BOOSTED_QUAL = 35;
-    */
+    public static final byte ULTIMA_INVALID_QUAL = -1;
 
     public static final String ULTIMA_TP_TAG = "tp";
     public static final String ULTIMA_T0_TAG = "t0";

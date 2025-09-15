@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
@@ -277,7 +276,7 @@ public class JunctionTracker
             }
         }
 
-        mJunctions.forEach(x -> x.setInitialRead(LOW_BASE_QUAL_THRESHOLD));
+        mJunctions.forEach(x -> x.setInitialRead());
 
         perfCounterStop(PerfCounters.InitJunctions);
 

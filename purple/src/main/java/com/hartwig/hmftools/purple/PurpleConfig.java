@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
@@ -8,8 +10,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
@@ -37,7 +37,7 @@ public class PurpleConfig
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
-    public final Map<VariantTier,Integer> TierQualFilters;
+    public final Map<VariantTier, Integer> TierQualFilters;
     public final int Threads;
 
     // debug only
@@ -63,13 +63,13 @@ public class PurpleConfig
         ReferenceId = configBuilder.getValue(REFERENCE);
         TumorId = tumorId != null ? tumorId : ReferenceId;
 
-        if(TumorId == null && ReferenceId == null)
+        if(TumorId == null)
         {
             mIsValid = false;
         }
 
         String outputDir = configBuilder.getValue(OUTPUT_DIR);
-        String sampleDir = "";
+        String sampleDir;
 
         if(configBuilder.hasValue(SAMPLE_DIR))
         {
@@ -92,7 +92,9 @@ public class PurpleConfig
             if(!Charting.Disabled)
             {
                 if(Charting.CircosBinary != null)
+                {
                     mIsValid &= createDirectory(Charting.CircosDirectory);
+                }
 
                 mIsValid &= createDirectory(Charting.PlotDirectory);
             }
@@ -115,7 +117,7 @@ public class PurpleConfig
 
             for(String tierFilter : tierFilterStrings)
             {
-                String[] tierItems = tierFilter.split("=",-1);
+                String[] tierItems = tierFilter.split("=", -1);
                 TierQualFilters.put(VariantTier.valueOf(tierItems[0]), Integer.parseInt(tierItems[1]));
             }
         }
@@ -123,16 +125,35 @@ public class PurpleConfig
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
         if(SpecificChrRegions == null)
+        {
             mIsValid = false;
+        }
     }
 
-    public boolean isValid() { return mIsValid; }
+    public boolean isValid()
+    {
+        return mIsValid;
+    }
 
-    public boolean tumorOnlyMode() { return ReferenceId == null; }
-    public boolean germlineMode() { return TumorId.equals(ReferenceId); }
+    public boolean tumorOnlyMode()
+    {
+        return ReferenceId == null;
+    }
 
-    public boolean runTumor() { return !germlineMode(); }
-    public boolean runGermline() { return !tumorOnlyMode(); }
+    public boolean germlineMode()
+    {
+        return TumorId.equals(ReferenceId);
+    }
+
+    public boolean runTumor()
+    {
+        return !germlineMode();
+    }
+
+    public boolean runGermline()
+    {
+        return !tumorOnlyMode();
+    }
 
     public RunMode runMode()
     {
@@ -164,10 +185,14 @@ public class PurpleConfig
     public boolean excludeOnSpecificRegion(final String chromosome, final int position)
     {
         if(!SpecificChrRegions.hasFilters())
+        {
             return false;
+        }
 
         if(!SpecificChrRegions.Regions.isEmpty())
+        {
             return SpecificChrRegions.excludePosition(chromosome, position);
+        }
 
         return SpecificChrRegions.excludeChromosome(chromosome);
     }
