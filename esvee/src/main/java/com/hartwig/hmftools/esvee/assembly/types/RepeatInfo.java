@@ -309,9 +309,14 @@ public class RepeatInfo
 
     public static int getRepeatCount(final Read read, final RepeatInfo repeatInfo, int readIndexStart, boolean searchForward)
     {
+        return getRepeatCount(read, repeatInfo.Bases, readIndexStart, searchForward);
+    }
+
+    public static int getRepeatCount(final Read read, final String repeat, int readIndexStart, boolean searchForward)
+    {
         // count how many instance of the repeat are in this read
         int repeatCount = 0;
-        int repeatLength = repeatInfo.baseLength();
+        int repeatLength = repeat.length();
         int readIndex = readIndexStart;
 
         if(!searchForward)
@@ -320,7 +325,7 @@ public class RepeatInfo
         if(readIndex < 0 || readIndex >= read.basesLength() - repeatLength + 1)
             return -1;
 
-        byte[] repeatBases = repeatInfo.Bases.getBytes();
+        byte[] repeatBases = repeat.getBytes();
 
         while(readIndex >= 0 && readIndex < read.basesLength() - repeatLength + 1)
         {
