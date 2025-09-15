@@ -55,7 +55,7 @@ public class CobaltConfig
         GERMLIHE_ONLY
     }
 
-    private static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
+    public static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     public static final String PCF_GAMMA = "pcf_gamma";
 

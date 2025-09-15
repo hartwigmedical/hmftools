@@ -33,4 +33,6 @@ public class TargetedRegionsFilter implements RatioMapper
         onTargetRatios = onTargetRatios.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
         return onTargetRatios;
     }
+
+
 }
