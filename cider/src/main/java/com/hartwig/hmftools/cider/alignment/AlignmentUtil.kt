@@ -6,8 +6,6 @@ import com.hartwig.hmftools.cider.CiderConstants
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
@@ -111,7 +109,7 @@ object AlignmentUtil
             Multimap<Int, BwaMemMatch>
     {
         val refGenome = loadRefGenome(refGenomeFastaPath)
-        val refGenomeVersion = RefGenomeSource.deriveRefGenomeVersion(refGenome)
+        val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)
         aligner.setNThreadsOption(numThreads)
@@ -133,12 +131,7 @@ object AlignmentUtil
         val results = ArrayListMultimap.create<Int, BwaMemMatch>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
-                val chromosome = if (alignment.refId >= 0 && alignment.refId < HumanChromosome.entries.size) {
-                    refGenomeVersion.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
-                }
-                else {
-                    continue
-                }
+                val chromosome = refGenSeqDict.getSequence(alignment.refId).sequenceName
                 val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
                 val refEnd = alignment.refEnd
                 require(refStart <= refEnd)
