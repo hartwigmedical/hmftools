@@ -12,4 +12,14 @@ public class LowCovBucket
         EndPosition = endPosition;
         BucketPosition = midPosition;
     }
+
+    @Override
+    public String toString()
+    {
+        return "LowCovBucket{" +
+                "StartPosition=" + StartPosition +
+                ", EndPosition=" + EndPosition +
+                ", BucketPosition=" + BucketPosition +
+                '}';
+    }
 }

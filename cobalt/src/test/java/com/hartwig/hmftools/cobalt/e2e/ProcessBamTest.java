@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.e2e;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._15;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._16;
@@ -25,8 +26,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
@@ -54,6 +57,7 @@ public class ProcessBamTest
     private File referenceBamFile;
     private File gcProfile;
     private File panelNormalisation;
+    private File diploidBedFile;
     private File outputDir;
     private Map<Chromosome, List<CobaltRatio>> tumorRatioResults;
 
@@ -66,6 +70,7 @@ public class ProcessBamTest
         tumorRatioResults = null;
         tempDir = FileUtils.getTempDirectory();
         outputDir = new File(tempDir, "output");
+        diploidBedFile = null;
         outputDir.mkdirs();
         FileUtils.cleanDirectory(outputDir);
     }
@@ -103,6 +108,42 @@ public class ProcessBamTest
         assertEquals(2001, ratios.get(2).position());
         assertEquals(0.0, ratios.get(2).tumorReadDepth(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void applyDiploidRegionFiltering() throws Exception
+    {
+        // chr1 and chr2 both of length 10_000
+        // Each chr has each window of depth 100.
+        sample = "chrs_1_and_2_10_windows_each";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+        createStandardMultiChromosomeGCFile(10_000, _1, _2);
+        createStandardMultipleChromosomePanelFile(10_000, 1.0001, _1, _2);
+
+        // Create a diploid regions file that masks out the first
+        // half of chr1 and the second half of chr2.
+        diploidBedFile = new File(tempDir, "diploid_bed.tsv.gz");
+        DiploidRegionsFileWriter diploidRegionsFileWriter = new DiploidRegionsFileWriter();
+        diploidRegionsFileWriter.addSection(new DiploidFileSection(_1, 5000, 10000));
+        diploidRegionsFileWriter.addSection(new DiploidFileSection(_2, 0, 5000));
+        diploidRegionsFileWriter.write(diploidBedFile);
+        runCobalt();
+
+        assertEquals(2, tumorRatioResults.size());
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
+        List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
+        assertEquals(10, ratios1.size());
+        for (int i=0; i < 5; i++)
+        {
+            assertEquals(-1.0, ratios1.get(i).tumorGCRatio(), 0.01);
+            assertEquals(1.0, ratios2.get(i).tumorGCRatio(), 0.01);
+        }
+        for (int i=5; i < 10; i++)
+        {
+            assertEquals(1.0, ratios1.get(i).tumorGCRatio(), 0.01);
+            assertEquals(-1.0, ratios2.get(i).tumorGCRatio(), 0.01);
+        }
     }
 
     @Test
@@ -211,6 +252,78 @@ public class ProcessBamTest
         assertEquals(3.0 * 1.0 * oneSeventh, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(3.0 * 4.0 * oneSeventh, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(3.0 * 2.0 * oneSeventh, ratios.get(3).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void lowCoverage() throws Exception
+    {
+        // chr1 and chr2 each have length 100_000.
+        // chr1 has depth 2 for each window, chr2 has depth 4.
+        sample = "chr1_depth_2_chr2_depth_4";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+        createStandardMultiChromosomeGCFile(100_000, _1, _2);
+        runCobalt(false);
+
+        assertEquals(2, tumorRatioResults.size());
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
+        assertEquals(100, ratios1.size());
+        List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
+        assertEquals(100, ratios2.size());
+        // The median depth is 3. Because this is <8, window consolidation is applied.
+        // The number of windows merged into a single window is 80/3 rounded up to 30.
+        // The middle of each consolidated list of windows is chosen as the representative position.
+        // At these consolidation windows, the ratio is 2/3 or 4/3, depending on the chromosome.
+        // At other positions, the ratio is -1.
+        // Because there is no window for 105_000, a window is set at 95
+        Set<Integer> representativeWindows = new HashSet<>();
+        representativeWindows.add(14);
+        representativeWindows.add(44);
+        representativeWindows.add(74);
+        representativeWindows.add(95);
+
+        for (int i=0; i < 100; i++)
+        {
+            if (representativeWindows.contains(i))
+            {
+                assertEquals(2.0 / 3.0, ratios1.get(i).tumorGCRatio(), 0.01);
+                assertEquals(4.0 / 3.0, ratios2.get(i).tumorGCRatio(), 0.01);
+            }
+            else
+            {
+                assertEquals(-1.0, ratios1.get(i).tumorGCRatio(), 0.01);
+                assertEquals(-1.0, ratios2.get(i).tumorGCRatio(), 0.01);
+            }
+        }
+    }
+
+    @Test
+    public void lowCoverageTargeted() throws Exception
+    {
+        // chr1 and chr2 each have length 100_000.
+        // chr1 has depth 2 for each window, chr2 has depth 4.
+        sample = "chr1_depth_2_chr2_depth_4";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+        createStandardMultiChromosomeGCFile(100_000, _1, _2);
+        panelNormalisation = new File(tempDir, "ThePanel.tsv");
+        // Apply panel normalisation that adjusts the low read counts in chr1.
+        PanelFileWriter panelWriter = new PanelFileWriter();
+        panelWriter.addSection(new PanelFileSection(_1, 0, 100_000, 0.501));
+        panelWriter.addSection(new PanelFileSection(_2, 0, 100_000, 1.001));
+        panelWriter.write(panelNormalisation);
+        runCobalt();
+
+        assertEquals(2, tumorRatioResults.size());
+        List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
+        assertEquals(100, ratios1.size());
+        List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
+        assertEquals(100, ratios2.size());
+        for (int i=0; i < 100; i++)
+        {
+            assertEquals(1.0, ratios1.get(i).tumorGCRatio(), 0.01);
+            assertEquals(1.0, ratios2.get(i).tumorGCRatio(), 0.01);
+        }
     }
 
     @Test
@@ -876,6 +989,10 @@ public class ProcessBamTest
         {
             argCount += 4;
         }
+        if(diploidBedFile != null)
+        {
+            argCount += 2;
+        }
         String[] args = new String[argCount];
         int index = 0;
         args[index++] = String.format("-%s", GC_PROFILE);
@@ -903,7 +1020,12 @@ public class ProcessBamTest
         if(targeted)
         {
             args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
-            args[index] = String.format("%s", panelNormalisation.getAbsolutePath());
+            args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
+        }
+        if(diploidBedFile != null)
+        {
+            args[index++] = String.format("-%s", TUMOR_ONLY_DIPLOID_BED);
+            args[index] = String.format("%s", diploidBedFile.getAbsolutePath());
         }
 
         CobaltApplication.main(args);

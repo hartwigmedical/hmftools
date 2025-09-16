@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.cobalt.e2e;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -32,12 +31,15 @@ public abstract class SectionalData<T extends ChromosomeSection>
     {
         List<String> lines = new ArrayList<>();
         String header = header();
-        if (header != null)
+        if(header != null)
         {
             lines.add(header);
         }
         sectionsByChromosome.forEach((chromosome, sections) -> sections.forEach(section -> lines.addAll(section.lines())));
-        Files.write(destination.toPath(), lines);
+        try(BufferedWriter writer = FileWriterUtils.createBufferedWriter(destination.getAbsolutePath()))
+        {
+            writer.write(String.join("\n", lines));
+        }
     }
 }
 
@@ -59,7 +61,7 @@ interface ChromosomeSection
     default List<String> lines()
     {
         int interval = stop() - start();
-//        Preconditions.checkArgument(interval > 0);
+        //        Preconditions.checkArgument(interval > 0);
         Preconditions.checkArgument(interval % 1000 == 0);
 
         int steps = (interval / 1000) + 1;
