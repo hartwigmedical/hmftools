@@ -59,7 +59,7 @@ public class BamRecordReader implements BamReader
 
     private static final int MAX_DISTANCE = 1000;
 
-    public BamRecordReader(final String bamFile, final LilacConfig config, final Map<HlaGene_, TranscriptData> transcripts,
+    public BamRecordReader(final String bamFile, final LilacConfig config, final Map<HlaGene_, TranscriptData> transcripts_,
             final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
@@ -75,8 +75,8 @@ public class BamRecordReader implements BamReader
 
         for(HlaGene_ geneName : GENE_CACHE.GeneNames)
         {
-            TranscriptData transcriptData = transcripts.get(geneName);
-            mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
+            TranscriptData transcriptData_ = transcripts_.get(geneName);
+            mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData_));
         }
 
         mFragmentFactory = factory;

@@ -56,8 +56,8 @@ public class NucleotideFragmentFactory
 
         boolean reverseStrand = geneStrand == NEG_STRAND;
 
-        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, read.PositionStart);
-        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts, read.PositionEnd);
+        int codingPositionStartLoci = calcNucelotideLocus(GENE_CACHE.Transcripts_, read.PositionStart);
+        int codingPositionEndLoci = calcNucelotideLocus(GENE_CACHE.Transcripts_, read.PositionEnd);
 
         int samCodingStartLoci = !reverseStrand ? codingPositionStartLoci : codingPositionEndLoci;
         int samCodingEndLoci = !reverseStrand ? codingPositionEndLoci : codingPositionStartLoci;

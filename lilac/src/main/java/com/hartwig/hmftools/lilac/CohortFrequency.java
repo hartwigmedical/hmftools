@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.RARE_ALLELES_FREQ_CUTOFF;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +33,9 @@ public class CohortFrequency
 
     public double getAlleleFrequency(final HlaAllele allele)
     {
+        if(!allele.Gene.hasFrequencies())
+            return RARE_ALLELES_FREQ_CUTOFF;
+
         Double frequency = mAlleleFrequencies_.get(allele);
         return frequency != null ? frequency : 0.0;
     }
@@ -58,7 +62,7 @@ public class CohortFrequency
                 String alleleStr = items[0];
                 double frequency = Double.parseDouble(items[1]);
                 HlaAllele allele = HlaAllele.fromString(alleleStr);
-                if(!mGenes.contains(allele.Gene))
+                if(mGenes != null && !mGenes.contains(allele.Gene))
                     continue;
 
                 mAlleleFrequencies_.put(allele, frequency);

@@ -99,11 +99,11 @@ public class ReferenceData
         mResourceDir = resourceDir;
         mConfig = config;
 
-        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, mConfig.Genes);
+        Map<HlaGene_, TranscriptData> hlaTranscriptMap_ = loadHlaTranscripts_(config.RefGenVersion, mConfig.Genes);
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
-        GENE_CACHE = new GeneCache(hlaTranscriptMap);
+        GENE_CACHE = new GeneCache(hlaTranscriptMap_);
 
         if(config.Genes.coversMhcClass1())
             EXCLUDED_ALLELES.addAll(CLASS_1_EXCLUDED_ALLELES);
@@ -351,10 +351,10 @@ public class ReferenceData
             final Map<HlaGene_, TranscriptData> hlaTranscriptMap, final RefGenomeVersion refGenomeVersion, final GeneSelector genes)
     {
         hlaTranscriptMap.clear();
-        hlaTranscriptMap.putAll(loadHlaTranscripts(refGenomeVersion, genes));
+        hlaTranscriptMap.putAll(loadHlaTranscripts_(refGenomeVersion, genes));
     }
 
-    public static Map<HlaGene_, TranscriptData> loadHlaTranscripts(
+    public static Map<HlaGene_, TranscriptData> loadHlaTranscripts_(
             final RefGenomeVersion refGenomeVersion, @Nullable final GeneSelector genes)
     {
         Map<HlaGene_, TranscriptData> hlaTranscriptMap_ = Maps.newHashMap();

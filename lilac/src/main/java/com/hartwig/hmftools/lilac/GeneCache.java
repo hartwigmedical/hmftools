@@ -18,8 +18,8 @@ import org.apache.commons.lang3.NotImplementedException;
 
 public class GeneCache
 {
-    public final Map<HlaGene_, TranscriptData> GeneTranscriptMap;
-    public final List<TranscriptData> Transcripts;
+    public final Map<HlaGene_, TranscriptData> GeneTranscriptMap_;
+    public final List<TranscriptData> Transcripts_;
 
     // TODO: Load the appropriate genes
     public final List<HlaGene_> GeneNames; // long names matching Ensembl
@@ -32,15 +32,15 @@ public class GeneCache
     public final Map<HlaGene_, List<Integer>> NucleotideExonBoundaries;
     public final Map<HlaGene_, Integer> NucleotideLengths;
 
-    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap_)
     {
-        GeneTranscriptMap = hlaTranscriptMap;
+        GeneTranscriptMap_ = hlaTranscriptMap_;
 
         // establish other properties and commonly used constants
-        GeneNames = GeneTranscriptMap.keySet().stream().sorted().toList(); // long names matching Ensembl
+        GeneNames = GeneTranscriptMap_.keySet().stream().sorted().toList(); // long names matching Ensembl
 
-        Transcripts = Lists.newArrayListWithExpectedSize(hlaTranscriptMap.size());
-        GeneNames.forEach(x -> Transcripts.add(GeneTranscriptMap.get(x)));
+        Transcripts_ = Lists.newArrayListWithExpectedSize(hlaTranscriptMap_.size());
+        GeneNames.forEach(x -> Transcripts_.add(GeneTranscriptMap_.get(x)));
 
         ExpectAlleleCount = GeneNames.size() * 2;
 
@@ -49,20 +49,20 @@ public class GeneCache
         NucleotideLengths = Maps.newHashMap();
 
         for(HlaGene_ geneName : GeneNames)
-            setExonBoundaryValues(geneName, GeneTranscriptMap.get(geneName));
+            setExonBoundaryValues(geneName, GeneTranscriptMap_.get(geneName));
 
         MaxCommonAminoAcidExonBoundary = findMaxCommonAminoAcidBoundary();
     }
 
-    private void setExonBoundaryValues(final HlaGene_ geneName, final TranscriptData transcriptData)
+    private void setExonBoundaryValues(final HlaGene_ geneName, final TranscriptData transcriptData_)
     {
-        boolean forwardStrand = transcriptData.posStrand();
+        boolean forwardStrand = transcriptData_.posStrand();
 
-        int exonCount = transcriptData.exons().size();
+        int exonCount = transcriptData_.exons().size();
         int exonIndex = forwardStrand ? 0 : exonCount - 1;
 
-        int codingStart = transcriptData.CodingStart;
-        int codingEnd = transcriptData.CodingEnd;
+        int codingStart = transcriptData_.CodingStart;
+        int codingEnd = transcriptData_.CodingEnd;
 
         int codingBaseIndex = -1;
         int totalCodingBases = 0;
@@ -75,24 +75,24 @@ public class GeneCache
 
         while(exonIndex >= 0 && exonIndex < exonCount)
         {
-            ExonData exon = transcriptData.exons().get(exonIndex);
+            ExonData exon_ = transcriptData_.exons().get(exonIndex);
 
             boolean withinCoding = false;
 
             if(forwardStrand)
             {
-                if(exon.Start > codingEnd)
+                if(exon_.Start > codingEnd)
                     break;
 
-                if(exon.End >= codingStart)
+                if(exon_.End >= codingStart)
                     withinCoding = true;
             }
             else
             {
-                if(exon.End < codingStart)
+                if(exon_.End < codingStart)
                     break;
 
-                if(exon.Start <= codingEnd)
+                if(exon_.Start <= codingEnd)
                     withinCoding = true;
             }
 
@@ -104,11 +104,11 @@ public class GeneCache
                     codingBaseIndex = 0;
                 }
 
-                int codingBasesInExon = min(exon.End, codingEnd) - max(exon.Start, codingStart) + 1;
+                int codingBasesInExon = min(exon_.End, codingEnd) - max(exon_.Start, codingStart) + 1;
 
                 totalCodingBases += codingBasesInExon;
 
-                boolean hasExonBoundary = forwardStrand ? exon.End <= codingEnd : exon.Start >= codingStart;
+                boolean hasExonBoundary = forwardStrand ? exon_.End <= codingEnd : exon_.Start >= codingStart;
 
                 if(hasExonBoundary)
                 {

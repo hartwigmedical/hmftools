@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Predicate;
@@ -20,7 +21,7 @@ public enum GeneSelector
     HLA_DPA1(HlaGene_.HLA_DPA1),
     HLA_DPB1(HlaGene_.HLA_DPB1),
     HLA_DQA1(HlaGene_.HLA_DQA1),
-    HLA_DRB1(HlaGene_.HLA_DRB1);
+    HLA_DRB(List.of(HlaGene_.HLA_DRB1, HlaGene_.HLA_DRB3, HlaGene_.HLA_DRB4, HlaGene_.HLA_DRB5));
 
     private final LinkedHashSet<HlaGene_> mGenes_;
 
@@ -28,6 +29,8 @@ public enum GeneSelector
     {
         mGenes_ = Sets.newLinkedHashSet(List.of(gene));
     }
+
+    GeneSelector(final Iterable<HlaGene_> genes) { mGenes_ = Sets.newLinkedHashSet(genes); }
 
     GeneSelector(final Predicate<HlaGene_> geneFilter)
     {

@@ -177,14 +177,14 @@ public class LilacApplication
         mNucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
         if(mRefBamReader == null)
-            mRefBamReader = new BamRecordReader(referenceBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
+            mRefBamReader = new BamRecordReader(referenceBam, mConfig, GENE_CACHE.GeneTranscriptMap_, mNucleotideFragFactory);
 
         if(mTumorBamReader == null)
         {
             if(mConfig.tumorOnly())
                 mTumorBamReader = mRefBamReader;
             else if(!mConfig.TumorBam.isEmpty())
-                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
+                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, GENE_CACHE.GeneTranscriptMap_, mNucleotideFragFactory);
         }
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
@@ -606,7 +606,7 @@ public class LilacApplication
         }
 
         // SOMATIC VARIANTS
-        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, GENE_CACHE.GeneTranscriptMap);
+        SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, GENE_CACHE.GeneTranscriptMap_);
 
         if(variantAnnotation.getSomaticVariants().isEmpty())
             return;

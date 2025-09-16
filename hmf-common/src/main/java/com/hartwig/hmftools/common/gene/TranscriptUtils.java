@@ -42,7 +42,7 @@ public class TranscriptUtils
     public static int tickPhaseForward(int phase, int increment) { return increment != 0 ? (phase + increment) % 3 : phase; }
     public static int tickPhaseForward(int phase) { return (phase + 1) % 3; }
 
-    public static int calcExonicCodingPhase(final ExonData exon, int codingStart, int codingEnd, byte strand, int position)
+    public static int calcExonicCodingPhase(final ExonData exon_, int codingStart, int codingEnd, byte strand, int position)
     {
         // if coding has started in an earlier exon, then take the exon start phase and process new coding bases
         // ie if previous exon's end phase was 2, then start phase of this exon will also be 2, and first base will tick to phase 0
@@ -54,19 +54,19 @@ public class TranscriptUtils
             return PHASE_NONE;
 
         // coding bases up to and including the specified position
-        int codingBases = strand == POS_STRAND ? position - max(exon.Start, codingStart) + 1 : min(exon.End, codingEnd) - position + 1;
+        int codingBases = strand == POS_STRAND ? position - max(exon_.Start, codingStart) + 1 : min(exon_.End, codingEnd) - position + 1;
 
-        if((strand == POS_STRAND && codingStart == exon.Start) || (strand == NEG_STRAND && codingEnd == exon.End))
+        if((strand == POS_STRAND && codingStart == exon_.Start) || (strand == NEG_STRAND && codingEnd == exon_.End))
         {
             // coding starts on the first base of this exon - take the initial phase and tick it forward
             // phasing starts on 1 if not specified (ie is -1)
-            int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+            int startPhase = exon_.PhaseStart == PHASE_NONE ? PHASE_0 : exon_.PhaseStart;
             return (startPhase + codingBases) % 3;
         }
-        else if((strand == POS_STRAND && codingStart < exon.Start) || (strand == NEG_STRAND && codingEnd > exon.End))
+        else if((strand == POS_STRAND && codingStart < exon_.Start) || (strand == NEG_STRAND && codingEnd > exon_.End))
         {
             // coding started before this exon
-            return (exon.PhaseStart + codingBases) % 3;
+            return (exon_.PhaseStart + codingBases) % 3;
         }
         else
         {
@@ -117,7 +117,7 @@ public class TranscriptUtils
             return 0; // already on the codon start
     }
 
-    public static CodingBaseData calcCodingBases(final TranscriptData transData, int position)
+    public static CodingBaseData calcCodingBases(final TranscriptData transData_, int position)
     {
         // intronic phase can read from the preceding exon end phase (regardless of whether coding has begun
         // exonic phase depends on where coding begins - see function for details
@@ -126,23 +126,23 @@ public class TranscriptUtils
 
         CodingBaseData cbData = new CodingBaseData();
 
-        if(transData.nonCoding())
+        if(transData_.nonCoding())
             return cbData;
 
-        int codingStart = transData.CodingStart;
-        int codingEnd = transData.CodingEnd;
+        int codingStart = transData_.CodingStart;
+        int codingEnd = transData_.CodingEnd;
 
         boolean posInCodingRegion = positionWithin(position, codingStart, codingEnd);
 
         boolean isExonic = false;
 
-        for (int i = 0; i < transData.exons().size(); ++i)
+        for (int i = 0; i < transData_.exons().size(); ++i)
         {
-            final ExonData exon = transData.exons().get(i);
-            final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
+            final ExonData exon_ = transData_.exons().get(i);
+            final ExonData nextExon_ = i < transData_.exons().size() - 1 ? transData_.exons().get(i + 1) : null;
 
-            int exonStart = exon.Start;
-            int exonEnd = exon.End;
+            int exonStart = exon_.Start;
+            int exonEnd = exon_.End;
 
             if(!isExonic && positionWithin(position, exonStart, exonEnd))
             {
@@ -150,16 +150,16 @@ public class TranscriptUtils
 
                 // set phase
                 if(posInCodingRegion)
-                    cbData.Phase = calcExonicCodingPhase(exon, codingStart, codingEnd, transData.Strand, position);
+                    cbData.Phase = calcExonicCodingPhase(exon_, codingStart, codingEnd, transData_.Strand, position);
             }
 
             // set phase for intronic positions
-            if(position > exonEnd && nextExon != null && position < nextExon.Start)
+            if(position > exonEnd && nextExon_ != null && position < nextExon_.Start)
             {
-                if(transData.Strand == POS_STRAND)
-                    cbData.Phase = exon.PhaseEnd;
+                if(transData_.Strand == POS_STRAND)
+                    cbData.Phase = exon_.PhaseEnd;
                 else
-                    cbData.Phase = nextExon.PhaseEnd;
+                    cbData.Phase = nextExon_.PhaseEnd;
             }
 
             if (!inCodingRegion)
@@ -222,7 +222,7 @@ public class TranscriptUtils
         }
 
         // adjust for strand of the gene
-        if(transData.Strand == NEG_STRAND)
+        if(transData_.Strand == NEG_STRAND)
         {
             if(posInCodingRegion && isExonic)
                 cbData.CodingBases = cbData.TotalCodingBases - cbData.CodingBases + 1;

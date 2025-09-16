@@ -37,16 +37,16 @@ public class SomaticVariantAnnotation
 
     private final List<SomaticVariant> mSomaticVariants;
 
-    private final Map<HlaGene_, TranscriptData> mHlaTranscriptData;
+    private final Map<HlaGene_, TranscriptData> mHlaTranscriptData_;
 
-    public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene_, TranscriptData> transcriptData)
+    public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene_, TranscriptData> transcriptData_)
     {
         mConfig = config;
-        mHlaTranscriptData = transcriptData;
+        mHlaTranscriptData_ = transcriptData_;
 
         mGeneVariantLoci = Maps.newHashMap();
 
-        List<TranscriptData> transcripts = transcriptData.values().stream().toList();
+        List<TranscriptData> transcripts_ = transcriptData_.values().stream().toList();
 
         mSomaticVariants = Lists.newArrayList();
 
@@ -54,7 +54,7 @@ public class SomaticVariantAnnotation
 
         for(SomaticVariant variant : variants)
         {
-            int variantNucleotideLoci = calcNucelotideLocus(transcripts, variant.Position);
+            int variantNucleotideLoci = calcNucelotideLocus(transcripts_, variant.Position);
 
             if(variantNucleotideLoci < 0)
                 continue;
@@ -187,13 +187,13 @@ public class SomaticVariantAnnotation
         int posStart = variant.position();
         int posEnd = posStart + variant.ref().length() - 1;
 
-        for(TranscriptData transData : mHlaTranscriptData.values())
+        for(TranscriptData transData_ : mHlaTranscriptData_.values())
         {
-            if(!positionsOverlap(posStart, posEnd, transData.CodingStart, transData.CodingEnd))
+            if(!positionsOverlap(posStart, posEnd, transData_.CodingStart, transData_.CodingEnd))
                 continue;
 
             // check that the variant covers any exon
-            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
+            if(transData_.exons().stream().anyMatch(x_ -> positionsOverlap(posStart, posEnd, x_.Start, x_.End)))
                 return true;
 
             // otherwise any splice variant
