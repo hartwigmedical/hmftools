@@ -80,6 +80,20 @@ public final class AssemblyUtils
         return first == second || first == DNA_N_BYTE || second == DNA_N_BYTE || belowMinQual(firstQual) || belowMinQual(secondQual);
     }
 
+    public static boolean basesMatch(final byte[] bases1, final byte[] bases2)
+    {
+        if(bases1.length != bases2.length)
+            return false;
+
+        for(int i = 0; i < bases1.length; ++i)
+        {
+            if(bases1[i] != bases2[i])
+                return false;
+        }
+
+        return true;
+    }
+
     public static boolean isLocalAssemblyCandidate(
             final JunctionAssembly first, final JunctionAssembly second, boolean checkConcordantReads, boolean checkLineInsertion)
     {

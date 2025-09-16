@@ -2,6 +2,10 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MIN_DUAL_REPEAT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MIN_OTHER_REPEAT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MIN_SINGLE_REPEAT;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,9 +37,15 @@ public class RepeatInfo
 
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
-    public static final int MIN_SINGLE_REPEAT = 4;
-    public static final int MIN_DUAL_REPEAT = 3;
-    public static final int MIN_OTHER_REPEAT = 2;
+    public static boolean hasMinRepeats(int repeatLength, int repeatCount)
+    {
+        if(repeatLength == 1)
+            return repeatCount >= MIN_SINGLE_REPEAT;
+        else if(repeatLength == 2)
+            return repeatCount >= MIN_DUAL_REPEAT;
+        else
+            return repeatCount >= MIN_OTHER_REPEAT;
+    }
 
     public static List<RepeatInfo> findRepeats(final byte[] bases)
     {
@@ -309,10 +319,10 @@ public class RepeatInfo
 
     public static int getRepeatCount(final Read read, final RepeatInfo repeatInfo, int readIndexStart, boolean searchForward)
     {
-        return getRepeatCount(read, repeatInfo.Bases, readIndexStart, searchForward);
+        return getRepeatCount(read.getBases(), repeatInfo.Bases, readIndexStart, searchForward);
     }
 
-    public static int getRepeatCount(final Read read, final String repeat, int readIndexStart, boolean searchForward)
+    public static int getRepeatCount(final byte[] bases, final String repeat, int readIndexStart, boolean searchForward)
     {
         // count how many instance of the repeat are in this read
         int repeatCount = 0;
@@ -322,16 +332,16 @@ public class RepeatInfo
         if(!searchForward)
             readIndex -= repeatLength - 1; // move to start of repeat
 
-        if(readIndex < 0 || readIndex >= read.basesLength() - repeatLength + 1)
+        if(readIndex < 0 || readIndex >= bases.length - repeatLength + 1)
             return -1;
 
         byte[] repeatBases = repeat.getBytes();
 
-        while(readIndex >= 0 && readIndex < read.basesLength() - repeatLength + 1)
+        while(readIndex >= 0 && readIndex < bases.length - repeatLength + 1)
         {
             for(int j = 0; j < repeatLength; ++j)
             {
-                if(read.getBases()[readIndex + j] != repeatBases[j])
+                if(bases[readIndex + j] != repeatBases[j])
                     return repeatCount;
             }
 

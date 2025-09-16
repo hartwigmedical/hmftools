@@ -3,7 +3,15 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.MATCH;
 
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class ReadParseState
@@ -17,9 +25,10 @@ public class ReadParseState
     private boolean mExhausted;
     private boolean mIsValid;
 
-    private int mMismatches;
-    private int mIndelMismatches;
+    private double mMismatchPenality;
     public int mHighQualMatches;
+
+    private final List<SequenceDiffInfo> mMismatches;
 
     public ReadParseState(final boolean moveForward, final Read read, final int startIndex)
     {
@@ -29,15 +38,15 @@ public class ReadParseState
         mStartIndex = startIndex;
 
         mExhausted = false;
-        mIsValid = true;
         mReadIndex = 0;
+        mIsValid = true;
 
         // move to the required index
         resetIndex();
 
-        mMismatches = 0;
-        mIndelMismatches = 0;
+        mMismatchPenality = 0;
         mHighQualMatches = 0; // was initialised to 1 for first ref base for ref base building
+        mMismatches = Lists.newArrayList();
     }
 
     public Read read()
@@ -57,39 +66,61 @@ public class ReadParseState
 
     public int highQualMatches() { return mHighQualMatches; }
     public void addHighQualMatch() { ++mHighQualMatches; }
+    public List<SequenceDiffInfo> mismatchInfos() { return mMismatches; }
+    public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo) { mMismatches.add(seqDiffInfo); }
 
-    public int mismatches() { return mMismatches; }
-    public void addMismatch() { ++mMismatches; }
+    public double mismatchPenality() { return mMismatchPenality; }
+    public void addMismatch() { ++mMismatchPenality; }
 
     public void resetMatches()
     {
-        mMismatches = 0;
+        mMismatchPenality = 0;
         mHighQualMatches = 0;
+        mMismatches.clear();
     }
 
-    public int indelMismatches() { return mIndelMismatches; }
-    public void addIndelMismatch() { ++mIndelMismatches; }
+    public boolean exceedsMaxMismatches(double maxMismatchPenalty) { return mMismatchPenality > maxMismatchPenalty; }
 
-    public boolean exceedsMaxMismatches(int permittedMismatches) { return mMismatches > permittedMismatches; }
+    public void moveOnMatchType(final SequenceDiffInfo seqDiffInfo)
+    {
+        if(seqDiffInfo.RepeatCount != 0)
+            return;
 
-    public void moveNext()
+        if(seqDiffInfo.Type == MATCH || seqDiffInfo.Type == BASE)
+        {
+            moveNext();
+        }
+        else if(seqDiffInfo.Type == DELETE)
+        {
+            // skip over base
+        }
+        else if(seqDiffInfo.Type == INSERT)
+        {
+            // skip this and the consensus base
+            moveNextBases(2);
+        }
+    }
+
+    public void moveNext() { moveNextBases(1); }
+
+    public void moveNextBases(int baseCount)
     {
         if(mExhausted)
             return;
 
-        if(mMoveForward)
+        for(int i = 0; i < baseCount; ++i)
         {
-            ++mReadIndex;
-        }
-        else
-        {
-            --mReadIndex;
-        }
+            if(mMoveForward)
+                ++mReadIndex;
+            else
+                --mReadIndex;
 
-        mExhausted = mReadIndex < 0 || mReadIndex >= mBaseLength;
-
-        if(mReadIndex < 0 || mReadIndex >= mBaseLength)
-            mIsValid = false;
+            if(mReadIndex < 0 || mReadIndex >= mBaseLength)
+            {
+                mExhausted = true;
+                break;
+            }
+        }
     }
 
     public void resetIndex()
@@ -161,8 +192,14 @@ public class ReadParseState
 
     public String toString()
     {
-        return format("%s: index(%d/%d) %s match(%d) mismatch(%d indel=%d)",
-                mRead.id(), mReadIndex, mBaseLength, mIsValid ? (mExhausted ? "exhausted" : "active") : "invalid",
-                mHighQualMatches, mMismatches, mIndelMismatches);
+        return format("%s: index(%d/%d) %s hqMatch(%d) mismatch(%.1f)",
+                mRead.id(), mReadIndex, mBaseLength - 1, mExhausted ? "exhausted" : "active", mHighQualMatches, mMismatchPenality);
+    }
+
+    @VisibleForTesting
+    public void resetAll()
+    {
+        resetIndex();
+        resetMatches();
     }
 }

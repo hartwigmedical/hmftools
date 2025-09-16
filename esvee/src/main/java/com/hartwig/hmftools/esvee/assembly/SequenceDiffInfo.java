@@ -7,14 +7,16 @@ public class SequenceDiffInfo
     public final int Index;
     public final String Bases; // either the alt SNV base, the indel base or the repeat sequence if a contraction or expansion
     public final SequenceDiffType Type;
-    public final int RepeatDiff;
+    public final int RepeatCount;
 
-    public SequenceDiffInfo(final int index, final String bases, final SequenceDiffType type, final int repeatDiff)
+    public static final SequenceDiffInfo UNSET = new SequenceDiffInfo(-1, "", SequenceDiffType.UNSET, 0);
+
+    public SequenceDiffInfo(final int index, final String bases, final SequenceDiffType type, final int repeatCount)
     {
         Index = index;
         Bases = bases;
         Type = type;
-        RepeatDiff = repeatDiff;
+        RepeatCount = repeatCount;
     }
 
     public static SequenceDiffInfo fromSnv(final int index, final byte base)
@@ -29,7 +31,10 @@ public class SequenceDiffInfo
 
     public String toString()
     {
-        String info = format("%d: %s %s", Index, Bases, Type);
-        return RepeatDiff == 0 ? info : format("%s repeatDiff(%d)", info, RepeatDiff);
+        if(Type == SequenceDiffType.MATCH)
+            return format("%d: %s", Index, Type);
+
+        String info = format("%d: %s %s", Index, Type, Bases);
+        return RepeatCount == 0 ? info : format("%s x%d)", info, RepeatCount);
     }
 }

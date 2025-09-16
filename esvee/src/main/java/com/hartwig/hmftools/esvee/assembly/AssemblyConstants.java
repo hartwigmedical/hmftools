@@ -27,7 +27,6 @@ public final class AssemblyConstants
     public static final double DECOY_MIN_SCORE_FACTOR = 0.9;
     public static final int ASSEMBLY_MIN_READ_SUPPORT = 2;
     public static final int ASSEMBLY_SPLIT_MIN_READ_SUPPORT = 5;
-    public static final int MAX_REPEAT_BASE_COUNT = 5;
     public static final double PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC = 0.2;
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
@@ -47,7 +46,11 @@ public final class AssemblyConstants
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
     public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
 
-    // sequence comparison
+    // repeat identification and sequence comparison
+    public static final int MAX_REPEAT_BASE_COUNT = 5;
+    public static final int MIN_SINGLE_REPEAT = 4;
+    public static final int MIN_DUAL_REPEAT = 3;
+    public static final int MIN_OTHER_REPEAT = 2;
     public static final int REPEAT_2_DIFF_COUNT = 11;
     public static final int REPEAT_3_DIFF_COUNT = 16;
 

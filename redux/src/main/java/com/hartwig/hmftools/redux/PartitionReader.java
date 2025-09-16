@@ -234,7 +234,6 @@ public class PartitionReader
         {
             UltimaRoutines.finaliseRead(mConfig.RefGenome, record);
         }
-
     }
 
     private void processSamRecord(final SAMRecord read)
