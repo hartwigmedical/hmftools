@@ -6,15 +6,12 @@ import com.hartwig.hmftools.cider.CiderConstants
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.codon.Nucleotides
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
-import kotlin.math.max
-import kotlin.math.min
 
 object AlignmentUtil
 {
@@ -146,18 +143,14 @@ object AlignmentUtil
                 val refEnd = alignment.refEnd
                 require(refStart <= refEnd)
                 val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
-                var refSeq = refGenome.getBases(chromosome, refStart, refEnd)
-                refSeq = if (strand == Strand.FORWARD) { refSeq } else {
-                    Nucleotides.reverseComplementBases(refSeq)
-                }
                 val querySeq = seqs[key.index]
                 // Apparently these need to be inverted if the alignment reports the reverse strand
                 // Do this to match Blastn behaviour
                 val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.size - alignment.seqEnd }
                 val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.size - alignment.seqStart }
                 require(queryAlignStart <= queryAlignEnd)
-                val alignedQuerySeq = querySeq.copyOfRange(queryAlignStart, queryAlignEnd)
-                val percentIdentity = calcPercentIdentity(refSeq, alignedQuerySeq)
+                // TODO: is this good?
+                val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
                 val resAlignment = BwaMemMatch(
                     sequences[key.value]!!,
                     // Convert to 1-indexed for the rest of the code
@@ -174,16 +167,5 @@ object AlignmentUtil
             }
         }
         return results
-    }
-
-    // TODO: this is wrong because it doesn't take into account gaps. Probably need to parse CIGAR score instead.
-    private fun calcPercentIdentity(refSeq: ByteArray, alignedQuerySeq: ByteArray): Double {
-        var match = 0
-        for (i in 0 until min(refSeq.size, alignedQuerySeq.size)) {
-            if (refSeq[i] == alignedQuerySeq[i]) {
-                ++match
-            }
-        }
-        return 100 * match.toDouble() / max(refSeq.size, alignedQuerySeq.size)
     }
 }
