@@ -3,20 +3,18 @@ package com.hartwig.hmftools.cider.alignment
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants
-import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary
 import com.hartwig.hmftools.common.codon.Nucleotides
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.round
 
 object AlignmentUtil
 {
@@ -72,7 +70,6 @@ object AlignmentUtil
         return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, if (isPrimaryAssembly(assembly)) null else assembly)
     }
 
-    // TODO: get rid of this?
     fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
                   expectedValueCutoff: Double)
             : Multimap<Int, BlastnMatch>
@@ -116,7 +113,8 @@ object AlignmentUtil
     fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, numThreads: Int):
             Multimap<Int, BwaMemMatch>
     {
-        val refGenome = loadRefGenome(refGenomeFastaPath);
+        val refGenome = loadRefGenome(refGenomeFastaPath)
+        val refGenomeVersion = RefGenomeSource.deriveRefGenomeVersion(refGenome)
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)
         aligner.setNThreadsOption(numThreads)
@@ -139,7 +137,7 @@ object AlignmentUtil
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
                 val chromosome = if (alignment.refId >= 0 && alignment.refId < HumanChromosome.entries.size) {
-                    BLAST_REF_GENOME_VERSION.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
+                    refGenomeVersion.versionedChromosome(HumanChromosome.entries[alignment.refId].toString())
                 }
                 else {
                     continue
@@ -178,6 +176,7 @@ object AlignmentUtil
         return results
     }
 
+    // TODO: this is wrong because it doesn't take into account gaps. Probably need to parse CIGAR score instead.
     private fun calcPercentIdentity(refSeq: ByteArray, alignedQuerySeq: ByteArray): Double {
         var match = 0
         for (i in 0 until min(refSeq.size, alignedQuerySeq.size)) {
