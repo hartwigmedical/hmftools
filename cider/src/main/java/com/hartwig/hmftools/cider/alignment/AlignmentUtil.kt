@@ -139,19 +139,18 @@ object AlignmentUtil
                 val querySeq = seqs[key.index]
                 // Apparently these need to be inverted if the alignment reports the reverse strand
                 // Do this to match Blastn behaviour
-                val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.size - alignment.seqEnd }
+                val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.size - alignment.seqEnd } + 1
                 val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.size - alignment.seqStart }
                 require(queryAlignStart <= queryAlignEnd)
                 // TODO: is this good?
                 val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
                 val resAlignment = BwaMemMatch(
                     sequences[key.value]!!,
-                    // Convert to 1-indexed for the rest of the code
-                    queryAlignStart + 1,
+                    queryAlignStart,
                     queryAlignEnd,
                     chromosome,
-                    alignment.refStart,
-                    alignment.refEnd,
+                    refStart,
+                    refEnd,
                     strand,
                     alignment.alignerScore,
                     percentIdentity
