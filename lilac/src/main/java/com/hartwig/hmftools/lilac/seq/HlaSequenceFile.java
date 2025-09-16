@@ -70,7 +70,10 @@ public class HlaSequenceFile
 
         try
         {
-            String linePrefix = gene.shortName() + "*";
+            List<String> linePrefixes_ = Lists.newArrayList(gene.shortName() + "*");
+            if(gene == HlaGene_.HLA_DRB3 || gene == HlaGene_.HLA_DRB4 || gene == HlaGene_.HLA_DRB5)
+                linePrefixes_.add("DRB1*");
+
             final List<String> fileData = Files.readAllLines(filename_.toPath());
 
             final List<String> orderedAlleles = Lists.newArrayList();
@@ -78,9 +81,9 @@ public class HlaSequenceFile
 
             for(final String line : fileData)
             {
-                String lineData = line.trim();
+                final String lineData = line.trim();
 
-                if(!lineData.startsWith(linePrefix))
+                if(!linePrefixes_.stream().anyMatch(x -> lineData.startsWith(x)))
                     continue;
 
                 String[] split = lineData.split(" ");

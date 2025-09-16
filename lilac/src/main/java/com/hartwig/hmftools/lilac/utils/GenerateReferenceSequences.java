@@ -20,7 +20,8 @@ import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
-import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
+import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts_;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB1;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
@@ -51,6 +52,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.GeneCache;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
@@ -83,7 +85,7 @@ public class GenerateReferenceSequences
         mAlleleFrequencies_ = new CohortFrequency(null, alleleFrequenciesFile.toString());
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
-        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, null);
+        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts_(V37, null);
         mGeneCache = new GeneCache(hlaTranscriptMap);
 
         mNucleotideSequences__ = Lists.newArrayList();
@@ -179,7 +181,7 @@ public class GenerateReferenceSequences
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
 
-        return buildSequences(reducedSequences, false);
+        return buildSequences(gene, reducedSequences, false);
     }
 
     private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene_ gene)
@@ -194,10 +196,10 @@ public class GenerateReferenceSequences
                 .map(x -> x.getRawSequence().endsWith("X") ? x : x.copyWithAdditionalSequence("X"))
                 .collect(Collectors.toList());
 
-        return buildSequences(reducedSequences, true);
+        return buildSequences(gene, reducedSequences, true);
     }
 
-    private List<HlaSequenceLoci> buildSequences(final List<HlaSequence> sequences, boolean isProteinFile)
+    private List<HlaSequenceLoci> buildSequences(final HlaGene_ gene, final List<HlaSequence> sequences, boolean isProteinFile)
     {
         // the first A, B and C entries in both the nucleotide and amino acid files (A*01:01:01, B*07:02:01, C*01:02:01)
         // are used as a reference for all the others
@@ -208,6 +210,9 @@ public class GenerateReferenceSequences
 
         for(HlaSequence sequence : sequences)
         {
+            if(sequence.Allele.Gene != gene)
+                continue;
+
             HlaAllele allele = isProteinFile ?
                     mAlleleCache.requestFourDigit(sequence.Allele.toString()) : mAlleleCache.request(sequence.Allele.toString());
 
@@ -255,7 +260,7 @@ public class GenerateReferenceSequences
                     maxSeq = seq;
                 }
 
-                if(freq < WILDCARD_FREQUENCY_CUTOFF)
+                if(seq.Allele.Gene.hasFrequencies() && freq < WILDCARD_FREQUENCY_CUTOFF)
                     continue;
 
                 if(fourDigit.toString().matches("^.*[^0-9]$"))
@@ -400,161 +405,162 @@ public class GenerateReferenceSequences
         }
     }
 
-    private void writeAminoAcidSequences(final File filename_, final Collection<HlaSequenceLoci> sequenceData)
-    {
-        // write each allele's amino acid sequence with reference to the template allele A*01:01
-
-        HlaSequenceLoci refSequence = sequenceData.stream().filter(x -> x.Allele.matches(DEFLATE_TEMPLATE)).findFirst().orElse(null);
-
-        if(refSequence == null)
-        {
-            LL_LOGGER.error("default template({}) not found");
-            return;
-        }
-
-        List<Integer> sequenceMaxLengths = Lists.newArrayList();
-        int sequenceLociMax = sequenceData.stream().mapToInt(HlaSequenceLoci::length).max().orElse(0);
-
-        int maxAlleleNameLength = sequenceData.stream().mapToInt(x -> x.Allele.toString().length()).max().orElse(0);
-
-        for(int i = 0; i < sequenceLociMax; ++i)
-        {
-            final int locus = i;
-
-            int maxLocusLength = sequenceData.stream()
-                    .filter(x -> locus < x.length())
-                    .mapToInt(x -> x.sequence(locus).length()).max().orElse(0);
-
-            sequenceMaxLengths.add(maxLocusLength);
-        }
-
-        int alleleNameLength = maxAlleleNameLength + 5;
-        int maxInsertLen = 2;
-
-        try
-        {
-            final BufferedWriter writer = createBufferedWriter(filename_.toString(), false);
-
-            // write locus values first
-            String titleStr = padString("Index", alleleNameLength);
-            writer.write(titleStr);
-
-            int segmentInsertCount = 0;
-
-            writer.write(format("%03d", 0));
-
-            for(int i = 1; i < sequenceMaxLengths.size(); ++i)
-            {
-                if(sequenceMaxLengths.get(i) > 1)
-                    ++segmentInsertCount;
-
-                if((i % 10) == 0)
-                {
-                    String padding = padString("", 7 + (maxInsertLen - 1) * segmentInsertCount);
-                    writer.write(format("%s%03d", padding, i));
-                    segmentInsertCount = 0;
-                }
-            }
-
-            writer.newLine();
-            writer.newLine();
-
-            // then actual transcript positions for the exon boundaries
-            for(HlaGene_ gene : mGeneCache.GeneNames)
-            {
-                TranscriptData transData = mGeneCache.GeneTranscriptMap.get(gene);
-                String geneStr = padString(gene.shortName(), alleleNameLength);
-                writer.write(geneStr);
-
-                if(transData.Strand == POS_STRAND)
-                {
-                    for(int i = 0; i < transData.exons().size(); ++i)
-                    {
-                        ExonData exon = transData.exons().get(i);
-
-                        if(transData.CodingStart > exon.End)
-                            continue;
-                        else if(transData.CodingEnd < exon.Start)
-                            break;
-
-                        writer.write(format("%d: %d - %d\t",
-                                exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
-                    }
-                }
-                else
-                {
-                    for(int i = transData.exons().size() - 1; i >= 0; --i)
-                    {
-                        ExonData exon = transData.exons().get(i);
-
-                        if(transData.CodingEnd < exon.Start)
-                            continue;
-                        else if(transData.CodingStart > exon.End)
-                            break;
-
-                        writer.write(format("%d: %d - %d\t",
-                                exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
-                    }
-                }
-
-                writer.newLine();
-            }
-
-            writer.newLine();
-
-            for(HlaSequenceLoci sequenceLoci : sequenceData)
-            {
-                HlaAllele allele = sequenceLoci.Allele;
-                boolean isReference = sequenceLoci == refSequence;
-                String alleleStr = padString(allele.toString(), alleleNameLength);
-                writer.write(alleleStr);
-
-                List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
-
-                int nextExonIndex = 0;
-                int nextExonBoundary = exonBoundaries.get(nextExonIndex);
-                ++nextExonIndex;
-
-                for(int locus = 0; locus < sequenceLoci.length(); ++locus)
-                {
-                    if(locus > nextExonBoundary)
-                    {
-                        writer.write(EXON_BOUNDARY);
-                        if(nextExonIndex < exonBoundaries.size())
-                        {
-                            nextExonBoundary = exonBoundaries.get(nextExonIndex);
-                            ++nextExonIndex;
-                        }
-                        else
-                        {
-                            nextExonBoundary = sequenceLociMax + 1;
-                        }
-                    }
-
-                    String seq = sequenceLoci.sequence(locus);
-
-                    if(!isReference)
-                    {
-                        String refSeq = locus < refSequence.length() ? refSequence.sequence(locus) : "";
-                        if(refSeq.equals(seq))
-                            seq = String.valueOf(IDENTICAL);
-                    }
-
-                    int maxSeqLength = min(sequenceMaxLengths.get(locus), maxInsertLen); // only show inserts with 1-extra base
-                    seq = padString(seq, maxSeqLength);
-                    writer.write(seq);
-                }
-
-                writer.newLine();
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to write file {}: {}", filename_.toString(), e.toString());
-        }
-    }
+    // TODO:
+//    private void writeAminoAcidSequences(final File filename_, final Collection<HlaSequenceLoci> sequenceData)
+//    {
+//        // write each allele's amino acid sequence with reference to the template allele A*01:01
+//
+//        HlaSequenceLoci refSequence = sequenceData.stream().filter(x -> x.Allele.matches(DEFLATE_TEMPLATE)).findFirst().orElse(null);
+//
+//        if(refSequence == null)
+//        {
+//            LL_LOGGER.error("default template({}) not found");
+//            return;
+//        }
+//
+//        List<Integer> sequenceMaxLengths = Lists.newArrayList();
+//        int sequenceLociMax = sequenceData.stream().mapToInt(HlaSequenceLoci::length).max().orElse(0);
+//
+//        int maxAlleleNameLength = sequenceData.stream().mapToInt(x -> x.Allele.toString().length()).max().orElse(0);
+//
+//        for(int i = 0; i < sequenceLociMax; ++i)
+//        {
+//            final int locus = i;
+//
+//            int maxLocusLength = sequenceData.stream()
+//                    .filter(x -> locus < x.length())
+//                    .mapToInt(x -> x.sequence(locus).length()).max().orElse(0);
+//
+//            sequenceMaxLengths.add(maxLocusLength);
+//        }
+//
+//        int alleleNameLength = maxAlleleNameLength + 5;
+//        int maxInsertLen = 2;
+//
+//        try
+//        {
+//            final BufferedWriter writer = createBufferedWriter(filename_.toString(), false);
+//
+//            // write locus values first
+//            String titleStr = padString("Index", alleleNameLength);
+//            writer.write(titleStr);
+//
+//            int segmentInsertCount = 0;
+//
+//            writer.write(format("%03d", 0));
+//
+//            for(int i = 1; i < sequenceMaxLengths.size(); ++i)
+//            {
+//                if(sequenceMaxLengths.get(i) > 1)
+//                    ++segmentInsertCount;
+//
+//                if((i % 10) == 0)
+//                {
+//                    String padding = padString("", 7 + (maxInsertLen - 1) * segmentInsertCount);
+//                    writer.write(format("%s%03d", padding, i));
+//                    segmentInsertCount = 0;
+//                }
+//            }
+//
+//            writer.newLine();
+//            writer.newLine();
+//
+//            // then actual transcript positions for the exon boundaries
+//            for(HlaGene_ gene : GENES)
+//            {
+//                TranscriptData transData = mGeneCache.GeneTranscriptMap.get(gene);
+//                String geneStr = padString(gene.shortName(), alleleNameLength);
+//                writer.write(geneStr);
+//
+//                if(transData.Strand == POS_STRAND)
+//                {
+//                    for(int i = 0; i < transData.exons().size(); ++i)
+//                    {
+//                        ExonData exon = transData.exons().get(i);
+//
+//                        if(transData.CodingStart > exon.End)
+//                            continue;
+//                        else if(transData.CodingEnd < exon.Start)
+//                            break;
+//
+//                        writer.write(format("%d: %d - %d\t",
+//                                exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
+//                    }
+//                }
+//                else
+//                {
+//                    for(int i = transData.exons().size() - 1; i >= 0; --i)
+//                    {
+//                        ExonData exon = transData.exons().get(i);
+//
+//                        if(transData.CodingEnd < exon.Start)
+//                            continue;
+//                        else if(transData.CodingStart > exon.End)
+//                            break;
+//
+//                        writer.write(format("%d: %d - %d\t",
+//                                exon.Rank, max(exon.Start, transData.CodingStart), min(exon.End, transData.CodingEnd)));
+//                    }
+//                }
+//
+//                writer.newLine();
+//            }
+//
+//            writer.newLine();
+//
+//            for(HlaSequenceLoci sequenceLoci : sequenceData)
+//            {
+//                HlaAllele allele = sequenceLoci.Allele;
+//                boolean isReference = sequenceLoci == refSequence;
+//                String alleleStr = padString(allele.toString(), alleleNameLength);
+//                writer.write(alleleStr);
+//
+//                List<Integer> exonBoundaries = getAminoAcidExonBoundaries(allele.Gene);
+//
+//                int nextExonIndex = 0;
+//                int nextExonBoundary = exonBoundaries.get(nextExonIndex);
+//                ++nextExonIndex;
+//
+//                for(int locus = 0; locus < sequenceLoci.length(); ++locus)
+//                {
+//                    if(locus > nextExonBoundary)
+//                    {
+//                        writer.write(EXON_BOUNDARY);
+//                        if(nextExonIndex < exonBoundaries.size())
+//                        {
+//                            nextExonBoundary = exonBoundaries.get(nextExonIndex);
+//                            ++nextExonIndex;
+//                        }
+//                        else
+//                        {
+//                            nextExonBoundary = sequenceLociMax + 1;
+//                        }
+//                    }
+//
+//                    String seq = sequenceLoci.sequence(locus);
+//
+//                    if(!isReference)
+//                    {
+//                        String refSeq = locus < refSequence.length() ? refSequence.sequence(locus) : "";
+//                        if(refSeq.equals(seq))
+//                            seq = String.valueOf(IDENTICAL);
+//                    }
+//
+//                    int maxSeqLength = min(sequenceMaxLengths.get(locus), maxInsertLen); // only show inserts with 1-extra base
+//                    seq = padString(seq, maxSeqLength);
+//                    writer.write(seq);
+//                }
+//
+//                writer.newLine();
+//            }
+//
+//            closeBufferedWriter(writer);
+//        }
+//        catch(IOException e)
+//        {
+//            LL_LOGGER.error("failed to write file {}: {}", filename_.toString(), e.toString());
+//        }
+//    }
 
     private static String padString(final String str, int reqLength)
     {

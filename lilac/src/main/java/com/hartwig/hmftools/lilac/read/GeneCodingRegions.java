@@ -21,25 +21,25 @@ public class GeneCodingRegions
     public final int CodingEnd;
     public final List<BaseRegion> CodingRegions;
 
-    public GeneCodingRegions(final HlaGene_ geneName, final String chromosome, final TranscriptData transcriptData)
+    public GeneCodingRegions(final HlaGene_ geneName, final String chromosome, final TranscriptData transcriptData_)
     {
         GeneName = geneName;
         Chromosome = chromosome;
-        Strand = transcriptData.Strand;
+        Strand = transcriptData_.Strand;
 
-        CodingStart = transcriptData.CodingStart;
-        CodingEnd = transcriptData.CodingEnd;
+        CodingStart = transcriptData_.CodingStart;
+        CodingEnd = transcriptData_.CodingEnd;
 
         CodingRegions = Lists.newArrayList();
 
-        int codingStart = transcriptData.CodingStart;
-        int codingEnd = transcriptData.CodingEnd;
+        int codingStart = transcriptData_.CodingStart;
+        int codingEnd = transcriptData_.CodingEnd;
 
-        for(ExonData exon : transcriptData.exons())
+        for(ExonData exon_ : transcriptData_.exons())
         {
-            if(codingStart <= exon.End && codingEnd >= exon.Start)
+            if(codingStart <= exon_.End && codingEnd >= exon_.Start)
             {
-                CodingRegions.add(new BaseRegion(max(codingStart, exon.Start), min(codingEnd, exon.End)));
+                CodingRegions.add(new BaseRegion(max(codingStart, exon_.Start), min(codingEnd, exon_.End)));
             }
         }
     }

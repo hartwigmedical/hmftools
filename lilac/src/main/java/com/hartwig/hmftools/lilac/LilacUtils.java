@@ -16,15 +16,15 @@ public class LilacUtils
     public static boolean aboveMinQual(int qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
     public static boolean belowMinQual(byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
 
-    public static int calcNucelotideLocus(final List<TranscriptData> transcripts, int position)
+    public static int calcNucelotideLocus(final List<TranscriptData> transcripts_, int position)
     {
-        for(TranscriptData transData : transcripts)
+        for(TranscriptData transData_ : transcripts_)
         {
-            if(!positionWithin(position, transData.CodingStart, transData.CodingEnd))
+            if(!positionWithin(position, transData_.CodingStart, transData_.CodingEnd))
                 continue;
 
             // locus is a zero-based index, so the first coding base has locus of 0
-            return calcCodingBases(transData, position).CodingBases - 1;
+            return calcCodingBases(transData_, position).CodingBases - 1;
         }
         return -1;
     }

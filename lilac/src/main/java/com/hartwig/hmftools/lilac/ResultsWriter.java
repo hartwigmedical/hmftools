@@ -164,7 +164,8 @@ public class ResultsWriter
         // TODO:
         if(true)
         {
-            throw new NotImplementedException("");
+            return;
+//            throw new NotImplementedException("");
         }
 
         Map<HlaGene_, Integer> countsByGene = Map.of(HlaGene_.HLA_A, 0, HlaGene_.HLA_B, 0, HlaGene_.HLA_C, 0);
