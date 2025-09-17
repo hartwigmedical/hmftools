@@ -2,6 +2,10 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_DESC;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CIDER_DIR_CFG;
@@ -159,6 +163,13 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
+
+            configBuilder.addConfigItem(
+                    formSourceConfig(PIPELINE_FORMAT_CFG, sourceName), false,
+                    formSourceDescription(PIPELINE_FORMAT_DESC, sourceName));
+            configBuilder.addPath(
+                    formSourceConfig(PIPELINE_FORMAT_FILE_CFG, sourceName), false,
+                    formSourceDescription(PIPELINE_FORMAT_FILE_DESC, sourceName));
         }
     }
 
@@ -181,33 +192,44 @@ public class FileSources
     {
         String sampleDir = checkAddDirSeparator(getConfigValue(configBuilder, SAMPLE_DIR, sourceName));
 
-        String linxDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LINX_SOMATIC_DIR, LINX_DIR_CFG, sourceName);
+        PipelineToolDirectories defaultToolDirs = resolveDefaultToolDirs(configBuilder, sourceName);
 
-        String linxGermlineDir = getDirectory(
-                configBuilder, sampleDir, PipelineToolDirectories.LINX_GERMLINE_DIR, LINX_GERMLINE_DIR_CFG, sourceName);
+        String linxDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.linxSomaticDir(), LINX_DIR_CFG, sourceName);
 
-        String cobaltDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.COBALT_DIR, COBALT_DIR_CFG, sourceName);
-        String purpleDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PURPLE_DIR, PURPLE_DIR_CFG, sourceName);
-        String cuppaDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CUPPA_DIR, CUPPA_DIR_CFG, sourceName);
-        String lilacDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.LILAC_DIR, LILAC_DIR_CFG, sourceName);
-        String chordDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CHORD_DIR, CHORD_DIR_CFG, sourceName);
-        String peachDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.PEACH_DIR, PEACH_DIR_CFG, sourceName);
-        String virusDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.VIRUS_INTERPRETER_DIR, VIRUS_DIR_CFG, sourceName);
+        String linxGermlineDir =
+                getDirectory(configBuilder, sampleDir, defaultToolDirs.linxGermlineDir(), LINX_GERMLINE_DIR_CFG, sourceName);
+
+        String cobaltDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.cobaltDir(), COBALT_DIR_CFG, sourceName);
+        String purpleDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.purpleDir(), PURPLE_DIR_CFG, sourceName);
+        String cuppaDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.cuppaDir(), CUPPA_DIR_CFG, sourceName);
+        String lilacDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.lilacDir(), LILAC_DIR_CFG, sourceName);
+        String chordDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.chordDir(), CHORD_DIR_CFG, sourceName);
+        String peachDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.peachDir(), PEACH_DIR_CFG, sourceName);
+        String virusDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.virusInterpreterDir(), VIRUS_DIR_CFG, sourceName);
 
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
 
-        String tumorFlagstat = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_FLAGSTAT, sourceName);
-        String germlineFlagstat = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_FLAGSTAT, sourceName);
-        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, "*/bam_metrics", TUMOR_BAM_METRICS, sourceName);
-        String germlineBamMetrics = getDirectory(configBuilder, sampleDir, "$/bam_metrics", GERMLINE_BAM_METRICS, sourceName);
-        String snpGenotype = getDirectory(configBuilder, sampleDir, "$/snp_genotype", SNP_GENOTYPE, sourceName);
-        String ciderDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.CIDER_DIR, CIDER_DIR_CFG, sourceName);
-        String tealDir = getDirectory(configBuilder, sampleDir, PipelineToolDirectories.TEAL_DIR, TEAL_DIR_CFG, sourceName);
+        String tumorFlagstat = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorFlagstatDir(), TUMOR_FLAGSTAT, sourceName);
+        String germlineFlagstat =
+                getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineFlagstatDir(), GERMLINE_FLAGSTAT, sourceName);
+        String tumorBamMetrics = getDirectory(configBuilder, sampleDir, defaultToolDirs.tumorMetricsDir(), TUMOR_BAM_METRICS, sourceName);
+        String germlineBamMetrics =
+                getDirectory(configBuilder, sampleDir, defaultToolDirs.germlineMetricsDir(), GERMLINE_BAM_METRICS, sourceName);
+        String snpGenotype = getDirectory(configBuilder, sampleDir, defaultToolDirs.snpGenotypeDir(), SNP_GENOTYPE, sourceName);
+        String ciderDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.ciderDir(), CIDER_DIR_CFG, sourceName);
+        String tealDir = getDirectory(configBuilder, sampleDir, defaultToolDirs.tealDir(), TEAL_DIR_CFG, sourceName);
 
         return new FileSources(sourceName, linxDir, cobaltDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, peachDir, virusDir,
                 somaticVcf, somaticUnfilteredVcf, tumorFlagstat, germlineFlagstat, tumorBamMetrics, germlineBamMetrics, snpGenotype,
                 ciderDir, tealDir);
+    }
+
+    private static PipelineToolDirectories resolveDefaultToolDirs(final ConfigBuilder configBuilder, final String sourceName)
+    {
+        String pipelineFormatConfigStr = formSourceConfig(PIPELINE_FORMAT_CFG, sourceName);
+        String pipelineFormatFileConfigStr = formSourceConfig(PIPELINE_FORMAT_FILE_CFG, sourceName);
+        return PipelineToolDirectories.resolveToolDirectories(configBuilder, pipelineFormatConfigStr, pipelineFormatFileConfigStr);
     }
 
     private static String getDirectory(
