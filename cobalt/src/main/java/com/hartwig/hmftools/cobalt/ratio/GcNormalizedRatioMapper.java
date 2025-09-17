@@ -81,7 +81,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         double medianNormalisation = mSampleMedianReadDepth / mSampleMeanReadDepth;
 
         DoubleColumn gcNormalisedRatio = ratiosWithMedianCount.doubleColumn(CobaltColumns.RATIO)
-                .multiply(medianNormalisation)
+                .multiply(medianNormalisation) // todo - not needed in targeted mode (has no effect due to final normalisation)
                 .divide(ratiosWithMedianCount.doubleColumn("gcMedianCount"))
                 .map(d -> Double.isFinite(d) ? d : Double.NaN); // protect against division by 0
 

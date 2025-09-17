@@ -23,7 +23,7 @@ public class TargetedRegionNormaliser implements RatioMapper
         // normalise the ratio by relative enrichment and targeted region median
         DoubleColumn onTargetRatioColumn = onTargetRatios.doubleColumn(CobaltColumns.RATIO)
                 .divide(onTargetRatios.doubleColumn("relativeEnrichment"))
-                .divide(targetRegionGcRatioMedian)
+                .divide(targetRegionGcRatioMedian) // todo - not needed in targeted mode (has no effect due to final normalisation)
                 .map(d -> Double.isFinite(d) ? d : Double.NaN) // protect against division by 0
                 .setName(CobaltColumns.RATIO);
 
