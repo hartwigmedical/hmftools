@@ -407,7 +407,7 @@ public class VariantFilters
 
         if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc)
         {
-            edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
+            edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
         }
 
         double repeatPenalty = 0;

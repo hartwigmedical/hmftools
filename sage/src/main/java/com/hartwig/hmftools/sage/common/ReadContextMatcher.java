@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
@@ -235,9 +236,12 @@ public class ReadContextMatcher
         return 1 + (segmentLength / CORE_LOW_QUAL_MISMATCH_FACTOR);
     }
 
-    public boolean coversVariant(final SAMRecord record, final int readVarIndex) { return coversVariant(record.getReadBases(), readVarIndex); }
+    public boolean coversVariant(final SAMRecord record, final int readVarIndex)
+    {
+        return coversVariant(record.getReadBases(), record.getBaseQualities(), readVarIndex);
+    }
 
-    public boolean coversVariant(final byte[] readBases, final int readVarIndex)
+    public boolean coversVariant(final byte[] readBases, final byte[] baseQuals, final int readVarIndex)
     {
         if(readVarIndex < 0)
             return false;
@@ -246,7 +250,16 @@ public class ReadContextMatcher
         int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
 
         // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
-        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < readBases.length;
+        if(requiredReadIndexLower < 0 || requiredReadIndexUpper >= readBases.length)
+            return false;
+
+        for(int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
+        {
+            if(isUncertainBaseQual(baseQuals[i]))
+                return false;
+        }
+
+        return true;
     }
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)
