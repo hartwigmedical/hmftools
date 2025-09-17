@@ -142,7 +142,8 @@ object AlignmentUtil
                 val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.size - alignment.seqEnd } + 1
                 val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.size - alignment.seqStart }
                 require(queryAlignStart <= queryAlignEnd)
-                // TODO: is this good?
+                // nMismatches is not the best name - it's actually the edit distance.
+                // Which means this calculation is correct for mismatches and gaps.
                 val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
                 val resAlignment = BwaMemMatch(
                     sequences[key.value]!!,
