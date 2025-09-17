@@ -112,50 +112,15 @@ public class SvVisualiser implements AutoCloseable
 
         if(mConfig.PlotReportableEvents)
         {
-            Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
-
-            for(Integer clusterId : reportableClusterIds)
-            {
-                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-            }
+            submitReportableEvents();
         }
         else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty())
         {
-            if(!mConfig.ClusterIds.isEmpty())
-            {
-                submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
-            }
-
-            if(!mConfig.Chromosomes.isEmpty())
-            {
-                submitChromosome(mConfig.Chromosomes, null);
-            }
-
-            if(!mConfig.Genes.isEmpty())
-            {
-                for(String geneName : mConfig.Genes)
-                {
-                    String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
-                    submitChromosome(Lists.newArrayList(geneChromosome), geneName);
-                }
-            }
+            submitSelectedEvents();
         }
         else
         {
-            List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
-
-            for(Integer clusterId : clusterIds)
-            {
-                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-            }
-
-            Set<String> chromosomes = Sets.newHashSet();
-            mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            for(String chromosome : chromosomes)
-            {
-                submitChromosome(Lists.newArrayList(chromosome), null);
-            }
+            submitDefaultEvents();
         }
 
         mCallableConfigs.forEach(x -> futures.add(mExecutorService.submit(x)));
@@ -167,6 +132,56 @@ public class SvVisualiser implements AutoCloseable
         }
 
         VIS_LOGGER.info("Linx Visualiser complete");
+    }
+
+    private void submitDefaultEvents()
+    {
+        List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
+
+        for(Integer clusterId : clusterIds)
+        {
+            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+        }
+
+        Set<String> chromosomes = Sets.newHashSet();
+        mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        for(String chromosome : chromosomes)
+        {
+            submitChromosome(Lists.newArrayList(chromosome), null);
+        }
+    }
+
+    private void submitReportableEvents()
+    {
+        Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
+
+        for(Integer clusterId : reportableClusterIds)
+        {
+            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+        }
+    }
+
+    private void submitSelectedEvents()
+    {
+        if(!mConfig.ClusterIds.isEmpty())
+        {
+            submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
+        }
+
+        if(!mConfig.Chromosomes.isEmpty())
+        {
+            submitChromosome(mConfig.Chromosomes, null);
+        }
+
+        if(!mConfig.Genes.isEmpty())
+        {
+            for(String geneName : mConfig.Genes)
+            {
+                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName);
+            }
+        }
     }
 
     private void submitChromosome(List<String> chromosomes, @Nullable final String geneName)
