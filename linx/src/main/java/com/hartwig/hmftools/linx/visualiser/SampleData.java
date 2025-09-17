@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -26,6 +27,9 @@ import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -161,12 +165,17 @@ public class SampleData
         }
 
         boolean clustersOrChainsProvided = !mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty();
-        boolean anyLinxVisDataEmpty = Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty();
-        boolean anyUpstreamCnvDataExists =  !AmberBAFs.isEmpty() || !CobaltRatios.isEmpty() || !PurpleSegments.isEmpty();
+        boolean anyUpstreamCnvDataExists = !AmberBAFs.isEmpty() || !CobaltRatios.isEmpty() || !PurpleSegments.isEmpty();
+
+        List<String> missingLinxVisData = Lists.newArrayList();
+        if(CopyNumbers.isEmpty()) missingLinxVisData.add("copy numbers");
+        if(Segments.isEmpty())    missingLinxVisData.add("segments");
+        if(SvData.isEmpty())      missingLinxVisData.add("SV data");
+        boolean anyLinxVisDataEmpty = !missingLinxVisData.isEmpty();
 
         if(clustersOrChainsProvided && anyLinxVisDataEmpty)
         {
-            VIS_LOGGER.error("sample({}) Cannot plot user specified cluster/chain IDs because Linx VIS data was empty", mConfig.Sample);
+            VIS_LOGGER.error("sample({}) Cannot plot user specified cluster/chain IDs because LINX vis data was empty", mConfig.Sample);
             System.exit(1);
         }
 
@@ -174,14 +183,14 @@ public class SampleData
         {
             if(anyUpstreamCnvDataExists)
             {
-                VIS_LOGGER.info("sample({}) Linx VIS data empty, but proceeding to plotting CNV data", mConfig.Sample);
+                VIS_LOGGER.info("sample({}) has some missing LINX vis data: {}. Proceeding to plotting CNV data only",
+                        mConfig.Sample, String.join(", ", missingLinxVisData));
             }
             else
             {
-                VIS_LOGGER.info("sample({}) Linx VIS data and (filtered) CNV data empty - no plots to generate", mConfig.Sample);
+                VIS_LOGGER.info("No plots to generate - sample({}) LINX vis data and (filtered) AMBER/COBALT/PURPLE CNV data empty", mConfig.Sample);
+                System.exit(0);
             }
-
-            return;
         }
 
         boolean loadSvData = !mConfig.UseCohortFiles
@@ -290,6 +299,29 @@ public class SampleData
         }
 
         return clusterIds;
+    }
+
+    public Set<String> findGenesWithCNVs()
+    {
+        try
+        {
+            if(mConfig.PurpleDir == null)
+                return null;
+
+            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<DriverCatalog> drivers = DriverCatalogFile.read(purpleDriverFile);
+
+            List<DriverCatalog> geneCNVs = drivers.stream()
+                    .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL )
+                    .toList();
+
+            return geneCNVs.stream().map(x -> x.gene()).collect(Collectors.toSet());
+        }
+        catch(Exception e)
+        {
+            VIS_LOGGER.warn("sample({}) failed to load driver data: {}", mConfig.Sample, e.toString());
+            return null;
+        }
     }
 
     private List<VisFusion> loadFusions(final String fileName) throws IOException

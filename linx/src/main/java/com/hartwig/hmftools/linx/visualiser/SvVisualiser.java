@@ -71,8 +71,6 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
-    private final boolean mPlottingSelectedLoci;
-
     private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
         VIS_LOGGER.info("loading visualiser data");
@@ -84,18 +82,15 @@ public class SvVisualiser implements AutoCloseable
         mCallableImages = Lists.newArrayList();
         mCallableConfigs = Lists.newArrayList();
 
-        mPlottingSelectedLoci = !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty();
-
-        if(mConfig.Genes.isEmpty())
+        if(mConfig.EnsemblDataDir != null)
         {
-            mEnsemblDataCache = null;
+            mEnsemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+            mEnsemblDataCache.setRequiredData(true, false, false, true);
+            mEnsemblDataCache.load(false);
         }
         else
         {
-            EnsemblDataCache ensemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
-            ensemblDataCache.setRequiredData(true, false, false, true);
-            ensemblDataCache.load(false);
-            mEnsemblDataCache = ensemblDataCache;
+            mEnsemblDataCache = null;
         }
 
         mSampleData = new SampleData(mConfig);
@@ -150,6 +145,17 @@ public class SvVisualiser implements AutoCloseable
         {
             submitChromosome(Lists.newArrayList(chromosome), null);
         }
+
+        Set<String> genesWithCNVs = mSampleData.findGenesWithCNVs();
+        if(genesWithCNVs != null)
+        {
+            for(String geneName : genesWithCNVs)
+            {
+                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName);
+            }
+        }
+
     }
 
     private void submitReportableEvents()
@@ -207,11 +213,6 @@ public class SvVisualiser implements AutoCloseable
                 .collect(toSet());
 
         List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        if(!mPlottingSelectedLoci && chromosomeLinks.isEmpty())
-        {
-            VIS_LOGGER.warn("chromosomes({}) not present in file", chromosomesStr);
-            return;
-        }
 
         if(mCircosConfig.exceedsMaxPlotSvCount(chromosomeLinks.size()))
         {
@@ -447,17 +448,6 @@ public class SvVisualiser implements AutoCloseable
                 0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments, mConfig.RefGenomeCoords);
 
         List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
-
-        if(!mPlottingSelectedLoci && (copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty()))
-        {
-            List<String> missingDataTypes = Lists.newArrayList();
-            if(copyNumbers.isEmpty()) missingDataTypes.add("copy numbers");
-            if(segments.isEmpty())    missingDataTypes.add("segments");
-            if(links.isEmpty())       missingDataTypes.add("links");
-
-            VIS_LOGGER.warn("plot({}) has missing required data: {}", fileId, String.join(", ", missingDataTypes));
-            return;
-        }
 
         ColorPicker color = colorPickerFactory.create(links);
 
