@@ -11,22 +11,14 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import htsjdk.samtools.SAMRecord;
 
-// works with one repeat
-// find the number of reads of each number of repeat across the section
 public class MicrosatelliteSiteAnalyser
 {
-    public static final Logger sLogger = LogManager.getLogger(MicrosatelliteSiteAnalyser.class);
-
-    private final RefGenomeMicrosatellite mRefGenomeMicrosatellite;
+    private final MicrosatelliteSite mMicrosatelliteSite;
     private final ConsensusMarker mConsensusMarker;
 
-    private final EnumMap<ConsensusType, Map<Integer, Integer>> mPassingJitterCountsByConsensusType;
+    private final EnumMap<ConsensusType, Map<Integer,Integer>> mPassingJitterCountsByConsensusType;
     private final EnumMap<ConsensusType, Integer> mReadRepeatMatchCountsByConsensusType;
     private int mNumReadRejected;
     private int mPassingReadRepeatMatchCount;
@@ -34,10 +26,10 @@ public class MicrosatelliteSiteAnalyser
     private final EnumMap<ConsensusType, SortedMap<Integer, Integer>> mPassingRepeatLengthCountsByConsensusType;
 
     public MicrosatelliteSiteAnalyser(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final ConsensusMarker consensusMarker,
+            final MicrosatelliteSite microsatelliteSite, final ConsensusMarker consensusMarker,
             boolean storeAllPassingRepeatLengths)
     {
-        mRefGenomeMicrosatellite = refGenomeMicrosatellite;
+        mMicrosatelliteSite = microsatelliteSite;
         mConsensusMarker = consensusMarker;
 
         mPassingJitterCountsByConsensusType = Maps.newEnumMap(ConsensusType.class);
@@ -48,9 +40,9 @@ public class MicrosatelliteSiteAnalyser
         mPassingRepeatLengthCountsByConsensusType = storeAllPassingRepeatLengths ? Maps.newEnumMap(ConsensusType.class) : null;
     }
 
-    public RefGenomeMicrosatellite refGenomeMicrosatellite()
+    public MicrosatelliteSite refGenomeMicrosatellite()
     {
-        return mRefGenomeMicrosatellite;
+        return mMicrosatelliteSite;
     }
 
     public int readRepeatMatchCount(final ConsensusType consensusType)
@@ -65,7 +57,7 @@ public class MicrosatelliteSiteAnalyser
 
     public int numReadRejected() { return mNumReadRejected; }
 
-    public Map<Integer, Integer> passingJitterCounts(final ConsensusType consensusType)
+    public Map<Integer,Integer> passingJitterCounts(final ConsensusType consensusType)
     {
         return mPassingJitterCountsByConsensusType.getOrDefault(consensusType, Collections.emptyMap());
     }
@@ -81,12 +73,15 @@ public class MicrosatelliteSiteAnalyser
             return Collections.emptyList();
 
         List<Integer> passingRepeats = Lists.newArrayList();
+
         for(Map.Entry<Integer, Integer> repeatLengthAndCount : mPassingRepeatLengthCountsByConsensusType.get(consensusType).entrySet())
         {
             int repeatLength = repeatLengthAndCount.getKey();
             int repeatCount = repeatLengthAndCount.getValue();
             for(int i = 0; i < repeatCount; i++)
+            {
                 passingRepeats.add(repeatLength);
+            }
         }
 
         return passingRepeats;
@@ -94,10 +89,7 @@ public class MicrosatelliteSiteAnalyser
 
     public synchronized void addReadToStats(final SAMRecord read)
     {
-        if(read.getReadUnmappedFlag() || read.getDuplicateReadFlag())
-            return;
-
-        MicrosatelliteRead msRead = MicrosatelliteRead.from(mRefGenomeMicrosatellite, read, mConsensusMarker);
+        MicrosatelliteRead msRead = MicrosatelliteRead.from(mMicrosatelliteSite, read, mConsensusMarker);
 
         ConsensusType consensusType = msRead.consensusType();
         mReadRepeatMatchCountsByConsensusType.merge(consensusType, 1, Integer::sum);
@@ -120,38 +112,31 @@ public class MicrosatelliteSiteAnalyser
         }
     }
 
-    public boolean shouldKeepSite(final double altCountFractionInit,
-            final double altCountFractionCutoffStep,
-            final double rejectedReadFractionCutoff,
-            final int minPassingSiteReads)
+    public boolean shouldKeepSite(
+            final double altCountFractionInit, final double altCountFractionCutoffStep,
+            final double rejectedReadFractionCutoff, final int minPassingSiteReads)
     {
         return !isRealVariant(altCountFractionInit, altCountFractionCutoffStep, rejectedReadFractionCutoff, minPassingSiteReads);
     }
 
-    // have threshold for ALT site differ depending on INDEL length (e.g. 30% for INDEL=1, 25% for INDEL=2, ..., 10% for INDEL=5)
-    public boolean isRealVariant(final double altCountFractionInit,
-            final double altCountFractionCutoffStep,
-            final double rejectedReadFractionCutoff,
-            final int minPassingSiteReads)
+    public boolean isRealVariant(
+            final double altCountFractionInit, final double altCountFractionCutoffStep,
+            final double rejectedReadFractionCutoff, final int minPassingSiteReads)
     {
-        Validate.isTrue(altCountFractionCutoffStep <= 0.0);
-
+        // have threshold for ALT site differ depending on INDEL length (e.g. 30% for INDEL=1, 25% for INDEL=2, ..., 10% for INDEL=5)
         if(mPassingReadRepeatMatchCount < minPassingSiteReads)
-        {
             return true;
-        }
 
         double fractionRejected = 1.0 - mPassingReadRepeatMatchCount / (double) readRepeatMatchCount();
 
         if(Doubles.greaterOrEqual(fractionRejected, rejectedReadFractionCutoff))
-        {
             return true;
-        }
 
-        Map<Integer, Integer> passingJitterCounts = Maps.newHashMap();
-        for(Map<Integer, Integer> jitterCounts : mPassingJitterCountsByConsensusType.values())
+        Map<Integer,Integer> passingJitterCounts = Maps.newHashMap();
+
+        for(Map<Integer,Integer> jitterCounts : mPassingJitterCountsByConsensusType.values())
         {
-            for(Map.Entry<Integer, Integer> entry : jitterCounts.entrySet())
+            for(Map.Entry<Integer,Integer> entry : jitterCounts.entrySet())
             {
                 int jitter = entry.getKey();
                 if(jitter == 0)
@@ -162,7 +147,7 @@ public class MicrosatelliteSiteAnalyser
             }
         }
 
-        for(Map.Entry<Integer, Integer> entry : passingJitterCounts.entrySet())
+        for(Map.Entry<Integer,Integer> entry : passingJitterCounts.entrySet())
         {
             int repeatDiff = entry.getKey();
             int readCount = entry.getValue();

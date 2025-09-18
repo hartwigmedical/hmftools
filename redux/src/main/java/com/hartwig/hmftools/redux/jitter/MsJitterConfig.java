@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
-import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
+import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
@@ -14,6 +14,7 @@ import java.util.EnumSet;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -32,6 +33,7 @@ public class JitterAnalyserConfig
     public final int MinMappingQuality;
     public final int MaxSitesPerType;
     public final double MaxSingleSiteAltContribution;
+    public final SpecificRegions SpecificChrRegions;
 
     public final boolean WritePlots;
     public final boolean WriteSiteFile;
@@ -68,6 +70,9 @@ public class JitterAnalyserConfig
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
         MaxSitesPerType = configBuilder.getInteger(JITTER_MAX_SITES_PER_TYPE);
         MaxSingleSiteAltContribution = configBuilder.getDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder, false);
+
         WritePlots = configBuilder.hasFlag(JITTER_WRITE_MSI_PLOTS);
         WriteSiteFile = configBuilder.hasFlag(JITTER_WRITE_SITE_FILE);
     }
