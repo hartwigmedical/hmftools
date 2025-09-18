@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
+import com.hartwig.hmftools.cider.alignment.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
@@ -270,7 +271,7 @@ class AlignmentAnnotator
 
     fun findGene(alignmentMatch: AlignmentUtil.BwaMemMatch) : IgTcrGene?
     {
-        val chromosome = alignmentMatch.refContig
+        val chromosome = parseChromosome(alignmentMatch.refContig)
 
         val geneDataList = vdjGenes[Pair(chromosome, alignmentMatch.strand)]
 

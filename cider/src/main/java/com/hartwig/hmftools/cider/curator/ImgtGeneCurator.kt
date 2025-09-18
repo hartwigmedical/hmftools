@@ -9,7 +9,7 @@ import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
 import com.hartwig.hmftools.cider.alignment.AlignmentUtil
-import com.hartwig.hmftools.cider.alignment.AlignmentUtil.PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.alignment.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ
@@ -495,7 +495,7 @@ class ImgtGeneCurator
                     .filter { m: BlastnMatch -> m.numMismatch <= BLASTN_MAX_MISMATCH &&
                             m.alignmentLength >= (m.querySeqLen - BLASTN_MAX_MISMATCH) }
                     .sortedWith(Comparator.comparingDouble { m: BlastnMatch -> m.expectedValue }
-                        .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
+                        .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
 
                 // find the gene in the ensembl
                 val ensemblGene = ensemblDataCache.getGeneDataByName(geneData.geneName)

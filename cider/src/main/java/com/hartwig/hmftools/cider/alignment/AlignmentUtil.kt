@@ -31,18 +31,13 @@ object AlignmentUtil
     const val MAX_TARGET_SEQUENCES = 5000
 
     // val REF_GENOME_NAME = "GRCh38.p13"
-    val CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
-    val PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
-
-    fun isPrimaryAssembly(assemblyName: String) : Boolean
-    {
-        return assemblyName == PRIMARY_ASSEMBLY_NAME
-    }
+    val BLASTN_CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
+    val BLASTN_PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
 
     fun toGenomicLocation(blastnMatch: BlastnMatch) : GenomicLocation?
     {
         // parse the chromosome / assembly
-        val m = CHROMOSOME_ASSEMBLY_REGEX.matchEntire(blastnMatch.subjectTitle)
+        val m = BLASTN_CHROMOSOME_ASSEMBLY_REGEX.matchEntire(blastnMatch.subjectTitle)
 
         if (m == null)
         {
@@ -62,7 +57,9 @@ object AlignmentUtil
             Strand.REVERSE -> { start = blastnMatch.subjectAlignEnd; end = blastnMatch.subjectAlignStart }
         }
 
-        return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, if (isPrimaryAssembly(assembly)) null else assembly)
+        val altAssemblyName = if (assembly == BLASTN_PRIMARY_ASSEMBLY_NAME) null else assembly
+
+        return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, altAssemblyName)
     }
 
     fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
@@ -103,6 +100,13 @@ object AlignmentUtil
             require(refStart <= refEnd)
             require(queryAlignStart <= queryAlignEnd)
         }
+    }
+
+    fun parseChromosome(contig: String): String
+    {
+        // Parses ref genome contig to the primary assembly chromosome. E.g.:
+        // chr14_KI270726v1_random
+        return contig.split("_")[0]
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, numThreads: Int):
