@@ -86,7 +86,8 @@ public class CircosData
             final List<AmberBAF> unadjustedAmberBAFs,
             final List<CobaltRatio> unadjustedCobaltRatios,
             final List<PurpleSegment> unadjustedPurpleSegments,
-            boolean showSimpleSvSegments, boolean showFragileSites, boolean showLineElements
+            boolean showSimpleSvSegments, boolean showFragileSites, boolean showLineElements,
+            final String fileId
     )
     {
         UpstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
@@ -144,11 +145,11 @@ public class CircosData
         DisruptedGeneRegions = positionScaler.interpolateRegions(unadjustedDisruptedGeneRegions);
         Exons = positionScaler.interpolateExons(unadjustedGeneExons);
 
-        List<AmberBAF> amberBAFsDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedAmberBAFs, positionsToScale);
+        List<AmberBAF> amberBAFsDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedAmberBAFs, positionsToScale, fileId);
         List<AmberBAF> amberBAFsScaled = positionScaler.interpolateAmberBAFs(amberBAFsDownsampled);
         AmberBAFs = amberBAFsScaled;
 
-        List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedCobaltRatios, positionsToScale);
+        List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedCobaltRatios, positionsToScale, fileId);
         List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(cobaltRatiosDownsampled, positionsToScale);
         List<CobaltRatio> cobaltRatiosScaled = positionScaler.interpolateCobaltRatios(cobaltRatiosBreakpointAligned);
         CobaltRatios = cobaltRatiosScaled;
