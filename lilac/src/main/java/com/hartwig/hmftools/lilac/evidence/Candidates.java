@@ -22,6 +22,8 @@ import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class Candidates
 {
     private final List<HlaSequenceLoci> mNucleotideSequences;
@@ -93,7 +95,7 @@ public final class Candidates
 
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterSequencesByMinSupport(final Collection<HlaSequenceLoci> candidates,
-            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, final SequenceCount rawAminoAcidCounts)
+            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, @Nullable final SequenceCount rawAminoAcidCounts)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
@@ -104,7 +106,7 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+            if(rawAminoAcidCounts != null && rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
                 continue;
 
             Set<String> expectedSequences = Sets.newHashSet(aminoAcidCount.getMinEvidenceSequences(locus));
@@ -155,7 +157,7 @@ public final class Candidates
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterCandidates(
             final Collection<HlaSequenceLoci> initialCandidates, final Iterable<PhasedEvidence> evidence,
-            final SequenceCount rawAminoAcidCounts)
+            @Nullable final SequenceCount rawAminoAcidCounts)
     {
         List<HlaSequenceLoci> candidates = Lists.newArrayList();
         candidates.addAll(initialCandidates);
@@ -171,7 +173,7 @@ public final class Candidates
             for(int j = 0; j < targetLoci.size(); j++)
             {
                 int locus = targetLoci.get(j);
-                if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                if(rawAminoAcidCounts != null && rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
                     lowDepthIndices.add(j);
             }
 

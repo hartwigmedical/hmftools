@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB4;
 
 import java.util.Collection;
 import java.util.List;
@@ -77,7 +79,7 @@ public class NucleotideFiltering
         int count = 0;
         for(Fragment fragment : fragments)
         {
-            if(fragment.readGene() != gene)
+            if(gene != HLA_DRB3 && gene != HLA_DRB4 && fragment.readGene() != gene)
                 continue;
 
             if(!fragment.containsAllNucleotideLoci(nucleotideIndices))

@@ -1,22 +1,22 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import java.util.Collection;
+import java.util.NavigableMap;
 
 public class ExpectedAlleles
 {
+    private final int mDefaultAlleleCount;
     private final int[] mAlleleCount;
 
-    public ExpectedAlleles(final int[] alleleCount)
+    public ExpectedAlleles(int defaultAlleleCount, final int[] alleleCount)
     {
+        mDefaultAlleleCount = defaultAlleleCount;
         mAlleleCount = alleleCount;
     }
 
     private int expectedAlleles(int loci)
     {
-        return mAlleleCount == null || loci >= mAlleleCount.length ? 2 : mAlleleCount[loci];
+        return mAlleleCount == null || loci >= mAlleleCount.length ? mDefaultAlleleCount : mAlleleCount[loci];
     }
 
     public int expectedAlleles(final Collection<Integer> loci)
@@ -24,25 +24,25 @@ public class ExpectedAlleles
         return loci.stream().mapToInt(this::expectedAlleles).min().orElse(0);
     }
 
-    public static ExpectedAlleles expectedAlleles(int otherMin1, int otherMin2)
+    public static ExpectedAlleles expectedAlleles(int geneCount, final NavigableMap<Integer, Integer> minUniqueProteinExonBoundaries)
     {
-        // seems to be 1 short on the 6-groups
-        int min = min(otherMin1, otherMin2);
-        int max = max(otherMin1, otherMin2);
+        if(minUniqueProteinExonBoundaries.isEmpty())
+            return new ExpectedAlleles(2 * geneCount, null);
 
+        int max = minUniqueProteinExonBoundaries.lastKey();
         int arraySize = max - 1;
         int[] alleleCounts = new int[arraySize];
 
-        for(int i = 0; i < min - 1; ++i)
+        int boundaryCount;
+        for(int i = 0; i < arraySize; i++)
         {
-            alleleCounts[i] = 6;
+            int locus = i + 1;
+            boundaryCount = minUniqueProteinExonBoundaries.headMap(locus, true).values().stream().mapToInt(x -> x).sum();
+            alleleCounts[i] = 2 * (geneCount - boundaryCount);
         }
 
-        for(int i = min - 1; i < max - 1; ++i)
-        {
-            alleleCounts[i] = 4;
-        }
-
-        return new ExpectedAlleles(alleleCounts);
+        boundaryCount = minUniqueProteinExonBoundaries.values().stream().mapToInt(x -> x).sum();
+        int defaultAlleleCount = 2 * (geneCount - boundaryCount);
+        return new ExpectedAlleles(defaultAlleleCount, alleleCounts);
     }
 }

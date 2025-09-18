@@ -51,7 +51,7 @@ public class NucleotideTest
     {
         buildGeneCache();
 
-        NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(GENE_EXON_BOUNDARIES);
+        NucleotideGeneEnrichment enricher = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();
         indices.add(337);

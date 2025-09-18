@@ -119,8 +119,8 @@ public class GenerateReferenceSequences
         File aminoAcidSequenceFile = new File(outputDir, AA_REF_FILE);
         writeSequenceData(aminoAcidSequenceFile, mAminoAcidSequences);
 
-        //        File aminoAcidComparisonFile = new File(outputDir, "hla_ref_aminoacid_compare.csv");
-        //        writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
+        // File aminoAcidComparisonFile = new File(outputDir, "hla_ref_aminoacid_compare.csv");
+        // writeAminoAcidSequences(aminoAcidComparisonFile, mAminoAcidSequences);
     }
 
     private void loadSequenceFiles()
@@ -170,7 +170,7 @@ public class GenerateReferenceSequences
 
         List<HlaSequence> reducedSequences = reduceToSixDigit(filteredSequences);
 
-        return buildSequences(reducedSequences, false);
+        return buildSequences(gene, reducedSequences, false);
     }
 
     private List<HlaSequenceLoci> aminoAcidLoci(final File filename, final HlaGene gene)
@@ -185,10 +185,10 @@ public class GenerateReferenceSequences
                 .map(x -> x.getRawSequence().endsWith("X") ? x : x.copyWithAdditionalSequence("X"))
                 .collect(Collectors.toList());
 
-        return buildSequences(reducedSequences, true);
+        return buildSequences(gene, reducedSequences, true);
     }
 
-    private List<HlaSequenceLoci> buildSequences(final List<HlaSequence> sequences, boolean isProteinFile)
+    private List<HlaSequenceLoci> buildSequences(final HlaGene gene, final List<HlaSequence> sequences, final boolean isProteinFile)
     {
         // the first A, B and C entries in both the nucleotide and amino acid files (A*01:01:01, B*07:02:01, C*01:02:01)
         // are used as a reference for all the others
@@ -199,6 +199,9 @@ public class GenerateReferenceSequences
 
         for(HlaSequence sequence : sequences)
         {
+            if(sequence.Allele.Gene != gene)
+                continue;
+
             HlaAllele allele = isProteinFile ?
                     mAlleleCache.requestFourDigit(sequence.Allele.toString()) : mAlleleCache.request(sequence.Allele.toString());
 
@@ -246,7 +249,7 @@ public class GenerateReferenceSequences
                     maxSeq = seq;
                 }
 
-                if(freq < WILDCARD_FREQUENCY_CUTOFF)
+                if(seq.Allele.Gene.hasFrequencies() && freq < WILDCARD_FREQUENCY_CUTOFF)
                     continue;
 
                 if(fourDigit.toString().matches("^.*[^0-9]$"))
