@@ -162,10 +162,6 @@ class AlignmentAnnotator
             if (match.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
                 alignmentRunData.querySeq.length <= (match.queryAlignEnd - match.queryAlignStart) + 5)
             {
-                // sLogger.debug("matches ref genome: {}", match.subjectTitle)
-                // sLogger.debug("  query seq: {}", match.alignedPartOfQuerySeq)
-                // sLogger.debug("subject seq: {}", match.alignedPartOfSubjectSeq)
-
                 return AlignmentAnnotation(
                     vdjSequence = vdjSequence,
                     fullMatch = match,
@@ -332,15 +328,16 @@ class AlignmentAnnotator
                 return true
             }
 
-            if (newMatch.alignmentScore > existingMatch.alignmentScore)
+            if (newMatch.alignmentScore != existingMatch.alignmentScore)
             {
                 // always prefer higher alignment score
-                return true
+                return newMatch.alignmentScore > existingMatch.alignmentScore
             }
 
-            if ((newMatch.alignmentScore == existingMatch.alignmentScore))
+            if (existingGene.isFunctional != newGene.isFunctional)
             {
-                if (!existingGene.isFunctional && newGene.isFunctional) {
+                if (newGene.isFunctional)
+                {
                     // if scores are equal, we prefer the functional one
                     sLogger.trace(
                         "prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
@@ -348,13 +345,14 @@ class AlignmentAnnotator
                     )
                     return true
                 }
-                // Deterministic tie breaker for otherwise identical gene alignments
-                if (newGene.geneName < existingGene.geneName) {
-                    return true
+                else
+                {
+                    return false
                 }
             }
 
-            return false
+            // Deterministic tie breaker for otherwise identical gene alignments
+            return newGene.geneName < existingGene.geneName
         }
     }
 }
