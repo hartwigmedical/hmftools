@@ -132,19 +132,16 @@ class AlignmentAnnotator
 
         val alignStartOffset = alignmentRunData.querySeqRange.start
 
-        // the matches are grouped by contigs, and each contig the matches are sorted by expected value
-        // however we want to process matches by expected value first regardless of contig, so we need to
-        // resort the matches
-
-        // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
-        // and queryAlignEnd indices are off
-        val matchesAdjusted = matches.map {
-            it.copy(
-                queryAlignStart = it.queryAlignStart + alignStartOffset,
-                queryAlignEnd = it.queryAlignEnd + alignStartOffset)
-        }
-
-        val sortedMatches: List<AlignmentUtil.BwaMemMatch> = matchesAdjusted.sortedBy { m -> -m.alignmentScore }
+        val matches = matches
+            .filter { m -> m.alignmentScore >= BWA_ALIGNMENT_SCORE_MIN }
+            .map {
+                // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
+                // and queryAlignEnd indices are off
+                it.copy(
+                    queryAlignStart = it.queryAlignStart + alignStartOffset,
+                    queryAlignEnd = it.queryAlignEnd + alignStartOffset)
+            }
+            .sortedBy { m -> -m.alignmentScore }
 
         // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
         // locus supercedes a 100% identity match from the correct locus
@@ -159,7 +156,7 @@ class AlignmentAnnotator
         var jGene: IgTcrGene? = null
         var jMatch: AlignmentUtil.BwaMemMatch? = null
 
-        for (match in sortedMatches)
+        for (match in matches)
         {
             // check if it matches whole way. Require 95% sequence identity
             if (match.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
@@ -300,10 +297,9 @@ class AlignmentAnnotator
 
     companion object
     {
-        // TODO
-        // from my test, it evalue of 1 can only match minimum 20 bases. If we want to match D segment that is shorter
+        // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
         // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
-        const val BLASTN_MAX_EVALUE = 1.0
+        const val BWA_ALIGNMENT_SCORE_MIN = 20
 
         const val FLANKING_BASES = 50
 
