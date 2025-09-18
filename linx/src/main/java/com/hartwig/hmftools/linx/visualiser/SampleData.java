@@ -17,7 +17,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -327,12 +326,15 @@ public class SampleData
         return clusterIds;
     }
 
-    public Set<String> findGenesWithCNVs()
+    public List<DriverCatalog> findGenesWithCNVs()
     {
         try
         {
             if(mConfig.PurpleDir == null)
-                return null;
+            {
+                VIS_LOGGER.debug("PURPLE dir not specified - Skipping finding gene CNVs in PURPLE driver catalog");
+                return Lists.newArrayList();
+            }
 
             String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDir, mConfig.Sample);
             List<DriverCatalog> drivers = DriverCatalogFile.read(purpleDriverFile);
@@ -341,7 +343,7 @@ public class SampleData
                     .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL )
                     .toList();
 
-            return geneCNVs.stream().map(x -> x.gene()).collect(Collectors.toSet());
+            return geneCNVs;
         }
         catch(Exception e)
         {

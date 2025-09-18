@@ -22,6 +22,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -142,16 +144,18 @@ public class SvVisualiser implements AutoCloseable
         mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
         for(String chromosome : chromosomes)
         {
-            submitChromosome(Lists.newArrayList(chromosome), null);
+            submitChromosome(Lists.newArrayList(chromosome));
         }
 
-        Set<String> genesWithCNVs = mSampleData.findGenesWithCNVs();
-        if(genesWithCNVs != null)
+        List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
+        if(!genesWithCNVs.isEmpty())
         {
-            for(String geneName : genesWithCNVs)
+            for(DriverCatalog gene : genesWithCNVs)
             {
+                String geneName = gene.gene();
+                DriverType geneDriverType = gene.driver();
                 String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
-                submitChromosome(Lists.newArrayList(geneChromosome), geneName);
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
             }
         }
 
@@ -176,20 +180,41 @@ public class SvVisualiser implements AutoCloseable
 
         if(!mConfig.Chromosomes.isEmpty())
         {
-            submitChromosome(mConfig.Chromosomes, null);
+            submitChromosome(mConfig.Chromosomes);
         }
 
         if(!mConfig.Genes.isEmpty())
         {
+            List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
+
             for(String geneName : mConfig.Genes)
             {
                 String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
-                submitChromosome(Lists.newArrayList(geneChromosome), geneName);
+
+                DriverCatalog matchedGeneCnvEntry = genesWithCNVs.stream()
+                        .filter(x -> x.gene().equals(geneName))
+                        .findFirst()
+                        .orElse(null);
+
+                DriverType geneDriverType = null;
+                if(matchedGeneCnvEntry != null)
+                {
+                    geneDriverType = matchedGeneCnvEntry.driver();
+                    VIS_LOGGER.debug("found CNV entry({}) in PURPLE driver catalog for manually selected gene({})",
+                            geneDriverType, geneName);
+                }
+
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
             }
         }
     }
 
-    private void submitChromosome(List<String> chromosomes, @Nullable final String geneName)
+    private void submitChromosome(List<String> chromosomes)
+    {
+        submitChromosome(chromosomes, null, null);
+    }
+
+    private void submitChromosome(List<String> chromosomes, @Nullable final String geneName, @Nullable final DriverType geneDriverType)
     {
         if(chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
@@ -252,9 +277,23 @@ public class SvVisualiser implements AutoCloseable
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        String fileId = mConfig.Sample + ".";
-        fileId += geneName == null ? "chr" + chromosomesStr : geneName;
-        fileId += mConfig.Debug ? ".debug" : "";
+        StringJoiner fileIdBuilder = new StringJoiner(".");
+
+        fileIdBuilder.add(mConfig.Sample);
+        fileIdBuilder.add("chr" + chromosomesStr);
+
+        if(geneName != null)
+        {
+            fileIdBuilder.add(geneName);
+
+            if(geneDriverType != null)
+                fileIdBuilder.add(geneDriverType.toString().toLowerCase());
+        }
+
+        if(mConfig.Debug)
+            fileIdBuilder.add("debug");
+
+        String fileId = fileIdBuilder.toString();
 
         submitFiltered(ColorPicker::clusterColors, fileId, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
                 Collections.emptyList(), false);
