@@ -5,20 +5,22 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.cobalt.calculations.CobaltWindow;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.ImmutableReadRatio;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-import tech.tablesaw.api.*;
+import tech.tablesaw.api.Row;
+import tech.tablesaw.api.Table;
 
 public class CobaltUtils
 {
     public static Multimap<Chromosome, ReadRatio> toCommonChromosomeMap(final Table input)
     {
         Multimap<Chromosome, ReadRatio> output = ArrayListMultimap.create();
-        for (String c : input.stringColumn(CobaltColumns.CHROMOSOME).unique())
+        for(String c : input.stringColumn(CobaltColumns.CHROMOSOME).unique())
         {
             if(HumanChromosome.contains(c))
             {
@@ -26,10 +28,10 @@ public class CobaltUtils
 
                 List<ReadRatio> ratios = inputFiltered.stream().map(
                         r -> ImmutableReadRatio.builder()
-                            .chromosome(c)
-                            .position(r.getInt(CobaltColumns.POSITION))
-                            .ratio(r.getDouble(CobaltColumns.RATIO))
-                            .build()).collect(Collectors.toList());
+                                .chromosome(c)
+                                .position(r.getInt(CobaltColumns.POSITION))
+                                .ratio(r.getDouble(CobaltColumns.RATIO))
+                                .build()).collect(Collectors.toList());
 
                 output.putAll(HumanChromosome.fromString(c), ratios);
             }
@@ -49,5 +51,11 @@ public class CobaltUtils
                 row.getDouble(CobaltColumns.TUMOR_READ_DEPTH),
                 row.getDouble("tumorGCRatio"),
                 row.getDouble(CobaltColumns.TUMOR_GC_CONTENT));
+    }
+
+    public static CobaltRatio tumorOnlyRatio(CobaltWindow window, double ratio)
+    {
+        String chr = window.Chromosome.contig();
+        return new CobaltRatio(chr, window.Position, -1.0, -1.0, -1.0, -1.0, window.ReadDepth.ReadDepth, ratio, window.ReadDepth.ReadGcContent);
     }
 }

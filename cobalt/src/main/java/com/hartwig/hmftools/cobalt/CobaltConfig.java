@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,8 +44,11 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class CobaltConfig
 {
@@ -217,6 +221,18 @@ public class CobaltConfig
         }
 
         return Mode.TUMOR_GERMLINE;
+    }
+
+    public SamReaderFactory readerFactory()
+    {
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(BamStringency);
+
+        if(RefGenomePath != null && !RefGenomePath.isEmpty())
+        {
+            return readerFactory.referenceSource(new ReferenceSource(new File(RefGenomePath)));
+        }
+
+        return readerFactory;
     }
 
     private void loadExcludedRegions()

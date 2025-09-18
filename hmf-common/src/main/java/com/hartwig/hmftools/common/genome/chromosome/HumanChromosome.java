@@ -57,6 +57,12 @@ public enum HumanChromosome implements Chromosome
     public static final String MT_CHR_V38 = "chrM";
 
     @Override
+    public String contig()
+    {
+        return shortName(); // todo test, refactor
+    }
+
+    @Override
     public boolean isAutosome()
     {
         return mIsAutosome;
@@ -125,6 +131,8 @@ public enum HumanChromosome implements Chromosome
     {
         return mName;
     }
+
+
 
     public static boolean hasShortArm(final String chromosome)
     {

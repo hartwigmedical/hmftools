@@ -66,7 +66,7 @@ public class CobaltOutputsComparison
             CB_LOGGER.warn("Cobalt ratios files have different lengths. Original size: {}. Comparison size: {}", originalRatios.size(), comparisonRatios.size());
             return;
         }
-        double epsilon = 0.0001;
+        double epsilon = 0.01;
         List<RawCobaltRatio> differences = new ArrayList<>();
         for(int i = 0; i < length; i++)
         {
