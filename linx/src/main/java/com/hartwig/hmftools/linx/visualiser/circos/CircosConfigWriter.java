@@ -109,7 +109,7 @@ public class CircosConfigWriter
 
         if(!data.AmberBAFs.isEmpty())
         {
-            amberOuterRadius = cobaltInnerRadius - gapSize;
+            amberOuterRadius = currentTrackOuterRadius - gapSize;
             amberInnerRadius = amberOuterRadius - amberRelativeSize * purpleTrackSize;
             currentTrackOuterRadius = amberInnerRadius;
         }

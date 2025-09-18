@@ -22,6 +22,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -71,12 +73,8 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
-    private final boolean mPlottingSelectedLoci;
-
     private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
-        VIS_LOGGER.info("loading visualiser data");
-
         mCircosConfig = new CircosConfig(configBuilder);
         mConfig = new VisualiserConfig(configBuilder);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
@@ -84,18 +82,16 @@ public class SvVisualiser implements AutoCloseable
         mCallableImages = Lists.newArrayList();
         mCallableConfigs = Lists.newArrayList();
 
-        mPlottingSelectedLoci = !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty();
-
-        if(mConfig.Genes.isEmpty())
+        if(mConfig.EnsemblDataDir != null)
         {
-            mEnsemblDataCache = null;
+            VIS_LOGGER.info("loading Ensembl data");
+            mEnsemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
+            mEnsemblDataCache.setRequiredData(true, false, false, true);
+            mEnsemblDataCache.load(false);
         }
         else
         {
-            EnsemblDataCache ensemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
-            ensemblDataCache.setRequiredData(true, false, false, true);
-            ensemblDataCache.load(false);
-            mEnsemblDataCache = ensemblDataCache;
+            mEnsemblDataCache = null;
         }
 
         mSampleData = new SampleData(mConfig);
@@ -112,50 +108,15 @@ public class SvVisualiser implements AutoCloseable
 
         if(mConfig.PlotReportableEvents)
         {
-            Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
-
-            for(Integer clusterId : reportableClusterIds)
-            {
-                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-            }
+            submitReportableEvents();
         }
         else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty() || !mConfig.Genes.isEmpty())
         {
-            if(!mConfig.ClusterIds.isEmpty())
-            {
-                submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
-            }
-
-            if(!mConfig.Chromosomes.isEmpty())
-            {
-                submitChromosome(mConfig.Chromosomes, null);
-            }
-
-            if(!mConfig.Genes.isEmpty())
-            {
-                for(String geneName : mConfig.Genes)
-                {
-                    String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
-                    submitChromosome(Lists.newArrayList(geneChromosome), geneName);
-                }
-            }
+            submitSelectedEvents();
         }
         else
         {
-            List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
-
-            for(Integer clusterId : clusterIds)
-            {
-                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-            }
-
-            Set<String> chromosomes = Sets.newHashSet();
-            mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            for(String chromosome : chromosomes)
-            {
-                submitChromosome(Lists.newArrayList(chromosome), null);
-            }
+            submitDefaultEvents();
         }
 
         mCallableConfigs.forEach(x -> futures.add(mExecutorService.submit(x)));
@@ -169,7 +130,91 @@ public class SvVisualiser implements AutoCloseable
         VIS_LOGGER.info("Linx Visualiser complete");
     }
 
-    private void submitChromosome(List<String> chromosomes, @Nullable final String geneName)
+    private void submitDefaultEvents()
+    {
+        List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
+
+        for(Integer clusterId : clusterIds)
+        {
+            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+        }
+
+        Set<String> chromosomes = Sets.newHashSet();
+        mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
+        for(String chromosome : chromosomes)
+        {
+            submitChromosome(Lists.newArrayList(chromosome));
+        }
+
+        List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
+        if(!genesWithCNVs.isEmpty())
+        {
+            for(DriverCatalog gene : genesWithCNVs)
+            {
+                String geneName = gene.gene();
+                DriverType geneDriverType = gene.driver();
+                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
+            }
+        }
+
+    }
+
+    private void submitReportableEvents()
+    {
+        Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
+
+        for(Integer clusterId : reportableClusterIds)
+        {
+            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+        }
+    }
+
+    private void submitSelectedEvents()
+    {
+        if(!mConfig.ClusterIds.isEmpty())
+        {
+            submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
+        }
+
+        if(!mConfig.Chromosomes.isEmpty())
+        {
+            submitChromosome(mConfig.Chromosomes);
+        }
+
+        if(!mConfig.Genes.isEmpty())
+        {
+            List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
+
+            for(String geneName : mConfig.Genes)
+            {
+                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
+
+                DriverCatalog matchedGeneCnvEntry = genesWithCNVs.stream()
+                        .filter(x -> x.gene().equals(geneName))
+                        .findFirst()
+                        .orElse(null);
+
+                DriverType geneDriverType = null;
+                if(matchedGeneCnvEntry != null)
+                {
+                    geneDriverType = matchedGeneCnvEntry.driver();
+                    VIS_LOGGER.debug("found CNV entry({}) in PURPLE driver catalog for manually selected gene({})",
+                            geneDriverType, geneName);
+                }
+
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
+            }
+        }
+    }
+
+    private void submitChromosome(List<String> chromosomes)
+    {
+        submitChromosome(chromosomes, null, null);
+    }
+
+    private void submitChromosome(List<String> chromosomes, @Nullable final String geneName, @Nullable final DriverType geneDriverType)
     {
         if(chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
@@ -192,11 +237,6 @@ public class SvVisualiser implements AutoCloseable
                 .collect(toSet());
 
         List<VisSvData> chromosomeLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        if(!mPlottingSelectedLoci && chromosomeLinks.isEmpty())
-        {
-            VIS_LOGGER.warn("chromosomes({}) not present in file", chromosomesStr);
-            return;
-        }
 
         if(mCircosConfig.exceedsMaxPlotSvCount(chromosomeLinks.size()))
         {
@@ -237,9 +277,23 @@ public class SvVisualiser implements AutoCloseable
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
 
-        String fileId = mConfig.Sample + ".";
-        fileId += geneName == null ? "chr" + chromosomesStr : geneName;
-        fileId += mConfig.Debug ? ".debug" : "";
+        StringJoiner fileIdBuilder = new StringJoiner(".");
+
+        fileIdBuilder.add(mConfig.Sample);
+        fileIdBuilder.add("chr" + chromosomesStr);
+
+        if(geneName != null)
+        {
+            fileIdBuilder.add(geneName);
+
+            if(geneDriverType != null)
+                fileIdBuilder.add(geneDriverType.toString().toLowerCase());
+        }
+
+        if(mConfig.Debug)
+            fileIdBuilder.add("debug");
+
+        String fileId = fileIdBuilder.toString();
 
         submitFiltered(ColorPicker::clusterColors, fileId, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
                 Collections.emptyList(), false);
@@ -257,7 +311,7 @@ public class SvVisualiser implements AutoCloseable
             if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
                 continue;
 
-            VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
+            VIS_LOGGER.info("loading exon data for gene({})", geneName);
 
             GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
             TranscriptData transcriptData = geneData != null ? mEnsemblDataCache.getCanonicalTranscriptData(geneData.GeneId) : null;
@@ -432,17 +486,6 @@ public class SvVisualiser implements AutoCloseable
                 0, filteredSegments, filteredLinks, positionsToCover, showSimpleSvSegments, mConfig.RefGenomeCoords);
 
         List<VisSvData> links = VisLinks.addFrame(segments, filteredLinks);
-
-        if(!mPlottingSelectedLoci && (copyNumbers.isEmpty() || segments.isEmpty() || links.isEmpty()))
-        {
-            List<String> missingDataTypes = Lists.newArrayList();
-            if(copyNumbers.isEmpty()) missingDataTypes.add("copy numbers");
-            if(segments.isEmpty())    missingDataTypes.add("segments");
-            if(links.isEmpty())       missingDataTypes.add("links");
-
-            VIS_LOGGER.warn("plot({}) has missing required data: {}", fileId, String.join(", ", missingDataTypes));
-            return;
-        }
 
         ColorPicker color = colorPickerFactory.create(links);
 
