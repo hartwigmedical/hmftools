@@ -109,19 +109,19 @@ object AlignmentUtil
         return contig.split("_")[0]
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, numThreads: Int):
+    fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             Multimap<Int, BwaMemMatch>
     {
         val refGenome = loadRefGenome(refGenomeFastaPath)
         val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)
-        aligner.setNThreadsOption(numThreads)
-        aligner.setFlagOption(aligner.getFlagOption() or BwaMemAligner.MEM_F_ALL)
-        aligner.setOutputScoreThresholdOption(1)
-        aligner.setMinSeedLengthOption(WORD_SIZE)
-        aligner.setMatchScoreOption(MATCH_SCORE)
-        aligner.setMismatchPenaltyOption(-MISMATCH_SCORE)
+        aligner.nThreadsOption = numThreads
+        aligner.flagOption = aligner.flagOption or BwaMemAligner.MEM_F_ALL
+        aligner.outputScoreThresholdOption = alignScoreThreshold
+        aligner.minSeedLengthOption = WORD_SIZE
+        aligner.matchScoreOption = MATCH_SCORE
+        aligner.mismatchPenaltyOption = -MISMATCH_SCORE
         aligner.dGapOpenPenaltyOption = -GAP_OPENING_SCORE;
         aligner.iGapOpenPenaltyOption = -GAP_OPENING_SCORE;
         aligner.dGapExtendPenaltyOption = -GAP_EXTEND_SCORE;
@@ -135,7 +135,13 @@ object AlignmentUtil
         val results = ArrayListMultimap.create<Int, BwaMemMatch>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
-                val chromosome = refGenSeqDict.getSequence(alignment.refId).sequenceName
+                if (alignment.samFlag and 0x4 != 0)
+                {
+                    // Not a real alignment, means the query is unmapped.
+                    continue
+                }
+
+                val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
                 val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
                 val refEnd = alignment.refEnd
                 require(refStart <= refEnd)
@@ -153,7 +159,7 @@ object AlignmentUtil
                     sequences[key.value]!!,
                     queryAlignStart,
                     queryAlignEnd,
-                    chromosome,
+                    refContig,
                     refStart,
                     refEnd,
                     strand,

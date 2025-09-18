@@ -87,7 +87,7 @@ class AlignmentAnnotator
 
         val alignmentResults = AlignmentUtil.runBwaMem(
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
-             refGenomeFastaPath, refGenomeIndexPath, numThreads)
+             refGenomeFastaPath, refGenomeIndexPath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
         val vdjToMatch: Multimap<AlignmentRunData, AlignmentUtil.BwaMemMatch> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
