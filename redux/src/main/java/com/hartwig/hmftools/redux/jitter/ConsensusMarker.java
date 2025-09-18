@@ -1,13 +1,8 @@
 package com.hartwig.hmftools.redux.jitter;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
-import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 
@@ -19,7 +14,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Pair;
 
 import htsjdk.samtools.CigarElement;
@@ -33,9 +27,6 @@ public abstract class ConsensusMarker
     {
         if(SEQUENCING_TYPE == SBX)
             return new SBXConsensusMarker();
-
-        if(SEQUENCING_TYPE == BIOMODAL)
-            return new BiomodalConsensusMarker();
 
         return new StandardConsensusMarker();
     }
@@ -153,26 +144,6 @@ public abstract class ConsensusMarker
                 int startIndex = boundaries.getLeft();
                 return SbxBamUtils.inDuplexRegion(true, duplexBaseIndex, startIndex) ? DUAL : SINGLE;
             }
-        }
-    }
-
-    public static class BiomodalConsensusMarker extends ConsensusMarker
-    {
-        @Override
-        public ConsensusType consensusType(final MicrosatelliteSite microsatelliteSite, final SAMRecord record)
-        {
-            byte[] quals = record.getBaseQualities();
-            Pair<Integer, Integer> boundaries = getMicrosatelliteBoundaries(microsatelliteSite, record);
-            int startIdx = boundaries.getLeft();
-            int endIdx = boundaries.getRight();
-            int minQual = Integer.MAX_VALUE;
-            for(int i = startIdx; i <= endIdx; i++)
-                minQual = min(minQual, quals[i]);
-
-            if(minQual > LOW_QUAL_CUTOFF)
-                return DUAL;
-
-            return NONE;
         }
     }
 }

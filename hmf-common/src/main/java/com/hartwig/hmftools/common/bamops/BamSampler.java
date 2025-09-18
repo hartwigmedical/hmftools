@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
@@ -28,6 +29,7 @@ public class BamSampler
     private int mMaxReadLength;
     private boolean mReadsPaired;
     private boolean mMateCigarSet;
+    private Consumer<SAMRecord> mConsumer;
 
     private static final int DEFAULT_MAX_READS = 1000;
 
@@ -42,11 +44,15 @@ public class BamSampler
         mMaxReadLength = 0;
         mMaxReadCount = maxReadCount;
         mRefGenome = loadRefGenome(referenceGenome);
+        mConsumer = null;
+
         mMateCigarSet = false;
         mReadsPaired = false;
 
         mSlicer = new BamSlicer(0);
     }
+
+    public void setConsumer(final Consumer<SAMRecord> consumer) { mConsumer = consumer; }
 
     public int maxReadLength() { return mMaxReadLength; }
     public boolean readsPaired() { return mReadsPaired; }
@@ -90,6 +96,9 @@ public class BamSampler
             mReadsPaired = true;
             mMateCigarSet |= record.hasAttribute(MATE_CIGAR_ATTRIBUTE);
         }
+
+        if(mConsumer != null)
+            mConsumer.accept(record);
 
         if(mReadCount >= mMaxReadCount)
         {

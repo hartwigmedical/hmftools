@@ -58,6 +58,7 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.isofox.IsofoxData;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -69,6 +70,8 @@ public final class SbxRoutines
     // internal SBX base qual values to maintain knowledge of simplex vs duplex mismatches
     protected static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
     protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
+
+    public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
 
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
@@ -90,40 +93,11 @@ public final class SbxRoutines
             return;
 
         // not expecting to see hard-clips but remove any if present
-
         if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
         {
             RD_LOGGER.error("hard-clipped reads not supported in SBX: {}", readToString(record));
             System.exit(1);
         }
-
-        /*
-        int leftHardClipLength = leftHardClipLength(record);
-        int rightHardClipLength = rightHardClipLength(record);
-
-        if(leftHardClipLength > 0)
-        {
-            int index = 0;
-            while(index < leftHardClipLength)
-            {
-                duplexIndelIndices.remove(index);
-                ++index;
-            }
-        }
-
-        if(rightHardClipLength > 0)
-        {
-            int index = duplexIndelIndices.size() - 1;
-            int firstRightHardClipIndex = record.getReadBases().length - rightHardClipLength;
-            while(index >= 0)
-            {
-                if(duplexIndelIndices.get(index) >= firstRightHardClipIndex)
-                    duplexIndelIndices.remove(index);
-
-                --index;
-            }
-        }
-        */
 
         if(duplexIndelIndices.isEmpty())
             return;
@@ -436,7 +410,10 @@ public final class SbxRoutines
             final RefGenomeInterface refGenome, final String chromosome, final List<SbxAnnotatedBase> annotatedBases, boolean isForward)
     {
         int chromosomeLength = refGenome.getChromosomeLength(chromosome);
-        if(!isForward)
+
+        boolean requireReversedBases = SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL ? isForward : !isForward;
+
+        if(requireReversedBases)
             Collections.reverse(annotatedBases);
 
         boolean readModified = false;
@@ -548,8 +525,10 @@ public final class SbxRoutines
             // trim bases
             int trimLength = min(readRepeatLength - refRepeatLength, duplexIndelBases.length());
             int insertTrimStart = INVALID_POSITION;
-            final int jStart = isForward ? readRepeatStart : duplexIndelEnd;
-            final int jInc = isForward ? 1 : -1;
+
+            int jStart = requireReversedBases ? duplexIndelEnd : readRepeatStart;
+            int jInc = requireReversedBases ? -1 : 1;
+
             for(int j = jStart; j >= readRepeatStart && j <= duplexIndelEnd; j += jInc)
             {
                 if(annotatedBases.get(j).Op == I)
@@ -590,11 +569,8 @@ public final class SbxRoutines
             i = duplexIndelEnd + 1;
         }
 
-        if(readModified)
-        {
-            if(!isForward)
-                Collections.reverse(annotatedBases);
-        }
+        if(readModified && requireReversedBases)
+            Collections.reverse(annotatedBases);
 
         return readModified;
     }

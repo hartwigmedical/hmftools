@@ -4,9 +4,11 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.isHomopolymerLowBaseQualAtStart;
 import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
+import com.hartwig.hmftools.redux.consensus.SbxBamSampler;
+import com.hartwig.hmftools.redux.consensus.SbxRoutines;
 import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
@@ -33,6 +37,8 @@ import com.hartwig.hmftools.redux.unmap.UnmapStats;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.FinalBamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
+
+import htsjdk.samtools.SAMRecord;
 
 public class ReduxApplication
 {
@@ -257,6 +263,12 @@ public class ReduxApplication
 
         // sample the BAM to determine read length
         BamSampler bamSampler = new BamSampler(mConfig.RefGenomeFile);
+
+        if(isSbx())
+        {
+            SbxBamSampler sbxBamSampler = new SbxBamSampler();
+            bamSampler.setConsumer(sbxBamSampler::processSampleRecord);
+        }
 
         ChrBaseRegion sampleRegion = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
                 mConfig.SpecificChrRegions.Regions.get(0) : bamSampler.defaultRegion();
