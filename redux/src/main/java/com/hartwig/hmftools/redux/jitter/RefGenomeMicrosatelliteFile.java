@@ -32,7 +32,7 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
         return basePath + File.separator + refGenomeVersion + FILE_EXTENSION;
     }
 
-    private final DelimFileWriter<RefGenomeMicrosatellite> mWriter;
+    private final DelimFileWriter<MicrosatelliteSite> mWriter;
 
     public RefGenomeMicrosatelliteFile(String fileName)
     {
@@ -53,20 +53,23 @@ public class RefGenomeMicrosatelliteFile implements AutoCloseable
         mWriter.close();
     }
 
-    public void writeRow(@NotNull final RefGenomeMicrosatellite refGenomeMicrosatellite)
+    public void writeRow(@NotNull final MicrosatelliteSite microsatelliteSite)
     {
-        mWriter.writeRow(refGenomeMicrosatellite);
+        mWriter.writeRow(microsatelliteSite);
     }
 
-    public static List<RefGenomeMicrosatellite> read(final String filename)
+    public static List<MicrosatelliteSite> read(final String filename)
     {
-        List<RefGenomeMicrosatellite> refGenomeMicrosatellites = new ArrayList<>(100_000);
+        List<MicrosatelliteSite> microsatelliteSites = new ArrayList<>(100_000);
         try (DelimFileReader reader = new DelimFileReader(filename))
         {
             reader.stream().map(row ->
-                        new RefGenomeMicrosatellite(row.get(Column.chromosome), row.getInt(Column.start), row.getInt(Column.end),
-                                StringUtil.stringToBytes(row.get(Column.unit)))).forEach(refGenomeMicrosatellites::add);
+                        new MicrosatelliteSite(
+                                row.get(Column.chromosome),
+                                row.getInt(Column.start),
+                                row.getInt(Column.end),
+                                StringUtil.stringToBytes(row.get(Column.unit)))).forEach(microsatelliteSites::add);
         }
-        return refGenomeMicrosatellites;
+        return microsatelliteSites;
     }
 }

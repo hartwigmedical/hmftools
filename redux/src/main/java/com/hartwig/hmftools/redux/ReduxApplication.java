@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -54,14 +54,14 @@ public class ReduxApplication
 
         setReadLength();
 
-        JitterAnalyser jitterAnalyser = null;
+        MsJitterAnalyser msJitterAnalyser = null;
 
         if(mConfig.JitterConfig != null)
-            jitterAnalyser = new JitterAnalyser(mConfig.JitterConfig);
+            msJitterAnalyser = new MsJitterAnalyser(mConfig.JitterConfig);
 
         BaseQualRecalibration baseQualRecalibration = new BaseQualRecalibration(mConfig);
 
-        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser, baseQualRecalibration);
+        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, msJitterAnalyser, baseQualRecalibration);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
         if(mConfig.UnmapRegions.enabled())
@@ -114,12 +114,12 @@ public class ReduxApplication
 
         RD_LOGGER.info("all partition tasks complete");
 
-        if(jitterAnalyser != null)
+        if(msJitterAnalyser != null)
         {
             try
             {
                 RD_LOGGER.info("analysing microsatellite jitter");
-                jitterAnalyser.writeAnalysisOutput();
+                msJitterAnalyser.writeAnalysisOutput();
             }
             catch(Exception e)
             {

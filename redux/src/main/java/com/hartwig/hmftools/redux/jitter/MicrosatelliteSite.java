@@ -4,22 +4,22 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.util.StringUtil;
 
-public class RefGenomeMicrosatellite
+public class MicrosatelliteSite
 {
     public final ChrBaseRegion Region;
     public final byte[] Unit;
     public final int RepeatCount;
-    public double mMappability;
+    public double Mappability;
 
-    public RefGenomeMicrosatellite(final ChrBaseRegion region, final byte[] unit)
+    public MicrosatelliteSite(final ChrBaseRegion region, final byte[] unit)
     {
         Region = region;
         Unit = unit;
         RepeatCount = region.baseLength() / unit.length;
-        mMappability = Double.NaN;
+        Mappability = Double.NaN;
     }
 
-    public RefGenomeMicrosatellite(final String chromosome, int start, int end, final byte[] unit)
+    public MicrosatelliteSite(final String chromosome, int start, int end, final byte[] unit)
     {
         this(new ChrBaseRegion(chromosome, start, end), unit);
     }
@@ -37,8 +37,8 @@ public class RefGenomeMicrosatellite
         return Region.end();
     }
 
-    public double mappability() { return mMappability; }
-    public void setMappability(double mappability) { mMappability = mappability; }
+    public double mappability() { return Mappability; }
+    public void setMappability(double mappability) { Mappability = mappability; }
 
     public String unitString()
     {

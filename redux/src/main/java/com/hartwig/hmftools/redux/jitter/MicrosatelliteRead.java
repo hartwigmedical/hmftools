@@ -5,8 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
-import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.LOW_BASE_QUAL_FLANKING_BASES;
-import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.LOW_BASE_QUAL_FLANKING_BASES;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.MIN_FLANKING_BASE_MATCHES;
+import static com.hartwig.hmftools.redux.jitter.MsJitterConfig.JITTER_APPLY_BQ_FILTER;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -48,10 +49,10 @@ public class MicrosatelliteRead
     }
 
     public static MicrosatelliteRead from(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, final ConsensusMarker consensusMarker)
+            final MicrosatelliteSite microsatelliteSite, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         MicrosatelliteRead instance = THREAD_INSTANCE.get();
-        instance.analyse(refGenomeMicrosatellite, record, consensusMarker);
+        instance.analyse(microsatelliteSite, record, consensusMarker);
         return instance;
     }
 
@@ -66,9 +67,11 @@ public class MicrosatelliteRead
     public int jitter() { return mJitterLength; }
 
     @VisibleForTesting
-    public void analyse(final RefGenomeMicrosatellite microsatelliteRepeat, final SAMRecord record, final ConsensusMarker consensusMarker)
+    public void analyse(final MicrosatelliteSite microsatelliteRepeat, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         clear();
+
+        mConsensusType = consensusMarker.consensusType(microsatelliteRepeat, record);
 
         // this read needs to wholly contain the repeat to be counted
         int msPosStart = microsatelliteRepeat.referenceStart();
@@ -172,12 +175,10 @@ public class MicrosatelliteRead
 
         int msReadIndexEnd = msReadIndexStart + msPosEnd - msPosStart;
 
-        if(!hasValidBaseQualities(record, msReadIndexStart, msReadIndexEnd))
+        if(JITTER_APPLY_BQ_FILTER && !hasValidBaseQualities(record, msReadIndexStart, msReadIndexEnd))
             return;
 
         mIsValidRead = true;
-
-        mConsensusType = consensusMarker.consensusType(microsatelliteRepeat, record);
 
         mRepeatLength = mAlignedBases + mInsertedBases;
         mRepeatUnits = mRepeatLength / microsatelliteRepeat.Unit.length;

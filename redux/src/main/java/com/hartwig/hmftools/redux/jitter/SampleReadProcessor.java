@@ -10,7 +10,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.hartwig.hmftools.common.collect.ImmutableIntervalTree;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,27 +17,27 @@ import htsjdk.samtools.SAMRecord;
 
 public class SampleReadProcessor
 {
-    private final List<MicrosatelliteSiteAnalyser> mMicrosatelliteSiteAnalysers;
-    private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteAnalyser>> mMicrosatelliteSiteAnalysersByChromosome;
+    private final List<MicrosatelliteSiteData> mMicrosatelliteSiteAnalysers;
+    private final Map<String, ImmutableIntervalTree<MicrosatelliteSiteData>> mMicrosatelliteSiteAnalysersByChromosome;
 
     public SampleReadProcessor(
-            final JitterAnalyserConfig config, final Collection<RefGenomeMicrosatellite> refGenomeMicrosatellites,
+            final MsJitterConfig config, final Collection<MicrosatelliteSite> microsatelliteSites,
             final ConsensusMarker consensusMarker)
     {
-        mMicrosatelliteSiteAnalysers = refGenomeMicrosatellites.stream()
-                .map(x -> new MicrosatelliteSiteAnalyser(x, consensusMarker, config.WriteSiteFile))
+        mMicrosatelliteSiteAnalysers = microsatelliteSites.stream()
+                .map(x -> new MicrosatelliteSiteData(x, consensusMarker, config.WriteSiteFile))
                 .collect(Collectors.toList());
 
         mMicrosatelliteSiteAnalysersByChromosome = Maps.newHashMap();
-        Multimap<String, MicrosatelliteSiteAnalyser> analysersByChromosome =
+        Multimap<String, MicrosatelliteSiteData> analysersByChromosome =
                 Multimaps.index(mMicrosatelliteSiteAnalysers, analyser -> analyser.refGenomeMicrosatellite().chromosome());
 
-        for(Map.Entry<String, Collection<MicrosatelliteSiteAnalyser>> chromosomeAnalysers : analysersByChromosome.asMap().entrySet())
+        for(Map.Entry<String, Collection<MicrosatelliteSiteData>> chromosomeAnalysers : analysersByChromosome.asMap().entrySet())
         {
             String chromosome = chromosomeAnalysers.getKey();
-            Collection<MicrosatelliteSiteAnalyser> analysers = chromosomeAnalysers.getValue();
+            Collection<MicrosatelliteSiteData> analysers = chromosomeAnalysers.getValue();
 
-            Collection<Pair<BaseRegion, MicrosatelliteSiteAnalyser>> entries = analysers
+            Collection<Pair<BaseRegion, MicrosatelliteSiteData>> entries = analysers
                     .stream()
                     .map(analyser -> Pair.of(analyser.refGenomeMicrosatellite().Region.baseRegion(), analyser))
                     .collect(Collectors.toList());
@@ -56,7 +55,7 @@ public class SampleReadProcessor
         int readAlignmentStart = read.getAlignmentStart();
         int readAlignmentEnd = read.getAlignmentEnd();
 
-        ImmutableIntervalTree<MicrosatelliteSiteAnalyser> chromosomeAnalysers = mMicrosatelliteSiteAnalysersByChromosome.get(chromosome);
+        ImmutableIntervalTree<MicrosatelliteSiteData> chromosomeAnalysers = mMicrosatelliteSiteAnalysersByChromosome.get(chromosome);
         if(chromosomeAnalysers == null || chromosomeAnalysers.isEmpty())
         {
             return;
@@ -70,20 +69,7 @@ public class SampleReadProcessor
                 .forEach(analyser -> analyser.addReadToStats(read));
     }
 
-    public void processRead(final SAMRecord read, final ChrBaseRegion region)
-    {
-        if(read.getReadUnmappedFlag())
-            return;
-
-        if(!region.containsPosition(read.getAlignmentStart()))
-        {
-            return;
-        }
-
-        processRead(read);
-    }
-
-    public Collection<MicrosatelliteSiteAnalyser> getMicrosatelliteSiteAnalysers()
+    public Collection<MicrosatelliteSiteData> getMicrosatelliteSiteAnalysers()
     {
         return mMicrosatelliteSiteAnalysers;
     }

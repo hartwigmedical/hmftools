@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import static htsjdk.samtools.util.SequenceUtil.N;
 
@@ -52,18 +53,14 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.StringUtil;
 
-public class RefGenomeMicrosatellitesFinder
+public class MicrosatelliteSiteFinder
 {
-    public static final Logger MSI_LOGGER = LogManager.getLogger(RefGenomeMicrosatellitesFinder.class);
-
     private static final int BED_REGION_EXPANSION = 950;
     private static final int TARGET_SITE_COUNT = 3000;
 
@@ -244,12 +241,12 @@ public class RefGenomeMicrosatellitesFinder
 
     private final Config mConfig;
     private final  Map<String,List<GCProfile>> mGcProfiles;
-    private final Multimap<UnitRepeatKey, RefGenomeMicrosatellite> mAllMicrosatelliteSites = ArrayListMultimap.create();
+    private final Multimap<UnitRepeatKey, MicrosatelliteSite> mAllMicrosatelliteSites = ArrayListMultimap.create();
     
     // this needs to be thread safe
-    private final Multimap<UnitRepeatKey, RefGenomeMicrosatellite> mDownSampledMicrosatelliteSites = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
+    private final Multimap<UnitRepeatKey, MicrosatelliteSite> mDownSampledMicrosatelliteSites = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
 
-    public RefGenomeMicrosatellitesFinder(final ConfigBuilder configBuilder) throws IOException
+    public MicrosatelliteSiteFinder(final ConfigBuilder configBuilder) throws IOException
     {
         mConfig = new Config(configBuilder);
         mGcProfiles = loadChrGcProfileMap(mConfig.GcProfilePath);
@@ -257,13 +254,13 @@ public class RefGenomeMicrosatellitesFinder
 
     public int run() throws Exception
     {
-        MSI_LOGGER.info("finding ms sites from ref genome: {}", mConfig.RefGenomeFile);
+        RD_LOGGER.info("finding ms sites from ref genome: {}", mConfig.RefGenomeFile);
         Instant start = Instant.now();
 
         IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
 
         //
-        RefGenomeMicrosatellitesFinder.findMicrosatellites(refGenome, JitterAnalyserConstants.MIN_MICROSAT_UNIT_COUNT,
+        MicrosatelliteSiteFinder.findMicrosatellites(refGenome, JitterConstants.MIN_MICROSAT_UNIT_COUNT,
                 r -> {
                     populateMappability(r, mGcProfiles);
 
@@ -281,11 +278,11 @@ public class RefGenomeMicrosatellitesFinder
             mDownSampledMicrosatelliteSites.values().forEach(refGenomeMicrosatelliteFile::writeRow);
         }
 
-        MSI_LOGGER.info("wrote {} microsatellite sites into {}", mDownSampledMicrosatelliteSites.size(), outputFile);
+        RD_LOGGER.info("wrote {} microsatellite sites into {}", mDownSampledMicrosatelliteSites.size(), outputFile);
 
         Duration duration = Duration.between(start, Instant.now());
 
-        MSI_LOGGER.info("ref genome microsatellites finder took {}m {}s", duration.toMinutes(), duration.toSecondsPart());
+        RD_LOGGER.info("ref genome microsatellites finder took {}m {}s", duration.toMinutes(), duration.toSecondsPart());
 
         return 0;
     }
@@ -331,7 +328,7 @@ public class RefGenomeMicrosatellitesFinder
 
     public static void findMicrosatellites(
             final ReferenceSequenceFile referenceSequenceFile, int minRepeatLength,
-            final Consumer<RefGenomeMicrosatellite> refGenomeMsConsumer)
+            final Consumer<MicrosatelliteSite> refGenomeMsConsumer)
     {
         int chunkSize = 100_000;
         findMicrosatellites(referenceSequenceFile, minRepeatLength, refGenomeMsConsumer, chunkSize);
@@ -343,7 +340,7 @@ public class RefGenomeMicrosatellitesFinder
     //
     static void findMicrosatellites(
             final ReferenceSequenceFile referenceSequenceFile, int minNumRepeats,
-            final Consumer<RefGenomeMicrosatellite> refGenomeMsConsumer, int chunkSize)
+            final Consumer<MicrosatelliteSite> refGenomeMsConsumer, int chunkSize)
     {
         MutableInt microsatelliteCounter = new MutableInt(0);
 
@@ -354,13 +351,13 @@ public class RefGenomeMicrosatellitesFinder
 
         for(SAMSequenceRecord sequenceRecord : seqRecords)
         {
-            MSI_LOGGER.info("start processing chromosome {}", sequenceRecord.getContig());
+            RD_LOGGER.info("start processing chromosome {}", sequenceRecord.getContig());
 
             int length = sequenceRecord.getSequenceLength();
 
             // pending candidate, we do not accept a candidate when it is completed. We want to avoid
             // candidates that are too close to each other. They are dropped if too close.
-            List<RefGenomeMicrosatellite> pendingMicrosatellies = new ArrayList<>();
+            List<MicrosatelliteSite> pendingMicrosatellies = new ArrayList<>();
 
             // current best candidate
             Candidate bestCandidate = null;
@@ -424,11 +421,11 @@ public class RefGenomeMicrosatellitesFinder
                             int baseLength = unitRepeatCount * bestCandidate.pattern.length;
 
                             // this is a microsatellite
-                            RefGenomeMicrosatellite refGenomeMicrosatellite = new RefGenomeMicrosatellite(sequenceRecord.getContig(),
+                            MicrosatelliteSite microsatelliteSite = new MicrosatelliteSite(sequenceRecord.getContig(),
                                     bestCandidate.startIndex,
                                     bestCandidate.startIndex + baseLength - 1, // change to inclusive
                                     bestCandidate.pattern);
-                            pendingMicrosatellies.add(refGenomeMicrosatellite);
+                            pendingMicrosatellies.add(microsatelliteSite);
 
                             // check the panding microsatellites, see if any can be accepted
                             checkPendingMicrosatellites(pendingMicrosatellies, refGenomeMsConsumer, microsatelliteCounter);
@@ -439,7 +436,7 @@ public class RefGenomeMicrosatellitesFinder
 
                     // also start new Candidates at this location
                     // all these candidates have the current base as the last base of the pattern
-                    for(int j = Math.max(i - JitterAnalyserConstants.MAX_MICROSAT_UNIT_LENGTH + 1, 0); j <= i; ++j)
+                    for(int j = Math.max(i - JitterConstants.MAX_MICROSAT_UNIT_LENGTH + 1, 0); j <= i; ++j)
                     {
                         byte[] repeatUnit = Arrays.copyOfRange(seq, j, i + 1);
 
@@ -463,17 +460,17 @@ public class RefGenomeMicrosatellitesFinder
                 refGenomeMsConsumer.accept(pendingMicrosatellies.get(0));
             }
 
-            MSI_LOGGER.info("finished chromosome {}", sequenceRecord.getSequenceName());
+            RD_LOGGER.info("finished chromosome {}", sequenceRecord.getSequenceName());
         }
 
-        MSI_LOGGER.info("found {} microsatellite regions in ref genome", microsatelliteCounter);
+        RD_LOGGER.info("found {} microsatellite regions in ref genome", microsatelliteCounter);
     }
 
     // the aim of this code is to remove microsatellites that are too close to each other
     // We do not try to merge them for now, even though tools such as MsDetector would.
     // i.e. AAAAATAAAAAAA
     static void checkPendingMicrosatellites(
-            final List<RefGenomeMicrosatellite> pendingMicrosatellies, final Consumer<RefGenomeMicrosatellite> refGenomeMsConsumer,
+            final List<MicrosatelliteSite> pendingMicrosatellies, final Consumer<MicrosatelliteSite> refGenomeMsConsumer,
             final MutableInt microsatelliteCounter)
     {
         int groupStart = 0;
@@ -481,10 +478,10 @@ public class RefGenomeMicrosatellitesFinder
         // check the panding microsatellites, see if any can be accepted
         for(int i = 0; i < pendingMicrosatellies.size() - 1; ++i)
         {
-            RefGenomeMicrosatellite ms1 = pendingMicrosatellies.get(i);
-            RefGenomeMicrosatellite ms2 = pendingMicrosatellies.get(i + 1);
+            MicrosatelliteSite ms1 = pendingMicrosatellies.get(i);
+            MicrosatelliteSite ms2 = pendingMicrosatellies.get(i + 1);
 
-            if((ms2.referenceStart() - ms1.referenceEnd()) > JitterAnalyserConstants.MIN_ADJACENT_MICROSAT_DISTANCE)
+            if((ms2.referenceStart() - ms1.referenceEnd()) > JitterConstants.MIN_ADJACENT_MICROSAT_DISTANCE)
             {
                 // previous group finished, if previous group only has 1 ms, we accept it, otherwise
                 // remove them all from the pending list
@@ -493,14 +490,14 @@ public class RefGenomeMicrosatellitesFinder
                     // only 1 item, accept this
                     refGenomeMsConsumer.accept(ms1);
                     microsatelliteCounter.increment();
-                    MSI_LOGGER.trace("microsatellite: {}", ms1);
+                    RD_LOGGER.trace("microsatellite: {}", ms1);
                 }
                 else
                 {
                     // ms are too close to each other, remove them
                     for(int j = groupStart; j <= i; ++j)
                     {
-                        MSI_LOGGER.trace("reject microsatellite as too close to neighbour: {}", pendingMicrosatellies.get(j));
+                        RD_LOGGER.trace("reject microsatellite as too close to neighbour: {}", pendingMicrosatellies.get(j));
                     }
                 }
 
@@ -517,10 +514,10 @@ public class RefGenomeMicrosatellitesFinder
     }
 
     private static void populateMappability(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final Map<String,List<GCProfile>> gcProfileMap)
+            final MicrosatelliteSite microsatelliteSite, final Map<String,List<GCProfile>> gcProfileMap)
     {
-        List<GCProfile> gcProfiles = gcProfileMap.get(refGenomeMicrosatellite.chromosome());
-        int siteMid = refGenomeMicrosatellite.Region.start() + (refGenomeMicrosatellite.Region.baseLength()) / 2;
+        List<GCProfile> gcProfiles = gcProfileMap.get(microsatelliteSite.chromosome());
+        int siteMid = microsatelliteSite.Region.start() + (microsatelliteSite.Region.baseLength()) / 2;
 
         GCProfile endKey = ImmutableGCProfile.builder().from(gcProfiles.get(0)).end(siteMid).build();
 
@@ -536,20 +533,20 @@ public class RefGenomeMicrosatellitesFinder
         if(index < gcProfiles.size())
         {
             GCProfile gcProfile = gcProfiles.get(index);
-            Validate.isTrue(gcProfile.overlaps(refGenomeMicrosatellite.Region.genomeRegion()));
-            refGenomeMicrosatellite.setMappability(gcProfile.mappablePercentage());
+            Validate.isTrue(gcProfile.overlaps(microsatelliteSite.Region.genomeRegion()));
+            microsatelliteSite.setMappability(gcProfile.mappablePercentage());
         }
         else
         {
-            refGenomeMicrosatellite.setMappability(0);
-            MSI_LOGGER.warn("microsatellite site({}) gc profile not found", refGenomeMicrosatellite.Region);
+            microsatelliteSite.setMappability(0);
+            RD_LOGGER.warn("microsatellite site({}) gc profile not found", microsatelliteSite.Region);
         }
     }
 
     // filter the microsatellites such that each type of (unit, length) is approximately the target count
     void downsampleSites(int targetCountPerType) throws ExecutionException, InterruptedException
     {
-        MSI_LOGGER.info("filtering microsatellite sites, target count per type = {}", targetCountPerType);
+        RD_LOGGER.info("filtering microsatellite sites, target count per type = {}", targetCountPerType);
 
         Map<String,List<BaseRegion>> regionsToKeep = ChrBaseRegion.loadChrBaseRegions(mConfig.BedFile);
 
@@ -570,7 +567,7 @@ public class RefGenomeMicrosatellitesFinder
         // wait for completion
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
 
-        MSI_LOGGER.info("filtered {} microsatellite sites down to {}",
+        RD_LOGGER.info("filtered {} microsatellite sites down to {}",
                 mAllMicrosatelliteSites.size(), mDownSampledMicrosatelliteSites.size());
     }
 
@@ -578,10 +575,10 @@ public class RefGenomeMicrosatellitesFinder
             final int targetCountPerType, final Map<String,List<BaseRegion>> regionsToKeep,
             final UnitRepeatKey unitRepeatKey)
     {
-        Collection<RefGenomeMicrosatellite> filteredList = mDownSampledMicrosatelliteSites.get(unitRepeatKey);
-        Collection<RefGenomeMicrosatellite> allList = mAllMicrosatelliteSites.get(unitRepeatKey);
+        Collection<MicrosatelliteSite> filteredList = mDownSampledMicrosatelliteSites.get(unitRepeatKey);
+        Collection<MicrosatelliteSite> allList = mAllMicrosatelliteSites.get(unitRepeatKey);
 
-        MSI_LOGGER.info("[{}] filtering {} microsatellite sites", unitRepeatKey, allList.size());
+        RD_LOGGER.info("[{}] filtering {} microsatellite sites", unitRepeatKey, allList.size());
 
         if(allList.size() <= targetCountPerType)
         {
@@ -590,7 +587,7 @@ public class RefGenomeMicrosatellitesFinder
             return;
         }
 
-        List<RefGenomeMicrosatellite> sitesOutsideBedRegions = new ArrayList<>();
+        List<MicrosatelliteSite> sitesOutsideBedRegions = new ArrayList<>();
 
         // first work out which are retained by the bed regions
         // we do it first by taking all inside the bed regions + 1000 bases around those bed regions
@@ -603,7 +600,7 @@ public class RefGenomeMicrosatellitesFinder
 
         while(true)
         {
-            for(RefGenomeMicrosatellite r : allList)
+            for(MicrosatelliteSite r : allList)
             {
                 if(r.mappability() < mappabilityCutoff)
                 {
@@ -634,7 +631,7 @@ public class RefGenomeMicrosatellitesFinder
             if(bedRegionExpansion > 0 && filteredList.size() > targetCountPerType * 2)
             {
                 // if we got way too many sites inside bed region try again with no expanded region and also mappability cutoff of 1.0
-                MSI_LOGGER.debug("[{}] too many sites in bed + expanded region: {}, try again with no expanded region",
+                RD_LOGGER.debug("[{}] too many sites in bed + expanded region: {}, try again with no expanded region",
                         unitRepeatKey, filteredList.size());
                 bedRegionExpansion = 0;
                 mappabilityCutoff = 1.0;
@@ -662,7 +659,7 @@ public class RefGenomeMicrosatellitesFinder
             }
         }
 
-        MSI_LOGGER.info("[{}] filtered {} microsatellite sites down to {}, sites in bed: {}, sites outside bed: {}",
+        RD_LOGGER.info("[{}] filtered {} microsatellite sites down to {}, sites in bed: {}, sites outside bed: {}",
                 unitRepeatKey, allList.size(), filteredList.size(), numSitesInBed, sitesOutsideBedRegions.size());
     }
 
@@ -673,6 +670,6 @@ public class RefGenomeMicrosatellitesFinder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        System.exit(new RefGenomeMicrosatellitesFinder(configBuilder).run());
+        System.exit(new MicrosatelliteSiteFinder(configBuilder).run());
     }
 }

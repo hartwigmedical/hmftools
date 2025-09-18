@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.jitter;
 
 import java.util.List;
 
-public class MsiJitterConstants
+public class JitterConstants
 {
     public static final int MIN_FLANKING_BASE_MATCHES = 5;
     public static final int LOW_BASE_QUAL_FLANKING_BASES = 1;

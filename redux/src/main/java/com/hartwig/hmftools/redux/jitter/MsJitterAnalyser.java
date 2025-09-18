@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DUAL_BASE_1;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DUAL_BASE_2;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DUAL_BASE_3;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DUAL_BASE_4;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.SINGLE_BASE_1;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.SINGLE_BASE_2;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_1;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_2;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_3;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.DUAL_BASE_4;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.SINGLE_BASE_1;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.SINGLE_BASE_2;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,14 +30,14 @@ import com.hartwig.hmftools.common.utils.RExecutor;
 
 import htsjdk.samtools.SAMRecord;
 
-public class MsiJitterAnalyser
+public class MsJitterAnalyser
 {
-    private final JitterAnalyserConfig mConfig;
+    private final MsJitterConfig mConfig;
     private final SampleReadProcessor mSampleReadProcessor;
 
     private EnumSet<ConsensusType> mConsensusTypes;
 
-    public MsiJitterAnalyser(final JitterAnalyserConfig config)
+    public MsJitterAnalyser(final MsJitterConfig config)
     {
         mConfig = config;
 
@@ -58,7 +58,7 @@ public class MsiJitterAnalyser
         if(mConsensusTypes != null)
             return mConsensusTypes;
 
-        mConsensusTypes = JitterAnalyserConfig.consensusTypes(mConfig);
+        mConsensusTypes = MsJitterConfig.consensusTypes(mConfig);
         return mConsensusTypes;
     }
 

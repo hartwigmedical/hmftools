@@ -59,15 +59,15 @@ public class MicrosatelliteSiteFile
     }
 
     public static void write(
-            final String filename, @NotNull final Collection<MicrosatelliteSiteAnalyser> microsatelliteSiteAnalysers,
+            final String filename, @NotNull final Collection<MicrosatelliteSiteData> microsatelliteSiteData,
             final EnumSet<ConsensusType> consensusTypes)
     {
-        Comparator<MicrosatelliteSiteAnalyser> comparator = Comparator.comparing((MicrosatelliteSiteAnalyser o) -> o.refGenomeMicrosatellite().chromosome())
+        Comparator<MicrosatelliteSiteData> comparator = Comparator.comparing((MicrosatelliteSiteData o) -> o.refGenomeMicrosatellite().chromosome())
                         .thenComparingInt(o -> o.refGenomeMicrosatellite().referenceStart())
                         .thenComparing(o -> o.refGenomeMicrosatellite().referenceEnd());
 
         // sort the bins
-        List<MicrosatelliteSiteAnalyser> sortedAnalysers = microsatelliteSiteAnalysers.stream().sorted(comparator).collect(Collectors.toList());
+        List<MicrosatelliteSiteData> sortedAnalysers = microsatelliteSiteData.stream().sorted(comparator).collect(Collectors.toList());
 
         List<String> columns = List.of(CHROMOSOME, START, END, UNIT, CONSENSUS_TYPE, NUM_READS, NUM_READS_REJECTED, REAL_VARIANT,
                 COUNT_m10, COUNT_m9, COUNT_m8, COUNT_m7, COUNT_m6, COUNT_m5, COUNT_m4, COUNT_m3, COUNT_m2, COUNT_m1,
@@ -75,10 +75,10 @@ public class MicrosatelliteSiteFile
                 READ_REPEAT_LENGTHS);
 
         // add the count columns
-        List<Pair<ConsensusType, MicrosatelliteSiteAnalyser>> consensusTypeByAnalysers = Lists.newArrayList();
+        List<Pair<ConsensusType, MicrosatelliteSiteData>> consensusTypeByAnalysers = Lists.newArrayList();
         for(ConsensusType consensusType : consensusTypes)
         {
-            for(MicrosatelliteSiteAnalyser analyser : sortedAnalysers)
+            for(MicrosatelliteSiteData analyser : sortedAnalysers)
             {
                 consensusTypeByAnalysers.add(Pair.of(consensusType, analyser));
             }
@@ -87,17 +87,17 @@ public class MicrosatelliteSiteFile
         DelimFileWriter.write(filename, columns, consensusTypeByAnalysers, (consensusTypeAndRepeatAnalyser, row) ->
         {
             ConsensusType consensusType = consensusTypeAndRepeatAnalyser.getLeft();
-            MicrosatelliteSiteAnalyser repeatAnalyser = consensusTypeAndRepeatAnalyser.getRight();
+            MicrosatelliteSiteData repeatAnalyser = consensusTypeAndRepeatAnalyser.getRight();
 
             row.set(CHROMOSOME, repeatAnalyser.refGenomeMicrosatellite().chromosome());
             row.set(START, repeatAnalyser.refGenomeMicrosatellite().referenceStart());
             row.set(END, repeatAnalyser.refGenomeMicrosatellite().referenceEnd());
             row.set(UNIT,  repeatAnalyser.refGenomeMicrosatellite().unitString());
             row.set(CONSENSUS_TYPE, consensusType.name());
-            row.set(NUM_READS, repeatAnalyser.readRepeatMatchCount(consensusType));
-            row.set(NUM_READS_REJECTED, repeatAnalyser.numReadRejected());
-            row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterAnalyserConstants.ALT_COUNT_FRACTION_INIT, JitterAnalyserConstants.ALT_COUNT_FRACTION_STEP,
-                    JitterAnalyserConstants.MAX_REJECTED_READ_FRACTION, JitterAnalyserConstants.MIN_PASSING_SITE_READS));
+            row.set(NUM_READS, repeatAnalyser.readCountByConsensus(consensusType));
+            row.set(NUM_READS_REJECTED, repeatAnalyser.readsRejectedByConsensus(consensusType));
+            row.set(REAL_VARIANT, repeatAnalyser.isRealVariant(JitterConstants.ALT_COUNT_FRACTION_INIT, JitterConstants.ALT_COUNT_FRACTION_STEP,
+                    JitterConstants.MAX_REJECTED_READ_FRACTION, JitterConstants.MIN_PASSING_SITE_READS));
 
             row.set(COUNT_p0, repeatAnalyser.passingJitterCount(0, consensusType));
 

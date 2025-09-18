@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
@@ -47,7 +47,7 @@ public class FileWriterCache
 
     private String mFinalBamFilename;
 
-    private final JitterAnalyser mJitterAnalyser;
+    private final MsJitterAnalyser mMsJitterAnalyser;
     private final BaseQualRecalibration mBaseQualRecalibration;
 
     private static final String SORTED_ID = "sorted";
@@ -57,10 +57,10 @@ public class FileWriterCache
     private static final String UNMAPPING_SORTED = "unmapping_sorted";
     private static final String FULL_UNMAPPED = "full_unmapped";
 
-    public FileWriterCache(final ReduxConfig config, @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
+    public FileWriterCache(final ReduxConfig config, @Nullable final MsJitterAnalyser msJitterAnalyser, final BaseQualRecalibration bqr)
     {
         mConfig = config;
-        mJitterAnalyser = jitterAnalyser;
+        mMsJitterAnalyser = msJitterAnalyser;
         mBaseQualRecalibration = bqr;
 
         mReadDataWriter = new ReadDataWriter(mConfig);
@@ -74,7 +74,7 @@ public class FileWriterCache
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
         {
-            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, jitterAnalyser, mBaseQualRecalibration);
+            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, msJitterAnalyser, mBaseQualRecalibration);
             mBamWriters.add(bamWriter);
 
             mUnmappingWriter = (BamWriterSync)bamWriter;
@@ -162,11 +162,11 @@ public class FileWriterCache
 
         if(synchronousUnsorted)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, mBaseQualRecalibration);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mMsJitterAnalyser, mBaseQualRecalibration);
         }
         else
         {
-            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, mBaseQualRecalibration);
+            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mMsJitterAnalyser, mBaseQualRecalibration);
         }
 
         mBamWriters.add(bamWriter);

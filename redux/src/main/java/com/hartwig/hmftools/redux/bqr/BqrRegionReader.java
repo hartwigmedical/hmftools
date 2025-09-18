@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
@@ -99,6 +100,9 @@ public class BqrRegionReader implements CigarHandler
     public void initialise(final ChrBaseRegion region)
     {
         if(mRefGenome == null)
+            return;
+
+        if(!HumanChromosome.contains(region.Chromosome))
             return;
 
         List<ChrBaseRegion> overlappedBqrRegions = mAllBqrRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());

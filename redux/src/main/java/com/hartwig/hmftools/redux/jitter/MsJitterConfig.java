@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.jitter;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
-import static com.hartwig.hmftools.redux.jitter.MsiJitterConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;
 
-public class JitterAnalyserConfig
+public class MsJitterConfig
 {
     public final String SampleId;
     public final RefGenomeVersion RefGenVersion;
@@ -35,6 +35,8 @@ public class JitterAnalyserConfig
     public final double MaxSingleSiteAltContribution;
     public final SpecificRegions SpecificChrRegions;
 
+    public static boolean JITTER_APPLY_BQ_FILTER = true;
+
     public final boolean WritePlots;
     public final boolean WriteSiteFile;
 
@@ -47,6 +49,8 @@ public class JitterAnalyserConfig
     public static final String JITTER_MAX_SITES_PER_TYPE = "msi_max_sites_per_type";
     public static final String JITTER_MAX_SITES_PER_TYPE_DESC = "Max number of sites per microsatellite unit / length type";
 
+    private static final String NO_BASE_QUAL_FILTER = "msi_no_bq_filter";
+
     private static final String MIN_MAP_QUALITY = "msi_min_map_quality";
     private static final String MAX_SINGLE_SITE_ALT_CONTRIBUTION = "max_site_alt_contribution";
 
@@ -56,7 +60,7 @@ public class JitterAnalyserConfig
     public static final int DEFAULT_MIN_MAPPING_QUALITY = BQR_MIN_MAP_QUAL;
     public static final int DEFAULT_NUM_SITES_PER_TYPE = 5_000;
 
-    private JitterAnalyserConfig(
+    private MsJitterConfig(
             final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
             boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
@@ -75,16 +79,18 @@ public class JitterAnalyserConfig
 
         WritePlots = configBuilder.hasFlag(JITTER_WRITE_MSI_PLOTS);
         WriteSiteFile = configBuilder.hasFlag(JITTER_WRITE_SITE_FILE);
+
+        JITTER_APPLY_BQ_FILTER = !configBuilder.hasFlag(NO_BASE_QUAL_FILTER);
     }
 
     @Nullable
-    public static JitterAnalyserConfig create(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
+    public static MsJitterConfig create(final String sampleId, final String refGenomeFile, final RefGenomeVersion refGenVersion,
             final SequencingType sequencing, boolean usesDuplexUMIs, final String outputDir, final ConfigBuilder configBuilder)
     {
         if(!configBuilder.hasValue(JITTER_MSI_SITES_FILE))
             return null;
 
-        return new JitterAnalyserConfig(sampleId, refGenomeFile, refGenVersion, usesDuplexUMIs, outputDir, configBuilder);
+        return new MsJitterConfig(sampleId, refGenomeFile, refGenVersion, usesDuplexUMIs, outputDir, configBuilder);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -95,9 +101,11 @@ public class JitterAnalyserConfig
         configBuilder.addDecimal(MAX_SINGLE_SITE_ALT_CONTRIBUTION, "Max percentage a single alt site can contribute", DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION);
         configBuilder.addFlag(JITTER_WRITE_MSI_PLOTS, JITTER_WRITE_MSI_PLOTS_DESC);
         configBuilder.addFlag(JITTER_WRITE_SITE_FILE, JITTER_WRITE_SITE_FILE_DESC);
+
+        configBuilder.addFlag(NO_BASE_QUAL_FILTER, "Include SBX medium base quals");
     }
 
-    public static EnumSet<ConsensusType> consensusTypes(final JitterAnalyserConfig config)
+    public static EnumSet<ConsensusType> consensusTypes(final MsJitterConfig config)
     {
         EnumSet<ConsensusType> consensusTypes = Sets.newEnumSet(Collections.emptyList(), ConsensusType.class);
 

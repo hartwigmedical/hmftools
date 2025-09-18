@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -19,9 +19,9 @@ public class BamWriterSync extends BamWriter
 
     public BamWriterSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
+            @Nullable final MsJitterAnalyser msJitterAnalyser, final BaseQualRecalibration bqr)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser, bqr);
+        super(filename, config, readDataWriter, samFileWriter, msJitterAnalyser, bqr);
         mWriteCount = 0;
     }
 
