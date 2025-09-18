@@ -122,12 +122,10 @@ object AlignmentUtil
         aligner.minSeedLengthOption = WORD_SIZE
         aligner.matchScoreOption = MATCH_SCORE
         aligner.mismatchPenaltyOption = -MISMATCH_SCORE
-        aligner.dGapOpenPenaltyOption = -GAP_OPENING_SCORE;
-        aligner.iGapOpenPenaltyOption = -GAP_OPENING_SCORE;
-        aligner.dGapExtendPenaltyOption = -GAP_EXTEND_SCORE;
-        aligner.iGapExtendPenaltyOption = -GAP_EXTEND_SCORE;
-//        aligner.setMaxMemIntvOption(2000)
-//        aligner.setMaxSeedOccurencesOption(2000)
+        aligner.dGapOpenPenaltyOption = -GAP_OPENING_SCORE
+        aligner.iGapOpenPenaltyOption = -GAP_OPENING_SCORE
+        aligner.dGapExtendPenaltyOption = -GAP_EXTEND_SCORE
+        aligner.iGapExtendPenaltyOption = -GAP_EXTEND_SCORE
 
         val keys = sequences.keys.toList()
         val seqs = keys.map { k -> sequences[k]!!.toByteArray() }
