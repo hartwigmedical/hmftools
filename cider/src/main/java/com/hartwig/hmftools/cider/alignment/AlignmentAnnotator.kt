@@ -338,14 +338,20 @@ class AlignmentAnnotator
                 return true
             }
 
-            if ((newMatch.alignmentScore == existingMatch.alignmentScore) &&
-                !existingGene.isFunctional &&
-                newGene.isFunctional)
+            if ((newMatch.alignmentScore == existingMatch.alignmentScore))
             {
-                // if scores are equal, we prefer the functional one
-                sLogger.trace("prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
-                    newGene.geneAllele, newMatch.alignmentScore, existingGene.geneAllele, existingMatch.alignmentScore)
-                return true
+                if (!existingGene.isFunctional && newGene.isFunctional) {
+                    // if scores are equal, we prefer the functional one
+                    sLogger.trace(
+                        "prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
+                        newGene.geneAllele, newMatch.alignmentScore, existingGene.geneAllele, existingMatch.alignmentScore
+                    )
+                    return true
+                }
+                // Deterministic tie breaker for otherwise identical gene alignments
+                if (newGene.geneName < existingGene.geneName) {
+                    return true
+                }
             }
 
             return false
