@@ -66,6 +66,8 @@ public class SampleData
     {
         mConfig = config;
 
+        VIS_LOGGER.info("loading LINX visualiser data - sample({})", mConfig.Sample);
+
         boolean isGermline = config.IsGermline;
 
         if(!isGermline
@@ -130,29 +132,48 @@ public class SampleData
         }
 
         SvData = svData;
+        VIS_LOGGER.debug("loaded {} LINX vis SV data entries", SvData.size());
 
         Fusions = loadFusions(fusionFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        VIS_LOGGER.debug("loaded {} LINX vis fusion entries", Fusions.size());
+
         Exons = VisExons.readExons(geneExonFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        VIS_LOGGER.debug("loaded {} LINX vis exon entries", Exons.size());
+
         Segments = VisSegments.readSegments(linksFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        VIS_LOGGER.debug("loaded {} LINX vis segment entries", Segments.size());
 
         CopyNumbers = VisCopyNumbers.read(cnaFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        VIS_LOGGER.debug("loaded {} LINX vis copy number entries", CopyNumbers.size());
 
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        VIS_LOGGER.debug("loaded {} LINX vis protein domain entries", ProteinDomains.size());
+
+        if(mConfig.AmberDir != null || mConfig.CobaltDir != null || mConfig.PurpleDir != null)
+        {
+            VIS_LOGGER.info("loading CNV data - sample({})", mConfig.Sample);
+        }
 
         if(mConfig.AmberDir != null)
         {
             final String amberBafFile = AmberBAFFile.generateAmberFilenameForReading(mConfig.AmberDir, mConfig.Sample);
             Multimap<Chromosome,AmberBAF> amberBafData = AmberBAFFile.read(amberBafFile, true);
             AmberBAFs.addAll(amberBafData.values());
+
+            VIS_LOGGER.debug("loaded {} AMBER BAF entries", AmberBAFs.size());
         }
 
         if(mConfig.CobaltDir != null)
         {
             final String cobaltRatioFile = CobaltRatioFile.generateFilename(mConfig.CobaltDir, mConfig.Sample);
             ListMultimap<Chromosome, CobaltRatio> cobaltRatiosUnfiltered = CobaltRatioFile.read(cobaltRatioFile);
-            List<CobaltRatio> cobaltRatiosFiltered = cobaltRatiosUnfiltered.values().stream().filter(x -> x.tumorGCRatio() != -1).toList();
+            List<CobaltRatio> cobaltRatiosFiltered = cobaltRatiosUnfiltered.values().stream()
+                    .filter(x -> x.tumorGCRatio() != -1)
+                    .toList();
             CobaltRatios.addAll(cobaltRatiosFiltered);
+
+            VIS_LOGGER.debug("loaded {} COBALT ratio entries", CobaltRatios.size());
         }
 
         if(mConfig.PurpleDir != null)
@@ -160,8 +181,11 @@ public class SampleData
             final String purpleSegmentFile = PurpleSegment.generateFilename(mConfig.PurpleDir, mConfig.Sample);
             List<PurpleSegment> purpleSegmentsUnfiltered = PurpleSegment.read(purpleSegmentFile);
             List<PurpleSegment> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
-                    .filter(x -> x.GermlineState == GermlineStatus.DIPLOID).toList();
+                    .filter(x -> x.GermlineState == GermlineStatus.DIPLOID)
+                    .toList();
             PurpleSegments.addAll(purpleSegmentsFiltered);
+
+            VIS_LOGGER.debug("loaded {} PURPLE segment entries", PurpleSegments.size());
         }
 
         boolean clustersOrChainsProvided = !mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty();
@@ -183,12 +207,12 @@ public class SampleData
         {
             if(anyUpstreamCnvDataExists)
             {
-                VIS_LOGGER.info("sample({}) has some missing LINX vis data: {}. Proceeding to plotting CNV data only",
-                        mConfig.Sample, String.join(", ", missingLinxVisData));
+                VIS_LOGGER.info("proceeding to plotting CNV data only - the following LINX vis data are empty: {}",
+                        String.join(", ", missingLinxVisData));
             }
             else
             {
-                VIS_LOGGER.info("No plots to generate - sample({}) LINX vis data and (filtered) AMBER/COBALT/PURPLE CNV data empty", mConfig.Sample);
+                VIS_LOGGER.info("no plots to generate - sample({}) LINX vis data and AMBER/COBALT/PURPLE CNV data are all empty", mConfig.Sample);
                 System.exit(0);
             }
         }
@@ -208,6 +232,8 @@ public class SampleData
             {
                 svAnnotations = svAnnotations.stream().filter(x -> SvData.stream().anyMatch(y -> y.SvId == x.svId())).collect(toList());
             }
+
+            VIS_LOGGER.debug("loaded {} LINX vis SV annotation entries", svAnnotations.size());
 
             if(mConfig.PlotClusterGenes && !mConfig.ClusterIds.isEmpty())
             {
@@ -319,7 +345,7 @@ public class SampleData
         }
         catch(Exception e)
         {
-            VIS_LOGGER.warn("sample({}) failed to load driver data: {}", mConfig.Sample, e.toString());
+            VIS_LOGGER.error("sample({}) failed to load driver data: {}", mConfig.Sample, e.toString());
             return null;
         }
     }

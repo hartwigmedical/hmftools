@@ -73,8 +73,6 @@ public class SvVisualiser implements AutoCloseable
 
     private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
-        VIS_LOGGER.info("loading visualiser data");
-
         mCircosConfig = new CircosConfig(configBuilder);
         mConfig = new VisualiserConfig(configBuilder);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
@@ -84,6 +82,7 @@ public class SvVisualiser implements AutoCloseable
 
         if(mConfig.EnsemblDataDir != null)
         {
+            VIS_LOGGER.info("loading Ensembl data");
             mEnsemblDataCache = new EnsemblDataCache(mConfig.EnsemblDataDir, mConfig.RefGenVersion);
             mEnsemblDataCache.setRequiredData(true, false, false, true);
             mEnsemblDataCache.load(false);
@@ -273,7 +272,7 @@ public class SvVisualiser implements AutoCloseable
             if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
                 continue;
 
-            VIS_LOGGER.info("loading exon data for additional gene({})", geneName);
+            VIS_LOGGER.info("loading exon data for gene({})", geneName);
 
             GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
             TranscriptData transcriptData = geneData != null ? mEnsemblDataCache.getCanonicalTranscriptData(geneData.GeneId) : null;
