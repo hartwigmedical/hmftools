@@ -16,7 +16,7 @@ purity_ploidy_range_plot <- function(bestFit, range) {
 
     bestPurity = bestFit[1, "purity"]
     bestPloidy = bestFit[1, "ploidy"]
-    bestScore = bestFit[1, "score"]
+    bestScore = min(range$score, na.rm = TRUE)
     
     range =  range %>%
         arrange(purity, ploidy) %>%
