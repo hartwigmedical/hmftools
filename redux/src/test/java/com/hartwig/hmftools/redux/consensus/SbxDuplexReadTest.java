@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
@@ -13,6 +15,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelI
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.reverseDuplexIndelIndices;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
@@ -43,6 +46,7 @@ import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import org.junit.After;
@@ -130,7 +134,7 @@ public class SbxDuplexReadTest
         int alignmentStart = 25;
         int leftSoftClipLength = 10;
         String readStr = "A".repeat(readLength);
-        String cigar = leftSoftClipLength + "S" + (readLength - leftSoftClipLength) + "M";
+        String cigar = format("%dS%dM", leftSoftClipLength, readLength - leftSoftClipLength);
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
@@ -378,15 +382,23 @@ public class SbxDuplexReadTest
         int alignmentStart = 25;
 
         String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(100);
-        RefGenomeInterface refGenome = getRefGenome(refBases);
+        // RefGenomeInterface refGenome = getRefGenome(refBases);
+
+        MockRefGenome mockRefGenome = new MockRefGenome(true);
+        mockRefGenome.RefGenomeMap.put(CHR_1, refBases);
+        mockRefGenome.RefGenomeMap.put(CHR_2, refBases);
+        mockRefGenome.ChromosomeLengths.put(CHR_1, refBases.length());
+        mockRefGenome.ChromosomeLengths.put(CHR_2, refBases.length());
+        RefGenomeInterface refGenome = new CachedRefGenome(mockRefGenome);
 
         String alignedBases = REF_BASES.substring(1, 21);
         String suppBases = REF_BASES.substring(30, 54); // "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
         String cigar = "20M24S";
         String suppCigar = "20S10M2I12M";
+        int suppPosStart = 25;
         String readBases = alignedBases + suppBases;
 
-        SupplementaryReadData suppData = new SupplementaryReadData(CHR_1, 200, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
+        SupplementaryReadData suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
         String ycTagStr = "20-10Z13-0";
 
@@ -402,7 +414,7 @@ public class SbxDuplexReadTest
         // with supplementary having a different aligned and soft-clip length, requiring adjustment
         suppCigar = "18S12M2I12M";
 
-        suppData = new SupplementaryReadData(CHR_1, 200, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
+        suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
@@ -415,7 +427,7 @@ public class SbxDuplexReadTest
 
         // reversed supp data
         suppCigar = "12M2I08M22S";
-        suppData = new SupplementaryReadData(CHR_1, 200, SUPP_NEG_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
+        suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_NEG_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
@@ -431,7 +443,7 @@ public class SbxDuplexReadTest
         suppCigar = "10M2I12M20S";
         readBases = suppBases + alignedBases;
 
-        suppData = new SupplementaryReadData(CHR_1, 200, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
+        suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
 
         ycTagStr = "10-5Z18-0";
 

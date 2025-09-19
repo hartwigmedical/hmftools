@@ -16,7 +16,8 @@ public class SbxAnnotatedBase
 
     private byte mQual;
     private boolean mDeleted;
-    private boolean mInSoftClip; // true if derived from a soft-clip but has been replaced by the aligned supplementary data
+    private boolean mInSuppDataSoftClip; // true if derived from a soft-clip but has been replaced by the aligned supplementary data
+    private String mSuppDataChromosome;
 
     protected final static byte INVALID_BASE = -1;
 
@@ -30,7 +31,8 @@ public class SbxAnnotatedBase
 
         mQual = qual;
         mDeleted = false;
-        mInSoftClip = false;
+        mInSuppDataSoftClip = false;
+        mSuppDataChromosome = null;
     }
 
     public boolean isReadBase() { return Op.consumesReadBases(); }
@@ -51,10 +53,15 @@ public class SbxAnnotatedBase
         return mQual;
     }
 
-    public void setInSoftClip() { mInSoftClip = true; }
+    public void setSoftClipSuppData(final String suppDataChromosome)
+    {
+        mInSuppDataSoftClip = true;
+        mSuppDataChromosome = suppDataChromosome;
+    }
 
-    public boolean inSoftClip() { return Op == S || mInSoftClip; }
-    public CigarOperator originalOperator() { return mInSoftClip ? S : Op; }
+    public boolean inSoftClipSuppData() { return Op == S || mInSuppDataSoftClip; }
+    public CigarOperator originalOperator() { return mInSuppDataSoftClip ? S : Op; }
+    public String softClipChromosome() { return mSuppDataChromosome; }
 
     public boolean setQual(byte qual)
     {
@@ -97,6 +104,6 @@ public class SbxAnnotatedBase
     public String toString()
     {
         return format("%d:%d %c@%d cigar(%s) duplexIndel(%s) deleted(%s) softClip(%s)",
-                ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted, mInSoftClip);
+                ReadIndex, RefPos, (char)ReadBase, mQual, Op, IsDuplexIndel, mDeleted, mInSuppDataSoftClip);
     }
 }

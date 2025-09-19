@@ -58,7 +58,6 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.isofox.IsofoxData;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -213,20 +212,20 @@ public final class SbxRoutines
     {
         List<SbxAnnotatedBase> annotatedBases = Lists.newArrayList();
 
+        // use any supplementary data to set aligned bases to help with indel stripping
         SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record);
 
-        List<CigarElement> readCigarElements = record.getCigar().getCigarElements();
-        List<CigarElement> cigarElements;
+        final List<CigarElement> readCigarElements = record.getCigar().getCigarElements();
+        List<CigarElement> remoteSuppElements;
+        List<CigarElement> localCigarElements;
 
         int leftSoftClipLength = readCigarElements.get(0).getOperator() == S ? readCigarElements.get(0).getLength() : 0;
         int lastElement = readCigarElements.size() - 1;
         int rightSoftClipLength = readCigarElements.get(lastElement).getOperator() == S ? readCigarElements.get(lastElement).getLength() : 0;
-        int leftClipSuppInsertedBases = 0;
+        boolean useLeftClipSuppData = false;
 
         if(suppData != null)
         {
-            cigarElements = Lists.newArrayList();
-
             List<CigarElement> suppElements = CigarUtils.cigarElementsFromStr(suppData.Cigar);
 
             if(suppData.isForwardOrient() == record.getReadNegativeStrandFlag())
@@ -234,74 +233,104 @@ public final class SbxRoutines
 
             if(leftSoftClipLength > rightSoftClipLength)
             {
-                List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, leftSoftClipLength, true);
-                cigarElements.addAll(trimmedSuppElements);
-
-                leftClipSuppInsertedBases = trimmedSuppElements.stream().filter(x -> x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
-
-                cigarElements.addAll(readCigarElements.subList(1, lastElement + 1)); // remove soft-clip from original
+                remoteSuppElements = checkSupplementaryCigar(suppElements, leftSoftClipLength, true);
+                localCigarElements = readCigarElements.subList(1, lastElement + 1); // remove soft-clip from original
+                useLeftClipSuppData = true;
             }
             else
             {
-                cigarElements.addAll(readCigarElements.subList(0, lastElement));
-
-                List<CigarElement> trimmedSuppElements = checkSupplementaryCigar(suppElements, rightSoftClipLength, false);
-                cigarElements.addAll(trimmedSuppElements);
+                localCigarElements = readCigarElements.subList(0, lastElement);
+                remoteSuppElements = checkSupplementaryCigar(suppElements, rightSoftClipLength, false);
             }
         }
         else
         {
-            cigarElements = readCigarElements;
+            localCigarElements = readCigarElements;
+            remoteSuppElements = Collections.emptyList();
         }
 
         byte[] quals = record.getBaseQualities();
         byte[] bases = record.getReadBases();
         int readIndex = 0;
-        int refPos = record.getAlignmentStart() - leftSoftClipLength;
+        boolean useLocalAlignments = true;
 
-        // adjust the inferred ref start position for any inserts in the soft-clip bases
-        refPos += leftClipSuppInsertedBases;
-
-        for(CigarElement element : cigarElements)
+        for(int e = 0; e <= 1; ++e)
         {
-            if(element.getOperator() == H)
-                continue;
+            List<CigarElement> cigarElements;
 
-            boolean isRead = element.getOperator().consumesReadBases();
-            boolean isRef = element.getOperator() == S || element.getOperator().consumesReferenceBases();
-
-            if(isRead && isRef)
+            if(e == 0)
             {
-                for(int i = 0; i < element.getLength(); i++)
+                if(useLeftClipSuppData)
                 {
-                    annotatedBases.add(new SbxAnnotatedBase(
-                            readIndex, refPos, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
-                    readIndex++;
-                    refPos++;
+                    // process supplementary-data aligned bases first
+                    useLocalAlignments = false;
                 }
+            }
+            else
+            {
+                if(suppData == null)
+                    break;
 
-                continue;
+                useLocalAlignments = !useLocalAlignments;
             }
 
-            if(isRead)
+            int refPos;
+            if(useLocalAlignments)
             {
-                for(int i = 0; i < element.getLength(); i++)
-                {
-                    annotatedBases.add(new SbxAnnotatedBase(
-                            readIndex, refPos - 1, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
-                    readIndex++;
-                }
+                refPos = record.getAlignmentStart();
 
-                continue;
+                if(!useLeftClipSuppData)
+                    refPos -= leftSoftClipLength;
+
+                cigarElements = localCigarElements;
+            }
+            else
+            {
+                refPos = suppData.Position;
+                cigarElements = remoteSuppElements;
             }
 
-            if(isRef)
+            for(CigarElement element : cigarElements)
             {
-                for(int i = 0; i < element.getLength(); i++)
+                if(element.getOperator() == H)
+                    continue;
+
+                boolean isRead = element.getOperator().consumesReadBases();
+                boolean isRef = element.getOperator() == S || element.getOperator().consumesReferenceBases();
+
+                if(isRead && isRef)
                 {
-                    annotatedBases.add(new SbxAnnotatedBase(
-                            readIndex - 1, refPos, element.getOperator(), INVALID_BASE, INVALID_BASE, false));
-                    refPos++;
+                    for(int i = 0; i < element.getLength(); i++)
+                    {
+                        annotatedBases.add(new SbxAnnotatedBase(
+                                readIndex, refPos, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
+                        readIndex++;
+                        refPos++;
+                    }
+
+                    continue;
+                }
+
+                if(isRead)
+                {
+                    for(int i = 0; i < element.getLength(); i++)
+                    {
+                        annotatedBases.add(new SbxAnnotatedBase(
+                                readIndex, refPos - 1, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
+                        readIndex++;
+                    }
+
+                    continue;
+                }
+
+                if(isRef)
+                {
+                    for(int i = 0; i < element.getLength(); i++)
+                    {
+                        annotatedBases.add(new SbxAnnotatedBase(
+                                readIndex - 1, refPos, element.getOperator(), INVALID_BASE, INVALID_BASE, false));
+                        refPos++;
+                    }
                 }
             }
         }
@@ -323,7 +352,7 @@ public final class SbxRoutines
 
             for(int i = suppSoftIndexStart; i <= suppSoftIndexEnd; ++i)
             {
-                annotatedBases.get(i).setInSoftClip();
+                annotatedBases.get(i).setSoftClipSuppData(suppData.Chromosome);
             }
         }
 
@@ -410,6 +439,7 @@ public final class SbxRoutines
             final RefGenomeInterface refGenome, final String chromosome, final List<SbxAnnotatedBase> annotatedBases, boolean isForward)
     {
         int chromosomeLength = refGenome.getChromosomeLength(chromosome);
+        Integer suppDataChromosomeLength = null;
 
         boolean requireReversedBases = SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL ? isForward : !isForward;
 
@@ -499,9 +529,26 @@ public final class SbxRoutines
             int refPos = startRefRepeatPos;
             repeatStrIndex = duplexIndelBases.length() - 1;
             int refRepeatLength = 0;
-            while(refPos >= 1 && refPos <= chromosomeLength)
+
+            String refPosChr = chromosome;
+            int refChromosomeLength = chromosomeLength;
+
+            if(annotatedBase.inSoftClipSuppData())
             {
-                byte refBase = refGenome.getBase(chromosome, refPos);
+                refPosChr = annotatedBase.softClipChromosome();
+
+                if(!refPosChr.equals(chromosome))
+                {
+                    if(suppDataChromosomeLength == null)
+                        suppDataChromosomeLength = refGenome.getChromosomeLength(refPosChr);
+
+                    refChromosomeLength = suppDataChromosomeLength;
+                }
+            }
+
+            while(refPos >= 1 && refPos <= refChromosomeLength)
+            {
+                byte refBase = refGenome.getBase(refPosChr, refPos);
                 if(refBase != (byte) duplexIndelBases.charAt(repeatStrIndex))
                     break;
 
