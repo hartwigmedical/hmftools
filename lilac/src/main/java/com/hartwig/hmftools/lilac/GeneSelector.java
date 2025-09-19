@@ -3,7 +3,6 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Predicate;

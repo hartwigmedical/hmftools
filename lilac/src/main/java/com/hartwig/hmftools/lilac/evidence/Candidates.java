@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS_;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.Collection;
@@ -24,6 +24,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.Nullable;
 
 public final class Candidates
 {
@@ -52,7 +53,7 @@ public final class Candidates
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts,
-                Sets.newTreeSet(context.AminoAcidBoundaries), RAW_REF_AMINO_ACID_COUNTS.get(context.Gene));
+                Sets.newTreeSet(context.AminoAcidBoundaries), RAW_REF_AMINO_ACID_COUNTS_.get(context.Gene));
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -96,7 +97,7 @@ public final class Candidates
 
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterSequencesByMinSupport(final Collection<HlaSequenceLoci> candidates,
-            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, final SequenceCount rawAminoAcidCounts)
+            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, @Nullable final SequenceCount rawAminoAcidCounts_)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
@@ -107,7 +108,7 @@ public final class Candidates
             if(aminoAcidBoundaries.contains(locus))
                 continue;
 
-            if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+            if(rawAminoAcidCounts_ != null && rawAminoAcidCounts_.get(locus).size() < MIN_DEPTH_FILTER)
                 continue;
 
             Set<String> expectedSequences = Sets.newHashSet(aminoAcidCount.getMinEvidenceSequences(locus));
@@ -146,7 +147,7 @@ public final class Candidates
                 .filter(x -> unphasedCandidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
         List<HlaSequenceLoci> phasedCandidates = filterCandidates(
-                unphasedCandidates, phasedEvidence, RAW_REF_AMINO_ACID_COUNTS.get(context.Gene));
+                unphasedCandidates, phasedEvidence, RAW_REF_AMINO_ACID_COUNTS_.get(context.Gene));
         List<HlaAllele> phasedAlleles = phasedCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
         LL_LOGGER.info("gene({}) has {} candidates after phasing: {}",
@@ -158,7 +159,7 @@ public final class Candidates
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterCandidates(
             final Collection<HlaSequenceLoci> initialCandidates, final Iterable<PhasedEvidence> evidence,
-            final SequenceCount rawAminoAcidCounts)
+            @Nullable final SequenceCount rawAminoAcidCounts_)
     {
         List<HlaSequenceLoci> candidates = Lists.newArrayList();
         candidates.addAll(initialCandidates);
@@ -174,7 +175,7 @@ public final class Candidates
             for(int j = 0; j < targetLoci.size(); j++)
             {
                 int locus = targetLoci.get(j);
-                if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                if(rawAminoAcidCounts_ != null && rawAminoAcidCounts_.get(locus).size() < MIN_DEPTH_FILTER)
                     lowDepthIndices.add(j);
             }
 

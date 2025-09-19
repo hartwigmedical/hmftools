@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
-import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT_;
+import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT__;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
 import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.CANDIDATE;
@@ -189,8 +189,8 @@ public class LilacApplication
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
 
-        if(NUC_GENE_FRAG_ENRICHMENT_ != null)
-            NUC_GENE_FRAG_ENRICHMENT_.checkAddAdditionalGenes(refFragments);
+        if(NUC_GENE_FRAG_ENRICHMENT__ != null)
+            NUC_GENE_FRAG_ENRICHMENT__.checkAddAdditionalGenes(refFragments);
 
         mRefNucleotideFrags.addAll(refFragments);
 
@@ -577,8 +577,8 @@ public class LilacApplication
         else
         {
             List<Fragment> tumorNucleotideFrags = mTumorBamReader.findGeneFragments();
-            if(NUC_GENE_FRAG_ENRICHMENT_ != null)
-                NUC_GENE_FRAG_ENRICHMENT_.checkAddAdditionalGenes(tumorNucleotideFrags);
+            if(NUC_GENE_FRAG_ENRICHMENT__ != null)
+                NUC_GENE_FRAG_ENRICHMENT__.checkAddAdditionalGenes(tumorNucleotideFrags);
 
             List<Fragment> tumorFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(tumorNucleotideFrags);
 
@@ -635,7 +635,7 @@ public class LilacApplication
             final List<HlaSequenceLoci> winningNucSequences)
     {
         mRnaCoverage = LilacAppendRna.extractRnaCoverage(
-                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT_, mAminoAcidPipeline, mFragAlleleMapper_,
+                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT__, mAminoAcidPipeline, mFragAlleleMapper_,
                 winningAlleles, winningSequences, winningNucSequences);
     }
 
@@ -694,10 +694,20 @@ public class LilacApplication
 
     private boolean hasSufficientGeneDepth(final Map<HlaGene_, int[]> geneBaseDepth)
     {
+        // TODO: skip for HLA-DRB for now
+        if(geneBaseDepth.containsKey(HlaGene_.HLA_DRB1))
+            return true;
+
         Map<HlaGene_, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();
         int totalLowCoveragePositions = 0;
         for(Map.Entry<HlaGene_, int[]> entry : geneBaseDepth.entrySet())
         {
+            HlaGene_ gene = entry.getKey();
+
+            // we expect no raw coverage for HLA-DRB3 and HLA-DRB4, they get their reads from HLA-DRB1 and HLA-DRB5
+            if(gene == HlaGene_.HLA_DRB3 || gene == HlaGene_.HLA_DRB4)
+                continue;
+
             int count = (int) Arrays.stream(entry.getValue()).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
             geneLowCoveragePositionCounts.put(entry.getKey(), count);
             totalLowCoveragePositions += count;

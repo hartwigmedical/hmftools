@@ -57,6 +57,12 @@ public class HlaYCoverage
             final List<HlaSequenceLoci> hlaYSequences, final Map<HlaGene_, Map<Integer, Set<String>>> geneAminoAcidHetLociMap,
             final LilacConfig config)
     {
+        // TODO:
+        if(!config.Genes.coversMhcClass1())
+        {
+            throw new IllegalStateException("HLA-Y is not valid for non-CLASS1 genes");
+        }
+
         mHlaYSequences = hlaYSequences;
         mAminoAcidHetLoci = Sets.newHashSet(geneAminoAcidHetLociMap.get(HLA_A).keySet());
         mConfig = config;

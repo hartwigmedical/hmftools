@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
-import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_H;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
@@ -74,7 +73,7 @@ public class ReferenceData
     public static final Map<HlaGene_, List<Integer>> GENE_EXON_BOUNDARIES_ = Maps.newHashMap();
 
     public static HlaContextFactory HLA_CONTEXT_FACTORY = null;
-    public static NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT_ = null;
+    public static NucleotideGeneEnrichment NUC_GENE_FRAG_ENRICHMENT__ = null;
 
     private final HlaAlleleCache mAlleleCache;
 
@@ -114,7 +113,7 @@ public class ReferenceData
 
 
         HLA_CONTEXT_FACTORY = new HlaContextFactory(mConfig, GENE_EXON_BOUNDARIES_);
-        NUC_GENE_FRAG_ENRICHMENT_ = config.Genes.coversMhcClass1() ? new NucleotideGeneEnrichment(GENE_EXON_BOUNDARIES_) : null;
+        NUC_GENE_FRAG_ENRICHMENT__ = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES_);
 
         mAlleleCache = new HlaAlleleCache();
 

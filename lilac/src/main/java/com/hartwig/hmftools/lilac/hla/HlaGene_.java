@@ -4,10 +4,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_2;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.MhcClass_;
 
 public enum HlaGene_

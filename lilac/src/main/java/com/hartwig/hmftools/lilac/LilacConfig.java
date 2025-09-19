@@ -53,7 +53,6 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.sun.jdi.ClassType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

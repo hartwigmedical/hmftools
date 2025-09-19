@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_NUCLEOTIDE_COUNTS;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_NUCLEOTIDE_COUNTS_;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -34,15 +36,15 @@ public final class NucleotideFragmentQualEnrichment
         SequenceCount highQualCounts = SequenceCount.buildFromNucleotides(MIN_HIGH_QUAL_EVIDENCE_FACTOR, highQualFrags);
         SequenceCount rawCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, fragments);
 
-        SequenceCount rawNucleotideCounts = RAW_REF_NUCLEOTIDE_COUNTS.get(context.Gene);
+        SequenceCount rawNucleotideCounts_ = RAW_REF_NUCLEOTIDE_COUNTS_.get(context.Gene);
         return fragments.stream()
-                .map(x -> applyQualityFilter(x, highQualCounts, rawCounts, rawNucleotideCounts))
+                .map(x -> applyQualityFilter(x, highQualCounts, rawCounts, rawNucleotideCounts_))
                 .collect(Collectors.toList());
     }
 
     @VisibleForTesting
     public static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount,
-            final SequenceCount rawNucleotideCounts)
+            @Nullable final SequenceCount rawNucleotideCounts_)
     {
         // checks whether all nucleotides have qual above the required level - if so return this fragment, otherwise build a
         // new fragment just with these filtered loci
@@ -54,7 +56,7 @@ public final class NucleotideFragmentQualEnrichment
         {
             int locus = entry.getKey();
             Nucleotide nucleotide = entry.getValue();
-            if(rawNucleotideCounts.get(locus).size() < MIN_DEPTH_FILTER)
+            if(rawNucleotideCounts_ != null && rawNucleotideCounts_.get(locus).size() < MIN_DEPTH_FILTER)
             {
                 filteredNucleotides.add(nucleotide);
                 continue;

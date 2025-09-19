@@ -2,50 +2,102 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
-import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB1;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.OptionalInt;
 import java.util.Set;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.lilac.MhcClass_;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
-
-import org.apache.commons.lang3.NotImplementedException;
 
 public class NucleotideGeneEnrichment
 {
-    private final int mAbMinUniqueProteinExonBoundary_;
-    private final int mAcMinUniqueProteinExonBoundary_;
-    private final int mBcMinUniqueProteinExonBoundary_;
+    private final List<HlaGene_> mGenes;
+    private final HashMap<Set<HlaGene_>, OptionalInt> mMinUniqueProteinExonBoundaries;
 
-    public NucleotideGeneEnrichment(final Map<HlaGene_, List<Integer>> geneBoundaries_)
+    private NucleotideGeneEnrichment(final List<HlaGene_> genes, final HashMap<Set<HlaGene_>, OptionalInt> minUniqueProteinExonBoundaries)
     {
-        // determine the minimum unique exon boundary for each pair
-        mAbMinUniqueProteinExonBoundary_ = getMinUniqueBoundary(geneBoundaries_.get(HLA_A), geneBoundaries_.get(HLA_B));
-        mAcMinUniqueProteinExonBoundary_ = getMinUniqueBoundary(geneBoundaries_.get(HLA_A), geneBoundaries_.get(HLA_C));
-        mBcMinUniqueProteinExonBoundary_ = getMinUniqueBoundary(geneBoundaries_.get(HLA_B), geneBoundaries_.get(HLA_C));
+        mGenes = genes;
+        mMinUniqueProteinExonBoundaries = minUniqueProteinExonBoundaries;
     }
 
-    private static int getMinUniqueBoundary(final List<Integer> boundariesGene1, final List<Integer> boundariesGene2)
+    public static NucleotideGeneEnrichment create(final Map<HlaGene_, List<Integer>> geneBoundaries_)
+    {
+        // determine the minimum unique exon boundary for each pair
+        List<HlaGene_> genes = null;
+        if(geneBoundaries_.containsKey(HLA_A))
+        {
+            genes = Lists.newArrayList(GeneSelector.MHC_CLASS_1.genes_());
+        }
+        else if(geneBoundaries_.containsKey(HLA_DRB1))
+        {
+            genes = Lists.newArrayList(GeneSelector.HLA_DRB.genes_());
+        }
+        else
+        {
+            return null;
+        }
+
+        HashMap<Set<HlaGene_>, OptionalInt> minUniqueProteinExonBoundaries = Maps.newHashMap();
+        for(int i = 0; i < genes.size() - 1; i++)
+        {
+            HlaGene_ gene1 = genes.get(i);
+            for(int j = i + 1; j < genes.size(); j++)
+            {
+                HlaGene_ gene2 = genes.get(j);
+                Set<HlaGene_> key = Sets.newHashSet(gene1, gene2);
+                OptionalInt minUniqueExonBoundary = getMinUniqueBoundary(geneBoundaries_.get(gene1), geneBoundaries_.get(gene2));
+                minUniqueProteinExonBoundaries.put(key, minUniqueExonBoundary);
+            }
+        }
+
+        return new NucleotideGeneEnrichment(genes, minUniqueProteinExonBoundaries);
+    }
+
+    private static OptionalInt getMinUniqueBoundary(final List<Integer> boundariesGene1, final List<Integer> boundariesGene2)
     {
         Set<Integer> uniqueBoundaries = Sets.newHashSet();
 
         boundariesGene1.stream().filter(x -> !boundariesGene2.contains(x)).forEach(uniqueBoundaries::add);
         boundariesGene2.stream().filter(x -> !boundariesGene1.contains(x)).forEach(uniqueBoundaries::add);
 
-        return uniqueBoundaries.stream().mapToInt(x -> x).min().orElse(0);
+        if(uniqueBoundaries.isEmpty())
+            return OptionalInt.empty();
+
+        return OptionalInt.of(uniqueBoundaries.stream().mapToInt(x -> x).min().orElse(0));
     }
 
-    public int getAFilterB_() { return mAbMinUniqueProteinExonBoundary_; }
-    public int getAFilterC_() { return mAcMinUniqueProteinExonBoundary_; }
-    public int getBFilterA_() { return mAbMinUniqueProteinExonBoundary_; }
-    public int getBFilterC_() { return mBcMinUniqueProteinExonBoundary_; }
-    public int getCFilterA_() { return mAcMinUniqueProteinExonBoundary_; }
-    public int getCFilterB_() { return mBcMinUniqueProteinExonBoundary_; }
+    public NavigableMap<Integer, Integer> getFilters(final HlaGene_ gene)
+    {
+        NavigableMap<Integer, Integer> filters = Maps.newTreeMap();
+        for(HlaGene_ otherGene : mGenes)
+        {
+            if(gene == otherGene)
+                continue;
+
+            OptionalInt filter = getFilter(gene, otherGene);
+            if(filter.isEmpty())
+                continue;
+
+            filters.merge(filter.getAsInt(), 1, Integer::sum);
+        }
+
+        return filters;
+    }
+
+    public OptionalInt getFilter(final HlaGene_ gene1, final HlaGene_ gene2)
+    {
+        Set<HlaGene_> key = Sets.newHashSet(gene1, gene2);
+        return mMinUniqueProteinExonBoundaries.get(key);
+    }
 
     public void checkAddAdditionalGenes(final Iterable<Fragment> fragments)
     {
@@ -58,42 +110,35 @@ public class NucleotideGeneEnrichment
         if(fragment.containsIndel())
             return;
 
-        if(fragment.readGene().mhcClass() != MhcClass_.CLASS_1)
-            return;
-
         // logic: for any gene which isn't yet associated with the fragment, test if it could be by check its max nucleotide locus
         // versus the first unique nucelotide for the gene pair
         //
         // example: a fragment isn't associated with gene A, is with A, and the fragments max base is within the unique base of A and B,
         // so cannot it be distinguished between them - then add it to A as well
         int maxFragmentNucleotideLocus = fragment.maxNucleotideLocus();
-        if(considerAddingGene(fragment, HLA_A, maxFragmentNucleotideLocus))
+        for(HlaGene_ gene : mGenes)
         {
-            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mAbMinUniqueProteinExonBoundary_)
-                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mAcMinUniqueProteinExonBoundary_))
-            {
-                fragment.addGene(HLA_A);
-            }
-        }
+            if(!considerAddingGene(fragment, gene, maxFragmentNucleotideLocus))
+                continue;
 
-        if(considerAddingGene(fragment, HLA_B, maxFragmentNucleotideLocus))
-        {
-            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
-            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAbMinUniqueProteinExonBoundary_)
-                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_C, mBcMinUniqueProteinExonBoundary_))
+            boolean addGene = false;
+            for(HlaGene_ otherGene : mGenes)
             {
-                fragment.addGene(HLA_B);
-            }
-        }
+                if(gene == otherGene)
+                    continue;
 
-        if(considerAddingGene(fragment, HLA_C, maxFragmentNucleotideLocus))
-        {
-            // test: HLA_B, mAbMinUniqueProteinExonBoundary, HLA_C, mAcMinUniqueProteinExonBoundary))
-            if(checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_A, mAcMinUniqueProteinExonBoundary_)
-                    || checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, HLA_B, mBcMinUniqueProteinExonBoundary_))
-            {
-                fragment.addGene(HLA_C);
+                OptionalInt minUniqueProteinExonBoundary = getFilter(gene, otherGene);
+                if(!checkAddAdditionalGene(fragment, maxFragmentNucleotideLocus, otherGene, minUniqueProteinExonBoundary))
+                    continue;
+
+                addGene = true;
+                break;
             }
+
+            if(!addGene)
+                continue;
+
+            fragment.addGene(gene);
         }
     }
 
@@ -107,11 +152,11 @@ public class NucleotideGeneEnrichment
     }
 
     private static boolean checkAddAdditionalGene(
-            final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene_ otherGene, int geneComboUniqueAminoAcidBoundary)
+            final Fragment fragment, int maxFragmentNucleotideLocus, final HlaGene_ otherGene, final OptionalInt geneComboUniqueAminoAcidBoundary)
     {
         if(!fragment.containsGene(otherGene))
             return false;
 
-        return maxFragmentNucleotideLocus < geneComboUniqueAminoAcidBoundary * 3;
+        return geneComboUniqueAminoAcidBoundary.isEmpty() || maxFragmentNucleotideLocus < geneComboUniqueAminoAcidBoundary.getAsInt() * 3;
     }
 }

@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
-import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT_;
+import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT__;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -113,7 +113,7 @@ public class LilacAppendRna
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
 
         ComplexCoverage rnaCoverage = extractRnaCoverage(
-                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT_, aminoAcidPipeline,
+                mConfig.RnaBam, mConfig, mRefData, nucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT__, aminoAcidPipeline,
                 fragAlleleMapper, winningAlleles, aminoAcidSequences, nucleotideSequences);
 
         /*
@@ -130,7 +130,7 @@ public class LilacAppendRna
 
     public static ComplexCoverage extractRnaCoverage(
             final String rnaBam, final LilacConfig config, final ReferenceData referenceData,
-            final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment_,
+            final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment__,
             final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
             final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
@@ -143,8 +143,8 @@ public class LilacAppendRna
 
         List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
 
-        if(nucleotideGeneEnrichment_ != null)
-            nucleotideGeneEnrichment_.checkAddAdditionalGenes(rnaNucleotideFrags);
+        if(nucleotideGeneEnrichment__ != null)
+            nucleotideGeneEnrichment__.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

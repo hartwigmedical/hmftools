@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB1;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -159,9 +160,20 @@ public final class SequenceCount
             geneHetLociMap.put(gene, hetLociMap);
         }
 
-        if(!geneHetLociMap.containsKey(HLA_A) || !geneHetLociMap.containsKey(HLA_B) || !geneHetLociMap.containsKey(HLA_C))
-            return geneHetLociMap;
+        if(geneHetLociMap.containsKey(HLA_A))
+        {
+            addMhcClass1HeterozygousLociSequences(geneHetLociMap);
+        }
+        else if(geneHetLociMap.containsKey(HLA_DRB1))
+        {
+            addDrbHeterozygousLociSequences(geneHetLociMap);
+        }
 
+        return geneHetLociMap;
+    }
+
+    private static void addMhcClass1HeterozygousLociSequences(final Map<HlaGene_, Map<Integer, Set<String>>> geneHetLociMap)
+    {
         // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
         // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.
         Map<Integer, Set<String>> aHetLociMap = geneHetLociMap.get(HLA_A);
@@ -204,8 +216,29 @@ public final class SequenceCount
                 bHetLociMap.put(locus, combinedSeqs);
             }
         }
+    }
 
-        return geneHetLociMap;
+    private static void addDrbHeterozygousLociSequences(final Map<HlaGene_, Map<Integer, Set<String>>> geneHetLociMap)
+    {
+        // the HLA-DRB genes have the exact same structure: same lengths and exon boundaries
+        NavigableSet<Integer> allLoci = geneHetLociMap.values().stream()
+                .flatMap(x -> x.keySet().stream())
+                .collect(Collectors.toCollection(Sets::newTreeSet));
+
+        for(int locus : allLoci)
+        {
+            Set<String> combinedSeqs = Sets.newHashSet();
+            for(Map<Integer, Set<String>> hetLociMap : geneHetLociMap.values())
+            {
+                if(!hetLociMap.containsKey(locus))
+                    continue;
+
+                combinedSeqs.addAll(hetLociMap.get(locus));
+            }
+
+            for(Map<Integer, Set<String>> hetLociMap : geneHetLociMap.values())
+                hetLociMap.put(locus, combinedSeqs);
+        }
     }
 
     private Map<Integer, Set<String>> extractHeterozygousLociSequences(final Iterable<HlaSequenceLoci> extraSequences)
@@ -241,7 +274,7 @@ public final class SequenceCount
         writeVertically(fileName, null);
     }
 
-    public void writeVertically(final String fileName, @Nullable final SequenceCount rawCounts)
+    public void writeVertically(final String fileName, @Nullable final SequenceCount rawCounts_)
     {
         try
         {
@@ -250,12 +283,12 @@ public final class SequenceCount
             {
                 int locus = seqCountsEntry.getKey();
                 Multiset<String> seqCounts = seqCountsEntry.getValue();
-                int rawDepth = rawCounts == null ? -1 : rawCounts.get(locus).size();
+                int rawDepth_ = rawCounts_ == null ? -1 : rawCounts_.get(locus).size();
 
                 StringJoiner lineBuilder = new StringJoiner("\t");
                 lineBuilder.add(String.valueOf(locus));
-                if(rawDepth >= 0)
-                    lineBuilder.add(String.valueOf(rawDepth));
+                if(rawDepth_ >= 0)
+                    lineBuilder.add(String.valueOf(rawDepth_));
 
                 Iterator<Multiset.Entry<String>> sortedCounts = seqCounts.entrySet().stream()
                         .sorted(Comparator.comparingInt((Multiset.Entry<String> x) -> x.getCount()).reversed())

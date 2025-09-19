@@ -168,19 +168,21 @@ public class ResultsWriter
 //            throw new NotImplementedException("");
         }
 
-        Map<HlaGene_, Integer> countsByGene = Map.of(HlaGene_.HLA_A, 0, HlaGene_.HLA_B, 0, HlaGene_.HLA_C, 0);
-        CoverageQC coverageQC = new CoverageQC(
-                countsByGene, 0, 0, 0, 0, 0, 0, 0);
+        // TODO: Other genes.
 
-        LilacQC summaryMetrics = new LilacQC(
-                0, "", 0, null,
-                aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
-
-        SolutionSummary solutionSummary = new SolutionSummary(
-                null, null, null, null, null);
-
-        solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+//        Map<HlaGene_, Integer> countsByGene = Map.of(HlaGene_.HLA_A, 0, HlaGene_.HLA_B, 0, HlaGene_.HLA_C, 0);
+//        CoverageQC coverageQC = new CoverageQC(
+//                countsByGene, 0, 0, 0, 0, 0, 0, 0);
+//
+//        LilacQC summaryMetrics = new LilacQC(
+//                0, "", 0, null,
+//                aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
+//
+//        SolutionSummary solutionSummary = new SolutionSummary(
+//                null, null, null, null, null);
+//
+//        solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+//        summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
     }
 
     private BufferedWriter initialiseFragmentWriter()

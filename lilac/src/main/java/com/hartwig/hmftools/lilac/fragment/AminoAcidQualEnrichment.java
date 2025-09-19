@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
-import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS;
+import static com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline.RAW_REF_AMINO_ACID_COUNTS_;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +14,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
+
+import org.jetbrains.annotations.Nullable;
 
 public final class AminoAcidQualEnrichment
 {
@@ -37,20 +39,20 @@ public final class AminoAcidQualEnrichment
                 .collect(Collectors.toList());
 
         unfilteredAminoAcidFragments.forEach(Fragment::buildAminoAcids);
-        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts, RAW_REF_AMINO_ACID_COUNTS.get(context.Gene)));
+        unfilteredAminoAcidFragments.forEach(x -> applyQualFilter(x, highQualityAminoAcidCounts, RAW_REF_AMINO_ACID_COUNTS_.get(context.Gene)));
 
         return unfilteredAminoAcidFragments;
     }
 
     @VisibleForTesting
-    public static void applyQualFilter(final Fragment fragment, final SequenceCount count, final SequenceCount rawAminoAcidCounts)
+    public static void applyQualFilter(final Fragment fragment, final SequenceCount count, @Nullable final SequenceCount rawAminoAcidCounts_)
     {
         NavigableSet<Integer> filteredIntersect = Sets.newTreeSet();
         fragment.aminoAcidsByLoci().values().stream()
                 .mapToInt(AminoAcid::locus)
                 .forEach(locus ->
                 {
-                    if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                    if(rawAminoAcidCounts_ != null && rawAminoAcidCounts_.get(locus).size() < MIN_DEPTH_FILTER)
                     {
                         filteredIntersect.add(locus);
                         return;
