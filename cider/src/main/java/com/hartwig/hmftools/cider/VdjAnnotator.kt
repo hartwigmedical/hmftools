@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.alignment.AlignmentAnnotation
-import com.hartwig.hmftools.cider.alignment.AlignmentStatus
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
+import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord

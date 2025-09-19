@@ -8,8 +8,8 @@ import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
-import com.hartwig.hmftools.cider.alignment.AlignmentUtil
-import com.hartwig.hmftools.cider.alignment.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
+import com.hartwig.hmftools.cider.AlignmentUtil
+import com.hartwig.hmftools.cider.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ

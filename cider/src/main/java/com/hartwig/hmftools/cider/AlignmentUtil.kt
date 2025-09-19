@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.cider.alignment
+package com.hartwig.hmftools.cider
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
-import com.hartwig.hmftools.cider.CiderConstants
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
@@ -112,7 +111,7 @@ object AlignmentUtil
     fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             Multimap<Int, BwaMemMatch>
     {
-        val refGenome = loadRefGenome(refGenomeFastaPath)
+        val refGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
         val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)

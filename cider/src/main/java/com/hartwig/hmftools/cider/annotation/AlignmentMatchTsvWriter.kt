@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cider.alignment
+package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.CiderFormatter
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils

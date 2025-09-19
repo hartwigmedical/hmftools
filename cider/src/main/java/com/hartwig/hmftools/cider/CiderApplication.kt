@@ -3,9 +3,9 @@ package com.hartwig.hmftools.cider
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
-import com.hartwig.hmftools.cider.alignment.AlignmentAnnotation
-import com.hartwig.hmftools.cider.alignment.AlignmentAnnotator
-import com.hartwig.hmftools.cider.alignment.AlignmentStatus
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotator
+import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
@@ -103,7 +103,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val alignmentAnnotations: Collection<AlignmentAnnotation>
 
-        if (mParams.alignmentRefGenomePath != null && mParams.alignmentBwaIndexImagePath != null)
+        if (mParams.annotationRefGenomePath != null && mParams.annotationBwaIndexImagePath != null)
         {
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
@@ -116,7 +116,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
             val alignmentAnnotator = AlignmentAnnotator()
             alignmentAnnotations = alignmentAnnotator.runAnnotate(
                 mParams.sampleId, filteredVdjs,
-                mParams.alignmentRefGenomePath, mParams.alignmentBwaIndexImagePath,
+                mParams.annotationRefGenomePath, mParams.annotationBwaIndexImagePath,
                 mParams.outputDir, mParams.threadCount)
         }
         else

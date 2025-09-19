@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.alignment.AlignmentStatus
-import com.hartwig.hmftools.cider.alignment.AlignmentUtil
+import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat

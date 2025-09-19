@@ -8,8 +8,6 @@ The intended purposes of this are the following:
 
 ## Usage
 
-TODO
-
 ```
 java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
    -sample COLO829T \
@@ -17,8 +15,8 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
    -output_dir /path/to/COLO829/cider \
    -ref_genome_version 37 \
    -write_cider_bam \
-   -blast /tools/ncbi-blast/ncbi-blast-2.13.0+ \
-   -blast_db /data/blastdb \
+   -annotation_ref_genome /path/to/genome/GRCh38_masked_exclusions_alts_hlas.fasta \
+   -annotation_bwa_index_image /path/to/genome/GRCh38_masked_exclusions_alts_hlas.fasta.img \
    -threads 8
 ```
 ### Mandatory Arguments
@@ -32,8 +30,6 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 
 ### Optional Arguments
 
-TODO
-
 | Argument                   | Default | Description                                                                                             |
 |----------------------------|---------|---------------------------------------------------------------------------------------------------------|
 | write_cider_bam            | Off     | If specified, write a small bam file of all the extracted reads.                                        |
@@ -45,8 +41,8 @@ TODO
 | num_trim_bases             | 0       | Number of bases to trim on each side of reads. Defaults to 0                                            |
 | max_low_qual_base_fraction | 0.1     | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
 | max_reads_per_gene         | 600,000 | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
-| blast                      |         | Path to the ncbi-blast installation                                                                     |
-| blast_db                   |         | Path to the ncbi-blast database                                                                         |
+| annotation_ref_genome      |         | Path to the reference genome FASTA for gene annotation alignment. Recommend GRCh38 genome.              |
+| annotation_bwa_index_image |         | Path to the reference genome BWA-MEM index GATK image for gene annotation alignment.                    |
 | primer_csv                 |         | Path to csv file containing primers                                                                     |
 | primer_mismatch_max        | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
 
@@ -175,9 +171,9 @@ In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_s
 
 ### Alignment annotation logic
 
-When the command line arguments `-blast` and `-blast_db` are supplied, CIDER uses [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK62051/def-item/blast/)
-to query each sequence found against the human genome (GCF_000001405.39_top_level). It uses this information to assign V, D, J alleles and also
-weed out false positives. This requires BLASTN to be set up. See [Setting up BLASTN](#setting-up-blastn)
+When the command line arguments `-annotation_ref_genome` and `-annotation_bwa_index_image` are supplied, CIDER uses BWA-MEM
+to query each sequence found against the human genome. It uses this information to assign V, D, J alleles and also
+weed out false positives.
 
 Following briefly describe the annotation logic:
 1. CIDER would run alignment and query the sequences against the human genome database. We use match/mismatch/gapopen/gapextend scores of
@@ -193,18 +189,6 @@ Following briefly describe the annotation logic:
 4. If there is a V or J gene, the D gene locus must match either the V or the J locus. Otherwise the D alignment is removed. We also
   allow TRA and TRD to match one another.
 5. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
-
-TODO
-
-## Setting up BLASTN
-To set up BLASTN, do the following:
-1. Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ to install BLAST+
-2. Set up the `human_genome` blast DB:
-    ```
-    $ cd $BLASTDB
-    $ perl $BLAST_INSTALL/bin/update_blastdb.pl --passive --decompress human_genome
-    ```
-   Make sure the `BLASTDB` environment variable is defined.
 
 ## Ig/TCR gene reference data curation
 To create reference data, following steps:
@@ -238,18 +222,7 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Alignment annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 - Alignment annotation for D gene requires more lenient alignment parameters.
 
-## Performance Characteristics
-These are indicative performance characteristics on a 12 core machines running with 4 threads.
-Running with `-xmx32G`.
-
-| Max reads per gene | Elapsed time (minutes) |
-|--------------------|------------------------|
-| 200k               | 81                     |
-| 400k               | 192                    |
-| 600k               | 292                    |
-| 800k               | 518                    |
-
-"Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc.
+TODO
 
 # Version History and Download Links
 - [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)

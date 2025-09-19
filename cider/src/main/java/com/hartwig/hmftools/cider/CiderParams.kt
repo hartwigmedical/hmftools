@@ -28,8 +28,8 @@ data class CiderParams(
     val primerCsv: String?,
     val primerMismatchMax: Int,
     val bwaLibPath: String?,
-    val alignmentRefGenomePath: String?,
-    val alignmentBwaIndexImagePath: String?
+    val annotationRefGenomePath: String?,
+    val annotationBwaIndexImagePath: String?
 )
 {
     companion object
@@ -51,12 +51,12 @@ data class CiderParams(
         const val ARG_MAX_READS_PER_GENE = "max_reads_per_gene"
         const val ARG_PRIMER_CSV = "primer_csv"
         const val ARG_PRIMER_MISMATCH_MAX = "primer_mismatch_max"
-        const val ARG_ALIGNMENT_REF_GENOME = "alignment_ref_genome"
-        const val ARG_BWA_INDEX_IMAGE_FILE = "bwa_index_image"
+        const val ARG_ANNOTATION_REF_GENOME = "annotation_ref_genome"
+        const val ARG_ANNOTATION_BWA_INDEX_IMAGE = "annotation_bwa_index_image"
 
         fun fromConfigBuilder(configBuilder: ConfigBuilder): CiderParams {
-            val alignmentRefGenome = configBuilder.getValue(ARG_ALIGNMENT_REF_GENOME)
-            val defaultAlignmentBwaIndex = if (alignmentRefGenome == null) { null } else { "$alignmentRefGenome.img" }
+            val annotationRefGenome = configBuilder.getValue(ARG_ANNOTATION_REF_GENOME)
+            val defaultAnnotationBwaIndex = if (annotationRefGenome == null) { null } else { "$annotationRefGenome.img" }
             return CiderParams(
                 sampleId = configBuilder.getValue(SAMPLE),
                 bamPath = configBuilder.getValue(ARG_BAM),
@@ -74,8 +74,8 @@ data class CiderParams(
                 primerCsv = configBuilder.getValue(ARG_PRIMER_CSV),
                 primerMismatchMax = configBuilder.getInteger(ARG_PRIMER_MISMATCH_MAX),
                 bwaLibPath = configBuilder.getValue(BwaUtils.BWA_LIB_PATH),
-                alignmentRefGenomePath = alignmentRefGenome,
-                alignmentBwaIndexImagePath = configBuilder.getValue(ARG_BWA_INDEX_IMAGE_FILE, defaultAlignmentBwaIndex)
+                annotationRefGenomePath = annotationRefGenome,
+                annotationBwaIndexImagePath = configBuilder.getValue(ARG_ANNOTATION_BWA_INDEX_IMAGE, defaultAnnotationBwaIndex)
             )
         }
 
@@ -109,8 +109,10 @@ data class CiderParams(
                 0
             )
             configBuilder.addPath(BwaUtils.BWA_LIB_PATH, false, BwaUtils.BWA_LIB_PATH_DESC)
-            configBuilder.addPath(ARG_ALIGNMENT_REF_GENOME, false, "Reference genome FASTA for alignment")
-            configBuilder.addPath(ARG_BWA_INDEX_IMAGE_FILE, false, "Reference genome BWA-MEM index GATK image file")
+            configBuilder.addPath(ARG_ANNOTATION_REF_GENOME, false,
+                "Reference genome FASTA for gene annotation alignment")
+            configBuilder.addPath(ARG_ANNOTATION_BWA_INDEX_IMAGE, false,
+                "Reference genome BWA-MEM index GATK image file for gene annotation alignment")
         }
     }
 }
