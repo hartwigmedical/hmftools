@@ -1,22 +1,18 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
@@ -165,12 +161,12 @@ public final class SequenceCompare
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches)
     {
-        return compareSequences(
+        return compareSequencesMismatchSpec(
                 firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
                 secondIndexEnd, secondRepeats, maxMismatches, true, true);
     }
 
-    public static int compareSequences(
+    private static int compareSequencesMismatchSpec(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             int maxMismatches, boolean checkForwards, boolean repeatsAreMismatches)
@@ -454,144 +450,5 @@ public final class SequenceCompare
         }
 
         return true;
-    }
-
-    // unused matching routines
-    public static int calcReadSequenceMismatches(
-            final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
-            final Read read, final int readJunctionIndex, final int maxMismatches)
-    {
-        int readStartIndex = isForward ? readJunctionIndex : 0;
-        int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
-
-        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
-        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
-        // so the comparison offset in the extension sequence is
-        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
-
-        if(extSeqReadStartIndex < 0)
-        {
-            readStartIndex += -extSeqReadStartIndex;
-            extSeqReadStartIndex = 0;
-        }
-
-        byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
-        byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
-        List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
-
-        // run the comparison heading out from the junction
-        return compareSequences(
-                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
-                readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
-                readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches, isForward, false);
-    }
-
-    private static boolean hasCompatibleRepeats(
-            int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
-            int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
-    {
-        List<RepeatInfo> firstRepeatsInRange = firstRepeats.stream()
-                .filter(x -> x.Index >= firstIndexStart && x.postRepeatIndex() <= firstIndexEnd).collect(Collectors.toList());
-
-        List<RepeatInfo> secondRepeatsInRange = secondRepeats.stream()
-                .filter(x -> x.Index >= secondIndexStart && x.postRepeatIndex() <= secondIndexEnd).collect(Collectors.toList());
-
-        int minRepeatCount = min(firstRepeatsInRange.size(), secondRepeatsInRange.size());
-
-        int firstIndex = 0;
-        int matchedCount = 0;
-
-        while(firstIndex < firstRepeatsInRange.size())
-        {
-            RepeatInfo firstRepeat = firstRepeatsInRange.get(firstIndex);
-
-            RepeatInfo matchedRepeat = secondRepeatsInRange.stream()
-                    .filter(x -> x.Bases.equals(firstRepeat.Bases) && x.Count == firstRepeat.Count).findFirst().orElse(null);
-
-            if(matchedRepeat == null)
-            {
-                matchedRepeat = secondRepeatsInRange.stream()
-                        .filter(x -> x.Bases.equals(firstRepeat.Bases) && abs(x.Count - firstRepeat.Count) <= 2).findFirst().orElse(null);
-            }
-
-            if(matchedRepeat != null)
-            {
-                ++matchedCount;
-                firstRepeatsInRange.remove(firstIndex);
-                secondRepeatsInRange.remove(matchedRepeat);
-            }
-            else
-            {
-                ++firstIndex;
-            }
-        }
-
-        return minRepeatCount - matchedCount <= 2;
-    }
-
-    public static List<SequenceDiffInfo> getSequenceMismatchInfo(
-            final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
-            final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats)
-    {
-        List<SequenceDiffInfo> diffs = Lists.newArrayList();
-
-        int firstIndex = firstIndexStart;
-        int secondIndex = secondIndexStart;
-
-        while(firstIndex <= firstIndexEnd && secondIndex <= secondIndexEnd)
-        {
-            // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
-            // the solution may be to start the matching process from the other end
-            if(basesMatch(firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]))
-            {
-                ++firstIndex;
-                ++secondIndex;
-                continue;
-            }
-
-            // check if the mismatch is a single-base INDEL and if so skip it
-            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex, true);
-
-            if(recoverySkipBases != 0)
-            {
-                if(recoverySkipBases > 0)
-                    firstIndex += recoverySkipBases;
-                else
-                    secondIndex += -recoverySkipBases;
-
-                boolean isFirst = recoverySkipBases > 0;
-
-                diffs.add(new SequenceDiffInfo(
-                        isFirst ? firstIndex : secondIndex, SequenceDiffType.INDEL, recoverySkipBases));
-
-                continue; // check the next base again
-            }
-
-            // check for a repeat diff - must be of the same type and just a different count
-            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats, true);
-
-            if(expectedRepeatBaseDiff != 0)
-            {
-                // positive means the first's repeat was longer so move it ahead
-                if(expectedRepeatBaseDiff > 0)
-                    firstIndex += expectedRepeatBaseDiff;
-                else
-                    secondIndex += -expectedRepeatBaseDiff;
-
-                boolean isFirst = expectedRepeatBaseDiff > 0;
-
-                diffs.add(new SequenceDiffInfo(
-                        isFirst ? firstIndex : secondIndex, SequenceDiffType.REPEAT, expectedRepeatBaseDiff));
-
-                continue; // check the next base again
-            }
-
-            diffs.add(new SequenceDiffInfo(firstIndex, SequenceDiffType.BASE, 1));
-
-            ++firstIndex;
-            ++secondIndex;
-        }
-
-        return diffs;
     }
 }

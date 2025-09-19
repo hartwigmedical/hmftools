@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.reverseDuplexIn
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedB
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -39,9 +41,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
+import org.junit.After;
 import org.junit.Test;
 
 import htsjdk.samtools.CigarOperator;
@@ -51,6 +55,46 @@ public class SbxDuplexReadTest
 {
     private static final String MISMATCH_QUAL = String.valueOf(phredToFastq(SBX_DUPLEX_MISMATCH_QUAL));
     private static final String NON_ZERO_QUAL = String.valueOf(phredToFastq(RAW_DUPLEX_QUAL));
+
+    public SbxDuplexReadTest()
+    {
+        SbxRoutines.SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = false;
+    }
+
+    @After
+    public void resetSequencingType()
+    {
+        SbxRoutines.SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
+    }
+
+    @Test
+    public void testHomopolymerLowBaseQualDirection()
+    {
+        //                  01234567890123456789
+        String readBases = "ACGTACGTAAAAACGTACGT";
+
+        SAMRecord read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, 100, readBases, "20M", false, false, null);
+
+        byte[] baseQualities = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
+        read.setBaseQualities(baseQualities);
+
+        assertNull(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
+
+        read.getBaseQualities()[8] = 0;
+        assertTrue(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
+
+        read.getBaseQualities()[8] = RAW_DUPLEX_QUAL;
+        read.getBaseQualities()[11] = 0;
+        read.getBaseQualities()[12] = 0;
+        assertFalse(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
+
+        // unclear on a single base
+        read.getBaseQualities()[11] = RAW_DUPLEX_QUAL;
+        read.getBaseQualities()[12] = RAW_DUPLEX_QUAL;
+        read.getBaseQualities()[15] = 0;
+        assertNull(SbxBamUtils.isHomopolymerLowBaseQualAtStart(read));
+    }
 
     @Test
     public void testGetAnnotatedBasesSimple()
@@ -193,6 +237,8 @@ public class SbxDuplexReadTest
 
         assertTrue(readModified);
         assertEquals(expectedBases, annotedBases);
+
+        SbxRoutines.SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
     }
 
     @Test

@@ -38,14 +38,12 @@ import com.hartwig.hmftools.redux.common.Statistics;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.consensus.SbxRoutines;
 import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
-import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import org.apache.logging.log4j.Level;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -97,7 +95,8 @@ public class PartitionReader
         {
             // the sampled max read length is doubled, because it has been observed in non-Illumina bams that the max read length is usually
             // larger than the sampled max read length extra room is required
-            mReadCache = new ReadCache(3 * mConfig.readLength(),
+            mReadCache = new ReadCache(
+                    3 * mConfig.readLength(),
                     2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
         }
 
@@ -234,7 +233,6 @@ public class PartitionReader
         {
             UltimaRoutines.finaliseRead(mConfig.RefGenome, record);
         }
-
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -474,11 +472,5 @@ public class PartitionReader
     public void flushReadPositions()
     {
         processReadGroups(mReadCache.evictAll());
-    }
-
-    @VisibleForTesting
-    public UmiGroupBuilder umiGroupBuilder()
-    {
-        return mDuplicateGroupBuilder.umiGroupBuilder();
     }
 }

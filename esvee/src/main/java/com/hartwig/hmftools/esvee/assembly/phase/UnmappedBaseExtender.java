@@ -505,7 +505,7 @@ public class UnmappedBaseExtender
             {
                 if(mBases[extBaseIndex] == base || belowMinQual(qual))
                 {
-                    if((int)qual > (int)mBaseQuals[extBaseIndex])
+                    if(qual > mBaseQuals[extBaseIndex])
                         mBaseQuals[extBaseIndex] = qual;
                 }
                 else if(belowMinQual(mBaseQuals[extBaseIndex]))

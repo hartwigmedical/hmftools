@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RA
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.isDiscordantUnpairedReadGroup;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
@@ -352,13 +353,13 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(mDiscordantGroupFinder.isDiscordantGroup(readGroup))
-            {
-                mDiscordantStats.processReadGroup(readGroup);
+            boolean isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
 
-                if(mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
-                    mCandidateDiscordantGroups.add(readGroup);
-            }
+            if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
+                mCandidateDiscordantGroups.add(readGroup);
+
+            if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
+                mDiscordantStats.processReadGroup(readGroup);
         }
 
         perfCounterStop(PerfCounters.JunctionSupport);

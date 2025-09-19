@@ -3,7 +3,6 @@ package com.hartwig.hmftools.redux.write;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
@@ -36,7 +35,7 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
 
-    private final JitterAnalyser mJitterAnalyser;
+    private final MsJitterAnalyser mMsJitterAnalyser;
     private final BqrRegionReader mBqrProcessor;
 
     private final boolean mRecomputeFragCoords;
@@ -46,13 +45,13 @@ public abstract class BamWriter
 
     public BamWriter(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
+            @Nullable final MsJitterAnalyser msJitterAnalyser, final BaseQualRecalibration bqr)
     {
         mFilename = filename;
         mConfig = config;
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
-        mJitterAnalyser = jitterAnalyser;
+        mMsJitterAnalyser = msJitterAnalyser;
         mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
 
         mRecomputeFragCoords = mReadDataWriter.enabled()
@@ -168,14 +167,14 @@ public abstract class BamWriter
 
     public void captureReadInfo(final SAMRecord read)
     {
-        if(read.getDuplicateReadFlag() || read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+        if(read.getReadUnmappedFlag() || read.getDuplicateReadFlag() || read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
             return;
 
         if(read.getMappingQuality() < BQR_MIN_MAP_QUAL)
             return;
 
-        if(mJitterAnalyser != null)
-            mJitterAnalyser.processRead(read);
+        if(mMsJitterAnalyser != null)
+            mMsJitterAnalyser.processRead(read);
 
         if(mBqrProcessor.isActive())
             mBqrProcessor.processRecord(read);

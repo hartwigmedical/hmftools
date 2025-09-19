@@ -93,12 +93,12 @@ public class SpecificRegions
         {
             for(ChrBaseRegion region : Regions)
             {
-                LOGGER.info("filtering for specific region: {}", region);
+                LOGGER.debug("filtering for specific region: {}", region);
             }
         }
         else if(!Chromosomes.isEmpty())
         {
-            LOGGER.info("filtering for specific chromosomes: {}", Chromosomes.stream().collect(Collectors.joining(",")));
+            LOGGER.debug("filtering for specific chromosomes: {}", Chromosomes.stream().collect(Collectors.joining(",")));
         }
     }
 
@@ -108,7 +108,9 @@ public class SpecificRegions
         configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
     }
 
-    public static SpecificRegions from(final ConfigBuilder configBuilder)
+    public static SpecificRegions from(final ConfigBuilder configBuilder) { return from(configBuilder, true); }
+
+    public static SpecificRegions from(final ConfigBuilder configBuilder, boolean logDetails)
     {
         SpecificRegions specificRegions = new SpecificRegions();
 
@@ -118,7 +120,9 @@ public class SpecificRegions
         try
         {
             loadSpecificChromsomesOrRegions(regionsStr, chromosomesStr, specificRegions.Chromosomes, specificRegions.Regions);
-            specificRegions.log();
+
+            if(logDetails)
+                specificRegions.log();
         }
         catch(Exception e)
         {

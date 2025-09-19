@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
@@ -51,9 +52,26 @@ public class DiscordantStats
     {
         PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
 
-        addToCounts(
-                read.Chromosome, read.MateChromosome, read.AlignmentStart, read.MatePosStart, read.orientation(), read.mateOrientation(),
-                inferredInsertSizeAbs(read.record()));
+        if(read.isPaired())
+        {
+            addToCounts(
+                    read.Chromosome, read.MateChromosome, read.AlignmentStart, read.MatePosStart, read.orientation(), read.mateOrientation(),
+                    inferredInsertSizeAbs(read.record()));
+        }
+        else if(read.supplementaryAlignment() != null)
+        {
+            int inferredInsertSize = abs(read.AlignmentStart - read.supplementaryAlignment().Position);
+
+            addToCounts(
+                    read.Chromosome, read.supplementaryAlignment().Chromosome, read.AlignmentStart, read.supplementaryAlignment().Position,
+                    read.orientation(), read.supplementaryAlignment().orient().opposite(), inferredInsertSize);
+        }
+    }
+
+    public static boolean isDiscordantUnpairedReadGroup(final ReadGroup readGroup)
+    {
+        PrepRead read = readGroup.reads().stream().filter(x -> !x.isSupplementaryAlignment()).findFirst().orElse(null);
+        return read != null && read.hasSuppAlignment();
     }
 
     private void addToCounts(

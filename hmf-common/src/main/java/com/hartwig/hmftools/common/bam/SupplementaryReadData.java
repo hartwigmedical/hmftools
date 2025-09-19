@@ -2,8 +2,10 @@ package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +13,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -50,6 +53,7 @@ public class SupplementaryReadData
     }
 
     public byte orientation() { return Strand == SUPP_POS_STRAND ? ORIENT_FWD : ORIENT_REV; }
+    public Orientation orient() { return Strand == SUPP_POS_STRAND ? FORWARD : REVERSE; }
     public boolean isForwardOrient() { return Strand == SUPP_POS_STRAND; }
 
     @Nullable

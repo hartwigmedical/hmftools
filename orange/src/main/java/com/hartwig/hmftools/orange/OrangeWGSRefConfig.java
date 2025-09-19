@@ -80,8 +80,11 @@ public interface OrangeWGSRefConfig
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
         // Params required for WGS, Tumor only
-        String virusDir = pathResolver.resolveMandatoryToolDirectory(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
-        builder.annotatedVirusTsv(mandatoryPath(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
+        String virusDir = pathResolver.resolveOptionalToolDirectory(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
+        if(virusDir != null)
+        {
+            builder.annotatedVirusTsv(mandatoryPath(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
+        }
 
         String chordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, CHORD_DIR);
         builder.chordPredictionTxt(mandatoryPath(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
@@ -117,9 +120,12 @@ public interface OrangeWGSRefConfig
             String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
-            String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
-            builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
-            builder.cuppaSummaryPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
+            String cuppaDir = pathResolver.resolveOptionalToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
+            if(cuppaDir != null)
+            {
+                builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
+                builder.cuppaSummaryPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
+            }
 
             // PEACH optional so that skipping it in oncoanalyser still generates an ORANGE report
             String peachDir = pathResolver.resolveOptionalToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
@@ -142,7 +148,7 @@ public interface OrangeWGSRefConfig
     }
 
     // params for WGS Tumor only
-    @NotNull
+    @Nullable
     String annotatedVirusTsv();
 
     @NotNull

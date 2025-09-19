@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
@@ -15,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.redux.jitter.ConsensusMarker;
 import com.hartwig.hmftools.redux.jitter.MicrosatelliteRead;
-import com.hartwig.hmftools.redux.jitter.RefGenomeMicrosatellite;
+import com.hartwig.hmftools.redux.jitter.MicrosatelliteSite;
 
 import org.junit.Test;
 
@@ -27,7 +26,7 @@ public class MsiJitterReadTest
     public void testMicrosatelliteRead()
     {
         String repeat = "AAAA";
-        RefGenomeMicrosatellite msiSite = new RefGenomeMicrosatellite(new ChrBaseRegion(CHR_1, 50, 53), repeat.getBytes());
+        MicrosatelliteSite msiSite = new MicrosatelliteSite(new ChrBaseRegion(CHR_1, 50, 53), repeat.getBytes());
 
         MicrosatelliteRead microsatelliteRead = new MicrosatelliteRead();
 

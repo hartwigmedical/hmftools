@@ -247,13 +247,13 @@ public class JunctionAssembly
             {
                 if(mBases[assemblyIndex] == base || belowMinQual(qual))
                 {
-                    if((int)qual > (int)mBaseQuals[assemblyIndex])
+                    if(qual > mBaseQuals[assemblyIndex])
                         mBaseQuals[assemblyIndex] = qual;
 
                     if(aboveMinQual(qual))
                         ++highQualMatchCount;
                 }
-                else if(belowMinQual(mBaseQuals[assemblyIndex]))
+                else if(belowMinQual(mBaseQuals[assemblyIndex]) || qual > mBaseQuals[assemblyIndex])
                 {
                     mBases[assemblyIndex] = base;
                     mBaseQuals[assemblyIndex] = qual;

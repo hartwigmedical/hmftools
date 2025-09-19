@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-// Simple class to select type of microsatellite based on the repeat unit
 public class MicrosatelliteSelector
 {
     private final List<String> mUnits;
@@ -18,22 +17,24 @@ public class MicrosatelliteSelector
         mUnitLengthMax = unitLengthMax;
     }
 
-    public boolean select(MicrosatelliteSiteAnalyser microsatelliteSiteAnalyser)
+    public boolean select(final MicrosatelliteSiteData microsatelliteSiteData)
     {
+        // select the type of microsatellite based on the repeat unit
+        MicrosatelliteSite msiSite = microsatelliteSiteData.refGenomeMicrosatellite();
+
         if(mUnits != null)
         {
-            return mUnits.contains(microsatelliteSiteAnalyser.refGenomeMicrosatellite().unitString());
+            return mUnits.contains(msiSite.unitString());
         }
         else if(mUnitLengthMin != null)
         {
             if(mUnitLengthMax == null)
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length == mUnitLengthMin;
+                return msiSite.Unit.length == mUnitLengthMin;
             }
             else
             {
-                return microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length >= mUnitLengthMin &&
-                        microsatelliteSiteAnalyser.refGenomeMicrosatellite().Unit.length <= mUnitLengthMax;
+                return msiSite.Unit.length >= mUnitLengthMin && msiSite.Unit.length <= mUnitLengthMax;
             }
         }
         return false;

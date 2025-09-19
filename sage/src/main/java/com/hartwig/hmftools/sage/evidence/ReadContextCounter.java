@@ -564,9 +564,9 @@ public class ReadContextCounter
     private boolean coversVariant(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)
     {
         if(splitReadSegment != null)
-            return mMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadVarIndex);
+            return mMatcher.coversVariant(splitReadSegment.ReadBases, splitReadSegment.ReadQuals, splitReadSegment.ReadVarIndex);
 
-        return mMatcher.coversVariant(record.getReadBases(), readIndex);
+        return mMatcher.coversVariant(record.getReadBases(), record.getBaseQualities(), readIndex);
     }
 
     private ReadMatchInfo determineReadContextMatch(final SAMRecord record, int readIndex, final SplitReadSegment splitReadSegment)

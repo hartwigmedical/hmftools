@@ -69,7 +69,7 @@ public final class FileCommon
     {
         if(configBuilder.hasValue(SEQUENCING_TYPE_CFG))
         {
-            SvConstants.Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+            SvConstants.SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         }
     }
 

@@ -137,4 +137,47 @@ public class SbxBamUtils
 
         return intString.toString();
     }
+
+    public static Boolean isHomopolymerLowBaseQualAtStart(final SAMRecord record)
+    {
+        byte previousBase = record.getReadBases()[0];
+        byte previousQual = record.getBaseQualities()[0];
+        byte hpStartQual = 0;
+        boolean inHomopolymer = false;
+
+        for(int i = 1; i < record.getReadBases().length; ++i)
+        {
+            byte base = record.getReadBases()[i];
+            byte qual = record.getBaseQualities()[i];
+
+            if(inHomopolymer)
+            {
+                if(base != previousBase)
+                {
+                    inHomopolymer = false;
+
+                    if(hpStartQual != previousQual)
+                    {
+                        if(hpStartQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                            return Boolean.TRUE;
+                        else if(previousQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                            return Boolean.FALSE;
+                    }
+                }
+            }
+            else
+            {
+                if(base == previousBase)
+                {
+                    inHomopolymer = true;
+                    hpStartQual = previousQual;
+                }
+            }
+
+            previousQual = qual;
+            previousBase = base;
+        }
+
+        return null;
+    }
 }

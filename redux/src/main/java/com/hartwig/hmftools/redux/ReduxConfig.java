@@ -51,7 +51,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.bamops.BamToolName;
 import com.hartwig.hmftools.redux.bqr.BqrConfig;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -65,6 +64,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
+import com.hartwig.hmftools.redux.jitter.MsJitterConfig;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
 import com.hartwig.hmftools.redux.unmap.ReadChecker;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
@@ -82,7 +82,7 @@ public class ReduxConfig
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
-    public final JitterAnalyserConfig JitterConfig;
+    public final MsJitterConfig JitterConfig;
 
     // global for convenience
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
@@ -224,7 +224,7 @@ public class ReduxConfig
 
         BQR = new BqrConfig(configBuilder);
 
-        JitterConfig = JitterAnalyserConfig.create(
+        JitterConfig = MsJitterConfig.create(
                 SampleId, RefGenomeFile, RefGenVersion, SEQUENCING_TYPE, UMIs.Enabled && UMIs.Duplex, OutputDir, configBuilder);
 
         if(configBuilder.hasFlag(BQR_JITTER_MSI_ONLY))
@@ -234,6 +234,7 @@ public class ReduxConfig
             SkipUnmapping = true;
             SkipFullyUnmappedReads = true;
             FailOnMissingSuppMateCigar = false;
+            SkipDuplicateMarking = true;
         }
         else
         {
@@ -242,11 +243,11 @@ public class ReduxConfig
             SkipUnmapping = configBuilder.hasFlag(SKIP_UNMAPPING);
             SkipFullyUnmappedReads = SkipUnmapping || configBuilder.hasFlag(SKIP_FULL_UNMAPPED_READS);
             FailOnMissingSuppMateCigar = configBuilder.hasFlag(FAIL_SUPP_NO_MATE_CIGAR);
+            SkipDuplicateMarking = configBuilder.hasFlag(SKIP_DUPLICATE_MARKING);
         }
 
         DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
 
-        SkipDuplicateMarking = configBuilder.hasFlag(SKIP_DUPLICATE_MARKING);
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
@@ -409,7 +410,7 @@ public class ReduxConfig
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
-        JitterAnalyserConfig.addConfig(configBuilder);
+        MsJitterConfig.addConfig(configBuilder);
         DuplicateGroupCollapseConfig.addConfig(configBuilder);
 
         addThreadOptions(configBuilder);
