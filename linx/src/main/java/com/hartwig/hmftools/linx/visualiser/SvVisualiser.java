@@ -233,10 +233,10 @@ public class SvVisualiser implements AutoCloseable
 
         if(geneName != null)
         {
-            fileIdSj.add(geneName);
+            fileIdSj.add("gene-" + geneName);
 
             if(geneDriverType != null)
-                fileIdSj.add(geneDriverType.toString().toLowerCase());
+                fileIdSj.add("driver-" + geneDriverType);
         }
 
         if(mConfig.Debug)
@@ -392,14 +392,14 @@ public class SvVisualiser implements AutoCloseable
             fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
             fileId += clusterIdsStr;
 
-            if(mConfig.ClusterIds.size() == 1)
+            if(clusterIds.size() == 1)
             {
                 String resolvedTypeString = clusterSvs.get(0).ClusterResolvedType.toString();
-                fileId += "." + resolvedTypeString;
+                fileId += ".resolved_type-" + resolvedTypeString;
             }
         }
 
-        fileId += ".sv" + clusterSvs.size();
+        fileId += ".sv_count-" + clusterSvs.size();
 
         if(mConfig.Debug)
             fileId += ".debug";
