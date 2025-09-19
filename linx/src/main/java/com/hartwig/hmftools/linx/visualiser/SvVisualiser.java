@@ -496,7 +496,9 @@ public class SvVisualiser implements AutoCloseable
                 showSimpleSvSegments,  mConfig.IncludeFragileSites, mConfig.IncludeLineElements, fileId
         );
 
-        CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig);
+        CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig,
+                mConfig.AmberDir != null, mConfig.CobaltDir != null);
+
         FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
 
         mCallableConfigs.add(() -> new CircosDataWriter(color, fileId, mConfig.OutputConfPath, mCircosConfig, confWrite, circosData).write());
