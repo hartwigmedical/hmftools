@@ -57,6 +57,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
@@ -214,6 +215,9 @@ public final class SbxRoutines
 
         // use any supplementary data to set aligned bases to help with indel stripping
         SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record);
+
+        if(suppData != null && !HumanChromosome.contains(suppData.Chromosome))
+            suppData = null;
 
         final List<CigarElement> readCigarElements = record.getCigar().getCigarElements();
         List<CigarElement> remoteSuppElements;
@@ -540,7 +544,9 @@ public final class SbxRoutines
                 if(!refPosChr.equals(chromosome))
                 {
                     if(suppDataChromosomeLength == null)
+                    {
                         suppDataChromosomeLength = refGenome.getChromosomeLength(refPosChr);
+                    }
 
                     refChromosomeLength = suppDataChromosomeLength;
                 }

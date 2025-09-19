@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.jitter;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
@@ -210,11 +211,15 @@ public class MicrosatelliteRead
         {
             if(BaseQualAdjustment.isUncertainBaseQual(record.getBaseQualities()[i]))
                 return false;
-
-            if(BaseQualAdjustment.isMediumBaseQual(record.getBaseQualities()[i], SEQUENCING_TYPE))
-                return false;
         }
 
         return true;
+    }
+
+    public String toString()
+    {
+        return format("ct(%s) %s aligned(%d ins=%d) repeat(unit=%d len=%d jit=%d)",
+                mConsensusType, mIsValidRead ? "valid" : "invalid", mAlignedBases, mInsertedBases,
+                mRepeatUnits, mRepeatLength, mJitterLength);
     }
 }

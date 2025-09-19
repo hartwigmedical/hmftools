@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.jitter;
 
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.ALT_COUNT_FRACTION_INIT;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.ALT_COUNT_FRACTION_STEP;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.MAX_REJECTED_READ_FRACTION;
@@ -61,8 +62,6 @@ public class MicrosatelliteSiteData
         return mTotalReadCount;
     }
 
-    public int totalReadsRejected() { return mRejectedCountsByConsensusType.values().stream().mapToInt(x -> x).sum(); }
-
     public int readsRejectedByConsensus(final ConsensusType consensusType)
     {
         return mRejectedCountsByConsensusType.getOrDefault(consensusType, 0);
@@ -103,8 +102,6 @@ public class MicrosatelliteSiteData
         MicrosatelliteRead msRead = MicrosatelliteRead.from(mMicrosatelliteSite, read, mConsensusMarker);
 
         ConsensusType consensusType = msRead.consensusType();
-        Integer consensusCount = mCountsByConsensusType.get(consensusType);
-        mCountsByConsensusType.put(consensusType, consensusCount != null ? consensusCount + 1 : 1);
 
         if(!msRead.isValidRead())
         {
@@ -114,6 +111,12 @@ public class MicrosatelliteSiteData
         }
 
         mPassingReadCount++;
+
+        if(isSbx() && consensusType == ConsensusType.SINGLE) // count towards passing count but nothing else
+            return;
+
+        Integer consensusCount = mCountsByConsensusType.get(consensusType);
+        mCountsByConsensusType.put(consensusType, consensusCount != null ? consensusCount + 1 : 1);
 
         Map<Integer,Integer> consensusLengthCounts = mJitterCountsByConsensusType.get(consensusType);
 

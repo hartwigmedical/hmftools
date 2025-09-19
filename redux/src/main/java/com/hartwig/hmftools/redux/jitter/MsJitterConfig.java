@@ -118,7 +118,6 @@ public class MsJitterConfig
         }
         else if(SEQUENCING_TYPE == SBX)
         {
-            consensusTypes.add(ConsensusType.SINGLE);
             consensusTypes.add(ConsensusType.DUAL);
         }
         else if(SEQUENCING_TYPE == ULTIMA)
