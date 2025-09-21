@@ -39,6 +39,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.SbxAnnotatedBase.INVALID_BASE;
+import static com.hartwig.hmftools.redux.consensus.SbxDuplexIndelBuilder.checkSupplementaryCigar;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
@@ -49,7 +50,6 @@ import static htsjdk.samtools.CigarOperator.X;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -72,6 +72,178 @@ public final class SbxRoutines
     protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
 
     public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
+
+    public static void stripDuplexIndelsNew(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
+        if(record.getReadUnmappedFlag())
+            return;
+
+        String chromosome = record.getReferenceName();
+        String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
+        if(ycTagStr == null)
+        {
+            throw new IllegalArgumentException(format("read missing %s tag: %s", SBX_YC_TAG, readToString(record)));
+        }
+
+        boolean isForward = !record.getReadNegativeStrandFlag();
+
+        List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
+
+        if(duplexIndelIndices == null)
+            return;
+
+        // not expecting to see hard-clips but remove any if present
+        if(leftHardClipLength(record) > 0 || rightHardClipLength(record) > 0)
+        {
+            RD_LOGGER.error("hard-clipped reads not supported in SBX: {}", readToString(record));
+            System.exit(1);
+        }
+
+        if(duplexIndelIndices.isEmpty())
+            return;
+
+        //if(!isForward)
+        //    reverseDuplexIndelIndices(duplexIndelIndices, record.getReadBases().length);
+
+        SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, refGenome, duplexIndelIndices);
+
+        List<SbxDuplexIndel> duplexIndels = builder.duplexIndels();
+
+        if(duplexIndels.isEmpty())
+            return;
+
+        // List<SbxAnnotatedBase> oldAnnotatedBases = getAnnotatedBases(record, duplexIndelIndices);
+        // boolean oldReadModified = processAnnotatedBases(refGenome, chromosome, oldAnnotatedBases, isForward);
+
+        // CHECK: is there a scenario where the base quals are altered but no indels are stripped?
+        // boolean replaceReadBaseQuals = newBaseLength != record.getReadBases().length;
+
+        int strippedBases = duplexIndels.stream().mapToInt(x -> x.deletedBaseCount()).sum();
+        int oldBaseLength = record.getReadBases().length;
+        int newBaseLength = record.getReadBases().length - strippedBases;
+
+        byte[] readBases = new byte[newBaseLength];
+        byte[] readQuals = new byte[newBaseLength];
+
+        List<CigarElement> oldCigarElements = record.getCigar().getCigarElements();
+        List<CigarElement> newCigarElements = Lists.newArrayListWithCapacity(oldCigarElements.size());
+
+        int duplexIndelIndex = 0;
+        SbxDuplexIndel duplexIndel = duplexIndels.get(duplexIndelIndex);
+
+        int oldCigarIndex = 0;
+        int oldCigarElementIndex = 0;
+        CigarElement oldElement = oldCigarElements.get(0);
+
+        CigarOperator curentCigarOp = null;
+        int currentCigarLength = 0;
+
+        int oldInsertCount = 0;
+        int oldInsertedBases = 0;
+
+        int newReadIndex = 0;
+
+        for(int oldReadIndex = 0; oldReadIndex < oldBaseLength; ++oldCigarElementIndex)
+        {
+            if(oldCigarElementIndex >= oldElement.getLength())
+            {
+                // move to next old element, register insert info
+                oldCigarElementIndex = 0;
+                ++oldCigarIndex;
+                oldElement = oldCigarElements.get(oldCigarIndex);
+
+                if(oldElement.getOperator() == I)
+                {
+                    ++oldInsertCount;
+                    oldInsertedBases += oldElement.getLength();
+                }
+            }
+
+            boolean isStrippedIndelBase = false;
+
+            if(oldElement.getOperator() == I)
+            {
+                if(duplexIndel != null && newReadIndex >= duplexIndel.DeletedIndelIndexStart && newReadIndex <= duplexIndel.DeletedIndelIndexEnd)
+                {
+                    // skip over stripped indel bases
+                    isStrippedIndelBase = true;
+
+                    if(newReadIndex == duplexIndel.DeletedIndelIndexEnd)
+                    {
+                        ++duplexIndelIndex;
+                        duplexIndel = duplexIndelIndex < duplexIndels.size() ? duplexIndels.get(duplexIndelIndex) : null;
+                    }
+                }
+            }
+
+            if(!isStrippedIndelBase)
+            {
+                if(curentCigarOp != oldElement.getOperator())
+                {
+                    if(currentCigarLength > 0)
+                        newCigarElements.add(new CigarElement(currentCigarLength, curentCigarOp));
+
+                    curentCigarOp = oldElement.getOperator();
+                    currentCigarLength = 1;
+                }
+                else
+                {
+                    ++currentCigarLength;
+                }
+            }
+
+            if(oldElement.getOperator().consumesReadBases())
+            {
+                if(!isStrippedIndelBase)
+                {
+                    readBases[newReadIndex] = record.getReadBases()[oldReadIndex];
+                    readQuals[newReadIndex] = record.getBaseQualities()[oldReadIndex];
+                    ++newReadIndex;
+                }
+
+                ++oldReadIndex;
+            }
+        }
+
+        // add last
+        newCigarElements.add(new CigarElement(currentCigarLength, curentCigarOp));
+
+        int newInsertCount = 0;
+        int newInsertedBases = 0;
+
+        for(CigarElement element : newCigarElements)
+        {
+            if(element.getOperator() == I)
+            {
+                ++newInsertCount;
+                newInsertedBases += element.getLength();
+            }
+        }
+
+        int nmDiff = newInsertedBases - oldInsertedBases;
+        Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        if(oldNumMutations != null && nmDiff != 0)
+        {
+            int newNumMutations = oldNumMutations + nmDiff;
+            record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+        }
+
+        int oldInsertAlignmentScore = -BWA_GAP_OPEN_PENALTY * oldInsertCount - BWA_GAP_EXTEND_PENALTY * oldInsertedBases;
+        int newInsertAlignmentScore = -BWA_GAP_OPEN_PENALTY * newInsertCount - BWA_GAP_EXTEND_PENALTY * newInsertedBases;
+        int alignmentScoreDiff = newInsertAlignmentScore - oldInsertAlignmentScore;
+        Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
+        if(oldAlignmentScore != null && alignmentScoreDiff != 0)
+        {
+            int newAlignmentScore = oldAlignmentScore + alignmentScoreDiff;
+            record.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, newAlignmentScore);
+        }
+
+        record.setReadBases(readBases);
+        record.setBaseQualities(readQuals);
+
+        record.setCigar(new Cigar(newCigarElements));
+        // record.setAlignmentStart(newAlignmentStart);
+    }
 
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
     {
@@ -302,12 +474,13 @@ public final class SbxRoutines
                 boolean isRead = element.getOperator().consumesReadBases();
                 boolean isRef = element.getOperator() == S || element.getOperator().consumesReferenceBases();
 
-                if(isRead && isRef)
+                if(isRead && isRef) // soft-clip or M
                 {
                     for(int i = 0; i < element.getLength(); i++)
                     {
                         annotatedBases.add(new SbxAnnotatedBase(
-                                readIndex, refPos, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
+                                readIndex, refPos, element.getOperator(), bases[readIndex], quals[readIndex],
+                                duplexIndelIndices.contains(readIndex)));
                         readIndex++;
                         refPos++;
                     }
@@ -315,19 +488,20 @@ public final class SbxRoutines
                     continue;
                 }
 
-                if(isRead)
+                if(isRead) // an insert
                 {
                     for(int i = 0; i < element.getLength(); i++)
                     {
                         annotatedBases.add(new SbxAnnotatedBase(
-                                readIndex, refPos - 1, element.getOperator(), bases[readIndex], quals[readIndex], duplexIndelIndices.contains(readIndex)));
+                                readIndex, refPos - 1, element.getOperator(), bases[readIndex], quals[readIndex],
+                                duplexIndelIndices.contains(readIndex)));
                         readIndex++;
                     }
 
                     continue;
                 }
 
-                if(isRef)
+                if(isRef) // ie a delete
                 {
                     for(int i = 0; i < element.getLength(); i++)
                     {
@@ -361,81 +535,6 @@ public final class SbxRoutines
         }
 
         return annotatedBases;
-    }
-
-    private static List<CigarElement> checkSupplementaryCigar(final List<CigarElement> suppCigarElements, int softClipLength, boolean isLeftClipped)
-    {
-        // the supplementary data's cigar may not have the same mirrored soft-clip length, in which case it needs to be made to match
-        int cigarCount = suppCigarElements.size();
-        CigarElement matchingSoftClip;
-        List<CigarElement> newSuppElements;
-
-        // left clipped refers to the read, so the supp data cigar's right side is being evaluated and trimmed
-        boolean trimLeftSide = !isLeftClipped;
-
-        if(trimLeftSide)
-        {
-            matchingSoftClip = suppCigarElements.get(0);
-            newSuppElements = suppCigarElements.subList(1, cigarCount);
-        }
-        else
-        {
-            matchingSoftClip = suppCigarElements.get(cigarCount - 1);
-            newSuppElements = suppCigarElements.subList(0, cigarCount - 1);
-        }
-
-        // remove delete elements since these won't correspond to soft-clipped bases
-        newSuppElements = newSuppElements.stream().filter(x -> x.getOperator().consumesReadBases()).collect(Collectors.toList());
-
-        int readBaseLength = newSuppElements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
-
-        if(readBaseLength == softClipLength)
-            return newSuppElements;
-
-        int diff = readBaseLength - softClipLength;
-
-        if(diff > 0) // needs to be trimmed
-        {
-            trimCigar(newSuppElements, diff, trimLeftSide);
-        }
-        else
-        {
-            // add back the required portion of soft-clipping
-            CigarElement extraElement = new CigarElement(abs(diff), matchingSoftClip.getOperator());
-
-            if(trimLeftSide)
-                newSuppElements.add(0, extraElement);
-            else
-                newSuppElements.add(extraElement);
-        }
-
-        return newSuppElements;
-    }
-
-    private static void trimCigar(final List<CigarElement> cigarElements, int length, boolean fromStart)
-    {
-        int remainingBases = length;
-
-        int index = fromStart ? 0 : cigarElements.size() - 1;
-
-        while(remainingBases > 0)
-        {
-            CigarElement element = cigarElements.get(index);
-
-            if(element.getLength() > remainingBases)
-            {
-                cigarElements.set(index, new CigarElement(element.getLength() - remainingBases, element.getOperator()));
-                return;
-            }
-            else
-            {
-                cigarElements.remove(index);
-                remainingBases -= element.getLength();
-
-                if(!fromStart)
-                    --index;
-            }
-        }
     }
 
     @VisibleForTesting

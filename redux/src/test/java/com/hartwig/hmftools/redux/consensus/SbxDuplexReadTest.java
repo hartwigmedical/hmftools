@@ -18,8 +18,10 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
+import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
@@ -295,7 +297,8 @@ public class SbxDuplexReadTest
         int nm = 2;
         int alignmentScore = 0;
         String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
-        String cigar = "5M2I7M";  // inserts are left aligned.
+        String cigar = "5M2I7M";  // inserts are right-aligned
+        // String cigar = "5M2I7M";
         String qualStr = NON_ZERO_QUAL.repeat(7) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
         String ycTagStr = "0-7ZZ5-0";
 
@@ -308,6 +311,9 @@ public class SbxDuplexReadTest
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
         SbxRoutines.stripDuplexIndels(refGenome, read);
+
+        SAMRecord newRead = cloneSamRecord(read, READ_ID_GEN.nextId());
+        SbxRoutines.stripDuplexIndelsNew(refGenome, newRead);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
