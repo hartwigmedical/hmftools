@@ -14,4 +14,15 @@ public class ReadDepth
         ReadDepth = readDepth;
         ReadGcContent = readGcContent;
     }
+
+    @Override
+    public String toString()
+    {
+        return "ReadDepth{" +
+                "Chromosome='" + Chromosome + '\'' +
+                ", StartPosition=" + StartPosition +
+                ", ReadDepth=" + ReadDepth +
+                ", ReadGcContent=" + ReadGcContent +
+                '}';
+    }
 }

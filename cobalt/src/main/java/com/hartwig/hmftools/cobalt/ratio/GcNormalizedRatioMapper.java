@@ -55,6 +55,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
+//        RatioSupplier.printTable(gcMedianCalcDf, "GCMedianCalcDFRaw");
         NumericAggregateFunction aggFunc = AggregateFunctions.median;
 
         // get the sample median and mean
@@ -65,6 +66,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         gcMedianCalcDf = gcMedianCalcDf.retainColumns(CobaltColumns.GC_BUCKET, CobaltColumns.RATIO)
                 .summarize(CobaltColumns.RATIO, aggFunc, AggregateFunctions.count)
                 .by(CobaltColumns.GC_BUCKET);
+        RatioSupplier.printTable(gcMedianCalcDf, "GCMedianCalcDFAggregated");
 
         gcMedianCalcDf = new TableSmoother(gcMedianCalcDf).smoothed();
 

@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -65,10 +66,11 @@ public class ProcessBamTest
     public void setup() throws Exception
     {
         sample = null;
+        regionOffset = 0;
         tumorBamFile = null;
         referenceBamFile = null;
         tumorRatioResults = null;
-        tempDir = FileUtils.getTempDirectory();
+        tempDir = new File( "/Users/timlavers/work/junk/rubbish/tmp");
         outputDir = new File(tempDir, "output");
         diploidBedFile = null;
         outputDir.mkdirs();
@@ -236,9 +238,11 @@ public class ProcessBamTest
         // Overwrite the normalisation profile
         panelNormalisation = new File(tempDir, "ThePanel.tsv");
         PanelFileWriter panelWriter = new PanelFileWriter();
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset, regionOffset, 2.000));
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 1000, regionOffset + 1000, 0.5000));
-        panelWriter.addSection(new PanelFileSection(_1, regionOffset + 2000, regionOffset + 2000, 1.0000));
+        panelWriter.addSection(new PanelFileSection(_1, 0, 0, 0.000));
+        panelWriter.addSection(new PanelFileSection(_1, 1000, 1000, 2.000));
+        panelWriter.addSection(new PanelFileSection(_1,  2000, 2000, 0.5000));
+        panelWriter.addSection(new PanelFileSection(_1, 3000, 3000, 1.0000));
+        panelWriter.addSection(new PanelFileSection(_1, 4000, 4000, 2.0000));
         panelWriter.write(panelNormalisation);
 
         runCobalt();
@@ -338,18 +342,19 @@ public class ProcessBamTest
         double mappability2 = MIN_MAPPABLE_PERCENTAGE - 0.01;
         gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
         GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, mappability0));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1,
-                regionOffset + 1000, regionOffset + 1_000, MIN_MAPPABLE_PERCENTAGE));
-        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, mappability2));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, 0, 1000, mappability0));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, 2000, 2000, MIN_MAPPABLE_PERCENTAGE));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, 3000, 4_000, mappability2));
         gcFileWriter.write(gcProfile);
 
         runCobalt();
 
         List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(3).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(4).tumorGCRatio(), 0.01);
     }
 
     @Test
@@ -361,10 +366,9 @@ public class ProcessBamTest
         // 1:3201-4201 depth 50
         sample = "three_windows_with_offset";
         tumorBamFile = getBam(sample);
-        regionOffset = 1_200;
 
-        createStandardChr1GCFile(5_000);
-        createStandardChr1PanelFile(5_000, 1.0001);
+        createStandardChr1GCFile(6_000);
+        createStandardChr1PanelFile(6_000, 1.0001);
 
         runCobalt();
 
@@ -389,19 +393,22 @@ public class ProcessBamTest
         // etc
         sample = "increasing_gc_per_window_depth_1";
         tumorBamFile = getBam(sample);
-        regionOffset = 1000;
+//        regionOffset = 1000;
 
         createStandardChr1GCFile(101_000);
         createStandardChr1PanelFile(101_000, 1.0001);
 
         runCobalt();
-        // Upper and lower limits for gc ratio are 0.26 and 0.68 respectively
+        // Upper and lower limits for gc ratio are 0.24 and 0.68 respectively
         List<CobaltRatio> ratios = tumorRatioResults.get(_1);
-        for(int i = 1; i < 26; i++)
+        for(int i = 1; i < 25; i++)
         {
-            assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
+            final CobaltRatio cobaltRatio = ratios.get(i);
+            assertEquals(1000 * i + 1, ratios.get(i).position());
+            assertEquals(0.01 * (i - 1), ratios.get(i).tumorGcContent(), 0.01);
+            assertEquals(-1.0, cobaltRatio.tumorGCRatio(), 0.01);
         }
-        for(int i = 26; i < 68; i++)
+        for(int i = 25; i < 68; i++)
         {
             assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
@@ -912,13 +919,18 @@ public class ProcessBamTest
         createStandardChr1PanelFile(2_000, 1.000001);
     }
 
+    private Pair<Integer, Integer> nextGcFileRegion(int length)
+    {
+        return Pair.of(regionOffset, regionOffset+=length);
+    }
+
     private void setupForThreeWindowBamTumorOnly() throws IOException
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
         sample = "three_windows";
         tumorBamFile = getBam(sample);
-        regionOffset = 1_000;
+        regionOffset = 0;
 
         createStandardChr1GCFile(4_000);
         createStandardChr1PanelFile(4_000, 1.0000001);

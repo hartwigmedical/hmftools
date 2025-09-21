@@ -101,6 +101,23 @@ public class TableSmootherTest
         checkRow(3, 5, 1.3, 13);
     }
 
+
+    @Test
+    public void gapTest()
+    {
+        addRow(1, 1.0, 10);
+        addRow(2, 1.3, 13);
+        addRow(4, 1.3, 13);
+        addRow(5, 1.6, 16);
+        addRow(6, 1.0, 10);
+
+        smoothIt();
+        assertEquals(3, output.rowCount());
+        checkRow(0, 2, 1.2, 12.0);
+        checkRow(1, 4, 1.4, 14.0);
+        checkRow(2, 5, 1.3, 13.0);
+    }
+
     private void checkRow(int index, int col0, double col1, double col2)
     {
         Row row = output.row(index);

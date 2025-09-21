@@ -1,16 +1,15 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MIN;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.CobaltUtils;
 import com.hartwig.hmftools.cobalt.count.ReadDepth;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class CobaltCalculation
 {
@@ -25,84 +24,80 @@ public class CobaltCalculation
 
         double enrichmentQuotient(Chromosome chromosome, ReadDepth readDepth);
 
+        boolean isInTargetRegions(Chromosome chromosome, int position);
+
         boolean applyFinalNormalisation();
     }
 
     private final ListMultimap<Chromosome, CobaltWindow> mWindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final Filter mFilter;
+    private final RefGenomeVersion GenomeVersion;
+    private final TargetRegions mTargetRegions;
 
-    public CobaltCalculation(final Filter mFilter)
+    public CobaltCalculation(final Filter mFilter, RefGenomeVersion genomeVersion, TargetRegions targetRegions)
     {
         this.mFilter = mFilter;
+        this.mTargetRegions = targetRegions;
+        this.GenomeVersion = genomeVersion;
     }
 
     public void addReading(Chromosome chromosome, ReadDepth readDepth)
     {
-        //        Preconditions.checkArgument(chromosome.equals(readDepth.Chromosome)); // todo reinstate after making ReadDepth have a Chromosome
+        CobaltWindow window;
+
         if(mFilter.exclude(chromosome, readDepth))
         {
-            return;
+            window = new CobaltWindow(chromosome, readDepth.StartPosition, readDepth);
         }
-        GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
-        bucket.addReading(readDepth.ReadDepth);
-        CobaltWindow window = new CobaltWindow(chromosome, readDepth.StartPosition, readDepth, bucket);
+        else
+        {
+            GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
+            if(chromosome.isAutosome() && mTargetRegions.isInTargetRegions(chromosome, readDepth.StartPosition) && readDepth.ReadDepth > 0)
+            {
+                bucket.addReading(readDepth.ReadDepth);
+            }
+            window = new CobaltWindow(chromosome, readDepth.StartPosition, readDepth, bucket);
+        }
         mWindowsByChromosome.put(chromosome, window);
     }
 
     public ListMultimap<Chromosome, CobaltRatio> calculateRatios(TargetRegions targetRegions)
     {
         GcBucketStatistics bucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
-        DescriptiveStatistics meanCalculator = new DescriptiveStatistics();
-        final ListMultimap<Chromosome, CobaltRatio> interimResults = ArrayListMultimap.create();
+        BamRatiosMeanCalculator meanCalculator = new BamRatiosMeanCalculator();
+        final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
         mWindowsByChromosome.forEach((chromosome, window) ->
         {
-            // Maybe use something other tnan CobaltRatio here - something that can
-            // be transformed in a logical way by the arithmetical normalisation operations
-            // including handling getting set to NaN or whatever
-            if(targetRegions.isInTargetRegions(chromosome, window))
+            BamRatio bamRatio = new BamRatio(chromosome, window.ReadDepth, targetRegions.isInTargetRegions(chromosome, window));
+            bamRatio.normaliseForGc(bucketStatistics.medianReadDepth(window.GcBucket));
+            bamRatio.applyEnrichment(targetRegions.enrichmentQuotient(chromosome, window.ReadDepth));
+
+            if(targetRegions.applyFinalNormalisation())
             {
-                double medianReadDepthForBucket = bucketStatistics.medianReadDepth(window.GcBucket.mGC);
-                if (medianReadDepthForBucket < 0)
-                {
-                    // disallowed bucket
-                    // todo - better just make normalise(-1.0)  do this
-                    interimResults.put(chromosome, CobaltUtils.tumorOnlyRatio(window, -1.0));
-                }
-                else
-                {
-                    double ratio = window.ReadDepth.ReadDepth / medianReadDepthForBucket;
-                    ratio = ratio / targetRegions.enrichmentQuotient(chromosome, window.ReadDepth);
-                    if(targetRegions.applyFinalNormalisation())
-                    {
-                        meanCalculator.addValue(ratio);
-                    }
-                    interimResults.put(chromosome, CobaltUtils.tumorOnlyRatio(window, ratio));
-                }
+                meanCalculator.recordValue(bamRatio);
             }
+            bamResults.put(chromosome, bamRatio);
         });
-        ListMultimap<Chromosome, CobaltRatio> finalResults;
+
+        final ListMultimap<Chromosome, CobaltRatio> finalResults = ArrayListMultimap.create();
         if(targetRegions.applyFinalNormalisation())
         {
-            final ListMultimap<Chromosome, CobaltRatio> normalisedResults = ArrayListMultimap.create();
-            double meanRatio = meanCalculator.getMean();
-            interimResults.forEach(((chromosome, cobaltRatio) ->
+            double meanRatio = meanCalculator.mean();
+            CB_LOGGER.info("Normalising results with mean ratio {}", meanRatio);
+
+            bamResults.forEach(((chromosome, cobaltRatio) ->
             {
-                if (cobaltRatio.tumorGCRatio() < 0)
-                {
-                    normalisedResults.put(chromosome, cobaltRatio); // todo - better just make normalise(-1.0)  do nothing
-                }
-                else
-                {
-                    CobaltRatio normalised = cobaltRatio.normaliseTumorGcRatio(meanRatio);
-                    normalisedResults.put(chromosome, normalised);
-                }
+                cobaltRatio.normaliseByMean(meanRatio);
+                finalResults.put(chromosome, cobaltRatio.toTumorRatio(GenomeVersion));
             }));
-            finalResults = normalisedResults;
         }
         else
         {
-            finalResults = interimResults;
+            bamResults.forEach(((chromosome, cobaltRatio) ->
+            {
+                finalResults.put(chromosome, cobaltRatio.toTumorRatio(GenomeVersion));
+            }));
         }
         return finalResults;
     }

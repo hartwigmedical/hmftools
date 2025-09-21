@@ -35,8 +35,13 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
 
+import com.hartwig.hmftools.cobalt.calculations.CobaltCalculation;
+import com.hartwig.hmftools.cobalt.calculations.NoEnrichment;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
+import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnricher;
+import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
@@ -44,7 +49,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -233,6 +237,21 @@ public class CobaltConfig
         }
 
         return readerFactory;
+    }
+
+    public CobaltCalculation.TargetRegions targetRegionEnricher()
+    {
+        if(TargetRegionNormFile == null)
+        {
+            return new NoEnrichment();
+        }
+        else
+        {
+            TargetedRegionsNormalisationFile enrichmentFile = new TargetedRegionsNormalisationFile(TargetRegionNormFile);
+            final RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
+            TargetRegionEnricher.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
+            return new TargetRegionEnricher(enrichmentFile.load(), chromosomeData);
+        }
     }
 
     private void loadExcludedRegions()

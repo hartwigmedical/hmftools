@@ -103,7 +103,7 @@ public class CobaltApplication
             {
                 brcReference = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.ReferenceBamPath, chromosomePosCodec);
             }
-/*
+
             Table tumorReadDepths = brcTumor != null ? brcTumor.generateDepths() : null;
             Table referenceReadDepths = brcReference != null ? brcReference.generateDepths() : null;
 
@@ -151,7 +151,7 @@ public class CobaltApplication
                 default:
                     ratios = ratioSupplier.tumorNormalPair();
             }
-*/
+
             final String outputFilename = CobaltRatioFile.generateFilename(
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
 

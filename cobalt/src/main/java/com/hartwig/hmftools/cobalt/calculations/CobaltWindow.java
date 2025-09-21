@@ -11,6 +11,7 @@ public class CobaltWindow
     public final int Position;
     public final ReadDepth ReadDepth;
     public final GCPail GcBucket;
+    public final boolean IsFilteredOut;
 
     public CobaltWindow(final Chromosome chromosome, final int position, final ReadDepth ReadDepth, final GCPail GcBucket)
     {
@@ -18,6 +19,16 @@ public class CobaltWindow
         Position = position;
         this.ReadDepth = ReadDepth;
         this.GcBucket = GcBucket;
+        IsFilteredOut = false;
+    }
+
+    public CobaltWindow(final Chromosome chromosome, final int position, final ReadDepth ReadDepth)
+    {
+        Chromosome = chromosome;
+        Position = position;
+        this.ReadDepth = ReadDepth;
+        this.GcBucket = null;
+        IsFilteredOut = true;
     }
 
     @Override
@@ -35,5 +46,15 @@ public class CobaltWindow
     public int hashCode()
     {
         return Objects.hash(Chromosome, Position);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "CobaltWindow{" +
+                "Chromosome=" + Chromosome +
+                ", Position=" + Position +
+                ", ReadDepth=" + ReadDepth +
+                '}';
     }
 }

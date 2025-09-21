@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.toCommonChromosomeMap;
 import static com.hartwig.hmftools.cobalt.ratio.DiploidRatioSupplier.calcDiploidRatioResults;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -410,4 +412,46 @@ public class RatioSupplier
 
         return result;
     }
+
+    public static void printTable(Table table, String fileName)
+    {
+        File dir = new File("/Users/timlavers/work/junk/rubbish");
+        File outputFile = new File(dir, fileName + ".tsv");
+
+        try (FileWriter writer = new FileWriter(outputFile))
+        {
+            // Write header row
+            for (int i = 0; i < table.columnCount(); i++)
+            {
+                writer.write(table.columnNames().get(i));
+                if (i < table.columnCount() - 1)
+                {
+                    writer.write("\t");
+                }
+            }
+            writer.write("\n");
+
+            // Write data rows
+            for (int rowIndex = 0; rowIndex < table.rowCount(); rowIndex++)
+            {
+                Row row = table.row(rowIndex);
+                for (int colIndex = 0; colIndex < table.columnCount(); colIndex++)
+                {
+                    final Object object = row.getObject(colIndex);
+                    String value = object == null ? "" : object.toString();
+                    writer.write(value);
+                    if (colIndex < table.columnCount() - 1)
+                    {
+                        writer.write("\t");
+                    }
+                }
+                writer.write("\n");
+            }
+        }
+        catch (IOException e)
+        {
+            CB_LOGGER.error("Error writing table to file: {}", e.getMessage());
+        }
+    }
+
 }

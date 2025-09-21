@@ -18,6 +18,12 @@ public class NoEnrichment implements CobaltCalculation.TargetRegions
     }
 
     @Override
+    public boolean isInTargetRegions(final Chromosome chromosome, final int position)
+    {
+        return true; //todo
+    }
+
+    @Override
     public boolean applyFinalNormalisation()
     {
         return false;

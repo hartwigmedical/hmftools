@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.COMPARIS
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.ORIGINAL_VALUES_DIR;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
@@ -81,6 +82,8 @@ public class CobaltBatchLocal
         String outputDir = cobaltOutputBase + sample;
         String[] args = new String[14];
         int index = 0;
+//        args[index++] = String.format("-%s", SPECIFIC_REGIONS);
+//        args[index++] = String.format("%s", "1:2491001-2496001");
         args[index++] = String.format("-%s", TUMOR);
         args[index++] = String.format("%s", sample);
         args[index++] = String.format("-%s", TUMOR_BAM);
@@ -95,6 +98,7 @@ public class CobaltBatchLocal
         args[index++] = String.format("%s", outputDir);
         args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
         args[index] = String.format("%s", panel);
+        //2491001
 
         try
         {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import java.util.Arrays;
+
 import com.google.common.base.Preconditions;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -27,7 +29,10 @@ public class GcBucketStatistics
             nextMedian = gcPail.median();
             if(isAllowed(gcPail))
             {
-                MeanDepths[i] = getMean(previousMedian, currentMedian, nextMedian);
+                System.out.println("GC raw median: " + gcPail + " median: " + nextMedian);
+//                MeanDepths[i] = currentMedian;//getMean(previousMedian, currentMedian, nextMedian);
+                MeanDepths[i] = Arrays.stream(new double[]{previousMedian, currentMedian, nextMedian}).average().getAsDouble();
+                System.out.println("Smoothed median: " + MeanDepths[i]);
             }
             else
             {
@@ -39,14 +44,16 @@ public class GcBucketStatistics
 
     public boolean isAllowed(GCPail gcPail)
     {
-        return gcPail.mGC >= MinAllowedGc && gcPail.mGC <= MaxAllowedGc;
+        return gcPail != null && gcPail.mGC >= MinAllowedGc && gcPail.mGC <= MaxAllowedGc;
     }
 
-    public double medianReadDepth(int gcBucket)
+    public double medianReadDepth(GCPail gcBucket)
     {
-        Preconditions.checkArgument(gcBucket >= 0);
-        Preconditions.checkArgument(gcBucket <= 100);
-        return MeanDepths[gcBucket];
+        if (!isAllowed(gcBucket))
+        {
+            return -1;
+        }
+        return MeanDepths[gcBucket.mGC];
     }
 
     public double medianReadDepthAcrossInRangeBuckets()
