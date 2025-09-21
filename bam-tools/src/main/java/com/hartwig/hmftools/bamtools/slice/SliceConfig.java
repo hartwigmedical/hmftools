@@ -56,6 +56,7 @@ public class SliceConfig
     public final boolean DropExcluded;
     public final boolean OnlySupplementaries;
     public final boolean WriteReadBases;
+    public final boolean SkipRemoteReads;
     public final boolean LogMissingReads;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
@@ -78,6 +79,7 @@ public class SliceConfig
     private static final String ONLY_SUPPS = "only_supps";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String MAX_REMOTE_READS = "max_remote_reads";
+    private static final String SKIP_REMOTE_READS = "skip_remote_reads";
     private static final String WRITE_READ_BASES = "write_read_bases";
     private static final String MAX_UNMAPPED_READS = "max_unmapped_reads";
     private static final String LOG_MISSING_READS = "log_missing_reads";
@@ -114,6 +116,7 @@ public class SliceConfig
         WriteReadBases = WriteReads && configBuilder.hasFlag(WRITE_READ_BASES);
         OnlySupplementaries = configBuilder.hasFlag(ONLY_SUPPS);
         LogMissingReads = configBuilder.hasFlag(LOG_MISSING_READS);
+        SkipRemoteReads = configBuilder.hasFlag(SKIP_REMOTE_READS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         MaxUnmappedReads = configBuilder.getInteger(MAX_UNMAPPED_READS);
@@ -191,6 +194,7 @@ public class SliceConfig
         configBuilder.addFlag(UNSORTED_BAM, "Write BAM unsorted");
         configBuilder.addFlag(WRITE_READS, "Write reads file for sliced region");
         configBuilder.addFlag(WRITE_READ_BASES, "Write read bases to TSV file");
+        configBuilder.addFlag(SKIP_REMOTE_READS, "Skip slicing remote reads");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(ONLY_SUPPS, "Only capture supplementary reads");
         configBuilder.addFlag(LOG_MISSING_READS, "Log missing reads");
@@ -215,6 +219,7 @@ public class SliceConfig
         WriteReads = false;
         WriteBam = false;
         WriteReadBases = false;
+        SkipRemoteReads = false;
         UnsortedBam = false;
         DropExcluded = false;
         OnlySupplementaries = false;

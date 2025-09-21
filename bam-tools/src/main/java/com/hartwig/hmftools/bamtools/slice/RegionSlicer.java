@@ -70,33 +70,36 @@ public class RegionSlicer
         BT_LOGGER.info("initial slice complete, read written({}) cached fragments({})",
                 sliceWriter.writeCount(), readCache.fragmentMap().size());
 
-        readCache.setProcessingRemoteRegions(true);
-
         List<ChrBaseRegion> excludedRegions = mConfig.DropExcluded ?
                 ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion) : Collections.emptyList();
 
-        // perform the slice of remote positions twice if necessary to pick up remote mates which in turn have remote supplementaries
-        for(int i = 0; i < 2; ++i)
+        if(!mConfig.SkipRemoteReads)
         {
-            List<ChrBaseRegion> remotePositions = readCache.collateRemoteReadRegions();
+            readCache.setProcessingRemoteRegions(true);
 
-            for(ChrBaseRegion region : remotePositions)
+            // perform the slice of remote positions twice if necessary to pick up remote mates which in turn have remote supplementaries
+            for(int i = 0; i < 2; ++i)
             {
-                if(ChrBaseRegion.overlaps(excludedRegions, region))
-                    continue;
+                List<ChrBaseRegion> remotePositions = readCache.collateRemoteReadRegions();
 
-                futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader),
-                        executorService));
+                for(ChrBaseRegion region : remotePositions)
+                {
+                    if(ChrBaseRegion.overlaps(excludedRegions, region))
+                        continue;
+
+                    futures.add(CompletableFuture.runAsync(new RemoteReadSlicer(region, mConfig, readCache, threadBamReader),
+                            executorService));
+                }
+
+                BT_LOGGER.info("splitting {} remote regions across {} threads", remotePositions.size(), mConfig.Threads);
+
+                // wait for completion
+                CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
+                futures.clear();
             }
 
-            BT_LOGGER.info("splitting {} remote regions across {} threads", remotePositions.size(), mConfig.Threads);
-
-            // wait for completion
-            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
-            futures.clear();
+            BT_LOGGER.info("remote slice complete");
         }
-
-        BT_LOGGER.info("remote slice complete");
 
         if(mConfig.MaxUnmappedReads != UNMAPPED_READS_DISABLED)
         {
