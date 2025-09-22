@@ -84,7 +84,7 @@ object AlignmentUtil
             .run(sequences)
     }
 
-    data class BwaMemMatch(
+    data class BwaMemAlignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
@@ -109,7 +109,7 @@ object AlignmentUtil
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            Multimap<Int, BwaMemMatch>
+            Multimap<Int, BwaMemAlignment>
     {
         val refGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
         val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
@@ -129,7 +129,7 @@ object AlignmentUtil
         val keys = sequences.keys.toList()
         val seqs = keys.map { k -> sequences[k]!!.toByteArray() }
         val alignments = aligner.alignSeqs(seqs)
-        val results = ArrayListMultimap.create<Int, BwaMemMatch>()
+        val results = ArrayListMultimap.create<Int, BwaMemAlignment>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
                 if (alignment.samFlag and 0x4 != 0)
@@ -152,7 +152,7 @@ object AlignmentUtil
                 // nMismatches is not the best name - it's actually the edit distance.
                 // Which means this calculation is correct for mismatches and gaps.
                 val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
-                val resAlignment = BwaMemMatch(
+                val resAlignment = BwaMemAlignment(
                     sequences[key.value]!!,
                     queryAlignStart,
                     queryAlignEnd,

@@ -24,10 +24,10 @@ data class AlignmentAnnotation(
     val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
     val jGeneSupplementary: List<IgTcrGene> = emptyList(),
-    val vMatch: AlignmentUtil.BwaMemMatch? = null,
-    val dMatch: AlignmentUtil.BwaMemMatch? = null,
-    val jMatch: AlignmentUtil.BwaMemMatch? = null,
-    val fullMatch: AlignmentUtil.BwaMemMatch? = null,
+    val vMatch: AlignmentUtil.BwaMemAlignment? = null,
+    val dMatch: AlignmentUtil.BwaMemAlignment? = null,
+    val jMatch: AlignmentUtil.BwaMemAlignment? = null,
+    val fullMatch: AlignmentUtil.BwaMemAlignment? = null,
     val alignmentStatus: AlignmentStatus)
 
 class AlignmentAnnotator
@@ -93,7 +93,7 @@ class AlignmentAnnotator
              refGenomeFastaPath, refGenomeIndexPath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
-        val vdjToMatch: Multimap<AlignmentRunData, AlignmentUtil.BwaMemMatch> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
+        val vdjToMatch: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
 
         for ((vdjKey, match) in alignmentResults.entries())
         {
@@ -117,7 +117,7 @@ class AlignmentAnnotator
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
     // NOTE: we cannot use matches.keySet(), as it might not include some VDJs that returned no match
-    fun processAlignmentMatches(alignmentRunDataList: Collection<AlignmentRunData>, matches: Multimap<AlignmentRunData, AlignmentUtil.BwaMemMatch>)
+    fun processAlignmentMatches(alignmentRunDataList: Collection<AlignmentRunData>, matches: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment>)
     : Collection<AlignmentAnnotation>
     {
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
@@ -128,7 +128,7 @@ class AlignmentAnnotator
         return alignmentAnnotations
     }
 
-    fun processAlignmentMatches(alignmentRunData: AlignmentRunData, matches: Collection<AlignmentUtil.BwaMemMatch>)
+    fun processAlignmentMatches(alignmentRunData: AlignmentRunData, matches: Collection<AlignmentUtil.BwaMemAlignment>)
     : AlignmentAnnotation
     {
         val vdjSequence: VDJSequence = alignmentRunData.vdj
@@ -146,104 +146,76 @@ class AlignmentAnnotator
             }
             .sortedBy { m -> -m.alignmentScore }
 
-        // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
-        // locus supercedes a 100% identity match from the correct locus
-        val locus: IgTcrLocus? = vdjSequence.vAnchor?.geneType?.locus ?: vdjSequence.jAnchor?.geneType?.locus
-
-        require(locus != null)
-
-        var vGene: IgTcrGene? = null
-        var vMatch: AlignmentUtil.BwaMemMatch? = null
-        val vGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
-        var dGene: IgTcrGene? = null
-        var dMatch: AlignmentUtil.BwaMemMatch? = null
-        val dGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
-        var jGene: IgTcrGene? = null
-        var jMatch: AlignmentUtil.BwaMemMatch? = null
-        val jGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
-
+        // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
         for (match in matches)
         {
-            // check if it matches whole way. Require 95% sequence identity
             if (match.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
-                alignmentRunData.querySeq.length <= (match.queryAlignEnd - match.queryAlignStart) + 5)
+                alignmentRunData.querySeq.length <= (match.queryAlignEnd - match.queryAlignStart) + 5
+            )
             {
                 return AlignmentAnnotation(
                     vdjSequence = vdjSequence,
                     fullMatch = match,
-                    alignmentStatus = AlignmentStatus.NO_REARRANGEMENT)
-            }
-
-            var vdjGene: IgTcrGene? = findGene(match)
-
-            // for V/J gene segments, we mandate 90% identity
-            if (vdjGene != null && vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && match.percentageIdent < CiderConstants.ALIGNMENT_MATCH_MIN_VJ_IDENTITY)
-            {
-                vdjGene = null
-            }
-
-            if (vdjGene != null)
-            {
-                val geneLocus = IgTcrLocus.fromGeneName(vdjGene.geneName)
-
-                if (locus == geneLocus)
-                {
-                    // we must check to make sure the locus matches the top alignment
-                    // this ensure we do not annotate incorrect genes
-                    // we found a VDJ gene, see which one it is
-                    // but also need to check against identity
-                    if (vdjGene.region == IgTcrRegion.V_REGION)
-                    {
-                        val compare = compareGeneMatch(vMatch, vGene, match, vdjGene)
-                        if (compare > 0)
-                        {
-                            vGene = vdjGene
-                            vMatch = match
-                        }
-                        else if (compare == 0)
-                        {
-                            requireNotNull(vGene)
-                            vGeneSupplementary.add(vdjGene)
-                        }
-                    }
-                    if (vdjGene.region == IgTcrRegion.D_REGION)
-                    {
-                        val compare = compareGeneMatch(dMatch, dGene, match, vdjGene)
-                        if (compare > 0)
-                        {
-                            dGene = vdjGene
-                            dMatch = match
-                        }
-                        else if (compare == 0)
-                        {
-                            requireNotNull(dGene)
-                            dGeneSupplementary.add(vdjGene)
-                        }
-                    }
-                    if (vdjGene.region == IgTcrRegion.J_REGION)
-                    {
-                        val compare = compareGeneMatch(jMatch, jGene, match, vdjGene)
-                        if (compare > 0)
-                        {
-                            jGene = vdjGene
-                            jMatch = match
-                        }
-                        else if (compare == 0)
-                        {
-                            requireNotNull(jGene)
-                            jGeneSupplementary.add(vdjGene)
-                        }
-                    }
-                }
+                    alignmentStatus = AlignmentStatus.NO_REARRANGEMENT
+                )
             }
         }
 
-        // determine status
-        val alignmentStatus: AlignmentStatus = if (vGene != null)
+        // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
+        // locus supercedes a 100% identity match from the correct locus
+        val locus: IgTcrLocus? = vdjSequence.vAnchor?.geneType?.locus ?: vdjSequence.jAnchor?.geneType?.locus
+        require(locus != null)
+
+        // Find candidate gene matches, from which we will then select the best and supplementary matches.
+        val vGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
+        val dGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
+        val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
+        for (match in matches)
         {
-            if (dGene != null)
+            val vdjGene: IgTcrGene? = findGene(match)
+            if (vdjGene == null)
             {
-                if (jGene != null)
+                continue
+            }
+
+            // for V/J gene segments, we mandate 90% identity
+            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && match.percentageIdent < CiderConstants.ALIGNMENT_MATCH_MIN_VJ_IDENTITY)
+            {
+                continue
+            }
+
+            // we must check to make sure the locus matches the top alignment
+            // this ensure we do not annotate incorrect genes
+            val geneLocus = IgTcrLocus.fromGeneName(vdjGene.geneName)
+            if (locus != geneLocus)
+            {
+                continue
+            }
+
+            if (vdjGene.region == IgTcrRegion.V_REGION)
+            {
+                vGeneCandidates.add(Pair(vdjGene, match))
+            }
+            if (vdjGene.region == IgTcrRegion.D_REGION)
+            {
+                dGeneCandidates.add(Pair(vdjGene, match))
+            }
+            if (vdjGene.region == IgTcrRegion.J_REGION)
+            {
+                jGeneCandidates.add(Pair(vdjGene, match))
+            }
+        }
+
+        val vGeneMatch = selectBestGene(vGeneCandidates)
+        val dGeneMatch = selectBestGene(dGeneCandidates)
+        val jGeneMatch = selectBestGene(jGeneCandidates)
+        
+        // determine status
+        val alignmentStatus: AlignmentStatus = if (vGeneMatch != null)
+        {
+            if (dGeneMatch != null)
+            {
+                if (jGeneMatch != null)
                 {
                     AlignmentStatus.V_D_J
                 }
@@ -252,7 +224,7 @@ class AlignmentAnnotator
                     AlignmentStatus.V_D
                 }
             }
-            else if (jGene != null)
+            else if (jGeneMatch != null)
             {
                 AlignmentStatus.V_J
             }
@@ -263,9 +235,9 @@ class AlignmentAnnotator
         }
         else
         {
-            if (dGene != null)
+            if (dGeneMatch != null)
             {
-                if (jGene != null)
+                if (jGeneMatch != null)
                 {
                     AlignmentStatus.D_J
                 }
@@ -274,7 +246,7 @@ class AlignmentAnnotator
                     AlignmentStatus.D_ONLY
                 }
             }
-            else if (jGene != null)
+            else if (jGeneMatch != null)
             {
                 AlignmentStatus.J_ONLY
             }
@@ -286,23 +258,23 @@ class AlignmentAnnotator
 
         return AlignmentAnnotation(
             vdjSequence = vdjSequence,
-            vGene = vGene,
-            dGene = dGene,
-            jGene = jGene,
-            vMatch = vMatch,
-            dMatch = dMatch,
-            jMatch = jMatch,
-            vGeneSupplementary = vGeneSupplementary,
-            dGeneSupplementary = dGeneSupplementary,
-            jGeneSupplementary = jGeneSupplementary,
+            vGene = vGeneMatch?.gene,
+            dGene = dGeneMatch?.gene,
+            jGene = jGeneMatch?.gene,
+            vMatch = vGeneMatch?.alignment,
+            dMatch = dGeneMatch?.alignment,
+            jMatch = jGeneMatch?.alignment,
+            vGeneSupplementary = vGeneMatch?.supplementaryGenes ?: emptyList(),
+            dGeneSupplementary = dGeneMatch?.supplementaryGenes ?: emptyList(),
+            jGeneSupplementary = jGeneMatch?.supplementaryGenes ?: emptyList(),
             alignmentStatus = alignmentStatus)
     }
 
-    fun findGene(alignmentMatch: AlignmentUtil.BwaMemMatch) : IgTcrGene?
+    fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
     {
-        val chromosome = parseChromosome(alignmentMatch.refContig)
+        val chromosome = parseChromosome(alignment.refContig)
 
-        val geneDataList = vdjGenes[Pair(chromosome, alignmentMatch.strand)]
+        val geneDataList = vdjGenes[Pair(chromosome, alignment.strand)]
 
         var bestGene : IgTcrGene? = null
 
@@ -311,13 +283,13 @@ class AlignmentAnnotator
             val geneLocation = gene.geneLocation ?: continue
 
             require(geneLocation.chromosome == chromosome)
-            require(geneLocation.strand == alignmentMatch.strand)
+            require(geneLocation.strand == alignment.strand)
 
             if (bestGene == null || !bestGene.isFunctional)
             {
                 // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignmentMatch.refEnd + GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignmentMatch.refStart - GENE_REGION_TOLERANCE)
+                if (geneLocation.posStart <= alignment.refEnd + GENE_REGION_TOLERANCE &&
+                    geneLocation.posEnd >= alignment.refStart - GENE_REGION_TOLERANCE)
                 {
                     bestGene = gene
                 }
@@ -339,8 +311,6 @@ class AlignmentAnnotator
         // an alignment to the gene
         const val GENE_REGION_TOLERANCE = 50
 
-        private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
-
         fun alignmentQuerySeqRange(vdj: VDJSequence) : IntRange
         {
             val fullSeq = vdj.layout.consensusSequenceString()
@@ -357,43 +327,56 @@ class AlignmentAnnotator
             return range
         }
 
-        // -1 -> existing gene is better
-        //  0 -> genes are equivalently good matches
-        // +1 -> new gene is better
-        fun compareGeneMatch(existingMatch: AlignmentUtil.BwaMemMatch?, existingGene: IgTcrGene?, newMatch: AlignmentUtil.BwaMemMatch, newGene: IgTcrGene)
+        data class GeneMatch(val gene: IgTcrGene, val alignment: AlignmentUtil.BwaMemAlignment, val supplementaryGenes: List<IgTcrGene>)
+
+        fun selectBestGene(candidateGenes: List<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>) : GeneMatch?
+        {
+            if (candidateGenes.isEmpty())
+            {
+                return null
+            }
+
+            // Find the best gene match. There may be multiple, in which case we use a tie breaker and select the rest as supplementary matches.
+            val baseComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>
+                { p1, p2 -> compareGeneMatch(p1.second, p1.first, p2.second, p2.first) }
+            val tieBreakerComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>
+                { p1, p2 -> geneMatchTieBreaker(p1.first, p2.first) }
+            val best = candidateGenes.minWith(baseComparator.thenComparing(tieBreakerComparator))
+            val supplementary = candidateGenes.filter { it != best && baseComparator.compare(it, best) == 0 }.map { it.first }
+            return GeneMatch(best.first, best.second, supplementary)
+        }
+
+        // Better gene match compares less than.
+        fun compareGeneMatch(alignment1: AlignmentUtil.BwaMemAlignment, gene1: IgTcrGene, alignment2: AlignmentUtil.BwaMemAlignment, gene2: IgTcrGene)
             : Int
         {
-            if (existingMatch == null || existingGene == null)
-            {
-                return 1
-            }
-
             // Always prefer higher alignment score
-            if (newMatch.alignmentScore > existingMatch.alignmentScore)
-            {
-                return 1
-            }
-            else if (newMatch.alignmentScore < existingMatch.alignmentScore)
+            if (alignment1.alignmentScore > alignment2.alignmentScore)
             {
                 return -1
             }
-
-            if (newGene.isFunctional && !existingGene.isFunctional)
+            else if (alignment1.alignmentScore < alignment2.alignmentScore)
             {
-                // if scores are equal, we prefer the functional one
-                sLogger.trace(
-                    "prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
-                    newGene.geneAllele, newMatch.alignmentScore, existingGene.geneAllele, existingMatch.alignmentScore
-                )
                 return 1
             }
-            else if (!newGene.isFunctional && existingGene.isFunctional)
+
+            // if scores are equal, we prefer the functional one
+            if (gene1.isFunctional && !gene2.isFunctional)
             {
                 return -1
             }
+            else if (!gene1.isFunctional && gene2.isFunctional)
+            {
+                return 1
+            }
 
-            // Deterministic tie breaker for otherwise identical gene alignments
-            return existingGene.geneName.compareTo(newGene.geneName)
+            return 0
+        }
+
+        // Deterministic tie breaker for otherwise identical gene alignments
+        fun geneMatchTieBreaker(gene1: IgTcrGene, gene2: IgTcrGene) : Int
+        {
+            return gene1.geneName.compareTo(gene2.geneName)
         }
     }
 }

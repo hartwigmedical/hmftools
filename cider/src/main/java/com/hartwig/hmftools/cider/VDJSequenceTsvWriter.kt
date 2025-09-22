@@ -130,7 +130,8 @@ object VDJSequenceTsvWriter
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
                 Column.vGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vGene?.geneName)
-                Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(vdjAnnotation.alignmentAnnotation?.vGeneSupplementary))
+                Column.vGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
+                    vdjAnnotation.alignmentAnnotation?.vGeneSupplementary, vdjAnnotation.alignmentAnnotation?.vGene))
                 Column.vPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.vMatch?.percentageIdent)
                 Column.vAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
@@ -149,7 +150,8 @@ object VDJSequenceTsvWriter
                         csvPrinter.print(null)
                     }
                 Column.dGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dGene?.geneName)
-                Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(vdjAnnotation.alignmentAnnotation?.dGeneSupplementary))
+                Column.dGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
+                    vdjAnnotation.alignmentAnnotation?.dGeneSupplementary, vdjAnnotation.alignmentAnnotation?.dGene))
                 Column.dPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.dMatch?.percentageIdent)
                 Column.dAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
@@ -168,7 +170,8 @@ object VDJSequenceTsvWriter
                         csvPrinter.print(null)
                     }
                 Column.jGene -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jGene?.geneName)
-                Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(vdjAnnotation.alignmentAnnotation?.jGeneSupplementary))
+                Column.jGeneSupplementary -> csvPrinter.print(formatGeneSupplementary(
+                    vdjAnnotation.alignmentAnnotation?.jGeneSupplementary, vdjAnnotation.alignmentAnnotation?.jGene))
                 Column.jPIdent -> csvPrinter.print(vdjAnnotation.alignmentAnnotation?.jMatch?.percentageIdent)
                 Column.jAlignStart -> if (vdjAnnotation.alignmentAnnotation != null)
                     {
@@ -196,13 +199,19 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
-    private fun zeroBaseAlignStart(match: AlignmentUtil.BwaMemMatch?) : Int?
+    private fun zeroBaseAlignStart(match: AlignmentUtil.BwaMemAlignment?) : Int?
     {
         return if (match == null) null else match.queryAlignStart - 1
     }
 
-    private fun formatGeneSupplementary(geneSupplementary: List<IgTcrGene>?): String?
+    private fun formatGeneSupplementary(geneSupplementary: List<IgTcrGene>?, primaryGene: IgTcrGene?): String?
     {
-        return geneSupplementary?.joinToString(";") { it.geneName }
+        return geneSupplementary
+            ?.map { it.geneName }
+            // Since we only output the gene name, don't output duplicate gene names. Can have multiple alleles with the same name.
+            ?.filter { it != primaryGene?.geneName }
+            ?.toSet()
+            ?.sorted()
+            ?.joinToString(";")
     }
 }
