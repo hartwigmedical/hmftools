@@ -439,7 +439,8 @@ public class PurpleApplication
             somaticDriverCatalog.addAll(ampDrivers);
 
             List<DriverCatalog> delDrivers = DeletionDrivers.findDeletions(
-                    purityContext.qc().status(), mReferenceData.DriverGenes, geneCopyNumbers, mConfig.TargetRegionsMode);
+                    purityContext.qc().status(), purityContext.bestFit().ploidy(), mReferenceData.DriverGenes,
+                    geneCopyNumbers, mConfig.TargetRegionsMode);
 
             somaticDriverCatalog.addAll(delDrivers);
 

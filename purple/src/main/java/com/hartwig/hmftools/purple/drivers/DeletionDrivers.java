@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
+import static com.hartwig.hmftools.common.driver.DriverType.DEL;
+import static com.hartwig.hmftools.common.driver.DriverType.HET_DEL;
+import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +29,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class DeletionDrivers
 {
     public static final double MAX_COPY_NUMBER_DEL = 0.5;
+    public static final double MIN_COPY_NUMBER_HETEROZYGOUS_DEL = 0.6;
 
     private static final int SHORT_DEL_LENGTH = 10_000_000;
     private static final double SINGLE_DEPTH_GC_MIN = 0.35;
@@ -40,8 +46,8 @@ public class DeletionDrivers
     }
 
     public static List<DriverCatalog> findDeletions(
-            final Set<PurpleQCStatus> qcStatus, final DriverGenePanel panel, final List<GeneCopyNumber> geneCopyNumbers,
-            boolean isTargetRegions)
+            final Set<PurpleQCStatus> qcStatus, final double ploidy, final DriverGenePanel panel,
+            final List<GeneCopyNumber> geneCopyNumbers, boolean isTargetRegions)
     {
         List<DriverCatalog> drivers = Lists.newArrayList();
 
@@ -54,10 +60,26 @@ public class DeletionDrivers
 
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(geneCopyNumber.minCopyNumber() >= MAX_COPY_NUMBER_DEL)
-                continue;
-
+            DriverType driverType = DriverType.UNKNOWN;
             DriverGene driverGene = deletionGenes.get(geneCopyNumber.geneName());
+
+            if(geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
+            {
+                driverType = DEL;
+            }
+            else if(ploidy > 0)
+            {
+                double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
+
+                double hetDelCopyNumberThreshold = driverGene != null ?
+                        driverGene.hetDeletionThreshold() : DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
+
+                if(adjustedMinCopyNumber < hetDelCopyNumberThreshold)
+                    driverType = HET_DEL;
+            }
+
+            if(driverType == UNKNOWN)
+                continue;
 
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
             boolean isShort = geneCopyNumber.minRegionBases() < SHORT_DEL_LENGTH;
@@ -85,11 +107,11 @@ public class DeletionDrivers
                 }
             }
 
-            geneCopyNumber.setDriverType(DriverType.DEL);
+            geneCopyNumber.setDriverType(driverType);
             geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
 
             if(driverGene != null)
-                drivers.add(createDelDriver(driverGene, geneCopyNumber));
+                drivers.add(createDelDriver(driverGene, driverType, geneCopyNumber));
         }
 
         return drivers;
@@ -115,8 +137,9 @@ public class DeletionDrivers
         return false;
     }
 
-    private static DriverCatalog createDelDriver(final DriverGene driverGene, final GeneCopyNumber geneCopyNumber)
+    private static DriverCatalog createDelDriver(final DriverGene driverGene, final DriverType driverType, final GeneCopyNumber geneCopyNumber)
     {
-        return createCopyNumberDriver(driverGene.likelihoodType(), DriverType.DEL, LikelihoodMethod.DEL, true, geneCopyNumber);
+        boolean biallelic = driverType == DEL;
+        return createCopyNumberDriver(driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, geneCopyNumber);
     }
 }
