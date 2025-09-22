@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.calculations.CobaltCalculation;
-import com.hartwig.hmftools.cobalt.calculations.CobaltWindow;
-import com.hartwig.hmftools.cobalt.count.ReadDepth;
+import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
+import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-public class TargetRegionEnricher implements CobaltCalculation.TargetRegions
+public class TargetRegionEnricher implements TargetRegions
 {
     public interface ChromosomeData
     {
@@ -44,26 +44,19 @@ public class TargetRegionEnricher implements CobaltCalculation.TargetRegions
     }
 
     @Override
-    public boolean isInTargetRegions(final Chromosome chromosome, final CobaltWindow window)
-    {
-        return getEnrichment(chromosome, window.Position) != null;
-    }
-
-    @Override
-    public boolean isInTargetRegions(final Chromosome chromosome, final int position)
+    public boolean onTarget(final Chromosome chromosome, final int position)
     {
         return getEnrichment(chromosome, position) != null;
-
     }
 
     @Override
-    public boolean applyFinalNormalisation()
+    public ResultsNormaliser createNormaliser()
     {
-        return true;
+        return new UnityNormaliser();
     }
 
     @Override
-    public double enrichmentQuotient(final Chromosome chromosome, final ReadDepth readDepth)
+    public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
     {
         TargetRegionEnrichment enrichment = getEnrichment(chromosome, readDepth.StartPosition);
         return enrichment == null ? -1.0 : enrichment.Enrichment;

@@ -219,9 +219,9 @@ public class BamReadCounter
 
         for(ChromosomeData chromosome : mChromosomes)
         {
-            List<ReadDepth> readDepths = readDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
+            List<DepthReading> readDepths = readDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
             Objects.requireNonNull(readDepths);
-            for (ReadDepth readDepth : readDepths)
+            for (DepthReading readDepth : readDepths)
             {
                 Row row = readDepthTable.appendRow();
                 row.setString(CobaltColumns.CHROMOSOME, chromosome.Name);

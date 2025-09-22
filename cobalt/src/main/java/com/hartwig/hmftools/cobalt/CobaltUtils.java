@@ -56,6 +56,6 @@ public class CobaltUtils
     public static CobaltRatio tumorOnlyRatio(CobaltWindow window, double ratio)
     {
         String chr = window.Chromosome.contig();
-        return new CobaltRatio(chr, window.Position, -1.0, -1.0, -1.0, -1.0, window.ReadDepth.ReadDepth, ratio, window.ReadDepth.ReadGcContent);
+        return new CobaltRatio(chr, window.Position, -1.0, -1.0, -1.0, -1.0, window.mDepthReading.ReadDepth, ratio, window.mDepthReading.ReadGcContent);
     }
 }

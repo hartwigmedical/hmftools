@@ -5,14 +5,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.cobalt.count.ReadDepth;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 
 import org.junit.Test;
 
 public class BamRatioTest
 {
-    ReadDepth readDepth = new ReadDepth("1", 1001, 82, 0.49);
+    DepthReading readDepth = new DepthReading("1", 1001, 82, 0.49);
 
     @Test
     public void inTargetRegion()
@@ -81,7 +81,7 @@ public class BamRatioTest
     @Test
     public void handleNaN()
     {
-        ReadDepth nan = new ReadDepth("1", 1001, Double.NaN, Double.NaN);
+        DepthReading nan = new DepthReading("1", 1001, Double.NaN, Double.NaN);
         BamRatio ratio = new BamRatio(_1, nan, true);
         ratio.normaliseForGc(100.0);
         CobaltRatio cobaltRatio = ratio.toTumorRatio(V38);

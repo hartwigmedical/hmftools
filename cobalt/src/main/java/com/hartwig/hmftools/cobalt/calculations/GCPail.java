@@ -8,6 +8,11 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class GCPail
 {
+    public static int bucketIndex(final double gcContent)
+    {
+        return (int) Math.round(gcContent * 100);
+    }
+
     public final int mGC;
     private final DescriptiveStatistics mStatistics = new DescriptiveStatistics();
 
@@ -22,7 +27,7 @@ public class GCPail
     {
         if (mStatistics.getN() == 0)
         {
-            return -1;
+            return 0;
         }
         return mStatistics.getPercentile(50);
     }

@@ -2,33 +2,55 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import java.util.Objects;
 
-import com.hartwig.hmftools.cobalt.count.ReadDepth;
+import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public class CobaltWindow
 {
     public final Chromosome Chromosome;
     public final int Position;
-    public final ReadDepth ReadDepth;
+    public final DepthReading mDepthReading;
     public final GCPail GcBucket;
-    public final boolean IsFilteredOut;
+    public final boolean IsInExcludedRegion;
+    public final boolean IsInTargetRegion;
 
-    public CobaltWindow(final Chromosome chromosome, final int position, final ReadDepth ReadDepth, final GCPail GcBucket)
+    public CobaltWindow(final Chromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
     {
         Chromosome = chromosome;
-        Position = position;
-        this.ReadDepth = ReadDepth;
-        this.GcBucket = GcBucket;
-        IsFilteredOut = false;
+        Position = depth.StartPosition;
+        this.mDepthReading = depth;
+        this.GcBucket = null;
+        IsInExcludedRegion = isInExcludedRegion;
+        IsInTargetRegion = isInTargetRegion;
     }
 
-    public CobaltWindow(final Chromosome chromosome, final int position, final ReadDepth ReadDepth)
+    public CobaltWindow(final Chromosome chromosome, DepthReading depthReading, final GCPail GcBucket, boolean isInTargetRegion)
     {
         Chromosome = chromosome;
-        Position = position;
-        this.ReadDepth = ReadDepth;
-        this.GcBucket = null;
-        IsFilteredOut = true;
+        Position = depthReading.StartPosition;
+        this.mDepthReading = depthReading;
+        this.GcBucket = GcBucket;
+        IsInExcludedRegion = false;
+        IsInTargetRegion = isInTargetRegion;
+    }
+
+    public CobaltWindow bucketed(final GCPail bucket)
+    {
+        Preconditions.checkArgument(this.GcBucket == null);
+        Preconditions.checkArgument(GCPail.bucketIndex(mDepthReading.ReadGcContent) == bucket.mGC);
+        if(IsInExcludedRegion)
+        {
+            return this;
+        }
+        else
+        {
+            if(this.Chromosome.isAutosome() && IsInTargetRegion && mDepthReading.ReadDepth > 0)
+            {
+                bucket.addReading(mDepthReading.ReadDepth);
+            }
+            return new CobaltWindow(Chromosome, mDepthReading, bucket, IsInTargetRegion);
+        }
     }
 
     @Override
@@ -54,7 +76,7 @@ public class CobaltWindow
         return "CobaltWindow{" +
                 "Chromosome=" + Chromosome +
                 ", Position=" + Position +
-                ", ReadDepth=" + ReadDepth +
+                ", ReadDepth=" + mDepthReading +
                 '}';
     }
 }

@@ -103,7 +103,7 @@ public class CobaltApplication
             {
                 brcReference = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.ReferenceBamPath, chromosomePosCodec);
             }
-
+/*
             Table tumorReadDepths = brcTumor != null ? brcTumor.generateDepths() : null;
             Table referenceReadDepths = brcReference != null ? brcReference.generateDepths() : null;
 
@@ -151,11 +151,13 @@ public class CobaltApplication
                 default:
                     ratios = ratioSupplier.tumorNormalPair();
             }
+ */
 
             final String outputFilename = CobaltRatioFile.generateFilename(
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
 
             CB_LOGGER.info("persisting cobalt ratios to {}", outputFilename);
+
             CobaltCalculator calculator = new CobaltCalculator(brcTumor.calculateReadDepths(), mConfig);
             ListMultimap<Chromosome, CobaltRatio> results = calculator.doCalculation();
 

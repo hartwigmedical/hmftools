@@ -68,7 +68,7 @@ public class ReadDepthAccumulator
     }
 
     @NotNull
-    public List<ReadDepth> getChromosomeReadDepths(String chromosome)
+    public List<DepthReading> getChromosomeReadDepths(String chromosome)
     {
         ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
 
@@ -78,14 +78,14 @@ public class ReadDepthAccumulator
             return List.of();
         }
 
-        List<ReadDepth> readDepths = new ArrayList<>();
+        List<DepthReading> readDepths = new ArrayList<>();
 
         for(int windowIndex = 0; windowIndex < windowCounts.windowReadBaseCounts.length(); ++windowIndex)
         {
             double basesCount = windowCounts.getCount(windowIndex);
             double depth = basesCount / mWindowSize;
             double gcContent = windowCounts.getGcCount(windowIndex) / basesCount;
-            readDepths.add(new ReadDepth(chromosome, getGenomePosition(windowIndex), depth, gcContent));
+            readDepths.add(new DepthReading(chromosome, getGenomePosition(windowIndex), depth, gcContent));
         }
 
         return readDepths;

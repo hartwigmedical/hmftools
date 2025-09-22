@@ -153,17 +153,17 @@ public class BRC
         mReadDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
     }
 
-    public ListMultimap<Chromosome, ReadDepth> calculateReadDepths()throws ExecutionException, InterruptedException
+    public ListMultimap<Chromosome, DepthReading> calculateReadDepths()throws ExecutionException, InterruptedException
     {
         for(Future<?> f : tasks)
         {
             f.get();
         }
 
-        ListMultimap<Chromosome, ReadDepth> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome, DepthReading> result = ArrayListMultimap.create();
         for(ChromosomeData chromosome : mChromosomes)
         {
-            List<ReadDepth> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
+            List<DepthReading> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
             Objects.requireNonNull(readDepths);
             HumanChromosome humanChromosome = HumanChromosome.fromString(chromosome.Name);
             result.putAll(humanChromosome, readDepths);
@@ -180,9 +180,9 @@ public class BRC
 
         for(ChromosomeData chromosome : mChromosomes)
         {
-            List<ReadDepth> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
+            List<DepthReading> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
             Objects.requireNonNull(readDepths);
-            for(ReadDepth readDepth : readDepths)
+            for(DepthReading readDepth : readDepths)
             {
                 Row row = readDepthTable.appendRow();
                 row.setString(CobaltColumns.CHROMOSOME, chromosome.Name);

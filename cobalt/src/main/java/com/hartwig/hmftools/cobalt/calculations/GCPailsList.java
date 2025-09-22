@@ -17,7 +17,7 @@ public class GCPailsList
 
     public GCPail getGCPail(double gcContent)
     {
-        return mBuckets.get((int) Math.round(gcContent * 100));
+        return mBuckets.get(GCPail.bucketIndex(gcContent));
     }
 
     public List<GCPail> getBuckets()

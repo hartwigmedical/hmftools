@@ -11,7 +11,7 @@ public class GCPailTest
     public void medianTest()
     {
         GCPail pail = new GCPail(50);
-        assertEquals(-1.0, pail.median(), 0.0001);
+        assertEquals(0.0, pail.median(), 0.0001);
 
         pail.addReading(34.5);
         assertEquals(34.5, pail.median(), 0.0001);

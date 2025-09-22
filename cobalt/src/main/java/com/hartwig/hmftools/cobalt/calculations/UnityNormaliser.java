@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import com.google.common.base.Preconditions;
+
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class BamRatiosMeanCalculator
+public class UnityNormaliser implements ResultsNormaliser
 {
     private final DescriptiveStatistics descriptiveStatistics = new DescriptiveStatistics();
 
-    public void recordValue(BamRatio bamRatio)
+    @Override
+    public void recordValue(final BamRatio bamRatio)
     {
         if (!bamRatio.mChromosome.isAutosome())
         {
@@ -19,8 +22,10 @@ public class BamRatiosMeanCalculator
         }
     }
 
-    public double mean()
+    @Override
+    public void applyNormalisation(BamRatio bamRatio)
     {
-        return descriptiveStatistics.getMean();
+        double mean = descriptiveStatistics.getMean();
+        bamRatio.normaliseByMean(mean);
     }
 }

@@ -35,10 +35,10 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
 
-import com.hartwig.hmftools.cobalt.calculations.CobaltCalculation;
-import com.hartwig.hmftools.cobalt.calculations.NoEnrichment;
+import com.hartwig.hmftools.cobalt.targeted.NoEnrichment;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnricher;
+import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -239,7 +239,7 @@ public class CobaltConfig
         return readerFactory;
     }
 
-    public CobaltCalculation.TargetRegions targetRegionEnricher()
+    public TargetRegions targetRegionEnricher()
     {
         if(TargetRegionNormFile == null)
         {

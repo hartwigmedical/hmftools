@@ -8,13 +8,13 @@ import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
-import com.hartwig.hmftools.cobalt.count.ReadDepth;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 
-public class WindowStatuses implements CobaltCalculation.Filter
+public class WindowStatuses implements GenomeFilter
 {
     private final ListMultimap<Chromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
 
@@ -30,14 +30,14 @@ public class WindowStatuses implements CobaltCalculation.Filter
     }
 
     @Override
-    public boolean exclude(final Chromosome chromosome, final ReadDepth readDepth)
+    public boolean exclude(final Chromosome chromosome, final DepthReading readDepth)
     {
         List<WindowStatus> statusesForChromosome= mStatusesByChromosome.get(chromosome);
         WindowStatus status = statusesForChromosome.get(indexFor(readDepth));
         return status.maskedOut();
     }
 
-    private int indexFor(ReadDepth depth)
+    private int indexFor(DepthReading depth)
     {
         return depth.StartPosition / WINDOW_SIZE;
     }
