@@ -226,6 +226,24 @@ public class SvVisualiser implements AutoCloseable
                 ? "All"
                 : chromosomes.stream().map(RefGenomeFunctions::stripChrPrefix).collect(Collectors.joining("-"));
 
+        StringJoiner fileIdSj = new StringJoiner(".");
+
+        fileIdSj.add(mConfig.Sample);
+        fileIdSj.add("chr" + chromosomesStr);
+
+        if(geneName != null)
+        {
+            fileIdSj.add("gene-" + geneName);
+
+            if(geneDriverType != null)
+                fileIdSj.add("driver-" + geneDriverType);
+        }
+
+        if(mConfig.Debug)
+            fileIdSj.add("debug");
+
+        String fileId = fileIdSj.toString();
+
         Predicate<VisSvData> linePredicate = x -> !x.isLineElement() || mConfig.IncludeLineElements;
         Predicate<VisSvData> chromosomePredicate = x -> chromosomes.contains(x.ChrStart) || chromosomes.contains(x.ChrEnd);
         Predicate<VisSvData> combinedPredicate = chromosomePredicate.and(linePredicate);
@@ -240,8 +258,8 @@ public class SvVisualiser implements AutoCloseable
 
         if(mCircosConfig.exceedsMaxPlotSvCount(chromosomeLinks.size()))
         {
-            VIS_LOGGER.warn("chromosomes({}) svCount({}) exceeds limit({})",
-                    chromosomesStr, chromosomeLinks.size(), mCircosConfig.MaxPlotSvCount);
+            VIS_LOGGER.warn("plot({}) - chromosomes({}) svCount({}) exceeds limit({})",
+                    fileId, chromosomesStr, chromosomeLinks.size(), mCircosConfig.MaxPlotSvCount);
             return;
         }
 
@@ -267,40 +285,23 @@ public class SvVisualiser implements AutoCloseable
             chromosomeExons = mSampleData.Exons.stream().filter(x -> chromosomesOfInterest.contains(x.Chromosome)).collect(toList());
 
             if(!mConfig.Genes.isEmpty())
-                chromosomeExons.addAll(getExonDataFromCache(mConfig.Genes, mConfig.ClusterIds, chromosomeExons));
+                chromosomeExons.addAll(getExonDataFromCache(mConfig.Genes, mConfig.ClusterIds, chromosomeExons, fileId));
         }
         else
         {
-            chromosomeExons = getExonDataFromCache(Set.of(geneName), mConfig.ClusterIds, Lists.newArrayList());
+            chromosomeExons = getExonDataFromCache(Set.of(geneName), mConfig.ClusterIds, Lists.newArrayList(), fileId);
         }
 
         List<VisProteinDomain> chromosomeProteinDomains =
                 mSampleData.ProteinDomains.stream().filter(x -> chromosomesOfInterest.contains(x.chromosome())).collect(toList());
-
-        StringJoiner fileIdBuilder = new StringJoiner(".");
-
-        fileIdBuilder.add(mConfig.Sample);
-        fileIdBuilder.add("chr" + chromosomesStr);
-
-        if(geneName != null)
-        {
-            fileIdBuilder.add(geneName);
-
-            if(geneDriverType != null)
-                fileIdBuilder.add(geneDriverType.toString().toLowerCase());
-        }
-
-        if(mConfig.Debug)
-            fileIdBuilder.add("debug");
-
-        String fileId = fileIdBuilder.toString();
 
         submitFiltered(ColorPicker::clusterColors, fileId, chromosomeLinks, chromosomeSegments, chromosomeExons, chromosomeProteinDomains,
                 Collections.emptyList(), false);
     }
 
     private List<VisGeneExon> getExonDataFromCache(
-            final Set<String> geneList, final List<Integer> clusterIds, final List<VisGeneExon> currentExons)
+            final Set<String> geneList, final List<Integer> clusterIds, final List<VisGeneExon> currentExons, final String fileId
+    )
     {
         final List<VisGeneExon> exonList = Lists.newArrayList();
 
@@ -311,7 +312,7 @@ public class SvVisualiser implements AutoCloseable
             if(currentExons.stream().anyMatch(x -> x.Gene.equals(geneName) && clusterIds.contains(x.ClusterId)))
                 continue;
 
-            VIS_LOGGER.info("loading exon data for gene({})", geneName);
+            VIS_LOGGER.debug("plot({}) - loading exon data for gene({})", fileId, geneName);
 
             GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
             TranscriptData transcriptData = geneData != null ? mEnsemblDataCache.getCanonicalTranscriptData(geneData.GeneId) : null;
@@ -391,14 +392,14 @@ public class SvVisualiser implements AutoCloseable
             fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
             fileId += clusterIdsStr;
 
-            if(mConfig.ClusterIds.size() == 1)
+            if(clusterIds.size() == 1)
             {
                 String resolvedTypeString = clusterSvs.get(0).ClusterResolvedType.toString();
-                fileId += "." + resolvedTypeString;
+                fileId += ".resolved_type-" + resolvedTypeString;
             }
         }
 
-        fileId += ".sv" + clusterSvs.size();
+        fileId += ".sv_count-" + clusterSvs.size();
 
         if(mConfig.Debug)
             fileId += ".debug";
@@ -492,10 +493,12 @@ public class SvVisualiser implements AutoCloseable
         CircosData circosData = new CircosData(
                 mCircosConfig,
                 segments, links, copyNumbers, filteredExons, filteredFusions, filteredAmberBAFs, filteredCobaltRatios, filteredPurpleSegments,
-                showSimpleSvSegments,  mConfig.IncludeFragileSites, mConfig.IncludeLineElements
+                showSimpleSvSegments,  mConfig.IncludeFragileSites, mConfig.IncludeLineElements, fileId
         );
 
-        CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig);
+        CircosConfigWriter confWrite = new CircosConfigWriter(fileId, mConfig.OutputConfPath, circosData, mCircosConfig,
+                mConfig.AmberDir != null, mConfig.CobaltDir != null);
+
         FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
 
         mCallableConfigs.add(() -> new CircosDataWriter(color, fileId, mConfig.OutputConfPath, mCircosConfig, confWrite, circosData).write());
@@ -512,20 +515,20 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private void submitFrame(int frame, boolean hasFusion, double labelSize, String sample, final CircosConfigWriter confWrite)
+    private void submitFrame(int frame, boolean hasFusion, double labelSize, String fileId, final CircosConfigWriter confWrite)
     {
         boolean plotFusion = hasFusion && !mConfig.Debug;
         boolean plotChromosome = !mConfig.Debug;
 
         mCallableConfigs.add(() -> confWrite.writeConfig(frame));
-        mCallableImages.add(() -> createImageFrame(frame, labelSize, sample, plotFusion, plotChromosome));
+        mCallableImages.add(() -> createImageFrame(frame, labelSize, fileId, plotFusion, plotChromosome));
     }
 
     private Object createImageFrame(
-            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws Exception
+            int frame, double labelSize, final String fileId, boolean plotFusion, boolean plotChromosome) throws Exception
     {
-        String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
-        String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
+        String confFileName = fileId + ".circos." + String.format("%03d", frame) + ".conf";
+        String outputFileName = fileId + "." + String.format("%03d", frame) + ".png";
 
         double rLabelSize = 1.2 * labelSize;
 
@@ -535,7 +538,7 @@ public class SvVisualiser implements AutoCloseable
 
         if(plotFusion)
         {
-            int execution = new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
+            int execution = new FusionExecution(fileId, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
                     .executeR(mCircosConfig, rLabelSize);
 
             if(execution != 0)
@@ -545,7 +548,7 @@ public class SvVisualiser implements AutoCloseable
         if(plotChromosome)
         {
             int execution = new ChromosomeRangeExecution(
-                    sample, mConfig.RefGenVersion, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
+                    fileId, mConfig.RefGenVersion, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
                     .executeR(mCircosConfig, rLabelSize);
 
             if(execution != 0)

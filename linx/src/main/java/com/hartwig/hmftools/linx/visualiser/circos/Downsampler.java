@@ -112,7 +112,9 @@ public class Downsampler
         return regions;
     }
 
-    public static <T extends GenomePosition> List<T> downsampleWithMinimumPerRegion(List<T> dataPoints, List<GenomePosition> positionsToScale)
+    public static <T extends GenomePosition> List<T> downsampleWithMinimumPerRegion(
+            List<T> dataPoints, List<GenomePosition> positionsToScale, String fileId
+    )
     {
         if(dataPoints.size() < DEFAULT_DOWNSAMPLE_TARGET)
             return dataPoints;
@@ -148,14 +150,15 @@ public class Downsampler
             boolean isDownsampled = groupDataPoints.size() > groupDownsampleTarget;
             if(isDownsampled)
             {
-                VIS_LOGGER.trace("downsampled dataType({}) region({}:{}-{}): {} -> {}",
-                        dataType, regions.get(i).chromosome(), regions.get(i).start(), regions.get(i).end(),
+                VIS_LOGGER.trace("plot({}) - downsampled {} points in region({}:{}-{}): {} -> {}",
+                        fileId, dataType, regions.get(i).chromosome(), regions.get(i).start(), regions.get(i).end(),
                         groupDataPoints.size(), groupDataPointsDownsampled.size()
                 );
             }
         }
 
-        VIS_LOGGER.debug("downsampled dataType({}): {} -> {}", dataType, dataPoints.size(), dataPointsDownsampled.size());
+        VIS_LOGGER.debug("plot({}) - downsampled {} points: {} -> {}",
+                fileId, dataType, dataPoints.size(), dataPointsDownsampled.size());
 
         return dataPointsDownsampled;
     }
