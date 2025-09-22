@@ -103,7 +103,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
         val alignmentAnnotations: Collection<AlignmentAnnotation>
 
-        if (mParams.annotationRefGenomePath != null && mParams.annotationBwaIndexImagePath != null)
+        if (mParams.annotationRefGenomeVersion != null && mParams.annotationRefGenomeDictPath != null && mParams.annotationBwaIndexImagePath != null)
         {
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
@@ -113,7 +113,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
             loadAlignerLibrary(mParams.bwaLibPath)
 
-            val alignmentAnnotator = AlignmentAnnotator(mParams.annotationRefGenomePath, mParams.annotationBwaIndexImagePath)
+            val alignmentAnnotator = AlignmentAnnotator(
+                mParams.annotationRefGenomeVersion, mParams.annotationRefGenomeDictPath, mParams.annotationBwaIndexImagePath)
             alignmentAnnotations = alignmentAnnotator.runAnnotate(
                 mParams.sampleId, filteredVdjs,
                 mParams.outputDir, mParams.threadCount)

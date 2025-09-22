@@ -6,8 +6,7 @@ import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -35,19 +34,17 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
-    private val mRefGenome: RefGenomeSource
+    private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
     private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
 
     // class to help associate the data back
     data class AlignmentRunData(val vdj: VDJSequence, val key: Int, val querySeqRange: IntRange, val querySeq: String)
 
-    constructor(refGenomeFastaPath: String, refGenomeBwaIndexImagePath: String)
+    constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
-        this.mRefGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
+        this.mRefGenomeDictPath = refGenomeDictPath
         this.mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
-
-        val refGenomeVersion = deriveRefGenomeVersion(mRefGenome)
 
         // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
         val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
@@ -101,7 +98,7 @@ class AlignmentAnnotator
 
         val alignmentResults = AlignmentUtil.runBwaMem(
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
-             mRefGenome, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
+             mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
         val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }

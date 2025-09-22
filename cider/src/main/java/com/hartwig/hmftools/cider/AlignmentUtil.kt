@@ -5,10 +5,11 @@ import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.region.Strand
+import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
+import java.io.FileInputStream
 
 object AlignmentUtil
 {
@@ -108,10 +109,10 @@ object AlignmentUtil
         return contig.split("_")[0]
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, refGenome: RefGenomeSource, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+    fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             Multimap<Int, BwaMemAlignment>
     {
-        val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
+        val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)
         aligner.nThreadsOption = numThreads
