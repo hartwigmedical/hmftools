@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
-import static com.hartwig.hmftools.lilac.MhcClass_.CLASS_1;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_GENE_FRAG_ENRICHMENT__;
@@ -77,7 +76,6 @@ import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication
@@ -695,7 +693,7 @@ public class LilacApplication
     private boolean hasSufficientGeneDepth(final Map<HlaGene_, int[]> geneBaseDepth)
     {
         // TODO: skip for HLA-DRB for now
-        if(geneBaseDepth.containsKey(HlaGene_.HLA_DRB1))
+        if(geneBaseDepth.containsKey(HlaGene_.HLA_DRB3))
             return true;
 
         Map<HlaGene_, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();

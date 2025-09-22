@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
-import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB1;
+import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB3;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +37,7 @@ public class NucleotideGeneEnrichment
         {
             genes = Lists.newArrayList(GeneSelector.MHC_CLASS_1.genes_());
         }
-        else if(geneBoundaries_.containsKey(HLA_DRB1))
+        else if(geneBoundaries_.containsKey(HLA_DRB3))
         {
             genes = Lists.newArrayList(GeneSelector.HLA_DRB.genes_());
         }

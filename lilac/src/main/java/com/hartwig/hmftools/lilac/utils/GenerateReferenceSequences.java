@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -19,13 +18,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts_;
-import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB1;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_Y;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.IDENTICAL;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILDCARD;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceFile.SEQUENCE_DELIM;
@@ -36,9 +30,6 @@ import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSeque
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,12 +38,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.GeneCache;
-import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
@@ -60,7 +49,6 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateReferenceSequences

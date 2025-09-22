@@ -20,6 +20,7 @@ public enum GeneSelector
     HLA_DPA1(HlaGene_.HLA_DPA1),
     HLA_DPB1(HlaGene_.HLA_DPB1),
     HLA_DQA1(HlaGene_.HLA_DQA1),
+    HLA_DRB1(HlaGene_.HLA_DRB1),
     HLA_DRB(List.of(HlaGene_.HLA_DRB1, HlaGene_.HLA_DRB3, HlaGene_.HLA_DRB4, HlaGene_.HLA_DRB5));
 
     private final LinkedHashSet<HlaGene_> mGenes_;
