@@ -190,9 +190,9 @@ The ‘UT’ tag is added to the BAM to mark the consensus group status of the r
 
 | Value               | Description                    |
 |---------------------|--------------------------------|
-| NONE  | Read is not in any consensus group       |
-| DUAL           | Read is in a consensus group, DUPLEX UMIs are enabled, and at least one read from each original DNA strand was used to form the consensus (i.e. at least one read of each fragment orientation)        |
-| SINGLE | Read is in a consensus group but does not mean the requirements of DUAL |
+| NONE  | Read is not part of any consensus group       |
+| DUAL           | Read is formed from a consensus of reads from both original DNA strands (i.e. at least one read of each fregment orientation). Only applicable if DUPLEX UMIs are used.     |
+| SINGLE | Read is formed from a consensus group, but does not meet the requirements of DUAL (i.e. constituent reads are only from a single fragment orientation and/or DUPLEX UMIs are not used) |
 
 The ‘CR’ flag is used to record the number of reads contributing to each consensus read. It is a series of 3 numbers and can be interpreted as follows:
 
