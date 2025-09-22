@@ -108,10 +108,9 @@ object AlignmentUtil
         return contig.split("_")[0]
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, refGenomeFastaPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+    fun runBwaMem(sequences: Map<Int, String>, refGenome: RefGenomeSource, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             Multimap<Int, BwaMemAlignment>
     {
-        val refGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
         val refGenSeqDict = refGenome.refGenomeFile().sequenceDictionary
         val index = BwaMemIndex(refGenomeIndexPath)
         val aligner = BwaMemAligner(index)

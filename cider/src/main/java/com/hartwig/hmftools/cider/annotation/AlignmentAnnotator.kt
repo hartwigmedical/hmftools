@@ -7,6 +7,8 @@ import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
 import java.util.*
@@ -34,17 +36,25 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
-    val vdjGenes: Multimap<Pair<String, Strand>, IgTcrGene>
+    private val refGenome: RefGenomeSource
+    private val refGenomeBwaIndexImagePath: String
+    private val vdjGenes: Multimap<Pair<String, Strand>, IgTcrGene>
 
     // class to help associate the data back
     data class AlignmentRunData(val vdj: VDJSequence, val key: Int, val querySeqRange: IntRange, val querySeq: String)
 
-    init
+    constructor(refGenomeFastaPath: String, refGenomeBwaIndexImagePath: String)
     {
+        this.refGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
+        this.refGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
+
+        val refGenomeVersion = deriveRefGenomeVersion(refGenome)
+
+        // TODO: determinism
         vdjGenes = ArrayListMultimap.create()
 
         // since we use V38 for alignment annotation
-        val igTcrGenes = IgTcrGeneFile.read(CiderConstants.BLAST_REF_GENOME_VERSION)
+        val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
             .map { o -> fromCommonIgTcrGene(o) }
 
         // find all the genes that are we need
@@ -69,7 +79,7 @@ class AlignmentAnnotator
         }
     }
 
-    fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, refGenomeFastaPath: String, refGenomeIndexPath: String, outputDir: String, numThreads: Int)
+    fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
             : Collection<AlignmentAnnotation>
     {
         sLogger.info("Running alignment annotation")
@@ -90,7 +100,7 @@ class AlignmentAnnotator
 
         val alignmentResults = AlignmentUtil.runBwaMem(
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
-             refGenomeFastaPath, refGenomeIndexPath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
+             refGenome, refGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
         val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }

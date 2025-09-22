@@ -113,10 +113,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
             loadAlignerLibrary(mParams.bwaLibPath)
 
-            val alignmentAnnotator = AlignmentAnnotator()
+            val alignmentAnnotator = AlignmentAnnotator(mParams.annotationRefGenomePath, mParams.annotationBwaIndexImagePath)
             alignmentAnnotations = alignmentAnnotator.runAnnotate(
                 mParams.sampleId, filteredVdjs,
-                mParams.annotationRefGenomePath, mParams.annotationBwaIndexImagePath,
                 mParams.outputDir, mParams.threadCount)
         }
         else
