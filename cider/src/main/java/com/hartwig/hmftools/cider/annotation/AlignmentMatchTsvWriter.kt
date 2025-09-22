@@ -63,14 +63,14 @@ object AlignmentMatchTsvWriter
 
     private fun writeVDJSequence(csvPrinter: CSVPrinter, alignmentAnnotation: AlignmentAnnotation)
     {
-        val typeMatch = listOf(Triple(MatchType.V, alignmentAnnotation.vGene, alignmentAnnotation.vMatch),
-            Triple(MatchType.D, alignmentAnnotation.dGene, alignmentAnnotation.dMatch),
-            Triple(MatchType.J, alignmentAnnotation.jGene, alignmentAnnotation.jMatch),
-            Triple(MatchType.full, null, alignmentAnnotation.fullMatch))
+        val typeMatch = listOf(Triple(MatchType.V, alignmentAnnotation.vGene, alignmentAnnotation.vAlignment),
+            Triple(MatchType.D, alignmentAnnotation.dGene, alignmentAnnotation.dAlignment),
+            Triple(MatchType.J, alignmentAnnotation.jGene, alignmentAnnotation.jAlignment),
+            Triple(MatchType.full, null, alignmentAnnotation.fullAlignment))
 
-        for ((type, gene, match) in typeMatch)
+        for ((type, gene, alignment) in typeMatch)
         {
-            if (match == null)
+            if (alignment == null)
                 continue
 
             for (c in Column.values())
@@ -82,15 +82,15 @@ object AlignmentMatchTsvWriter
                     Column.matchType -> csvPrinter.print(type)
                     Column.gene -> csvPrinter.print(gene?.geneName)
                     Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
-                    Column.pIdent -> csvPrinter.print(match.percentageIdent)
-                    Column.alignStart -> csvPrinter.print(match.queryAlignStart)
-                    Column.alignEnd -> csvPrinter.print(match.queryAlignEnd)
-                    Column.alignScore -> csvPrinter.print(match.alignmentScore)
-                    Column.refStrand -> csvPrinter.print(match.strand.asChar())
-                    Column.refStart -> csvPrinter.print(match.refStart)
-                    Column.refEnd -> csvPrinter.print(match.refEnd)
-                    Column.refContig -> csvPrinter.print(match.refContig)
-                    Column.querySeq -> csvPrinter.print(match.querySeq)
+                    Column.pIdent -> csvPrinter.print(alignment.percentageIdent)
+                    Column.alignStart -> csvPrinter.print(alignment.queryAlignStart)
+                    Column.alignEnd -> csvPrinter.print(alignment.queryAlignEnd)
+                    Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
+                    Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
+                    Column.refStart -> csvPrinter.print(alignment.refStart)
+                    Column.refEnd -> csvPrinter.print(alignment.refEnd)
+                    Column.refContig -> csvPrinter.print(alignment.refContig)
+                    Column.querySeq -> csvPrinter.print(alignment.querySeq)
                 }
             }
             csvPrinter.println()

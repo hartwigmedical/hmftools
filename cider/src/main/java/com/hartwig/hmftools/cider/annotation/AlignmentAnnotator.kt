@@ -24,10 +24,10 @@ data class AlignmentAnnotation(
     val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
     val jGeneSupplementary: List<IgTcrGene> = emptyList(),
-    val vMatch: AlignmentUtil.BwaMemAlignment? = null,
-    val dMatch: AlignmentUtil.BwaMemAlignment? = null,
-    val jMatch: AlignmentUtil.BwaMemAlignment? = null,
-    val fullMatch: AlignmentUtil.BwaMemAlignment? = null,
+    val vAlignment: AlignmentUtil.BwaMemAlignment? = null,
+    val dAlignment: AlignmentUtil.BwaMemAlignment? = null,
+    val jAlignment: AlignmentUtil.BwaMemAlignment? = null,
+    val fullAlignment: AlignmentUtil.BwaMemAlignment? = null,
     val alignmentStatus: AlignmentStatus)
 
 class AlignmentAnnotator
@@ -93,9 +93,9 @@ class AlignmentAnnotator
              refGenomeFastaPath, refGenomeIndexPath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
-        val vdjToMatch: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
+        val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
 
-        for ((vdjKey, match) in alignmentResults.entries())
+        for ((vdjKey, alignment) in alignmentResults.entries())
         {
             val alignmentRunData = alignmentRunDataMap[vdjKey]
 
@@ -105,10 +105,10 @@ class AlignmentAnnotator
                 throw RuntimeException("error processing alignment results: cannot find key: $vdjKey")
             }
 
-            vdjToMatch.put(alignmentRunData, match)
+            vdjToAlignment.put(alignmentRunData, alignment)
         }
 
-        val annotations = processAlignmentMatches(alignmentRunDataMap.values, vdjToMatch)
+        val annotations = processAlignments(alignmentRunDataMap.values, vdjToAlignment)
 
         AlignmentMatchTsvWriter.write(outputDir, sampleId, annotations)
 
@@ -117,25 +117,25 @@ class AlignmentAnnotator
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
     // NOTE: we cannot use matches.keySet(), as it might not include some VDJs that returned no match
-    fun processAlignmentMatches(alignmentRunDataList: Collection<AlignmentRunData>, matches: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment>)
+    fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>, alignments: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment>)
     : Collection<AlignmentAnnotation>
     {
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
         for (runData in alignmentRunDataList)
         {
-            alignmentAnnotations.add(processAlignmentMatches(runData, matches[runData]))
+            alignmentAnnotations.add(processAlignments(runData, alignments[runData]))
         }
         return alignmentAnnotations
     }
 
-    fun processAlignmentMatches(alignmentRunData: AlignmentRunData, matches: Collection<AlignmentUtil.BwaMemAlignment>)
+    fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.BwaMemAlignment>)
     : AlignmentAnnotation
     {
         val vdjSequence: VDJSequence = alignmentRunData.vdj
 
         val alignStartOffset = alignmentRunData.querySeqRange.start
 
-        val matches = matches
+        val alignments = alignments
             .filter { m -> m.alignmentScore >= BWA_ALIGNMENT_SCORE_MIN }
             .map {
                 // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
@@ -147,15 +147,15 @@ class AlignmentAnnotator
             .sortedBy { m -> -m.alignmentScore }
 
         // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
-        for (match in matches)
+        for (alignment in alignments)
         {
-            if (match.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
-                alignmentRunData.querySeq.length <= (match.queryAlignEnd - match.queryAlignStart) + 5
+            if (alignment.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
+                alignmentRunData.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
             )
             {
                 return AlignmentAnnotation(
                     vdjSequence = vdjSequence,
-                    fullMatch = match,
+                    fullAlignment = alignment,
                     alignmentStatus = AlignmentStatus.NO_REARRANGEMENT
                 )
             }
@@ -170,16 +170,16 @@ class AlignmentAnnotator
         val vGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
         val dGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
         val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
-        for (match in matches)
+        for (alignment in alignments)
         {
-            val vdjGene: IgTcrGene? = findGene(match)
+            val vdjGene: IgTcrGene? = findGene(alignment)
             if (vdjGene == null)
             {
                 continue
             }
 
             // for V/J gene segments, we mandate 90% identity
-            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && match.percentageIdent < CiderConstants.ALIGNMENT_MATCH_MIN_VJ_IDENTITY)
+            if (vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && alignment.percentageIdent < CiderConstants.ALIGNMENT_MATCH_MIN_VJ_IDENTITY)
             {
                 continue
             }
@@ -194,15 +194,15 @@ class AlignmentAnnotator
 
             if (vdjGene.region == IgTcrRegion.V_REGION)
             {
-                vGeneCandidates.add(Pair(vdjGene, match))
+                vGeneCandidates.add(Pair(vdjGene, alignment))
             }
             if (vdjGene.region == IgTcrRegion.D_REGION)
             {
-                dGeneCandidates.add(Pair(vdjGene, match))
+                dGeneCandidates.add(Pair(vdjGene, alignment))
             }
             if (vdjGene.region == IgTcrRegion.J_REGION)
             {
-                jGeneCandidates.add(Pair(vdjGene, match))
+                jGeneCandidates.add(Pair(vdjGene, alignment))
             }
         }
 
@@ -261,9 +261,9 @@ class AlignmentAnnotator
             vGene = vGeneMatch?.gene,
             dGene = dGeneMatch?.gene,
             jGene = jGeneMatch?.gene,
-            vMatch = vGeneMatch?.alignment,
-            dMatch = dGeneMatch?.alignment,
-            jMatch = jGeneMatch?.alignment,
+            vAlignment = vGeneMatch?.alignment,
+            dAlignment = dGeneMatch?.alignment,
+            jAlignment = jGeneMatch?.alignment,
             vGeneSupplementary = vGeneMatch?.supplementaryGenes ?: emptyList(),
             dGeneSupplementary = dGeneMatch?.supplementaryGenes ?: emptyList(),
             jGeneSupplementary = jGeneMatch?.supplementaryGenes ?: emptyList(),
