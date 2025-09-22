@@ -28,7 +28,7 @@ public class FlagStats
         }
     }
 
-    private void increment(final FlagStatType type, boolean passes)
+    public void increment(final FlagStatType type, boolean passes)
     {
         mTypeStats.get(type.ordinal()).record(passes);
     }
