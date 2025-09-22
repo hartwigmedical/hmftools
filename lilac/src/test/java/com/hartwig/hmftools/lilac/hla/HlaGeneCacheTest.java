@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts_;
+import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,7 +18,7 @@ public class HlaGeneCacheTest
     @Test
     public void testClass1GeneCache()
     {
-        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts_(RefGenomeVersion.V37, GeneSelector.MHC_CLASS_1);
+        Map<HlaGene_, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, GeneSelector.MHC_CLASS_1);
 
         assertEquals(3, hlaTranscriptMap.size());
 

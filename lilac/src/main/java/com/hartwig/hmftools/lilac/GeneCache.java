@@ -32,14 +32,14 @@ public class GeneCache
     public final Map<HlaGene_, List<Integer>> NucleotideExonBoundaries;
     public final Map<HlaGene_, Integer> NucleotideLengths;
 
-    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap_)
+    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap)
     {
-        GeneTranscriptMap_ = hlaTranscriptMap_;
+        GeneTranscriptMap_ = hlaTranscriptMap;
 
         // establish other properties and commonly used constants
         GeneNames = GeneTranscriptMap_.keySet().stream().sorted().toList(); // long names matching Ensembl
 
-        Transcripts_ = Lists.newArrayListWithExpectedSize(hlaTranscriptMap_.size());
+        Transcripts_ = Lists.newArrayListWithExpectedSize(hlaTranscriptMap.size());
         GeneNames.forEach(x -> Transcripts_.add(GeneTranscriptMap_.get(x)));
 
         ExpectAlleleCount = GeneNames.size() * 2;
