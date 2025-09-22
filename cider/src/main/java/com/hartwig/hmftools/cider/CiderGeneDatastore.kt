@@ -97,7 +97,7 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
             if (gene.anchorSequence.isNotEmpty())
             {
                 anchorSequenceMap.computeIfAbsent(gene.anchorSequence) { ArrayList() }.add(gene)
-                geneTypeAnchorSeqMap.computeIfAbsent(gene.type) { o: VJGeneType? -> HashMap() }
+                geneTypeAnchorSeqMap.computeIfAbsent(gene.type) { HashMap() }
                     .computeIfAbsent(gene.anchorSequence) { ArrayList() }.add(gene)
             }
         }

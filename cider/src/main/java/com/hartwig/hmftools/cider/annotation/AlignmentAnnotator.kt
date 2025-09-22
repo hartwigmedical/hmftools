@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider.annotation
 
-import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
@@ -36,28 +35,27 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
-    private val refGenome: RefGenomeSource
-    private val refGenomeBwaIndexImagePath: String
-    private val vdjGenes: Multimap<Pair<String, Strand>, IgTcrGene>
+    private val mRefGenome: RefGenomeSource
+    private val mRefGenomeBwaIndexImagePath: String
+    private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
 
     // class to help associate the data back
     data class AlignmentRunData(val vdj: VDJSequence, val key: Int, val querySeqRange: IntRange, val querySeq: String)
 
     constructor(refGenomeFastaPath: String, refGenomeBwaIndexImagePath: String)
     {
-        this.refGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
-        this.refGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
+        this.mRefGenome = RefGenomeSource.loadRefGenome(refGenomeFastaPath)
+        this.mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
-        val refGenomeVersion = deriveRefGenomeVersion(refGenome)
+        val refGenomeVersion = deriveRefGenomeVersion(mRefGenome)
 
-        // TODO: determinism
-        vdjGenes = ArrayListMultimap.create()
+        // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
+        val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
 
-        // since we use V38 for alignment annotation
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
             .map { o -> fromCommonIgTcrGene(o) }
 
-        // find all the genes that are we need
+        // find all the genes that we need
         for (geneData in igTcrGenes)
         {
             if (geneData.region !in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION))
@@ -70,13 +68,16 @@ class AlignmentAnnotator
                 continue
             }
 
-            vdjGenes.put(Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand), geneData)
+            val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
+            vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
 
             /* sLogger.debug(
                 "found constant region gene: {}, type: {}, location: {}",
                 geneData.GeneName, igConstantRegionType, genomeRegionStrand
             )*/
         }
+
+        mVdjGenes = vdjGenes
     }
 
     fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
@@ -100,7 +101,7 @@ class AlignmentAnnotator
 
         val alignmentResults = AlignmentUtil.runBwaMem(
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
-             refGenome, refGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
+             mRefGenome, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
         // put all into an identity hash multimap
         val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
@@ -284,7 +285,7 @@ class AlignmentAnnotator
     {
         val chromosome = parseChromosome(alignment.refContig)
 
-        val geneDataList = vdjGenes[Pair(chromosome, alignment.strand)]
+        val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 
