@@ -19,8 +19,11 @@ enum class AlignmentStatus
 data class AlignmentAnnotation(
     val vdjSequence: VDJSequence,
     val vGene: IgTcrGene? = null,
+    val vGeneSupplementary: List<IgTcrGene> = emptyList(),
     val dGene: IgTcrGene? = null,
+    val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
+    val jGeneSupplementary: List<IgTcrGene> = emptyList(),
     val vMatch: AlignmentUtil.BwaMemMatch? = null,
     val dMatch: AlignmentUtil.BwaMemMatch? = null,
     val jMatch: AlignmentUtil.BwaMemMatch? = null,
@@ -151,10 +154,13 @@ class AlignmentAnnotator
 
         var vGene: IgTcrGene? = null
         var vMatch: AlignmentUtil.BwaMemMatch? = null
+        val vGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
         var dGene: IgTcrGene? = null
         var dMatch: AlignmentUtil.BwaMemMatch? = null
+        val dGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
         var jGene: IgTcrGene? = null
         var jMatch: AlignmentUtil.BwaMemMatch? = null
+        val jGeneSupplementary: MutableList<IgTcrGene> = ArrayList()
 
         for (match in matches)
         {
@@ -186,20 +192,47 @@ class AlignmentAnnotator
                     // this ensure we do not annotate incorrect genes
                     // we found a VDJ gene, see which one it is
                     // but also need to check against identity
-                    if (vdjGene.region == IgTcrRegion.V_REGION && isBetterMatch(vMatch, vGene, match, vdjGene))
+                    if (vdjGene.region == IgTcrRegion.V_REGION)
                     {
-                        vGene = vdjGene
-                        vMatch = match
+                        val compare = compareGeneMatch(vMatch, vGene, match, vdjGene)
+                        if (compare > 0)
+                        {
+                            vGene = vdjGene
+                            vMatch = match
+                        }
+                        else if (compare == 0)
+                        {
+                            requireNotNull(vGene)
+                            vGeneSupplementary.add(vdjGene)
+                        }
                     }
-                    if (vdjGene.region == IgTcrRegion.D_REGION && isBetterMatch(dMatch, dGene, match, vdjGene))
+                    if (vdjGene.region == IgTcrRegion.D_REGION)
                     {
-                        dGene = vdjGene
-                        dMatch = match
+                        val compare = compareGeneMatch(dMatch, dGene, match, vdjGene)
+                        if (compare > 0)
+                        {
+                            dGene = vdjGene
+                            dMatch = match
+                        }
+                        else if (compare == 0)
+                        {
+                            requireNotNull(dGene)
+                            dGeneSupplementary.add(vdjGene)
+                        }
                     }
-                    if (vdjGene.region == IgTcrRegion.J_REGION && isBetterMatch(jMatch, jGene, match, vdjGene))
+                    if (vdjGene.region == IgTcrRegion.J_REGION)
                     {
-                        jGene = vdjGene
-                        jMatch = match
+                        val compare = compareGeneMatch(jMatch, jGene, match, vdjGene)
+                        if (compare > 0)
+                        {
+                            jGene = vdjGene
+                            jMatch = match
+                        }
+                        else if (compare == 0)
+                        {
+                            requireNotNull(jGene)
+                            jGeneSupplementary.add(vdjGene)
+                        }
                     }
                 }
             }
@@ -259,6 +292,9 @@ class AlignmentAnnotator
             vMatch = vMatch,
             dMatch = dMatch,
             jMatch = jMatch,
+            vGeneSupplementary = vGeneSupplementary,
+            dGeneSupplementary = dGeneSupplementary,
+            jGeneSupplementary = jGeneSupplementary,
             alignmentStatus = alignmentStatus)
     }
 
@@ -321,38 +357,43 @@ class AlignmentAnnotator
             return range
         }
 
-        fun isBetterMatch(existingMatch: AlignmentUtil.BwaMemMatch?, existingGene: IgTcrGene?, newMatch: AlignmentUtil.BwaMemMatch, newGene: IgTcrGene) : Boolean
+        // -1 -> existing gene is better
+        //  0 -> genes are equivalently good matches
+        // +1 -> new gene is better
+        fun compareGeneMatch(existingMatch: AlignmentUtil.BwaMemMatch?, existingGene: IgTcrGene?, newMatch: AlignmentUtil.BwaMemMatch, newGene: IgTcrGene)
+            : Int
         {
             if (existingMatch == null || existingGene == null)
             {
-                return true
+                return 1
             }
 
-            if (newMatch.alignmentScore != existingMatch.alignmentScore)
+            // Always prefer higher alignment score
+            if (newMatch.alignmentScore > existingMatch.alignmentScore)
             {
-                // always prefer higher alignment score
-                return newMatch.alignmentScore > existingMatch.alignmentScore
+                return 1
+            }
+            else if (newMatch.alignmentScore < existingMatch.alignmentScore)
+            {
+                return -1
             }
 
-            if (existingGene.isFunctional != newGene.isFunctional)
+            if (newGene.isFunctional && !existingGene.isFunctional)
             {
-                if (newGene.isFunctional)
-                {
-                    // if scores are equal, we prefer the functional one
-                    sLogger.trace(
-                        "prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
-                        newGene.geneAllele, newMatch.alignmentScore, existingGene.geneAllele, existingMatch.alignmentScore
-                    )
-                    return true
-                }
-                else
-                {
-                    return false
-                }
+                // if scores are equal, we prefer the functional one
+                sLogger.trace(
+                    "prefer functional gene: {}, alignScore: {} over non functional: {}, alignScore: {}",
+                    newGene.geneAllele, newMatch.alignmentScore, existingGene.geneAllele, existingMatch.alignmentScore
+                )
+                return 1
+            }
+            else if (!newGene.isFunctional && existingGene.isFunctional)
+            {
+                return -1
             }
 
             // Deterministic tie breaker for otherwise identical gene alignments
-            return newGene.geneName < existingGene.geneName
+            return existingGene.geneName.compareTo(newGene.geneName)
         }
     }
 }
