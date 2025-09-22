@@ -77,10 +77,9 @@ public class BamMaker
         bamRecipe.add(chr1Depths);
         bamRecipe.add(chr2Depths);
         */
-                for (int i=0; i<100; i++)
+                for (int i=0; i<=100; i++)
                 {
-                    double ratio = 1.0 * i / 100.0;
-                    ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(_1, ratio);
+                    ChromosomeRegionDepths depths = new GCRatioChromosomeRegionDepths(_1, i);
                     depths.addRange(regionOffset, regionOffset + 1_000, 10);
                     regionOffset += 1000;
                     bamRecipe.add(depths);
@@ -107,7 +106,7 @@ public class BamMaker
 //                bamRecipe.add(chr2Depths);
 
         File outputDir = new File("/Users/timlavers/work/junk/rubbish");
-        File bamFile = new File(outputDir, "Example12.bam");
+        File bamFile = new File(outputDir, "Example14.bam");
         bamRecipe.writeToBam(bamFile.getAbsolutePath());
     }
 }

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -12,16 +11,15 @@ import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
-import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class WindowStatuses implements GenomeFilter
 {
     private final ListMultimap<Chromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
 
-    public WindowStatuses(CobaltConfig config) throws IOException
+    public WindowStatuses(ListMultimap<Chromosome, GCProfile> gcProfileData, List<ChrBaseRegion> exclusions)
     {
-        final ListMultimap<Chromosome, GCProfile> gcProfileData = GCProfileFactory.loadGCContent(WINDOW_SIZE, config.GcProfilePath);
-        SuppliedExcludedRegions excludedRegions = new SuppliedExcludedRegions(config.mExcludedRegions);
+        SuppliedExcludedRegions excludedRegions = new SuppliedExcludedRegions(exclusions);
         ListMultimap<Chromosome, GCProfile> toExclude = excludedRegions.findIntersections(gcProfileData);
         gcProfileData.forEach( (chromosome, gcProfile) -> {
             boolean excluded = toExclude.containsEntry(chromosome, gcProfile);

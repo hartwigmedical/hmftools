@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MIN;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_PCF_GAMMA;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE_DESC;
@@ -35,12 +36,17 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.targeted.NoEnrichment;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnricher;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -251,6 +257,19 @@ public class CobaltConfig
             final RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
             TargetRegionEnricher.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
             return new TargetRegionEnricher(enrichmentFile.load(), chromosomeData);
+        }
+    }
+
+    public ListMultimap<Chromosome, GCProfile> gcProfileData()
+    {
+        try
+        {
+            return GCProfileFactory.loadGCContent(WINDOW_SIZE, GcProfilePath);
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to load GC profile data: {}", e.toString());
+            return ArrayListMultimap.create();
         }
     }
 

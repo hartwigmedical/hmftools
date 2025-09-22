@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import java.io.IOException;
-
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
@@ -16,10 +14,10 @@ public class CobaltCalculator
     private final TargetRegions mEnricher;
     private final CobaltConfig mConfig;
 
-    public CobaltCalculator(final ListMultimap<Chromosome, DepthReading> mTumorReadDepths, CobaltConfig config) throws IOException
+    public CobaltCalculator(final ListMultimap<Chromosome, DepthReading> mTumorReadDepths, CobaltConfig config)
     {
         this.mTumorReadDepths = mTumorReadDepths;
-        mWindowStatuses = new WindowStatuses(config);
+        mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.mExcludedRegions);
         mConfig = config;
         mEnricher = mConfig.targetRegionEnricher();
     }

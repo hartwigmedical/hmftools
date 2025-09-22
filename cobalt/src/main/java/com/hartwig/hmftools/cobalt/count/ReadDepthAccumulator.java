@@ -3,6 +3,12 @@ package com.hartwig.hmftools.cobalt.count;
 import static htsjdk.samtools.util.SequenceUtil.C;
 import static htsjdk.samtools.util.SequenceUtil.G;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +60,20 @@ public class ReadDepthAccumulator
 
     private final int mWindowSize;
     private final Map<String, ChromosomeWindowCounts> mChromosomeWindowCounts = new ConcurrentHashMap<>();
+    private PrintWriter logWriter;
 
     public ReadDepthAccumulator(int windowSize)
     {
         mWindowSize = windowSize;
+        File logDir = new File("/Users/timlavers/work/junk/outputs");
+        try
+        {
+            logWriter = new PrintWriter(new BufferedWriter(new FileWriter(new File(logDir, "RDA.txt"))));
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     public void addChromosome(String chromosome, int chromosomeLength)
@@ -95,8 +111,10 @@ public class ReadDepthAccumulator
     // this function is thread safe
     // genomeStart is 1 based and genomeEnd is inclusive
     // readStartIndex is 0 based
-    public void addReadAlignmentToCounts(String chromosome, int genomeStart, int alignmentLength, byte[] readBases, int readStartIndex)
+    public synchronized void addReadAlignmentToCounts(String chromosome, int genomeStart, int alignmentLength, byte[] readBases, int readStartIndex)
     {
+        String b = new String(readBases);
+        logWriter.println(String.format("gs: %d aL: %d bases: %s rSI: %d", genomeStart, alignmentLength, b, readStartIndex) );
         ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
 
         if(windowCounts == null)

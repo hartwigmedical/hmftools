@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class CobaltCalculation
 {
-
     private final ListMultimap<Chromosome, CobaltWindow> mWindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final GenomeFilter mGenomeFilter;
@@ -31,8 +30,8 @@ public class CobaltCalculation
     {
         final boolean isExcluded = mGenomeFilter.exclude(chromosome, readDepth);
         final boolean isInTargetRegion = mTargetRegions.onTarget(chromosome, readDepth.StartPosition);
+        final GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
         final CobaltWindow rawWindow = new CobaltWindow(chromosome, readDepth, isExcluded, isInTargetRegion);
-        GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
         mWindowsByChromosome.put(chromosome, rawWindow.bucketed(bucket));
     }
 

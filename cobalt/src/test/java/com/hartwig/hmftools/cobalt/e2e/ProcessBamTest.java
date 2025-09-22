@@ -393,7 +393,6 @@ public class ProcessBamTest
         // etc
         sample = "increasing_gc_per_window_depth_1";
         tumorBamFile = getBam(sample);
-//        regionOffset = 1000;
 
         createStandardChr1GCFile(101_000);
         createStandardChr1PanelFile(101_000, 1.0001);
@@ -401,14 +400,14 @@ public class ProcessBamTest
         runCobalt();
         // Upper and lower limits for gc ratio are 0.24 and 0.68 respectively
         List<CobaltRatio> ratios = tumorRatioResults.get(_1);
-        for(int i = 1; i < 25; i++)
+        for(int i = 1; i < 24; i++)
         {
             final CobaltRatio cobaltRatio = ratios.get(i);
             assertEquals(1000 * i + 1, ratios.get(i).position());
-            assertEquals(0.01 * (i - 1), ratios.get(i).tumorGcContent(), 0.01);
+            assertEquals(0.01 * (i), ratios.get(i).tumorGcContent(), 0.01);
             assertEquals(-1.0, cobaltRatio.tumorGCRatio(), 0.01);
         }
-        for(int i = 25; i < 68; i++)
+        for(int i = 24; i < 68; i++)
         {
             assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
@@ -822,32 +821,6 @@ public class ProcessBamTest
         checkWindowsAreMaskedButNeighoursAreNot(chr16Exclusions, _16);
     }
 
-    private void checkWindowsAreMaskedButNeighoursAreNot(final List<Integer> exclusions, final HumanChromosome humanChromosome)
-    {
-        for(Integer position : exclusions)
-        {
-            System.out.println(position + " - " + humanChromosome);
-            // The window at this position should be masked.
-            int windowStart = rounded1000(position) + 1;
-            assertEquals(-1.0, retrieveRatio(humanChromosome, windowStart).tumorGCRatio(), 0.01);
-
-            // The previous window should not be masked, unless it in the masked set.
-            int previousWindowStart = windowStart - 1000;
-            double expectedRatio = exclusions.contains(previousWindowStart) ? -1.0 : 1.0;
-            assertEquals(expectedRatio, retrieveRatio(humanChromosome, previousWindowStart).tumorGCRatio(), 0.01);
-
-            // The next window should not be masked, unless it is in the masked set.
-            int nextWindowStart = windowStart - 1000;
-            expectedRatio = exclusions.contains(nextWindowStart) ? -1.0 : 1.0;
-            assertEquals(expectedRatio, retrieveRatio(humanChromosome, nextWindowStart).tumorGCRatio(), 0.01);
-        }
-    }
-
-    private static int rounded1000(final Integer position)
-    {
-        return (position / 1000) * 1000;
-    }
-
     @Test
     public void regionsOfExtremeGCAreFilteredOutInWholeGenomeMode() throws Exception
     {
@@ -876,6 +849,32 @@ public class ProcessBamTest
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
+    }
+
+    private void checkWindowsAreMaskedButNeighoursAreNot(final List<Integer> exclusions, final HumanChromosome humanChromosome)
+    {
+        for(Integer position : exclusions)
+        {
+            System.out.println(position + " - " + humanChromosome);
+            // The window at this position should be masked.
+            int windowStart = rounded1000(position) + 1;
+            assertEquals(-1.0, retrieveRatio(humanChromosome, windowStart).tumorGCRatio(), 0.01);
+
+            // The previous window should not be masked, unless it in the masked set.
+            int previousWindowStart = windowStart - 1000;
+            double expectedRatio = exclusions.contains(previousWindowStart) ? -1.0 : 1.0;
+            assertEquals(expectedRatio, retrieveRatio(humanChromosome, previousWindowStart).tumorGCRatio(), 0.01);
+
+            // The next window should not be masked, unless it is in the masked set.
+            int nextWindowStart = windowStart - 1000;
+            expectedRatio = exclusions.contains(nextWindowStart) ? -1.0 : 1.0;
+            assertEquals(expectedRatio, retrieveRatio(humanChromosome, nextWindowStart).tumorGCRatio(), 0.01);
+        }
+    }
+
+    private static int rounded1000(final Integer position)
+    {
+        return (position / 1000) * 1000;
     }
 
     private CobaltRatio retrieveRatio(HumanChromosome chromosome, int position)

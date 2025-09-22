@@ -11,6 +11,7 @@ import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,6 +26,11 @@ public class CalculationsTestBase
     DepthReading dr(Chromosome chromosome, int position, double depth, double gc)
     {
         return new DepthReading(chromosome.contig(), position, depth, gc);
+    }
+
+    ChrBaseRegion cbr(Chromosome chromosome, int start, int end)
+    {
+        return new ChrBaseRegion(chromosome.contig(), start, end);
     }
 
     GCProfile gcProfile(Chromosome chromosome, int position, double gc, double mappablePercentage)
