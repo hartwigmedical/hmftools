@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
-import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
+import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
@@ -22,7 +22,7 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val jSimilarityScore: Int?,
                          val vPrimerMatchCount: Int,
                          val jPrimerMatchCount: Int,
-                         var blastnAnnotation: BlastnAnnotation? = null)
+                         var alignmentAnnotation: AlignmentAnnotation? = null)
 {
     enum class Filter
     {
@@ -60,7 +60,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
                    private val blosumSearcher: IAnchorBlosumSearcher)
 {
     fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>,
-                            blastnAnnotations: Collection<BlastnAnnotation>,
+                            alignmentAnnotations: Collection<AlignmentAnnotation>,
                             primerMatches: List<VdjPrimerMatch>) : List<VdjAnnotation>
     {
         val sortedVdj = vdjSequences.sortedWith(
@@ -100,14 +100,14 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             val vdjWithMoreSupport : VDJSequence? = notDuplicateVdjs[vdj.cdr3Sequence]
             requireNotNull(vdjWithMoreSupport)
             val isDuplicate: Boolean = vdjWithMoreSupport !== vdj
-            val blastnAnnotation: BlastnAnnotation? = blastnAnnotations.find { o -> o.vdjSequence === vdj }
-            vdjAnnotations.add(annotateVdj(vdj, isDuplicate, blastnAnnotation, primerMatches))
+            val alignmentAnnotation: AlignmentAnnotation? = alignmentAnnotations.find { o -> o.vdjSequence === vdj }
+            vdjAnnotations.add(annotateVdj(vdj, isDuplicate, alignmentAnnotation, primerMatches))
         }
 
         return vdjAnnotations
     }
 
-    fun annotateVdj(vdj: VDJSequence, isDuplicate: Boolean, blastnAnnotation: BlastnAnnotation?,
+    fun annotateVdj(vdj: VDJSequence, isDuplicate: Boolean, alignmentAnnotation: AlignmentAnnotation?,
                     primerMatches: List<VdjPrimerMatch>) : VdjAnnotation
     {
         val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
@@ -121,7 +121,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val matchesRef: Boolean = vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
                                                 vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
 
-        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef, cdr3SupportMin, blastnAnnotation)
+        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef, cdr3SupportMin, alignmentAnnotation)
 
         val vSimilarityScore: Int? = if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null
         val jSimilarityScore: Int? = if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null
@@ -137,7 +137,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             cdr3SupportMin = cdr3SupportMin,
             vSimilarityScore = vSimilarityScore, jSimilarityScore = jSimilarityScore,
             vPrimerMatchCount = vPrimerMatchCount, jPrimerMatchCount = jPrimerMatchCount,
-            blastnAnnotation = blastnAnnotation)
+            alignmentAnnotation = alignmentAnnotation)
     }
 
     fun findAnchorByBlosum(vdj: VDJSequence, vj: VJ) : AnchorBlosumMatch?
@@ -324,17 +324,17 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         }
 
         fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int,
-                                  blastnAnnotation: BlastnAnnotation?): List<VdjAnnotation.Filter>
+                                  alignmentAnnotation: AlignmentAnnotation?): List<VdjAnnotation.Filter>
         {
             val filters = ArrayList<VdjAnnotation.Filter>()
 
-            if (matchesRef || blastnAnnotation?.blastnStatus == BlastnStatus.NO_REARRANGEMENT)
+            if (matchesRef || alignmentAnnotation?.alignmentStatus == AlignmentStatus.NO_REARRANGEMENT)
             {
                 filters.add(VdjAnnotation.Filter.MATCHES_REF)
             }
-            if (blastnAnnotation == null)
+            if (alignmentAnnotation == null)
             {
-                // following filters are only applied if we do not use blastn
+                // following filters are only applied if we do not use alignment
                 if (vdj.vAnchor == null)
                 {
                     filters.add(VdjAnnotation.Filter.NO_V_ANCHOR)
@@ -354,14 +354,14 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
             else
             {
-                if (blastnAnnotation.blastnStatus == BlastnStatus.V_D ||
-                    blastnAnnotation.blastnStatus == BlastnStatus.D_J ||
-                    blastnAnnotation.blastnStatus == BlastnStatus.V_ONLY ||
-                    blastnAnnotation.blastnStatus == BlastnStatus.J_ONLY)
+                if (alignmentAnnotation.alignmentStatus == AlignmentStatus.V_D ||
+                    alignmentAnnotation.alignmentStatus == AlignmentStatus.D_J ||
+                    alignmentAnnotation.alignmentStatus == AlignmentStatus.V_ONLY ||
+                    alignmentAnnotation.alignmentStatus == AlignmentStatus.J_ONLY)
                 {
                     filters.add(VdjAnnotation.Filter.PARTIAL)
                 }
-                else if (blastnAnnotation.blastnStatus == BlastnStatus.NO_VDJ_ALIGNMENT)
+                else if (alignmentAnnotation.alignmentStatus == AlignmentStatus.NO_VDJ_ALIGNMENT)
                 {
                     filters.add(VdjAnnotation.Filter.NO_VDJ_ALIGNMENT)
                 }
