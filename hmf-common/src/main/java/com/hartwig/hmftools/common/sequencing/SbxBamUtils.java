@@ -12,6 +12,7 @@ public class SbxBamUtils
 {
     public static final byte RAW_DUPLEX_QUAL = 93;
     public static final byte RAW_SIMPLEX_QUAL = 18;
+    public static final byte RAW_DUPLEX_MISMATCH_QUAL = 0;
 
     // values assigned by Redux, used in BQR and all downstream tools
     public static final byte SBX_SIMPLEX_QUAL = 27;

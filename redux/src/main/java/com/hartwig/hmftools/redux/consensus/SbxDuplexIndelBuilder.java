@@ -4,9 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -16,9 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -28,7 +23,6 @@ public class SbxDuplexIndelBuilder
 {
     private final SAMRecord mRecord;
     private final int mReadLength;
-    private final RefGenomeInterface mRefGenome;
     private final List<CigarElement> mReadCigarElements;
     private final List<SbxDuplexIndel> mDuplexIndels;
 
@@ -40,11 +34,10 @@ public class SbxDuplexIndelBuilder
     private int mSuppDataIndexEnd;
     private boolean mSuppDataInLeftSoftClip;
 
-    public SbxDuplexIndelBuilder(final SAMRecord record, final RefGenomeInterface refGenome, final List<Integer> duplexIndelIndices)
+    public SbxDuplexIndelBuilder(final SAMRecord record, final List<Integer> duplexIndelIndices)
     {
         mRecord = record;
         mReadLength = mRecord.getReadBases().length;
-        mRefGenome = refGenome;
         mDuplexIndels = Lists.newArrayListWithExpectedSize(duplexIndelIndices.size());
 
         mReadCigarElements = record.getCigar().getCigarElements();
@@ -96,60 +89,77 @@ public class SbxDuplexIndelBuilder
 
     private void processDuplexIndel(final ReadBaseInfo readBaseInfo, int duplexIndelIndexStart, int duplexIndelIndexEnd)
     {
-        int duplexIndexLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
-        byte[] repeatBases = new byte[duplexIndexLength];
+        int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
+        byte[] repeatBases = new byte[duplexMismatchLength];
 
-        for(int i = 0; i < duplexIndexLength; ++i)
+        for(int i = 0; i < duplexMismatchLength; ++i)
         {
             repeatBases[i] = mRecord.getReadBases()[duplexIndelIndexStart + i];
         }
 
-        // search backwards to find the start of the repeat
-        int repeatStrIndex = duplexIndexLength - 1;
-        int readRepeatCount = 1;
+        // convert to 1-base homopolymer if all bases match
+        if(repeatBases.length > 1)
+        {
+            boolean isSingleBase = true;
+            for(int i = 1; i < repeatBases.length; ++i)
+            {
+                if(repeatBases[i] != repeatBases[0])
+                {
+                    isSingleBase = false;
+                    break;
+                }
+            }
+
+            if(isSingleBase)
+            {
+                repeatBases = new byte[] { repeatBases[0] };
+            }
+        }
+
+        int repeatLength = repeatBases.length;
+
+        // search backwards and within inserted bases to find the start of the repeat
+        int repeatStrIndex = repeatLength - 1;
+        int insertRepeatCount = 0;
         int firstReadInsertIndex = -1;
 
         while(readBaseInfo.Index >= 0)
         {
             movePrevious(readBaseInfo);
 
-            if(!readBaseInfo.isReadBase())
+            if(readBaseInfo.CigarOp != I)
                 break;
 
             if(repeatBases[repeatStrIndex] != readBaseInfo.Base)
                 break;
 
-            if(readBaseInfo.CigarOp == I)
-                firstReadInsertIndex = readBaseInfo.Index;
-
             --repeatStrIndex;
 
             if(repeatStrIndex < 0)
             {
-                ++readRepeatCount;
-                repeatStrIndex = duplexIndexLength - 1;
+                ++insertRepeatCount;
+                repeatStrIndex = repeatLength - 1;
+                firstReadInsertIndex = readBaseInfo.Index;
             }
         }
 
-        // set quals of first 2 (ie repeat length) of the repeat to SBX_DUPLEX_MISMATCH_QUAL (=1)
-        moveNext(readBaseInfo);
-        int readRepeatIndexStart = readBaseInfo.Index;
-
-        // find length of repeat in the ref
-        int refRepeatCount = determineRefRepeat(readBaseInfo, repeatBases);
-
-        // mark the indel bases in the read to be trimmed
-        int repeatDiff = readRepeatCount - refRepeatCount;
-
-        if(repeatDiff <= 0)
+        // the repeat must be either wholy contained within the inserted bases or continue on past the insert without a gap
+        if(firstReadInsertIndex < 0 || insertRepeatCount == 0)
             return;
 
-        int trimLength = min(repeatDiff * duplexIndexLength, duplexIndexLength);
+        int insertRepeatLength = insertRepeatCount * repeatLength;
 
-        // find the first cigar I element
-        if(firstReadInsertIndex < 0)
-            return;
+        int totalRepeatBaseLength = insertRepeatLength + duplexMismatchLength;
 
+        int trimLength = min(insertRepeatLength, duplexMismatchLength);
+
+        int lowBaseQualCount = duplexMismatchLength;
+
+        int trimmedRepeatBaseLength = totalRepeatBaseLength - trimLength;
+
+        // ensure there are enough low-qual bases for symmetry around the repeat
+        if(lowBaseQualCount < trimmedRepeatBaseLength && (duplexMismatchLength % 2) == 1)
+            ++lowBaseQualCount;
 
         int trimCount = 0;
         int deletedIndelIndexStart =-1;
@@ -157,86 +167,47 @@ public class SbxDuplexIndelBuilder
 
         moveTo(readBaseInfo, firstReadInsertIndex);
 
-        for(int i = firstReadInsertIndex; i <= duplexIndelIndexEnd && trimCount < trimLength; ++i)
+        List<Integer> lowQualIndices = Lists.newArrayListWithExpectedSize(lowBaseQualCount);
+        int remainingLowQualCount = lowBaseQualCount;
+        int addedLowQualAtStartCount = 0;
+
+        for(int i = firstReadInsertIndex; i <= duplexIndelIndexEnd; ++i)
         {
-            if(!readBaseInfo.isReadBase())
-                continue;
-
-            if(readBaseInfo.CigarOp != I)
-                break;
-
-            if(deletedIndelIndexStart < 0)
+            if(readBaseInfo.CigarOp == I && trimCount < trimLength) // only trim inserted bases
             {
-                deletedIndelIndexStart = i;
-                deletedIndelIndexEnd = i;
+                trimCount++;
+
+                if(deletedIndelIndexStart < 0)
+                {
+                    deletedIndelIndexStart = i;
+                    deletedIndelIndexEnd = i;
+                }
+                else
+                {
+                    deletedIndelIndexEnd = i;
+                }
             }
-            else
+            else if(remainingLowQualCount > 0)
             {
-                deletedIndelIndexEnd = i;
+                lowQualIndices.add(i);
+                --remainingLowQualCount;
+                ++addedLowQualAtStartCount;
+
+                if(remainingLowQualCount > 0)
+                {
+                    // apply symmetrically
+                    int otherLowQualIndex = duplexIndelIndexEnd - (addedLowQualAtStartCount - 1);
+                    lowQualIndices.add(otherLowQualIndex);
+                    --remainingLowQualCount;
+                }
             }
-            trimCount++;
         }
 
         SbxDuplexIndel duplexIndel = new SbxDuplexIndel(
-                duplexIndelIndexStart, duplexIndelIndexEnd, new String(repeatBases), readRepeatIndexStart,
-                refRepeatCount, deletedIndelIndexStart, deletedIndelIndexEnd);
+                duplexIndelIndexStart, duplexIndelIndexEnd, new String(repeatBases), totalRepeatBaseLength,
+                firstReadInsertIndex, lowQualIndices, deletedIndelIndexStart, deletedIndelIndexEnd);
 
         mDuplexIndels.add(duplexIndel);
-    }
-
-    private int determineRefRepeat(final ReadBaseInfo readBaseInfo, final byte[] repeatBases)
-    {
-        // check if the read index falls in the supplementary
-        int refPosition;
-        String chromosome;
-
-        if(readBaseInfo.Index >= mSuppDataIndexStart && readBaseInfo.Index <= mSuppDataIndexEnd)
-        {
-            int suppReadIndex;
-
-            if(mSuppDataInLeftSoftClip)
-                suppReadIndex = readBaseInfo.Index;
-            else
-                suppReadIndex = readBaseInfo.Index - mSuppDataIndexStart;
-
-            refPosition = getPositionFromReadIndex(mSuppData.Position, mSuppDataCigarElements, suppReadIndex);
-            chromosome = mSuppData.Chromosome;
-        }
-        else
-        {
-            refPosition = getPositionFromReadIndex(
-                    mRecord.getAlignmentStart(), mReadCigarElements, readBaseInfo.Index, true, false)[0];
-            chromosome = mRecord.getContig();
-        }
-
-        if(refPosition == NO_POSITION)
-            return 0;
-
-        int chromosomeLength = mRefGenome.getChromosomeLength(chromosome);
-
-        int repeatStrIndex = 0;
-        int refRepeatCount = 0;
-
-        while(true)
-        {
-            byte refBase = mRefGenome.getBase(chromosome, refPosition);
-            if(repeatBases[repeatStrIndex] != refBase)
-                break;
-
-            ++repeatStrIndex;
-            ++refPosition;
-
-            if(repeatStrIndex >= repeatBases.length)
-            {
-                repeatStrIndex = 0;
-                ++refRepeatCount;
-            }
-
-            if(refPosition > chromosomeLength)
-                break;
-        }
-
-        return refRepeatCount;
     }
 
     private void buildAdjustedSupplementaryCigar()

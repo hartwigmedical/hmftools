@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.CigarOperator.X;
@@ -368,5 +369,77 @@ public final class CigarUtils
             elems.add(new CigarElement(currentLength, currentOp));
 
         return elems;
+    }
+
+    public static boolean checkLeftAlignment(final List<CigarElement> cigarElements, final byte[] readBases)
+    {
+        // shift any right-aligned inserts back to the left
+        boolean modified = false;
+
+        int readIndex = 0;
+
+        for(int i = 0; i < cigarElements.size(); ++i)
+        {
+            CigarElement element = cigarElements.get(i);
+
+            if(element.getOperator() == I)
+            {
+                byte[] repeatBases = new byte[element.getLength()];
+
+                for(int j = 0; j < repeatBases.length; ++j)
+                {
+                    repeatBases[j] = readBases[readIndex + j];
+                }
+
+                // search backwards through the previous aligned section
+                int priorIndex = readIndex;
+                int matchedRepeatCount = 0;
+
+                while(true)
+                {
+                    priorIndex -= repeatBases.length;
+
+                    if(priorIndex < 0)
+                        break;
+
+                    boolean matches = true;
+
+                    for(int j = 0; j < repeatBases.length; ++j)
+                    {
+                        if(repeatBases[j] != readBases[priorIndex + j])
+                        {
+                            matches = false;
+                            break;
+                        }
+                    }
+
+                    if(!matches)
+                        break;
+
+                    ++matchedRepeatCount;
+                }
+
+                if(matchedRepeatCount > 0)
+                {
+                    int alignmentShift = matchedRepeatCount * repeatBases.length;
+                    CigarElement prevElement = cigarElements.get(i - 1);
+                    prevElement = new CigarElement(prevElement.getLength() - alignmentShift, prevElement.getOperator());
+                    cigarElements.set(i - 1, prevElement);
+
+                    CigarElement nextElement = cigarElements.get(i + 1);
+                    nextElement = new CigarElement(nextElement.getLength() + alignmentShift, nextElement.getOperator());
+                    cigarElements.set(i + 1, nextElement);
+
+                    readIndex -= alignmentShift; // to move back to start of next aligned section
+
+                    modified = true;
+                }
+            }
+
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
+        }
+
+        return modified;
     }
 }

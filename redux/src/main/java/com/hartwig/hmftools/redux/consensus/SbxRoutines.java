@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_P
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
+import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
@@ -23,6 +24,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH;
@@ -73,19 +75,17 @@ public final class SbxRoutines
 
     public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
 
-    public static void stripDuplexIndelsNew(final RefGenomeInterface refGenome, final SAMRecord record)
+    public static void stripDuplexIndelsNew(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
             return;
 
-        String chromosome = record.getReferenceName();
+        // String chromosome = record.getReferenceName();
         String ycTagStr = record.getStringAttribute(SBX_YC_TAG);
         if(ycTagStr == null)
         {
             throw new IllegalArgumentException(format("read missing %s tag: %s", SBX_YC_TAG, readToString(record)));
         }
-
-        boolean isForward = !record.getReadNegativeStrandFlag();
 
         List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
@@ -105,7 +105,7 @@ public final class SbxRoutines
         //if(!isForward)
         //    reverseDuplexIndelIndices(duplexIndelIndices, record.getReadBases().length);
 
-        SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, refGenome, duplexIndelIndices);
+        SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, duplexIndelIndices);
 
         List<SbxDuplexIndel> duplexIndels = builder.duplexIndels();
 
@@ -130,6 +130,7 @@ public final class SbxRoutines
 
         int duplexIndelIndex = 0;
         SbxDuplexIndel duplexIndel = duplexIndels.get(duplexIndelIndex);
+        int indelTrimmedCount = 0;
 
         int oldCigarIndex = 0;
         int oldCigarElementIndex = 0;
@@ -142,6 +143,8 @@ public final class SbxRoutines
         int oldInsertedBases = 0;
 
         int newReadIndex = 0;
+
+        int totalDeletedBases = 0;
 
         for(int oldReadIndex = 0; oldReadIndex < oldBaseLength; ++oldCigarElementIndex)
         {
@@ -160,18 +163,39 @@ public final class SbxRoutines
             }
 
             boolean isStrippedIndelBase = false;
+            boolean isLowQualBase = false;
 
-            if(oldElement.getOperator() == I)
+            if(duplexIndel != null && (oldElement.getOperator() == I || oldElement.getOperator() == M))
             {
-                if(duplexIndel != null && newReadIndex >= duplexIndel.DeletedIndelIndexStart && newReadIndex <= duplexIndel.DeletedIndelIndexEnd)
+                int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
+                if(duplexIndel.isLowQualBase(effectReadIndex))
+                {
+                    isLowQualBase = true;
+                }
+                else if(effectReadIndex >= duplexIndel.DeletedIndelIndexStart && effectReadIndex <= duplexIndel.DeletedIndelIndexEnd)
                 {
                     // skip over stripped indel bases
                     isStrippedIndelBase = true;
+                    ++indelTrimmedCount;
+                }
 
-                    if(newReadIndex == duplexIndel.DeletedIndelIndexEnd)
+                if(effectReadIndex >= duplexIndel.DuplexIndelIndexEnd)
+                {
+                    ++duplexIndelIndex;
+                    totalDeletedBases += duplexIndel.deletedBaseCount();
+
+                    if(duplexIndelIndex < duplexIndels.size())
                     {
-                        ++duplexIndelIndex;
-                        duplexIndel = duplexIndelIndex < duplexIndels.size() ? duplexIndels.get(duplexIndelIndex) : null;
+                        duplexIndel = duplexIndels.get(duplexIndelIndex);
+                        indelTrimmedCount = 0;
+
+                        // factor in deleted bases from prior stripped indels - using totalDeletedBases
+                        if(totalDeletedBases > 0)
+                            duplexIndel = new SbxDuplexIndel(duplexIndel, totalDeletedBases);
+                    }
+                    else
+                    {
+                        duplexIndel = null;
                     }
                 }
             }
@@ -197,7 +221,18 @@ public final class SbxRoutines
                 if(!isStrippedIndelBase)
                 {
                     readBases[newReadIndex] = record.getReadBases()[oldReadIndex];
-                    readQuals[newReadIndex] = record.getBaseQualities()[oldReadIndex];
+
+                    byte existingQual = record.getBaseQualities()[oldReadIndex];
+                    byte qual;
+
+                    if(isLowQualBase)
+                        qual = SBX_DUPLEX_MISMATCH_QUAL;
+                    else if(existingQual == RAW_DUPLEX_MISMATCH_QUAL)
+                        qual = RAW_DUPLEX_QUAL; // restore to duplex value
+                    else
+                        qual = existingQual;
+
+                    readQuals[newReadIndex] = qual;
                     ++newReadIndex;
                 }
 
@@ -241,8 +276,9 @@ public final class SbxRoutines
         record.setReadBases(readBases);
         record.setBaseQualities(readQuals);
 
+        checkLeftAlignment(newCigarElements, readBases);
+
         record.setCigar(new Cigar(newCigarElements));
-        // record.setAlignmentStart(newAlignmentStart);
     }
 
     public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)

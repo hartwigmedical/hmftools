@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -10,6 +11,11 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
@@ -205,5 +211,61 @@ public class CigarUtilsTest
 
         ucPos = getFivePrimeUnclippedPosition(read);
         assertEquals(194, ucPos);
+    }
+
+    @Test
+    public void testIndelLeftAlignment()
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList();
+
+        cigarElements.add(new CigarElement(10, M));
+        cigarElements.add(new CigarElement(1, I));
+        cigarElements.add(new CigarElement(10, M));
+
+        String readBases = "ACGTACGTTT" + "T" + "CCGGTTAACC";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        assertEquals(7, cigarElements.get(0).getLength());
+        assertEquals(1, cigarElements.get(1).getLength());
+        assertEquals(13, cigarElements.get(2).getLength());
+
+        // 2-base repeat
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(10, M));
+        cigarElements.add(new CigarElement(2, I));
+        cigarElements.add(new CigarElement(10, M));
+
+        readBases = "ACGTACACAC" + "AC" + "CCGGTTAACC";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        assertEquals(4, cigarElements.get(0).getLength());
+        assertEquals(2, cigarElements.get(1).getLength());
+        assertEquals(16, cigarElements.get(2).getLength());
+
+        // no need for realignment
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(6, M));
+        cigarElements.add(new CigarElement(1, I));
+        cigarElements.add(new CigarElement(10, M));
+
+        readBases = "ACGTAC" + "A" + "AAGGTTAACC";
+        assertFalse(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        // two different locations need aligning
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(6, M));
+        cigarElements.add(new CigarElement(1, I));
+        cigarElements.add(new CigarElement(10, M));
+        cigarElements.add(new CigarElement(3, I));
+        cigarElements.add(new CigarElement(5, M));
+
+        readBases = "ACGTAA" + "A" + "CCGGTTACCT" + "CCT" + "GGAAC";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        assertEquals(4, cigarElements.get(0).getLength());
+        assertEquals(1, cigarElements.get(1).getLength());
+        assertEquals(9, cigarElements.get(2).getLength());
+        assertEquals(3, cigarElements.get(3).getLength());
+        assertEquals(8, cigarElements.get(4).getLength());
     }
 }
