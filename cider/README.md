@@ -225,8 +225,6 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Alignment annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 - Alignment annotation for D gene requires more lenient alignment parameters.
 
-TODO
-
 # Version History and Download Links
 - [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)
   - Fix blastn performance issue when an assembly maps to a problematic region.   
