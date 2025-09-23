@@ -186,8 +186,15 @@ In the case of DUPLEX UMIs, the logic is applied to each strand individually and
 the consensus base on each strand is different and one matches the ref genome then the base is set to the ref genome, otherwise the highest
 qual base is chosen as per above.
 
-The ‘UT’ tag is added to the BAM to mark the UMI group as either ‘SINGLE’ or ‘DUAL_STRAND’. The ‘CR’ flag is also used to record the number
-of reads contributing to each consensus read. It is a series of 3 numbers and can be interpreted as follows:
+The ‘UT’ tag is added to the BAM to mark the consensus group status of the read:
+
+| Value               | Description                    |
+|---------------------|--------------------------------|
+| NONE  | Read is not part of any consensus group       |
+| DUAL           | Read is formed from a consensus of reads from both original DNA strands (i.e. at least one read of each fregment orientation). Only applicable if DUPLEX UMIs are used.     |
+| SINGLE | Read is formed from a consensus group, but does not meet the requirements of DUAL (i.e. constituent reads are only from a single fragment orientation and/or DUPLEX UMIs are not used) |
+
+The ‘CR’ flag is used to record the number of reads contributing to each consensus read. It is a series of 3 numbers and can be interpreted as follows:
 
 1. Number of fragments in the consensus group
 2. Number of fragments in the most common strand
