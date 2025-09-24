@@ -105,13 +105,18 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **CDR3_DELETED** - A V and J anchor are found, but the CDR3 portion of the sequence (including conserved C,W,F) is fully deleted
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
-- **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0) OR alignment matches to reference contig.
-- **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read. 
+- **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0), OR alignment matches to reference contig, OR the sequences matches known list (see below).
+- **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read.
+
+CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  
+(This was introduced to reduce discrepancies in the output when switching from Blastn to BWA-MEM alignment.)  
+The list of amino acid sequences is:
+- CTXGPKXELRT
 
 Note that sequences with "no anchor" may represent partial rearrangements.
 
 CIDER hard filters variants with filter='MATCHES_REF' or if filter contains both MIN_LENGTH and either NO_V_ANCHOR or NO_J_ANCHOR.
- 
+
 The full set of fields output are:
 
 | Field                                                      | Explanation                                                                                                                                         | 
