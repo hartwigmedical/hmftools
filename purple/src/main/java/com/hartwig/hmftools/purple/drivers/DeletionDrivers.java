@@ -67,7 +67,7 @@ public class DeletionDrivers
             {
                 driverType = DEL;
             }
-            else if(ploidy > 0)
+            else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
             {
                 double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
 
