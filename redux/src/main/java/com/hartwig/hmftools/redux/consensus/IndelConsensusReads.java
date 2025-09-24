@@ -234,22 +234,6 @@ public class IndelConsensusReads
                 BaseQualPair consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                         locationBases, locationQuals, consensusState.Chromosome, basePosition, isDualStrand, isFirstInPair);
 
-                /*
-                BaseQualPair consensusBaseAndQual;
-
-                if(isDualStrand && basePosition != INVALID_POSITION)
-                {
-                    // split the reads into 2 consensus reads and then compare
-                    consensusBaseAndQual = mBaseBuilder.determineDualStrandBaseAndQual(
-                            isFirstInPair, locationBases, locationQuals, consensusState.Chromosome, basePosition);
-                }
-                else
-                {
-                    consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
-                            locationBases, locationQuals, consensusState.Chromosome, basePosition);
-                }
-                */
-
                 consensusState.Bases[baseIndex] = consensusBaseAndQual.Base;
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual.Qual;
             }

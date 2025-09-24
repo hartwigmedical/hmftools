@@ -170,6 +170,51 @@ public class SbxConsensusTest
     }
 
     @Test
+    public void testSbxIndelConsensus()
+    {
+        List<SAMRecord> reads = Lists.newArrayList();
+
+        int position = 1;
+        String refBases = REF_BASES.substring(position, 11);
+
+        // 1 read has an insert, the other does not
+        byte[] baseQuals = buildBaseQuals(refBases.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read1 = createSamRecord(refBases, position, baseQuals);
+        reads.add(read1);
+
+        String readBases = "T" + refBases.substring(1);
+        baseQuals = buildBaseQuals(readBases.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read2 = createSamRecord(readBases, position, baseQuals);
+        reads.add(read2);
+
+        baseQuals = buildBaseQuals(readBases.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read3 = createSamRecord(readBases, position, baseQuals);
+        reads.add(read3);
+
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(readBases, readInfo.ConsensusRead.getReadString());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+
+        for(int i = 0; i < readInfo.ConsensusRead.getBaseQualities().length; ++i)
+        {
+            assertEquals(RAW_SIMPLEX_QUAL, readInfo.ConsensusRead.getBaseQualities()[i]);
+        }
+
+        assertEquals(position, readInfo.ConsensusRead.getAlignmentStart());
+
+        // test again with no bases agreeing
+        readBases = "G" + refBases.substring(1);
+
+        read3 = createSamRecord(readBases, position, baseQuals);
+        reads.set(2, read3);
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(refBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(SIMPLEX_NO_CONSENSUS_QUAL, readInfo.ConsensusRead.getBaseQualities()[0]);
+    }
+
+    @Test
     public void testSbxFinaliseReads()
     {
         int position = 1;

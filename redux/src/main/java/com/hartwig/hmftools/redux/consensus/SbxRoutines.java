@@ -75,7 +75,7 @@ public final class SbxRoutines
 
     public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
 
-    public static void stripDuplexIndelsNew(final SAMRecord record)
+    public static void stripDuplexIndels(final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
             return;
@@ -102,21 +102,12 @@ public final class SbxRoutines
         if(duplexIndelIndices.isEmpty())
             return;
 
-        //if(!isForward)
-        //    reverseDuplexIndelIndices(duplexIndelIndices, record.getReadBases().length);
-
         SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, duplexIndelIndices);
 
         List<SbxDuplexIndel> duplexIndels = builder.duplexIndels();
 
         if(duplexIndels.isEmpty())
             return;
-
-        // List<SbxAnnotatedBase> oldAnnotatedBases = getAnnotatedBases(record, duplexIndelIndices);
-        // boolean oldReadModified = processAnnotatedBases(refGenome, chromosome, oldAnnotatedBases, isForward);
-
-        // CHECK: is there a scenario where the base quals are altered but no indels are stripped?
-        // boolean replaceReadBaseQuals = newBaseLength != record.getReadBases().length;
 
         int strippedBases = duplexIndels.stream().mapToInt(x -> x.deletedBaseCount()).sum();
         int oldBaseLength = record.getReadBases().length;
@@ -164,10 +155,11 @@ public final class SbxRoutines
 
             boolean isStrippedIndelBase = false;
             boolean isLowQualBase = false;
+            int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
+            boolean withinDuplexIndelBounds = duplexIndel != null && duplexIndel.withinBounds (effectReadIndex);
 
-            if(duplexIndel != null && (oldElement.getOperator() == I || oldElement.getOperator() == M))
+            if(withinDuplexIndelBounds && (oldElement.getOperator() == I || oldElement.getOperator() == M))
             {
-                int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
                 if(duplexIndel.isLowQualBase(effectReadIndex))
                 {
                     isLowQualBase = true;
@@ -227,7 +219,7 @@ public final class SbxRoutines
 
                     if(isLowQualBase)
                         qual = SBX_DUPLEX_MISMATCH_QUAL;
-                    else if(existingQual == RAW_DUPLEX_MISMATCH_QUAL)
+                    else if(existingQual == RAW_DUPLEX_MISMATCH_QUAL && withinDuplexIndelBounds)
                         qual = RAW_DUPLEX_QUAL; // restore to duplex value
                     else
                         qual = existingQual;
@@ -281,7 +273,7 @@ public final class SbxRoutines
         record.setCigar(new Cigar(newCigarElements));
     }
 
-    public static void stripDuplexIndels(final RefGenomeInterface refGenome, final SAMRecord record)
+    public static void stripDuplexIndelsOld(final RefGenomeInterface refGenome, final SAMRecord record)
     {
         if(record.getReadUnmappedFlag())
             return;
@@ -619,6 +611,7 @@ public final class SbxRoutines
 
             // look backward to get start of the repeat
             int repeatStrIndex = duplexIndelBases.length() - 1;
+            int duplexIndelMismatches = duplexIndelBases.length();
             int readRepeatLength = duplexIndelBases.length();
             int readRepeatStart = i;
             for(int j = i - 1; j >= 0; j--)
@@ -985,6 +978,7 @@ public final class SbxRoutines
                     break;
 
                 case DUPLEX_NO_CONSENSUS_QUAL:
+                case RAW_DUPLEX_MISMATCH_QUAL:
                 default:
                     newBaseQuals[i] = SBX_DUPLEX_MISMATCH_QUAL;
                     break;

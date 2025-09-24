@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
@@ -18,7 +19,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.getAnnotatedBases;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.processAnnotatedBases;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndelsNew;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -106,32 +106,57 @@ public class SbxDuplexReadTest
     {
         int alignmentStart = 10;
 
-        // test 1: 1 low-qual base in 2-base repeat
+        // test invalid: no stripping for a SNV
 
-        //                01234567
-        String readStr = "CTCTTACC";
-        String cigar = "3M1I4M";
+        //                012567
+        String readStr = "CTCACC";
+        String cigar = "6M";
 
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[4] = 0;
+        baseQuals[3] = 0;
         read.setBaseQualities(baseQuals);
 
-        String ycTagStr = "0-4Z3-0";
+        String ycTagStr = "0-3Z2-0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
-        assertEquals("7M", read.getCigarString());
-        assertEquals("CTCTACC", read.getReadString());
+        assertEquals("6M", read.getCigarString());
+        assertEquals("CTCACC", read.getReadString());
         checkBaseQuals(read, List.of(3));
+        assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+
+        // test 0: 1 low-qual base not in a repeat
+
+        //         01234567
+        readStr = "CTCTACC";
+        cigar = "3M1I3M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+        baseQuals[3] = 0;
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-3Z3-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
+        read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
+
+        stripDuplexIndels(read);
+
+        assertEquals("6M", read.getCigarString());
+        assertEquals("CTCACC", read.getReadString());
+        checkBaseQuals(read, Collections.emptyList());
         assertEquals(0, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
-        // read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
 
         // test 2: as before in 2-base repeat
 
@@ -152,7 +177,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         assertEquals("3M1I4M", read.getCigarString());
         assertEquals("CTCTTACC", read.getReadString());
@@ -179,7 +204,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         assertEquals("8M", read.getCigarString());
         assertEquals("CTCTTACC", read.getReadString());
@@ -206,7 +231,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 3);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         assertEquals("3M1I5M", read.getCigarString());
         assertEquals("CTCTTTACC", read.getReadString());
@@ -233,7 +258,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 4);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         assertEquals("3M2I5M", read.getCigarString());
         assertEquals("CTCATTTACC", read.getReadString());
@@ -266,7 +291,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 4);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         assertEquals("3M2I5M", read.getCigarString());
         assertEquals("CTCATATACC", read.getReadString());
@@ -275,7 +300,7 @@ public class SbxDuplexReadTest
 
         // test 2: requiring left alignment after trimming
         //         012     3456     78     901
-        readStr = "CTC" + "AAAA" + "AG" + "ACC";
+        readStr = "CTC" + "AAAA" + "AG" + "CTC";
         cigar = "7M2I3M";
 
         // M MMMM II M    M MMMM I M    M I MMMM M
@@ -286,7 +311,6 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
         baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
-        baseQuals[7] = 0;
         baseQuals[8] = 0;
         read.setBaseQualities(baseQuals);
 
@@ -296,14 +320,41 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         // read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
-        /*
-        assertEquals("3M2I5M", read.getCigarString());
-        assertEquals("CTCATATACC", read.getReadString());
-        checkBaseQuals(read, List.of(3, 6));
-        assertEquals(2, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
-        */
+        assertEquals("3M1I7M", read.getCigarString());
+        assertEquals("CTCAAAAACTC", read.getReadString());
+        checkBaseQuals(read, Collections.emptyList());
+        assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+
+        // test 3: low-qual base is right aligned
+        // MMMMM I MMMMMMMM
+        // CTTTA T TTTTATTA
+        // 99990 9 99909999
+        //         01234     5     6789012
+        readStr = "CTTTA" + "T" + "TTTTACC";
+        cigar = "5M1I7M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+        baseQuals[4] = 0;
+        baseQuals[9] = 0;
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-4Z4Z3-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        // read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
+
+        stripDuplexIndels(read);
+
+        assertEquals("12M", read.getCigarString());
+        assertEquals("CTTTATTTTACC", read.getReadString());
+        checkBaseQuals(read, List.of(4, 5, 8));
+        assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
    }
 
     private static void checkBaseQuals(final SAMRecord read, final List<Integer> lowQualBases)
@@ -312,7 +363,8 @@ public class SbxDuplexReadTest
         {
             if(lowQualBases.contains(i))
             {
-                assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[i]);
+                if(read.getBaseQualities()[i] != RAW_DUPLEX_MISMATCH_QUAL && read.getBaseQualities()[i] != SBX_DUPLEX_MISMATCH_QUAL)
+                    assertFalse(true);
             }
             else
             {
@@ -531,7 +583,7 @@ public class SbxDuplexReadTest
 
         // SbxRoutines.stripDuplexIndels(refGenome, read);
 
-        stripDuplexIndelsNew(read);
+        stripDuplexIndels(read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -579,7 +631,7 @@ public class SbxDuplexReadTest
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
-        SbxRoutines.stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndelsOld(refGenome, read);
 
         int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
 
@@ -632,7 +684,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
-        SbxRoutines.stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndelsOld(refGenome, read);
 
         assertEquals("20M23S", read.getCigarString());
         assertEquals(43, read.getReadBases().length);
@@ -646,7 +698,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
-        SbxRoutines.stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndelsOld(refGenome, read);
 
         assertEquals("20M23S", read.getCigarString());
         assertEquals(43, read.getReadBases().length);
@@ -659,7 +711,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
-        SbxRoutines.stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndelsOld(refGenome, read);
 
         assertEquals("20M23S", read.getCigarString());
         assertEquals(43, read.getReadBases().length);
@@ -677,7 +729,7 @@ public class SbxDuplexReadTest
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
 
-        SbxRoutines.stripDuplexIndels(refGenome, read);
+        SbxRoutines.stripDuplexIndelsOld(refGenome, read);
 
         assertEquals("23S20M", read.getCigarString());
         assertEquals(43, read.getReadBases().length);

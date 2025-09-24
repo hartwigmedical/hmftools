@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
@@ -90,44 +91,26 @@ public class SbxDuplexIndelBuilder
     private void processDuplexIndel(final ReadBaseInfo readBaseInfo, int duplexIndelIndexStart, int duplexIndelIndexEnd)
     {
         int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
-        byte[] repeatBases = new byte[duplexMismatchLength];
-
-        for(int i = 0; i < duplexMismatchLength; ++i)
-        {
-            repeatBases[i] = mRecord.getReadBases()[duplexIndelIndexStart + i];
-        }
-
-        // convert to 1-base homopolymer if all bases match
-        if(repeatBases.length > 1)
-        {
-            boolean isSingleBase = true;
-            for(int i = 1; i < repeatBases.length; ++i)
-            {
-                if(repeatBases[i] != repeatBases[0])
-                {
-                    isSingleBase = false;
-                    break;
-                }
-            }
-
-            if(isSingleBase)
-            {
-                repeatBases = new byte[] { repeatBases[0] };
-            }
-        }
-
+        byte[] repeatBases = findDuplexMismatchRepeat(mRecord.getReadBases(), duplexIndelIndexStart, duplexIndelIndexEnd);
         int repeatLength = repeatBases.length;
 
         // search backwards and within inserted bases to find the start of the repeat
         int repeatStrIndex = repeatLength - 1;
         int insertRepeatCount = 0;
         int firstReadInsertIndex = -1;
+        boolean duplexMismatchInInsert = readBaseInfo.CigarOp == I;
+
+        if(readBaseInfo.CigarOp == I)
+        {
+            duplexMismatchInInsert = true;
+            firstReadInsertIndex = readBaseInfo.Index;
+        }
 
         while(readBaseInfo.Index >= 0)
         {
             movePrevious(readBaseInfo);
 
-            if(readBaseInfo.CigarOp != I)
+            if(readBaseInfo.CigarOp != I && readBaseInfo.CigarOp != M)
                 break;
 
             if(repeatBases[repeatStrIndex] != readBaseInfo.Base)
@@ -144,14 +127,14 @@ public class SbxDuplexIndelBuilder
         }
 
         // the repeat must be either wholy contained within the inserted bases or continue on past the insert without a gap
-        if(firstReadInsertIndex < 0 || insertRepeatCount == 0)
+        if(firstReadInsertIndex < 0 || (insertRepeatCount == 0 && !duplexMismatchInInsert))
             return;
 
         int insertRepeatLength = insertRepeatCount * repeatLength;
 
         int totalRepeatBaseLength = insertRepeatLength + duplexMismatchLength;
 
-        int trimLength = min(insertRepeatLength, duplexMismatchLength);
+        int trimLength = insertRepeatLength > 0 ? min(insertRepeatLength, duplexMismatchLength) : duplexMismatchLength;
 
         int lowBaseQualCount = duplexMismatchLength;
 
@@ -208,6 +191,30 @@ public class SbxDuplexIndelBuilder
                 firstReadInsertIndex, lowQualIndices, deletedIndelIndexStart, deletedIndelIndexEnd);
 
         mDuplexIndels.add(duplexIndel);
+    }
+
+    private static byte[] findDuplexMismatchRepeat(final byte[] readBases, int duplexIndelIndexStart, int duplexIndelIndexEnd)
+    {
+        int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
+        byte[] repeatBases = new byte[duplexMismatchLength];
+
+        boolean isHomopolymer = true;
+
+        for(int i = 0; i < duplexMismatchLength; ++i)
+        {
+            repeatBases[i] = readBases[duplexIndelIndexStart + i];
+
+            if(i > 0 && repeatBases[i] != repeatBases[0])
+                isHomopolymer = false;
+        }
+
+        // convert to 1-base homopolymer if all bases match
+        if(repeatBases.length > 1 && isHomopolymer)
+        {
+            repeatBases = new byte[] { repeatBases[0] };
+        }
+
+        return repeatBases;
     }
 
     private void buildAdjustedSupplementaryCigar()
