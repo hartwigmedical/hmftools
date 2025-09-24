@@ -97,14 +97,8 @@ public class SbxDuplexIndelBuilder
         // search backwards and within inserted bases to find the start of the repeat
         int repeatStrIndex = repeatLength - 1;
         int insertRepeatCount = 0;
-        int firstReadInsertIndex = -1;
         boolean duplexMismatchInInsert = readBaseInfo.CigarOp == I;
-
-        if(readBaseInfo.CigarOp == I)
-        {
-            duplexMismatchInInsert = true;
-            firstReadInsertIndex = readBaseInfo.Index;
-        }
+        int firstReadInsertIndex = readBaseInfo.CigarOp == I ? readBaseInfo.Index : -1;
 
         while(readBaseInfo.Index >= 0)
         {
@@ -184,6 +178,11 @@ public class SbxDuplexIndelBuilder
                     --remainingLowQualCount;
                 }
             }
+
+            if(trimCount == trimLength && remainingLowQualCount == 0)
+                break;
+
+            moveNext(readBaseInfo);
         }
 
         SbxDuplexIndel duplexIndel = new SbxDuplexIndel(

@@ -108,16 +108,6 @@ public class SbxBamUtils
         return duplexIndels;
     }
 
-    public static void reverseDuplexIndelIndices(final List<Integer> duplexIndelIndices, final int readLength)
-    {
-        int maxIndex = readLength - 1;
-
-        for(int i = 0; i < duplexIndelIndices.size(); ++i)
-        {
-            duplexIndelIndices.set(i, maxIndex - duplexIndelIndices.get(i));
-        }
-    }
-
     @Nullable
     private static String parseInt(final String s, int start)
     {

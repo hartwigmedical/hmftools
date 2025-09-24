@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndelsOld;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -205,7 +205,7 @@ public class PartitionReader
     {
         if(isSbx())
         {
-            stripDuplexIndelsOld(mConfig.RefGenome, read);
+            stripDuplexIndels(read);
         }
     }
 
