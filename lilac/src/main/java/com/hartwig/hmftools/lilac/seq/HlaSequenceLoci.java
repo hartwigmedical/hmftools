@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.seq;
 
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries_;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DELETION;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.EXON_BOUNDARY;
@@ -144,7 +144,7 @@ public class HlaSequenceLoci
         if(!sequence.hasWildcards())
             return loci;
 
-        List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
+        List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries_(sequence.Allele.Gene);
 
         return loci.stream()
                 .filter(x -> !aminoAcidExonBoundaries.contains(x)

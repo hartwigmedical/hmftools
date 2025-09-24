@@ -40,7 +40,7 @@ public final class Candidates
     public List<HlaAllele> unphasedCandidates(
 	    final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
     {
-        List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
+        List<Integer> aminoAcidBoundary_ = context.AminoAcidBoundaries_;
 
         LL_LOGGER.debug("gene({}) determining un-phased candidates from frags({})", context.geneName(), fragments.size());
 
@@ -53,7 +53,7 @@ public final class Candidates
 
         // Amino acid filtering
         List<HlaSequenceLoci> aminoAcidCandidates = filterSequencesByMinSupport(geneCandidates, aminoAcidCounts,
-                Sets.newTreeSet(context.AminoAcidBoundaries), RAW_REF_AMINO_ACID_COUNTS_.get(context.Gene));
+                Sets.newTreeSet(context.AminoAcidBoundaries_), RAW_REF_AMINO_ACID_COUNTS_.get(context.Gene));
 
         List<HlaAllele> aminoAcidCandidateAlleles = aminoAcidCandidates.stream().map(x -> x.Allele).collect(Collectors.toList());
 
@@ -71,7 +71,7 @@ public final class Candidates
         LL_LOGGER.info("gene({}) {} candidates after amino acid filtering", context.geneName(), aminoAcidCandidates.size());
 
         // Nucleotide filtering
-        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(aminoAcidBoundary);
+        NucleotideFiltering nucleotideFiltering = new NucleotideFiltering(aminoAcidBoundary_);
 
         List<HlaSequenceLoci> nucleotideCandidatesAfterAminoAcidFiltering = mNucleotideSequences.stream()
                 .filter(x -> aminoAcidSpecificAllelesCandidates.contains(x.Allele.asFourDigit()))
@@ -97,7 +97,7 @@ public final class Candidates
 
     @VisibleForTesting
     public static List<HlaSequenceLoci> filterSequencesByMinSupport(final Collection<HlaSequenceLoci> candidates,
-            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries, @Nullable final SequenceCount rawAminoAcidCounts_)
+            final SequenceCount aminoAcidCount, final Set<Integer> aminoAcidBoundaries_, @Nullable final SequenceCount rawAminoAcidCounts_)
     {
         // eliminate sequences without min support for their amino acid at each loco, ignoring exon boundaries
         List<HlaSequenceLoci> candidateSequences = Lists.newArrayList();
@@ -105,7 +105,7 @@ public final class Candidates
 
         for(final int locus : aminoAcidCount.seqCountsByLoci().keySet())
         {
-            if(aminoAcidBoundaries.contains(locus))
+            if(aminoAcidBoundaries_.contains(locus))
                 continue;
 
             if(rawAminoAcidCounts_ != null && rawAminoAcidCounts_.get(locus).size() < MIN_DEPTH_FILTER)

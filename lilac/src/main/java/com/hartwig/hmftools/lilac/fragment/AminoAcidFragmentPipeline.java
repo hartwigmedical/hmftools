@@ -125,12 +125,12 @@ public class AminoAcidFragmentPipeline
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
                 context, geneRefNucFrags, highQualFrags);
 
-        int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
+        int maxCommonAminoAcidExonBoundary_ = GENE_CACHE.MaxCommonAminoAcidExonBoundary_;
 
-        Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
-                .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
+        Set<Integer> aminoAcidBoundaries_ = context.AminoAcidBoundaries_.stream()
+                .filter(x -> x <= maxCommonAminoAcidExonBoundary_).collect(Collectors.toSet());
 
-        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(aminoAcidBoundaries);
+        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(aminoAcidBoundaries_);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
         List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(

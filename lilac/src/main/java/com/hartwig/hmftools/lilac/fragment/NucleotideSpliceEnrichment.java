@@ -13,12 +13,12 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 public class NucleotideSpliceEnrichment
 {
     private final byte mMinBaseQuality;
-    private final Set<Integer> mAminoAcidBoundary;
+    private final Set<Integer> mAminoAcidBoundary_;
 
-        public NucleotideSpliceEnrichment(final Set<Integer> aminoAcidBoundary)
+        public NucleotideSpliceEnrichment(final Set<Integer> aminoAcidBoundary_)
     {
         mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
-        mAminoAcidBoundary = aminoAcidBoundary;
+        mAminoAcidBoundary_ = aminoAcidBoundary_;
     }
 
     public List<Fragment> applySpliceInfo(final List<Fragment> fragments, final List<Fragment> highQualFrags)
@@ -26,19 +26,19 @@ public class NucleotideSpliceEnrichment
         // fragments are all in nucleotide-space
 
         SequenceCount nucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, highQualFrags);
-        Set<Integer> nucleotideExonBoundaryStarts = mAminoAcidBoundary.stream().map(x -> x * 3).collect(Collectors.toSet());
+        Set<Integer> nucleotideExonBoundaryStarts_ = mAminoAcidBoundary_.stream().map(x -> x * 3).collect(Collectors.toSet());
         List<Integer> homLoci = Lists.newArrayList(nucleotideCounts.homozygousLoci());
 
-        Set<Integer> homStarts = nucleotideExonBoundaryStarts.stream().filter(x -> homLoci.contains(x)).collect(Collectors.toSet());
+        Set<Integer> homStarts_ = nucleotideExonBoundaryStarts_.stream().filter(x -> homLoci.contains(x)).collect(Collectors.toSet());
 
-        Set<Integer> homEnds = nucleotideExonBoundaryStarts.stream()
+        Set<Integer> homEnds_ = nucleotideExonBoundaryStarts_.stream()
                 .filter(x -> homLoci.contains(x + 1) && homLoci.contains(x + 2)).collect(Collectors.toSet());
 
         final List<Fragment> results = Lists.newArrayList();
 
         for(Fragment fragment : fragments)
         {
-            for(Integer homStart : homStarts)
+            for(Integer homStart : homStarts_)
             {
                 if(missingStart(homStart, fragment))
                 {
@@ -46,7 +46,7 @@ public class NucleotideSpliceEnrichment
                 }
             }
 
-            for(Integer homEnd : homEnds)
+            for(Integer homEnd : homEnds_)
             {
                 if(missingEnd(homEnd, fragment))
                     addEnd(fragment, homEnd, nucleotideCounts);

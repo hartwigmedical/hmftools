@@ -26,6 +26,8 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariantAnnotation
@@ -41,6 +43,12 @@ public class SomaticVariantAnnotation
 
     public SomaticVariantAnnotation(final LilacConfig config, final Map<HlaGene_, TranscriptData> transcriptData_)
     {
+        // TODO:
+        if(true)
+        {
+            throw new NotImplementedException("TODO");
+        }
+
         mConfig = config;
         mHlaTranscriptData_ = transcriptData_;
 

@@ -2,8 +2,8 @@ package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
-import static com.hartwig.hmftools.lilac.ReferenceData.getNucleotideExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries_;
+import static com.hartwig.hmftools.lilac.ReferenceData.getNucleotideExonBoundaries_;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.NO_HET_LOCI;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNMATCHED_AMINO_ACID;
@@ -296,13 +296,13 @@ public class FragmentAlleleMapper
                 fragNucleotideLoci = fragNucleotideLoci.stream().collect(Collectors.toList());
 
                 // ignore any wildcard loci at an exon boundary
-                List<Integer> nucleotideExonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
+                List<Integer> nucleotideExonBoundaries_ = getNucleotideExonBoundaries_(sequence.Allele.Gene);
 
                 int index = 0;
                 while(index < fragNucleotideLoci.size())
                 {
                     int locus = fragNucleotideLoci.get(index);
-                    boolean wildcardExonBoundary = nucleotideExonBoundaries.contains(locus)
+                    boolean wildcardExonBoundary = nucleotideExonBoundaries_.contains(locus)
                             && locus < sequence.length() && sequence.sequence(locus).equals(WILD_STR);
 
                     if(!wildcardExonBoundary)
@@ -418,13 +418,13 @@ public class FragmentAlleleMapper
                 fragAminoAcidLoci = fragAminoAcidLoci.stream().collect(Collectors.toList());
 
                 // ignore any wildcard loci at an exon boundary
-                List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
+                List<Integer> aminoAcidExonBoundaries_ = getAminoAcidExonBoundaries_(sequence.Allele.Gene);
 
                 int index = 0;
                 while(index < fragAminoAcidLoci.size())
                 {
                     int locus = fragAminoAcidLoci.get(index);
-                    boolean wildcardExonBoundary = aminoAcidExonBoundaries.contains(locus)
+                    boolean wildcardExonBoundary = aminoAcidExonBoundaries_.contains(locus)
                             && locus < sequence.length() && sequence.sequence(locus).equals(WILD_STR);
 
                     if(!wildcardExonBoundary)

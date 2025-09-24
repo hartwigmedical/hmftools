@@ -7,13 +7,13 @@ import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 public class HlaContext
 {
     public final HlaGene_ Gene;
-    public final List<Integer> AminoAcidBoundaries;
+    public final List<Integer> AminoAcidBoundaries_;
     public final ExpectedAlleles ExpectedAlleles;
 
-    public HlaContext(final HlaGene_ gene, final List<Integer> aminoAcidBoundaries, final ExpectedAlleles expectedAlleles)
+    public HlaContext(final HlaGene_ gene, final List<Integer> aminoAcidBoundaries_, final ExpectedAlleles expectedAlleles)
     {
         // TODO:
-        if(aminoAcidBoundaries == null)
+        if(aminoAcidBoundaries_ == null)
         {
             throw new RuntimeException("aminoAcidBoundaries == null");
         }
@@ -25,7 +25,7 @@ public class HlaContext
         }
 
         Gene = gene;
-        AminoAcidBoundaries = aminoAcidBoundaries;
+        AminoAcidBoundaries_ = aminoAcidBoundaries_;
         ExpectedAlleles = expectedAlleles;
     }
 

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMENTS;
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries_;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
@@ -290,7 +290,7 @@ public class HlaYCoverage
         if(fragment.aminoAcidsByLoci().containsKey(Y0101_X_LOCUS) && fragment.aminoAcid(Y0101_X_LOCUS).equals("X"))
             ++miscCounts[Y0101_X];
 
-        List<Integer> hlaAExonBoundaries = getAminoAcidExonBoundaries(HLA_A);
+        List<Integer> hlaAExonBoundaries = getAminoAcidExonBoundaries_(HLA_A);
         int exon3Start = hlaAExonBoundaries.get(1) + 1;
         int exon3End = hlaAExonBoundaries.get(2);
 

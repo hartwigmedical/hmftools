@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
@@ -101,6 +102,8 @@ public class ReferenceData
         mConfig = config;
 
         Map<HlaGene_, TranscriptData> hlaTranscriptMap_ = loadHlaTranscripts_(config.RefGenVersion, mConfig.Genes);
+        if(config.Genes == HLA_DRB1)
+            hlaTranscriptMap_ = trimDrb1Transcripts(hlaTranscriptMap_);
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
@@ -114,7 +117,7 @@ public class ReferenceData
 
         // see note above
         for(HlaGene_ gene : GENE_CACHE.GeneNames)
-            GENE_EXON_BOUNDARIES_.computeIfAbsent(gene, k -> Lists.newArrayList()).addAll(GENE_CACHE.AminoAcidExonBoundaries.get(gene));
+            GENE_EXON_BOUNDARIES_.computeIfAbsent(gene, k -> Lists.newArrayList()).addAll(GENE_CACHE.AminoAcidExonBoundaries_.get(gene));
 
 
         HLA_CONTEXT_FACTORY = new HlaContextFactory(mConfig, GENE_EXON_BOUNDARIES_);
@@ -141,6 +144,20 @@ public class ReferenceData
         KnownStopLossIndelAlleles = Maps.newHashMap();
     }
 
+    private static Map<HlaGene_, TranscriptData> trimDrb1Transcripts(final Map<HlaGene_, TranscriptData> transcripts)
+    {
+        // restrict to first three exons
+        TranscriptData transcript = transcripts.get(HlaGene_.HLA_DRB1);
+        List<ExonData> exons = Lists.newArrayList(transcript.exons());
+        exons = exons.subList(exons.size() - 3, exons.size());
+        int trimmedCodingStart = exons.get(0).Start + 1;
+        TranscriptData trimmedTranscript = new TranscriptData(transcript.TransId, transcript.TransName, transcript.GeneId, transcript.IsCanonical, transcript.Strand, transcript.TransStart, transcript.TransEnd, trimmedCodingStart, transcript.CodingEnd, transcript.BioType, transcript.RefSeqId);
+        trimmedTranscript.setExons(exons);
+        Map<HlaGene_, TranscriptData> trimmedTranscripts = Maps.newHashMap();
+        trimmedTranscripts.put(HlaGene_.HLA_DRB1, trimmedTranscript);
+        return trimmedTranscripts;
+    }
+
     private static void setPonIndels(final RefGenomeVersion version)
     {
         // load indel PON
@@ -161,14 +178,14 @@ public class ReferenceData
     }
 
     // HLA gene convenience methods
-    public static List<Integer> getAminoAcidExonBoundaries(final HlaGene_ gene)
+    public static List<Integer> getAminoAcidExonBoundaries_(final HlaGene_ gene)
     {
-        return GENE_CACHE.AminoAcidExonBoundaries.get(gene);
+        return GENE_CACHE.AminoAcidExonBoundaries_.get(gene);
     }
 
-    public static List<Integer> getNucleotideExonBoundaries(final HlaGene_ gene)
+    public static List<Integer> getNucleotideExonBoundaries_(final HlaGene_ gene)
     {
-        return GENE_CACHE.NucleotideExonBoundaries.get(gene);
+        return GENE_CACHE.NucleotideExonBoundaries_.get(gene);
     }
 
     private void populateAminoAcidSequenceLookup()
@@ -182,7 +199,7 @@ public class ReferenceData
             if(allele.Gene.isPseudo())
                 continue;
 
-            ExonSequencesLookup.computeIfAbsent(allele, k -> HlaExonSequences.create(GENE_CACHE.AminoAcidExonBoundaries, seq));
+            ExonSequencesLookup.computeIfAbsent(allele, k -> HlaExonSequences.create(GENE_CACHE.AminoAcidExonBoundaries_, seq));
         }
     }
 
@@ -280,7 +297,7 @@ public class ReferenceData
             if(sequence.Allele.Gene.isPseudo())
                 continue;
 
-            List<Integer> exonBoundaries = getAminoAcidExonBoundaries(sequence.Allele.Gene);
+            List<Integer> exonBoundaries = getAminoAcidExonBoundaries_(sequence.Allele.Gene);
             sequence.setExonBoundaryWildcards(exonBoundaries);
         }
 
@@ -289,7 +306,7 @@ public class ReferenceData
             if(sequence.Allele.Gene.isPseudo())
                 continue;
 
-            List<Integer> exonBoundaries = getNucleotideExonBoundaries(sequence.Allele.Gene);
+            List<Integer> exonBoundaries = getNucleotideExonBoundaries_(sequence.Allele.Gene);
             sequence.setExonBoundaryWildcards(exonBoundaries);
         }
     }
@@ -467,8 +484,17 @@ public class ReferenceData
                 continue;
 
             String sequenceStr = items[1];
-
             HlaSequenceLoci newSequence = HlaSequenceFile.createFromReference(allele, sequenceStr, isProteinFile);
+
+            // restrict to first three exons on HLA-DRB1
+            if(mConfig.Genes == HLA_DRB1)
+            {
+                int nucCount = GENE_CACHE.NucleotideLengths.get(HlaGene_.HLA_DRB1);
+                int acidCount = nucCount / 3;
+                int trimLength = isProteinFile ? acidCount : nucCount;
+                List<String> trimmedSequence = Lists.newArrayList(newSequence.getSequences().subList(0, min(trimLength, newSequence.getSequences().size())));
+                newSequence =  new HlaSequenceLoci(allele, trimmedSequence);
+            }
 
             if(isDefaultTemplate)
                 mDeflatedSequenceTemplate = newSequence;

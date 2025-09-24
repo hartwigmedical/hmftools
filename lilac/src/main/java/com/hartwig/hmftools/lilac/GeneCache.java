@@ -5,16 +5,12 @@ import static java.lang.Math.min;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
-
-import org.apache.commons.lang3.NotImplementedException;
 
 public class GeneCache
 {
@@ -26,32 +22,32 @@ public class GeneCache
 
     public final int ExpectAlleleCount;
 
-    public final Map<HlaGene_, List<Integer>> AminoAcidExonBoundaries;
-    public final int MaxCommonAminoAcidExonBoundary;
+    public final Map<HlaGene_, List<Integer>> AminoAcidExonBoundaries_;
+    public final int MaxCommonAminoAcidExonBoundary_;
 
-    public final Map<HlaGene_, List<Integer>> NucleotideExonBoundaries;
+    public final Map<HlaGene_, List<Integer>> NucleotideExonBoundaries_;
     public final Map<HlaGene_, Integer> NucleotideLengths;
 
-    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene_, TranscriptData> hlaTranscriptMap_)
     {
-        GeneTranscriptMap_ = hlaTranscriptMap;
+        GeneTranscriptMap_ = hlaTranscriptMap_;
 
         // establish other properties and commonly used constants
         GeneNames = GeneTranscriptMap_.keySet().stream().sorted().toList(); // long names matching Ensembl
 
-        Transcripts_ = Lists.newArrayListWithExpectedSize(hlaTranscriptMap.size());
+        Transcripts_ = Lists.newArrayListWithExpectedSize(hlaTranscriptMap_.size());
         GeneNames.forEach(x -> Transcripts_.add(GeneTranscriptMap_.get(x)));
 
         ExpectAlleleCount = GeneNames.size() * 2;
 
-        AminoAcidExonBoundaries = Maps.newHashMap();
-        NucleotideExonBoundaries = Maps.newHashMap();
+        AminoAcidExonBoundaries_ = Maps.newHashMap();
+        NucleotideExonBoundaries_ = Maps.newHashMap();
         NucleotideLengths = Maps.newHashMap();
 
         for(HlaGene_ geneName : GeneNames)
             setExonBoundaryValues(geneName, GeneTranscriptMap_.get(geneName));
 
-        MaxCommonAminoAcidExonBoundary = findMaxCommonAminoAcidBoundary();
+        MaxCommonAminoAcidExonBoundary_ = findMaxCommonAminoAcidBoundary_();
     }
 
     private void setExonBoundaryValues(final HlaGene_ geneName, final TranscriptData transcriptData_)
@@ -68,10 +64,10 @@ public class GeneCache
         int totalCodingBases = 0;
 
         List<Integer> aminoAcidExonBoundaries = Lists.newArrayListWithExpectedSize(10);
-        AminoAcidExonBoundaries.put(geneName, aminoAcidExonBoundaries);
+        AminoAcidExonBoundaries_.put(geneName, aminoAcidExonBoundaries);
 
         List<Integer> nucleotideExonBoundaries = Lists.newArrayListWithExpectedSize(10);
-        NucleotideExonBoundaries.put(geneName, nucleotideExonBoundaries);
+        NucleotideExonBoundaries_.put(geneName, nucleotideExonBoundaries);
 
         while(exonIndex >= 0 && exonIndex < exonCount)
         {
@@ -127,11 +123,11 @@ public class GeneCache
         NucleotideLengths.put(geneName, totalCodingBases);
     }
 
-    private int findMaxCommonAminoAcidBoundary()
+    private int findMaxCommonAminoAcidBoundary_()
     {
         int maxCommonAminoAcidBoundary = 0;
 
-        List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries.values().stream().toList();
+        List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries_.values().stream().toList();
 
         List<Integer> firstSet = aminoAcidBoundaries.get(0);
 

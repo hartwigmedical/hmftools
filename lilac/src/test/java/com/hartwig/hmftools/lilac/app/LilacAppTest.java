@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
-import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES_;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
@@ -71,9 +71,9 @@ public class LilacAppTest
             return;
 
         GENE_CACHE = new GeneCache(loadHlaTranscripts(V37, GeneSelector.MHC_CLASS_1));
-        GENE_EXON_BOUNDARIES_.put(HLA_A, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
-        GENE_EXON_BOUNDARIES_.put(HLA_B, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
-        GENE_EXON_BOUNDARIES_.put(HLA_C, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
+        GENE_EXON_BOUNDARIES.put(HLA_A, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
+        GENE_EXON_BOUNDARIES.put(HLA_B, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
+        GENE_EXON_BOUNDARIES.put(HLA_C, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
     }
 
     @Test

@@ -10,6 +10,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 public class LilacUtils
 {
     public static boolean aboveMinQual(byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }

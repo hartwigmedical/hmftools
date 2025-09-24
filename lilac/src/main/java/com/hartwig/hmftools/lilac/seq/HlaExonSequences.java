@@ -26,10 +26,10 @@ public final class HlaExonSequences
         ExonSequences = ImmutableList.copyOf(exonSequences);
     }
 
-    public static HlaExonSequences create(final Map<HlaGene_, List<Integer>> geneExonBoundaries, final HlaSequenceLoci sequence)
+    public static HlaExonSequences create(final Map<HlaGene_, List<Integer>> geneExonBoundaries_, final HlaSequenceLoci sequence)
     {
         HlaAllele allele = sequence.Allele;
-        List<Integer> exonBoundaries = geneExonBoundaries.get(allele.Gene);
+        List<Integer> exonBoundaries = geneExonBoundaries_.get(allele.Gene);
         List<String> acids = sequence.getSequences();
         List<List<String>> exonAcids = Lists.newArrayList();
 
@@ -61,6 +61,24 @@ public final class HlaExonSequences
 
             exonAcids.addAll(chunks);
             index = exonBoundary + 1;
+        }
+
+        if(index < acids.size())
+        {
+            List<String> exonAcid = acids.subList(index, acids.size());
+
+            List<List<String>> chunks = Lists.newArrayList();
+            int chunkCount = (int) ceil(((double) exonAcid.size()) / EXON_CHUNK_SIZE);
+            int chunkSize = (int) ceil(((double) exonAcid.size()) / chunkCount);
+            int start = 0;
+            while(start < exonAcid.size())
+            {
+                int end = min(start + chunkSize, exonAcid.size());
+                chunks.add(exonAcid.subList(start, end));
+                start = end;
+            }
+
+            exonAcids.addAll(chunks);
         }
 
         List<ExonSequence> exonSeqs = Lists.newArrayList();

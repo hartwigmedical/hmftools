@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.evidence;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
-import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries_;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB3;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_DRB4;
 
@@ -21,11 +21,11 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public class NucleotideFiltering
 {
-    private final List<Integer> mAminoAcidBoundaries;
+    private final List<Integer> mAminoAcidBoundaries_;
 
-    public NucleotideFiltering(final List<Integer> aminoAcidBoundaries)
+    public NucleotideFiltering(final List<Integer> aminoAcidBoundaries_)
     {
-        mAminoAcidBoundaries = aminoAcidBoundaries;
+        mAminoAcidBoundaries_ = aminoAcidBoundaries_;
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
@@ -34,7 +34,7 @@ public class NucleotideFiltering
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
 
-        for(int boundary : mAminoAcidBoundaries)
+        for(int boundary : mAminoAcidBoundaries_)
         {
             int nucleotideStart = boundary * 3;
             if(localSpanCount(gene, fragments, Lists.newArrayList(nucleotideStart, nucleotideStart + 1, nucleotideStart + 2))
@@ -98,19 +98,19 @@ public class NucleotideFiltering
 
         for(HlaGene_ gene : GENE_CACHE.GeneNames)
         {
-            List<Integer> aminoAcidExonBoundaries = getAminoAcidExonBoundaries(gene);
+            List<Integer> aminoAcidExonBoundaries_ = getAminoAcidExonBoundaries_(gene);
 
-            List<Integer> nucleotideExonBoundaries = Lists.newArrayList();
+            List<Integer> nucleotideExonBoundaries_ = Lists.newArrayList();
 
-            for(Integer boundary : aminoAcidExonBoundaries)
+            for(Integer boundary : aminoAcidExonBoundaries_)
             {
-                nucleotideExonBoundaries.add(boundary * 3);
-                nucleotideExonBoundaries.add(boundary * 3 + 1);
-                nucleotideExonBoundaries.add(boundary * 3 + 2);
+                nucleotideExonBoundaries_.add(boundary * 3);
+                nucleotideExonBoundaries_.add(boundary * 3 + 1);
+                nucleotideExonBoundaries_.add(boundary * 3 + 2);
             }
 
             hetLociMap.put(gene,
-                    refNucleotideHetLoci.stream().filter(nucleotideExonBoundaries::contains).collect(Collectors.toList()));
+                    refNucleotideHetLoci.stream().filter(nucleotideExonBoundaries_::contains).collect(Collectors.toList()));
 
         }
 

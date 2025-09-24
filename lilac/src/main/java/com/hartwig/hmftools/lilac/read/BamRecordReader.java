@@ -37,6 +37,8 @@ import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.hla.HlaGene_;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -208,14 +210,16 @@ public class BamRecordReader implements BamReader
         {
             Fragment fragment = null;
 
-            try
-            {
-                fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
-            }
-            catch(Exception e)
-            {
-                LL_LOGGER.error("read({}) failed to build fragment", read.toString());
-            }
+            // TODO:
+            fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
+//            try
+//            {
+//                fragment = mFragmentFactory.createFragment(read, geneName, geneStrand);
+//            }
+//            catch(Exception e)
+//            {
+//                LL_LOGGER.error("read({}) failed to build fragment", read.toString());
+//            }
 
             if(fragment != null)
             {

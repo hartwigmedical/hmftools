@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
-import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES_;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.hla.HlaGene_.HLA_A;
@@ -51,7 +51,7 @@ public class NucleotideTest
     {
         buildGeneCache();
 
-        NucleotideGeneEnrichment enricher = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES_);
+        NucleotideGeneEnrichment enricher = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();
         indices.add(337);
