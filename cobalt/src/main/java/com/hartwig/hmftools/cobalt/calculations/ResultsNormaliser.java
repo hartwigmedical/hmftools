@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import java.util.Collection;
-
 public interface ResultsNormaliser
 {
     void recordValue(BamRatio bamRatio);
+
+    default void recordsAllAdded()
+    {
+    }
+
     void applyNormalisation(BamRatio bamRatio);
 }

@@ -50,12 +50,6 @@ public class TargetRegionEnricher implements TargetRegions
     }
 
     @Override
-    public ResultsNormaliser createNormaliser()
-    {
-        return new UnityNormaliser();
-    }
-
-    @Override
     public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
     {
         TargetRegionEnrichment enrichment = getEnrichment(chromosome, readDepth.StartPosition);

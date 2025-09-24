@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-class DiploidRatioNormalization
+public class DiploidRatioNormalization
 {
     private int mStartIndex;
     private int mEndIndex;
@@ -17,7 +17,7 @@ class DiploidRatioNormalization
     private final List<Double> mResults;
     private final RollingMedian mRollingMedian;
 
-    DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage, final List<Double> ratios)
+    public DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage, final List<Double> ratios)
     {
         mStartIndex = 0;
         mEndIndex = -1;
@@ -48,7 +48,7 @@ class DiploidRatioNormalization
     }
 
     @NotNull
-    List<Double> get()
+    public List<Double> get()
     {
         return mResults;
     }
@@ -58,7 +58,7 @@ class DiploidRatioNormalization
         return ratio != null && Doubles.greaterThan(ratio, 0);
     }
 
-    private void addNewRatios(int currentIndex)
+    private void addNewRatios(final int currentIndex)
     {
         for(int laterIndex = mEndIndex + 1; laterIndex < mRatios.size(); laterIndex++)
         {
@@ -84,7 +84,7 @@ class DiploidRatioNormalization
         }
     }
 
-    private void removeExpiredRatios(int currentIndex)
+    private void removeExpiredRatios(final int currentIndex)
     {
         for(int earlierIndex = mStartIndex; earlierIndex < currentIndex; earlierIndex++)
         {

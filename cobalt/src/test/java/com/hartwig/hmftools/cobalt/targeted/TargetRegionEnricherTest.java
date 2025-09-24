@@ -86,12 +86,6 @@ public class TargetRegionEnricherTest
         assertFalse(enricher.onTarget(_3, 5_001));
     }
 
-    @Test
-    public void createNormaliserTest()
-    {
-        Assert.assertTrue(enricher.createNormaliser() instanceof UnityNormaliser);
-    }
-
     void check(double expected, Chromosome chromosome, int position)
     {
         assertEquals(expected, enricher.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);

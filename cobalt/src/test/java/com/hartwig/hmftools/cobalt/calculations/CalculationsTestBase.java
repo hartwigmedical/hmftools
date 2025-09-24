@@ -1,20 +1,12 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
-
 import static org.immutables.value.internal.$guava$.collect.$ImmutableList.of;
-
-import java.util.List;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class CalculationsTestBase
 {

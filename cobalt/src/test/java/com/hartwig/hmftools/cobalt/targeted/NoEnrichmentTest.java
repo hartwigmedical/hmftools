@@ -46,12 +46,6 @@ public class NoEnrichmentTest
         assertTrue(enricher.onTarget(_3, 5_001));
     }
 
-    @Test
-    public void createNormaliserTest()
-    {
-        Assert.assertTrue(enricher.createNormaliser() instanceof DoNothingNormaliser);
-    }
-
     void check(Chromosome chromosome, int position)
     {
         assertEquals(1.0, enricher.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);

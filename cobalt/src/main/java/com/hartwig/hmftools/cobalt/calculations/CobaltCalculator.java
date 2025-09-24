@@ -9,23 +9,30 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public class CobaltCalculator
 {
-    private final ListMultimap<Chromosome, DepthReading> mTumorReadDepths;
-    private final GenomeFilter mWindowStatuses;
-    private final TargetRegions mEnricher;
-    private final CobaltConfig mConfig;
+    private final ListMultimap<Chromosome, CobaltRatio> mRatios;
 
-    public CobaltCalculator(final ListMultimap<Chromosome, DepthReading> mTumorReadDepths, CobaltConfig config)
+    public CobaltCalculator(
+            final ListMultimap<Chromosome, DepthReading> tumourDepthReadings,
+            final ListMultimap<Chromosome, DepthReading> referenceDepthReadings,
+            CobaltConfig config)
     {
-        this.mTumorReadDepths = mTumorReadDepths;
-        mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.mExcludedRegions);
-        mConfig = config;
-        mEnricher = mConfig.targetRegionEnricher();
+        GenomeFilter mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.mExcludedRegions);
+        TargetRegions mEnricher = config.targetRegionEnricher();
+
+        TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, mEnricher);
+        tumourDepthReadings.forEach((tumorBamCalculation::addReading));
+        ListMultimap<Chromosome, BamRatio> tumorResults = tumorBamCalculation.calculateRatios();
+
+        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, mEnricher);
+        referenceDepthReadings.forEach((referenceBamCalculation::addReading));
+        ListMultimap<Chromosome, BamRatio> referenceResults = referenceBamCalculation.calculateRatios();
+
+        ResultsCollator collator = new ResultsCollator(config.RefGenVersion);
+        mRatios = collator.collateResults(tumorResults, referenceResults);
     }
 
-    public ListMultimap<Chromosome, CobaltRatio> doCalculation()
+    public ListMultimap<Chromosome, CobaltRatio> getCalculatedRatios()
     {
-        CobaltCalculation tumorCalculation = new CobaltCalculation(mWindowStatuses, mConfig.RefGenVersion,mEnricher);
-        mTumorReadDepths.forEach((tumorCalculation::addReading));
-        return tumorCalculation.calculateRatios();
+        return mRatios;
     }
 }

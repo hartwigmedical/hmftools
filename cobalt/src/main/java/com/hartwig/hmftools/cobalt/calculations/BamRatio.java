@@ -9,8 +9,9 @@ public class BamRatio
 {
     public final Chromosome mChromosome;
     public final int Position;
-    private double mReadDepth;
+    private final double mReadDepth;
     private double Ratio;
+    private double DiploidAdjustedRatio = -1.0;
     private final double GcContent;
     private boolean Included;
 
@@ -28,14 +29,6 @@ public class BamRatio
         }
     }
 
-    public CobaltRatio toTumorRatio(RefGenomeVersion version)
-    {
-        double r = Ratio;
-        double g = GcContent;
-        double rd = mReadDepth;
-        return new CobaltRatio(version.versionedChromosome(mChromosome), Position, -1.0, -1.0, -1.0, -1.0, rd, r, g);
-    }
-
     public void normaliseForGc(double medianReadDepthForGcBucket)
     {
         normalise(medianReadDepthForGcBucket);
@@ -49,6 +42,16 @@ public class BamRatio
     public void normaliseByMean(double mean)
     {
         normalise(mean);
+    }
+
+    public void setDiploidAdjustedRatio(double ratio)
+    {
+        DiploidAdjustedRatio = ratio;
+    }
+
+    public double getDiploidAdjustedRatio()
+    {
+        return DiploidAdjustedRatio;
     }
 
     private void normalise(final double factor)

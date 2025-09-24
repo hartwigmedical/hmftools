@@ -1,37 +1,30 @@
 package com.hartwig.hmftools.cobalt;
 
-import static com.hartwig.hmftools.cobalt.CobaltColumns.CHROMOSOME;
+import static com.google.common.collect.ArrayListMultimap.create;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.registerConfig;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.APP_NAME;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
-import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
-import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.calculations.CobaltCalculator;
 import com.hartwig.hmftools.cobalt.count.BRC;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
-import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
-import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -47,12 +40,10 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import tech.tablesaw.api.BooleanColumn;
-import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.DoubleColumn;
 import tech.tablesaw.api.LongColumn;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
-import tech.tablesaw.io.csv.CsvReadOptions;
 
 public class CobaltApplication
 {
@@ -88,24 +79,25 @@ public class CobaltApplication
 
             ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
 
-//            BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
-//
-//            bamReadCounter.generateDepths();
+            BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
 
+            bamReadCounter.generateDepths();
+            //
             BRC brcTumor = null;
-            if (mConfig.TumorBamPath != null)
+            if(mConfig.TumorBamPath != null)
             {
                 brcTumor = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.TumorBamPath, chromosomePosCodec);
             }
 
             BRC brcReference = null;
-            if (mConfig.ReferenceBamPath != null)
+            if(mConfig.ReferenceBamPath != null)
             {
                 brcReference = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.ReferenceBamPath, chromosomePosCodec);
             }
-/*
-            Table tumorReadDepths = brcTumor != null ? brcTumor.generateDepths() : null;
-            Table referenceReadDepths = brcReference != null ? brcReference.generateDepths() : null;
+
+            /*
+            Table tumorReadDepths = bamReadCounter.getTumorDepths();//brcTumor != null ? brcTumor.generateDepths() : null;
+            Table referenceReadDepths = bamReadCounter.getReferenceDepths();// brcReference != null ? brcReference.generateDepths() : null;
 
             Table gcProfiles = loadMappabilityData(chromosomePosCodec);
 
@@ -124,11 +116,11 @@ public class CobaltApplication
 
                 if(mConfig.SpecificChrRegions.hasFilters())
                 {
-                    List<ChromosomeData> chromosomeData = brcTumor != null ? brcTumor.chromosomes() : brcReference.chromosomes();
+                    List<ChromosomeData> chromosomeData = bamReadCounter.chromosomes();//brcTumor != null ? brcTumor.chromosomes() : brcReference.chromosomes();
                     List<String> validChromosomes = chromosomeData.stream().map(x -> x.Name).collect(Collectors.toList());
 
                     targetRegionEnrichment = targetRegionEnrichment.where(
-                            targetRegionEnrichment.stringColumn(CobaltColumns.CHROMOSOME).isIn(validChromosomes));
+                            targetRegionEnrichment.stringColumn(CHROMOSOME).isIn(validChromosomes));
                 }
 
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
@@ -151,26 +143,28 @@ public class CobaltApplication
                 default:
                     ratios = ratioSupplier.tumorNormalPair();
             }
- */
 
+*/
             final String outputFilename = CobaltRatioFile.generateFilename(
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
 
             CB_LOGGER.info("persisting cobalt ratios to {}", outputFilename);
 
-            CobaltCalculator calculator = new CobaltCalculator(brcTumor.calculateReadDepths(), mConfig);
-            ListMultimap<Chromosome, CobaltRatio> results = calculator.doCalculation();
+            ListMultimap<Chromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
+            ListMultimap<Chromosome, DepthReading> referenceDepths = brcReference == null ? create() : brcReference.calculateReadDepths();
+            CobaltCalculator calculator = new CobaltCalculator(tumourDepths, referenceDepths, mConfig);
+            ListMultimap<Chromosome, CobaltRatio> results = calculator.getCalculatedRatios();
 
-//            final List<CobaltRatio> collectedRatios = ratios.stream()
-//                    .map(r -> rowToCobaltRatio(r, chromosomePosCodec))
-//                    .collect(Collectors.toList());
+            //                        final List<CobaltRatio> collectedRatios = ratios.stream()
+            //                                .map(r -> rowToCobaltRatio(r, chromosomePosCodec))
+            //                                .collect(Collectors.toList());
             final List<CobaltRatio> collectedRatios = new ArrayList<>();
             results.keySet().forEach(chromosome -> collectedRatios.addAll(results.get(chromosome)));
             CobaltRatioFile.write(outputFilename, collectedRatios);
 
             if(!mConfig.SkipPcfCalc)
             {
-//                applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+                //                applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
             }
 
             final VersionInfo version = fromAppName(APP_NAME);

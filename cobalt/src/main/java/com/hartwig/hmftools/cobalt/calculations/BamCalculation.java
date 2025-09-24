@@ -7,23 +7,19 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class CobaltCalculation
+public abstract class BamCalculation
 {
     private final ListMultimap<Chromosome, CobaltWindow> mWindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final GenomeFilter mGenomeFilter;
-    private final RefGenomeVersion GenomeVersion;
     private final TargetRegions mTargetRegions;
 
-    public CobaltCalculation(final GenomeFilter mGenomeFilter, RefGenomeVersion genomeVersion, TargetRegions targetRegions)
+    public BamCalculation(final GenomeFilter mGenomeFilter, TargetRegions targetRegions)
     {
         this.mGenomeFilter = mGenomeFilter;
         this.mTargetRegions = targetRegions;
-        this.GenomeVersion = genomeVersion;
     }
 
     public void addReading(Chromosome chromosome, DepthReading readDepth)
@@ -35,26 +31,34 @@ public class CobaltCalculation
         mWindowsByChromosome.put(chromosome, rawWindow.bucketed(bucket));
     }
 
-    public ListMultimap<Chromosome, CobaltRatio> calculateRatios()
+    public ListMultimap<Chromosome, BamRatio> calculateRatios()
     {
         GcBucketStatistics bucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
-        ResultsNormaliser finalNormaliser = mTargetRegions.createNormaliser();
+        ResultsNormaliser finalNormaliser = finalMeanNormaliser();
+        ResultsNormaliser diploidNormaliser = diploidNormaliser();
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
         mWindowsByChromosome.forEach((chromosome, window) ->
         {
             BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, mTargetRegions.onTarget(chromosome, window.Position));
             bamRatio.normaliseForGc(bucketStatistics.medianReadDepth(window.GcBucket));
             bamRatio.applyEnrichment(mTargetRegions.enrichmentQuotient(chromosome, window.mDepthReading));
+            diploidNormaliser.recordValue(bamRatio);
             finalNormaliser.recordValue(bamRatio);
             bamResults.put(chromosome, bamRatio);
         });
 
-        final ListMultimap<Chromosome, CobaltRatio> finalResults = ArrayListMultimap.create();
+        diploidNormaliser.recordsAllAdded();
+        finalNormaliser.recordsAllAdded();
+
         bamResults.forEach(((chromosome, bamRatio) ->
         {
+            diploidNormaliser.applyNormalisation(bamRatio);
             finalNormaliser.applyNormalisation(bamRatio);
-            finalResults.put(chromosome, bamRatio.toTumorRatio(GenomeVersion));
         }));
-        return finalResults;
+        return bamResults;
     }
+
+    abstract ResultsNormaliser finalMeanNormaliser();
+
+    abstract ResultsNormaliser diploidNormaliser();
 }

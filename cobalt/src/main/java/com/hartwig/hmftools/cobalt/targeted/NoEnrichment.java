@@ -18,10 +18,4 @@ public class NoEnrichment implements TargetRegions
     {
         return true; //todo
     }
-
-    @Override
-    public ResultsNormaliser createNormaliser()
-    {
-        return new DoNothingNormaliser();
-    }
 }
