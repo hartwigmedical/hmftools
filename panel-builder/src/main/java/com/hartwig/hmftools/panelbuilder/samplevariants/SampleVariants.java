@@ -99,20 +99,59 @@ public class SampleVariants
 
         Map<String, Integer> geneDisruptions = new HashMap<>();
 
-        result = result.add(generateDriverProbes(variants, geneDisruptions, mConfig.maxProbes() - result.probes().size()));
-        result = result.add(generateNondriverProbes(variants, mConfig.maxProbes() - result.probes().size()));
+        // TODO: wrong, should generate infinite stream of variants and consume as possible
+        result = result.add(
+                generateProbesFromDefinitions(generateDriverProbes(variants, geneDisruptions, mConfig.maxProbes()), mConfig.maxProbes()));
+
+        while(true)
+        {
+            int remainingProbes = mConfig.maxProbes() - result.probes().size();
+            if(remainingProbes > 0)
+            {
+                // TODO: wrong, this will select the same variants multiple times
+                result = result.add(
+                        generateProbesFromDefinitions(generateNondriverProbes(variants, mConfig.maxProbes()), remainingProbes));
+            }
+            else
+            {
+                break;
+            }
+        }
 
         return result;
     }
 
-    private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, Map<String, Integer> geneDisruptions, int maxProbes)
+    private ProbeGenerationResult generateProbesFromDefinitions(final List<ProbeDefinition> probeDefs, int maxProbes)
+    {
+        List<ProbeGenerationResult> batch = mProbeGenerator.probeBatched(
+                probeDefs.stream().map(ProbeDefinition::sequenceDefinition).toList(),
+                probeDefs.stream().map(ProbeDefinition::metadata).toList(),
+                probeDefs.stream().map(ProbeDefinition::evalCriteria).toList(),
+                probeDefs.stream().map(pd -> pd.coverageCheck() ? (PanelCoverage) mPanelData : null).toList());
+        ProbeGenerationResult result = new ProbeGenerationResult();
+        for(ProbeGenerationResult singleResult : batch)
+        {
+            ProbeGenerationResult newResult = result.add(singleResult);
+            if(newResult.probes().size() <= maxProbes)
+            {
+                result = newResult;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private List<ProbeDefinition> generateDriverProbes(final List<Variant> variants, Map<String, Integer> geneDisruptions, int maxProbes)
     {
         LOGGER.debug("Selecting up to {} driver variants", max(0, maxProbes));
 
-        ProbeGenerationResult result = new ProbeGenerationResult();
+        List<ProbeDefinition> result = new ArrayList<>();
         for(Variant variant : variants)
         {
-            if(result.probes().size() >= maxProbes)
+            if(result.size() >= maxProbes)
             {
                 // We assume that there will be enough probes to cover all the driver variants.
                 // If not, then we randomly(?) discarded some drivers, which may be important to handle.
@@ -129,8 +168,8 @@ public class SampleVariants
             FilterResult filterResult = driverFilters(variant, geneDisruptions);
             if(filterResult.passed())
             {
-                ProbeGenerationResult probeGenResult = generateProbe(variant);
-                result = result.add(probeGenResult);
+                ProbeDefinition probeGenResult = generateProbe(variant);
+                result.add(probeGenResult);
                 registerDisruptedGenes(variant, geneDisruptions);
             }
             else
@@ -141,7 +180,7 @@ public class SampleVariants
         return result;
     }
 
-    private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, int maxProbes)
+    private List<ProbeDefinition> generateNondriverProbes(final List<Variant> variants, int maxProbes)
     {
         LOGGER.debug("Selecting up to {} nondriver variants", max(0, maxProbes));
 
@@ -154,10 +193,10 @@ public class SampleVariants
                 .sorted(new NondriverVariantComparator())
                 .toList();
 
-        ProbeGenerationResult result = new ProbeGenerationResult();
+        List<ProbeDefinition> result = new ArrayList<>();
         for(SomaticMutation variant : nondriverVariants)
         {
-            if(result.probes().size() >= maxProbes)
+            if(result.size() >= maxProbes)
             {
                 // Filled the probe quota.
                 break;
@@ -166,8 +205,8 @@ public class SampleVariants
             FilterResult filterResult = nondriverFilters(variant);
             if(filterResult.passed())
             {
-                ProbeGenerationResult probeGenResult = generateProbe(variant);
-                result = result.add(probeGenResult);
+                ProbeDefinition probeGenResult = generateProbe(variant);
+                result.add(probeGenResult);
             }
             else
             {
@@ -267,7 +306,16 @@ public class SampleVariants
         }
     }
 
-    private ProbeGenerationResult generateProbe(final Variant variant)
+    private record ProbeDefinition(
+            SequenceDefinition sequenceDefinition,
+            TargetMetadata metadata,
+            ProbeEvaluator.Criteria evalCriteria,
+            boolean coverageCheck
+    )
+    {
+    }
+
+    private ProbeDefinition generateProbe(final Variant variant)
     {
         LOGGER.trace("Generating probe for variant: {}", variant);
 
@@ -278,11 +326,11 @@ public class SampleVariants
         // so the variant probe is not needed.
         // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
         boolean isNovel = isVariantProbeNovel(definition);
-        PanelCoverage coverage = isNovel ? null : mPanelData;
+        boolean coverageCheck = !isNovel;
 
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probe(definition, metadata, evalCriteria, coverage);
+        return new ProbeDefinition(definition, metadata, evalCriteria, coverageCheck);
     }
 
     private static boolean isVariantProbeNovel(final SequenceDefinition definition)

@@ -5,10 +5,13 @@ import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
 import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.function.DoubleSupplier;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -40,36 +43,47 @@ public class ProbeFactory
     // Returns empty optional if it's not valid to create a probe at that location.
     public Optional<Probe> createProbe(final SequenceDefinition definition, final TargetMetadata metadata)
     {
-        String sequence = buildSequence(definition);
-        if(sequence.length() != definition.baseLength())
-        {
-            return Optional.empty();
-        }
-
-        return createProbe(definition, sequence, metadata,
-                () -> getQualityScore(definition.exactRegionOrNull(), sequence, !definition.isExactRegion()),
-                () -> calcGcPercent(sequence));
+        return createProbe(
+                definition, metadata,
+                () -> buildSequence(definition),
+                sequence -> getQualityScore(definition.exactRegionOrNull(), sequence, !definition.isExactRegion()));
     }
 
-    private Optional<Probe> createProbe(final SequenceDefinition definition, final String sequence, final TargetMetadata metadata,
-            final DoubleSupplier getQualityScore, final DoubleSupplier getGcContent)
+    public List<Optional<Probe>> createProbeBatched(final List<SequenceDefinition> definitions, final List<TargetMetadata> metadatas)
+    {
+        QualityScoreBatcher batcher = new QualityScoreBatcher();
+        List<String> sequences = definitions.stream().map(this::buildSequence).toList();
+        // TODO: inefficient, don't need to compute quality score for probes which fail validation checks
+        sequences.forEach(sequence -> batcher.addQuery(null, sequence, true));
+        List<Double> qualityScores = batcher.computeBatch();
+        return IntStream.range(0, definitions.size())
+                .mapToObj(i -> createProbe(definitions.get(i), metadatas.get(i), () -> sequences.get(i), s -> qualityScores.get(i)))
+                .toList();
+    }
+
+    private Optional<Probe> createProbe(final SequenceDefinition definition, final TargetMetadata metadata,
+            final Supplier<String> getSequence, final Function<String, Double> getQualityScore)
     {
         // Only check properties which are inconvenient for the caller to check in advance.
         // Everything else is expected to be checked by the caller and will generate an exception.
+
         boolean regionsValid = definition.regions().stream().allMatch(this::isRegionValid);
-        boolean sequenceValid = isDnaSequenceNormal(sequence);
-        boolean valid = regionsValid && sequenceValid;
-        if(valid)
-        {
-            return Optional.of(new Probe(
-                    definition, sequence, metadata,
-                    null, null,
-                    getQualityScore.getAsDouble(), getGcContent.getAsDouble()));
-        }
-        else
+        if(!regionsValid)
         {
             return Optional.empty();
         }
+
+        String sequence = getSequence.get();
+        boolean sequenceValid = sequence.length() == definition.baseLength() && isDnaSequenceNormal(sequence);
+        if(!sequenceValid)
+        {
+            return Optional.empty();
+        }
+
+        double qualityScore = getQualityScore.apply(sequence);
+        double gcContent = calcGcPercent(sequence);
+
+        return Optional.of(new Probe(definition, sequence, metadata, null, null, qualityScore, gcContent));
     }
 
     private boolean isRegionValid(final ChrBaseRegion region)
@@ -100,17 +114,59 @@ public class ProbeFactory
 
     private double getQualityScore(@Nullable final ChrBaseRegion region, @Nullable final String sequence, boolean allowFallback)
     {
-        // Prefer the quality profile first since it's much faster.
-        // Fall back to computing the quality score based on the sequence if required.
+        // TODO: nicer way to do this?
+        QualityScoreBatcher batcher = new QualityScoreBatcher();
+        batcher.addQuery(region, sequence, allowFallback);
+        return batcher.computeBatch().get(0);
+    }
 
-        OptionalDouble qualityScore = mQualityProfile != null && region != null
-                ? mQualityProfile.computeQualityScore(region)
-                : OptionalDouble.empty();
-        if(qualityScore.isEmpty() && mQualityModel != null && sequence != null && allowFallback)
+    private class QualityScoreBatcher
+    {
+        private final List<ChrBaseRegion> mRegion = new ArrayList<>();
+        private final List<String> mSequence = new ArrayList<>();
+        private final List<Boolean> mAllowFallback = new ArrayList<>();
+
+        public void addQuery(@Nullable final ChrBaseRegion region, @Nullable final String sequence, boolean allowFallback)
         {
-            ProbeQualityModel.Result modelResult = mQualityModel.compute(List.of(sequence.getBytes())).get(0);
-            qualityScore = OptionalDouble.of(modelResult.qualityScore());
+            mRegion.add(region);
+            mSequence.add(sequence);
+            mAllowFallback.add(allowFallback);
         }
-        return qualityScore.orElse(DEFAULT_PROBE_QUALITY);
+
+        public List<Double> computeBatch()
+        {
+            // Prefer the quality profile first since it's much faster.
+            // Fall back to computing the quality score based on the sequence if required.
+
+            ArrayList<OptionalDouble> qualityScores = new ArrayList<>(mRegion.size());
+            ArrayList<Integer> indicesForModel = new ArrayList<>();
+            ArrayList<byte[]> sequencesForModel = new ArrayList<>();
+            for(int i = 0; i < mRegion.size(); ++i)
+            {
+                ChrBaseRegion region = mRegion.get(i);
+                OptionalDouble qualityScore = mQualityProfile != null && region != null
+                        ? mQualityProfile.computeQualityScore(region)
+                        : OptionalDouble.empty();
+                qualityScores.add(qualityScore);
+
+                String sequence = mSequence.get(i);
+                if(qualityScore.isEmpty() && mQualityModel != null && sequence != null && mAllowFallback.get(i))
+                {
+                    indicesForModel.add(i);
+                    sequencesForModel.add(sequence.getBytes());
+                }
+            }
+
+            if(!indicesForModel.isEmpty())
+            {
+                List<ProbeQualityModel.Result> modelResults = mQualityModel.compute(sequencesForModel);
+                for(int i = 0; i < indicesForModel.size(); ++i)
+                {
+                    qualityScores.set(indicesForModel.get(i), OptionalDouble.of(modelResults.get(i).qualityScore()));
+                }
+            }
+
+            return qualityScores.stream().map(qualityScore -> qualityScore.orElse(DEFAULT_PROBE_QUALITY)).toList();
+        }
     }
 }

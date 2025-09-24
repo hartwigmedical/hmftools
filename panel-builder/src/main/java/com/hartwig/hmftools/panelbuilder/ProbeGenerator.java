@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -522,7 +523,22 @@ public class ProbeGenerator
     }
 
     public ProbeGenerationResult probe(final SequenceDefinition definition, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, @Nullable PanelCoverage coverage)
+            final ProbeEvaluator.Criteria evalCriteria, @Nullable final PanelCoverage coverage)
+    {
+        return probe(definition, metadata, evalCriteria, coverage, () -> mProbeFactory.createProbe(definition, metadata));
+    }
+
+    public List<ProbeGenerationResult> probeBatched(final List<SequenceDefinition> definitions, final List<TargetMetadata> metadatas,
+            final List<ProbeEvaluator.Criteria> evalCriterias, final List<PanelCoverage> coverages)
+    {
+        List<Optional<Probe>> probes = mProbeFactory.createProbeBatched(definitions, metadatas);
+        return IntStream.range(0, definitions.size())
+                .mapToObj(i -> probe(definitions.get(i), metadatas.get(i), evalCriterias.get(i), coverages.get(i), () -> probes.get(i)))
+                .toList();
+    }
+
+    private ProbeGenerationResult probe(final SequenceDefinition definition, final TargetMetadata metadata,
+            final ProbeEvaluator.Criteria evalCriteria, @Nullable final PanelCoverage coverage, final Supplier<Optional<Probe>> createProbe)
     {
         List<TargetRegion> targetRegions = definition.regions().stream().map(region -> new TargetRegion(region, metadata)).toList();
 
@@ -532,7 +548,7 @@ public class ProbeGenerator
         }
         else
         {
-            return mProbeFactory.createProbe(definition, metadata)
+            return createProbe.get()
                     .map(probe ->
                     {
                         probe = mProbeEvaluator.evaluateProbe(probe, evalCriteria);
