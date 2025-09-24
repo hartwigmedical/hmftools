@@ -46,4 +46,11 @@ object CiderConstants
 
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
+
+    // Amino acids sequences which are known to match the reference genome but are not detected by alignment.
+    // This exists because of switching from Blastn to BWA-MEM, and some sequences cause significant discrepancies.
+    // These sequences are not in the ref genome for BWA-MEM to align to.
+    val MATCHES_REF_KNOWN_CDR3_AA = listOf(
+        Regex("CTXGPKXELRT.*")
+    )
 }
