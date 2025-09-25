@@ -149,7 +149,7 @@ public class ReferenceData
         // restrict to first three exons
         TranscriptData transcript = transcripts.get(HlaGene_.HLA_DRB1);
         List<ExonData> exons = Lists.newArrayList(transcript.exons());
-        exons = exons.subList(exons.size() - 3, exons.size());
+        exons = exons.subList(exons.size() - 2, exons.size());
         int trimmedCodingStart = exons.get(0).Start + 1;
         TranscriptData trimmedTranscript = new TranscriptData(transcript.TransId, transcript.TransName, transcript.GeneId, transcript.IsCanonical, transcript.Strand, transcript.TransStart, transcript.TransEnd, trimmedCodingStart, transcript.CodingEnd, transcript.BioType, transcript.RefSeqId);
         trimmedTranscript.setExons(exons);
