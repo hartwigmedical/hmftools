@@ -2,12 +2,14 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.determineIndelConsensus;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.H;
@@ -45,6 +47,12 @@ public class IndelConsensusReads
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
             consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
+            return;
+        }
+
+        if(isSbx())
+        {
+            determineIndelConsensus(this, consensusState, reads);
             return;
         }
 
@@ -90,11 +98,13 @@ public class IndelConsensusReads
                 --cigarIndex;
         }
 
+        consensusState.finaliseCigar();
+
         if(consensusState.outcome() != INDEL_FAIL)
             consensusState.setOutcome(INDEL_MISMATCH);
     }
 
-    private void addElementBases(
+    protected void addElementBases(
             final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex,
             boolean isDualStrand, final boolean[] isFirstInPair)
     {
@@ -245,7 +255,7 @@ public class IndelConsensusReads
         }
     }
 
-    private static boolean deleteOrSplit(final CigarOperator operator)
+    protected static boolean deleteOrSplit(final CigarOperator operator)
     {
         return operator == D || operator == N;
     }

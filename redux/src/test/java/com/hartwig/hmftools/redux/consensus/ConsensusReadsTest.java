@@ -476,7 +476,7 @@ public class ConsensusReadsTest
 
         // no mutations
         int posStart = 11;
-        String readBases = REF_BASES.substring(posStart, 21);
+        String readBases = REF_BASES.substring(posStart, posStart + 10);
         reads.add(createSamRecord(nextReadId(), posStart, readBases, "10M", false));
         reads.add(createSamRecord(nextReadId(), posStart, readBases, "10M", false));
 
@@ -487,8 +487,9 @@ public class ConsensusReadsTest
         // indels only
         reads.clear();
 
-        reads.add(createSamRecord(nextReadId(), posStart, readBases, "1M2I1M3D3M", false));
-        reads.add(createSamRecord(nextReadId(), posStart, readBases, "1M2I1M3D3M", false));
+        String indelReadBases = REF_BASES.substring(posStart, posStart + 7);
+        reads.add(createSamRecord(nextReadId(), posStart, indelReadBases, "1M2I1M3D3M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, indelReadBases, "1M2I1M3D3M", false));
 
         readInfo = createConsensusRead(mConsensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MATCH, readInfo.Outcome);
@@ -512,8 +513,13 @@ public class ConsensusReadsTest
         // indels and mismatches
         reads.clear();
 
-        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "2M1I1M3D3M", false));
-        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "2M1I1M3D3M", false));
+        StringBuilder indelMutatedBasesBuilder = new StringBuilder(indelReadBases);
+        indelMutatedBasesBuilder.setCharAt(0, mNextBaseMap.get(readBases.charAt(0)));
+        indelMutatedBasesBuilder.setCharAt(1, mNextBaseMap.get(readBases.charAt(2)));
+        indelMutatedBasesBuilder.setCharAt(4, mNextBaseMap.get(readBases.charAt(4)));
+        String indelMutatedBases = indelMutatedBasesBuilder.toString();
+        reads.add(createSamRecord(nextReadId(), posStart, indelMutatedBases, "2M1I1M3D3M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, indelMutatedBases, "2M1I1M3D3M", false));
 
         readInfo = createConsensusRead(mConsensusReads, reads, UMI_ID_1);
         assertEquals(INDEL_MATCH, readInfo.Outcome);

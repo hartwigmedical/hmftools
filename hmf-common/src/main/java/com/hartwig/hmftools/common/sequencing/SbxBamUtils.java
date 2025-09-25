@@ -45,6 +45,11 @@ public class SbxBamUtils
         return baseIndex != null ? baseIndex : -1;
     }
 
+    public static boolean inDuplexRegion(final SAMRecord record, int baseIndex)
+    {
+        return inDuplexRegion(!record.getReadNegativeStrandFlag(), extractDuplexBaseIndex(record), baseIndex);
+    }
+
     public static boolean inDuplexRegion(final boolean posOrientationRead, int duplexBaseIndex, int baseIndex)
     {
         if(duplexBaseIndex < 0)

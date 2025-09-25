@@ -29,6 +29,13 @@ public class ReadParseState
         mIsForward = isForward;
         mElementCount = read.getCigar().getCigarElements().size();
 
+        reset();
+    }
+
+    public void reset()
+    {
+        mExhausted = false;
+
         if(mIsForward)
         {
             mReadIndex = 0;
@@ -36,16 +43,16 @@ public class ReadParseState
         }
         else
         {
-            mReadIndex = read.getReadBases().length - 1;
+            mReadIndex = Read.getReadBases().length - 1;
             mCigarIndex = mElementCount - 1;
         }
 
-        mElementLength = read.getCigar().getCigarElement(mCigarIndex).getLength();
-        mElementType = read.getCigar().getCigarElement(mCigarIndex).getOperator();
+        mElementLength = Read.getCigar().getCigarElement(mCigarIndex).getLength();
+        mElementType = Read.getCigar().getCigarElement(mCigarIndex).getOperator();
         mElementIndex = 0;
-        mExhausted = false;
     }
 
+    public int currentIndex() { return mReadIndex; }
     public byte currentBase() { return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex]; }
     public byte currentBaseQual() { return mExhausted ? NO_BASE : Read.getBaseQualities()[mReadIndex]; }
 

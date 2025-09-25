@@ -343,6 +343,38 @@ public class SbxDuplexReadTest
         assertEquals("CTTTATTTTACC", read.getReadString());
         checkBaseQuals(read, List.of(4, 5, 8));
         assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+
+        // test 4: multiple stripped indels need to offset each other
+        //         0123     456     7690     12     3456     7     8901
+        readStr = "AACC" + "TTT" + "AACC" + "TT" + "AACC" + "T" + "AACC";
+        cigar = "4M3I4M2I4M1I4M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+        baseQuals[4] = 0;
+        baseQuals[5] = 0;
+        baseQuals[6] = 0;
+
+        baseQuals[11] = 0;
+        baseQuals[12] = 0;
+
+        baseQuals[17] = 0;
+
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-4ZZZ4ZZ4Z4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 6);
+
+        stripDuplexIndels(read);
+
+        assertEquals("16M", read.getCigarString());
+        assertEquals("AACCAACCAACCAACC", read.getReadString());
+        checkBaseQuals(read, Collections.emptyList());
+        assertEquals(0, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
    }
 
     private static void checkBaseQuals(final SAMRecord read, final List<Integer> lowQualBases)

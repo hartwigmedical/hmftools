@@ -2,7 +2,6 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
@@ -14,13 +13,12 @@ import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
-import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.alignedOrClipped;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.isValidRead;
 import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;
@@ -31,10 +29,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
@@ -44,7 +42,6 @@ public class ConsensusReads
     private final IndelConsensusReads mIndelConsensusReads;
 
     private final ConsensusStatistics mConsensusStats;
-    private boolean mValidateConsensusReads;
 
     public ConsensusReads(final RefGenomeInterface refGenome, final SequencingType sequencingType, final ConsensusStatistics consensusStats)
     {
@@ -54,7 +51,6 @@ public class ConsensusReads
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
 
         mConsensusStats = consensusStats;
-        mValidateConsensusReads = false;
     }
 
     @VisibleForTesting
@@ -67,11 +63,6 @@ public class ConsensusReads
     public ConsensusReads(final RefGenomeInterface refGenome)
     {
         this(refGenome, ILLUMINA);
-    }
-
-    public void setDebugOptions(boolean validateConsensusReads)
-    {
-        mValidateConsensusReads = validateConsensusReads;
     }
 
     public ConsensusReadInfo createConsensusRead(
@@ -155,10 +146,10 @@ public class ConsensusReads
                 consensusRead.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
         }
 
-        if(mValidateConsensusReads)
+        if(ReduxConfig.RunChecks)
         {
-            ValidationReason validReason = isValidConsensusRead(consensusRead);
-            if(validReason != ValidationReason.OK)
+            ReadValidReason validReason = isValidRead(consensusRead);
+            if(validReason != ReadValidReason.OK)
             {
                 logInvalidConsensusRead(readsView, consensusRead, consensusReadId, consensusState, validReason.toString());
             }
@@ -271,19 +262,11 @@ public class ConsensusReads
         return record;
     }
 
-    private enum ValidationReason
-    {
-        OK,
-        BASE_LENGTH,
-        CIGAR_LENGTH,
-        CIGAR_ELEMENTS;
-    }
-
     private void logInvalidConsensusRead(
             final List<SAMRecord> reads, final SAMRecord consensusRead, final String groupIdentifier, final ConsensusState consensusState,
             final String reason)
     {
-        if(!mValidateConsensusReads)
+        if(!ReduxConfig.RunChecks)
             return;
 
         RD_LOGGER.error("invalid consensus read({}): groupId({}) readCount({}) {} read: {}",
@@ -295,41 +278,5 @@ public class ConsensusReads
         {
             RD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
         }
-    }
-
-    private ValidationReason isValidConsensusRead(final SAMRecord consensusRead)
-    {
-        int baseLength = consensusRead.getReadBases().length;
-
-        if(consensusRead.getBaseQualities().length != baseLength)
-            return ValidationReason.BASE_LENGTH;
-
-        if(cigarBaseLength(consensusRead.getCigar()) != baseLength)
-            return ValidationReason.CIGAR_LENGTH;
-
-        int cigarCount = consensusRead.getCigar().getCigarElements().size();
-        if(cigarCount > 1)
-        {
-            for(int i = 0; i < consensusRead.getCigar().getCigarElements().size(); ++i)
-            {
-                CigarElement element = consensusRead.getCigar().getCigarElements().get(i);
-
-                if(i == 0 || i == cigarCount - 1)
-                {
-                    if(!alignedOrClipped(element.getOperator()) && element.getOperator() != I)
-                        return ValidationReason.CIGAR_ELEMENTS;
-                }
-                else if(element.getOperator().isClipping())
-                {
-                    return ValidationReason.CIGAR_ELEMENTS;
-                }
-            }
-        }
-        else if(consensusRead.getCigar().getCigarElements().get(0).getOperator() != M)
-        {
-            return ValidationReason.CIGAR_ELEMENTS;
-        }
-
-        return ValidationReason.OK;
     }
 }

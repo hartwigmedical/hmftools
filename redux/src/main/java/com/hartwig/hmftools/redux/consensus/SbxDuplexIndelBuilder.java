@@ -104,6 +104,9 @@ public class SbxDuplexIndelBuilder
         {
             movePrevious(readBaseInfo);
 
+            if(!readBaseInfo.Valid)
+                break;
+
             if(readBaseInfo.CigarOp != I && readBaseInfo.CigarOp != M)
                 break;
 
@@ -116,7 +119,9 @@ public class SbxDuplexIndelBuilder
             {
                 ++insertRepeatCount;
                 repeatStrIndex = repeatLength - 1;
-                firstReadInsertIndex = readBaseInfo.Index;
+
+                if(readBaseInfo.CigarOp == I)
+                    firstReadInsertIndex = readBaseInfo.Index;
             }
         }
 
@@ -143,6 +148,9 @@ public class SbxDuplexIndelBuilder
         int deletedIndelIndexEnd =-1;
 
         moveTo(readBaseInfo, firstReadInsertIndex);
+
+        if(!readBaseInfo.Valid)
+            return;
 
         List<Integer> lowQualIndices = Lists.newArrayListWithExpectedSize(lowBaseQualCount);
         int remainingLowQualCount = lowBaseQualCount;
@@ -183,7 +191,13 @@ public class SbxDuplexIndelBuilder
                 break;
 
             moveNext(readBaseInfo);
+
+            if(!readBaseInfo.Valid)
+                break;
         }
+
+        if(deletedIndelIndexStart < 0 || deletedIndelIndexEnd < deletedIndelIndexStart)
+            return;
 
         SbxDuplexIndel duplexIndel = new SbxDuplexIndel(
                 duplexIndelIndexStart, duplexIndelIndexEnd, new String(repeatBases), totalRepeatBaseLength,

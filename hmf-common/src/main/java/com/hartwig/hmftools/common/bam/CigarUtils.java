@@ -388,6 +388,9 @@ public final class CigarUtils
 
                 for(int j = 0; j < repeatBases.length; ++j)
                 {
+                    if(readIndex + j >= readBases.length) // invalid read bases if insert cannot extract corresponding bases
+                        return false;
+
                     repeatBases[j] = readBases[readIndex + j];
                 }
 

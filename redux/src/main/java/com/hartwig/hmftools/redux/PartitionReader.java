@@ -103,7 +103,6 @@ public class PartitionReader
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mStats = mDuplicateGroupBuilder.statistics();
         mConsensusReads = new ConsensusReads(config.RefGenome, SEQUENCING_TYPE, mStats.ConsensusStats);
-        mConsensusReads.setDebugOptions(config.RunChecks);
 
         mCurrentRegion = null;
         mUnmapRegionState = null;
@@ -254,6 +253,11 @@ public class PartitionReader
             mNextLogReadCount += LOG_READ_COUNT;
         }
 
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
+        {
+            RD_LOGGER.debug("specific read: {}", readToString(read));
+        }
+
         if(mConfig.BqrAndJitterMsiOnly)
         {
             mBamWriter.captureReadInfo(read);
@@ -263,8 +267,7 @@ public class PartitionReader
         if(shouldFilterRead(read))
             return;
 
-        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.getMateUnmappedFlag()
-                && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             if(!read.getSupplementaryAlignmentFlag() || mConfig.FailOnMissingSuppMateCigar)
             {
@@ -281,11 +284,6 @@ public class PartitionReader
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {
             return;
-        }
-
-        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
-        {
-            RD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
         if(mReadUnmapper.enabled())

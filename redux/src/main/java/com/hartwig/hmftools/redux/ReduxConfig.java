@@ -117,6 +117,8 @@ public class ReduxConfig
     public final boolean ParallelConcatenation;
 
     // debug
+    public static boolean RunChecks;
+
     public final boolean KeepInterimBams;
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
@@ -124,7 +126,6 @@ public class ReduxConfig
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
     public final boolean FailOnMissingSuppMateCigar;
-    public final boolean RunChecks;
     public final boolean DropDuplicates;
     public final boolean SkipFullyUnmappedReads;
     public final int WriteReadBaseLength;

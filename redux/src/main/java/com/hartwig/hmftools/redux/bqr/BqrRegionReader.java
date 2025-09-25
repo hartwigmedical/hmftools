@@ -374,6 +374,7 @@ public class BqrRegionReader implements CigarHandler
             int readIndex = startReadIndex + i;
 
             byte ref = mCurrentRefSequence.base(position);
+
             byte alt = record.getReadBases()[readIndex];
 
             if(alt == DNA_N_BYTE)

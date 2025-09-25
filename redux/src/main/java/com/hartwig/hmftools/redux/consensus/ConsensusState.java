@@ -25,6 +25,9 @@ public class ConsensusState
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
 
+    private int mCurrentCigarElementLength;
+    private CigarOperator mCurrentCigarElementOperator;
+
     public int MinUnclippedPosStart;
     public int MaxUnclippedPosEnd;
     public int MinAlignedPosStart;
@@ -50,6 +53,9 @@ public class ConsensusState
         MaxAlignedPosEnd = 0;
         MapQuality = 0;
         NumMutations = 0;
+
+        mCurrentCigarElementLength = 0;
+        mCurrentCigarElementOperator = null;
 
         mOutcome = UNSET;
     }
@@ -97,23 +103,30 @@ public class ConsensusState
     public void addCigarElement(int length, final CigarOperator operator)
     {
         // combine with existing if a match on type
-        if(IsForward)
-        {
-            int lastIndex = CigarElements.size() - 1;
-            if(lastIndex >= 0 && CigarElements.get(lastIndex).getOperator() == operator)
-                CigarElements.set(lastIndex, new CigarElement(CigarElements.get(lastIndex).getLength() + length, operator));
-            else
-                CigarElements.add(new CigarElement(length, operator));
-        }
-        else
-        {
-            int firstIndex = !CigarElements.isEmpty() ? 0 : -1;
-            if(firstIndex >= 0 && CigarElements.get(firstIndex).getOperator() == operator)
-                CigarElements.set(firstIndex, new CigarElement(CigarElements.get(firstIndex).getLength() + length, operator));
-            else
-                CigarElements.add(0, new CigarElement(length, operator));
-        }
+        if(mCurrentCigarElementLength > 0 && mCurrentCigarElementOperator != operator)
+            addCurrentCigarElement();
+
+        mCurrentCigarElementLength += length;
+        mCurrentCigarElementOperator = operator;
     }
+
+    private void addCurrentCigarElement()
+    {
+        if(mCurrentCigarElementLength == 0)
+            return;
+
+        CigarElement element = new CigarElement(mCurrentCigarElementLength, mCurrentCigarElementOperator);
+
+        if(IsForward)
+            CigarElements.add(element);
+        else
+            CigarElements.add(0, element);
+
+        mCurrentCigarElementLength = 0;
+        mCurrentCigarElementOperator = null;
+    }
+
+    public void finaliseCigar() { addCurrentCigarElement(); }
 
     public void setNumMutations()
     {

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
@@ -37,18 +38,32 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelI
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBase;
+import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBaseCount;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.deleteOrSplit;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.CigarOperator.X;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.redux.ReduxConfig;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -61,7 +76,7 @@ public final class SbxRoutines
     protected static final byte DUPLEX_NO_CONSENSUS_QUAL = 3;
     protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
 
-    public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true;
+    public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true; // currently unused but keep for now
 
     public static void stripDuplexIndels(final SAMRecord record)
     {
@@ -171,7 +186,7 @@ public final class SbxRoutines
 
                         // factor in deleted bases from prior stripped indels - using totalDeletedBases
                         if(totalDeletedBases > 0)
-                            duplexIndel = new SbxDuplexIndel(duplexIndel, totalDeletedBases);
+                            duplexIndel = new SbxDuplexIndel(duplexIndel, -totalDeletedBases);
                     }
                     else
                     {
@@ -200,6 +215,9 @@ public final class SbxRoutines
             {
                 if(!isStrippedIndelBase)
                 {
+                    // if(newReadIndex >= readBases.length || oldReadIndex >= record.getReadBases().length)
+                    //    break;
+
                     readBases[newReadIndex] = record.getReadBases()[oldReadIndex];
 
                     byte existingQual = record.getBaseQualities()[oldReadIndex];
@@ -259,6 +277,16 @@ public final class SbxRoutines
         checkLeftAlignment(newCigarElements, readBases);
 
         record.setCigar(new Cigar(newCigarElements));
+
+        if(ReduxConfig.RunChecks)
+        {
+            ReadValidReason validReason = ReadValidReason.isValidRead(record);
+
+            if(validReason != ReadValidReason.OK)
+            {
+                RD_LOGGER.debug("invalid read({}) reason({}) details: {}", record.getReadName(), validReason, readToString(record));
+            }
+        }
     }
 
     public static BaseQualPair determineBaseAndQual(
@@ -339,34 +367,6 @@ public final class SbxRoutines
         return new BaseQualPair(refBase, SBX_DUPLEX_MISMATCH_QUAL);
     }
 
-    private static int findMostCommonBaseCount(final int[] baseCounts)
-    {
-        int maxCount = 0;
-
-        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
-        {
-            maxCount = max(maxCount, baseCounts[b]);
-        }
-
-        return maxCount;
-    }
-
-    private static byte findMostCommonBase(final int[] baseCounts, final byte refBase, final int maxCount)
-    {
-        byte maxBase = DNA_N_BYTE;
-
-        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
-        {
-            if(baseCounts[b] == maxCount)
-            {
-                if(DNA_BASE_BYTES[b] == refBase || maxBase == DNA_N_BYTE)
-                    maxBase = DNA_BASE_BYTES[b];
-            }
-        }
-
-        return maxBase;
-    }
-
     public static int findMaxDuplexBaseIndex(final List<SAMRecord> reads)
     {
         int firstDuplexBaseIndex = -1;
@@ -394,6 +394,338 @@ public final class SbxRoutines
         }
 
         return firstDuplexBaseIndex;
+    }
+
+    public static void determineIndelConsensus(
+            final IndelConsensusReads indelConsensusReads, final ConsensusState consensusState, final List<SAMRecord> reads)
+    {
+        List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
+
+        int[] consensusStarts = determineConsensusStartPositions(readStates);
+        int consensusUnclippedStart = consensusStarts[0];
+        int consensusAlignmentStart = consensusStarts[1];
+
+        List<CigarElement> cigarElements = determineConsensusCigar(
+                readStates, consensusState.IsForward, consensusUnclippedStart, consensusAlignmentStart);
+
+        int baseLength = cigarElements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
+        consensusState.setBaseLength(baseLength);
+
+        int baseIndex = consensusState.IsForward ? 0 : baseLength - 1;
+
+        int cigarCount = cigarElements.size();
+        int cigarIndex = consensusState.IsForward ? 0 : cigarCount - 1;
+        boolean[] isFirstInPair = null; // unused
+
+        readStates.forEach(x -> x.reset());
+
+        while(cigarIndex >= 0 && cigarIndex < cigarCount)
+        {
+            CigarElement element = cigarElements.get(cigarIndex);
+
+            // simplest scenario is where all reads agree about this next element
+            indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+
+            if(consensusState.outcome() == INDEL_FAIL)
+                break;
+
+            if(element.getOperator().consumesReadBases())
+            {
+                if(consensusState.IsForward)
+                    baseIndex += element.getLength();
+                else
+                    baseIndex -= element.getLength();
+            }
+
+            if(consensusState.IsForward)
+                ++cigarIndex;
+            else
+                --cigarIndex;
+        }
+
+        consensusState.finaliseCigar();
+
+        int consensusAlignmentEnd = consensusAlignmentStart
+                + cigarElements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum() - 1;
+
+        int consensusUnclippedEnd = consensusAlignmentEnd;
+
+        if(cigarElements.get(cigarElements.size() - 1).getOperator() == S)
+            consensusUnclippedEnd += cigarElements.get(cigarElements.size() - 1).getLength();
+
+        consensusState.setBoundaries(consensusUnclippedStart, consensusUnclippedEnd, consensusAlignmentStart, consensusAlignmentEnd);
+
+        if(consensusState.outcome() != INDEL_FAIL)
+            consensusState.setOutcome(INDEL_MISMATCH);
+    }
+
+    private static int[] determineConsensusStartPositions(final List<ReadParseState> readStates)
+    {
+        int earliestUnclippedStart = -1;
+        int earliestAlignedStart = -1;
+
+        for(ReadParseState read : readStates)
+        {
+            int alignmentStart = read.Read.getAlignmentStart();
+            if(earliestAlignedStart < 0 || alignmentStart < earliestAlignedStart)
+                earliestAlignedStart = alignmentStart;
+
+            int unclippedStart = alignmentStart - leftSoftClipLength(read.Read.getCigar().getCigarElements());
+
+            if(earliestUnclippedStart < 0 || unclippedStart < earliestUnclippedStart)
+                earliestUnclippedStart = unclippedStart;
+        }
+
+        return new int[] { earliestUnclippedStart, earliestAlignedStart };
+    }
+
+    private static List<CigarElement> determineConsensusCigar(
+            final List<ReadParseState> readStates, final boolean isForwardConsensus,
+            int consensusUnclippedStart, int consensusAlignmentStart)
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList();
+
+        /* routine:
+        - determine earliest soft-clip start
+        - determine earliest aligned start
+        - build left soft-clip element using any read covering that unclipped read base up until the earlier aligned start
+            - that favours M over S
+        - then begin element prioritisation routine:
+	        - walk forwards while read cigars agree
+	        - at point of difference, take element type based on rules above
+	        - this will then use that read's element until exhausted
+	        - move all reads to this same point
+	        - repeat process
+        */
+
+        /* need to handle duplicate jitter and then decide how to compare S vs M
+        if(consensusUnclippedStart < consensusAlignmentStart)
+        {
+            cigarElements.add(new CigarElement(consensusAlignmentStart - consensusUnclippedStart, S));
+        }
+        */
+
+        List<ReadParseState> activeReadStates = Lists.newArrayList(readStates);
+
+        int elementLength = 0;
+        CigarOperator elementOperator = null;
+
+        while(true)
+        {
+            CigarOperator nextOperator = determineConsensusCigarOperator(activeReadStates);
+
+            if(elementOperator == null || elementOperator != nextOperator)
+            {
+                if(elementOperator != null)
+                {
+                    if(isForwardConsensus)
+                        cigarElements.add(new CigarElement(elementLength, elementOperator));
+                    else
+                        cigarElements.add(0, new CigarElement(elementLength, elementOperator));
+                }
+
+                elementLength = 0;
+                elementOperator = nextOperator;
+            }
+
+            ++elementLength;
+
+            // move reads ahead depending on whether they agree with the consensus or not
+            for(ReadParseState read : activeReadStates)
+            {
+                // check for element type differences:
+
+                // first skip past any insert if the selected element is aligned
+                if(nextOperator == M && read.elementType() == I)
+                    read.skipInsertElement();
+
+                boolean moveNext = true;
+
+                if(read.elementType() != nextOperator)
+                {
+                    // when aligned (M) is selected:
+                    // - insert - skip past the insert's bases
+                    // - delete - move along in step but cannot use base
+                    // - ignore read with soft-clipped bases since they are likely misaligned
+
+                    // when insert (I) is selected:
+                    // - aligned or delete - pause the index and don't use the base
+                    if(nextOperator == M)
+                    {
+                        if(deleteOrSplit(read.elementType()) || read.elementType() == S)
+                        {
+                            //
+                        }
+                        else if(read.elementType() == I)
+                        {
+                            return Collections.emptyList();
+                        }
+                    }
+                    else if(nextOperator == I)
+                    {
+                        if(read.elementType() == M || deleteOrSplit(read.elementType()))
+                        {
+                            moveNext = false;
+                        }
+                    }
+                }
+
+                if(moveNext)
+                    read.moveNextBase();
+            }
+
+            int index = 0;
+            while(index < activeReadStates.size())
+            {
+                if(activeReadStates.get(index).exhausted())
+                    activeReadStates.remove(index);
+                else
+                    ++index;
+            }
+
+            if(activeReadStates.isEmpty())
+                break;
+        }
+
+        // add the last
+        if(isForwardConsensus)
+            cigarElements.add(new CigarElement(elementLength, elementOperator));
+        else
+            cigarElements.add(0, new CigarElement(elementLength, elementOperator));
+
+        return cigarElements;
+    }
+
+    private static CigarOperator determineConsensusCigarOperator(final List<ReadParseState> readStates)
+    {
+        CigarOperator operator = null;
+        boolean matched = true;
+
+        for(ReadParseState read : readStates)
+        {
+            if(operator == null)
+            {
+                operator = read.elementType();
+            }
+            else if(operator != read.elementType())
+            {
+                matched = false;
+                break;
+            }
+        }
+
+        if(matched)
+            return operator;
+
+        // follow rules to find consensus
+        // if all reads are within the simplex tail at this location, and over 50% of them have the same cigar element, use that one
+
+        // look at the reads that are duplex in this region. Classify the Cigar element within each duplex read as high qual or not:
+        //  - For an element consuming read bases (e.g. M, I), it's high qual if the qual of the base itself is above the duplex mismatch qual = 1
+        //  - For an element not consuming read bases (e.g. D), it’s always high qual (this is because a base is only deleted in the read
+        //  if both R1 and R2 contain the deletion)
+
+        // If over 50% of the reads that are duplex in this region contain the same Cigar element, with high quality, use that one
+        // Otherwise, choose the most ref-like Cigar possible (e.g. strip I and D cigar elements)
+        Map<String,Integer> consensusTypeCounts = Maps.newHashMap();
+        int duplexCount = 0;
+        boolean hasAligned = false;
+
+        for(ReadParseState read : readStates)
+        {
+            SbxQualType qualType;
+            CigarOperator readOperator = read.elementType();
+            hasAligned |= readOperator == M;
+
+            if(read.currentBaseQual() == RAW_SIMPLEX_QUAL)
+            {
+                qualType = SbxQualType.SIMPLEX;
+            }
+            else
+            {
+                ++duplexCount;
+
+                if(readOperator.consumesReadBases())
+                    qualType = read.currentBaseQual() > SBX_DUPLEX_MISMATCH_QUAL ? SbxQualType.DUPLEX_HIGH_QUAL : SbxQualType.DUPLEX_LOW_QUAL;
+                else
+                    qualType = SbxQualType.DUPLEX_HIGH_QUAL;
+            }
+
+            String key = formQualTypeOperatorKey(qualType, readOperator);
+            Integer count = consensusTypeCounts.get(key);
+            consensusTypeCounts.put(key, count != null ? count + 1 : 1);
+        }
+
+        CigarOperator consensusOperator = null;
+        if(duplexCount == 0)
+        {
+            double minCount = readStates.size() * 0.5;
+            consensusOperator = getMajorityOperatorByType(consensusTypeCounts, SbxQualType.SIMPLEX, minCount);
+        }
+        else
+        {
+            double minCount = duplexCount * 0.5;
+            consensusOperator = getMajorityOperatorByType(consensusTypeCounts, SbxQualType.DUPLEX_HIGH_QUAL, minCount);
+        }
+
+        if(consensusOperator != null)
+            return consensusOperator;
+
+        // favour an M over an indel
+        if(hasAligned)
+            return M;
+
+        // take most common
+        return getMajorityOperatorByType(consensusTypeCounts, null, 0);
+    }
+
+    private static CigarOperator getMajorityOperatorByType(
+            final Map<String,Integer> consensusTypeCounts, @Nullable final SbxQualType requiredQualType, final double minCount)
+    {
+        CigarOperator maxOperator = null;
+        int maxCount = 0;
+        for(Map.Entry<String,Integer> entry : consensusTypeCounts.entrySet())
+        {
+            SbxQualType qualType = extractQualType(entry.getKey());
+
+            if(requiredQualType == null || requiredQualType == qualType)
+            {
+                CigarOperator operator = extractCigarOperator(entry.getKey());
+                int count = entry.getValue();
+
+                if(maxCount == 0 || count > maxCount)
+                {
+                    maxCount = count;
+                    maxOperator = operator;
+                }
+            }
+        }
+
+        return maxCount > minCount ? maxOperator : null;
+    }
+
+    private enum SbxQualType
+    {
+        SIMPLEX,
+        DUPLEX_LOW_QUAL,
+        DUPLEX_HIGH_QUAL;
+    }
+
+    public static CigarOperator extractCigarOperator(final String key)
+    {
+        String[] components = key.split("_", 2);
+        return CigarOperator.valueOf(components[0]);
+    }
+
+    public static SbxQualType extractQualType(final String key)
+    {
+        String[] components = key.split("_", 2);
+        return SbxQualType.valueOf(components[1]);
+    }
+
+    public static String formQualTypeOperatorKey(final SbxQualType qualType, final CigarOperator operator)
+    {
+        return format("%s_%s", operator, qualType);
     }
 
     private static final int[] ADJACENT_INDICES = {-3, -2, -1, 1, 2, 3};
