@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -58,6 +59,7 @@ public class SampleData
     public final List<AmberBAF> AmberBAFs = Lists.newArrayList();
     public final List<CobaltRatio> CobaltRatios = Lists.newArrayList();
     public final List<PurpleSegment> PurpleSegments = Lists.newArrayList();
+    public final List<DriverCatalog> PurpleGeneCNVs = Lists.newArrayList();
 
     private final VisualiserConfig mConfig;
 
@@ -185,6 +187,19 @@ public class SampleData
             PurpleSegments.addAll(purpleSegmentsFiltered);
 
             VIS_LOGGER.debug("loaded {} PURPLE segment entries", PurpleSegments.size());
+
+            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDir, mConfig.Sample);
+            List<DriverCatalog> drivers = DriverCatalogFile.read(purpleDriverFile);
+
+            Set<String> seenGeneCNVs = new HashSet<>();
+            List<DriverCatalog> purpleGeneCNVs = drivers.stream()
+                    .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL )
+                    .filter(x -> seenGeneCNVs.add(x.gene() + "-" + x.driver())) // Removes duplicate entries arising from different transcript IDs
+                    .toList();
+
+            PurpleGeneCNVs.addAll(purpleGeneCNVs);
+
+            VIS_LOGGER.debug("loaded {} PURPLE driver gene CNV entries", PurpleGeneCNVs.size());
         }
 
         boolean clustersOrChainsProvided = !mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty();
@@ -324,32 +339,6 @@ public class SampleData
         }
 
         return clusterIds;
-    }
-
-    public List<DriverCatalog> findGenesWithCNVs()
-    {
-        try
-        {
-            if(mConfig.PurpleDir == null)
-            {
-                VIS_LOGGER.debug("PURPLE dir not specified - Skipping finding gene CNVs in PURPLE driver catalog");
-                return Lists.newArrayList();
-            }
-
-            String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDir, mConfig.Sample);
-            List<DriverCatalog> drivers = DriverCatalogFile.read(purpleDriverFile);
-
-            List<DriverCatalog> geneCNVs = drivers.stream()
-                    .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL )
-                    .toList();
-
-            return geneCNVs;
-        }
-        catch(Exception e)
-        {
-            VIS_LOGGER.error("sample({}) failed to load driver data: {}", mConfig.Sample, e.toString());
-            return null;
-        }
     }
 
     private List<VisFusion> loadFusions(final String fileName) throws IOException

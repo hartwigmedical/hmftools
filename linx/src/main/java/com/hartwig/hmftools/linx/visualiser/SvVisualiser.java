@@ -147,10 +147,9 @@ public class SvVisualiser implements AutoCloseable
             submitChromosome(Lists.newArrayList(chromosome));
         }
 
-        List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
-        if(!genesWithCNVs.isEmpty())
+        if(!mSampleData.PurpleGeneCNVs.isEmpty())
         {
-            for(DriverCatalog gene : genesWithCNVs)
+            for(DriverCatalog gene : mSampleData.PurpleGeneCNVs)
             {
                 String geneName = gene.gene();
                 DriverType geneDriverType = gene.driver();
@@ -185,13 +184,11 @@ public class SvVisualiser implements AutoCloseable
 
         if(!mConfig.Genes.isEmpty())
         {
-            List<DriverCatalog> genesWithCNVs = mSampleData.findGenesWithCNVs();
-
             for(String geneName : mConfig.Genes)
             {
                 String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
 
-                DriverCatalog matchedGeneCnvEntry = genesWithCNVs.stream()
+                DriverCatalog matchedGeneCnvEntry = mSampleData.PurpleGeneCNVs.stream()
                         .filter(x -> x.gene().equals(geneName))
                         .findFirst()
                         .orElse(null);
