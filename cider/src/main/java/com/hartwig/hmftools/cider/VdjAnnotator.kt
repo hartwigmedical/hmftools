@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderConstants.MATCHES_REF_KNOWN_CDR3_AA
 import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
+import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
@@ -272,6 +274,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val maxNonSplitReads = Math.min(MAX_NONSPLIT_READS, Math.max(vdj.numReads / 2, 1))
         return ((vAlignedReads == 0 || jAlignedReads == 0) &&
             (jNonSplitReads + vNonSplitReads) >= maxNonSplitReads)
+                || vdjInKnownMatchesRefList(vdj)
     }
 
     fun vdjMatchesRef(vdj: VDJSequence) : Boolean
@@ -284,6 +287,12 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val jNonSplitReads: Int = countNonSplitReads(vdj, VJ.J)
         return vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
             vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
+    }
+
+    fun vdjInKnownMatchesRefList(vdj: VDJSequence): Boolean
+    {
+        val cdr3AA = Codons.aminoAcidFromBases(vdj.cdr3Sequence)
+        return MATCHES_REF_KNOWN_CDR3_AA.any { seq -> cdr3AA.matches(seq) }
     }
 
     companion object
