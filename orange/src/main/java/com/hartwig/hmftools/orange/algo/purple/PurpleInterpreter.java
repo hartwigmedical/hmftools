@@ -359,21 +359,24 @@ public class PurpleInterpreter
                 DriverCategory category;
                 LikelihoodMethod likelihoodMethod;
                 boolean biallelic;
+                double likelihood;
 
                 if(type == DriverType.AMP || type == DriverType.PARTIAL_AMP)
                 {
                     likelihoodMethod = LikelihoodMethod.AMP;
                     category = ONCO;
                     biallelic = false;
+                    likelihood = 1;
                 }
                 else
                 {
                     likelihoodMethod = LikelihoodMethod.DEL;
                     category = TSG;
                     biallelic = type == DriverType.DEL;
+                    likelihood = type == DriverType.DEL ? 1 : 0;
                 }
 
-                DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, geneCopyNumber);
+                DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, likelihood, geneCopyNumber);
                 allGainDels.add(driverCatalog);
             }
         }

@@ -94,6 +94,6 @@ public final class AmplificationDrivers
 
     private static DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber, final DriverType driverType)
     {
-        return createCopyNumberDriver(DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, geneCopyNumber);
+        return createCopyNumberDriver(DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, 1, geneCopyNumber);
     }
 }

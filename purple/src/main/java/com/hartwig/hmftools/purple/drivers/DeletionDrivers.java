@@ -140,6 +140,7 @@ public class DeletionDrivers
     private static DriverCatalog createDelDriver(final DriverGene driverGene, final DriverType driverType, final GeneCopyNumber geneCopyNumber)
     {
         boolean biallelic = driverType == DEL;
-        return createCopyNumberDriver(driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, geneCopyNumber);
+        double likelihood = driverType == DEL ? 1 : 0;
+        return createCopyNumberDriver(driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, likelihood, geneCopyNumber);
     }
 }
