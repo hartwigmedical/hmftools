@@ -193,7 +193,11 @@ public class SampleData
 
             Set<String> seenGeneCNVs = new HashSet<>();
             List<DriverCatalog> purpleGeneCNVs = drivers.stream()
-                    .filter(x -> x.driver() == DriverType.AMP || x.driver() == DriverType.PARTIAL_AMP || x.driver() == DriverType.DEL )
+                    .filter(x ->
+                            x.driver() == DriverType.AMP ||
+                            x.driver() == DriverType.PARTIAL_AMP ||
+                            x.driver() == DriverType.DEL ||
+                            x.driver() == DriverType.HET_DEL)
                     .filter(x -> seenGeneCNVs.add(x.gene() + "-" + x.driver())) // Removes duplicate entries arising from different transcript IDs
                     .toList();
 
