@@ -53,6 +53,12 @@ public class SbxDuplexIndel
     {
         return readIndex >= FirstReadInsertIndex && readIndex <= DuplexIndelIndexEnd;
     }
+
+    public boolean withinDeleteBounds(int readIndex)
+    {
+        return readIndex >= DeletedIndelIndexStart && readIndex <= DeletedIndelIndexEnd;
+    }
+
     public boolean isLowQualBase(int readIndex)
     {
         return LowBaseQualIndices.contains(readIndex);

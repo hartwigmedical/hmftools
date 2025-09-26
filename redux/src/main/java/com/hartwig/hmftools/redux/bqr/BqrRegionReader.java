@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -374,6 +375,14 @@ public class BqrRegionReader implements CigarHandler
             int readIndex = startReadIndex + i;
 
             byte ref = mCurrentRefSequence.base(position);
+
+            /*
+            if(readIndex >= record.getReadBases().length)
+            {
+                RD_LOGGER.error("invalid BQR read index({}): {}", readIndex, readToString(record));
+                return;
+            }
+            */
 
             byte alt = record.getReadBases()[readIndex];
 

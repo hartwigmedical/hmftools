@@ -105,6 +105,9 @@ public final class SbxRoutines
         if(duplexIndelIndices.isEmpty())
             return;
 
+        if(record.getReadNegativeStrandFlag())
+            duplexIndelIndices = reverseDuplexIndelIndices(duplexIndelIndices, record.getReadBases().length);
+
         SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, duplexIndelIndices);
 
         List<SbxDuplexIndel> duplexIndels = builder.duplexIndels();
@@ -112,9 +115,27 @@ public final class SbxRoutines
         if(duplexIndels.isEmpty())
             return;
 
-        int strippedBases = duplexIndels.stream().mapToInt(x -> x.deletedBaseCount()).sum();
+        int lastDeletedIndex = -1;
+        int netStrippedBases = 0;
+
+        for(SbxDuplexIndel duplexIndel : duplexIndels)
+        {
+            if(lastDeletedIndex < 0)
+            {
+                netStrippedBases += duplexIndel.deletedBaseCount();
+            }
+            else
+            {
+                int adustedDeletedIndexStart = max(lastDeletedIndex + 1, duplexIndel.DeletedIndelIndexStart);
+                netStrippedBases += max(duplexIndel.DeletedIndelIndexEnd - adustedDeletedIndexStart + 1, 0);
+            }
+
+            lastDeletedIndex = duplexIndel.DeletedIndelIndexEnd;
+
+        }
+
         int oldBaseLength = record.getReadBases().length;
-        int newBaseLength = record.getReadBases().length - strippedBases;
+        int newBaseLength = record.getReadBases().length - netStrippedBases;
 
         byte[] readBases = new byte[newBaseLength];
         byte[] readQuals = new byte[newBaseLength];
@@ -138,8 +159,6 @@ public final class SbxRoutines
 
         int newReadIndex = 0;
 
-        int totalDeletedBases = 0;
-
         for(int oldReadIndex = 0; oldReadIndex < oldBaseLength; ++oldCigarElementIndex)
         {
             if(oldCigarElementIndex >= oldElement.getLength())
@@ -158,6 +177,7 @@ public final class SbxRoutines
 
             boolean isStrippedIndelBase = false;
             boolean isLowQualBase = false;
+
             int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
             boolean withinDuplexIndelBounds = duplexIndel != null && duplexIndel.withinBounds (effectReadIndex);
 
@@ -167,7 +187,7 @@ public final class SbxRoutines
                 {
                     isLowQualBase = true;
                 }
-                else if(effectReadIndex >= duplexIndel.DeletedIndelIndexStart && effectReadIndex <= duplexIndel.DeletedIndelIndexEnd)
+                else if(duplexIndel.withinDeleteBounds(effectReadIndex))
                 {
                     // skip over stripped indel bases
                     isStrippedIndelBase = true;
@@ -177,7 +197,47 @@ public final class SbxRoutines
                 if(effectReadIndex >= duplexIndel.DuplexIndelIndexEnd)
                 {
                     ++duplexIndelIndex;
-                    totalDeletedBases += duplexIndel.deletedBaseCount();
+
+                    if(duplexIndelIndex < duplexIndels.size())
+                    {
+                        duplexIndel = duplexIndels.get(duplexIndelIndex);
+
+                        // skip over stripped indel bases if in next (adjacent) duplex indel
+                        if(!isStrippedIndelBase && duplexIndel.withinDeleteBounds(effectReadIndex))
+                        {
+                            isStrippedIndelBase = true;
+                            ++indelTrimmedCount;
+                        }
+                    }
+                    else
+                    {
+                        duplexIndel = null;
+                    }
+                }
+            }
+
+            /*
+            int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
+            boolean withinDuplexIndelBounds = duplexIndel != null && duplexIndel.withinBounds (effectReadIndex);
+
+            if(withinDuplexIndelBounds && (oldElement.getOperator().consumesReadBases()))
+            {
+                if(duplexIndel.isLowQualBase(effectReadIndex))
+                {
+                    isLowQualBase = true;
+                }
+                else if(duplexIndel.withinDeleteBounds(effectReadIndex))
+                {
+                    // skip over stripped indel bases
+                    isStrippedIndelBase = true;
+                    ++indelTrimmedCount;
+                }
+
+                if(effectReadIndex >= duplexIndel.DuplexIndelIndexEnd)
+                {
+                    ++duplexIndelIndex;
+                    // totalDeletedBases += duplexIndel.deletedBaseCount();
+                    totalDeletedBases += indelTrimmedCount; // the duplexIndel deleted base count may be out-of-date due to overlaps
 
                     if(duplexIndelIndex < duplexIndels.size())
                     {
@@ -187,6 +247,10 @@ public final class SbxRoutines
                         // factor in deleted bases from prior stripped indels - using totalDeletedBases
                         if(totalDeletedBases > 0)
                             duplexIndel = new SbxDuplexIndel(duplexIndel, -totalDeletedBases);
+
+                        // skip over stripped indel bases if in next (adjacent) duplex indel
+                        if(!isStrippedIndelBase && duplexIndel.withinDeleteBounds(newReadIndex))
+                            isStrippedIndelBase = true;
                     }
                     else
                     {
@@ -194,6 +258,7 @@ public final class SbxRoutines
                     }
                 }
             }
+            */
 
             if(!isStrippedIndelBase)
             {
@@ -215,8 +280,8 @@ public final class SbxRoutines
             {
                 if(!isStrippedIndelBase)
                 {
-                    // if(newReadIndex >= readBases.length || oldReadIndex >= record.getReadBases().length)
-                    //    break;
+                    if(newReadIndex >= readBases.length || oldReadIndex >= record.getReadBases().length)
+                        break;
 
                     readBases[newReadIndex] = record.getReadBases()[oldReadIndex];
 
@@ -287,6 +352,18 @@ public final class SbxRoutines
                 RD_LOGGER.debug("invalid read({}) reason({}) details: {}", record.getReadName(), validReason, readToString(record));
             }
         }
+    }
+
+    private static List<Integer> reverseDuplexIndelIndices(List<Integer> duplexIndelIndices, int readLength)
+    {
+        List<Integer> newIndices = Lists.newArrayListWithCapacity(duplexIndelIndices.size());
+
+        for(Integer index : duplexIndelIndices)
+        {
+            newIndices.add(0, readLength - index - 1);
+        }
+
+        return newIndices;
     }
 
     public static BaseQualPair determineBaseAndQual(

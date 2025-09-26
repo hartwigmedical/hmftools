@@ -255,7 +255,7 @@ public class SbxDuplexReadTest
     }
 
     @Test
-    public void testStripDuplexIndelsComplex()
+    public void testStripDuplexComplexIndels()
     {
         int alignmentStart = 10;
 
@@ -343,16 +343,22 @@ public class SbxDuplexReadTest
         assertEquals("CTTTATTTTACC", read.getReadString());
         checkBaseQuals(read, List.of(4, 5, 8));
         assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+   }
 
-        // test 4: multiple stripped indels need to offset each other
+    @Test
+    public void testStripDuplexMultipleIndels()
+    {
+        int alignmentStart = 10;
+
+        // test 1: multiple stripped indels need to offset each other
         //         0123     456     7690     12     3456     7     8901
-        readStr = "AACC" + "TTT" + "AACC" + "TT" + "AACC" + "T" + "AACC";
-        cigar = "4M3I4M2I4M1I4M";
+        String readStr = "AACC" + "TTT" + "AACC" + "TT" + "AACC" + "T" + "AACC";
+        String cigar = "4M3I4M2I4M1I4M";
 
-        read = createSamRecordUnpaired(
+        SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
 
-        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+        byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
         baseQuals[4] = 0;
         baseQuals[5] = 0;
         baseQuals[6] = 0;
@@ -364,7 +370,7 @@ public class SbxDuplexReadTest
 
         read.setBaseQualities(baseQuals);
 
-        ycTagStr = "0-4ZZZ4ZZ4Z4-0";
+        String ycTagStr = "0-4ZZZ4ZZ4Z4-0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
         read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 6);
@@ -375,7 +381,48 @@ public class SbxDuplexReadTest
         assertEquals("AACCAACCAACCAACC", read.getReadString());
         checkBaseQuals(read, Collections.emptyList());
         assertEquals(0, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
-   }
+
+        // test 2: overlapping / adjacent indels
+        //         012345678     90123456     789012
+        // low-qual               0 00        00000
+        readStr = "AAAAAGGGT" + "CTCCCTTC" + "CCTTCGGGG";
+        cigar = "9M8I9M";
+
+        // result after trimming
+        //         012345678 9 012345678
+        //         AAAAAGGGT C CCTTCGGGG
+        // low-qual            00000
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+        baseQuals[10] = 0;
+        baseQuals[12] = 0;
+        baseQuals[13] = 0;
+
+        baseQuals[17] = 0;
+        baseQuals[18] = 0;
+        baseQuals[19] = 0;
+        baseQuals[20] = 0;
+        baseQuals[21] = 0;
+
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-10Z1ZZ3ZZZZZ4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 8);
+
+        stripDuplexIndels(read);
+
+        assertEquals(ReadValidReason.OK, ReadValidReason.isValidRead(read));
+        assertEquals("9M1I9M", read.getCigarString());
+        assertEquals("AAAAAGGGTCCCTTCGGGG", read.getReadString());
+        checkBaseQuals(read, List.of(10, 11, 12, 13, 14));
+        assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+
+    }
 
     private static void checkBaseQuals(final SAMRecord read, final List<Integer> lowQualBases)
     {
@@ -398,11 +445,6 @@ public class SbxDuplexReadTest
     {
         int alignmentStart = 25;
 
-        String refBases = "A".repeat(alignmentStart - 1 + 5) + "CT" + "A".repeat(100);
-        RefGenomeInterface refGenome = getRefGenome(refBases);
-
-        int mapq = 10;
-        int nm = 2;
         int alignmentScore = 0;
         String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
         String cigar = "5M2I7M";
@@ -412,31 +454,16 @@ public class SbxDuplexReadTest
         SAMRecord read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
         read.setBaseQualityString(qualStr);
-        read.setMappingQuality(mapq);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
-        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, nm);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
         read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, alignmentScore);
 
         stripDuplexIndels(read);
 
-        int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
-
-        int expectedNm = 0;
-        int expectedAlignmentScore = alignmentScore + alignmentScoreDiff;
-        String expectedReadStr = "A".repeat(5) + "CT" + "A".repeat(5);
-        String expectedCigar = "12M";
-        String expectedQualStr = NON_ZERO_QUAL.repeat(5) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
-
-        SAMRecord expectedRead = createSamRecordUnpaired(
-                TEST_READ_ID, CHR_1, alignmentStart, expectedReadStr, expectedCigar, false, false, null);
-
-        expectedRead.setBaseQualityString(expectedQualStr);
-        expectedRead.setMappingQuality(mapq);
-        expectedRead.setAttribute(SBX_YC_TAG, ycTagStr);
-        expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
-        expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
-
-        assertEquals(expectedRead, read);
+        assertEquals("AAAAACTAAAAA", read.getReadString());
+        assertEquals("12M", read.getCigarString());
+        checkBaseQuals(read, List.of(5, 6));
+        assertEquals(0, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
     }
 
     @Test
@@ -447,8 +474,12 @@ public class SbxDuplexReadTest
         int mapq = 10;
         int nm = 2;
         int alignmentScore = 0;
-        String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
-        String cigar = "5M2I7M";  // inserts are left aligned.
+
+        //                01234     56     7890123
+        String readStr = "AAAAA" + "CT" + "CTAAAAA";
+        // String readStr = "A".repeat(5) + "CT".repeat(2) + "A".repeat(5);
+
+        String cigar = "5M2I7M";
         String qualStr = NON_ZERO_QUAL.repeat(5) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(7);
         String ycTagStr = "0-7ZZ5-0";
 
@@ -462,24 +493,10 @@ public class SbxDuplexReadTest
 
         stripDuplexIndels(read);
 
-        int alignmentScoreDiff = BWA_GAP_OPEN_PENALTY + 2 * BWA_GAP_EXTEND_PENALTY;
-
-        int expectedNm = 0;
-        int expectedAlignmentScore = alignmentScore + alignmentScoreDiff;
-        String expectedReadStr = "A".repeat(5) + "CT" + "A".repeat(5);
-        String expectedCigar = "12M";
-        String expectedQualStr = NON_ZERO_QUAL.repeat(5) + MISMATCH_QUAL.repeat(2) + NON_ZERO_QUAL.repeat(5);
-
-        SAMRecord expectedRead = createSamRecordUnpaired(
-                TEST_READ_ID, CHR_1, alignmentStart, expectedReadStr, expectedCigar, true, false, null);
-
-        expectedRead.setBaseQualityString(expectedQualStr);
-        expectedRead.setMappingQuality(mapq);
-        expectedRead.setAttribute(SBX_YC_TAG, ycTagStr);
-        expectedRead.setAttribute(NUM_MUTATONS_ATTRIBUTE, expectedNm);
-        expectedRead.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, expectedAlignmentScore);
-
-        assertEquals(expectedRead, read);
+        assertEquals("AAAAACTAAAAA", read.getReadString());
+        assertEquals("12M", read.getCigarString());
+        checkBaseQuals(read, List.of(5, 6));
+        assertEquals(0, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
     }
 
     @Test

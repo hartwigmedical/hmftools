@@ -88,6 +88,7 @@ public class SbxBamUtils
 
             switch(code)
             {
+                // indel related (ie not SNV)
                 case 'I':
                 case 'L':
                 case 'P':
