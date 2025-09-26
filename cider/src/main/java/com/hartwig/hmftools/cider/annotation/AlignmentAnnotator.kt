@@ -8,6 +8,7 @@ import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
@@ -102,7 +103,7 @@ class AlignmentAnnotator
 
         // put all into an identity hash multimap
         val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
-
+        val alignmentFile = createBufferedWriter("$outputDir/$sampleId.alignments.txt")
         for ((vdjKey, alignment) in alignmentResults.entries())
         {
             val alignmentRunData = alignmentRunDataMap[vdjKey]
@@ -114,7 +115,10 @@ class AlignmentAnnotator
             }
 
             vdjToAlignment.put(alignmentRunData, alignment)
+
+            alignmentFile.write("fullSeq=${alignmentRunData.vdj.layout.consensusSequenceString()} alignment=$alignment\n")
         }
+        alignmentFile.close()
 
         val annotations = processAlignments(alignmentRunDataMap.values, vdjToAlignment)
 
@@ -311,7 +315,7 @@ class AlignmentAnnotator
     {
         // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
         // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
-        const val BWA_ALIGNMENT_SCORE_MIN = 20
+        const val BWA_ALIGNMENT_SCORE_MIN = 19
 
         const val FLANKING_BASES = 50
 
