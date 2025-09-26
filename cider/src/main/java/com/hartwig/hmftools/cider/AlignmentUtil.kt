@@ -127,7 +127,7 @@ object AlignmentUtil
         aligner.iGapExtendPenaltyOption = -GAP_EXTEND_SCORE
         // Relax pruning parameters to encourage more alignments to be found.
         // Otherwise in some cases BWA will miss alignments which we know are correct for gene annotation.
-        aligner.dropRatioOption = 0.25f
+        aligner.dropRatioOption = 0.1f
         aligner.splitFactorOption = 0.5f
         aligner.maxMemIntvOption = 500
         aligner.maxSeedOccurencesOption = 2000
