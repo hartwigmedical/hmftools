@@ -2,9 +2,7 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.String.format;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
+import java.util.Set;
 
 public class SbxDuplexIndel
 {
@@ -14,14 +12,14 @@ public class SbxDuplexIndel
     public final int TotalRepeatBaseLength;
     public final int FirstReadInsertIndex;
 
-    public final List<Integer> LowBaseQualIndices; // after base trimming
+    public final Set<Integer> LowBaseQualIndices; // after base trimming
 
     public final int DeletedIndelIndexStart;
     public final int DeletedIndelIndexEnd;
 
     public SbxDuplexIndel(
             int duplexIndelIndexStart, int duplexIndelIndexEnd, String repeatBases, int totalRepeatBaseLength,
-            int firstReadInsertIndex, final List<Integer> lowBaseQualIndices, int deletedIndelIndexStart, int deletedIndelIndexEnd)
+            int firstReadInsertIndex, final Set<Integer> lowBaseQualIndices, int deletedIndelIndexStart, int deletedIndelIndexEnd)
     {
         DuplexIndelIndexStart = duplexIndelIndexStart;
         DuplexIndelIndexEnd = duplexIndelIndexEnd;
@@ -31,19 +29,6 @@ public class SbxDuplexIndel
         LowBaseQualIndices = lowBaseQualIndices;
         DeletedIndelIndexStart = deletedIndelIndexStart;
         DeletedIndelIndexEnd = deletedIndelIndexEnd;
-    }
-
-    public SbxDuplexIndel(final SbxDuplexIndel other, int readOffset)
-    {
-        DuplexIndelIndexStart = other.DuplexIndelIndexStart + readOffset;
-        DuplexIndelIndexEnd = other.DuplexIndelIndexEnd + readOffset;
-        RepeatBases = other.RepeatBases;
-        TotalRepeatBaseLength = other.TotalRepeatBaseLength;
-        FirstReadInsertIndex = other.FirstReadInsertIndex + readOffset;
-        LowBaseQualIndices = Lists.newArrayListWithCapacity(other.LowBaseQualIndices.size());
-        other.LowBaseQualIndices.forEach(x -> LowBaseQualIndices.add(x + readOffset));
-        DeletedIndelIndexStart = other.DeletedIndelIndexStart + readOffset;
-        DeletedIndelIndexEnd = other.DeletedIndelIndexEnd + readOffset;
     }
 
     public int duplexLowQualCount() { return DuplexIndelIndexEnd - DuplexIndelIndexStart + 1; }

@@ -14,6 +14,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -107,7 +108,7 @@ public class CigarUtilsTest
         // within a delete
         cigarElements.clear();
         cigarElements.add(new CigarElement(20, CigarOperator.M));
-        cigarElements.add(new CigarElement(10, CigarOperator.D));
+        cigarElements.add(new CigarElement(10, D));
         cigarElements.add(new CigarElement(20, CigarOperator.M));
 
         readIndex = getReadIndexFromPosition(100, cigarElements, 125, false, false);
@@ -267,5 +268,22 @@ public class CigarUtilsTest
         assertEquals(9, cigarElements.get(2).getLength());
         assertEquals(3, cigarElements.get(3).getLength());
         assertEquals(8, cigarElements.get(4).getLength());
+
+        // must not align past aligned element
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(4, M));
+        cigarElements.add(new CigarElement(1, D));
+        cigarElements.add(new CigarElement(3, M));
+        cigarElements.add(new CigarElement(2, I));
+        cigarElements.add(new CigarElement(4, M));
+
+        readBases = "AACC" + "ACA" + "CA" + "AAGG";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        assertEquals(4, cigarElements.get(0).getLength());
+        assertEquals(1, cigarElements.get(1).getLength());
+        assertEquals(1, cigarElements.get(2).getLength());
+        assertEquals(2, cigarElements.get(3).getLength());
+        assertEquals(6, cigarElements.get(4).getLength());
     }
 }

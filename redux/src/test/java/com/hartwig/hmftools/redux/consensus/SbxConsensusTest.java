@@ -61,6 +61,7 @@ public class SbxConsensusTest
         mConsensusReads.setChromosomeLength(REF_BASES.length());
 
         ReduxConfig.SEQUENCING_TYPE = SequencingType.SBX;
+        ReduxConfig.RunChecks = true;
     }
 
     @After
@@ -363,11 +364,111 @@ public class SbxConsensusTest
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+
+        //                      duplex->
+        // 1:   AAC   CGGTTAA A C      CGGTTA
+        // 2:   AAC   CGGTTAA   C CCCC CGGTTA
+        // 3:   AAC C CGGTTAA   C       GGTTA
+        //       duplex->
+        // net: AAC   CGGTTAA   C       GGTTA
+
+        //            0123456789     0     1234567
+        readBases1 = "AACCGGTTAA" + "A" + "CCGGTTA";
+        readCigar1 = "10M1I7M";
+
+        //            01234567890     1234     567980
+        readBases2 = "AACCGGTTAAC" + "CCCC" + "CGGTTA";
+        readCigar2 = "11M4I6M";
+
+        //            012     3     45678901   D 23456
+        readBases3 = "AAC" + "C" + "CGGTTAAC" + "GGTTA";
+        readCigar3 = "3M1I8M1D5M";
+
+        //              01234567890  D  12345
+        readBasesNet = "AACCGGTTAAC" + "GGTTA";
+        readCigarNet = "11M1D5M";
+
+        reads.clear();
+
+        readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        setBaseQuals(readBaseQuals1, 16, -1, RAW_DUPLEX_QUAL);
+        read1 = createSamRecord(readBases1, position, readBaseQuals1, readCigar1);
+        reads.add(read1);
+
+        readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        setBaseQuals(readBaseQuals2, 16, -1, RAW_DUPLEX_QUAL);
+        read2 = createSamRecord(readBases2, position, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        readBaseQuals3 = buildBaseQuals(readBases3.length(), RAW_SIMPLEX_QUAL);
+        setBaseQuals(readBaseQuals3, 8, -1, RAW_DUPLEX_QUAL);
+        read3 = createSamRecord(readBases3, position, readBaseQuals3, readCigar3);
+        reads.add(read3);
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+    }
+
+    private static void setBaseQuals(final byte[] quals, int startIndex, int endIndex, byte qual)
+    {
+        if(endIndex < 0)
+            endIndex = quals.length - 1;
+
+        for(int i = startIndex; i <= endIndex; ++i)
+        {
+            quals[i] = qual;
+        }
+    }
+
+    @Test
+    public void testSbxIndelConsensusWithSoftClips()
+    {
+        // requires ability to have different unclipped and/or aligned start locations
+        List<SAMRecord> reads = Lists.newArrayList();
+
+        // 1:   ACGT AAC CGG TT AC
+        //      SSSS MMM MMMDMM SS
+
+        // 2:     GT AACCCGG TT ACGT
+        //        SS MMMIMMMDMM MSSS
+
+        // net: ACGT AACCCGG TT ACGT
+        //      SSSM MMMIMMMDMM MSSS
+
+        String readBases1 = "AACCGGTTTAACCGGTT";
+        String readCigar1 = "4S4M1I4M4S";
+        int readStart1 = 10;
+
+        String readBases2 = "AACCGGTTAAACCGGTT";
+        String readCigar2 = "17M";
+        int readStart2 = 6;
+
+        byte[] readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        reads.add(read1);
+
+        byte[] readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        String readBasesNet = "AACCGGTTAACCCGGTT"; // chooses ref since both are simplex
+        String readCigarNet = readCigar2;
+
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+
+        // test 2: stick with right soft-clip once begun
+
     }
 
     @Ignore
     @Test
-    public void testSbxIndelConsensusWithSoftClips()
+    public void testSbxIndelConsensusWithSoftClipsJitter()
     {
         // requires ability to have different unclipped and/or aligned start locations
         List<SAMRecord> reads = Lists.newArrayList();

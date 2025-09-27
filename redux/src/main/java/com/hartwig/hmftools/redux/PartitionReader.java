@@ -210,7 +210,8 @@ public class PartitionReader
             }
             catch(Exception e)
             {
-                RD_LOGGER.error("preprocess read error: {}", readToString(read));
+                RD_LOGGER.error("preprocess read({}) error: {}", readToString(read), e.toString());
+                e.printStackTrace();
             }
         }
     }

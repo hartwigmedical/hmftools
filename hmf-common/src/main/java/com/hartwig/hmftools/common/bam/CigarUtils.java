@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.bam;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -422,10 +423,12 @@ public final class CigarUtils
                     ++matchedRepeatCount;
                 }
 
-                if(matchedRepeatCount > 0)
+                CigarElement prevElement = cigarElements.get(i - 1);
+
+                if(matchedRepeatCount > 0 && prevElement.getOperator() == M)
                 {
-                    int alignmentShift = matchedRepeatCount * repeatBases.length;
-                    CigarElement prevElement = cigarElements.get(i - 1);
+                    int alignmentShift = min(matchedRepeatCount * repeatBases.length, prevElement.getLength() - 1);
+
                     prevElement = new CigarElement(prevElement.getLength() - alignmentShift, prevElement.getOperator());
                     cigarElements.set(i - 1, prevElement);
 

@@ -172,7 +172,7 @@ public class IndelConsensusReads
                 // check for element type differences:
 
                 // first skip past any insert if the selected element is aligned
-                if(selectedElement.getOperator() == M && read.elementType() == I)
+                if(selectedElement.getOperator().consumesReferenceBases() && read.elementType() == I)
                     read.skipInsertElement();
 
                 boolean useBase = true;
