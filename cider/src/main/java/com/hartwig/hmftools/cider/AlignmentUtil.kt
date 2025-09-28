@@ -127,12 +127,12 @@ object AlignmentUtil
         aligner.iGapExtendPenaltyOption = -GAP_EXTEND_SCORE
         // Relax pruning parameters to encourage more alignments to be found.
         // Otherwise in some cases BWA will miss alignments which we know are correct for gene annotation.
-        aligner.dropRatioOption = 0.25f
-        //aligner.maxMemIntvOption = 1000
-        //aligner.maxSeedOccurencesOption = 1000
-        //aligner.splitFactorOption = 0.5f
-        //aligner.maxChainGapOption = 1000
-        //aligner.zDropOption = 1000
+        aligner.dropRatioOption = 0.1f
+        aligner.splitFactorOption = 0.5f
+        aligner.maxMemIntvOption = 500
+        aligner.maxSeedOccurencesOption = 2000
+        aligner.maxChainGapOption = 300
+        aligner.zDropOption = 300
 
         val keys = sequences.keys.toList()
         val seqs = keys.map { k -> sequences[k]!!.toByteArray() }
