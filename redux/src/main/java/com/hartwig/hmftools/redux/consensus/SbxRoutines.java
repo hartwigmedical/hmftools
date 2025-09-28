@@ -259,6 +259,10 @@ public final class SbxRoutines
         // add last
         newCigarElements.add(new CigarElement(currentCigarLength, curentCigarOp));
 
+        // convert any initial insert to soft-clip, as keeping with alignment expectations
+        if(newCigarElements.get(0).getOperator() == I)
+            newCigarElements.set(0, new CigarElement(newCigarElements.get(0).getLength(), S));
+
         int newInsertCount = 0;
         int newInsertedBases = 0;
 

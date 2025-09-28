@@ -17,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class CigarUtilsTest
 
         assertEquals(5, cigar.numCigarElements());
         assertEquals(120, cigar.getCigarElement(0).getLength());
-        assertEquals(CigarOperator.S, cigar.getCigarElement(0).getOperator());
+        assertEquals(S, cigar.getCigarElement(0).getOperator());
         assertEquals(35, cigar.getCigarElement(1).getLength());
         assertEquals(CigarOperator.M, cigar.getCigarElement(1).getOperator());
         assertEquals(1099, cigar.getCigarElement(2).getLength());
@@ -119,9 +120,9 @@ public class CigarUtilsTest
 
         // within soft-clips
         cigarElements.clear();
-        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(10, S));
         cigarElements.add(new CigarElement(20, CigarOperator.M));
-        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(10, S));
 
         readIndex = getReadIndexFromPosition(100, cigarElements, 95, false, false);
         assertEquals(INVALID_READ_INDEX, readIndex);
@@ -172,9 +173,9 @@ public class CigarUtilsTest
 
         // within soft-clips
         cigarElements.clear();
-        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(10, S));
         cigarElements.add(new CigarElement(20, CigarOperator.M));
-        cigarElements.add(new CigarElement(10, CigarOperator.S));
+        cigarElements.add(new CigarElement(10, S));
 
         readIndex = getPositionFromReadIndex(100, cigarElements, 5);
         assertEquals(NO_POSITION, readIndex);
@@ -285,5 +286,20 @@ public class CigarUtilsTest
         assertEquals(1, cigarElements.get(2).getLength());
         assertEquals(2, cigarElements.get(3).getLength());
         assertEquals(6, cigarElements.get(4).getLength());
+
+        // if left alignment goes as far as the start, convert I to an S
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(4, M));
+        cigarElements.add(new CigarElement(1, I));
+        cigarElements.add(new CigarElement(4, M));
+
+        readBases = "AAAA" + "A" + "TTGG";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        // 4M1I4S -> 1S8M
+        assertEquals(2, cigarElements.size());
+        assertEquals(1, cigarElements.get(0).getLength());
+        assertEquals(S, cigarElements.get(0).getOperator());
+        assertEquals(8, cigarElements.get(1).getLength());
     }
 }
