@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
+import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 
 public class TumorBamCalculation extends BamCalculation
 {
-    public TumorBamCalculation(final GenomeFilter mGenomeFilter, TargetRegions targetRegions)
+    public TumorBamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope)
     {
-        super(mGenomeFilter, targetRegions);
+        super(mGenomeFilter, scope);
     }
 
     ResultsNormaliser finalMeanNormaliser()
     {
-        return new UnityNormaliser();
+        return mScope.finalNormaliser();
     }
 
     ResultsNormaliser diploidNormaliser()

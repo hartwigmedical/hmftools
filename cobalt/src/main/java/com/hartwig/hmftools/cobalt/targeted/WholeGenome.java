@@ -5,8 +5,14 @@ import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-public class NoEnrichment implements TargetRegions
+public class WholeGenome implements CobaltScope
 {
+    @Override
+    public ResultsNormaliser finalNormaliser()
+    {
+        return new DoNothingNormaliser();
+    }
+
     @Override
     public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
     {

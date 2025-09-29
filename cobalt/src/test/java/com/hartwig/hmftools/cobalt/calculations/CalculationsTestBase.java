@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import static org.immutables.value.internal.$guava$.collect.$ImmutableList.of;
-
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
@@ -25,6 +23,10 @@ public class CalculationsTestBase
         return new ChrBaseRegion(chromosome.contig(), start, end);
     }
 
+    GCProfile gcProfile(Chromosome chromosome, int position, double mappablePercentage)
+    {
+        return gcProfile(chromosome, position, 0.50, mappablePercentage);
+    }
     GCProfile gcProfile(Chromosome chromosome, int position, double gc, double mappablePercentage)
     {
         return ImmutableGCProfile.builder()

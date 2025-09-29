@@ -1,0 +1,14 @@
+package com.hartwig.hmftools.cobalt.targeted;
+
+import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
+import com.hartwig.hmftools.cobalt.count.DepthReading;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+
+public interface CobaltScope
+{
+    ResultsNormaliser finalNormaliser();
+
+    double enrichmentQuotient(Chromosome chromosome, DepthReading readDepth);
+
+    boolean onTarget(Chromosome chromosome, int position);
+}

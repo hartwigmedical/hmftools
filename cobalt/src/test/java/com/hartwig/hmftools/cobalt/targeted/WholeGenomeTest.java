@@ -11,17 +11,16 @@ import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NoEnrichmentTest
+public class WholeGenomeTest
 {
-    NoEnrichment enricher;
+    WholeGenome scope;
 
     @Before
     public void setup(){
-        enricher = new NoEnrichment();
+        scope = new WholeGenome();
     }
 
     @Test
@@ -40,15 +39,21 @@ public class NoEnrichmentTest
     @Test
     public void onTargetTest()
     {
-        assertTrue(enricher.onTarget(_1, 4_999));
-        assertTrue(enricher.onTarget(_1, 5_000));
-        assertTrue(enricher.onTarget(_1, 8_000));
-        assertTrue(enricher.onTarget(_3, 5_001));
+        assertTrue(scope.onTarget(_1, 4_999));
+        assertTrue(scope.onTarget(_1, 5_000));
+        assertTrue(scope.onTarget(_1, 8_000));
+        assertTrue(scope.onTarget(_3, 5_001));
+    }
+
+    @Test
+    public void finalNormaliserTest()
+    {
+        assertTrue(scope.finalNormaliser() instanceof DoNothingNormaliser);
     }
 
     void check(Chromosome chromosome, int position)
     {
-        assertEquals(1.0, enricher.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);
+        assertEquals(1.0, scope.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);
     }
 
     private DepthReading rd(Chromosome chromosome, int position)

@@ -14,14 +14,13 @@ import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class TargetRegionEnricherTest
+public class TargetRegionsTest
 {
-    TargetRegionEnricher enricher;
+    TargetRegions enricher;
 
     @Before
     public void setup()
@@ -34,12 +33,12 @@ public class TargetRegionEnricherTest
         initialData.put(_1, tre(_1, 11_001, 0.4));
         initialData.put(_2, tre(_2, 3_001, 0.52));
         initialData.put(_2, tre(_2, 4_001, 0.62));
-        TargetRegionEnricher.ChromosomeData chromosomeData = Mockito.mock();
+        TargetRegions.ChromosomeData chromosomeData = Mockito.mock();
         Mockito.when(chromosomeData.length(Mockito.eq(_1))).thenReturn(15_000);
         Mockito.when(chromosomeData.length(Mockito.eq(_2))).thenReturn(10_000);
         Mockito.when(chromosomeData.length(Mockito.eq(_3))).thenReturn(30_000);
 
-        enricher = new TargetRegionEnricher(initialData, chromosomeData);
+        enricher = new TargetRegions(initialData, chromosomeData);
     }
 
     @Test
@@ -84,6 +83,12 @@ public class TargetRegionEnricherTest
         assertFalse(enricher.onTarget(_1, 8_000));
 
         assertFalse(enricher.onTarget(_3, 5_001));
+    }
+
+    @Test
+    public void finalNormaliserTest()
+    {
+        assertTrue(enricher.finalNormaliser() instanceof UnityNormaliser);
     }
 
     void check(double expected, Chromosome chromosome, int position)

@@ -3,15 +3,19 @@ package com.hartwig.hmftools.cobalt.calculations;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MAX_DISTANCE;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COVERAGE;
 
-import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
+import java.util.List;
+
+import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
+import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class ReferenceBamCalculation extends BamCalculation
 {
     private final DiploidNormaliser mDiploidNormaliser = new DiploidNormaliser(ROLLING_MEDIAN_MAX_DISTANCE, ROLLING_MEDIAN_MIN_COVERAGE);
 
-    public ReferenceBamCalculation(final GenomeFilter mGenomeFilter, TargetRegions targetRegions)
+    public ReferenceBamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope)
     {
-        super(mGenomeFilter, targetRegions);
+        super(mGenomeFilter, scope);
     }
 
     ResultsNormaliser finalMeanNormaliser()
@@ -24,4 +28,8 @@ public class ReferenceBamCalculation extends BamCalculation
         return mDiploidNormaliser;
     }
 
+    List<MedianRatio> medianRatios(final RefGenomeVersion refGenVersion)
+    {
+        return mDiploidNormaliser.medianRatios(refGenVersion);
+    }
 }

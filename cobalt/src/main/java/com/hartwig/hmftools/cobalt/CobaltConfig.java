@@ -38,11 +38,11 @@ import java.util.Objects;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.targeted.NoEnrichment;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
-import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnricher;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
+import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
+import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
@@ -245,18 +245,18 @@ public class CobaltConfig
         return readerFactory;
     }
 
-    public TargetRegions targetRegionEnricher()
+    public CobaltScope scope()
     {
         if(TargetRegionNormFile == null)
         {
-            return new NoEnrichment();
+            return new WholeGenome();
         }
         else
         {
             TargetedRegionsNormalisationFile enrichmentFile = new TargetedRegionsNormalisationFile(TargetRegionNormFile);
             final RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
-            TargetRegionEnricher.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
-            return new TargetRegionEnricher(enrichmentFile.load(), chromosomeData);
+            TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
+            return new TargetRegions(enrichmentFile.load(), chromosomeData);
         }
     }
 
@@ -271,6 +271,16 @@ public class CobaltConfig
             CB_LOGGER.error("failed to load GC profile data: {}", e.toString());
             return ArrayListMultimap.create();
         }
+    }
+
+    public List<ChrBaseRegion> excludedRegions()
+    {
+        return mExcludedRegions;
+    }
+
+    public RefGenomeVersion genomeVersion()
+    {
+        return RefGenVersion;
     }
 
     private void loadExcludedRegions()

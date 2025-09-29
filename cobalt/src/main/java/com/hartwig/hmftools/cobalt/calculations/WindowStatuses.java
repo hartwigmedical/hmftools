@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
