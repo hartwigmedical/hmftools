@@ -70,6 +70,10 @@ public class SageConstants
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
     public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
+    public static final double MSI_JITTER_MIN_RATIO = 2;
+    public static final double MSI_JITTER_MIN_RATIO_HOTSPOT = 1.5;
+    public static final double MSI_JITTER_RATIO_HOTSPOT_VAF = 0.025;
+
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
     public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.002;
