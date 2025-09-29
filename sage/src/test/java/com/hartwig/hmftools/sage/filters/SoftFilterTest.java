@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 
@@ -227,6 +228,62 @@ public class SoftFilterTest
     }
 
     @Test
+    public void testGermlineRelativeQualFilter()
+    {
+        int position = 50;
+
+        String refBase = REF_BASES.substring(position, position + 1);
+        String altBase = getNextBase(refBase);
+        SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
+
+        VariantReadContext readContext = createReadContext(
+                variant, REF_BASES.substring(48, position), REF_BASES.substring(position + 1, 53), REF_BASES.substring(38, 48), REF_BASES.substring(53, 63));
+
+        ReadContextCounter refCounter = createReadCounter(readContext, true);
+        ReadContextCounter tumorCounter = createReadCounter(readContext);
+
+        int readPosStart = 20;
+
+        String altReadBases = REF_BASES.substring(readPosStart, position) + altBase + REF_BASES.substring(position + 1, 80);
+        String readCigar = buildCigarString(altReadBases.length());
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+        tumorCounter.processRead(altRead, 1, null);
+
+        refCounter.processRead(altRead, 1, null);
+
+        String refBases = REF_BASES.substring(readPosStart, 80);
+        readCigar = buildCigarString(altReadBases.length());
+        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, refBases, readCigar);
+
+        for(int i = 0; i < 12; ++i)
+        {
+            refCounter.processRead(refRead, 1, null);
+        }
+
+        assertEquals(1, refCounter.altSupport());
+        assertEquals(13, refCounter.depth());
+
+        Candidate candidate = new Candidate(PANEL, readContext, 1, 1);
+        SageVariant snv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
+
+        FILTERS.applySoftFilters(snv);
+
+        assertFalse(snv.filters().contains(MAX_GERMLINE_RELATIVE_QUAL));
+
+        // now exceeding the limit
+        refCounter.processRead(altRead, 1, null);
+        refCounter.processRead(altRead, 1, null);
+
+        candidate = new Candidate(PANEL, readContext, 1, 1);
+        snv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
+
+        FILTERS.applySoftFilters(snv);
+
+        assertTrue(snv.filters().contains(MAX_GERMLINE_RELATIVE_QUAL));
+    }
+
+    @Test
     public void testSimpleAtGermlineVaf()
     {
         int position = 50;
@@ -286,8 +343,6 @@ public class SoftFilterTest
         SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
         tumorCounter.processRead(altRead, 1, null);
 
-        // String simpleAltReadBases = REF_BASES.substring(readPosStart, position - 1) + "G" + altBases + REF_BASES.substring(position + 3, 80);
-        // SAMRecord simpleAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, simpleAltReadBases, readCigar);
         altRead.getBaseQualities()[30] = 10;
         refCounter.processRead(altRead, 1, null);
 

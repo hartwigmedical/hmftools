@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -103,16 +105,13 @@ public class TestUtils
 
         SAMRecord record = recordBuilder.addFrag(
                 readId, chromosome.ordinal(), readStart, false, false,
-                cigar, readBases, 37, false);
+                cigar, readBases, DEFAULT_BASE_QUAL, false);
 
         record.setReadBases(readBases.getBytes());
 
-        final byte[] qualities = new byte[readBases.length()];
+        byte[] baseQuals = SamRecordTestUtils.buildBaseQuals(readBases.length(), DEFAULT_BASE_QUAL);
+        record.setBaseQualities(baseQuals);
 
-        for(int i = 0; i < readBases.length(); ++i)
-            qualities[i] = 37;
-
-        record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
 

@@ -136,8 +136,11 @@ public class TincAnalyser
 
             SoftFilterConfig tierConfig = getTieredSoftFilterConfig(tier, filterConfig);
 
-            recheckMaxGermlineVaf(tierConfig, variant, tier);
-            recheckMaxGermlineRelativeQual(tierConfig, variant);
+            // extract values used in more than one filter
+            ReadSupportCounts refReadCounts = new ReadSupportCounts(parseIntegerList(variant.RefGenotype, READ_CONTEXT_COUNT));
+
+            recheckMaxGermlineVaf(tierConfig, variant, refReadCounts);
+            recheckMaxGermlineRelativeQual(variant,refReadCounts);
             recheckMaxGermlineAltSupport(variant, tier);
 
             if(variant.recovered())
@@ -150,7 +153,8 @@ public class TincAnalyser
         }
     }
 
-    private static void recheckMaxGermlineVaf(final SoftFilterConfig config, final VariantData variant, final VariantTier tier)
+    private static void recheckMaxGermlineVaf(
+            final SoftFilterConfig config, final VariantData variant, final ReadSupportCounts refReadCounts)
     {
         if(!variant.newFilters().contains(MAX_GERMLINE_VAF))
             return;
@@ -162,9 +166,7 @@ public class TincAnalyser
 
         int simpleAltMatches = getGenotypeAttributeAsInt(variant.RefGenotype, SIMPLE_ALT_COUNT, 0);
 
-        ReadSupportCounts readCounts = new ReadSupportCounts(parseIntegerList(variant.RefGenotype, READ_CONTEXT_COUNT));
-
-        int altSupport = readCounts.altSupport();
+        int altSupport = refReadCounts.altSupport();
         int adjustedRefAltCount = altSupport + simpleAltMatches;
 
         if(variant.isLongIndel())
@@ -180,26 +182,38 @@ public class TincAnalyser
         double baseQualAvg = altSupport > 0 ? avgBaseQuals[1] / (double)altSupport : 0;
         baseQualAvg = variant.calcReducedAltValue(baseQualAvg);
 
-        if(aboveMaxGermlineVaf(tier, isInLongRepeat, tumorVaf, adjustedRefAltCount, baseQualAvg, readCounts.Total, config.MaxGermlineVaf))
+        if(aboveMaxGermlineVaf(variant.tier(), isInLongRepeat, tumorVaf, adjustedRefAltCount, baseQualAvg, refReadCounts.Total, config.MaxGermlineVaf))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_VAF);
     }
 
-    private static void recheckMaxGermlineRelativeQual(final SoftFilterConfig config, final VariantData variant)
+    private static void recheckMaxGermlineRelativeQual(final VariantData variant, final ReadSupportCounts refReadCounts)
     {
         if(!variant.newFilters().contains(MAX_GERMLINE_RELATIVE_QUAL))
             return;
 
+        int[] avgTumorBaseQuals = parseIntegerList(variant.TumorGenotype, AVG_BASE_QUAL);
+        int[] avgRefBaseQuals = parseIntegerList(variant.RefGenotype, AVG_BASE_QUAL);
+
         ReadSupportCounts tumorReadQuals = new ReadSupportCounts(parseIntegerList(variant.TumorGenotype, READ_CONTEXT_QUALITY));
         ReadSupportCounts refReadQuals = new ReadSupportCounts(parseIntegerList(variant.RefGenotype, READ_CONTEXT_QUALITY));
+        ReadSupportCounts tumorReadCounts = new ReadSupportCounts(parseIntegerList(variant.TumorGenotype, READ_CONTEXT_COUNT));
+
+        double tumorVaf = variant.tumorAf();
+        int tumorDepth = tumorReadCounts.Total;
+        int tumorAvgBaseQual = avgTumorBaseQuals[1];
+        int refDepth = refReadCounts.Total;
+        int refAltSupport = refReadCounts.altSupport();
+        int refAvgBaseQual = avgRefBaseQuals[1];
 
         double tumorQual = tumorReadQuals.Full + tumorReadQuals.PartialCore + tumorReadQuals.Realigned;
         double refQual = refReadQuals.Full + refReadQuals.PartialCore + refReadQuals.Realigned;
 
         refQual = variant.calcReducedAltValue(refQual);
 
-        if(aboveMaxGermlineRelativeQual(config, tumorQual, refQual))
+        if(aboveMaxGermlineRelativeQual(
+                variant.tier(), tumorQual, tumorVaf, tumorDepth, tumorAvgBaseQual, refQual, refDepth, refAltSupport, refAvgBaseQual))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_RELATIVE_QUAL);
@@ -212,11 +226,11 @@ public class TincAnalyser
 
         boolean isLongInsert = variant.isInsert() && variant.isLongIndel();
 
-        ReadSupportCounts readCounts = new ReadSupportCounts(parseIntegerList(variant.RefGenotype, READ_CONTEXT_COUNT));
+        ReadSupportCounts refReadCounts = new ReadSupportCounts(parseIntegerList(variant.RefGenotype, READ_CONTEXT_COUNT));
 
-        int newAltSupport = variant.calcReducedAltCount(readCounts.altSupport());
+        int newAltSupport = variant.calcReducedAltCount(refReadCounts.altSupport());
 
-        if(aboveMaxMnvIndelGermlineAltSupport(tier, variant.isMnv(), isLongInsert, readCounts.Total, newAltSupport))
+        if(aboveMaxMnvIndelGermlineAltSupport(tier, variant.isMnv(), isLongInsert, refReadCounts.Total, newAltSupport))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_ALT_SUPPORT);
