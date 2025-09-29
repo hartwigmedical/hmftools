@@ -66,7 +66,6 @@ public final class SamRecordUtils
     {
         return !record.getReadPairedFlag() || record.getFirstOfPairFlag();
     }
-
     public static boolean secondInPair(final SAMRecord record)
     {
         return record.getReadPairedFlag() && record.getSecondOfPairFlag();

@@ -263,6 +263,8 @@ public final class SbxRoutines
         if(newCigarElements.get(0).getOperator() == I)
             newCigarElements.set(0, new CigarElement(newCigarElements.get(0).getLength(), S));
 
+        checkLeftAlignment(newCigarElements, readBases);
+
         int newInsertCount = 0;
         int newInsertedBases = 0;
 
@@ -295,8 +297,6 @@ public final class SbxRoutines
 
         record.setReadBases(readBases);
         record.setBaseQualities(readQuals);
-
-        checkLeftAlignment(newCigarElements, readBases);
 
         record.setCigar(new Cigar(newCigarElements));
 
@@ -457,8 +457,19 @@ public final class SbxRoutines
         {
             CigarElement element = cigarElements.get(cigarIndex);
 
-            // simplest scenario is where all reads agree about this next element
-            indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+            //try
+            //{
+                indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+//            }
+//            catch(Exception e)
+//            {
+//                RD_LOGGER.error("consensus({}:{}) reads({}) failed to add next cigar element({}{}) from baseIndex({})",
+//                        consensusState.Chromosome, consensusAlignmentStart, readStates.size(),
+//                        element.getLength(), element.getOperator(), baseIndex);
+//                e.printStackTrace();
+//                consensusState.setOutcome(INDEL_FAIL);
+//                break;
+//            }
 
             if(consensusState.outcome() == INDEL_FAIL)
                 break;

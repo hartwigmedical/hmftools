@@ -20,13 +20,9 @@ public class ConsensusState
     public final boolean IsForward;
     public final String Chromosome;
     public final Map<String, Object> Attributes;
-    private final RefGenome mRefGenome;
     public byte[] Bases;
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
-
-    private int mCurrentCigarElementLength;
-    private CigarOperator mCurrentCigarElementOperator;
 
     public int MinUnclippedPosStart;
     public int MaxUnclippedPosEnd;
@@ -36,6 +32,10 @@ public class ConsensusState
     public int NumMutations;
 
     private ConsensusOutcome mOutcome;
+    private final RefGenome mRefGenome;
+
+    private int mCurrentCigarElementLength;
+    private CigarOperator mCurrentCigarElementOperator;
 
     public ConsensusState(final boolean isForward, final String chromosome, final RefGenome refGenome)
     {

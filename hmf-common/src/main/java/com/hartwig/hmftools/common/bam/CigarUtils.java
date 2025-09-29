@@ -385,11 +385,22 @@ public final class CigarUtils
         {
             CigarElement element = cigarElements.get(i);
             CigarElement nextElement = cigarElements.get(i + 1);
+            CigarElement prevElement = i > 0 ? cigarElements.get(i - 1) : null;
 
-            if(i >= 1 && element.getOperator() == I && cigarElements.get(i - 1).getOperator() == M && nextElement.getOperator() == M)
+            boolean checkLeftShift = prevElement != null && element.getOperator() == I
+                    && prevElement.getOperator() == M && nextElement.getOperator() == M;
+
+            if(checkLeftShift)
             {
-                CigarElement prevElement = cigarElements.get(i - 1);
+                // cannot shift back through the previous element, but can convert it exactly to a soft-clip - see below
+                if(element.getLength() > prevElement.getLength())
+                    checkLeftShift = false;
+                else if(element.getLength() == prevElement.getLength() && i != 1)
+                    checkLeftShift = false;
+            }
 
+            if(checkLeftShift)
+            {
                 byte[] repeatBases = new byte[element.getLength()];
 
                 for(int j = 0; j < repeatBases.length; ++j)
