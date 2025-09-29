@@ -2,14 +2,11 @@ package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -45,11 +42,13 @@ public final class AmplificationDrivers
         {
             DriverGene driverGene = amplificationDriverGenes.get(geneCopyNumber.geneName());
 
+            if(driverGene == null)
+                continue;
+
             if(isHighCopyNoise && !supportedByOneSV(geneCopyNumber))
                 continue;
 
-            double ampCopyNumberThreshold = driverGene != null ?
-                    ploidy * driverGene.amplificationRatio() : DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+            double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
 
             double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
                     ? ampCopyNumberThreshold * 0.5 :  ampCopyNumberThreshold;
@@ -72,15 +71,8 @@ public final class AmplificationDrivers
             {
                 geneCopyNumber.setDriverType(driverType);
 
-                if(driverGene != null)
-                {
-                    geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED);
-                    result.add(createAmpDriver(geneCopyNumber, driverType));
-                }
-                else
-                {
-                    geneCopyNumber.setReportableStatus(ReportableStatus.CANDIDATE);
-                }
+                geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED);
+                result.add(createAmpDriver(geneCopyNumber, driverType));
             }
         }
 
