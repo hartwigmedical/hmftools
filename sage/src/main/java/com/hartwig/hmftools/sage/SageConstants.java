@@ -82,9 +82,9 @@ public class SageConstants
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC = 10;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
 
-    public static final double MAX_GERMLINE_VAF_THRESHOLD_MIN = 0.05;
     public static final double MAX_GERMLINE_VAF_THRESHOLD_MAX = 0.1;
 
+    public static final double MAX_GERMLINE_QUAL_HET_TUMOR_VAF = 0.5;
     public static final double MAX_GERMLINE_QUAL_PROB_HOTSPOT = 0.01;
     public static final double MAX_GERMLINE_QUAL_PROB_PANEL = 0.00025;
     public static final double MAX_GERMLINE_QUAL_PROB_OTHER = 1e-7;
@@ -168,19 +168,21 @@ public class SageConstants
 
     public static final int VIS_VARIANT_BUFFER = 200;
 
+    public static final double DEFAULT_MAX_GERMLINE_VAF = 0.05;
+
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 1e-2, -6, 0.01,
-            0, 0, 0.1, 0.25);
+            0, 0, DEFAULT_MAX_GERMLINE_VAF, 0.25);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
             "panel", 1e-5, -6, 0.02,
-            0, 0, 0.04, 0.04);
+            0, 0, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
             "high_confidence", 1e-8, 0, 0.025,
-            10, 6, 0.05, 0.04);
+            10, 6, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
             "low_confidence", 1e-14, 0, 0.025,
-            10, 6, 0.05, 0.04);
+            10, 6, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 }

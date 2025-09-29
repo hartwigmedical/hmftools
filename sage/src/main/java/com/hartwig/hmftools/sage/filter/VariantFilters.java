@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
@@ -19,13 +18,12 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_HET_TUMOR_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_OTHER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_THRESHOLD_MAX;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_THRESHOLD_MIN;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -33,9 +31,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_BOOST;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
@@ -609,14 +604,11 @@ public class VariantFilters
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        return aboveMaxGermlineVaf(
-                tier, refCounter.isInLongRepeat(), tumorVaf, adjustedRefAltCount, refCounter.averageAltRecalibratedBaseQuality(),
-                refCounter.readCounts().Total, config.MaxGermlineVaf);
+        return aboveMaxGermlineVaf(tier, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
     }
 
     public static boolean aboveMaxGermlineVaf(
-            final VariantTier tier, boolean isInLongRepeat,
-            double tumorVaf, int adjustedRefAltCount, double baseQualAvg, int refTotalReads, double maxGermlineVaf)
+            final VariantTier tier, double tumorVaf, int adjustedRefAltCount, int refTotalReads, double maxGermlineVaf)
     {
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
@@ -625,7 +617,7 @@ public class VariantFilters
         {
             double threshold = tier == HOTSPOT ? tumorVaf : tumorVaf / 2;
 
-            maxGermlineVaf = max(min(threshold, MAX_GERMLINE_VAF_THRESHOLD_MAX), MAX_GERMLINE_VAF_THRESHOLD_MIN);
+            maxGermlineVaf = max(min(threshold, maxGermlineVaf * 2), maxGermlineVaf);
         }
 
         double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
@@ -655,7 +647,7 @@ public class VariantFilters
             return false; // rely on other germline filters, eg min germline depth
 
         // adjust inputs by avg base qual
-        double adjustedTumorVaf = min(max(tumorVaf - pow(10, -tumorAvgBaseQual / 10), 0.0), 0.5);
+        double adjustedTumorVaf = min(max(tumorVaf - pow(10, -tumorAvgBaseQual / 10), 0.0), MAX_GERMLINE_QUAL_HET_TUMOR_VAF);
 
         int adjustedRefAd = max((int)round(refAltSupport - refDepth * pow(10, -refAvgBaseQual / 10)), 0);
         double depthRatio = refDepth / (double)tumorDepth;

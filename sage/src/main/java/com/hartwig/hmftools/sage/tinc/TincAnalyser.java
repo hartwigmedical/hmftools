@@ -159,9 +159,6 @@ public class TincAnalyser
         if(!variant.newFilters().contains(MAX_GERMLINE_VAF))
             return;
 
-        int repeatCount = variant.Context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
-        boolean isInLongRepeat = repeatCount >= LONG_REPEAT_LENGTH;
-
         double tumorVaf = variant.tumorAf();
 
         int simpleAltMatches = getGenotypeAttributeAsInt(variant.RefGenotype, SIMPLE_ALT_COUNT, 0);
@@ -177,12 +174,7 @@ public class TincAnalyser
 
         adjustedRefAltCount = variant.calcReducedAltCount(adjustedRefAltCount);
 
-        int[] avgBaseQuals = parseIntegerList(variant.RefGenotype, AVG_BASE_QUAL);
-
-        double baseQualAvg = altSupport > 0 ? avgBaseQuals[1] / (double)altSupport : 0;
-        baseQualAvg = variant.calcReducedAltValue(baseQualAvg);
-
-        if(aboveMaxGermlineVaf(variant.tier(), isInLongRepeat, tumorVaf, adjustedRefAltCount, baseQualAvg, refReadCounts.Total, config.MaxGermlineVaf))
+        if(aboveMaxGermlineVaf(variant.tier(), tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_VAF);
