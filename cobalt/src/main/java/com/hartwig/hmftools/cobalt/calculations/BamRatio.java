@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class BamRatio
 {

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.calculations;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 
@@ -11,6 +12,30 @@ import org.junit.Test;
 public class BamRatioTest
 {
     DepthReading readDepth = new DepthReading("1", 1001, 82, 0.49);
+
+    @Test
+    public void handleNaNDepthInConstructor()
+    {
+        DepthReading rdNaN = new DepthReading("1", 1001, Double.NaN, 0.49);
+        BamRatio ratio = new BamRatio(_1, rdNaN, true);
+        assertEquals(_1, ratio.mChromosome);
+        assertEquals(1001, ratio.Position);
+        assertEquals(-1.0, ratio.ratio(), 0.001);
+        assertEquals(-1.0, ratio.readDepth(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+    }
+
+    @Test
+    public void handleNaNGcInConstructor()
+    {
+        DepthReading rdNaN = new DepthReading("1", 1001, 34, Double.NaN);
+        BamRatio ratio = new BamRatio(_1, rdNaN, true);
+        assertEquals(_1, ratio.mChromosome);
+        assertEquals(1001, ratio.Position);
+        assertEquals(34, ratio.ratio(), 0.001);
+        assertEquals(34, ratio.readDepth(), 0.001);
+        assertEquals(-1.0, ratio.gcContent(), 0.001);
+    }
 
     @Test
     public void inTargetRegion()
@@ -74,6 +99,12 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, readDepth, true);
         ratio.applyEnrichment(Double.NaN);
         checkBlanked(ratio);
+    }
+
+    @Test
+    public void toStringTest()
+    {
+        assertTrue(new BamRatio(_1, readDepth, true).toString().contains("82"));
     }
 
     private void checkBlanked(BamRatio ratio)

@@ -22,13 +22,13 @@ public class CobaltCalculator
     {
         Preconditions.checkArgument(!tumourDepthReadings.isEmpty() || !referenceDepthReadings.isEmpty());
         GenomeFilter mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.excludedRegions());
-        CobaltScope enricher = config.scope();
+        CobaltScope scope = config.scope();
 
-        TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, enricher);
+        TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, scope);
         tumourDepthReadings.forEach((tumorBamCalculation::addReading));
         ListMultimap<Chromosome, BamRatio> tumorResults = tumorBamCalculation.calculateRatios();
 
-        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, enricher);
+        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, scope);
         referenceDepthReadings.forEach((referenceBamCalculation::addReading));
         ListMultimap<Chromosome, BamRatio> referenceResults = referenceBamCalculation.calculateRatios();
         mMedianRatios = referenceBamCalculation.medianRatios(config.genomeVersion());

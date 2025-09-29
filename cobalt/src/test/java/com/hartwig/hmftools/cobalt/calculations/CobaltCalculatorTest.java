@@ -30,6 +30,9 @@ import org.mockito.Mockito;
 
 public class CobaltCalculatorTest extends CalculationsTestBase
 {
+    // Enrichment factors in targeted mode.
+    private static final double EF1 = 1.1;
+    private static final double EF2 = 1.2;
     // Tumor read depths, reference read depths,  tumor gc ratios, reference gc ratios for windows on chr 1
     double[] td1 = { -1.0, -1.0, -1.0, 25.0, 25.0, 24.0, 22.0, 23.0, 24.0, 22.0, 26.0, 26.0, 27.0, 23.0, 25.0 };
     double[] rd1 = { -1.0, -1.0, -1.0, 14.0, 12.0, 12.0, 16.0, 16.0, 17.0, 18.0, 18.0, 19.0, 12.0, 12.0, 15.0 };
@@ -40,11 +43,42 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     double[] rd2 = { 16.0, 20.0, 18.0, 22.0, 20.0, 24.0 };
     double[] tgc2 = { 0.44, 0.44, 0.46, 0.46, 0.45, 0.45 };
     double[] rgc2 = { 0.54, 0.54, 0.55, 0.55, 0.56, 0.56 };
-    final ListMultimap<Chromosome, DepthReading> tumorDepths = ArrayListMultimap.create();
-    final ListMultimap<Chromosome, DepthReading> referenceDepths = ArrayListMultimap.create();
     Map<Double, Double> refGcRatios = new HashMap<>();
     Map<Double, Double> tumGcRatios = new HashMap<>();
+    Map<Double, Double> tumGcRatiosTargeted = new HashMap<>();
     CobaltConfig config;
+
+    final ListMultimap<Chromosome, DepthReading> tumorDepths = ArrayListMultimap.create();
+    final ListMultimap<Chromosome, DepthReading> referenceDepths = ArrayListMultimap.create();
+
+    CobaltScope targetedScope = new CobaltScope()
+    {
+        @Override
+        public ResultsNormaliser finalNormaliser()
+        {
+            return new UnityNormaliser();
+        }
+
+        @Override
+        public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
+        {
+            if(chromosome == _1)
+            {
+                return EF1;
+            }
+            return EF2;
+        }
+
+        @Override
+        public boolean onTarget(final Chromosome chromosome, final int position)
+        {
+            if(chromosome == _1)
+            {
+                return position > 4000;
+            }
+            return true;
+        }
+    };
 
     public CobaltCalculatorTest()
     {
@@ -88,6 +122,14 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         tumGcRatios.put(0.45, 90.0 / 3.0);
         tumGcRatios.put(0.46, 62.0 / 3.0);
         tumGcRatios.put(0.47, 32.0 / 3.0);
+
+        // Because the window 1:4001-5000 is not in the targeted regions, it does not contribute
+        // to the gc buckets, so these need to be adjusted. The values for 0.40 are now 24 and 25,
+        // with a median of 24.5. Only the first few smoothed buckets are affected by this.
+        tumGcRatiosTargeted.putAll(tumGcRatios);
+        tumGcRatiosTargeted.put(0.39, (24.5) / 3.0);
+        tumGcRatiosTargeted.put(0.40, (24.5 + 26) / 3.0);
+        tumGcRatiosTargeted.put(0.41, (24.5 + 26 + 23) / 3.0);
 
         // Set up gc profile data to have everything mappable but for one region on chr1.
         ListMultimap<Chromosome, GCProfile> gcProfileData = ArrayListMultimap.create();
@@ -259,43 +301,8 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     @Test
     public void tumorAndReferenceTargetedTest()
     {
-        CobaltScope targetedScope = new CobaltScope()
-        {
-            @Override
-            public ResultsNormaliser finalNormaliser()
-            {
-                return new UnityNormaliser();
-            }
-
-            @Override
-            public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
-            {
-                if(chromosome == _1)
-                {
-                    return 1.1;
-                }
-                return 1.2;
-            }
-
-            @Override
-            public boolean onTarget(final Chromosome chromosome, final int position)
-            {
-                if(chromosome == _1)
-                {
-                    return position > 4000;
-                }
-                return true;
-            }
-        };
         when(config.scope()).thenReturn(targetedScope);
 
-        // Because the window 1:4001-5000 is not in the targeted regions, it does not contribute
-        // to the gc buckets, so these need to be adjusted. The values for 0.40 are now 24 and 25,
-        // with a median of 24.5. Only the first few smoothed buckets are affected by this.
-        Map<Double, Double> tumorGcRatiosTargeted = new HashMap<>(tumGcRatios);
-        tumorGcRatiosTargeted.put(0.39, (24.5) / 3.0);
-        tumorGcRatiosTargeted.put(0.40, (24.5 + 26) / 3.0);
-        tumorGcRatiosTargeted.put(0.41, (24.5 + 26 + 23) / 3.0);
         CobaltCalculator calculator = new CobaltCalculator(tumorDepths, referenceDepths, config);
         ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
@@ -310,19 +317,19 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         List<Double> expectedRawTumorRatios = new ArrayList<>();
         for(int i = 4; i < 15; i++)
         {
-            expectedRawTumorRatios.add(td1[i] / (tumorGcRatiosTargeted.get(tgc1[i]) * 1.1));
+            expectedRawTumorRatios.add(td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1));
         }
         for(int i = 0; i < 6; i++)
         {
-            expectedRawTumorRatios.add(td2[i] / (tumorGcRatiosTargeted.get(tgc2[i]) * 1.2));
+            expectedRawTumorRatios.add(td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2));
         }
         double normalisationFactor = expectedRawTumorRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
         for(int i = 4; i < 15; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * 1.1);
+            double refRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
             referenceRatios1.add(refRatio);
-            double tumRatio = td1[i] / (tumorGcRatiosTargeted.get(tgc1[i]) * 1.1 * normalisationFactor);
+            double tumRatio = td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1 * normalisationFactor);
             checkRatio(ratios1.get(i), _1, position, rd1[i], td1[i], refRatio, tumRatio, refRatio, rgc1[i], tgc1[i]);
         }
         List<CobaltRatio> ratios2 = cobaltRatios.get(_2);
@@ -331,9 +338,9 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         for(int i = 0; i < 6; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * 1.2);
+            double refRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
             referenceRatios2.add(refRatio);
-            double tumRatio = td2[i] / (tumorGcRatiosTargeted.get(tgc2[i]) * 1.2 * normalisationFactor);
+            double tumRatio = td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2 * normalisationFactor);
             checkRatio(ratios2.get(i), _2, position, rd2[i], td2[i], refRatio, tumRatio, refRatio, rgc2[i], tgc2[i]);
         }
 
@@ -346,6 +353,94 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(Doubles.median(referenceRatios2), medianRatios.get(1).MedianRatio, 0.001);
         assertEquals(6, medianRatios.get(1).Count, 0.001);
     }
+
+    @Test
+    public void tumorOnlyTargetedTest()
+    {
+        when(config.scope()).thenReturn(targetedScope);
+
+        CobaltCalculator calculator = new CobaltCalculator(tumorDepths, ArrayListMultimap.create(), config);
+        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        assertEquals(2, cobaltRatios.keySet().size());
+        List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
+        assertEquals(15, ratios1.size());
+        checkNulled(ratios1.get(0), _1, 1);
+        checkNulled(ratios1.get(1), _1, 1001);
+        checkNulled(ratios1.get(2), _1, 2001);
+        checkNulled(ratios1.get(3), _1, 3001);
+        // In targeted mode the tumor results are normalised so that their mean is 1.0.
+        List<Double> expectedRawTumorRatios = new ArrayList<>();
+        for(int i = 4; i < 15; i++)
+        {
+            expectedRawTumorRatios.add(td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1));
+        }
+        for(int i = 0; i < 6; i++)
+        {
+            expectedRawTumorRatios.add(td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2));
+        }
+        double normalisationFactor = expectedRawTumorRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+        for(int i = 4; i < 15; i++)
+        {
+            int position = i * 1000 + 1;
+            double tumRatio = td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1 * normalisationFactor);
+            checkRatio(ratios1.get(i), _1, position, -1.0, td1[i], -1.0, tumRatio, -1.0, -1.0, tgc1[i]);
+        }
+        List<CobaltRatio> ratios2 = cobaltRatios.get(_2);
+        assertEquals(6, ratios2.size());
+        for(int i = 0; i < 6; i++)
+        {
+            int position = i * 1000 + 1;
+            double tumRatio = td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2 * normalisationFactor);
+            checkRatio(ratios2.get(i), _2, position, -1.0, td2[i], -1.0, tumRatio, -1.0, -1.0, tgc2[i]);
+        }
+
+        List<MedianRatio> medianRatios = calculator.medianRatios();
+        assertEquals(0, medianRatios.size());
+    }
+
+    @Test
+    public void referenceOnlyTargetedTest()
+    {
+        when(config.scope()).thenReturn(targetedScope);
+
+        CobaltCalculator calculator = new CobaltCalculator(ArrayListMultimap.create(), referenceDepths, config);
+        ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
+        assertEquals(2, cobaltRatios.keySet().size());
+        List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
+        assertEquals(15, ratios1.size());
+        checkNulled(ratios1.get(0), _1, 1);
+        checkNulled(ratios1.get(1), _1, 1001);
+        checkNulled(ratios1.get(2), _1, 2001);
+        checkNulled(ratios1.get(3), _1, 3001);
+        List<Double> referenceRatios1 = new ArrayList<>();
+        for(int i = 4; i < 15; i++)
+        {
+            int position = i * 1000 + 1;
+            double refRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
+            referenceRatios1.add(refRatio);
+            checkRatio(ratios1.get(i), _1, position, rd1[i], -1.0, refRatio, -1.0, refRatio, rgc1[i], -1.0);
+        }
+        List<CobaltRatio> ratios2 = cobaltRatios.get(_2);
+        assertEquals(6, ratios2.size());
+        List<Double> referenceRatios2 = new ArrayList<>();
+        for(int i = 0; i < 6; i++)
+        {
+            int position = i * 1000 + 1;
+            double refRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
+            referenceRatios2.add(refRatio);
+            checkRatio(ratios2.get(i), _2, position, rd2[i], -1.0, refRatio, -1.0, refRatio, rgc2[i], -1.0);
+        }
+
+        List<MedianRatio> medianRatios = calculator.medianRatios();
+        assertEquals(2, medianRatios.size());
+        assertEquals(V38.versionedChromosome(_1), medianRatios.get(0).Chromosome);
+        assertEquals(Doubles.median(referenceRatios1), medianRatios.get(0).MedianRatio, 0.001);
+        assertEquals(11, medianRatios.get(0).Count, 0.001);
+        assertEquals(V38.versionedChromosome(_2), medianRatios.get(1).Chromosome);
+        assertEquals(Doubles.median(referenceRatios2), medianRatios.get(1).MedianRatio, 0.001);
+        assertEquals(6, medianRatios.get(1).Count, 0.001);
+    }
+
 
     private void checkNulled(CobaltRatio ratio, Chromosome chromosome, int position)
     {

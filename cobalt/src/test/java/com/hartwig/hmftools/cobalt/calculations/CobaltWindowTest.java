@@ -107,8 +107,6 @@ public class CobaltWindowTest
         assertEquals(99.0, gcBucket.median(), 0.001);
     }
 
-
-
     @Test
     public void testEquals()
     {

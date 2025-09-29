@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -32,6 +33,8 @@ public class GCPailTest
         assertEquals(pail1, pail2);
         GCPail pail3 = new GCPail(60);
         assertNotEquals(pail1, pail3);
+        assertNotEquals(null, pail3);
+        assertNotEquals("Gail the pail", pail3);
     }
 
     @Test
@@ -40,5 +43,11 @@ public class GCPailTest
         GCPail pail1 = new GCPail(50);
         GCPail pail2 = new GCPail(50);
         assertEquals(pail1.hashCode(), pail2.hashCode());
+    }
+
+    @Test
+    public void stringTest()
+    {
+        assertTrue(new GCPail(50).toString().contains("50"));
     }
 }
