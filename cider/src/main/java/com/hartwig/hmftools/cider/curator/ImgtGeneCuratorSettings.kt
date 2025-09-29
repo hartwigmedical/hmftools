@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cider.curator
 
 import com.hartwig.hmftools.cider.VJGeneType
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 
 // some extra settings to do with the gene curator
@@ -19,17 +20,16 @@ object ImgtGeneCuratorSettings
 
     // extra override for this one gene that does not seem to map nicely
     val genomicLocationOverrides = mapOf(
-        "IGHV3-54" to GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE)
+        RefGenomeVersion.V38 to mapOf(
+            "IGHV3-54" to GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE)
+        ),
+        RefGenomeVersion.V37 to mapOf(
+        )
     )
 
-    // following genes liftover from v38 to v37 produce incorrect genomic locations
-    val liftOverBlacklist = setOf(
-        "IGKV1/OR1-1"
-    )
-
-    fun getGenomicLocationOverrides(geneName: String): GenomicLocation?
+    fun getGenomicLocationOverrides(geneName: String, genomeVersion: RefGenomeVersion): GenomicLocation?
     {
-        return genomicLocationOverrides[geneName]
+        return genomicLocationOverrides[genomeVersion]?.get(geneName)
     }
 
     fun jAnchorSignatures(geneName: String) : List<String>
