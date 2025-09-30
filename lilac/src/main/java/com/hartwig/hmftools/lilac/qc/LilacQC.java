@@ -73,7 +73,7 @@ public final class LilacQC
         columns.add("HlaYAllele");
         columns.addAll(com.hartwig.hmftools.lilac.qc.BamQC.header());
         columns.addAll(com.hartwig.hmftools.lilac.qc.CoverageQC.header());
-        columns.addAll(AminoAcidQC.header());
+        columns.addAll(com.hartwig.hmftools.lilac.qc.AminoAcidQC.header());
         columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
@@ -102,14 +102,14 @@ public final class LilacQC
     public String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getHeaderItems().forEach(x -> sj.add(x));
+        getHeaderItems().forEach(sj::add);
         return sj.toString();
     }
 
     public String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getBodyItems().forEach(x -> sj.add(x));
+        getBodyItems().forEach(sj::add);
         return sj.toString();
     }
 
@@ -177,7 +177,7 @@ public final class LilacQC
             Status.add(WARN_UNMATCHED_AMINO_ACID);
         }
 
-        if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
+        if(CoverageQC.CountsByGene.values().stream().anyMatch(x -> x == 0))
         {
             Status.add(WARN_UNMATCHED_ALLELE);
         }

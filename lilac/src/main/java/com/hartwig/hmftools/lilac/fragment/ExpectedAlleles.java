@@ -3,7 +3,7 @@ package com.hartwig.hmftools.lilac.fragment;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import java.util.List;
+import java.util.Collection;
 
 public class ExpectedAlleles
 {
@@ -14,17 +14,17 @@ public class ExpectedAlleles
         mAlleleCount = alleleCount;
     }
 
-    public final int expectedAlleles(int loci)
+    private int expectedAlleles(int loci)
     {
-        return loci >= mAlleleCount.length ? 2 : mAlleleCount[loci];
+        return mAlleleCount == null || loci >= mAlleleCount.length ? 2 : mAlleleCount[loci];
     }
 
-    public final int expectedAlleles(final List<Integer> loci)
+    public int expectedAlleles(final Collection<Integer> loci)
     {
-        return loci.stream().mapToInt(x -> expectedAlleles(x)).min().orElse(0);
+        return loci.stream().mapToInt(this::expectedAlleles).min().orElse(0);
     }
 
-    public static final ExpectedAlleles expectedAlleles(int otherMin1, int otherMin2)
+    public static ExpectedAlleles expectedAlleles(int otherMin1, int otherMin2)
     {
         // seems to be 1 short on the 6-groups
         int min = min(otherMin1, otherMin2);

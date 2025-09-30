@@ -132,7 +132,8 @@ public class LilacAppendRna
             final String rnaBam, final LilacConfig config, final ReferenceData referenceData,
             final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
             final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
-            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+            final List<HlaSequenceLoci> winningNucSequences)
     {
         if(rnaBam.isEmpty())
         {
@@ -143,7 +144,8 @@ public class LilacAppendRna
 
         List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
 
-        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
+        if(nucleotideGeneEnrichment != null)
+            nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 

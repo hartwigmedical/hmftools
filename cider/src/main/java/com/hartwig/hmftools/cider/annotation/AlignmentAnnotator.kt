@@ -101,9 +101,7 @@ class AlignmentAnnotator
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
-        // put all into an identity hash multimap
         val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
-        val alignmentFile = createBufferedWriter("$outputDir/$sampleId.alignments.txt")
         for ((vdjKey, alignment) in alignmentResults.entries())
         {
             val alignmentRunData = alignmentRunDataMap[vdjKey]
@@ -115,10 +113,7 @@ class AlignmentAnnotator
             }
 
             vdjToAlignment.put(alignmentRunData, alignment)
-
-            alignmentFile.write("fullSeq=${alignmentRunData.vdj.layout.consensusSequenceString()} alignment=$alignment\n")
         }
-        alignmentFile.close()
 
         val annotations = processAlignments(alignmentRunDataMap.values, vdjToAlignment)
 

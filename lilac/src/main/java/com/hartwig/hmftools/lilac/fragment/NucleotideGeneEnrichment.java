@@ -6,10 +6,12 @@ import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class NucleotideGeneEnrichment
@@ -18,12 +20,12 @@ public class NucleotideGeneEnrichment
     private final int mAcMinUniqueProteinExonBoundary;
     private final int mBcMinUniqueProteinExonBoundary;
 
-    public NucleotideGeneEnrichment(final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
+    public NucleotideGeneEnrichment(final Map<HlaGene, List<Integer>> geneBoundaries)
     {
         // determine the minimum unique exon boundary for each pair
-        mAbMinUniqueProteinExonBoundary = getMinUniqueBoundary(aBoundaries, bBoundaries);
-        mAcMinUniqueProteinExonBoundary = getMinUniqueBoundary(aBoundaries, cBoundaries);
-        mBcMinUniqueProteinExonBoundary = getMinUniqueBoundary(bBoundaries, cBoundaries);
+        mAbMinUniqueProteinExonBoundary = getMinUniqueBoundary(geneBoundaries.get(HLA_A), geneBoundaries.get(HLA_B));
+        mAcMinUniqueProteinExonBoundary = getMinUniqueBoundary(geneBoundaries.get(HLA_A), geneBoundaries.get(HLA_C));
+        mBcMinUniqueProteinExonBoundary = getMinUniqueBoundary(geneBoundaries.get(HLA_B), geneBoundaries.get(HLA_C));
     }
 
     private static int getMinUniqueBoundary(final List<Integer> boundariesGene1, final List<Integer> boundariesGene2)
@@ -52,6 +54,9 @@ public class NucleotideGeneEnrichment
     public void checkAdditionalGenes(final Fragment fragment)
     {
         if(fragment.containsIndel())
+            return;
+
+        if(fragment.readGene().mhcClass() != MhcClass.CLASS_1)
             return;
 
         // logic: for any gene which isn't yet associated with the fragment, test if it could be by check its max nucleotide locus
