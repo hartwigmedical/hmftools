@@ -763,8 +763,9 @@ public class UmiGroupBuilder
         }
     }
 
-    private static void jitterCollapseUmiGroups(final SequencingType sequencingType, final UmiConfig umiConfig,
-            final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
+    private static void jitterCollapseUmiGroups(
+            final SequencingType sequencingType, final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups,
+            final List<ReadInfo> singleFragments)
     {
         if(umiGroups.isEmpty() && singleFragments.isEmpty())
             return;
@@ -774,8 +775,8 @@ public class UmiGroupBuilder
 
         boolean isUnpaired = Stream.concat(
                         umiGroups.stream().map(DuplicateGroup::fragmentCoordinates),
-                        singleFragments.stream().map(ReadInfo::coordinates))
-                .anyMatch(x -> x.Unpaired);
+                        singleFragments.stream().map(ReadInfo::coordinates)).anyMatch(x -> x.Unpaired);
+
         if(isUnpaired)
             return;
 

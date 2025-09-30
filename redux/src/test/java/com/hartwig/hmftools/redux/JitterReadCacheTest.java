@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
+import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
@@ -45,10 +46,21 @@ public class JitterReadCacheTest
         String cigar = "143M";
 
         // read1 and read2 need to be popped off together
-        SAMRecord read1 = createSamRecord("READ_001", CHR_1, 850, readBases, cigar, CHR_1, 1047, false, false, null, true, cigar);
-        SAMRecord read2 = createSamRecord("READ_002", CHR_1, 851, readBases, cigar, CHR_1, 1047, false, false, null, true, cigar);
-        SAMRecord read3 = createSamRecord("READ_003", CHR_1, 1000, readBases, cigar, CHR_1, 919, true, false, null, false, cigar);
-        SAMRecord read4 = createSamRecord("READ_004", CHR_1, 1098, readBases, cigar, CHR_1, 914, true, false, null, false, cigar);
+        SAMRecord read1 = createSamRecord(
+                READ_ID_GEN.nextId(), CHR_1, 850, readBases, cigar, CHR_1, 1047, false, false,
+                null, true, cigar);
+
+        SAMRecord read2 = createSamRecord(
+                READ_ID_GEN.nextId(), CHR_1, 851, readBases, cigar, CHR_1, 1047, false, false,
+                null, true, cigar);
+
+        SAMRecord read3 = createSamRecord(
+                READ_ID_GEN.nextId(), CHR_1, 1000, readBases, cigar, CHR_1, 919, true, false,
+                null, false, cigar);
+
+        SAMRecord read4 = createSamRecord(
+                READ_ID_GEN.nextId(), CHR_1, 1098, readBases, cigar, CHR_1, 914, true, false,
+                null, false, cigar);
 
         List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3, read4);
 
@@ -101,7 +113,8 @@ public class JitterReadCacheTest
         assertEquals(0, readCache.currentReadMinPosition());
 
         final BiFunction<Integer, Integer, SAMRecord> createRead = (final Integer id, final Integer pos) ->
-                createSamRecord(format("READ_%03d", id), CHR_1, pos, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false, false, null, true, TEST_CIGAR);
+                createSamRecord(format("READ_%03d", id), CHR_1, pos, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false,
+                        false, null, true, TEST_CIGAR);
 
         readCache.processRead(createRead.apply(1, 100));
         assertEquals(100, readCache.currentReadMinPosition());
@@ -159,16 +172,19 @@ public class JitterReadCacheTest
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA));
 
         SAMRecord read = createSamRecord(
-                "READ_001", CHR_1, 100, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100, false, false, null, false, NO_CIGAR);
+                "READ_001", CHR_1, 100, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100, false,
+                false, null, false, NO_CIGAR);
         read.setMateUnmappedFlag(true);
 
         SAMRecord mate = createSamRecord(
-                "READ_001", CHR_1, 100, TEST_READ_BASES, NO_CIGAR, CHR_1, 100, false, false, null, false, TEST_CIGAR);
+                "READ_001", CHR_1, 100, TEST_READ_BASES, NO_CIGAR, CHR_1, 100, false,
+                false, null, false, TEST_CIGAR);
         mate.setReadUnmappedFlag(true);
         flipFirstInPair(mate);
 
         SAMRecord read2 = createSamRecord(
-                "READ_002", CHR_1, 10_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false, false, null, true, TEST_CIGAR);
+                "READ_002", CHR_1, 10_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false,
+                false, null, true, TEST_CIGAR);
 
         readCache.processRead(read);
         Multiset<String> poppedReads = collaseFragmentCoordReads(readCache.popReads());
@@ -193,7 +209,8 @@ public class JitterReadCacheTest
         JitterReadCache readCache = new JitterReadCache(innerReadCache);
 
         SAMRecord read1 = createSamRecord(
-                "READ_001", CHR_1, 1_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false, false, null, true, TEST_CIGAR);
+                "READ_001", CHR_1, 1_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 100, false,
+                false, null, true, TEST_CIGAR);
 
         readCache.processRead(read1);
         int expectedReadCacheBoundary = 1_000 - ReadCache.DEFAULT_MAX_SOFT_CLIP + 1;
@@ -211,11 +228,16 @@ public class JitterReadCacheTest
                 new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA));
 
         SAMRecord read1 = createSamRecord(
-                "READ_001", CHR_1, 1_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_000, false, false, null, false, TEST_CIGAR);
+                "READ_001", CHR_1, 1_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_000, false,
+                false, null, false, TEST_CIGAR);
+
         SAMRecord read2 = createSamRecord(
-                "READ_002", CHR_1, 1_001, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_001, false, false, null, false, TEST_CIGAR);
+                "READ_002", CHR_1, 1_001, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_001, false,
+                false, null, false, TEST_CIGAR);
+
         SAMRecord read3 = createSamRecord(
-                "READ_003", CHR_1, 1_000 + ReadCache.DEFAULT_MAX_SOFT_CLIP + SINGLE_END_JITTER_COLLAPSE_DISTANCE, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_001, false, false, null, false, TEST_CIGAR);
+                "READ_003", CHR_1, 1_000 + ReadCache.DEFAULT_MAX_SOFT_CLIP + SINGLE_END_JITTER_COLLAPSE_DISTANCE,
+                TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_001, false, false, null, false, TEST_CIGAR);
 
         readCache.processRead(read1);
         readCache.processRead(read2);
