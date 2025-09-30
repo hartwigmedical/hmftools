@@ -229,6 +229,7 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Support AIRR format output.
 - Alignment annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 - Alignment annotation for D gene requires more lenient alignment parameters.
+- Using the GRCh37/hg19 reference genome for gene annotation, many TRB genes will not be annotated. This is a known issue with the reference genome and gene data, and will be fixed soon.
 
 # Version History and Download Links
 - [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)
