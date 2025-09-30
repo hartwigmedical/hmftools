@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
-
 object CiderConstants
 {
     // for partially rearranged VDJs, we designate that the "interesting"
@@ -47,9 +45,6 @@ object CiderConstants
     // cut off for full match
     const val ALIGNMENT_MATCH_MIN_VJ_IDENTITY = 90
     const val ALIGNMENT_MATCH_FULL_MATCH_IDENTITY = 95
-
-    // blast uses v38
-    val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
 
     // Amino acids sequences which are known to match the reference genome but are not detected by alignment.
     // This exists because of switching from Blastn to BWA-MEM, and some sequences cause significant discrepancies.

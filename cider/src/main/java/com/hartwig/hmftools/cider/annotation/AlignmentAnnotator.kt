@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -279,9 +278,9 @@ class AlignmentAnnotator
 
     fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
     {
-        val chromosome = parseChromosome(alignment.refContig)
+        val chromosome = AlignmentUtil.parseChromosome(alignment.refContig)
 
-        val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
+        val geneDataList = mVdjGenes[Pair(chromosome, alignment.refStrand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 
@@ -290,7 +289,7 @@ class AlignmentAnnotator
             val geneLocation = gene.geneLocation ?: continue
 
             require(geneLocation.chromosome == chromosome)
-            require(geneLocation.strand == alignment.strand)
+            require(geneLocation.strand == alignment.refStrand)
 
             if (bestGene == null || !bestGene.isFunctional)
             {

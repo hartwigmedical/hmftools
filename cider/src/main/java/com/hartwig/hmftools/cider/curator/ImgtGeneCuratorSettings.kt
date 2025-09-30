@@ -11,8 +11,7 @@ object ImgtGeneCuratorSettings
     const val SPECIES = "Homo sapiens"
     const val IMGT_V_ANCHOR_INDEX = 282
     const val IMGT_ANCHOR_LENGTH = 30
-    const val BLASTN_EVALUE_CUTOFF = 1000.0
-    const val BLASTN_MAX_MISMATCH = 1
+    const val ALIGNMENT_MAX_MISMATCH = 1
 
     // shift the V anchor index such that it starts at the first base
     val IGKINTR_SEQ = ".".repeat(IMGT_V_ANCHOR_INDEX) + "CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT"

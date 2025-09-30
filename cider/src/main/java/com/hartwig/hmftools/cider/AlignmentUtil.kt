@@ -96,8 +96,9 @@ object AlignmentUtil
         val refContig: String,
         val refStart: Int,
         val refEnd: Int,
-        val strand: Strand,
+        val refStrand: Strand,
         val alignmentScore: Int,
+        val editDistance: Int,
         val percentageIdent: Double,
     ) {
         init {
@@ -108,6 +109,7 @@ object AlignmentUtil
 
     fun parseChromosome(contig: String): String
     {
+        // TODO: should this validate that it is a chromosome? could be MT
         // Parses ref genome contig to the primary assembly chromosome. E.g.:
         // chr14_KI270726v1_random
         return contig.split("_")[0]
@@ -200,6 +202,7 @@ object AlignmentUtil
                     refEnd,
                     strand,
                     alignment.alignerScore,
+                    alignment.nMismatches,
                     percentIdentity
                 )
                 results.computeIfAbsent(key.value) { ArrayList() }.add(resAlignment)
