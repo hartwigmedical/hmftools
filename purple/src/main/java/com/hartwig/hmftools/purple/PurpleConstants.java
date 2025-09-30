@@ -106,6 +106,9 @@ public class PurpleConstants
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
 
+    public static final double GERMLINE_SV_TINC_FACTOR = 2;
+    public static final double GERMLINE_SV_TINC_MARGIN = 0.02;
+
     // germline deletions
     public static final int GERMLINE_DEL_GENE_BUFFER = 500;
     public static final int GERMLINE_DEL_REGION_MIN = 1000;

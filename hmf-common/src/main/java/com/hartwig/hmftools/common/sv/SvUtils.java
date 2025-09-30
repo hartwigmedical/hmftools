@@ -16,6 +16,9 @@ public final class SvUtils
 {
     public static final int DEFAULT_DISCORDANT_FRAGMENT_LENGTH = 1000;
 
+    public static final double SV_GERMLINE_AF_THRESHOLD = 0.1;
+    public static final double SV_GERMLINE_AD_THRESHOLD = 0.01;
+
     // must match the small DEl-DUP threshold in Esvee
     public static final int SHORT_INDEL_LENGTH = 1000;
 
