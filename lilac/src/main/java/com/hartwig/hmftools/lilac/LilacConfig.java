@@ -195,7 +195,7 @@ public class LilacConfig
 
         Genes = GeneSelector.valueOf(configBuilder.getValue(GENES));
 
-        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte)configBuilder.getInteger(MIN_BASE_QUAL);
+        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte) configBuilder.getInteger(MIN_BASE_QUAL);
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         LilacConstants.MIN_EVIDENCE_SUPPORT = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);

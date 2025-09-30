@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -78,8 +79,8 @@ public class HaplotypeQC
     }
 
     public static HaplotypeQC create(
-            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequences,
-            final List<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, final List<Fragment> unmatchedFragments)
+            final Collection<HlaSequenceLoci> winners, final Collection<HlaSequenceLoci> hlaYSequences,
+            final Collection<PhasedEvidence> evidence, final SequenceCount aminoAcidCount, final Iterable<Fragment> unmatchedFragments)
     {
         loadPonHaplotypes();
 
@@ -132,18 +133,19 @@ public class HaplotypeQC
         return new HaplotypeQC(unusedCount, maxSupport, pon, distinctHaplotypes);
     }
 
-    private static boolean consistentWithAny(final PhasedEvidence phasedEvidence, final List<HlaSequenceLoci> winners, final String sequence)
+    private static boolean consistentWithAny(final PhasedEvidence phasedEvidence, final Collection<HlaSequenceLoci> winners,
+            final String sequence)
     {
         return winners.stream().anyMatch(x -> x.consistentWith(sequence, phasedEvidence.getAminoAcidLoci()));
     }
 
     public static List<Haplotype> unmatchedHaplotype(
-            final PhasedEvidence evidence, int minEvidence, final List<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount,
-            final List<HlaSequenceLoci> hlaYSequences)
+            final PhasedEvidence evidence, final int minEvidence, final Collection<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount,
+            final Collection<HlaSequenceLoci> hlaYSequences)
     {
         // look through all phased evidence for AA sequences which are not supported by the winning alleles
         // ignore any wildcard sections
-        Map<String,Integer> unmatched = evidence.getEvidence().entrySet().stream()
+        Map<String, Integer> unmatched = evidence.getEvidence().entrySet().stream()
                 .filter(x -> !consistentWithAny(evidence, winners, x.getKey()))
                 .filter(x -> hlaYSequences == null || !consistentWithAny(evidence, hlaYSequences, x.getKey()))
                 .filter(x -> x.getValue() >= minEvidence)
@@ -153,7 +155,7 @@ public class HaplotypeQC
             return Lists.newArrayList();
 
         List<Haplotype> haplotypes = Lists.newArrayList();
-        for(Map.Entry<String,Integer> entry : unmatched.entrySet())
+        for(Map.Entry<String, Integer> entry : unmatched.entrySet())
         {
             Haplotype haplotype = Haplotype.create(
                     evidence.getAminoAcidLoci(), Pair.create(entry.getKey(), entry.getValue()), aminoAcidCount);
@@ -172,7 +174,7 @@ public class HaplotypeQC
         return haplotypes;
     }
 
-    private static void findSupportingFragmentCounts(final List<Haplotype> haplotypes, final List<Fragment> fragments)
+    private static void findSupportingFragmentCounts(final Iterable<Haplotype> haplotypes, final Iterable<Fragment> fragments)
     {
         for(Haplotype haplotype : haplotypes)
         {

@@ -132,7 +132,8 @@ public class LilacAppendRna
             final String rnaBam, final LilacConfig config, final ReferenceData referenceData,
             final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
             final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
-            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+            final List<HlaSequenceLoci> winningNucSequences)
     {
         if(rnaBam.isEmpty())
         {

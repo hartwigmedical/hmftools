@@ -81,7 +81,7 @@ public class ResultsWriter
 
         if(writeTypesStr.equals(WRITE_TYPES_ALL))
         {
-            Arrays.stream(WriteType.values()).forEach(x -> mWriteTypes.add(x));
+            mWriteTypes.addAll(Arrays.asList(WriteType.values()));
         }
         else
         {
@@ -110,7 +110,7 @@ public class ResultsWriter
     }
 
     public void writeMainOutputs(
-            final LilacQC summaryMetrics, final SolutionSummary solutionSummary, final List<ComplexCoverage> rankedComplexes)
+            final LilacQC summaryMetrics, final SolutionSummary solutionSummary, final Iterable<ComplexCoverage> rankedComplexes)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -139,7 +139,8 @@ public class ResultsWriter
     }
 
     public void writeReferenceFragments(
-            final List<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags, final List<FragmentAlleles> refFragAlleles)
+            final Iterable<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags,
+            final List<FragmentAlleles> refFragAlleles)
     {
         if(!mWriteTypes.contains(WriteType.FRAGMENTS))
             return;
@@ -149,7 +150,7 @@ public class ResultsWriter
         writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
-    public void writeFailedSampleFileOutputs(final Map<HlaGene, int[]> geneBaseDepth, int medianBaseQuality)
+    public void writeFailedSampleFileOutputs(final Map<HlaGene, int[]> geneBaseDepth)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -196,7 +197,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragments(final FragmentSource source, final List<Fragment> fragments)
+    public void writeFragments(final FragmentSource source, final Iterable<Fragment> fragments)
     {
         if(mFragmentWriter == null)
             return;

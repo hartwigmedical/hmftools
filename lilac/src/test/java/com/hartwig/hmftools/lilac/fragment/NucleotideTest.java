@@ -147,7 +147,7 @@ public class NucleotideTest
 
     private static void assertGene(
             final NucleotideGeneEnrichment enricher,
-            final Set<HlaGene> expectedGenes, final HlaGene alignedGene, final List<Integer> aminoAcideIndices)
+            final Set<HlaGene> expectedGenes, final HlaGene alignedGene, final Iterable<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
 

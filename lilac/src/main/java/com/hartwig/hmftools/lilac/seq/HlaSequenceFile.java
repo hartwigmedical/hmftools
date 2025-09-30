@@ -16,17 +16,19 @@ import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import org.jetbrains.annotations.NotNull;
 
-public class HlaSequenceFile
+public final class HlaSequenceFile
 {
     public static final char SEQUENCE_DELIM = '|';
 
-    public static HlaSequenceLoci createFromReference(final HlaAllele allele, final String sequenceStr, boolean isProteinFile)
+    private HlaSequenceFile() {}
+
+    public static HlaSequenceLoci createFromReference(final HlaAllele allele, final String sequenceStr, final boolean isProteinFile)
     {
         List<String> sequences = isProteinFile ?
                 Lists.newArrayListWithExpectedSize(367) : Lists.newArrayListWithExpectedSize(1098);
 
         int index = 0;
-        String sequence = "";
+        StringBuilder sequence = new StringBuilder();
         boolean inMulti = false; // to handle inserts, ie more than 1 char, indicated by splitting the sequence by '|' chars
         while(index < sequenceStr.length())
         {
@@ -38,8 +40,8 @@ public class HlaSequenceFile
                 if(inMulti && isMulti)
                 {
                     inMulti = false;
-                    sequences.add(sequence);
-                    sequence = "";
+                    sequences.add(sequence.toString());
+                    sequence.setLength(0);
                 }
                 else if(isMulti)
                 {
@@ -48,7 +50,7 @@ public class HlaSequenceFile
                 }
                 else
                 {
-                    sequence += nextChar;
+                    sequence.append(nextChar);
                 }
             }
             else
@@ -99,11 +101,11 @@ public class HlaSequenceFile
                 }
             }
 
-            return orderedAlleles.stream().map(x -> entries.get(x)).collect(Collectors.toList());
+            return orderedAlleles.stream().map(entries::get).collect(Collectors.toList());
 
             // return entries.values().stream().collect(Collectors.toList());
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LL_LOGGER.error("failed to read HLF nucleotide file({}): {}", filename.toString(), e.toString());
             return Lists.newArrayList();
@@ -111,13 +113,13 @@ public class HlaSequenceFile
     }
 
     @NotNull
-    public static List<HlaSequence> reduceToFourDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToFourDigit(final Iterable<HlaSequence> sequences)
     {
         return reduce(sequences, true);
     }
 
     @NotNull
-    public static List<HlaSequence> reduceToSixDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToSixDigit(final Iterable<HlaSequence> sequences)
     {
         return reduce(sequences, false);
     }
@@ -127,9 +129,9 @@ public class HlaSequenceFile
         return new HlaAllele(allele.Gene, allele.AlleleGroup, allele.Protein, allele.Synonymous, "", null, null);
     }
 
-    private static List<HlaSequence> reduce(final List<HlaSequence> sequences, boolean toFourDigit)
+    private static List<HlaSequence> reduce(final Iterable<HlaSequence> sequences, boolean toFourDigit)
     {
-        Map<String,HlaSequence> reducedMap = Maps.newHashMap();
+        Map<String, HlaSequence> reducedMap = Maps.newHashMap();
         List<String> orderAlleles = Lists.newArrayList();
 
         for(HlaSequence sequence : sequences)
@@ -143,6 +145,6 @@ public class HlaSequenceFile
             reducedMap.put(reducedAllele.toString(), new HlaSequence(reducedAllele, sequence.getRawSequence()));
         }
 
-        return orderAlleles.stream().map(x -> reducedMap.get(x)).collect(Collectors.toList());
+        return orderAlleles.stream().map(reducedMap::get).collect(Collectors.toList());
     }
 }

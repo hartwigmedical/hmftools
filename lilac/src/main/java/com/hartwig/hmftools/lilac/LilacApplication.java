@@ -205,7 +205,7 @@ public class LilacApplication
         final Map<HlaGene, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
         if(!hasSufficientGeneDepth(geneBaseDepth))
         {
-            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth);
             return;
         }
 
@@ -216,7 +216,7 @@ public class LilacApplication
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        LL_LOGGER.info(format("totalFrags(%d)", totalFragmentCount));
+        LL_LOGGER.info("totalFrags({})", totalFragmentCount);
 
         Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
@@ -327,7 +327,7 @@ public class LilacApplication
             mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
-        ComplexBuilder complexBuilder = new ComplexBuilder(mConfig, mRefData);
+        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData);
 
         complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
         allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
@@ -488,7 +488,7 @@ public class LilacApplication
         if(!allValid)
         {
             LL_LOGGER.error("failed validation");
-            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth);
             return;
         }
 
@@ -504,7 +504,7 @@ public class LilacApplication
 
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(
                 winningSequences, mRefData.HlaYAminoAcidSequences, mRefAminoAcidCounts,
-                haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
+                haplotypeQC.UnmatchedHaplotypes);
 
         BamQC bamQC = BamQC.create(mRefBamReader, geneBaseDepth);
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);

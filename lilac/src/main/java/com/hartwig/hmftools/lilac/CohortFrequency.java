@@ -68,7 +68,7 @@ public class CohortFrequency
 
             LL_LOGGER.info("loaded {} allele frequencies from file({})", mAlleleFrequencies.size(), filename);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             LL_LOGGER.error("failed to read cohort allele frequency file({}): {}", filename, e.toString());
         }

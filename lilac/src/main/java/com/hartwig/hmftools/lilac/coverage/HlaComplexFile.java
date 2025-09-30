@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
-public class HlaComplexFile
+public final class HlaComplexFile
 {
     private HlaComplexFile() {}
 
@@ -86,7 +86,7 @@ public class HlaComplexFile
     }
 
     public static void writeFragmentAssignment(
-            final String fileName, final List<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
+            final String fileName, final Iterable<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
     {
         try
         {

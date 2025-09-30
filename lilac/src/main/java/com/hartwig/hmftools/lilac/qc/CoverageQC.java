@@ -55,7 +55,6 @@ public class CoverageQC
     - discardedIndelMaxSupport - Maximum fragment support for an indel detected but not present in any known allele
      */
 
-
     public CoverageQC(final Map<HlaGene, Integer> countsByGene, int totalFragments, int unmatched, int uninformative, int hlaY,
             int uniqueFragments, int sharedFragments, int wildcardFragments)
     {

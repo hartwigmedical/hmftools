@@ -32,7 +32,7 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FindUniqueKmers
+public final class FindUniqueKmers
 {
     private final String mResourceDir;
 

@@ -31,7 +31,7 @@ public class HlaSequenceLoci
     private boolean mHasExonBoundaryWildcards;
     private final int mWildcardCount;
 
-    public HlaSequenceLoci(final HlaAllele allele, final List<String> sequences)
+    public HlaSequenceLoci(final HlaAllele allele, final Collection<String> sequences)
     {
         Allele = allele;
         mSequences = Lists.newArrayList();
@@ -40,7 +40,7 @@ public class HlaSequenceLoci
         mHasDeletes = mSequences.stream().anyMatch(x -> x.equals(DEL_STR));
         mHasInserts = mSequences.stream().anyMatch(x -> x.length() > 1);
 
-        mWildcardCount = (int)mSequences.stream().filter(x -> x.equals(WILD_STR)).count();
+        mWildcardCount = (int) mSequences.stream().filter(x -> x.equals(WILD_STR)).count();
         mHasWildcards = mWildcardCount > 0;
 
         if(mHasWildcards)
@@ -61,7 +61,7 @@ public class HlaSequenceLoci
 
     public boolean hasExonBoundaryWildcards() { return mHasExonBoundaryWildcards; }
 
-    public void setExonBoundaryWildcards(final List<Integer> exonBoundaries)
+    public void setExonBoundaryWildcards(final Iterable<Integer> exonBoundaries)
     {
         for(Integer locus : exonBoundaries)
         {
@@ -89,7 +89,7 @@ public class HlaSequenceLoci
         return sj.toString();
     }
 
-    public String sequence(final Collection<Integer> indices)
+    public String sequence(final Iterable<Integer> indices)
     {
         StringJoiner sj = new StringJoiner("");
 
@@ -126,12 +126,12 @@ public class HlaSequenceLoci
                 Lists.newArrayList(evidence.getEvidence().keySet()), evidence.getAminoAcidLoci());
     }
 
-    public boolean consistentWithAny(final List<String> targetSequences, final List<Integer> targetIndices)
+    public boolean consistentWithAny(final Collection<String> targetSequences, final Collection<Integer> targetIndices)
     {
         return targetSequences.stream().anyMatch(x -> determineMatchType(x, targetIndices) != SequenceMatchType.MISMATCH);
     }
 
-    public boolean consistentWith(final String targetSequence, final List<Integer> targetIndices)
+    public boolean consistentWith(final String targetSequence, final Collection<Integer> targetIndices)
     {
         return determineMatchType(targetSequence, targetIndices) != SequenceMatchType.MISMATCH;
     }
@@ -210,11 +210,11 @@ public class HlaSequenceLoci
             if(hlaSeqChr != WILDCARD && hlaSeqChr != targetChr)
                 return SequenceMatchType.MISMATCH;
 
-            if (hlaSeqChr == WILDCARD)
+            if(hlaSeqChr == WILDCARD)
                 wildCardCount++;
         }
 
-        if (wildCardCount > 0)
+        if(wildCardCount > 0)
             return WILD;
 
         return FULL;
