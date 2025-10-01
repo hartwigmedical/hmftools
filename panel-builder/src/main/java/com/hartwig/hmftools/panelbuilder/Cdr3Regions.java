@@ -51,6 +51,7 @@ public class Cdr3Regions
     {
         List<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
                 .filter(gene -> gene.region() == IgTcrRegion.V_REGION || gene.region() == IgTcrRegion.J_REGION)
+                // TODO? this filter is not specific enough. the unlocalised contigs will look like main chromosomes even though they are not, so the positions are wrong
                 .filter(gene -> gene.inPrimaryAssembly() != null && gene.inPrimaryAssembly())
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
