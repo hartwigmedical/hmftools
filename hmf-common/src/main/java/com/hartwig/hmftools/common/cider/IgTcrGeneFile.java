@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.common.cider;
 
-import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 
@@ -22,15 +21,13 @@ public class IgTcrGeneFile
         allele,
         region,
         functionality,
-        primaryAssembly,
-        chromosome,
+        contig,
         posStart,
         posEnd,
         strand,
         anchorStart,
         anchorEnd,
-        anchorSequence,
-        anchorAA
+        anchorSequence
     }
 
     private static final Logger sLogger = LogManager.getLogger(IgTcrGeneFile.class);
@@ -69,18 +66,17 @@ public class IgTcrGeneFile
                 String allele = record.get(Column.allele);
                 IgTcrRegion region = IgTcrRegion.valueOf(record.get(Column.region));
                 IgTcrFunctionality functionality = IgTcrFunctionality.fromCode(record.get(Column.functionality));
-                Boolean isPrimaryAssembly = record.getBooleanOrNull(Column.primaryAssembly);
 
                 String anchorSequence = record.getOrNull(Column.anchorSequence);
 
-                String chromosome = record.getOrNull(Column.chromosome);
-                ChrBaseRegion genomicLocation = null;
-                ChrBaseRegion anchorLocation = null;
+                String contig = record.getOrNull(Column.contig);
+                BaseRegion geneLocation = null;
+                BaseRegion anchorLocation = null;
                 Strand strand = null;
 
-                if(chromosome != null)
+                if(contig != null)
                 {
-                    chromosome = refGenomeVersion.versionedChromosome(chromosome);
+                    contig = refGenomeVersion.versionedChromosome(contig);
 
                     int posStart = record.getInt(Column.posStart);
                     int posEnd = record.getInt(Column.posEnd);
@@ -99,19 +95,19 @@ public class IgTcrGeneFile
                         throw new RuntimeException("chromosome exists but pos start or pos end is invalid");
                     }
 
-                    genomicLocation = new ChrBaseRegion(chromosome, posStart, posEnd);
+                    geneLocation = new BaseRegion(posStart, posEnd);
 
                     Integer anchorStart = record.getIntOrNull(Column.anchorStart);
                     Integer anchorEnd = record.getIntOrNull(Column.anchorEnd);
 
                     if(anchorStart != null && anchorEnd != null)
                     {
-                        anchorLocation = new ChrBaseRegion(chromosome, anchorStart, anchorEnd);
+                        anchorLocation = new BaseRegion(anchorStart, anchorEnd);
                     }
                 }
 
-                igTcrGenes.add(new IgTcrGene(geneName, allele, region, functionality, genomicLocation, strand, isPrimaryAssembly,
-                        anchorSequence, anchorLocation));
+                igTcrGenes.add(new IgTcrGene(
+                        geneName, allele, region, functionality, contig, geneLocation, strand, anchorSequence, anchorLocation));
             }
         }
 
@@ -127,15 +123,13 @@ public class IgTcrGeneFile
                     row.set(Column.allele, gene.allele());
                     row.set(Column.region, String.valueOf(gene.region()));
                     row.set(Column.functionality, gene.functionality().toCode());
-                    row.setOrNull(Column.primaryAssembly, gene.inPrimaryAssembly());
-                    row.setOrNull(Column.chromosome, gene.geneLocation() != null ? gene.geneLocation().chromosome() : null);
-                    row.setOrNull(Column.posStart, gene.geneLocation() != null ? Integer.toString(gene.geneLocation().start()) : null);
-                    row.setOrNull(Column.posEnd, gene.geneLocation() != null ? Integer.toString(gene.geneLocation().end()) : null);
-                    row.setOrNull(Column.strand, gene.geneStrand() != null ? String.valueOf(gene.geneStrand().asChar()) : null);
-                    row.setOrNull(Column.anchorStart, gene.anchorLocation() != null ? Integer.toString(gene.anchorLocation().start()) : null);
-                    row.setOrNull(Column.anchorEnd, gene.anchorLocation() != null ? Integer.toString(gene.anchorLocation().end()) : null);
-                    row.setOrNull(Column.anchorSequence, gene.anchorSequence() != null ? gene.anchorSequence() : null);
-                    row.setOrNull(Column.anchorAA, gene.anchorSequence() != null ? Codons.aminoAcidFromBases(gene.anchorSequence()) : null);
+                    row.setOrNull(Column.contig, gene.contigName());
+                    row.setOrNull(Column.posStart, gene.genePosition() != null ? gene.genePosition().start() : null);
+                    row.setOrNull(Column.posEnd, gene.genePosition() != null ? gene.genePosition().end() : null);
+                    row.setOrNull(Column.strand, gene.geneStrand() != null ? gene.geneStrand().asChar() : null);
+                    row.setOrNull(Column.anchorStart, gene.anchorPosition() != null ? gene.anchorPosition().start() : null);
+                    row.setOrNull(Column.anchorEnd, gene.anchorPosition() != null ? gene.anchorPosition().end() : null);
+                    row.setOrNull(Column.anchorSequence, gene.anchorSequence());
                 }
         );
     }

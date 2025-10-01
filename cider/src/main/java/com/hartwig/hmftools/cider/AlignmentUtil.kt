@@ -2,11 +2,12 @@ package com.hartwig.hmftools.cider
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
+import com.hartwig.hmftools.cider.genes.Contig
+import com.hartwig.hmftools.cider.genes.ContigType
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.region.ChrBaseRegion
+import com.hartwig.hmftools.common.region.BaseRegion
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
@@ -46,32 +47,18 @@ object AlignmentUtil
         }
     }
 
-    fun toGenomicLocation(alignment: BwaMemAlignment, genomeVersion: RefGenomeVersion): GenomicLocation? {
-        // Example possibilities for refContig:
-        // chr1
-        // chrM
-        // chr1_KI270763v1_alt
-        // chr15_KI270727v1_random
-        // chrUn_KI270423v1
-        val normalisedContig = genomeVersion.versionedChromosome(alignment.refContig)
-        val parts = normalisedContig.split("_", limit = 1)
-        // Could be regular human chromosome or M or Un
-        val chromosome = parts[0]
-        val extension = parts.getOrNull(1)
-        val isAltLocus = extension?.endsWith("_alt") ?: false
-        val isUnlocalised = extension?.endsWith("_random") ?: false
-        val isUnplaced = chromosome.lowercase().startsWith("un_")
-        val humanChromosome = try { HumanChromosome.fromString(chromosome) } catch (e: IllegalArgumentException) { null }
-        val primaryAssembly = ((extension == null) || isUnlocalised || isUnplaced) && !isAltLocus
-        return if (humanChromosome == null)
+    fun toGenomicLocation(alignment: BwaMemAlignment): GenomicLocation?
+    {
+        val contig = Contig.fromName(alignment.refContig)
+
+        if (contig.type == ContigType.MITOCHONDRIAL || contig.type == ContigType.UNPLACED)
         {
-            // This matches previous behaviour with Blast. It excludes mitochondrial and unplaced contigs.
+            // This matches previous behaviour with Blast.
             // TODO: review?
-            null
-        } else
-        {
-            GenomicLocation(ChrBaseRegion(chromosome, alignment.refStart, alignment.refEnd), alignment.refStrand, primaryAssembly)
+            return null
         }
+
+        return GenomicLocation(contig, BaseRegion(alignment.refStart, alignment.refEnd), alignment.refStrand)
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
