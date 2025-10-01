@@ -14,10 +14,10 @@ import com.hartwig.hmftools.cider.primer.VdjPrimerMatcher
 import com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
+import com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
-import com.hartwig.hmftools.common.utils.config.VersionInfo
 import htsjdk.samtools.SAMFileHeader
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
@@ -29,7 +29,6 @@ import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -45,6 +44,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
     {
         val runDate = LocalDate.now()
 
+        /* logged by OA now
         val versionInfo = VersionInfo("cider.version")
         sLogger.info("Cider version: {}, build timestamp: {}",
             versionInfo.version(),
@@ -52,9 +52,10 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         sLogger.info("run date: {}", runDate)
         sLogger.info("run args: {}", args.joinToString(" "))
+        */
 
         FileWriterUtils.checkCreateOutputDir(mParams.outputDir)
-        val start = Instant.now()
+        val startTimeMs = System.currentTimeMillis()
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
             CiderGeneDataLoader.loadAnchorTemplates(mParams.refGenomeVersion),
@@ -135,9 +136,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         // write the stats per locus
         CiderLocusStatsWriter.writeLocusStats(mParams.outputDir, mParams.sampleId, layoutBuildResults, vdjAnnotations)
 
-        val finish: Instant = Instant.now()
-        val seconds: Long = Duration.between(start, finish).seconds
-        sLogger.info("CIDER run complete. Time taken: {}m {}s", seconds / 60, seconds % 60)
+        sLogger.info("Cider complete, mins({})", runTimeMinsStr(startTimeMs));
         return 0
     }
 
