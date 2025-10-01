@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.common.blastn.BlastnMatch
-import com.hartwig.hmftools.common.blastn.BlastnRunner
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
@@ -29,71 +28,13 @@ object AlignmentUtil
 
     const val WORD_SIZE = 9
 
-    // This limits the number of hit each query can get. Necessary to protect against edge cases
-    const val MAX_TARGET_SEQUENCES = 5000
-
-    // val REF_GENOME_NAME = "GRCh38.p13"
-    val BLASTN_CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
-    val BLASTN_PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
-
     private val sLogger = LogManager.getLogger(AlignmentUtil::class.java)
-
-    fun toGenomicLocation(blastnMatch: BlastnMatch) : GenomicLocation?
-    {
-        // parse the chromosome / assembly
-        val m = BLASTN_CHROMOSOME_ASSEMBLY_REGEX.matchEntire(blastnMatch.subjectTitle)
-
-        if (m == null)
-        {
-            // might not have a chromosome, or it is mitochondrion
-            return null
-        }
-
-        val chromosome = CiderConstants.BLAST_REF_GENOME_VERSION.versionedChromosome(m.groupValues[1]).intern()
-        val assembly = m.groupValues[2].intern()
-
-        val start: Int
-        val end: Int
-
-        when (blastnMatch.subjectFrame)
-        {
-            Strand.FORWARD -> { start = blastnMatch.subjectAlignStart; end = blastnMatch.subjectAlignEnd }
-            Strand.REVERSE -> { start = blastnMatch.subjectAlignEnd; end = blastnMatch.subjectAlignStart }
-        }
-
-        val altAssemblyName = if (assembly == BLASTN_PRIMARY_ASSEMBLY_NAME) null else assembly
-
-        return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, altAssemblyName)
-    }
-
-    fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
-                  expectedValueCutoff: Double)
-            : Multimap<Int, BlastnMatch>
-    {
-        return BlastnRunner.Builder()
-            .withTask("blastn")
-            .withPrefix(sampleId)
-            .withBlastDir(blastDir)
-            .withBlastDb(blastDb)
-            .withOutputDir(outputDir)
-            .withWordSize(WORD_SIZE)
-            .withReward(MATCH_SCORE)
-            .withPenalty(MISMATCH_SCORE)
-            .withGapOpen(-GAP_OPENING_SCORE)
-            .withGapExtend(-GAP_EXTEND_SCORE)
-            .withExpectedValueCutoff(expectedValueCutoff)
-            .withNumThreads(numThreads)
-            .withSubjectBestHit(true)
-            .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
-            .build()
-            .run(sequences)
-    }
 
     data class BwaMemAlignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
-        val refContig: String,
+        val refContig: String,      // For GRCh38 this is prefixed with "chr", for GRCh37 it is not.
         val refStart: Int,
         val refEnd: Int,
         val refStrand: Strand,
@@ -107,12 +48,32 @@ object AlignmentUtil
         }
     }
 
-    fun parseChromosome(contig: String): String
-    {
-        // TODO: should this validate that it is a chromosome? could be MT
-        // Parses ref genome contig to the primary assembly chromosome. E.g.:
-        // chr14_KI270726v1_random
-        return contig.split("_")[0]
+    fun toGenomicLocation(alignment: BwaMemAlignment, genomeVersion: RefGenomeVersion): GenomicLocation? {
+        // Example possibilities for refContig:
+        // chr1
+        // chrM
+        // chr1_KI270763v1_alt
+        // chr15_KI270727v1_random
+        // chrUn_KI270423v1
+        val normalisedContig = genomeVersion.versionedChromosome(alignment.refContig)
+        val parts = normalisedContig.split("_", limit = 1)
+        // Could be regular human chromosome or M or Un
+        val chromosome = parts[0]
+        val extension = parts.getOrNull(1)
+        val isAltLocus = extension?.endsWith("_alt") ?: false
+        val isUnlocalised = extension?.endsWith("_random") ?: false
+        val isUnplaced = chromosome.lowercase().startsWith("un_")
+        val humanChromosome = try { HumanChromosome.fromString(chromosome) } catch (e: IllegalArgumentException) { null }
+        val primaryAssembly = ((extension == null) || isUnlocalised || isUnplaced) && !isAltLocus
+        return if (humanChromosome == null)
+        {
+            // This matches previous behaviour with Blast. It excludes mitochondrial and unplaced contigs.
+            // TODO: review?
+            null
+        } else
+        {
+            GenomicLocation(chromosome, alignment.refStart, alignment.refEnd, alignment.refStrand, primaryAssembly)
+        }
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):

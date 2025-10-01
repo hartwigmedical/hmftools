@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.fromCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrRegion
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -31,6 +33,7 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
+    private val mRefGenomeVersion: RefGenomeVersion
     private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
     private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
@@ -40,8 +43,9 @@ class AlignmentAnnotator
 
     constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
-        this.mRefGenomeDictPath = refGenomeDictPath
-        this.mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
+        mRefGenomeVersion = refGenomeVersion
+        mRefGenomeDictPath = refGenomeDictPath
+        mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
         // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
         val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
@@ -278,9 +282,13 @@ class AlignmentAnnotator
 
     fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
     {
-        val chromosome = AlignmentUtil.parseChromosome(alignment.refContig)
+        val location = AlignmentUtil.toGenomicLocation(alignment, mRefGenomeVersion)
+        if (location == null)
+        {
+            return null
+        }
 
-        val geneDataList = mVdjGenes[Pair(chromosome, alignment.refStrand)] ?: return null
+        val geneDataList = mVdjGenes[Pair(location.chromosome, alignment.refStrand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 
@@ -288,7 +296,7 @@ class AlignmentAnnotator
         {
             val geneLocation = gene.geneLocation ?: continue
 
-            require(geneLocation.chromosome == chromosome)
+            require(geneLocation.chromosome == location.chromosome)
             require(geneLocation.strand == alignment.refStrand)
 
             if (bestGene == null || !bestGene.isFunctional)

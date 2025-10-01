@@ -23,7 +23,6 @@ public class IgTcrGeneFile
         region,
         functionality,
         primaryAssembly,
-        assemblyName,
         chromosome,
         posStart,
         posEnd,
@@ -71,7 +70,6 @@ public class IgTcrGeneFile
                 IgTcrRegion region = IgTcrRegion.valueOf(record.get(Column.region));
                 IgTcrFunctionality functionality = IgTcrFunctionality.fromCode(record.get(Column.functionality));
                 boolean isPrimaryAssembly = record.getBoolean(Column.primaryAssembly);
-                String assemblyName = isPrimaryAssembly ? null : record.get(Column.assemblyName);
 
                 String anchorSequence = record.get(Column.anchorSequence);
                 if(anchorSequence.isEmpty())
@@ -116,7 +114,7 @@ public class IgTcrGeneFile
                     }
                 }
 
-                igTcrGenes.add(new IgTcrGene(geneName, allele, region, functionality, genomicLocation, strand, assemblyName,
+                igTcrGenes.add(new IgTcrGene(geneName, allele, region, functionality, genomicLocation, strand, isPrimaryAssembly,
                         anchorSequence, anchorLocation));
             }
         }
@@ -134,7 +132,6 @@ public class IgTcrGeneFile
                     row.set(Column.region, String.valueOf(gene.region()));
                     row.set(Column.functionality, gene.functionality().toCode());
                     row.set(Column.primaryAssembly, gene.inPrimaryAssembly());
-                    row.set(Column.assemblyName, gene.altAssemblyName() != null ? gene.altAssemblyName() : "");
                     row.set(Column.chromosome, gene.geneLocation() != null ? gene.geneLocation().chromosome() : "");
                     row.set(Column.posStart, gene.geneLocation() != null ? Integer.toString(gene.geneLocation().start()) : "");
                     row.set(Column.posEnd, gene.geneLocation() != null ? Integer.toString(gene.geneLocation().end()) : "");
