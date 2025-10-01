@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import com.hartwig.hmftools.common.cider.IgTcrGene;
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile;
