@@ -28,9 +28,7 @@ data class CiderParams(
     val primerCsv: String?,
     val primerMismatchMax: Int,
     val bwaLibPath: String?,
-    val annotationRefGenomeVersion: RefGenomeVersion?,
-    val annotationRefGenomeDictPath: String?,
-    val annotationBwaIndexImagePath: String?
+    val bwaIndexImagePath: String?
 )
 {
     companion object
@@ -52,18 +50,15 @@ data class CiderParams(
         const val ARG_MAX_READS_PER_GENE = "max_reads_per_gene"
         const val ARG_PRIMER_CSV = "primer_csv"
         const val ARG_PRIMER_MISMATCH_MAX = "primer_mismatch_max"
-        const val ARG_ANNOTATION_REF_GENOME_VERSION = "annotation_ref_genome_version"
-        const val ARG_ANNOTATION_REF_GENOME_DICT = "annotation_ref_genome_dict"
-        const val ARG_ANNOTATION_BWA_INDEX_IMAGE = "annotation_bwa_index_image"
+        const val ARG_BWA_INDEX_IMAGE = "bwa_index_image"
 
         fun fromConfigBuilder(configBuilder: ConfigBuilder): CiderParams {
-            val annotationRefGenomeDict = configBuilder.getValue(ARG_ANNOTATION_REF_GENOME_DICT)
-            val annotationRefGenomeFasta = annotationRefGenomeDict?.removeSuffix(".dict")
-            val defaultAnnotationBwaIndex = annotationRefGenomeFasta?.plus(".img")
+            val refGenomePath = configBuilder.getValue(RefGenomeSource.REF_GENOME, null)
+            val defaultBwaIndex = refGenomePath?.plus(".img")
             return CiderParams(
                 sampleId = configBuilder.getValue(SAMPLE),
                 bamPath = configBuilder.getValue(ARG_BAM),
-                refGenomePath = configBuilder.getValue(RefGenomeSource.REF_GENOME, null),
+                refGenomePath = refGenomePath,
                 outputDir = FileWriterUtils.parseOutputDir(configBuilder),
                 threadCount = TaskExecutor.parseThreads(configBuilder),
                 approxMaxFragmentLength = configBuilder.getInteger(ARG_MAX_FRAGMENT_LENGTH),
@@ -77,9 +72,7 @@ data class CiderParams(
                 primerCsv = configBuilder.getValue(ARG_PRIMER_CSV),
                 primerMismatchMax = configBuilder.getInteger(ARG_PRIMER_MISMATCH_MAX),
                 bwaLibPath = configBuilder.getValue(BwaUtils.BWA_LIB_PATH),
-                annotationRefGenomeVersion = configBuilder.getValue(ARG_ANNOTATION_REF_GENOME_VERSION)?.let(RefGenomeVersion::from),
-                annotationRefGenomeDictPath = annotationRefGenomeDict,
-                annotationBwaIndexImagePath = configBuilder.getValue(ARG_ANNOTATION_BWA_INDEX_IMAGE, defaultAnnotationBwaIndex)
+                bwaIndexImagePath = configBuilder.getValue(ARG_BWA_INDEX_IMAGE, defaultBwaIndex)
             )
         }
 
@@ -113,11 +106,7 @@ data class CiderParams(
                 0
             )
             configBuilder.addPath(BwaUtils.BWA_LIB_PATH, false, BwaUtils.BWA_LIB_PATH_DESC)
-            configBuilder.addConfigItem(ARG_ANNOTATION_REF_GENOME_VERSION, false, "Reference genome version for gene annotation")
-            configBuilder.addPath(ARG_ANNOTATION_REF_GENOME_DICT, false,
-                "Reference genome sequence dictionary for gene annotation alignment")
-            configBuilder.addPath(ARG_ANNOTATION_BWA_INDEX_IMAGE, false,
-                "Reference genome BWA-MEM index GATK image file for gene annotation alignment")
+            configBuilder.addPath(ARG_BWA_INDEX_IMAGE, false, "Reference genome BWA-MEM index GATK image file")
         }
     }
 }
