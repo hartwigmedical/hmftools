@@ -372,7 +372,7 @@ public class ReferenceData
         int codingEndIndex = fieldsIndexMap.get("CodingEnd");
 
         String currentGene = "";
-        TranscriptData currentTrans = null;
+        TranscriptData currentTrans;
         List<ExonData> exonDataList = null;
 
         for(String line : hlaTranscriptData)

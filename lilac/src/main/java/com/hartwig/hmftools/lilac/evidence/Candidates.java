@@ -36,7 +36,7 @@ public final class Candidates
     }
 
     public List<HlaAllele> unphasedCandidates(
-	    final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
+            final HlaContext context, final List<Fragment> fragments, final Collection<HlaAllele> commonAllles)
     {
         List<Integer> aminoAcidBoundary = context.AminoAcidBoundaries;
 

@@ -29,7 +29,7 @@ public class NucleotideFiltering
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final List<Fragment> fragments)
+            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final Iterable<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -53,7 +53,7 @@ public class NucleotideFiltering
     }
 
     private static boolean consistentWithAny(
-            final HlaSequenceLoci seqLoci, int startLoci, final List<String> startSequences, final List<String> endSequences)
+            final HlaSequenceLoci seqLoci, int startLoci, final Collection<String> startSequences, final Collection<String> endSequences)
     {
         return seqLoci.consistentWithAny(startSequences, Lists.newArrayList(startLoci))
                 && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));

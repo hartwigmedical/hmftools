@@ -17,7 +17,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
-public class NucleotideGeneEnrichment
+public final class NucleotideGeneEnrichment
 {
     private final List<HlaGene> mGenes;
     private final HashMap<Set<HlaGene>, Integer> mMinUniqueProteinExonBoundaries;
