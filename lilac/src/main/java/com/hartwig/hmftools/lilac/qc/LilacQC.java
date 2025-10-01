@@ -71,10 +71,10 @@ public final class LilacQC
         columns.add("NextSolutionAlleles");
         columns.add("MedianBaseQuality");
         columns.add("HlaYAllele");
-        columns.addAll(com.hartwig.hmftools.lilac.qc.BamQC.header());
-        columns.addAll(com.hartwig.hmftools.lilac.qc.CoverageQC.header());
-        columns.addAll(com.hartwig.hmftools.lilac.qc.AminoAcidQC.header());
-        columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
+        columns.addAll(BamQC.header());
+        columns.addAll(CoverageQC.header());
+        columns.addAll(AminoAcidQC.header());
+        columns.addAll(HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
     }
