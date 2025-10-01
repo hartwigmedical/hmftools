@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
 

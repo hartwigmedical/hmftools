@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.genes.IgTcrGene
-import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.fromCommonIgTcrGene
-import com.hartwig.hmftools.cider.genes.IgTcrRegion
+import com.hartwig.hmftools.cider.genes.genomicLocation
+import com.hartwig.hmftools.common.cider.IgTcrGene
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
+import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
@@ -51,7 +51,6 @@ class AlignmentAnnotator
         val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
 
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
-            .map { o -> fromCommonIgTcrGene(o) }
 
         // find all the genes that we need
         for (geneData in igTcrGenes)
@@ -61,12 +60,13 @@ class AlignmentAnnotator
                 continue
             }
 
-            if (geneData.geneLocation == null)
+            val genomicLocation = geneData.genomicLocation()
+            if (genomicLocation == null)
             {
                 continue
             }
 
-            val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
+            val key = Pair(genomicLocation.bases.chromosome(), genomicLocation.strand)
             vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
 
             /* sLogger.debug(
@@ -288,7 +288,7 @@ class AlignmentAnnotator
             return null
         }
 
-        val geneDataList = mVdjGenes[Pair(location.chromosome, alignment.refStrand)] ?: return null
+        val geneDataList = mVdjGenes[Pair(location.bases.chromosome(), alignment.refStrand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 
@@ -296,14 +296,14 @@ class AlignmentAnnotator
         {
             val geneLocation = gene.geneLocation ?: continue
 
-            require(geneLocation.chromosome == location.chromosome)
-            require(geneLocation.strand == alignment.refStrand)
+            require(geneLocation.chromosome() == location.bases.chromosome())
+            require(gene.geneStrand() == alignment.refStrand)
 
             if (bestGene == null || !bestGene.isFunctional)
             {
                 // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignment.refEnd + GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignment.refStart - GENE_REGION_TOLERANCE)
+                if (geneLocation.start() <= alignment.refEnd + GENE_REGION_TOLERANCE &&
+                    geneLocation.end() >= alignment.refStart - GENE_REGION_TOLERANCE)
                 {
                     bestGene = gene
                 }

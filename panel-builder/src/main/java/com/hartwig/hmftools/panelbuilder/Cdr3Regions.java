@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.hartwig.hmftools.common.cider.IgTcrGene;
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile;
@@ -51,7 +52,7 @@ public class Cdr3Regions
     {
         List<IgTcrGene> genes = IgTcrGeneFile.read(refGenomeVersion).stream()
                 .filter(gene -> gene.region() == IgTcrRegion.V_REGION || gene.region() == IgTcrRegion.J_REGION)
-                .filter(IgTcrGene::inPrimaryAssembly)
+                .filter(gene -> gene.inPrimaryAssembly() != null && gene.inPrimaryAssembly())
                 .filter(gene -> gene.anchorLocation() != null)
                 .toList();
         LOGGER.debug("Loaded {} V/J genes", genes.size());

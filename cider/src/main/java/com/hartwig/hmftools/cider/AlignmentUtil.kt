@@ -5,6 +5,7 @@ import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
@@ -72,7 +73,7 @@ object AlignmentUtil
             null
         } else
         {
-            GenomicLocation(chromosome, alignment.refStart, alignment.refEnd, alignment.refStrand, primaryAssembly)
+            GenomicLocation(ChrBaseRegion(chromosome, alignment.refStart, alignment.refEnd), alignment.refStrand, primaryAssembly)
         }
     }
 

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.google.common.collect.*
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import org.apache.logging.log4j.LogManager
 import java.util.EnumMap
 

@@ -199,7 +199,7 @@ Following briefly describe the annotation logic:
 To create reference data, following steps:
 1. queried from IMGT (https://www.imgt.org/genedb/)[[1]][1] to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG 
 and TR. Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.
-2. Use both blast and ensembl to determine the genomic location of each gene.
+2. Use both BWA-MEM and ensembl to determine the genomic location of each gene.
 3. For V and J genes, find their anchor regions.
 
 ## Idenfitification of clonal rearrangements in WGS samples
