@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.genes.Contig
 import com.hartwig.hmftools.cider.genes.genomicLocation
 import com.hartwig.hmftools.common.cider.IgTcrGene
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
@@ -36,7 +37,7 @@ class AlignmentAnnotator
     private val mRefGenomeVersion: RefGenomeVersion
     private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
-    private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
+    private val mVdjGenes: Map<Pair<Contig, Strand>, List<IgTcrGene>>
 
     // class to help associate the data back
     data class AlignmentRunData(val vdj: VDJSequence, val key: Int, val querySeqRange: IntRange, val querySeq: String)
@@ -48,7 +49,7 @@ class AlignmentAnnotator
         mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
         // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
-        val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
+        val vdjGenes: HashMap<Pair<Contig, Strand>, ArrayList<IgTcrGene>> = HashMap()
 
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
 
@@ -67,7 +68,7 @@ class AlignmentAnnotator
             }
 
             // TODO? this should probably be keyed by more data to account for genes on contigs which are not the main contigs
-            val key = Pair(genomicLocation.bases.chromosome(), genomicLocation.strand)
+            val key = Pair(genomicLocation.contig, genomicLocation.strand)
             vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
 
             /* sLogger.debug(
@@ -289,7 +290,7 @@ class AlignmentAnnotator
             return null
         }
 
-        val geneDataList = mVdjGenes[Pair(location.bases.chromosome(), alignment.refStrand)] ?: return null
+        val geneDataList = mVdjGenes[Pair(location.contig, alignment.refStrand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 

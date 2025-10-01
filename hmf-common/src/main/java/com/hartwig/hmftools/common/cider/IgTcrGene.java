@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.cider;
 
 import com.hartwig.hmftools.common.genome.region.Strand;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -10,11 +10,11 @@ public record IgTcrGene(
         String allele, // 01 etc
         IgTcrRegion region,
         IgTcrFunctionality functionality,
-        @Nullable ChrBaseRegion geneLocation,
+        @Nullable String contigName,    // From the reference genome. Can be a chromosome or another contig type.
+        @Nullable BaseRegion genePosition,
         @Nullable Strand geneStrand,
-        @Nullable Boolean inPrimaryAssembly,
         @Nullable String anchorSequence,  // only valid for V / J gene
-        @Nullable ChrBaseRegion anchorLocation)
+        @Nullable BaseRegion anchorPosition)
 {
     public String getGeneAllele()
     {
