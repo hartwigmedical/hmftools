@@ -12,7 +12,7 @@ public record IgTcrGene(
         IgTcrFunctionality functionality,
         @Nullable ChrBaseRegion geneLocation,
         @Nullable Strand geneStrand,
-        boolean inPrimaryAssembly,
+        @Nullable Boolean inPrimaryAssembly,
         @Nullable String anchorSequence,  // only valid for V / J gene
         @Nullable ChrBaseRegion anchorLocation)
 {
