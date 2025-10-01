@@ -629,10 +629,12 @@ public class VariantFilters
     {
         int tumorAvgAltBaseQuality = (int)round(primaryTumor.averageAltRecalibratedBaseQuality());
         int refAvgAltBaseQuality = (int)round(refCounter.averageAltRecalibratedBaseQuality());
+        int tumorQuality = primaryTumor.readQuals().Full + primaryTumor.readQuals().PartialCore + primaryTumor.readQuals().Realigned;
+        int refQuality = refCounter.readQuals().Full + refCounter.readQuals().PartialCore + refCounter.readQuals().Realigned;
 
         return aboveMaxGermlineRelativeQual(
-                 tier, primaryTumor.tumorQuality(), primaryTumor.vaf(), primaryTumor.depth(), tumorAvgAltBaseQuality,
-                refCounter.tumorQuality(), refCounter.depth(), refCounter.altSupport(), refAvgAltBaseQuality);
+                 tier, tumorQuality, primaryTumor.vaf(), primaryTumor.depth(), tumorAvgAltBaseQuality,
+                refQuality, refCounter.depth(), refCounter.altSupport(), refAvgAltBaseQuality);
     }
 
     public static boolean aboveMaxGermlineRelativeQual(
