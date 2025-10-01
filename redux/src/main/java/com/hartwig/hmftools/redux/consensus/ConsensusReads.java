@@ -174,7 +174,7 @@ public class ConsensusReads
         record.setMappingQuality(state.MapQuality);
         record.setReferenceName(templateRead.getReferenceName());
 
-        record.setAlignmentStart(state.MinAlignedPosStart);
+        record.setAlignmentStart(state.AlignmentStart);
 
         if(!templateRead.getReadUnmappedFlag())
             record.setCigar(new Cigar(state.CigarElements));

@@ -3,13 +3,21 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.UNSET;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -24,10 +32,10 @@ public class ConsensusState
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
 
-    public int MinUnclippedPosStart;
-    public int MaxUnclippedPosEnd;
-    public int MinAlignedPosStart;
-    public int MaxAlignedPosEnd;
+    public int UnclippedPosStart;
+    public int UnclippedPosEnd;
+    public int AlignmentStart;
+    public int AlignmentEnd;
     public int MapQuality;
     public int NumMutations;
 
@@ -47,10 +55,10 @@ public class ConsensusState
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
 
-        MinUnclippedPosStart = 0;
-        MaxUnclippedPosEnd = 0;
-        MinAlignedPosStart = 0;
-        MaxAlignedPosEnd = 0;
+        UnclippedPosStart = 0;
+        UnclippedPosEnd = 0;
+        AlignmentStart = 0;
+        AlignmentEnd = 0;
         MapQuality = 0;
         NumMutations = 0;
 
@@ -73,31 +81,48 @@ public class ConsensusState
     {
         int readStart = read.getAlignmentStart();
         int readEnd = read.getAlignmentEnd();
-        int unclippedStart = read.getCigar().isLeftClipped() ? readStart - read.getCigar().getFirstCigarElement().getLength() : readStart;
-        int unclippedEnd = read.getCigar().isRightClipped() ? readEnd + read.getCigar().getLastCigarElement().getLength() : readEnd;
 
-        if(MinUnclippedPosStart == 0)
+        int unclippedStart = readStart - CigarUtils.leftSoftClipLength(read);
+        int unclippedEnd = readEnd + CigarUtils.rightSoftClipLength(read);
+
+        if(UnclippedPosStart == 0)
         {
-            MinUnclippedPosStart = unclippedStart;
-            MaxUnclippedPosEnd = unclippedEnd;
-            MinAlignedPosStart = readStart;
-            MaxAlignedPosEnd = readEnd;
+            UnclippedPosStart = unclippedStart;
+            UnclippedPosEnd = unclippedEnd;
+            AlignmentStart = readStart;
+            AlignmentEnd = readEnd;
         }
         else
         {
-            MinUnclippedPosStart = min(unclippedStart, MinUnclippedPosStart);
-            MaxUnclippedPosEnd = max(unclippedEnd, MaxUnclippedPosEnd);
-            MinAlignedPosStart = min(readStart, MinAlignedPosStart);
-            MaxAlignedPosEnd = max(readEnd, MaxAlignedPosEnd);
+            UnclippedPosStart = min(unclippedStart, UnclippedPosStart);
+            UnclippedPosEnd = max(unclippedEnd, UnclippedPosEnd);
+            AlignmentStart = min(readStart, AlignmentStart);
+            AlignmentEnd = max(readEnd, AlignmentEnd);
         }
     }
 
     public void setBoundaries(int unclippedStart, int unclippedEnd, int readStart, int readEnd)
     {
-        MinUnclippedPosStart = unclippedStart;
-        MaxUnclippedPosEnd = unclippedEnd;
-        MinAlignedPosStart = readStart;
-        MaxAlignedPosEnd = readEnd;
+        UnclippedPosStart = unclippedStart;
+        UnclippedPosEnd = unclippedEnd;
+        AlignmentStart = readStart;
+        AlignmentEnd = readEnd;
+    }
+
+    public static int[] setReadPositionStartOffsets(final List<SAMRecord> reads, final int consensusUnclippedPosition, boolean isStart)
+    {
+        // convention is to return read's position - consensus position
+        int[] positionOffsets = new int[reads.size()];
+
+        for(int i = 0; i < reads.size(); ++i)
+        {
+            SAMRecord read = reads.get(i);
+
+            int readUnclippedPosition = getUnclippedPosition(read, isStart);
+            positionOffsets[i] = readUnclippedPosition - consensusUnclippedPosition;
+        }
+
+        return positionOffsets;
     }
 
     public void addCigarElement(int length, final CigarOperator operator)
@@ -131,7 +156,7 @@ public class ConsensusState
     public void setNumMutations()
     {
         NumMutations = 0;
-        byte[] refBases = mRefGenome.getRefBases(Chromosome, MinAlignedPosStart, MaxAlignedPosEnd);
+        byte[] refBases = mRefGenome.getRefBases(Chromosome, AlignmentStart, AlignmentEnd);
 
         if(refBases == null) // abort any attempt to set this property
             return;
@@ -164,7 +189,22 @@ public class ConsensusState
         }
     }
 
-    private static boolean isIndelOrMismatch(CigarOperator cigarOp)
+    protected static boolean deleteOrSplit(final CigarOperator operator)
+    {
+        return operator == D || operator == N;
+    }
+
+    protected static boolean alignedOrClipped(final CigarOperator operator)
+    {
+        return operator == M || operator.isClipping();
+    }
+
+    protected static boolean consumesRefOrUnclippedBases(final CigarOperator operator)
+    {
+        return operator.consumesReferenceBases() || operator == S;
+    }
+
+    protected static boolean isIndelOrMismatch(CigarOperator cigarOp)
     {
         if(cigarOp == CigarOperator.I)
             return true;

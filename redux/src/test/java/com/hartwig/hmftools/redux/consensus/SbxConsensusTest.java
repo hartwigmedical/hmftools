@@ -68,6 +68,7 @@ public class SbxConsensusTest
     public void resetSequencingType()
     {
         ReduxConfig.SEQUENCING_TYPE = SequencingType.ILLUMINA;
+        ReduxConfig.RunChecks = false;
     }
 
     @Test
@@ -428,22 +429,22 @@ public class SbxConsensusTest
         // requires ability to have different unclipped and/or aligned start locations
         List<SAMRecord> reads = Lists.newArrayList();
 
-        // 1:   ACGT AAC CGG TT AC
-        //      SSSS MMM MMMDMM SS
+        // 1:   AACA GGGTT AA
+        //      SSSS MMIMM MS
 
-        // 2:     GT AACCCGG TT ACGT
-        //        SS MMMIMMMDMM MSSS
+        // 2:     CC GGTT TACC
+        //        SM MMMM SSSS
 
-        // net: ACGT AACCCGG TT ACGT
-        //      SSSM MMMIMMMDMM MSSS
+        // net: AACC GGTT AACC
+        //      SSSM MMMM MSSS
 
-        String readBases1 = "AACCGGTTTAACCGGTT";
-        String readCigar1 = "4S4M1I4M4S";
+        String readBases1 = "AACAGGGTTAA";
+        String readCigar1 = "4S2M1I3M1S";
         int readStart1 = 10;
 
-        String readBases2 = "AACCGGTTAAACCGGTT";
-        String readCigar2 = "17M";
-        int readStart2 = 6;
+        String readBases2 = "CCGGTTTACC";
+        String readCigar2 = "1S5M4S";
+        int readStart2 = 9;
 
         byte[] readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
@@ -453,8 +454,8 @@ public class SbxConsensusTest
         SAMRecord read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
         reads.add(read2);
 
-        String readBasesNet = "AACCGGTTAACCCGGTT"; // chooses ref since both are simplex
-        String readCigarNet = readCigar2;
+        String readBasesNet = "AACCGGTTAACC"; // chooses ref since both are simplex
+        String readCigarNet = "3S6M3S";
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
@@ -462,11 +463,20 @@ public class SbxConsensusTest
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
 
-        // test 2: stick with right soft-clip once begun
+        // test 2: test in reverse direction
+        reads.clear();
+        read1.setReadNegativeStrandFlag(true);
+        read2.setReadNegativeStrandFlag(true);
+        reads.add(read1);
+        reads.add(read2);
 
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
     }
 
-    @Ignore
     @Test
     public void testSbxIndelConsensusWithSoftClipsJitter()
     {
@@ -476,7 +486,7 @@ public class SbxConsensusTest
         int position = 1;
 
         // 1:   ACGT AAC CGG TT AC
-        //      SSSS MMM MMMDMM SS
+        //      SSSS MMM MMMDMM MS
 
         // 2:     GT AACCCGG TT ACGT
         //        SS MMMIMMMDMM MSSS
@@ -485,22 +495,23 @@ public class SbxConsensusTest
         //       SSM MMMIMMMMMM S
 
         // net: ACGT AACCCGG TT ACGT
-        //      SSSM MMMIMMMDMM MSSS
+        //      SSSS MMMIMMMDMM MSSS
+        // cigar: 3S 3M 1I 3M 1D 3M 3S
 
         String readBases1 = "ACGTAACCGGTTAC";
-        String readCigar1 = "4S6M1D2M2S";
-        int readStart1 = 5;
+        String readCigar1 = "4S6M1D3M1S";
+        int readStart1 = 5; // unclipped start is 1
 
         String readBases2 = "GTAACCCGGTTACGT";
         String readCigar2 = "2S3M1I3M1D3M3S";
-        int readStart2 = 5;
+        int readStart2 = 5; // unclipped start is 3
 
         String readBases3 = "CGTAACCCGGGTTA";
         String readCigar3 = "2S4M1I6M1S";
-        int readStart3 = 4;
+        int readStart3 = 4; // unclipped start is 2
 
-        String readBasesNet = "AACCGGTAACGGT";
-        String readCigarNet = "3S4M1I3M1D3M3S";
+        String readBasesNet = "ACGTAACCCGGTTACGT";
+        String readCigarNet = "4S3M1I3M1D3M3S";
 
         byte[] readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
         SAMRecord read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);

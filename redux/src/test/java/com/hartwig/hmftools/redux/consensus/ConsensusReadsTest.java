@@ -327,12 +327,19 @@ public class ConsensusReadsTest
     {
         List<SAMRecord> reads = Lists.newArrayList();
 
-        int posStart = REF_BASES.length() - 5;
-        String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
-        reads.add(createSamRecord(nextReadId(), posStart, readBases1, "3M1D2M5S", false));
+        // ref:    CGTTAC
+        // read 1: CGT AC
+        // read 2: CG TAC
+        // net:    CGTTAC
 
-        String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
-        reads.add(createSamRecord(nextReadId(), posStart, readBases2, "2M1D3M5S", false));
+        int posStart = REF_BASES.length() - 5;
+        String readBases1 = "CGTACTTTTT";
+        String readCigar1 = "3M1D2M5S";
+        reads.add(createSamRecord(nextReadId(), posStart, readBases1, readCigar1, false));
+
+        String readBases2 = "CGTACAAAAA";
+        String readCigar2 = "2M1D3M5S";
+        reads.add(createSamRecord(nextReadId(), posStart, readBases2, readCigar2, false));
 
         ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
@@ -341,6 +348,8 @@ public class ConsensusReadsTest
         consensusReads = new ConsensusReads(mRefGenomeOneBased);
         consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
+        assertEquals(readCigar2, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBases1, readInfo.ConsensusRead.getReadString()); // takes first if cannot determine ref position
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }
 

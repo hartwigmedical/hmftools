@@ -137,14 +137,14 @@ public class IndelConsensusReadsTest
         String readBases = "CTTCGATAATGGCCGGGCCG";
         String shortedReadBases = readBases.substring(0, readBases.length() - 2);
         String shorterClipped = "3S7M10D5M3S";
-        read1 = createRecord(nextReadId(), 10, shortedReadBases, shorterClipped, false);
-        read2 = createRecord(nextReadId(), 10, readBases, "5S5M10D5M5S", false);
+        read1 = createRecord(nextReadId(), 8, shortedReadBases, shorterClipped, false); // unclipped is 7
+        read2 = createRecord(nextReadId(), 10, readBases, "5S5M10D5M5S", false); // unclipped is 5
 
         readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2), UMI_ID_1);
 
         assertEquals(shorterClipped, readInfo.ConsensusRead.getCigarString());
         assertEquals(shortedReadBases, readInfo.ConsensusRead.getReadString());
-        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(8, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
@@ -176,15 +176,15 @@ public class IndelConsensusReadsTest
     public void testHardClippedReads()
     {
         String readBases = "CTTCGATAATGGCCG";
-        SAMRecord read1 = createRecord(nextReadId(), 13, readBases, "3H8M7S", false);
-        SAMRecord read2 = createRecord(nextReadId(), 15, readBases, "5S10M5H", false);
-        SAMRecord read3 = createRecord(nextReadId(), 12, readBases, "2H13M2S", false);
+        SAMRecord read1 = createRecord(nextReadId(), 10, readBases, "3H8M7S", false);
+        SAMRecord read2 = createRecord(nextReadId(), 15, readBases, "5S10M5H", false); // unclipped start = 10
+        SAMRecord read3 = createRecord(nextReadId(), 10, readBases, "2H13M2S", false);
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals("2H13M2S", readInfo.ConsensusRead.getCigarString());
         assertEquals(readBases, readInfo.ConsensusRead.getReadString());
-        assertEquals(12, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
 
         readBases = "CTTCGATAATGGCCGGGCCG";
         read1 = createRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);

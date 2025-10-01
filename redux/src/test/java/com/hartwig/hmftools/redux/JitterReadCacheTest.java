@@ -25,6 +25,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
@@ -70,7 +71,7 @@ public class JitterReadCacheTest
                         fragmentCoordReads.SingleReads.stream().map(ReadInfo::read)
                 );
 
-        Set<String> readNamesOfInterest = Sets.newHashSet("READ_001", "READ_002");
+        Set<String> readNamesOfInterest = Sets.newHashSet(read1.getReadName(), read2.getReadName());
         int totalPopsOfInterest = 0;
         for(SAMRecord read : reads)
         {

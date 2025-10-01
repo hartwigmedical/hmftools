@@ -2,7 +2,7 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
 import static com.hartwig.hmftools.redux.consensus.CommonUtils.hasValidBases;
-import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.alignedOrClipped;
+import static com.hartwig.hmftools.redux.consensus.ConsensusState.alignedOrClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;

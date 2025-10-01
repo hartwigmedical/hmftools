@@ -10,7 +10,6 @@ public class DuplicateGroupCollapseConfig
     public final int SbxMaxDuplicateDistance;
 
     private static final String SBX_MAX_DUPLICATE_DISTANCE = "sbx_max_dup_dist";
-
     private static final String SBX_MAX_DUPLICATE_DISTANCE_DESC = "Max distance between the end of SBX fragments to be declared duplicates";
 
     public DuplicateGroupCollapseConfig(final SequencingType sequencing, final int sbxMaxDuplicateDistance)
@@ -28,7 +27,6 @@ public class DuplicateGroupCollapseConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         // sequencing is already defined in ReduxConfig
-
         configBuilder.addInteger(SBX_MAX_DUPLICATE_DISTANCE, SBX_MAX_DUPLICATE_DISTANCE_DESC, 0);
     }
 

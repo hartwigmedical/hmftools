@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
@@ -42,7 +43,8 @@ import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBas
 import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBaseCount;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
-import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.deleteOrSplit;
+import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
+import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -435,23 +437,50 @@ public final class SbxRoutines
     {
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
-        int[] consensusStarts = determineConsensusStartPositions(readStates);
-        int consensusUnclippedStart = consensusStarts[0];
-        int consensusAlignmentStart = consensusStarts[1];
+        int outerAlignedPosition = -1;
+        int outerUnclippedPosition = -1;
 
-        List<CigarElement> cigarElements = determineConsensusCigar(
-                readStates, consensusState.IsForward, consensusUnclippedStart, consensusAlignmentStart);
+        for(ReadParseState read : readStates)
+        {
+            if(consensusState.IsForward)
+            {
+                int readStart = read.Read.getAlignmentStart();
+
+                if(outerAlignedPosition < 0 || readStart < outerAlignedPosition)
+                    outerAlignedPosition = readStart;
+
+                int readUnclippedPosition = readStart - leftSoftClipLength(read.Read);
+
+                if(outerUnclippedPosition < 0 || readUnclippedPosition < outerUnclippedPosition)
+                    outerUnclippedPosition = readUnclippedPosition;
+            }
+            else
+            {
+                int readEnd = read.Read.getAlignmentEnd();
+                outerAlignedPosition = max(outerAlignedPosition, readEnd);
+
+                int readUnclippedPosition = readEnd + rightSoftClipLength(read.Read);
+                outerUnclippedPosition = max(outerUnclippedPosition, readUnclippedPosition);
+            }
+        }
+
+        int initialRefPosition = outerUnclippedPosition;
+        readStates.forEach(x -> x.moveToRefPosition(initialRefPosition));
+
+        List<CigarElement> cigarElements = determineConsensusCigar(readStates, consensusState.IsForward, initialRefPosition);
 
         int baseLength = cigarElements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
         consensusState.setBaseLength(baseLength);
 
         int baseIndex = consensusState.IsForward ? 0 : baseLength - 1;
+        int refPosition = initialRefPosition;
 
         int cigarCount = cigarElements.size();
         int cigarIndex = consensusState.IsForward ? 0 : cigarCount - 1;
         boolean[] isFirstInPair = null; // unused
 
         readStates.forEach(x -> x.reset());
+        readStates.forEach(x -> x.moveToRefPosition(initialRefPosition));
 
         while(cigarIndex >= 0 && cigarIndex < cigarCount)
         {
@@ -459,7 +488,7 @@ public final class SbxRoutines
 
             //try
             //{
-                indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+                indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, refPosition, false, isFirstInPair);
 //            }
 //            catch(Exception e)
 //            {
@@ -474,29 +503,58 @@ public final class SbxRoutines
             if(consensusState.outcome() == INDEL_FAIL)
                 break;
 
-            if(element.getOperator().consumesReadBases())
-            {
-                if(consensusState.IsForward)
-                    baseIndex += element.getLength();
-                else
-                    baseIndex -= element.getLength();
-            }
-
             if(consensusState.IsForward)
+            {
+                if(element.getOperator().consumesReadBases())
+                    baseIndex += element.getLength();
+
+                if(consumesRefOrUnclippedBases(element.getOperator()))
+                    refPosition += element.getLength();
+
                 ++cigarIndex;
+            }
             else
+            {
+                if(element.getOperator().consumesReadBases())
+                    baseIndex -= element.getLength();
+
+                if(consumesRefOrUnclippedBases(element.getOperator()))
+                    refPosition -= element.getLength();
+
                 --cigarIndex;
+            }
         }
 
         consensusState.finaliseCigar();
 
-        int consensusAlignmentEnd = consensusAlignmentStart
-                + cigarElements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum() - 1;
+        int consensusAlignmentStart, consensusAlignmentEnd, consensusUnclippedStart, consensusUnclippedEnd;
 
-        int consensusUnclippedEnd = consensusAlignmentEnd;
+        int refBaseLength = cigarElements.stream().filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum();
 
-        if(cigarElements.get(cigarElements.size() - 1).getOperator() == S)
-            consensusUnclippedEnd += cigarElements.get(cigarElements.size() - 1).getLength();
+        if(consensusState.IsForward)
+        {
+            consensusAlignmentStart = outerAlignedPosition;
+            consensusUnclippedStart = outerUnclippedPosition;
+
+            consensusAlignmentEnd = consensusAlignmentStart + refBaseLength - 1;
+
+            consensusUnclippedEnd = consensusAlignmentEnd;
+
+            if(cigarElements.get(cigarElements.size() - 1).getOperator() == S)
+                consensusUnclippedEnd += cigarElements.get(cigarElements.size() - 1).getLength();
+        }
+        else
+        {
+            consensusAlignmentEnd = outerAlignedPosition;
+            consensusUnclippedEnd = outerUnclippedPosition;
+
+            consensusAlignmentStart = consensusAlignmentEnd - refBaseLength + 1;
+
+            consensusUnclippedStart = consensusAlignmentStart;
+
+            if(cigarElements.get(0).getOperator() == S)
+                consensusUnclippedStart -= cigarElements.get(0).getLength();
+        }
 
         consensusState.setBoundaries(consensusUnclippedStart, consensusUnclippedEnd, consensusAlignmentStart, consensusAlignmentEnd);
 
@@ -504,29 +562,8 @@ public final class SbxRoutines
             consensusState.setOutcome(INDEL_MISMATCH);
     }
 
-    private static int[] determineConsensusStartPositions(final List<ReadParseState> readStates)
-    {
-        int earliestUnclippedStart = -1;
-        int earliestAlignedStart = -1;
-
-        for(ReadParseState read : readStates)
-        {
-            int alignmentStart = read.Read.getAlignmentStart();
-            if(earliestAlignedStart < 0 || alignmentStart < earliestAlignedStart)
-                earliestAlignedStart = alignmentStart;
-
-            int unclippedStart = alignmentStart - leftSoftClipLength(read.Read.getCigar().getCigarElements());
-
-            if(earliestUnclippedStart < 0 || unclippedStart < earliestUnclippedStart)
-                earliestUnclippedStart = unclippedStart;
-        }
-
-        return new int[] { earliestUnclippedStart, earliestAlignedStart };
-    }
-
     private static List<CigarElement> determineConsensusCigar(
-            final List<ReadParseState> readStates, final boolean isForwardConsensus,
-            int consensusUnclippedStart, int consensusAlignmentStart)
+            final List<ReadParseState> readStates, boolean isForwardConsensus, int initialUnclippedPosition)
     {
         List<CigarElement> cigarElements = Lists.newArrayList();
 
@@ -543,23 +580,17 @@ public final class SbxRoutines
 	        - repeat process
         */
 
-        /* need to handle duplicate jitter and then decide how to compare S vs M
-        if(consensusUnclippedStart < consensusAlignmentStart)
-        {
-            cigarElements.add(new CigarElement(consensusAlignmentStart - consensusUnclippedStart, S));
-        }
-        */
-
         List<ReadParseState> activeReadStates = Lists.newArrayList(readStates);
 
         int elementLength = 0;
         CigarOperator elementOperator = null;
         boolean inAlignedBases = false; // to prevent unvalid changes back from aligned to S
         boolean inRightSoftClip = false;
+        int refPosition = initialUnclippedPosition;
 
         while(true)
         {
-            CigarOperator nextOperator = inRightSoftClip ? S : determineConsensusCigarOperator(activeReadStates, inAlignedBases);
+            CigarOperator nextOperator = inRightSoftClip ? S : determineConsensusCigarOperator(activeReadStates, inAlignedBases, refPosition);
 
             if(elementOperator == null || elementOperator != nextOperator)
             {
@@ -587,7 +618,10 @@ public final class SbxRoutines
 
             for(ReadParseState read : activeReadStates)
             {
-                // check for element type differences:
+                if(read.beforeUnclippedPosition(refPosition))
+                    continue;
+
+                // check for element type differences
 
                 // first skip past any insert if the selected element is aligned
                 if(nextOperator.consumesReferenceBases() && read.elementType() == I)
@@ -644,6 +678,9 @@ public final class SbxRoutines
                 if(activeReadStates.isEmpty())
                     break;
             }
+
+            if(consumesRefOrUnclippedBases(nextOperator))
+                refPosition += isForwardConsensus ? 1 : -1;
         }
 
         // add the last
@@ -655,13 +692,17 @@ public final class SbxRoutines
         return cigarElements;
     }
 
-    private static CigarOperator determineConsensusCigarOperator(final List<ReadParseState> readStates, boolean inAlignedBases)
+    private static CigarOperator determineConsensusCigarOperator(
+            final List<ReadParseState> readStates, boolean inAlignedBases, int refPosition)
     {
         CigarOperator operator = null;
         boolean matched = true;
 
         for(ReadParseState read : readStates)
         {
+            if(read.beforeUnclippedPosition(refPosition))
+                continue;
+
             if(operator == null)
             {
                 operator = read.elementType();
@@ -693,6 +734,9 @@ public final class SbxRoutines
 
         for(ReadParseState read : readStates)
         {
+            if(read.beforeUnclippedPosition(refPosition))
+                continue;
+
             CigarOperator readOperator = read.elementType();
 
             if(inAlignedBases && readOperator == S && read.cigarIndex() == 0) // ignore left soft-clips once the aligned section has started
@@ -704,7 +748,7 @@ public final class SbxRoutines
 
             SbxQualType qualType;
 
-            if(read.currentBaseQual() == RAW_SIMPLEX_QUAL)
+            if(read.baseQual() == RAW_SIMPLEX_QUAL)
             {
                 qualType = SbxQualType.SIMPLEX;
             }
@@ -713,7 +757,7 @@ public final class SbxRoutines
                 ++duplexCount;
 
                 if(readOperator.consumesReadBases())
-                    qualType = read.currentBaseQual() > SBX_DUPLEX_MISMATCH_QUAL ? SbxQualType.DUPLEX_HIGH_QUAL : SbxQualType.DUPLEX_LOW_QUAL;
+                    qualType = read.baseQual() > SBX_DUPLEX_MISMATCH_QUAL ? SbxQualType.DUPLEX_HIGH_QUAL : SbxQualType.DUPLEX_LOW_QUAL;
                 else
                     qualType = SbxQualType.DUPLEX_HIGH_QUAL;
             }
