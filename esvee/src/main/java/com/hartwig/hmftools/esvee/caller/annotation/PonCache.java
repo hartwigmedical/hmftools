@@ -136,10 +136,12 @@ public class PonCache
                 if(!breakend.isSgl() && breakend.isEnd()) // only looked up on the first breakend
                     continue;
 
+                /*
                 if(lastPosStart > 0 && breakend.Position < lastPosStart)
                 {
                     SV_LOGGER.error("var({}) out of order");
                 }
+                */
 
                 lastPosStart = breakend.Position;
 

@@ -54,6 +54,7 @@ public class SampleDataFiles
     public SampleDataFiles(final ConfigBuilder configBuilder, final String sampleId)
     {
         SampleDataDir = configBuilder.hasValue(SAMPLE_DIR) ? checkAddDirSeparator(configBuilder.getValue(SAMPLE_DIR)) : null;
+
         PipelineToolDirectories pipelineToolDirectories = PipelineToolDirectories.resolveToolDirectories(
                 configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
 
@@ -71,14 +72,17 @@ public class SampleDataFiles
         else
             CobaltDirectory = null;
 
-        SomaticSvVcfFile =
-                getFilename(configBuilder, SOMATIC_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.somatic.vcf.gz");
-        GermlineSvVcfFile =
-                getFilename(configBuilder, GERMLINE_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.germline.vcf.gz");
-        SomaticVcfFile =
-                getFilename(configBuilder, SOMATIC_VARIANTS, pipelineToolDirectories.paveSomaticDir(), sampleId, ".pave.somatic.vcf.gz");
-        GermlineVcfFile =
-                getFilename(configBuilder, GERMLINE_VARIANTS, pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
+        SomaticSvVcfFile = getFilename(
+                configBuilder, SOMATIC_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.somatic.vcf.gz");
+
+        GermlineSvVcfFile = getFilename(
+                configBuilder, GERMLINE_SV_VCF, pipelineToolDirectories.esveeDir(), sampleId, ".esvee.germline.vcf.gz");
+
+        SomaticVcfFile = getFilename(
+                configBuilder, SOMATIC_VARIANTS, pipelineToolDirectories.paveSomaticDir(), sampleId, ".pave.somatic.vcf.gz");
+
+        GermlineVcfFile = getFilename(
+                configBuilder, GERMLINE_VARIANTS, pipelineToolDirectories.paveGermlineDir(), sampleId, ".pave.germline.vcf.gz");
     }
 
     public boolean hasValidSampleNames(final PurpleConfig config)

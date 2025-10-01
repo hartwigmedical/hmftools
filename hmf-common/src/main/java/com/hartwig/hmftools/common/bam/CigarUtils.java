@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.bam;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -375,14 +377,29 @@ public final class CigarUtils
     {
         // shift any right-aligned inserts back to the left
         boolean modified = false;
+        boolean convertFirstInsert = false;
 
         int readIndex = 0;
 
-        for(int i = 0; i < cigarElements.size(); ++i)
+        for(int i = 0; i < cigarElements.size() - 1; ++i)
         {
             CigarElement element = cigarElements.get(i);
+            CigarElement nextElement = cigarElements.get(i + 1);
+            CigarElement prevElement = i > 0 ? cigarElements.get(i - 1) : null;
 
-            if(element.getOperator() == I)
+            boolean checkLeftShift = prevElement != null && element.getOperator() == I
+                    && prevElement.getOperator() == M && nextElement.getOperator() == M;
+
+            if(checkLeftShift)
+            {
+                // cannot shift back through the previous element, but can convert it exactly to a soft-clip - see below
+                if(element.getLength() > prevElement.getLength())
+                    checkLeftShift = false;
+                else if(element.getLength() == prevElement.getLength() && i != 1)
+                    checkLeftShift = false;
+            }
+
+            if(checkLeftShift)
             {
                 byte[] repeatBases = new byte[element.getLength()];
 
@@ -420,16 +437,32 @@ public final class CigarUtils
                         break;
 
                     ++matchedRepeatCount;
+
+                    // cannot search back through the previous element
+                    if((matchedRepeatCount + 1) * repeatBases.length > prevElement.getLength())
+                        break;
                 }
 
                 if(matchedRepeatCount > 0)
                 {
                     int alignmentShift = matchedRepeatCount * repeatBases.length;
-                    CigarElement prevElement = cigarElements.get(i - 1);
-                    prevElement = new CigarElement(prevElement.getLength() - alignmentShift, prevElement.getOperator());
+
+                    if(alignmentShift == prevElement.getLength())
+                    {
+                        if(i == 1)
+                        {
+                            // the first element will be removed and the insert converted to a soft-clip
+                            convertFirstInsert = true;
+                        }
+                        else
+                        {
+                            alignmentShift = (matchedRepeatCount - 1) * repeatBases.length;
+                        }
+                    }
+
+                    prevElement = new CigarElement(max(prevElement.getLength() - alignmentShift, 1), prevElement.getOperator());
                     cigarElements.set(i - 1, prevElement);
 
-                    CigarElement nextElement = cigarElements.get(i + 1);
                     nextElement = new CigarElement(nextElement.getLength() + alignmentShift, nextElement.getOperator());
                     cigarElements.set(i + 1, nextElement);
 
@@ -441,6 +474,13 @@ public final class CigarUtils
 
             if(element.getOperator().consumesReadBases())
                 readIndex += element.getLength();
+        }
+
+        if(convertFirstInsert)
+        {
+            cigarElements.remove(0);
+            CigarElement firstElement = cigarElements.get(0);
+            cigarElements.set(0, new CigarElement(firstElement.getLength(), S));
         }
 
         return modified;

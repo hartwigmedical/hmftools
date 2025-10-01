@@ -59,6 +59,7 @@ public class ReadParseState
     public CigarOperator elementType() { return mElementType; }
     public int elementLength() { return mElementLength; }
     public int elementIndex() { return mElementIndex; }
+    public int cigarIndex() { return mCigarIndex; }
 
     public boolean exhausted() { return mExhausted; }
 

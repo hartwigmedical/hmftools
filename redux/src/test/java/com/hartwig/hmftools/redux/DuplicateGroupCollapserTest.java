@@ -65,8 +65,8 @@ public class DuplicateGroupCollapserTest
     private void checkCollapseToKeyWithoutCoordinatesUnmappedMate(boolean firstOfPair, boolean readReversed)
     {
         SAMRecord read = SamRecordTestUtils.createSamRecord(
-                "READ_001", CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, NO_CHROMOSOME_NAME, NO_POSITION, readReversed, false,
-                null, false, NO_CIGAR);
+                "READ_001", CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, NO_CHROMOSOME_NAME, NO_POSITION,
+                readReversed, false, null, false, NO_CIGAR);
         read.setMateUnmappedFlag(true);
         read.setFirstOfPairFlag(firstOfPair);
         read.setSecondOfPairFlag(!firstOfPair);

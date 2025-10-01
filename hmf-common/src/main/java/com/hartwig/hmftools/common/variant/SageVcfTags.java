@@ -72,9 +72,6 @@ public final class SageVcfTags
 
     public static final String TINC_LEVEL = "tincLevel";
 
-    public static final String TINC_RECOVERED_FLAG = "TINC_RECOVERED";
-    public static final String TINC_RECOVERED_DESC = "Variant recovered from germline filters by TINC detection";
-
     public static final String LIST_SEPARATOR = ",";
 
     public static void writeTincLevel(final VCFHeader vcfHeader, final double tincLevel)

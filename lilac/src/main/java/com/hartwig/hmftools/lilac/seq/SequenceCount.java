@@ -158,6 +158,9 @@ public final class SequenceCount
             geneHetLociMap.put(gene, hetLociMap);
         }
 
+        if(!geneHetLociMap.containsKey(HLA_A) || !geneHetLociMap.containsKey(HLA_B) || !geneHetLociMap.containsKey(HLA_C))
+            return geneHetLociMap;
+
         // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
         // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.
         Map<Integer, Set<String>> aHetLociMap = geneHetLociMap.get(HLA_A);

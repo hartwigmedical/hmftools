@@ -1,6 +1,6 @@
 # WISP
 
-WISP estimates TF in a given sample (typically ctDNA), guided by the biomarkers identified prior anlaysis of the same patient (typically a primary tissue biopsy).   The algorithm supports data generated from both WGS or tarrgeted analyses.    
+WISP estimates TF in a given sample (typically ctDNA), guided by the biomarkers identified prior anlaysis of the same patient (typically a primary tissue biopsy).   The algorithm supports data generated from both WGS or targeted analyses.    
 
 ## Commands
 

@@ -15,6 +15,9 @@ public final class CommonVcfTags
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String REPORTED_DESC = "Variant is reported in the driver catalog";
 
+    public static final String TINC_RECOVERED_FLAG = "TINC_RECOVERED";
+    public static final String TINC_RECOVERED_DESC = "Variant recovered from germline filters by TINC detection";
+
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultValue)
     {
         if(genotype == null)

@@ -330,7 +330,7 @@ public class PurityPloidyFitter
         PPL_LOGGER.debug("building copy numbers");
         mFittedRegions.addAll(mRegionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), mObservedRegions));
 
-        copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.variants());
+        copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.somaticVariants());
 
         mCopyNumbers.addAll(copyNumberFactory.copyNumbers());
 

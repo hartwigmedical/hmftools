@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.utils;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.MHC_CLASS;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.lilac.GeneCache;
-import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
@@ -34,10 +32,9 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.jetbrains.annotations.NotNull;
 
-public class FindUniqueKmers
+public final class FindUniqueKmers
 {
     private final String mResourceDir;
-    private final MhcClass mClassType;
 
     private final GeneCache mGeneCache;
 
@@ -57,10 +54,8 @@ public class FindUniqueKmers
         mAlleleCache = new HlaAlleleCache();
         mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
-        mClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
-
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, mClassType);
-        mGeneCache = new GeneCache(mClassType, hlaTranscriptMap);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(RefGenomeVersion.V37, null);
+        mGeneCache = new GeneCache(hlaTranscriptMap);
 
         mAminoAcidSequences = Lists.newArrayList();
         mHlaYAminoAcidSequences = Lists.newArrayList();

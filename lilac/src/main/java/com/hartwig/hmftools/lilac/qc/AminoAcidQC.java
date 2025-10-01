@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOG_UNMATCHED_HAPLOTYPE_SUPPORT;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class AminoAcidQC
         UnusedAminoAcidMaxFrags = unusedAminoAcidMaxFrags;
     }
 
-    public List<String> header()
+    public static List<String> header()
     {
         return Lists.newArrayList("UnusedAminoAcids", "UnusedAminoAcidMaxFrags");
     }
@@ -38,8 +39,8 @@ public class AminoAcidQC
     }
 
     public static AminoAcidQC create(
-            final List<HlaSequenceLoci> winners, final List<HlaSequenceLoci> hlaYSequenceLoci,
-            final SequenceCount aminoAcidCount, final List<Haplotype> unmatchedHaplotypes, int totalFragments)
+            final Collection<HlaSequenceLoci> winners, final Collection<HlaSequenceLoci> hlaYSequenceLoci,
+            final SequenceCount aminoAcidCount, final Collection<Haplotype> unmatchedHaplotypes)
     {
         int unused = 0;
         int largest = 0;
@@ -57,12 +58,11 @@ public class AminoAcidQC
             Set<String> actualSequences = winners.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
-            Set<String> hlaYSequences = hlaYSequenceLoci.stream()
+            Set<String> hlaYSequences = hlaYSequenceLoci == null ? null : hlaYSequenceLoci.stream()
                     .filter(x -> locus < x.getSequences().size()).map(x -> x.sequence(locus)).collect(Collectors.toSet());
 
             if(actualSequences.stream().anyMatch(x -> x.equals(WILD_STR)))
                 continue;
-
 
             for(Multiset.Entry<String> entry : expected.entrySet())
             {
@@ -71,7 +71,7 @@ public class AminoAcidQC
                 if(actualSequences.contains(aminoAcid))
                     continue;
 
-                if(hlaYSequences.contains(aminoAcid))
+                if(hlaYSequences != null && hlaYSequences.contains(aminoAcid))
                     continue;
 
                 int count = entry.getCount();

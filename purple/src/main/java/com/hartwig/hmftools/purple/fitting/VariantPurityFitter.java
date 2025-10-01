@@ -76,7 +76,7 @@ public class VariantPurityFitter
             PPL_LOGGER.debug("somatic fitting variants({})", mFittingSomatics.size());
         }
 
-        setSvSummary(mSampleData.SvCache.variants());
+        setSvSummary(mSampleData.SvCache.somaticVariants());
         setSomaticSummary(mFittingSomatics);
 
         if(mSomaticHotspotCount > 0 || mAlleleReadCountTotal >= MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT)

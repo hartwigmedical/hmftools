@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -24,7 +25,6 @@ import com.hartwig.hmftools.lilac.CohortFrequency;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaExonSequences;
-import com.hartwig.hmftools.lilac.seq.HlaExonSequences.ExonSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 /* Rank candidates by:
@@ -47,7 +47,7 @@ public class ComplexCoverageRanking
     }
 
     public List<ComplexCoverage> rankCandidates(
-            final List<ComplexCoverage> complexes, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final List<ComplexCoverage> complexes, final Set<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
     {
         if(complexes.isEmpty())
             return complexes;
@@ -90,7 +90,7 @@ public class ComplexCoverageRanking
     }
 
     private void calcScore(
-            final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
+            final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles, final Collection<HlaSequenceLoci> sequences)
     {
         calcCohortFrequency(complexCoverage);
         calcRecoveryPenalty(complexCoverage, recoveredAlleles);
@@ -98,7 +98,7 @@ public class ComplexCoverageRanking
         calcComplexScore(complexCoverage);
     }
 
-    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final List<HlaAllele> recoveredAlleles)
+    private static void calcRecoveryPenalty(final ComplexCoverage complexCoverage, final Set<HlaAllele> recoveredAlleles)
     {
         int recoveredCount = (int) complexCoverage.getAlleles().stream()
                 .filter(recoveredAlleles::contains)
@@ -172,26 +172,26 @@ public class ComplexCoverageRanking
         if(exonSequencesLookup == null || exonSequencesLookup.isEmpty())
             return 0;
 
-        Map<Integer, List<ExonSequence>> exonAcids = Maps.newTreeMap();
+        Map<Integer, List<HlaExonSequences.ExonSequence>> exonAcids = Maps.newTreeMap();
         for(HlaAllele allele : complexCoverage.getAlleles())
         {
-            List<ExonSequence> exonSeqs = exonSequencesLookup.get(allele.asFourDigit()).ExonSequences;
+            List<HlaExonSequences.ExonSequence> exonSeqs = exonSequencesLookup.get(allele.asFourDigit()).ExonSequences;
             for(int i = 0; i < exonSeqs.size(); i++)
             {
-                ExonSequence exonSeq = exonSeqs.get(i);
+                HlaExonSequences.ExonSequence exonSeq = exonSeqs.get(i);
                 exonAcids.computeIfAbsent(i, k -> Lists.newArrayList());
                 exonAcids.get(i).add(exonSeq);
             }
         }
 
         int uniqExonAcidsCount = 0;
-        for(List<ExonSequence> acids : exonAcids.values())
+        for(List<HlaExonSequences.ExonSequence> acids : exonAcids.values())
         {
             uniqExonAcidsCount++;
             Collections.sort(acids, Comparator.comparingInt(x -> x.hasWildcards() ? 0 : 1));
             for(int i = 1; i < acids.size(); i++)
             {
-                ExonSequence seq1 = acids.get(i);
+                HlaExonSequences.ExonSequence seq1 = acids.get(i);
                 List<String> acid1 = seq1.sequences();
                 boolean isUniq = true;
                 for(int j = 0; j < acids.size(); j++)
@@ -199,7 +199,7 @@ public class ComplexCoverageRanking
                     if(i == j)
                         continue;
 
-                    ExonSequence seq2 = acids.get(j);
+                    HlaExonSequences.ExonSequence seq2 = acids.get(j);
                     if(j > i && !seq2.hasWildcards())
                         break;
 

@@ -1,15 +1,47 @@
 package com.hartwig.hmftools.lilac.hla;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
+import static com.hartwig.hmftools.lilac.MhcClass.CLASS_1;
+import static com.hartwig.hmftools.lilac.MhcClass.CLASS_2;
+
+import com.hartwig.hmftools.lilac.MhcClass;
 
 public enum HlaGene
 {
-    HLA_A,
-    HLA_B,
-    HLA_C,
-    HLA_Y,
-    HLA_H,
-    NONE; // used for debugging
+    HLA_A(CLASS_1, false),
+    HLA_B(CLASS_1, false),
+    HLA_C(CLASS_1, false),
+
+    HLA_Y(CLASS_1, true),
+    HLA_H(CLASS_1, true),
+
+    HLA_DQB1(CLASS_2, false),
+    HLA_DPA1(CLASS_2, false),
+    HLA_DPB1(CLASS_2, false),
+    HLA_DQA1(CLASS_2, false),
+    HLA_DRB1(CLASS_2, false),
+
+    NONE(CLASS_1, false, true); // used for debugging
+
+    private final MhcClass mMhcClass;
+    private final boolean mIsPseudo;
+    private final boolean mIsDebug;
+
+    HlaGene(final MhcClass mhcClass, final boolean isPseudo)
+    {
+        this(mhcClass, isPseudo, false);
+    }
+
+    HlaGene(final MhcClass mhcClass, final boolean isPseudo, final boolean isDebug)
+    {
+        mMhcClass = mhcClass;
+        mIsPseudo = isPseudo;
+        mIsDebug = isDebug;
+    }
+
+    public MhcClass mhcClass() { return mMhcClass; }
+    public boolean isPseudo() { return mIsPseudo; }
+    public boolean isDebug() { return mIsDebug; }
 
     public static HlaGene fromString(final String s)
     {

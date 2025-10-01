@@ -121,7 +121,6 @@ public final class SvVcfTags
     public static final String REPEAT_MASK_COVERAGE = "INSRMP";
     public static final String REPEAT_MASK_COVERAGE_DESC = "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat";
 
-
     // set by Purple
     public static final String INFERRED = "INFERRED";
     public static final String INFERRED_DESC = "Breakend inferred from copy number transition";

@@ -10,9 +10,11 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
@@ -88,17 +90,79 @@ public class SbxDuplexIndelBuilder
 
     public List<SbxDuplexIndel> duplexIndels() { return mDuplexIndels; }
 
+    private int tryRightAligningRepeat(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, int duplexIndelIndexEnd)
+    {
+        ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
+        moveTo(readBaseInfo, duplexIndelIndexEnd + 1);
+
+        int repeatLength = repeatBases.length;
+        int repeatStrIndex = 0;
+        int repeatCount = 0;
+
+        while(readBaseInfo.Index >= 0)
+        {
+            if(!readBaseInfo.Valid)
+                break;
+
+            if(readBaseInfo.CigarOp != I && readBaseInfo.CigarOp != M)
+                break;
+
+            if(repeatBases[repeatStrIndex] != readBaseInfo.Base)
+                break;
+
+            ++repeatStrIndex;
+
+            if(repeatStrIndex == repeatLength)
+            {
+                ++repeatCount;
+                repeatStrIndex = 0;
+            }
+
+            moveNext(readBaseInfo);
+        }
+
+        return repeatCount * repeatLength;
+    }
+
     private void processDuplexIndel(final ReadBaseInfo readBaseInfo, int duplexIndelIndexStart, int duplexIndelIndexEnd)
     {
         int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
         byte[] repeatBases = findDuplexMismatchRepeat(mRecord.getReadBases(), duplexIndelIndexStart, duplexIndelIndexEnd);
         int repeatLength = repeatBases.length;
 
-        // search backwards and within inserted bases to find the start of the repeat
+        if(mRecord.getReadNegativeStrandFlag())
+        {
+            int rightShift = tryRightAligningRepeat(readBaseInfo, repeatBases, duplexIndelIndexEnd);
+
+            if(rightShift > 0)
+            {
+                duplexIndelIndexStart += rightShift;
+                duplexIndelIndexEnd += rightShift;
+                moveTo(readBaseInfo, duplexIndelIndexStart);
+            }
+        }
+
         int repeatStrIndex = repeatLength - 1;
         int insertRepeatCount = 0;
-        boolean duplexMismatchInInsert = readBaseInfo.CigarOp == I;
-        int firstReadInsertIndex = readBaseInfo.CigarOp == I ? readBaseInfo.Index : -1;
+
+        // count inserted bases within the duplex mismatch bases
+        int duplexMismatchInsertCount = 0;
+
+        while(readBaseInfo.Index <= duplexIndelIndexEnd)
+        {
+            if(readBaseInfo.CigarOp == I)
+                ++duplexMismatchInsertCount;
+            else
+                break;
+
+            moveNext(readBaseInfo);
+        }
+
+        boolean duplexMismatchInInsert = duplexMismatchInsertCount > 0;
+        int firstReadInsertIndex = duplexMismatchInInsert ? duplexIndelIndexStart : -1;
+
+        // search backwards and within inserted bases to find the start of the repeat
+        moveTo(readBaseInfo, duplexIndelIndexStart);
 
         while(readBaseInfo.Index >= 0)
         {
@@ -131,7 +195,7 @@ public class SbxDuplexIndelBuilder
 
         int insertRepeatLength = insertRepeatCount * repeatLength;
 
-        int totalRepeatBaseLength = insertRepeatLength + duplexMismatchLength;
+        int totalRepeatBaseLength = insertRepeatLength + duplexMismatchLength - duplexMismatchInsertCount;
 
         int trimLength = insertRepeatLength > 0 ? min(insertRepeatLength, duplexMismatchLength) : duplexMismatchLength;
 
@@ -152,7 +216,7 @@ public class SbxDuplexIndelBuilder
         if(!readBaseInfo.Valid)
             return;
 
-        List<Integer> lowQualIndices = Lists.newArrayListWithExpectedSize(lowBaseQualCount);
+        Set<Integer> lowQualIndices = Sets.newHashSetWithExpectedSize(lowBaseQualCount);
         int remainingLowQualCount = lowBaseQualCount;
         int addedLowQualAtStartCount = 0;
 

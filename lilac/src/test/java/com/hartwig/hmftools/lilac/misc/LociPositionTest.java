@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.lilac.MhcClass;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 import org.junit.Test;
@@ -24,7 +24,7 @@ public class LociPositionTest
     @Test
     public void testNucleotideLocus()
     {
-        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, MhcClass.CLASS_1);
+        Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(V37, GeneSelector.MHC_CLASS_1);
 
         List<TranscriptData> transcripts = hlaTranscriptMap.values().stream().toList();
 
@@ -54,7 +54,7 @@ public class LociPositionTest
 
         hlaTranscriptMap.clear();
 
-        hlaTranscriptMap = loadHlaTranscripts(V38, MhcClass.CLASS_1);
+        hlaTranscriptMap = loadHlaTranscripts(V38, GeneSelector.MHC_CLASS_1);
 
         transcripts = hlaTranscriptMap.values().stream().toList();
 

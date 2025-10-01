@@ -4,10 +4,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_THRESHOLD;
-import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.loadHlaTranscripts;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
@@ -31,9 +29,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.GeneCache;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.LilacApplication;
 import com.hartwig.hmftools.lilac.LilacConfig;
-import com.hartwig.hmftools.lilac.MhcClass;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.ResultsWriter;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
@@ -72,10 +70,10 @@ public class LilacAppTest
         if(GENE_CACHE != null)
             return;
 
-        GENE_CACHE = new GeneCache(MhcClass.CLASS_1, loadHlaTranscripts(V37, MhcClass.CLASS_1));
-        A_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
-        B_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
-        C_EXON_BOUNDARIES.addAll(GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
+        GENE_CACHE = new GeneCache(loadHlaTranscripts(V37, GeneSelector.MHC_CLASS_1));
+        GENE_EXON_BOUNDARIES.put(HLA_A, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_A));
+        GENE_EXON_BOUNDARIES.put(HLA_B, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_B));
+        GENE_EXON_BOUNDARIES.put(HLA_C, GENE_CACHE.AminoAcidExonBoundaries.get(HLA_C));
     }
 
     @Test

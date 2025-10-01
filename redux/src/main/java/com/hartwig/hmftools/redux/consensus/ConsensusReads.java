@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -118,7 +119,7 @@ public class ConsensusReads
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
-                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId, templateRead.getFirstOfPairFlag());
+                SAMRecord consensusRead = buildFromRead(primaryRead, consensusReadId, SamRecordUtils.firstInPair(templateRead));
 
                 return new ConsensusReadInfo(consensusRead, templateRead, consensusState.outcome());
             }

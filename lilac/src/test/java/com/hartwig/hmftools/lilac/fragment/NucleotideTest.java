@@ -2,9 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
-import static com.hartwig.hmftools.lilac.ReferenceData.A_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.B_EXON_BOUNDARIES;
-import static com.hartwig.hmftools.lilac.ReferenceData.C_EXON_BOUNDARIES;
+import static com.hartwig.hmftools.lilac.ReferenceData.GENE_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.app.LilacAppTest.buildGeneCache;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
@@ -53,7 +51,7 @@ public class NucleotideTest
     {
         buildGeneCache();
 
-        NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
+        NucleotideGeneEnrichment enricher = new NucleotideGeneEnrichment(GENE_EXON_BOUNDARIES);
 
         List<Integer> indices = Lists.newArrayList();
         indices.add(337);
@@ -149,7 +147,7 @@ public class NucleotideTest
 
     private static void assertGene(
             final NucleotideGeneEnrichment enricher,
-            final Set<HlaGene> expectedGenes, final HlaGene alignedGene, final List<Integer> aminoAcideIndices)
+            final Set<HlaGene> expectedGenes, final HlaGene alignedGene, final Iterable<Integer> aminoAcideIndices)
     {
         Fragment fragment = create(alignedGene, expandIndices(aminoAcideIndices));
 

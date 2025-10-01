@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.redux.common;
 
-import static java.lang.String.format;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -26,17 +26,5 @@ public class ReadInfo
                 mRead.getReferenceName(), mRead.getAlignmentStart(), id(), mCoordinates);
     }
 
-    public static String readToString(final SAMRecord read)
-    {
-        if(read.getReadPairedFlag())
-        {
-            return format("id(%s) coords(%s:%d-%d) isPaired(true) cigar(%s) mate(%s:%d) flags(%d)",
-                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                    read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
-        }
-
-        return format("id(%s) coords(%s:%d-%d) isPaired(false) cigar(%s) flags(%d)",
-                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getFlags());
-    }
+    public static String readToString(final SAMRecord read) { return SamRecordUtils.readToString(read); }
 }

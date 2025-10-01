@@ -329,10 +329,10 @@ public class ConsensusReadsTest
 
         int posStart = REF_BASES.length() - 5;
         String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
-        reads.add(createSamRecord(nextReadId(), posStart, readBases1, "2M1D2M5S", false));
+        reads.add(createSamRecord(nextReadId(), posStart, readBases1, "3M1D2M5S", false));
 
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
-        reads.add(createSamRecord(nextReadId(), posStart, readBases2, "1M1D3M5S", false));
+        reads.add(createSamRecord(nextReadId(), posStart, readBases2, "2M1D3M5S", false));
 
         ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);
@@ -366,10 +366,10 @@ public class ConsensusReadsTest
         List<SAMRecord> reads = Lists.newArrayList();
 
         String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
-        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S2M1D2M", false));
+        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S2M1D3M", false));
 
         String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
-        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D3M", false));
+        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D4M", false));
 
         ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = createConsensusRead(consensusReads, reads, UMI_ID_1);

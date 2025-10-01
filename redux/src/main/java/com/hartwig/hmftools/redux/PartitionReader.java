@@ -204,7 +204,15 @@ public class PartitionReader
     {
         if(isSbx())
         {
-            stripDuplexIndels(read);
+            try
+            {
+                stripDuplexIndels(read);
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("preprocess read({}) error: {}", readToString(read), e.toString());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -221,16 +229,23 @@ public class PartitionReader
             finaliseRead(duplicateGroup.primaryRead());
     }
 
-    private void finaliseRead(final SAMRecord record)
+    private void finaliseRead(final SAMRecord read)
     {
         // TODO: make an interface for seq-tech routines
         if(isSbx())
         {
-            SbxRoutines.finaliseRead(mConfig.RefGenome, record);
+            try
+            {
+                SbxRoutines.finaliseRead(mConfig.RefGenome, read);
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("finaluse read error: {}", readToString(read));
+            }
         }
         else if(isUltima())
         {
-            UltimaRoutines.finaliseRead(mConfig.RefGenome, record);
+            UltimaRoutines.finaliseRead(mConfig.RefGenome, read);
         }
     }
 
@@ -301,6 +316,7 @@ public class PartitionReader
 
             if(!internallyUnmapped)
             {
+                mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
                 mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
 
                 boolean fullyUnmapped = fullyUnmapped(read);

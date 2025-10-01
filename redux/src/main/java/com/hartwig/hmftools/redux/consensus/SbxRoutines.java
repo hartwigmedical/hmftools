@@ -38,13 +38,10 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelI
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBase;
 import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBaseCount;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
-import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.deleteOrSplit;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -55,12 +52,14 @@ import static htsjdk.samtools.CigarOperator.X;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.redux.ReduxConfig;
@@ -105,6 +104,9 @@ public final class SbxRoutines
         if(duplexIndelIndices.isEmpty())
             return;
 
+        if(record.getReadNegativeStrandFlag())
+            duplexIndelIndices = reverseDuplexIndelIndices(duplexIndelIndices, record.getReadBases().length);
+
         SbxDuplexIndelBuilder builder = new SbxDuplexIndelBuilder(record, duplexIndelIndices);
 
         List<SbxDuplexIndel> duplexIndels = builder.duplexIndels();
@@ -112,9 +114,19 @@ public final class SbxRoutines
         if(duplexIndels.isEmpty())
             return;
 
-        int strippedBases = duplexIndels.stream().mapToInt(x -> x.deletedBaseCount()).sum();
+        // gather unique deleted indices - these can be present in multiple duplex indels
+        Set<Integer> netStrippedBases = Sets.newHashSet();
+
+        for(SbxDuplexIndel duplexIndel : duplexIndels)
+        {
+            for(int i = duplexIndel.DeletedIndelIndexStart; i <= duplexIndel.DeletedIndelIndexEnd; ++i)
+            {
+                netStrippedBases.add(i);
+            }
+        }
+
         int oldBaseLength = record.getReadBases().length;
-        int newBaseLength = record.getReadBases().length - strippedBases;
+        int newBaseLength = record.getReadBases().length - netStrippedBases.size();
 
         byte[] readBases = new byte[newBaseLength];
         byte[] readQuals = new byte[newBaseLength];
@@ -122,8 +134,7 @@ public final class SbxRoutines
         List<CigarElement> oldCigarElements = record.getCigar().getCigarElements();
         List<CigarElement> newCigarElements = Lists.newArrayListWithCapacity(oldCigarElements.size());
 
-        int duplexIndelIndex = 0;
-        SbxDuplexIndel duplexIndel = duplexIndels.get(duplexIndelIndex);
+        int minDuplexIndelIndex = 0;
         int indelTrimmedCount = 0;
 
         int oldCigarIndex = 0;
@@ -137,8 +148,6 @@ public final class SbxRoutines
         int oldInsertedBases = 0;
 
         int newReadIndex = 0;
-
-        int totalDeletedBases = 0;
 
         for(int oldReadIndex = 0; oldReadIndex < oldBaseLength; ++oldCigarElementIndex)
         {
@@ -158,41 +167,50 @@ public final class SbxRoutines
 
             boolean isStrippedIndelBase = false;
             boolean isLowQualBase = false;
+            boolean withinDuplexIndelBounds = false;
+
             int effectReadIndex = newReadIndex + indelTrimmedCount; // factoring out trimmed bases
-            boolean withinDuplexIndelBounds = duplexIndel != null && duplexIndel.withinBounds (effectReadIndex);
 
-            if(withinDuplexIndelBounds && (oldElement.getOperator().consumesReadBases()))
+            if(oldElement.getOperator().consumesReadBases())
             {
-                if(duplexIndel.isLowQualBase(effectReadIndex))
-                {
-                    isLowQualBase = true;
-                }
-                else if(effectReadIndex >= duplexIndel.DeletedIndelIndexStart && effectReadIndex <= duplexIndel.DeletedIndelIndexEnd)
-                {
-                    // skip over stripped indel bases
-                    isStrippedIndelBase = true;
-                    ++indelTrimmedCount;
-                }
+                int i = minDuplexIndelIndex;
+                int firstActiveIndex = -1;
 
-                if(effectReadIndex >= duplexIndel.DuplexIndelIndexEnd)
+                for(; i < duplexIndels.size(); ++i)
                 {
-                    ++duplexIndelIndex;
-                    totalDeletedBases += duplexIndel.deletedBaseCount();
+                    SbxDuplexIndel duplexIndel = duplexIndels.get(i);
 
-                    if(duplexIndelIndex < duplexIndels.size())
+                    if(effectReadIndex > duplexIndel.DuplexIndelIndexEnd)
+                        continue;
+
+                    if(firstActiveIndex < 0)
+                        firstActiveIndex = i;
+
+                    if(!duplexIndel.withinBounds(effectReadIndex))
+                        continue;
+
+                    withinDuplexIndelBounds = true;
+
+                    if(duplexIndel.withinDeleteBounds(effectReadIndex))
                     {
-                        duplexIndel = duplexIndels.get(duplexIndelIndex);
-                        indelTrimmedCount = 0;
-
-                        // factor in deleted bases from prior stripped indels - using totalDeletedBases
-                        if(totalDeletedBases > 0)
-                            duplexIndel = new SbxDuplexIndel(duplexIndel, -totalDeletedBases);
+                        // skip over stripped indel bases
+                        isStrippedIndelBase = true;
+                        break;
                     }
-                    else
+                    if(duplexIndel.isLowQualBase(effectReadIndex))
                     {
-                        duplexIndel = null;
+                        isLowQualBase = true;
                     }
                 }
+
+                if(firstActiveIndex > 0)
+                    minDuplexIndelIndex = firstActiveIndex; // to avoid re-checking duplex indels which have been fully processed
+            }
+
+            if(isStrippedIndelBase)
+            {
+                ++indelTrimmedCount;
+                isLowQualBase = false;
             }
 
             if(!isStrippedIndelBase)
@@ -215,8 +233,8 @@ public final class SbxRoutines
             {
                 if(!isStrippedIndelBase)
                 {
-                    // if(newReadIndex >= readBases.length || oldReadIndex >= record.getReadBases().length)
-                    //    break;
+                    if(newReadIndex >= readBases.length || oldReadIndex >= record.getReadBases().length)
+                        break;
 
                     readBases[newReadIndex] = record.getReadBases()[oldReadIndex];
 
@@ -240,6 +258,12 @@ public final class SbxRoutines
 
         // add last
         newCigarElements.add(new CigarElement(currentCigarLength, curentCigarOp));
+
+        // convert any initial insert to soft-clip, as keeping with alignment expectations
+        if(newCigarElements.get(0).getOperator() == I)
+            newCigarElements.set(0, new CigarElement(newCigarElements.get(0).getLength(), S));
+
+        checkLeftAlignment(newCigarElements, readBases);
 
         int newInsertCount = 0;
         int newInsertedBases = 0;
@@ -274,8 +298,6 @@ public final class SbxRoutines
         record.setReadBases(readBases);
         record.setBaseQualities(readQuals);
 
-        checkLeftAlignment(newCigarElements, readBases);
-
         record.setCigar(new Cigar(newCigarElements));
 
         if(ReduxConfig.RunChecks)
@@ -287,6 +309,18 @@ public final class SbxRoutines
                 RD_LOGGER.debug("invalid read({}) reason({}) details: {}", record.getReadName(), validReason, readToString(record));
             }
         }
+    }
+
+    private static List<Integer> reverseDuplexIndelIndices(List<Integer> duplexIndelIndices, int readLength)
+    {
+        List<Integer> newIndices = Lists.newArrayListWithCapacity(duplexIndelIndices.size());
+
+        for(Integer index : duplexIndelIndices)
+        {
+            newIndices.add(0, readLength - index - 1);
+        }
+
+        return newIndices;
     }
 
     public static BaseQualPair determineBaseAndQual(
@@ -423,8 +457,19 @@ public final class SbxRoutines
         {
             CigarElement element = cigarElements.get(cigarIndex);
 
-            // simplest scenario is where all reads agree about this next element
-            indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+            //try
+            //{
+                indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, false, isFirstInPair);
+//            }
+//            catch(Exception e)
+//            {
+//                RD_LOGGER.error("consensus({}:{}) reads({}) failed to add next cigar element({}{}) from baseIndex({})",
+//                        consensusState.Chromosome, consensusAlignmentStart, readStates.size(),
+//                        element.getLength(), element.getOperator(), baseIndex);
+//                e.printStackTrace();
+//                consensusState.setOutcome(INDEL_FAIL);
+//                break;
+//            }
 
             if(consensusState.outcome() == INDEL_FAIL)
                 break;
@@ -509,10 +554,12 @@ public final class SbxRoutines
 
         int elementLength = 0;
         CigarOperator elementOperator = null;
+        boolean inAlignedBases = false; // to prevent unvalid changes back from aligned to S
+        boolean inRightSoftClip = false;
 
         while(true)
         {
-            CigarOperator nextOperator = determineConsensusCigarOperator(activeReadStates);
+            CigarOperator nextOperator = inRightSoftClip ? S : determineConsensusCigarOperator(activeReadStates, inAlignedBases);
 
             if(elementOperator == null || elementOperator != nextOperator)
             {
@@ -526,17 +573,24 @@ public final class SbxRoutines
 
                 elementLength = 0;
                 elementOperator = nextOperator;
+
+                if(!inAlignedBases && elementOperator == M)
+                    inAlignedBases = true;
+                else if(inAlignedBases && elementOperator == S)
+                    inRightSoftClip = true;
             }
 
             ++elementLength;
 
             // move reads ahead depending on whether they agree with the consensus or not
+            boolean hasExhausted = false;
+
             for(ReadParseState read : activeReadStates)
             {
                 // check for element type differences:
 
                 // first skip past any insert if the selected element is aligned
-                if(nextOperator == M && read.elementType() == I)
+                if(nextOperator.consumesReferenceBases() && read.elementType() == I)
                     read.skipInsertElement();
 
                 boolean moveNext = true;
@@ -572,19 +626,24 @@ public final class SbxRoutines
 
                 if(moveNext)
                     read.moveNextBase();
+
+                hasExhausted |= read.exhausted();
             }
 
-            int index = 0;
-            while(index < activeReadStates.size())
+            if(hasExhausted)
             {
-                if(activeReadStates.get(index).exhausted())
-                    activeReadStates.remove(index);
-                else
-                    ++index;
-            }
+                int index = 0;
+                while(index < activeReadStates.size())
+                {
+                    if(activeReadStates.get(index).exhausted())
+                        activeReadStates.remove(index);
+                    else
+                        ++index;
+                }
 
-            if(activeReadStates.isEmpty())
-                break;
+                if(activeReadStates.isEmpty())
+                    break;
+            }
         }
 
         // add the last
@@ -596,7 +655,7 @@ public final class SbxRoutines
         return cigarElements;
     }
 
-    private static CigarOperator determineConsensusCigarOperator(final List<ReadParseState> readStates)
+    private static CigarOperator determineConsensusCigarOperator(final List<ReadParseState> readStates, boolean inAlignedBases)
     {
         CigarOperator operator = null;
         boolean matched = true;
@@ -629,13 +688,21 @@ public final class SbxRoutines
         // Otherwise, choose the most ref-like Cigar possible (e.g. strip I and D cigar elements)
         Map<String,Integer> consensusTypeCounts = Maps.newHashMap();
         int duplexCount = 0;
+        int validReadCount = 0;
         boolean hasAligned = false;
 
         for(ReadParseState read : readStates)
         {
-            SbxQualType qualType;
             CigarOperator readOperator = read.elementType();
+
+            if(inAlignedBases && readOperator == S && read.cigarIndex() == 0) // ignore left soft-clips once the aligned section has started
+                continue;
+
+            ++validReadCount;
+
             hasAligned |= readOperator == M;
+
+            SbxQualType qualType;
 
             if(read.currentBaseQual() == RAW_SIMPLEX_QUAL)
             {
@@ -659,7 +726,7 @@ public final class SbxRoutines
         CigarOperator consensusOperator = null;
         if(duplexCount == 0)
         {
-            double minCount = readStates.size() * 0.5;
+            double minCount = validReadCount * 0.5;
             consensusOperator = getMajorityOperatorByType(consensusTypeCounts, SbxQualType.SIMPLEX, minCount);
         }
         else

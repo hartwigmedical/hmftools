@@ -102,9 +102,6 @@ public class FilterConstants
     public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
     public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
 
-    public static final double GERMLINE_AF_THRESHOLD = 0.1;
-    public static final double GERMLINE_AD_THRESHOLD = 0.01;
-
     public static final int PANEL_INCLUSION_BUFFER = 1000;
 
     public static FilterConstants from(final ConfigBuilder configBuilder)

@@ -122,7 +122,8 @@ public interface DuplicateGroupCollapser
 
         String upperOrientation = fragmentCoords.OrientUpper == FORWARD ? "F" : "R";
         String isLowerString = fragmentCoords.ReadIsLower ? "L" : "U";
-        return format("%s:%s:%s:%s:%s%s", fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix);
+        return format("%s:%s:%s:%s:%s%s",
+                fragmentCoords.ChromsomeLower, lowerOrientation, fragmentCoords.ChromsomeUpper, upperOrientation, isLowerString, suppSuffix);
     }
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
