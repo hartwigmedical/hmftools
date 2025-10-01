@@ -85,7 +85,7 @@
         <paddle.version>1.1</paddle.version>
         <panel-builder.version>1.0</panel-builder.version>
         <patient-db.version>2.2</patient-db.version>
-        <pave.version>1.8</pave.version>
+        <pave.version>1.8.1</pave.version>
         <peach.version>2.0</peach.version>
         <purple.version>4.3</purple.version>
         <redux.version>2.0</redux.version>
