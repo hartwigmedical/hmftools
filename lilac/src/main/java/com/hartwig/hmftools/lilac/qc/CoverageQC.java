@@ -142,7 +142,7 @@ public class CoverageQC
                 winner.UniqueCoverage, winner.SharedCoverage, winner.WildCoverage);
     }
 
-    public static List<String> header()
+    public List<String> header()
     {
         List<String> headerStrs = GENE_CACHE.GeneNames.stream()
                 .filter(x -> !x.isPseudo())

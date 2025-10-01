@@ -41,7 +41,7 @@ public class BamQC
 
     public int totalLowCoverage() { return GeneLowCoverageCounts.values().stream().mapToInt(Integer::intValue).sum(); }
 
-    public static List<String> header()
+    public List<String> header()
     {
         List<String> headerStrs = Lists.newArrayList("DiscardedIndels", "DiscardedIndelMaxFrags", "DiscardedAlignmentFragments");
         GENE_CACHE.GeneNames.stream().filter(x -> !x.isPseudo()).forEach(gene -> headerStrs.add(gene.shortName() + "_LowCoverageBases"));

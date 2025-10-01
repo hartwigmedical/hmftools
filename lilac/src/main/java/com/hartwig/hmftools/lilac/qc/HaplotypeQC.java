@@ -47,7 +47,7 @@ public class HaplotypeQC
         UnmatchedHaplotypes = haplotypes;
     }
 
-    public static List<String> header()
+    public List<String> header()
     {
         return Lists.newArrayList("UnusedHaplotypes", "UnusedHaplotypeMaxFrags");
     }
@@ -140,7 +140,7 @@ public class HaplotypeQC
     }
 
     public static List<Haplotype> unmatchedHaplotype(
-            final PhasedEvidence evidence, final int minEvidence, final Collection<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount,
+            final PhasedEvidence evidence, int minEvidence, final Collection<HlaSequenceLoci> winners, final SequenceCount aminoAcidCount,
             final Collection<HlaSequenceLoci> hlaYSequences)
     {
         // look through all phased evidence for AA sequences which are not supported by the winning alleles
