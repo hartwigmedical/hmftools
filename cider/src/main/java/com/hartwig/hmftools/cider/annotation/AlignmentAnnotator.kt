@@ -66,6 +66,7 @@ class AlignmentAnnotator
                 continue
             }
 
+            // TODO? this should probably be keyed by more data to account for genes on contigs which are not the main contigs
             val key = Pair(genomicLocation.bases.chromosome(), genomicLocation.strand)
             vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
 
