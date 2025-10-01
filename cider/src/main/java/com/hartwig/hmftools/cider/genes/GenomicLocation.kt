@@ -9,31 +9,22 @@ data class GenomicLocation(val chromosome: String,
                            val posStart: Int,
                            val posEnd: Int,
                            val strand: Strand,
-                           val altAssemblyName: String? = null)
+                           val inPrimaryAssembly: Boolean = true)
 {
     init
     {
         require(posStart <= posEnd)
-        require(altAssemblyName == null || altAssemblyName.isNotEmpty())
     }
-
-    val inPrimaryAssembly: Boolean get() { return altAssemblyName == null }
 
     fun baseLength(): Int
     {
         return posEnd - posStart + 1
     }
 
-    /*
-    operator fun compareTo(other: GenomicLocation): Int
-    {
-        val baseRegionCompare = super.compareTo(other)
-        return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
-    }*/
-
     override fun toString(): String
     {
-        return "${if (inPrimaryAssembly) "" else ("$altAssemblyName ") }${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
+        val chr = if (inPrimaryAssembly) chromosome else "$chromosome*"
+        return "${chr}:${posStart}-${posEnd}(${strand.asChar()})"
     }
 
     companion object

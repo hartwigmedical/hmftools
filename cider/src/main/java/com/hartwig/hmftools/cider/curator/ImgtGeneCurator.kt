@@ -4,14 +4,8 @@ import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.UnixStyleUsageFormatter
-import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.CiderConstants.BLAST_REF_GENOME_VERSION
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.toCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil
-import com.hartwig.hmftools.cider.AlignmentUtil.BLASTN_PRIMARY_ASSEMBLY_NAME
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_EVALUE_CUTOFF
-import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.BLASTN_MAX_MISMATCH
+import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.ALIGNMENT_MAX_MISMATCH
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKDEL_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IGKINTR_SEQ
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LENGTH
@@ -19,39 +13,35 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.common.blastn.BlastnMatch
+import com.hartwig.hmftools.cider.genes.IgTcrFunctionality
+import com.hartwig.hmftools.cider.genes.IgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrGene.Companion.toCommonIgTcrGene
+import com.hartwig.hmftools.cider.genes.IgTcrRegion
+import com.hartwig.hmftools.common.bwa.BwaUtils
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.gene.GeneData
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.utils.Doubles
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.config.Configurator
 import java.io.File
-import java.util.Comparator
 import kotlin.system.exitProcess
 
 const val ANCHOR_DNA_LENGTH: Int = 30
 
+// TODO: remove all blast references
+
 // This utility processes IMGT IG/TCR genes into format CIDER can use.
-// It uses BLASTN combined with ensembl to find the genomic location of each IG/TCR genes.
+// It uses BWA-MEM combined with ensembl to find the genomic location of each IG/TCR genes.
 // Download the IMGT sequences from the IMGT website.
-//
-// example usage for v38 genome:
-// java -cp VjTemplateGeneWriter
-// -imgt IMGT_genes.fasta
-// -blast /tools/ncbi-blast
-// -blast_db /data/blast_db/
-// -ensembl_data_dir /data/resources/public/ensembl_data_cache/38
-// -ref_genome /data/resources/bucket/reference_genome/38/GRCh38_masked_exclusions_alts_hlas.fasta
-// -ref_genome_version 38
-// -output igtcr_gene.38.tsv
-//
 // Format for the fasta line is F+ORF+in-frame P nucleotide sequences with IMGT gaps
 // See IMGT doc: https://www.imgt.org/genedb/doc
 class ImgtGeneCurator
@@ -59,20 +49,14 @@ class ImgtGeneCurator
     @Parameter(names = ["-imgt"], required = true, description = "Input IMGT fasta file")
     lateinit var inputImgtFasta: String
 
-    @Parameter(names = ["-blast"], required = true, description = "Location of blast installation")
-    lateinit var blast: String
-
-    @Parameter(names = ["-blast_db"], required = true, description = "Location of blast database")
-    lateinit var blastDb: String
-
     @Parameter(names = ["-" + EnsemblDataCache.ENSEMBL_DATA_DIR], required = true, description = EnsemblDataCache.ENSEMBL_DATA_DIR_CFG)
     lateinit var ensemblDataDir: String
 
     @Parameter(names = ["-ref_genome"], required = true, description = "Reference genome fasta file")
-    lateinit var refGenome: String
+    lateinit var refGenomePath: String
 
-    @Parameter(names = ["-ref_genome_version"], required = true, description = "Reference genome version")
-    lateinit var refGenomeVersion: String
+    @Parameter(names = ["-bwa_index_image"], required = true, description = "BWA-MEM index image for the reference genome")
+    lateinit var bwaIndexImagePath: String
 
     @Parameter(names = ["-output"], required = true, description = "Output TSV file")
     lateinit var output: String
@@ -80,8 +64,8 @@ class ImgtGeneCurator
     @Parameter(names = ["-threads"], description = "Number of threads")
     var threadCount = 1
 
-    @Parameter(names = ["-workdir"], required = true, description = "Number of threads")
-    lateinit var workdir: String
+    @Parameter(names = ["-log_level"], required = false)
+    var logLevel: String = "info"
 
     data class ImgtGeneData(val geneName: String, val allele: String, val species: String, val functionality: IgTcrFunctionality,
                             val region: IgTcrRegion?, val sequenceWithGaps: String, val partial: Boolean = false,
@@ -92,8 +76,14 @@ class ImgtGeneCurator
 
     fun run(): Int
     {
-        val ensemblDataCache = EnsemblDataCache(ensemblDataDir, BLAST_REF_GENOME_VERSION)
+        val refGenome = RefGenomeSource.loadRefGenome(refGenomePath)
+        val refGenomeVersion = deriveRefGenomeVersion(refGenome)
+
+        val ensemblDataCache = EnsemblDataCache(ensemblDataDir, refGenomeVersion)
         val ensemblLoadOk = ensemblDataCache.load(true)
+
+        // TODO
+        BwaUtils.loadAlignerLibrary(null)
 
         if (!ensemblLoadOk)
         {
@@ -101,11 +91,10 @@ class ImgtGeneCurator
             throw RuntimeException("Ensembl data cache load failed")
         }
 
-        val genomeVersion = RefGenomeVersion.from(refGenomeVersion)
-
         val imgtGeneDataList: List<ImgtGeneData> = readGeneDataFromFasta(inputImgtFasta)
 
-        findGenomicLocatons(imgtGeneDataList, blast, blastDb, genomeVersion,threadCount, workdir, ensemblDataCache)
+        val refGenomeDict = "$refGenomePath.dict"
+        findGenomicLocatons(imgtGeneDataList, refGenomeDict, bwaIndexImagePath, refGenomeVersion, threadCount, ensemblDataCache)
 
         val igTcrGeneList = ArrayList<IgTcrGene>()
 
@@ -116,7 +105,7 @@ class ImgtGeneCurator
 
         // validate anchor locations
         sLogger.info("validating anchor locations")
-        validateAnchorLocations(igTcrGeneList, refGenome)
+        validateAnchorLocations(igTcrGeneList, refGenomePath)
 
         IgTcrGeneFile.write(output, igTcrGeneList.map { o -> toCommonIgTcrGene(o) })
 
@@ -143,6 +132,7 @@ class ImgtGeneCurator
             try
             {
                 commander.parse(*args)
+                Configurator.setRootLevel(Level.valueOf(app.logLevel))
                 exitProcess(app.run())
             } catch (paramException: ParameterException)
             {
@@ -415,17 +405,17 @@ class ImgtGeneCurator
             return Pair(anchor, anchorLocation)
         }
 
-        fun findGenomicLocatons(imgtGeneDataList: List<ImgtGeneData>, blastn: String, blastDb: String, genomeVersion: RefGenomeVersion,
-                                numThreads: Int, workdir: String, ensemblDataCache: EnsemblDataCache)
+        fun findGenomicLocatons(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
+                                genomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
         {
             val constantGenes = imgtGeneDataList.filter { gene -> gene.region == IgTcrRegion.CONSTANT }
             val nonConstantGenes = imgtGeneDataList.filter { gene -> gene.region != IgTcrRegion.CONSTANT }
 
-            // V / D / J gene use blast, constant genes use ensembl
+            // V / D / J gene use alignment, constant genes use ensembl
             // reason is that ensembl is easier, and we do not need the alt locations for the constant genes. Another reason
             // is that we do not need to be very precise with the location of the anchor for constant genes
             // if we use ensembl for V / J gene, we need to use the fasta file to validate the anchor location is precise
-            blastForGenomicLocation(nonConstantGenes, blastn, blastDb, numThreads, workdir, ensemblDataCache)
+            alignForGenomicLocation(nonConstantGenes, refGenomeDict, bwaIndexImage, genomeVersion, numThreads, ensemblDataCache)
 
             for (geneData in constantGenes)
             {
@@ -447,66 +437,65 @@ class ImgtGeneCurator
             }
         }
 
-        // for each imgt gene segment, use blastn to find the genomic location
-        fun blastForGenomicLocation(imgtGeneDataList: List<ImgtGeneData>, blastn: String, blastDb: String, numThreads: Int, workdir: String,
-                                    ensemblDataCache: EnsemblDataCache)
+        // for each imgt gene segment, use alignment to find the genomic location
+        fun alignForGenomicLocation(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
+                                    genomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
         {
             // assign a key to each VDJ, such that we can keep track of them
             var key = 0
             val keyToGeneDataMap: Map<Int, ImgtGeneData> = imgtGeneDataList.associateBy { ++key }
 
-            val blastnResults: Multimap<Int, BlastnMatch> = AlignmentUtil.runBlastn(
-                "imgt", blastn, blastDb,
+            val alignments = AlignmentUtil.runBwaMem(
                 keyToGeneDataMap.mapValues { geneData -> geneData.value.sequenceWithoutGaps },
-                workdir, numThreads, BLASTN_EVALUE_CUTOFF)
+                refGenomeDict, bwaIndexImage,
+                0, numThreads)
 
-            // process the blastnResults
             for ((k, geneData) in keyToGeneDataMap)
             {
-                // Filter by full match and not too many mismatches, then
-                // We sort the matches by
-                // 1. match quality
-                // 2. primary assembly
-                val matches = blastnResults[k]
-                    .filter { m: BlastnMatch -> m.numMismatch <= BLASTN_MAX_MISMATCH &&
-                            m.alignmentLength >= (m.querySeqLen - BLASTN_MAX_MISMATCH) }
-                    .sortedWith(Comparator.comparingDouble { m: BlastnMatch -> m.expectedValue }
-                        .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
+                sLogger.debug("Processing alignments for gene {}", geneData)
 
-                // find the gene in the ensembl
-                val ensemblGene = ensemblDataCache.getGeneDataByName(geneData.geneName)
-                var bestMatch: BlastnMatch? = null
+                val geneAlignments = alignments[k]
+                    .filter { a -> a.editDistance <= ALIGNMENT_MAX_MISMATCH &&
+                            a.queryAlignEnd - a.queryAlignStart + 1 >= a.querySeq.length - ALIGNMENT_MAX_MISMATCH }
+                    // Order by alignment score then primary contig first
+                    .sortedWith(compareBy( { a -> -a.alignmentScore }, { a -> if ("_alt" in a.refContig) 0 else 1 }))
+//                        .thenComparingInt { m: BlastnMatch -> if (m.subjectTitle.endsWith(BLASTN_PRIMARY_ASSEMBLY_NAME)) 0 else 1 })
 
-                for (match in matches)
+                val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
+                var bestAlignment: AlignmentUtil.BwaMemAlignment? = null
+
+                for (alignment in geneAlignments)
                 {
-                    val matchLocation = AlignmentUtil.toGenomicLocation(match)
+                    sLogger.debug("considering alignment: {}", alignment)
 
-                    if (matchLocation == null)
+                    val location = AlignmentUtil.toGenomicLocation(alignment, genomeVersion)
+
+                    if (location == null)
                     {
                         continue
                     }
 
-                    if (bestMatch == null)
-                    {
-                        bestMatch = match
+                    if (bestAlignment == null) {
+                        bestAlignment = alignment
                     }
 
-                    else if (Doubles.equal(bestMatch.bitScore, match.bitScore))
+                    else if (bestAlignment.alignmentScore == alignment.alignmentScore)
                     {
                         // if they have same score, we want to choose the one that overlaps with ensembl gene
+                        sLogger.debug("considering ensembl gene {}", ensemblGene)
                         if (ensemblGene != null &&
-                            ensemblGene.Chromosome == matchLocation.chromosome &&
-                            ensemblGene.forwardStrand() == (matchLocation.strand == Strand.FORWARD) &&
-                            ensemblGene.GeneStart <= matchLocation.posEnd &&
-                            ensemblGene.GeneEnd >= matchLocation.posStart)
+                            ensemblGene.Chromosome == location.chromosome &&
+                            ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD) &&
+                            ensemblGene.GeneStart <= location.posEnd &&
+                            ensemblGene.GeneEnd >= location.posStart)
                         {
-                            bestMatch = match
-                            sLogger.debug("gene: {}*{}, using match that overlaps with ensembl", geneData.geneName, geneData.allele)
+                            bestAlignment = alignment
+                            sLogger.debug("gene: {}*{}, using alignment that overlaps with ensembl", geneData.geneName, geneData.allele)
                         }
                     }
                 }
 
-                if (bestMatch == null)
+                if (bestAlignment == null)
                 {
                     if (ensemblGene != null)
                     {
@@ -522,11 +511,13 @@ class ImgtGeneCurator
                 }
                 else
                 {
-                    geneData.genomicLocation = matchToQueryGenomicLocation(bestMatch)
-                    sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestMatch, geneData.genomicLocation)
+                    geneData.genomicLocation = alignmentToQueryGenomicLocation(bestAlignment, genomeVersion)
+                    sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestAlignment, geneData.genomicLocation)
                 }
             }
         }
+
+        fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
 
         fun toGenomicLocation(ensemblGene: GeneData) : GenomicLocation
         {
@@ -534,12 +525,12 @@ class ImgtGeneCurator
                 ensemblGene.GeneEnd, Strand.valueOf(ensemblGene.Strand.toInt()))
         }
 
-        fun matchToQueryGenomicLocation(match: BlastnMatch) : GenomicLocation
+        fun alignmentToQueryGenomicLocation(alignment: AlignmentUtil.BwaMemAlignment, genomeVersion: RefGenomeVersion) : GenomicLocation
         {
             // we need to correct for the ends to make sure things align properly
-            val startExtend = match.queryAlignStart - 1
-            val endExtend = match.querySeqLen - match.queryAlignEnd
-            val matchGenomicLoc = AlignmentUtil.toGenomicLocation(match)!!
+            val startExtend = alignment.queryAlignStart - 1
+            val endExtend = alignment.querySeq.length - alignment.queryAlignEnd
+            val matchGenomicLoc = AlignmentUtil.toGenomicLocation(alignment, genomeVersion)!!
 
             if (startExtend == 0 && endExtend == 0)
             {

@@ -1,6 +1,5 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.genes
 
-import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.GenomicLocation.Companion.toChrBaseRegion
 
 // see https://www.imgt.org/IMGTScientificChart/SequenceDescription/IMGTfunctionality.html
@@ -8,6 +7,7 @@ typealias IgTcrFunctionality = com.hartwig.hmftools.common.cider.IgTcrFunctional
 
 typealias IgTcrRegion = com.hartwig.hmftools.common.cider.IgTcrRegion
 
+// TODO: can we delete this?
 // use kotlin data class to use the nicer kotlin functionality
 data class IgTcrGene(
     val geneName: String,
@@ -21,7 +21,7 @@ data class IgTcrGene(
 {
     val geneAllele: String get() { return "$geneName*$allele" }
     val isFunctional: Boolean get() { return functionality == IgTcrFunctionality.FUNCTIONAL }
-    
+
     companion object {
 
         fun fromCommonIgTcrGene(commonGene: com.hartwig.hmftools.common.cider.IgTcrGene): IgTcrGene = IgTcrGene(
@@ -43,7 +43,7 @@ data class IgTcrGene(
                 gene.functionality,
                 toChrBaseRegion(gene.geneLocation),
                 gene.geneLocation?.strand,
-                gene.geneLocation?.altAssemblyName,
+                gene.geneLocation?.inPrimaryAssembly ?: true,
                 gene.anchorSequence,
                 toChrBaseRegion(gene.anchorLocation)
             )
