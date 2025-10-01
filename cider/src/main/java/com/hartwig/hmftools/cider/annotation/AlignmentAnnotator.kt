@@ -3,12 +3,12 @@ package com.hartwig.hmftools.cider.annotation
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
+import com.hartwig.hmftools.cider.genes.genomicLocation
+import com.hartwig.hmftools.common.cider.IgTcrGene
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
+import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
@@ -35,6 +35,7 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
+    private val mRefGenomeVersion: RefGenomeVersion
     private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
     private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
@@ -44,14 +45,14 @@ class AlignmentAnnotator
 
     constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
-        this.mRefGenomeDictPath = refGenomeDictPath
-        this.mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
+        mRefGenomeVersion = refGenomeVersion
+        mRefGenomeDictPath = refGenomeDictPath
+        mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
         // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
         val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
 
         val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
-            .map { o -> fromCommonIgTcrGene(o) }
 
         // find all the genes that we need
         for (geneData in igTcrGenes)
@@ -61,12 +62,14 @@ class AlignmentAnnotator
                 continue
             }
 
-            if (geneData.geneLocation == null)
+            val genomicLocation = geneData.genomicLocation()
+            if (genomicLocation == null)
             {
                 continue
             }
 
-            val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
+            // TODO? this should probably be keyed by more data to account for genes on contigs which are not the main contigs
+            val key = Pair(genomicLocation.bases.chromosome(), genomicLocation.strand)
             vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
 
             /* sLogger.debug(
@@ -279,9 +282,13 @@ class AlignmentAnnotator
 
     fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
     {
-        val chromosome = parseChromosome(alignment.refContig)
+        val location = AlignmentUtil.toGenomicLocation(alignment, mRefGenomeVersion)
+        if (location == null)
+        {
+            return null
+        }
 
-        val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
+        val geneDataList = mVdjGenes[Pair(location.bases.chromosome(), alignment.refStrand)] ?: return null
 
         var bestGene : IgTcrGene? = null
 
@@ -289,14 +296,14 @@ class AlignmentAnnotator
         {
             val geneLocation = gene.geneLocation ?: continue
 
-            require(geneLocation.chromosome == chromosome)
-            require(geneLocation.strand == alignment.strand)
+            require(geneLocation.chromosome() == location.bases.chromosome())
+            require(gene.geneStrand() == alignment.refStrand)
 
             if (bestGene == null || !bestGene.isFunctional)
             {
                 // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignment.refEnd + GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignment.refStart - GENE_REGION_TOLERANCE)
+                if (geneLocation.start() <= alignment.refEnd + GENE_REGION_TOLERANCE &&
+                    geneLocation.end() >= alignment.refStart - GENE_REGION_TOLERANCE)
                 {
                     bestGene = gene
                 }

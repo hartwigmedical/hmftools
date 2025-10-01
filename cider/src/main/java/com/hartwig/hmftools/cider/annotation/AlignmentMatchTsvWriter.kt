@@ -86,7 +86,7 @@ object AlignmentMatchTsvWriter
                     Column.alignStart -> csvPrinter.print(alignment.queryAlignStart)
                     Column.alignEnd -> csvPrinter.print(alignment.queryAlignEnd)
                     Column.alignScore -> csvPrinter.print(alignment.alignmentScore)
-                    Column.refStrand -> csvPrinter.print(alignment.strand.asChar())
+                    Column.refStrand -> csvPrinter.print(alignment.refStrand.asChar())
                     Column.refStart -> csvPrinter.print(alignment.refStart)
                     Column.refEnd -> csvPrinter.print(alignment.refEnd)
                     Column.refContig -> csvPrinter.print(alignment.refContig)

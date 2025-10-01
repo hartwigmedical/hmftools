@@ -254,6 +254,7 @@ public class DelimFileWriter<T> implements AutoCloseable
         public void set(String key, double value, NumberFormat format) { set(key, format.format(value)); }
 
         public void setOrNull(String key, String value) { set(key, value == null ? sNullIndicator : value); }
+        public void setOrNull(String key, Boolean value) { set(key, value == null ? sNullIndicator : value.toString()); }
         public void setOrNull(String key, Integer value) { set(key, value == null ? sNullIndicator : value.toString()); }
         public void setOrNull(String key, Double value) { setOrNull(key, value, sDefaultNumberFormat); }
         public void setOrNull(String key, Double value, NumberFormat format)
@@ -270,6 +271,9 @@ public class DelimFileWriter<T> implements AutoCloseable
         public void set(Enum<?> key, double value) { set(key.name(), value); }
         public void set(Enum<?> key, double value, String format) { set(key.name(), value, format); }
         public void set(Enum<?> key, double value, NumberFormat format) { set(key.name(), value, format); }
+
+        public void setOrNull(Enum<?> key, String value) { setOrNull(key.name(), value); }
+        public void setOrNull(Enum<?> key, Boolean value) { setOrNull(key.name(), value); }
     }
 
     // convert to unchecked IO exception to allow usage in streams

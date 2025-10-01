@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.google.common.collect.ImmutableList
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
 import htsjdk.samtools.SAMRecord
@@ -156,12 +157,14 @@ object TestUtils
         "01",
         null,
         "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
-        null)
+        null
+    )
 
     val ighJ6 = VJAnchorTemplate(
-        VJGeneType.IGHJ, "IGHJ6","01", null,
+        VJGeneType.IGHJ, "IGHJ6", "01", null,
         "TGGGGGCAAGGGACCACGGTCACCGTCTCC",
-        null)
+        null
+    )
 
     val ighV1_18 = VJAnchorTemplate(
         VJGeneType.IGHV,
@@ -169,10 +172,12 @@ object TestUtils
         "01",
         null,
         "AGATCTGACGACACGGCCGTGTATTACTGT",
-        null)
+        null
+    )
 
     val ighV3_7 = VJAnchorTemplate(
         VJGeneType.IGHV, "IGHV3-7", "01", null,
         "AGAGCCGAGGACACGGCTGTGTATTACTGT",
-        null)
+        null
+    )
 }
