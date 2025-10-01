@@ -14,10 +14,8 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
    -bam COLO829T.bam \
    -output_dir /path/to/COLO829/cider \
    -ref_genome_version 37 \
+   -ref_genome /path/to/genome/Homo_sapiens.GRCh37.GATK.illumina.fasta \
    -write_cider_bam \
-   -annotation_ref_genome_version 38 \
-   -annotation_ref_genome_dict /path/to/genome/GRCh38_masked_exclusions_alts_hlas.fasta.dict \
-   -annotation_bwa_index_image /path/to/genome/GRCh38_masked_exclusions_alts_hlas.fasta.img \
    -threads 8
 ```
 ### Mandatory Arguments
@@ -31,22 +29,21 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 
 ### Optional Arguments
 
-| Argument                      | Default | Description                                                                                             |
-|-------------------------------|---------|---------------------------------------------------------------------------------------------------------|
-| write_cider_bam               | Off     | If specified, write a small bam file of all the extracted reads.                                        |
-| threads                       | 1       | Number of threads to use, defaults to 1                                                                 |
-| max_fragment_length           | 1000    | Approximate length of the longest fragment. Defaults to 1000                                            |
-| threads                       | 1       | Number of threads to use, defaults to 1                                                                 |
-| min_base_quality              | 25      | Minimum base quality for a base to be considered a "support" base, defaults to 25                       |
-| report_match_ref_seq          | Off     | When specified, reports VDJ sequences that match reference genome                                       |
-| num_trim_bases                | 0       | Number of bases to trim on each side of reads. Defaults to 0                                            |
-| max_low_qual_base_fraction    | 0.1     | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
-| max_reads_per_gene            | 600,000 | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
-| annotation_ref_genome_version |         | Reference genome version for gene annotation                                                            |
-| annotation_ref_genome_dict    |         | Path to the reference genome .dict for gene annotation alignment                                        |
-| annotation_bwa_index_image    |         | Path to the reference genome BWA-MEM index GATK image for gene annotation alignment                     |
-| primer_csv                    |         | Path to csv file containing primers                                                                     |
-| primer_mismatch_max           | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
+| Argument                   | Default          | Description                                                                                             |
+|----------------------------|------------------|---------------------------------------------------------------------------------------------------------|
+| write_cider_bam            | Off              | If specified, write a small bam file of all the extracted reads.                                        |
+| threads                    | 1                | Number of threads to use, defaults to 1                                                                 |
+| max_fragment_length        | 1000             | Approximate length of the longest fragment. Defaults to 1000                                            |
+| threads                    | 1                | Number of threads to use, defaults to 1                                                                 |
+| min_base_quality           | 25               | Minimum base quality for a base to be considered a "support" base, defaults to 25                       |
+| report_match_ref_seq       | Off              | When specified, reports VDJ sequences that match reference genome                                       |
+| num_trim_bases             | 0                | Number of bases to trim on each side of reads. Defaults to 0                                            |
+| max_low_qual_base_fraction | 0.1              | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
+| max_reads_per_gene         | 600,000          | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
+| ref_genome                 |                  | Path to the reference genome FASTA                                                                      |
+| bwa_index_image            | {ref_genome}.img | Path to the reference genome BWA-MEM index GATK image                                                   |
+| primer_csv                 |                  | Path to csv file containing primers                                                                     |
+| primer_mismatch_max        | 0                | Maximum number of mismatch bases for matching primer sequence                                           |
 
 ## Algorithm
 
@@ -179,7 +176,7 @@ In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_s
 
 ### Alignment annotation logic
 
-When the `-annotation_*` command line arguments are supplied, CIDER uses BWA-MEM to query each sequence found against the human genome.
+When the `-ref_genome` command line argument is supplied, CIDER uses BWA-MEM to query each sequence found against the human genome.
 It uses this information to assign V, D, J alleles and also weed out false positives.
 Using the v38 genome for gene annotation is recommended for completeness.
 
