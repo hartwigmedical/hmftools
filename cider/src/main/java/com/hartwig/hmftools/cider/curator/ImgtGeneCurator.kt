@@ -38,8 +38,6 @@ import kotlin.system.exitProcess
 
 const val ANCHOR_DNA_LENGTH: Int = 30
 
-// TODO: remove all blast references
-
 // This utility processes IMGT IG/TCR genes into format CIDER can use.
 // It uses BWA-MEM combined with ensembl to find the genomic location of each IG/TCR genes.
 // Download the IMGT sequences from the IMGT website.
