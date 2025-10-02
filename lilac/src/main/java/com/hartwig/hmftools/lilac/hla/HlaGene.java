@@ -56,8 +56,16 @@ public enum HlaGene
 
     public static HlaGene fromString(final String s)
     {
-        String gene = s.startsWith(HLA_PREFIX) ? s.substring(HLA_PREFIX.length()) : s;
-        return valueOf("HLA_" + gene);
+        String geneStr = s.startsWith(HLA_PREFIX) ? s.substring(HLA_PREFIX.length()) : s;
+        try
+        {
+            HlaGene gene = valueOf("HLA_" + geneStr);
+            return gene;
+        }
+        catch(IllegalArgumentException e)
+        {
+            return null;
+        }
     }
 
     @Override
