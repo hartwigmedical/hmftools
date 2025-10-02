@@ -191,7 +191,8 @@ public class ReferenceData
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
         }
 
-        CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
+        String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_DEL_FREQ_FILE) : null;
+        CohortGermlineDeletions = new GermlineDeletionFrequency(germlineDeletionFreqFile);
 
         TargetRegions = new TargetRegionsData(
                 configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));

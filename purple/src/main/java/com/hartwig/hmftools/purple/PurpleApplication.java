@@ -14,6 +14,9 @@ import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
 
+import static org.apache.logging.log4j.Level.ERROR;
+import static org.apache.logging.log4j.Level.WARN;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -79,6 +82,7 @@ import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumbers;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsDataSource;
 
+import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleApplication
@@ -415,9 +419,12 @@ public class PurpleApplication
             }
             catch(Exception e)
             {
-                PPL_LOGGER.error("charting error: {}", e.toString());
+                Level logLevel = mConfig.IgnorePlotErrors ? WARN : ERROR;
+                PPL_LOGGER.log(logLevel, "charting error: {}", e.toString());
                 e.printStackTrace();
-                System.exit(1);
+
+                if(!mConfig.IgnorePlotErrors)
+                    System.exit(1);
             }
         }
     }

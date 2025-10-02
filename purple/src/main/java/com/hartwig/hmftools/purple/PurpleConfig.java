@@ -13,14 +13,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.VariantTier;
 
 public class PurpleConfig
 {
@@ -37,7 +34,7 @@ public class PurpleConfig
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
     public final boolean TargetRegionsMode;
-    public final Map<VariantTier, Integer> TierQualFilters;
+    public final boolean IgnorePlotErrors;
     public final int Threads;
 
     // debug only
@@ -50,8 +47,8 @@ public class PurpleConfig
     public static final String SAMPLE_DIR = "sample_dir";
 
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
-    public static final String TIER_FILTERS = "tier_filters";
     public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
+    public static final String IGNORE_PLOT_ERRORS = "ignore_plot_errors";
 
     public PurpleConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -107,20 +104,8 @@ public class PurpleConfig
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
         FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
+        IgnorePlotErrors = configBuilder.hasFlag(IGNORE_PLOT_ERRORS);
         WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
-
-        TierQualFilters = Maps.newHashMap();
-
-        if(configBuilder.hasFlag(TIER_FILTERS))
-        {
-            String[] tierFilterStrings = configBuilder.getValue(TIER_FILTERS).split(";", -1);
-
-            for(String tierFilter : tierFilterStrings)
-            {
-                String[] tierItems = tierFilter.split("=", -1);
-                TierQualFilters.put(VariantTier.valueOf(tierItems[0]), Integer.parseInt(tierItems[1]));
-            }
-        }
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -171,7 +156,7 @@ public class PurpleConfig
 
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
         configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
-        configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
+        configBuilder.addFlag(IGNORE_PLOT_ERRORS, "Run to completion if plotting fails");
 
         FittingConfig.addConfig(configBuilder);
         SomaticFitConfig.addConfig(configBuilder);

@@ -227,7 +227,7 @@ public class SomaticStream
                 if(!HumanChromosome.contains(variant.chromosome()))
                     continue;
 
-                if(variant.isPass() || mConfig.WriteAllSomatics)
+                if(purityAdjuster != null && (variant.isPass() || mConfig.WriteAllSomatics))
                     mSomaticGermlineLikelihood.processVariant(variant, purityAdjuster.purity());
 
                 if(variant.isPass())
