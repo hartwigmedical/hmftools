@@ -98,12 +98,11 @@ public final class LilacConstants
     public static final String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
     public static final String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
     public static final String LILAC_FILE_FRAGMENTS = "fragments.tsv";
-    public static final String LILAC_FILE_READS = "reads.tsv";
 
     public static final String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
     public static final String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
     public static final String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
-    public static final String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
-    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
+    public static final String LILAC_FILE_HLA_Y_COVERAGE = "HLA_Y.coverage.tsv";
+    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "HLA_Y.fragments.tsv";
 }

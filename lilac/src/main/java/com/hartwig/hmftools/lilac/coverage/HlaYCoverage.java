@@ -307,8 +307,7 @@ public class HlaYCoverage
                     sampleId, source, miscCounts[Y0101_X], miscCounts[EXON_3], outcome);
         }
 
-        String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_COVERAGE);
-
+        String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_COVERAGE, false);
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
@@ -354,7 +353,7 @@ public class HlaYCoverage
         {
             if(mWriter == null)
             {
-                String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS);
+                String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS, false);
                 mWriter = createBufferedWriter(fileName, false);
 
                 mWriter.write("ReadId\tReadInfo\tAlleles\tShared\tLoci");
