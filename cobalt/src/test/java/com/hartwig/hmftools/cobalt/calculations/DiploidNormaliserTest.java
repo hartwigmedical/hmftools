@@ -39,7 +39,7 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         Position = -1;
         CurrentChromosome = null;
         ChromosomeToBamRatio = ArrayListMultimap.create();
-        normaliser = new DiploidNormaliser(5, 7);
+        normaliser = new DiploidNormaliser(5, 7, V38);
     }
 
     @Test
@@ -57,9 +57,9 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         Position = 1;
         Pair<Double, Integer> chr2Stats = addRatios(-1, 32, 33, 34, 36, 27, 25, 30, 27, 37, 35, 33, 31, 29, 23, 25, 31, 80, 23);
 
-        normaliser.recordsAllAdded();
+        normaliser.dataCollectionFinished();
 
-        List<MedianRatio> medianRatios = normaliser.medianRatios(V38);
+        List<MedianRatio> medianRatios = normaliser.medianRatios();
         assertEquals(3, medianRatios.size());
         assertEquals(V38.versionedChromosome(_1), medianRatios.get(0).Chromosome);
         assertEquals(chr1Stats.getLeft(), medianRatios.get(0).MedianRatio, 0.001);
@@ -75,7 +75,7 @@ public class DiploidNormaliserTest extends CalculationsTestBase
     @Test
     public void normaliseTest()
     {
-        normaliser = new DiploidNormaliser(3, 3);
+        normaliser = new DiploidNormaliser(3, 3, V38);
 
         CurrentChromosome = _1;
         Position = 1;
@@ -93,8 +93,8 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         Position = 1;
         Pair<Double, Integer> chrYStats = addRatios(10, 10, 15, -1.0, 10, 15);
 
-        normaliser.recordsAllAdded();
-        applyNormalisation();
+        normaliser.dataCollectionFinished();
+        normalise();
 
         List<BamRatio> chr1RatiosNormalised = ChromosomeToBamRatio.get(_1);
         assertEquals(6, chr1RatiosNormalised.size());
@@ -140,7 +140,7 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         assertEquals( 0.1, chrYRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
         assertEquals( 0.15, chrYRatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
 
-        List<MedianRatio> medianRatios = normaliser.medianRatios(V38);
+        List<MedianRatio> medianRatios = normaliser.medianRatios();
         assertEquals(4, medianRatios.size());
         assertEquals(V38.versionedChromosome(_1), medianRatios.get(0).Chromosome);
         assertEquals(chr1Stats.getLeft(), medianRatios.get(0).MedianRatio, 0.001);
@@ -159,12 +159,12 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         assertEquals((long) chrYStats.getRight(), medianRatios.get(3).Count);
     }
 
-    private void applyNormalisation()
+    private void normalise()
     {
         ChromosomeToBamRatio.keySet().forEach(chromosome ->
         {
             List<BamRatio> chrBamRatios = ChromosomeToBamRatio.get(chromosome);
-            chrBamRatios.forEach(chrBamRatio -> normaliser.applyNormalisation(chrBamRatio));
+            chrBamRatios.forEach(chrBamRatio -> normaliser.normalise(chrBamRatio));
         });
     }
 

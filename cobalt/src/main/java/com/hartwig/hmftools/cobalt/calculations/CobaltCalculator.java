@@ -8,16 +8,20 @@ import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class CobaltCalculator
 {
     private final ListMultimap<Chromosome, CobaltRatio> mRatios;
     private final List<MedianRatio> mMedianRatios;
+    private final GcMedianReadDepth mTumorMedianReadDepths;
+    private final GcMedianReadDepth mReferenceMedianReadDepths;
     public CobaltCalculator(
-            final ListMultimap<Chromosome, DepthReading> tumourDepthReadings,
-            final ListMultimap<Chromosome, DepthReading> referenceDepthReadings,
+            final ListMultimap<HumanChromosome, DepthReading> tumourDepthReadings,
+            final ListMultimap<HumanChromosome, DepthReading> referenceDepthReadings,
             CobaltConfig config)
     {
         Preconditions.checkArgument(!tumourDepthReadings.isEmpty() || !referenceDepthReadings.isEmpty());
@@ -25,13 +29,15 @@ public class CobaltCalculator
         CobaltScope scope = config.scope();
 
         TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, scope);
-        tumourDepthReadings.forEach((tumorBamCalculation::addReading));
+        tumourDepthReadings.forEach(tumorBamCalculation::addReading);
         ListMultimap<Chromosome, BamRatio> tumorResults = tumorBamCalculation.calculateRatios();
+        mTumorMedianReadDepths = tumorBamCalculation.medianReadDepths();
 
-        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, scope);
-        referenceDepthReadings.forEach((referenceBamCalculation::addReading));
+        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, scope, config.RefGenVersion);
+        referenceDepthReadings.forEach(referenceBamCalculation::addReading);
         ListMultimap<Chromosome, BamRatio> referenceResults = referenceBamCalculation.calculateRatios();
-        mMedianRatios = referenceBamCalculation.medianRatios(config.genomeVersion());
+        mMedianRatios = referenceBamCalculation.medianRatios();
+        mReferenceMedianReadDepths = referenceBamCalculation.medianReadDepths();
 
         ResultsCollator collator = new ResultsCollator(config.genomeVersion());
         mRatios = collator.collateResults(tumorResults, referenceResults);
@@ -45,5 +51,15 @@ public class CobaltCalculator
     public List<MedianRatio> medianRatios()
     {
         return mMedianRatios;
+    }
+
+    public GcMedianReadDepth tumorMedianReadDepth()
+    {
+        return mTumorMedianReadDepths;
+    }
+
+    public GcMedianReadDepth referenceMedianReadDepth()
+    {
+        return mReferenceMedianReadDepths;
     }
 }

@@ -35,15 +35,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.count.BRC;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
 import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
+import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
@@ -273,6 +278,36 @@ public class CobaltConfig
         }
     }
 
+    public BRC tumorBamReader(ExecutorService executorService) throws IOException
+    {
+        return bamReader(executorService, TumorBamPath);
+    }
+
+    public BRC referenceBamReader(ExecutorService executorService) throws IOException
+    {
+        return bamReader(executorService, ReferenceBamPath);
+    }
+
+    public String cobaltRatiosFileName()
+    {
+        return CobaltRatioFile.generateFilename(OutputDir, TumorId != null ? TumorId : ReferenceId);
+    }
+
+    public String medianRatiosFileName()
+    {
+        return CobaltMedianRatioFile.generateFilename(OutputDir, ReferenceId);
+    }
+
+    public String tumorGcMedianFileName()
+    {
+        return CobaltGcMedianFile.generateFilename(OutputDir, TumorId);
+    }
+
+    public String referenceGcMedianFileName()
+    {
+        return CobaltGcMedianFile.generateFilename(OutputDir, ReferenceId);
+    }
+
     public List<ChrBaseRegion> excludedRegions()
     {
         return mExcludedRegions;
@@ -297,5 +332,14 @@ public class CobaltConfig
         {
             CB_LOGGER.error("failed to load excluded regions: {}", e.toString());
         }
+    }
+
+    private BRC bamReader(ExecutorService executorService, String bamPath) throws IOException
+    {
+        if(bamPath != null)
+        {
+            return new BRC(WINDOW_SIZE, this, executorService, bamPath);
+        }
+        return  null;
     }
 }

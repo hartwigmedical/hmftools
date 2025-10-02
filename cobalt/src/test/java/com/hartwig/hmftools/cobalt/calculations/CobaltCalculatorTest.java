@@ -21,6 +21,7 @@ import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -48,13 +49,13 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     Map<Double, Double> tumGcRatiosTargeted = new HashMap<>();
     CobaltConfig config;
 
-    final ListMultimap<Chromosome, DepthReading> tumorDepths = ArrayListMultimap.create();
-    final ListMultimap<Chromosome, DepthReading> referenceDepths = ArrayListMultimap.create();
+    final ListMultimap<HumanChromosome, DepthReading> tumorDepths = ArrayListMultimap.create();
+    final ListMultimap<HumanChromosome, DepthReading> referenceDepths = ArrayListMultimap.create();
 
     CobaltScope targetedScope = new CobaltScope()
     {
         @Override
-        public ResultsNormaliser finalNormaliser()
+        public ReadDepthStatisticsNormaliser finalNormaliser()
         {
             return new UnityNormaliser();
         }

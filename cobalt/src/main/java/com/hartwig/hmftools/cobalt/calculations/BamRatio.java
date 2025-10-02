@@ -71,7 +71,7 @@ public class BamRatio
 
     public double readDepth()
     {
-        return Included ? mReadDepth : -1.0;
+        return mReadDepth;
     }
 
     public double ratio()
@@ -81,7 +81,7 @@ public class BamRatio
 
     public double gcContent()
     {
-        return Included ? GcContent : -1.0;
+        return GcContent;
     }
 
     @Override

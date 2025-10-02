@@ -86,11 +86,12 @@ public class RatioSupplier
             CB_LOGGER.info("calculating sample ratios for {}", sampleId);
 
             readRatios = readDepths.copy().setName("readRatios");
-
+            printTable(readRatios, "1_ReadRatios");
             CB_LOGGER.info("merging in GC profile");
 
             // merge in the gc profile
             readRatios = readRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).leftOuter(gcProfiles);
+            printTable(readRatios, "2_GcMerged");
 
             // set column as ratio, but filter out unmappable regions
             DoubleColumn ratioColumn = DoubleColumn.create(CobaltColumns.RATIO);
@@ -106,6 +107,8 @@ public class RatioSupplier
                 }
             }
             readRatios.addColumns(ratioColumn);
+            printTable(readRatios, "3_Mappability");
+
 
             // Filter out the off-target regions if in target regions (panel) mode.
             if(targetRegionEnrichment != null)
@@ -117,6 +120,7 @@ public class RatioSupplier
             // Normalize by bucket, mean, median etc
             gcNormalizedRatioMapper = new GcNormalizedRatioMapper(targetRegionEnrichment != null);
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
+            printTable(readRatios, "4_GcNormalised");
 
             // Normalise by target regions if in target regions (panel) mode
             if(targetRegionEnrichment != null)
@@ -124,6 +128,7 @@ public class RatioSupplier
                 CB_LOGGER.info("using targeted ratio");
                 readRatios = new TargetedRegionNormaliser().mapRatios(readRatios);
             }
+            printTable(readRatios, "5_TargetRetionNormalisation");
 
             switch(sparseBucketPolicy)
             {
@@ -148,6 +153,7 @@ public class RatioSupplier
                 CB_LOGGER.info("using low coverage ratio");
                 readRatios = new LowCoverageRatioMapper(this.consolidatedBuckets, chromosomePosCodec).mapRatios(readRatios);
             }
+            printTable(readRatios, "6_LowCoverageConsolidation");
 
             // In panel mode we do a further round of normalisation so that the average ratio is 1.
             if(targetRegionEnrichment != null)
@@ -415,7 +421,12 @@ public class RatioSupplier
 
     public static void printTable(Table table, String fileName)
     {
-        File dir = new File("/Users/timlavers/work/junk/rubbish");
+        if (table != null)
+        {
+            return;
+        }
+        File dir = new File("/Users/timlavers/work/junk/rubbish/colo_chr21");
+        dir.mkdirs();
         File outputFile = new File(dir, fileName + ".tsv");
 
         try (FileWriter writer = new FileWriter(outputFile))

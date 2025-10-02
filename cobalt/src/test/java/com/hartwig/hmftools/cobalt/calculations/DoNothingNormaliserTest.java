@@ -2,15 +2,10 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 
 import static org.immutables.value.internal.$guava$.collect.$ImmutableList.of;
 
 import java.util.List;
-
-import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,7 +25,7 @@ public class DoNothingNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(20.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0, br3.ratio(), 0.001);
 
-        bamRatios.forEach(normaliser::applyNormalisation);
+        bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0, br1.ratio(), 0.001);
         Assert.assertEquals(20.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0, br3.ratio(), 0.001);

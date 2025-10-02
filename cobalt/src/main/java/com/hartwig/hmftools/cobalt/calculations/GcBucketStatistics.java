@@ -37,7 +37,7 @@ public class GcBucketStatistics
 
     public boolean isAllowed(GCPail gcPail)
     {
-        return gcPail != null && gcPail.mGC >= MinAllowedGc && gcPail.mGC <= MaxAllowedGc;
+        return gcPail != null && gcPail.mGC > MinAllowedGc && gcPail.mGC <= MaxAllowedGc;
     }
 
     public double medianReadDepth(GCPail gcBucket)

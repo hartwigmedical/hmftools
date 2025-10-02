@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
@@ -41,6 +43,13 @@ public class TargetRegions implements CobaltScope
             }
             mEnrichments.put(chromosome, enrichmentsForChromosome);
         }
+    }
+
+
+    @Override
+    public ReadDepthStatisticsNormaliser medianByMeanNormaliser()
+    {
+        return new NoOpReadDepthStatisticsNormaliser();
     }
 
     @Override

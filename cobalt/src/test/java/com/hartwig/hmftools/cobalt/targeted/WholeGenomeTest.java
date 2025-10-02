@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -48,7 +48,7 @@ public class WholeGenomeTest
     @Test
     public void finalNormaliserTest()
     {
-        assertTrue(scope.finalNormaliser() instanceof DoNothingNormaliser);
+        assertTrue(scope.finalNormaliser() instanceof ReadDepthStatisticsNormaliser);
     }
 
     void check(Chromosome chromosome, int position)

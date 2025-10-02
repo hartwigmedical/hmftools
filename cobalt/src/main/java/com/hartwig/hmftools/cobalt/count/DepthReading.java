@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.count;
 
+import java.util.Objects;
+
 public class DepthReading
 {
     public final String Chromosome; // todo make this a Chromosome
@@ -24,5 +26,23 @@ public class DepthReading
                 ", ReadDepth=" + ReadDepth +
                 ", ReadGcContent=" + ReadGcContent +
                 '}';
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        final DepthReading that = (DepthReading) o;
+        return StartPosition == that.StartPosition && Double.compare(ReadDepth, that.ReadDepth) == 0
+                && Double.compare(ReadGcContent, that.ReadGcContent) == 0 && Objects.equals(Chromosome, that.Chromosome);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(Chromosome, StartPosition, ReadDepth, ReadGcContent);
     }
 }

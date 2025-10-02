@@ -55,7 +55,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
-//        RatioSupplier.printTable(gcMedianCalcDf, "GCMedianCalcDFRaw");
+        RatioSupplier.printTable(gcMedianCalcDf, "999_GCMedianCalcDFRaw");
         NumericAggregateFunction aggFunc = AggregateFunctions.median;
 
         // get the sample median and mean
@@ -69,8 +69,9 @@ public class GcNormalizedRatioMapper implements RatioMapper
         RatioSupplier.printTable(gcMedianCalcDf, "GCMedianCalcDFAggregated");
 
         gcMedianCalcDf = new TableSmoother(gcMedianCalcDf).smoothed();
+        RatioSupplier.printTable(gcMedianCalcDf, "GCMedianCalcDFAggregatedSmoothed");
 
-        CB_LOGGER.trace("sample median: {}, mean: {}, gc median calc: {}", mSampleMedianReadDepth, mSampleMeanReadDepth, gcMedianCalcDf);
+        CB_LOGGER.info("sample median: {}, mean: {}, gc median calc: {}", mSampleMedianReadDepth, mSampleMeanReadDepth, gcMedianCalcDf);
 
         gcMedianCalcDf.column(String.format("Median [%s]", CobaltColumns.RATIO)).setName("gcMedianCount");
         gcMedianCalcDf.column(String.format("Count [%s]", CobaltColumns.RATIO)).setName("windowCount");
@@ -79,6 +80,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
         Table ratiosWithMedianCount = inputRatios
                 .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                 .joinOn(CobaltColumns.GC_BUCKET).inner(gcMedianCalcDf);
+        RatioSupplier.printTable(ratiosWithMedianCount, "888_RatiosWithMedianCount");
 
         double medianNormalisation = mSampleMedianReadDepth / mSampleMeanReadDepth;
 
@@ -91,6 +93,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
 
         // resort it, the join messes up with the ordering
         ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
+        RatioSupplier.printTable(ratiosWithMedianCount, "777_RatiosWithGCMedMeanNorm");
 
         // In panel mode we need to filter out regions that have a high GC content in the sample.
         if(mPanelMode)

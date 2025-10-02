@@ -17,11 +17,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.ChromosomeData;
-import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
-import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.common.bam.BamSlicer;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -33,11 +30,6 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import tech.tablesaw.api.DoubleColumn;
-import tech.tablesaw.api.IntColumn;
-import tech.tablesaw.api.Row;
-import tech.tablesaw.api.StringColumn;
-import tech.tablesaw.api.Table;
 
 public class BRC
 {
@@ -47,18 +39,15 @@ public class BRC
     private final List<Future<?>> tasks = new ArrayList<>();
     private final List<ChromosomeData> mChromosomes = Lists.newArrayList();
     private final ReadDepthAccumulator mReadDepthAccumulator;
-    private final ChromosomePositionCodec mChromosomePosCodec;
 
     public BRC(
             final int windowSize, final CobaltConfig config,
             final ExecutorService executorService,
-            final String bamPath,
-            final ChromosomePositionCodec chromosomePosCodec) throws IOException
+            final String bamPath) throws IOException
     {
         mConfig = config;
         mBamPath = bamPath;
         mReaderFactory = config.readerFactory();
-        mChromosomePosCodec = chromosomePosCodec;
         loadChromosomes();
         mReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
         for(ChromosomeData chromosome : mChromosomes)
@@ -72,22 +61,6 @@ public class BRC
             Runnable task = () -> sliceRegionTask(baseRegion);
             tasks.add(executorService.submit(task));
         }
-    }
-
-    public List<ChromosomeData> chromosomes()
-    {
-        return mChromosomes;
-    }
-
-    public Table generateDepths() throws ExecutionException, InterruptedException
-    {
-        // wait for all tasks to complete
-        for(Future<?> f : tasks)
-        {
-            f.get();
-        }
-        CB_LOGGER.info("read depth complete");
-        return calcDepths();
     }
 
     private void sliceRegionTask(ChrBaseRegion region)
@@ -153,14 +126,14 @@ public class BRC
         mReadDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
     }
 
-    public ListMultimap<Chromosome, DepthReading> calculateReadDepths()throws ExecutionException, InterruptedException
+    public ListMultimap<HumanChromosome, DepthReading> calculateReadDepths()throws ExecutionException, InterruptedException
     {
         for(Future<?> f : tasks)
         {
             f.get();
         }
 
-        ListMultimap<Chromosome, DepthReading> result = ArrayListMultimap.create();
+        ListMultimap<HumanChromosome, DepthReading> result = ArrayListMultimap.create();
         for(ChromosomeData chromosome : mChromosomes)
         {
             List<DepthReading> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
@@ -169,31 +142,6 @@ public class BRC
             result.putAll(humanChromosome, readDepths);
         }
         return result;
-    }
-    private Table calcDepths()
-    {
-        final Table readDepthTable = Table.create("readDepths",
-                StringColumn.create(CobaltColumns.CHROMOSOME),
-                IntColumn.create(CobaltColumns.POSITION),
-                DoubleColumn.create(CobaltColumns.READ_DEPTH),
-                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
-
-        for(ChromosomeData chromosome : mChromosomes)
-        {
-            List<DepthReading> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
-            Objects.requireNonNull(readDepths);
-            for(DepthReading readDepth : readDepths)
-            {
-                Row row = readDepthTable.appendRow();
-                row.setString(CobaltColumns.CHROMOSOME, chromosome.Name);
-                row.setInt(CobaltColumns.POSITION, readDepth.StartPosition);
-                row.setDouble(CobaltColumns.READ_DEPTH, readDepth.ReadDepth);
-                row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.ReadGcContent);
-            }
-        }
-        mChromosomePosCodec.addEncodedChrPosColumn(readDepthTable, false);
-
-        return readDepthTable;
     }
 
     private void loadChromosomes() throws IOException

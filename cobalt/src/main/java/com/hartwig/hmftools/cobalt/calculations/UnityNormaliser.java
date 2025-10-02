@@ -21,7 +21,7 @@ public class UnityNormaliser implements ResultsNormaliser
     }
 
     @Override
-    public void applyNormalisation(BamRatio bamRatio)
+    public void normalise(BamRatio bamRatio)
     {
         double mean = descriptiveStatistics.getMean();
         bamRatio.normaliseByMean(mean);

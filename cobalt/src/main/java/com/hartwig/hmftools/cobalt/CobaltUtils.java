@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.cobalt;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.calculations.CobaltWindow;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -17,6 +22,14 @@ import tech.tablesaw.api.Table;
 
 public class CobaltUtils
 {
+    public static <S extends Comparable<S>,T> List<T> toList(ListMultimap<S, T> multimap)
+    {
+        ArrayList<T> result = new ArrayList<>(multimap.size());
+        SortedSet<S> keysInOrder = new TreeSet<>(multimap.keySet());
+        keysInOrder.forEach(k -> result.addAll(multimap.get(k)));
+        return result;
+    }
+
     public static Multimap<Chromosome, ReadRatio> toCommonChromosomeMap(final Table input)
     {
         Multimap<Chromosome, ReadRatio> output = ArrayListMultimap.create();

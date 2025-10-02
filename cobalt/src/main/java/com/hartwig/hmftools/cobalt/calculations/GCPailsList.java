@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
+import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
 public class GCPailsList
 {
@@ -23,5 +28,13 @@ public class GCPailsList
     public List<GCPail> getBuckets()
     {
         return mBuckets;
+    }
+
+    public Map<GCBucket, Double> bucketToMedianReadDepth()
+    {
+        // todo test
+        Map<GCBucket, Double> bucketToMedian = new HashMap<>();
+        mBuckets.forEach(b -> bucketToMedian.put(new ImmutableGCBucket(b.mGC), b.median()));
+        return bucketToMedian;
     }
 }

@@ -20,6 +20,7 @@ class DiploidRatioNormaliser
     private final List<BamRatio> mRatios = new ArrayList<>();
     private final RollingMedian mRollingMedian;
     private int currentIndex = 0;
+    private double mExpectedRatio;
 
     DiploidRatioNormaliser(int maxWindowDistance, int minWindowCoverage)
     {
@@ -30,9 +31,9 @@ class DiploidRatioNormaliser
 
     void recordRatio(final BamRatio bamRatio)
     {
-        mRatios.add(bamRatio);
         if (isValid(bamRatio.ratio()))
         {
+            mRatios.add(bamRatio);
             mRatioStatistics.addValue(bamRatio.ratio());
         }
     }
@@ -40,6 +41,11 @@ class DiploidRatioNormaliser
     void dataCollectionFinished()
     {
         mMedian = mRatioStatistics.getPercentile(50);
+    }
+
+    void setmExpectedRatio(double expectedRatio)
+    {
+        mExpectedRatio = expectedRatio;
     }
 
     double median()
@@ -65,6 +71,10 @@ class DiploidRatioNormaliser
     double normalise(final BamRatio bamRatio)
     {
         checkThatDataHasBeenFinalised();
+        if (!isValid(bamRatio.ratio()))
+        {
+            return bamRatio.ratio();
+        }
         Preconditions.checkArgument(bamRatio.equals(mRatios.get(currentIndex)));
         final double current = bamRatio.ratio();
         removeExpiredRatios(currentIndex);
@@ -76,7 +86,7 @@ class DiploidRatioNormaliser
 
         if(isValid(current) && mRollingMedian.size() >= mMinWindowCoverage)
         {
-            correctedRatio = mMedian * current / medianRatio;
+            correctedRatio = mExpectedRatio * current / medianRatio;
         }
         return correctedRatio;
     }

@@ -22,11 +22,13 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.calculations.CobaltCalculator;
 import com.hartwig.hmftools.cobalt.count.BRC;
-import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.exclusions.SuppliedExcludedRegions;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
+import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
@@ -67,100 +69,40 @@ public class CobaltApplication
     private void run()
     {
         long startTimeMs = System.currentTimeMillis();
-
         CB_LOGGER.info("reading GC Profile from {}", mConfig.GcProfilePath);
-
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-
         try
         {
-            SamReaderFactory readerFactory = readerFactory(mConfig);
+            BRC brcTumor = mConfig.tumorBamReader(executorService);
+            BRC brcRef = mConfig.referenceBamReader(executorService);
 
-            ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
+            ListMultimap<HumanChromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
+            CB_LOGGER.info("Tumor depths collected, size: {}", tumourDepths.size());
+            ListMultimap<HumanChromosome, DepthReading> refDepths = brcRef == null ? create() : brcRef.calculateReadDepths();
+            CB_LOGGER.info("Reference depths collected, size: {}", refDepths.size());
 
-            BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
-
-            bamReadCounter.generateDepths();
-            //
-            BRC brcTumor = null;
-            if(mConfig.TumorBamPath != null)
-            {
-                brcTumor = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.TumorBamPath, chromosomePosCodec);
-            }
-
-            BRC brcReference = null;
-            if(mConfig.ReferenceBamPath != null)
-            {
-                brcReference = new BRC(WINDOW_SIZE, mConfig, executorService, mConfig.ReferenceBamPath, chromosomePosCodec);
-            }
-
-            /*
-            Table tumorReadDepths = bamReadCounter.getTumorDepths();//brcTumor != null ? brcTumor.generateDepths() : null;
-            Table referenceReadDepths = bamReadCounter.getReferenceDepths();// brcReference != null ? brcReference.generateDepths() : null;
-
-            Table gcProfiles = loadMappabilityData(chromosomePosCodec);
-
-            RatioSupplier ratioSupplier = new RatioSupplier(
-                    mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir, gcProfiles, referenceReadDepths, tumorReadDepths,
-                    chromosomePosCodec);
-
-            if(mConfig.TargetRegionNormFile != null)
-            {
-                CsvReadOptions options = CsvReadOptions.builder(
-                        mConfig.TargetRegionNormFile)
-                        .separator(TSV_DELIM.charAt(0))
-                        .columnTypesPartial(Map.of(CHROMOSOME, ColumnType.STRING)).build();
-
-                Table targetRegionEnrichment = Table.read().usingOptions(options);
-
-                if(mConfig.SpecificChrRegions.hasFilters())
-                {
-                    List<ChromosomeData> chromosomeData = bamReadCounter.chromosomes();//brcTumor != null ? brcTumor.chromosomes() : brcReference.chromosomes();
-                    List<String> validChromosomes = chromosomeData.stream().map(x -> x.Name).collect(Collectors.toList());
-
-                    targetRegionEnrichment = targetRegionEnrichment.where(
-                            targetRegionEnrichment.stringColumn(CHROMOSOME).isIn(validChromosomes));
-                }
-
-                chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
-                ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
-            }
-
-            Table ratios;
-
-            switch(mConfig.mode())
-            {
-                case TUMOR_ONLY:
-                    Table diploidRegions = new DiploidRegionLoader(chromosomePosCodec, mConfig.TumorOnlyDiploidBed).build();
-                    ratios = ratioSupplier.tumorOnly(diploidRegions);
-                    break;
-
-                case GERMLIHE_ONLY:
-                    ratios = ratioSupplier.germlineOnly();
-                    break;
-
-                default:
-                    ratios = ratioSupplier.tumorNormalPair();
-            }
-
-*/
-            final String outputFilename = CobaltRatioFile.generateFilename(
-                    mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
-
-            CB_LOGGER.info("persisting cobalt ratios to {}", outputFilename);
-
-            ListMultimap<Chromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
-            ListMultimap<Chromosome, DepthReading> referenceDepths = brcReference == null ? create() : brcReference.calculateReadDepths();
-            CobaltCalculator calculator = new CobaltCalculator(tumourDepths, referenceDepths, mConfig);
+            CobaltCalculator calculator = new CobaltCalculator(tumourDepths, refDepths, mConfig);
             ListMultimap<Chromosome, CobaltRatio> results = calculator.getCalculatedRatios();
 
-            //                        final List<CobaltRatio> collectedRatios = ratios.stream()
-            //                                .map(r -> rowToCobaltRatio(r, chromosomePosCodec))
-            //                                .collect(Collectors.toList());
             final List<CobaltRatio> collectedRatios = new ArrayList<>();
             results.keySet().forEach(chromosome -> collectedRatios.addAll(results.get(chromosome)));
-            CobaltRatioFile.write(outputFilename, collectedRatios);
+            CobaltRatioFile.write(mConfig.cobaltRatiosFileName(), collectedRatios);
+
+            if (mConfig.TumorId != null)
+            {
+                CB_LOGGER.info("persisting tumor {} GC read count to {}", mConfig.TumorId, mConfig.OutputDir);
+                CobaltGcMedianFile.write(mConfig.tumorGcMedianFileName(), calculator.tumorMedianReadDepth());
+            }
+
+            if(mConfig.ReferenceId != null)
+            {
+                CB_LOGGER.info("persisting {} gc ratio medians to {}", mConfig.ReferenceId, mConfig.OutputDir);
+                CobaltMedianRatioFile.write(mConfig.medianRatiosFileName(), calculator.medianRatios());
+
+                CB_LOGGER.info("persisting reference {} GC read count to {}", mConfig.ReferenceId, mConfig.OutputDir);
+                CobaltGcMedianFile.write(mConfig.referenceGcMedianFileName(), calculator.referenceMedianReadDepth());
+            }
 
             if(!mConfig.SkipPcfCalc)
             {
@@ -169,6 +111,15 @@ public class CobaltApplication
 
             final VersionInfo version = fromAppName(APP_NAME);
             version.write(mConfig.OutputDir);
+            //     List<DepthReading> tumorRawReads = CobaltUtils.toList(tumourDepths);
+            //            final String tumorRawReadsFile = DepthReadingsFile.generateFilename(mConfig.OutputDir, mConfig.TumorId, true);
+            //            DepthReadingsFile.write(tumorRawReadsFile, tumorRawReads);
+            //            CB_LOGGER.info("Tumor raw reads persisted to: {}", tumorRawReadsFile);
+            //
+            //            List<DepthReading> refRawReads = CobaltUtils.toList(refDepths);
+            //            final String refRawReadsFile = DepthReadingsFile.generateFilename(mConfig.OutputDir, mConfig.ReferenceId, false);
+            //            DepthReadingsFile.write(refRawReadsFile, refRawReads);
+            //            CB_LOGGER.info("Reference raw reads persisted to: {}", refRawReadsFile);
         }
         catch(Exception e)
         {

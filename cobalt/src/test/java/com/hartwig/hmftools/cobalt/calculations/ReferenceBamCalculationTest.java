@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 
 import org.junit.Assert;
@@ -11,16 +13,16 @@ public class ReferenceBamCalculationTest
     private ReferenceBamCalculation Calculation;
 
     @Test
-    public void finalNormaliser()
+    public void createFinalNormaliser()
     {
-        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class));
-        Assert.assertTrue(Calculation.finalMeanNormaliser() instanceof DoNothingNormaliser);
+        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
+        Assert.assertTrue(Calculation.createReadDepthsNormaliser() instanceof ReadDepthStatisticsNormaliser);
     }
 
     @Test
-    public void diploidNormaliser()
+    public void createMegaBaseScaleNormaliser()
     {
-        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class));
-        Assert.assertTrue(Calculation.diploidNormaliser() instanceof DiploidNormaliser);
+        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
+        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser() instanceof DiploidNormaliser);
     }
 }

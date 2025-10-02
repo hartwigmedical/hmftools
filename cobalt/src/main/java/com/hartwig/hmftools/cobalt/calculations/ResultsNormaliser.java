@@ -4,9 +4,9 @@ public interface ResultsNormaliser
 {
     void recordValue(BamRatio bamRatio);
 
-    default void recordsAllAdded()
+    default void dataCollectionFinished()
     {
     }
 
-    void applyNormalisation(BamRatio bamRatio);
+    void normalise(BamRatio bamRatio);
 }

@@ -27,7 +27,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(-1.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0, br3.ratio(), 0.001);
 
-        bamRatios.forEach(normaliser::applyNormalisation);
+        bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0/20.0, br1.ratio(), 0.001);
         Assert.assertEquals(-1.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0/20.0, br3.ratio(), 0.001);
@@ -46,7 +46,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(2.0, br2.ratio(), 0.001);
         Assert.assertEquals(3.0, br3.ratio(), 0.001);
 
-        bamRatios.forEach(normaliser::applyNormalisation);
+        bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(1.0, br1.ratio(), 0.001);
         Assert.assertEquals(2.0, br2.ratio(), 0.001);
         Assert.assertEquals(3.0, br3.ratio(), 0.001);
@@ -68,7 +68,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(50.0, br3.ratio(), 0.001);
         Assert.assertEquals(-1.0, br4.ratio(), 0.001);
 
-        bamRatios.forEach(normaliser::applyNormalisation);
+        bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0/30.0, br1.ratio(), 0.001);
         Assert.assertEquals(0.0/20.0, br2.ratio(), 0.001);
         Assert.assertEquals(50.0/30.0, br3.ratio(), 0.001);

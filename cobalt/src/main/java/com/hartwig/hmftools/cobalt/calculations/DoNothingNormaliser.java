@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
-import java.util.Collection;
-
 public class DoNothingNormaliser implements ResultsNormaliser
 {
     @Override
@@ -10,7 +8,7 @@ public class DoNothingNormaliser implements ResultsNormaliser
     }
 
     @Override
-    public void applyNormalisation(BamRatio bamRatio)
+    public void normalise(BamRatio bamRatio)
     {
     }
 }

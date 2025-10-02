@@ -11,25 +11,32 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class ReferenceBamCalculation extends BamCalculation
 {
-    private final DiploidNormaliser mDiploidNormaliser = new DiploidNormaliser(ROLLING_MEDIAN_MAX_DISTANCE, ROLLING_MEDIAN_MIN_COVERAGE);
+    private final DiploidNormaliser mDiploidNormaliser;
 
-    public ReferenceBamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope)
+    public ReferenceBamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
         super(mGenomeFilter, scope);
+        mDiploidNormaliser = new DiploidNormaliser(ROLLING_MEDIAN_MAX_DISTANCE, ROLLING_MEDIAN_MIN_COVERAGE, version);
     }
 
-    ResultsNormaliser finalMeanNormaliser()
+    ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
     {
-        return new DoNothingNormaliser();
+        return mScope.medianByMeanNormaliser();
     }
 
-    ResultsNormaliser diploidNormaliser()
+    ResultsNormaliser createMegaBaseScaleNormaliser()
     {
         return mDiploidNormaliser;
     }
 
-    List<MedianRatio> medianRatios(final RefGenomeVersion refGenVersion)
+    @Override
+    ResultsNormaliser createFinalNormaliser()
     {
-        return mDiploidNormaliser.medianRatios(refGenVersion);
+        return mScope.finalNormaliser();
+    }
+
+    List<MedianRatio> medianRatios()
+    {
+        return mDiploidNormaliser.medianRatios();
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
 import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -11,6 +12,12 @@ public class WholeGenome implements CobaltScope
     public ResultsNormaliser finalNormaliser()
     {
         return new DoNothingNormaliser();
+    }
+
+    @Override
+    public ReadDepthStatisticsNormaliser medianByMeanNormaliser()
+    {
+        return new ReadDepthStatisticsNormaliser();
     }
 
     @Override

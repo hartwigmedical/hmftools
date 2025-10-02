@@ -615,22 +615,24 @@ public class ProcessBamTest
 
         // There is only one GC bucket, and it has median read depth 105
         // (the sex chromosomes don't contribute to this median).
+        // Because of GC bucket smoothing, this median gets divided by 3.
+        double smoothedGcNormalisation = 105.0/3;
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(3, ratios1.size());
-        assertEquals(100.0 / 105.0, ratios1.get(0).tumorGCRatio(), 0.01);
-        assertEquals(110.0 / 105.0, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / smoothedGcNormalisation, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / smoothedGcNormalisation, ratios1.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios1.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(3, ratios2.size());
-        assertEquals(110.0 / 105.0, ratios2.get(0).tumorGCRatio(), 0.01);
-        assertEquals(100.0 / 105.0, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(110.0 /smoothedGcNormalisation, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0 /smoothedGcNormalisation, ratios2.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios2.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratiosX = tumorRatioResults.get(_X);
         assertEquals(3, ratiosX.size());
-        assertEquals(120.0 / 105.0, ratiosX.get(0).tumorGCRatio(), 0.01);
-        assertEquals(120.0 / 105.0, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(120.0 /smoothedGcNormalisation, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(120.0 /smoothedGcNormalisation, ratiosX.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratiosX.get(2).tumorGCRatio(), 0.01);
     }
 
@@ -661,29 +663,31 @@ public class ProcessBamTest
 
         // There is only one GC bucket, and it has median read depth 104
         // (the sex chromosomes don't contribute to this median).
+        // Because of GC bucket smoothing, this median gets divided by 3.
+        double smoothedGcNormalisation = 104.0/3;
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(3, ratios1.size());
-        assertEquals(100.0 / 104.0, ratios1.get(0).tumorGCRatio(), 0.01);
-        assertEquals(110.0 / 104.0, ratios1.get(1).tumorGCRatio(), 0.01);
-        assertEquals(1.0, ratios1.get(2).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / smoothedGcNormalisation, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / smoothedGcNormalisation, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(104.0 /smoothedGcNormalisation, ratios1.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(3, ratios2.size());
-        assertEquals(110.0 / 104.0, ratios2.get(0).tumorGCRatio(), 0.01);
-        assertEquals(100.0 / 104.0, ratios2.get(1).tumorGCRatio(), 0.01);
-        assertEquals(1.0, ratios2.get(2).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / smoothedGcNormalisation, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / smoothedGcNormalisation, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(104.0/smoothedGcNormalisation, ratios2.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratiosX = tumorRatioResults.get(_X);
         assertEquals(3, ratiosX.size());
-        assertEquals(60.0 / 104.0, ratiosX.get(0).tumorGCRatio(), 0.01);
-        assertEquals(60.0 / 104.0, ratiosX.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0 / 104.0, ratiosX.get(2).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / smoothedGcNormalisation, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / smoothedGcNormalisation, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / smoothedGcNormalisation, ratiosX.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratiosY = tumorRatioResults.get(_Y);
         assertEquals(3, ratiosY.size());
-        assertEquals(40.0 / 104.0, ratiosY.get(0).tumorGCRatio(), 0.01);
-        assertEquals(40.0 / 104.0, ratiosY.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0 / 104.0, ratiosY.get(2).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / smoothedGcNormalisation, ratiosY.get(0).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / smoothedGcNormalisation, ratiosY.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / smoothedGcNormalisation, ratiosY.get(2).tumorGCRatio(), 0.01);
     }
 
     @Test
@@ -707,10 +711,11 @@ public class ProcessBamTest
         createStandardMultiChromosomeGCFile(10_000, _1, _2, _X);
 
         runCobalt(false);
-        // Reference read depths are (5*2, 0*4, 6*4)*3. Mean of the non-zero values is 17/3.
+        // Reference read depths are (5*2, 0*4, 6*4)*3. Median of the non-zero values is 6.0.
         // Tumor read depths are (10*3, 0*4, 12*3)*3. Mean of the non-zero values is 11.0.
-        double refGCMean = 17.0 / 3.0;
-        double tumorGCMean = 11.0;
+        // These values get divided by three during GC bucket smoothing.
+        double refGCMean = 6.0 / 3.0;
+        double tumorGCMean = 11.0 / 3.0;
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(10, ratios1.size());
         assertEquals(5.0, ratios1.get(0).referenceReadDepth(), 0.01);
@@ -853,7 +858,7 @@ public class ProcessBamTest
 
         runCobalt(false);
         List<CobaltRatio> ratios = tumorRatioResults.get(_1);
-        for(int i = 0; i < 25; i++)
+        for(int i = 0; i < 24; i++)
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }

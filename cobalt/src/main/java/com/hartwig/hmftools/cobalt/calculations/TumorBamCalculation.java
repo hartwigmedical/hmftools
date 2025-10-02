@@ -9,13 +9,19 @@ public class TumorBamCalculation extends BamCalculation
         super(mGenomeFilter, scope);
     }
 
-    ResultsNormaliser finalMeanNormaliser()
+    ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
     {
-        return mScope.finalNormaliser();
+        return mScope.medianByMeanNormaliser();
     }
 
-    ResultsNormaliser diploidNormaliser()
+    ResultsNormaliser createMegaBaseScaleNormaliser()
     {
         return new DoNothingNormaliser();
+    }
+
+    @Override
+    ResultsNormaliser createFinalNormaliser()
+    {
+        return mScope.finalNormaliser();
     }
 }
