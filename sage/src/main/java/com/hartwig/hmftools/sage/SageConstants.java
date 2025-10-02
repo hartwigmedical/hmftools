@@ -146,6 +146,9 @@ public class SageConstants
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
 
+    public static final int CORE_AF_MIN = 3;
+    public static final double CORE_AF_FULL_RATIO = 0.25;
+
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 

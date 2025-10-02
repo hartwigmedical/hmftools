@@ -18,6 +18,8 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.CORE_AF_FULL_RATIO;
+import static com.hartwig.hmftools.sage.SageConstants.CORE_AF_MIN;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
@@ -37,6 +39,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.evidence.QualCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.evidence.ReadSupportCounts;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
@@ -146,10 +149,22 @@ public final class VariantContextFactory
         // NOTE: any field added to the genotype field should also be added to checkGenotypeFields() above, so that if it is only set in
         // append-mode, that it will also get valid default values
 
+        double vaf = counter.vaf();
+
+        // remove core support from AD and AF consideration if it is implausibly high
+        ReadSupportCounts readCounts = counter.readCounts();
+        double coreProportion = (double)readCounts.Core / readCounts.altSupport();
+
+        if(readCounts.Core >= CORE_AF_MIN && coreProportion >= CORE_AF_FULL_RATIO)
+        {
+            altSupport -= readCounts.Core;
+            vaf = altSupport / (double)readCounts.Total;
+        }
+
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
-                .attribute(READ_CONTEXT_COUNT, counter.counts())
+                .attribute(READ_CONTEXT_COUNT, readCounts.toArray())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter().summary())
                 .attribute(AVG_READ_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
@@ -165,7 +180,7 @@ public final class VariantContextFactory
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasNonAlt().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(
                         READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasNonAlt().bias(), counter.readStrandBiasAlt().bias()))
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, vaf)
                 .attribute(SIMPLE_ALT_COUNT, counter.simpleAltMatches())
                 .attribute(MIN_COORDS_COUNT, counter.fragmentCoords().minCount())
                 .alleles(NO_CALL);
