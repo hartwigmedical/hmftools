@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.pipeline;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.DB_V6_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_0_FORMAT;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.OA_V2_2_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIP5_V6_0_FORMAT;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
@@ -27,10 +28,10 @@ public class PipelineToolDirectoriesTest
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
-        assertEquals("pave_germline", victim.paveGermlineDir());
-        assertEqualDirectories(PIP5_V6_0_FORMAT, victim);
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
+                configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        assertEquals("pave", victim.paveGermlineDir());
+        assertEqualDirectories(OA_V2_2_FORMAT, victim);
     }
 
     @Test
@@ -38,12 +39,17 @@ public class PipelineToolDirectoriesTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
-        configBuilder.checkAndParseCommandLine(new String[]{"-" + PIPELINE_FORMAT_CFG, "PIP5_V6_0"});
+        setPipelineConfig(configBuilder, PipelineOutputStructure.PIP5_V6_0.toString());
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
+                configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("pave_germline", victim.paveGermlineDir());
         assertEqualDirectories(PIP5_V6_0_FORMAT, victim);
+    }
+
+    private static void setPipelineConfig(final ConfigBuilder configBuilder, final String pipelineVersion)
+    {
+        configBuilder.checkAndParseCommandLine(new String[]{"-" + PIPELINE_FORMAT_CFG, pipelineVersion});
     }
 
     @Test
@@ -51,12 +57,12 @@ public class PipelineToolDirectoriesTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
-        configBuilder.checkAndParseCommandLine(new String[]{"-" + PIPELINE_FORMAT_CFG, "OA_V2_0"});
+        setPipelineConfig(configBuilder, PipelineOutputStructure.OA_V2_2.toString());
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
+                configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("pave", victim.paveGermlineDir());
-        assertEqualDirectories(OA_V2_0_FORMAT, victim);
+        assertEqualDirectories(OA_V2_2_FORMAT, victim);
     }
 
     @Test
@@ -64,10 +70,9 @@ public class PipelineToolDirectoriesTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
-        configBuilder.checkAndParseCommandLine(new String[]{"-" + PIPELINE_FORMAT_CFG, "DB_V6_0"});
+        setPipelineConfig(configBuilder, PipelineOutputStructure.DB_V6_0.toString());
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("pave/germline", victim.paveGermlineDir());
         assertEqualDirectories(DB_V6_0_FORMAT, victim);
     }
@@ -79,8 +84,7 @@ public class PipelineToolDirectoriesTest
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
         configBuilder.checkAndParseCommandLine(new String[]{"-" + PIPELINE_FORMAT_FILE_CFG, PARTIAL_TEST_CONFIG_FILE });
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("amberTest", victim.amberDir());
         assertEquals("purple/*/test", victim.purpleDir());
         assertEquals("sage/$", victim.sageGermlineDir());
@@ -121,8 +125,9 @@ public class PipelineToolDirectoriesTest
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
-        PipelineToolDirectories victim =
-                PipelineToolDirectories.resolveToolDirectories(configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
+        setPipelineConfig(configBuilder, PipelineOutputStructure.PIP5_V6_0.toString());
+        PipelineToolDirectories victim = PipelineToolDirectories.resolveToolDirectories(
+                configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG);
         assertEquals("*/bam_metrics", victim.tumorMetricsDir());
         assertEquals("$/bam_metrics", victim.germlineMetricsDir());
         assertEquals("purple", victim.purpleDir());
@@ -134,6 +139,7 @@ public class PipelineToolDirectoriesTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
+        setPipelineConfig(configBuilder, PipelineOutputStructure.PIP5_V6_0.toString());
 
         String tumorSampleId = "TUMOR";
 
@@ -149,6 +155,7 @@ public class PipelineToolDirectoriesTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
+        setPipelineConfig(configBuilder, PipelineOutputStructure.PIP5_V6_0.toString());
 
         String tumorSampleId = "TUMOR";
         String normalSampleId = "NORMAL";

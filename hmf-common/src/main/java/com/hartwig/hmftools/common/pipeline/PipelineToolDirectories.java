@@ -72,6 +72,36 @@ public record PipelineToolDirectories(
             "virusbreakend",
             "virusinterpreter"
     );
+
+    public static final PipelineToolDirectories OA_V2_2_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$_bamtools",
+            "bamtools/$_bamtools",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave",
+            "pave",
+            "peach",
+            "purple",
+            "sage_calling/germline",
+            "sage_calling/somatic",
+            "sigs",
+            "",
+            "teal",
+            "bamtools/*_bamtools",
+            "bamtools/*_bamtools",
+            "virusbreakend",
+            "virusinterpreter"
+    );
+
     public static final PipelineToolDirectories PIP5_V6_0_FORMAT = new PipelineToolDirectories(
             "amber",
             "chord",
@@ -129,13 +159,15 @@ public record PipelineToolDirectories(
             "virusinterpreter"
     );
 
-    public static PipelineToolDirectories resolveToolDirectories(final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
             final String pipelineFormatFileConfigStr, final String tumorSampleId)
     {
         return resolveToolDirectories(configBuilder, pipelineFormatConfigStr, pipelineFormatFileConfigStr, tumorSampleId, null);
     }
 
-    public static PipelineToolDirectories resolveToolDirectories(final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
             final String pipelineFormatFileConfigStr, final String tumorSampleId, final String normalSampleId)
     {
         PipelineToolDirectories withWildcardSampleIds =
@@ -143,7 +175,8 @@ public record PipelineToolDirectories(
         return withWildcardSampleIds.resolveSampleIds(tumorSampleId, normalSampleId);
     }
 
-    public static PipelineToolDirectories resolveToolDirectories(final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
             final String pipelineFormatFileConfigStr)
     {
         if(configBuilder.hasValue(pipelineFormatFileConfigStr))
@@ -157,7 +190,7 @@ public record PipelineToolDirectories(
         }
         else
         {
-            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.PIP5_V6_0);
+            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.OA_V2_2);
         }
     }
 
@@ -172,6 +205,7 @@ public record PipelineToolDirectories(
         return switch(outputStructure)
         {
             case OA_V2_0 -> OA_V2_0_FORMAT;
+            case OA_V2_2 -> OA_V2_2_FORMAT;
             case PIP5_V6_0 -> PIP5_V6_0_FORMAT;
             case DB_V6_0 -> DB_V6_0_FORMAT;
         };

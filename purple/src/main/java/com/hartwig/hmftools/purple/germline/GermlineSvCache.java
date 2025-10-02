@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_FACTOR;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_MARGIN;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
@@ -145,6 +146,9 @@ public class GermlineSvCache
 
             double tincRecovery = tumorAF * tincAdjustment;
 
+            if(variant.hotspot())
+                tincRecovery *= GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER;
+
             double adjustedRefAF = refAF - tincRecovery;
             double adjustedRefAltFrags = (int)round(refAltFrags - refDepth * tincRecovery);
 
@@ -168,6 +172,8 @@ public class GermlineSvCache
         if(hasTransfers)
         {
             mVariantCollection.clear();
+
+            PPL_LOGGER.info("tincLevel({}) recovered {} germline SVs", tincLevel, transferredVariants.size());
 
             for(StructuralVariant variant : mVariantCollection.variants())
             {
