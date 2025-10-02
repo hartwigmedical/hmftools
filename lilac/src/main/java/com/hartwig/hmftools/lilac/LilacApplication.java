@@ -510,14 +510,14 @@ public class LilacApplication
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
         mSummaryMetrics = new LilacQC(
-                scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
+                mConfig.Genes, scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
                 mHlaYCoverage == null ? null : mHlaYCoverage.getSelectedAllele(),
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         ComplexCoverage refCoverage = !mConfig.tumorOnly() ? winningRefCoverage
                 : ComplexCoverage.create(Lists.newArrayList());
 
-        mSolutionSummary = SolutionSummary.create(refCoverage, mTumorCoverage, mTumorCopyNumber,
+        mSolutionSummary = SolutionSummary.create(mConfig.Genes, refCoverage, mTumorCoverage, mTumorCopyNumber,
                 mSomaticCodingCounts, mRnaCoverage);
 
         writeFileOutputs();
