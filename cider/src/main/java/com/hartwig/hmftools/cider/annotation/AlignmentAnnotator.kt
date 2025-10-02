@@ -127,11 +127,13 @@ class AlignmentAnnotator
     fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>, alignments: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment>)
     : Collection<AlignmentAnnotation>
     {
+        sLogger.debug("Processing alignments")
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
         for (runData in alignmentRunDataList)
         {
             alignmentAnnotations.add(processAlignments(runData, alignments[runData]))
         }
+        sLogger.debug("Done processing alignments")
         return alignmentAnnotations
     }
 

@@ -36,6 +36,10 @@ object CiderConstants
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
 
+    // From some testing, 50k query sequences used 10GB of memory.
+    // Want to limit it to about use only a few GB.
+    const val ALIGNMENT_BATCH_SIZE = 20000
+
     // filter out matches that have too low identity
     // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
     // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.

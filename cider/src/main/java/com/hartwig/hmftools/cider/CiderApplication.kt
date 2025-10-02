@@ -109,9 +109,6 @@ class CiderApplication(configBuilder: ConfigBuilder)
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
 
-            // perform a GC collection before running alignment. This is to reduce memory used by JVM
-            System.gc()
-
             loadAlignerLibrary(mParams.bwaLibPath)
 
             val refGenomeDictPath = "${mParams.refGenomePath}.dict"
