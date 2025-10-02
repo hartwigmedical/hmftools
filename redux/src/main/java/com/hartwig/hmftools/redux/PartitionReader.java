@@ -317,7 +317,6 @@ public class PartitionReader
             if(!internallyUnmapped)
             {
                 mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
-                mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
 
                 boolean fullyUnmapped = fullyUnmapped(read);
                 boolean unmapped = !isUnmapped && read.getReadUnmappedFlag();
