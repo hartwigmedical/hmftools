@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.registerCommonConfig;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
 import static com.hartwig.hmftools.lilac.ReferenceData.DEFLATE_TEMPLATE;
 import static com.hartwig.hmftools.lilac.ReferenceData.NUC_REF_FILE;
@@ -102,6 +103,7 @@ public class GenerateReferenceSequences
         LL_LOGGER.info("generating HLA sequence reference data");
 
         CLASS_1_EXCLUDED_ALLELES.clear();
+        HLA_DRB1_EXCLUDED_ALLELES.clear();
 
         seqGenerator.loadSequenceFiles();
 

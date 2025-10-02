@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
-import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB1;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -163,7 +163,7 @@ public final class SequenceCount
         {
             addMhcClass1HeterozygousLociSequences(geneHetLociMap);
         }
-        else if(geneHetLociMap.containsKey(HLA_DRB1))
+        else if(geneHetLociMap.containsKey(HLA_DRB3))
         {
             addDrbHeterozygousLociSequences(geneHetLociMap);
         }

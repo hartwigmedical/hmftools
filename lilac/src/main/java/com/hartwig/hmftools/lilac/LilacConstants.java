@@ -77,6 +77,13 @@ public final class LilacConstants
             // Similar to HLA-H
             "B*40:278");
 
+    public static final List<String> HLA_DRB1_EXCLUDED_ALLELES = Lists.newArrayList(
+            "DRB1*14:242", // Similar to Exon 3 of DRB3
+            "DRB1*14:141", // Similar to Exon 2 of DRB3
+            "DRB1*14:262", // Similar to Exon 2 (1st half) of DRB3
+            "DRB1*12:57" // Similar to Exon 2 (2nd half) of DRB3
+    );
+
     // common INDEL associated with allele C*04:09N
     // TODO(mkcmkc): If we update the resources change to "C*04:09L"
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";

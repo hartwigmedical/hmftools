@@ -57,6 +57,24 @@ public final class HlaExonSequences
             index = exonBoundary + 1;
         }
 
+        if(index < acids.size())
+        {
+            List<String> exonAcid = acids.subList(index, acids.size());
+
+            List<List<String>> chunks = Lists.newArrayList();
+            int chunkCount = (int) ceil(((double) exonAcid.size()) / EXON_CHUNK_SIZE);
+            int chunkSize = (int) ceil(((double) exonAcid.size()) / chunkCount);
+            int start = 0;
+            while(start < exonAcid.size())
+            {
+                int end = min(start + chunkSize, exonAcid.size());
+                chunks.add(exonAcid.subList(start, end));
+                start = end;
+            }
+
+            exonAcids.addAll(chunks);
+        }
+
         List<ExonSequence> exonSeqs = Lists.newArrayList();
         for(List<String> seq : exonAcids)
         {
