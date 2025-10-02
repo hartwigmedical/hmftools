@@ -108,6 +108,7 @@ public class PurpleConstants
 
     public static final double GERMLINE_SV_TINC_FACTOR = 2;
     public static final double GERMLINE_SV_TINC_MARGIN = 0.02;
+    public static final double GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER = 2;
 
     // germline deletions
     public static final int GERMLINE_DEL_GENE_BUFFER = 500;
