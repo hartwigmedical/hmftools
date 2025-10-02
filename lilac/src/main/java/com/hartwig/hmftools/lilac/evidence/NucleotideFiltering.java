@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac.evidence;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB4;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +29,7 @@ public class NucleotideFiltering
     }
 
     public List<HlaSequenceLoci> filterCandidatesOnAminoAcidBoundaries(
-            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final List<Fragment> fragments)
+            final HlaGene gene, final Collection<HlaSequenceLoci> candidates, final Iterable<Fragment> fragments)
     {
         List<HlaSequenceLoci> results = Lists.newArrayList();
         results.addAll(candidates);
@@ -51,7 +53,7 @@ public class NucleotideFiltering
     }
 
     private static boolean consistentWithAny(
-            final HlaSequenceLoci seqLoci, int startLoci, final List<String> startSequences, final List<String> endSequences)
+            final HlaSequenceLoci seqLoci, int startLoci, final Collection<String> startSequences, final Collection<String> endSequences)
     {
         return seqLoci.consistentWithAny(startSequences, Lists.newArrayList(startLoci))
                 && seqLoci.consistentWithAny(endSequences, Lists.newArrayList(startLoci + 1, startLoci + 2));
@@ -77,7 +79,7 @@ public class NucleotideFiltering
         int count = 0;
         for(Fragment fragment : fragments)
         {
-            if(fragment.readGene() != gene)
+            if(gene != HLA_DRB3 && gene != HLA_DRB4 && fragment.readGene() != gene)
                 continue;
 
             if(!fragment.containsAllNucleotideLoci(nucleotideIndices))

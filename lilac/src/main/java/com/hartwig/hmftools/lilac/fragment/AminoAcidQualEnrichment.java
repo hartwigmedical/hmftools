@@ -15,6 +15,8 @@ import com.hartwig.hmftools.lilac.evidence.AminoAcid;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class AminoAcidQualEnrichment
 {
     private AminoAcidQualEnrichment() {}
@@ -43,14 +45,14 @@ public final class AminoAcidQualEnrichment
     }
 
     @VisibleForTesting
-    public static void applyQualFilter(final Fragment fragment, final SequenceCount count, final SequenceCount rawAminoAcidCounts)
+    public static void applyQualFilter(final Fragment fragment, final SequenceCount count, @Nullable final SequenceCount rawAminoAcidCounts)
     {
         NavigableSet<Integer> filteredIntersect = Sets.newTreeSet();
         fragment.aminoAcidsByLoci().values().stream()
                 .mapToInt(AminoAcid::locus)
                 .forEach(locus ->
                 {
-                    if(rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
+                    if(rawAminoAcidCounts != null && rawAminoAcidCounts.get(locus).size() < MIN_DEPTH_FILTER)
                     {
                         filteredIntersect.add(locus);
                         return;

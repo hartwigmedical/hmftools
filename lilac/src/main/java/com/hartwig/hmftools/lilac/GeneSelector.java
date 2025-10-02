@@ -18,7 +18,7 @@ public enum GeneSelector
     HLA_DPA1(HlaGene.HLA_DPA1),
     HLA_DPB1(HlaGene.HLA_DPB1),
     HLA_DQA1(HlaGene.HLA_DQA1),
-    HLA_DRB1(HlaGene.HLA_DRB1);
+    HLA_DRB(List.of(HlaGene.HLA_DRB1, HlaGene.HLA_DRB3, HlaGene.HLA_DRB4, HlaGene.HLA_DRB5));
 
     private final LinkedHashSet<HlaGene> mGenes;
 
@@ -33,6 +33,8 @@ public enum GeneSelector
                 .filter(x -> !x.isDebug() && geneFilter.test(x))
                 .collect(Collectors.toCollection(Sets::newLinkedHashSet));
     }
+
+    GeneSelector(final Iterable<HlaGene> genes) { mGenes = Sets.newLinkedHashSet(genes); }
 
     public LinkedHashSet<HlaGene> genes()
     {

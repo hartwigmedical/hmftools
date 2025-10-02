@@ -699,6 +699,12 @@ public class LilacApplication
         int totalLowCoveragePositions = 0;
         for(Map.Entry<HlaGene, int[]> entry : geneBaseDepth.entrySet())
         {
+            HlaGene gene = entry.getKey();
+
+            // we expect no raw coverage for HLA-DRB3 and HLA-DRB4, they get their reads from HLA-DRB1 and HLA-DRB5
+            if(gene == HlaGene.HLA_DRB3 || gene == HlaGene.HLA_DRB4)
+                continue;
+
             int count = (int) Arrays.stream(entry.getValue()).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
             geneLowCoveragePositionCounts.put(entry.getKey(), count);
             totalLowCoveragePositions += count;

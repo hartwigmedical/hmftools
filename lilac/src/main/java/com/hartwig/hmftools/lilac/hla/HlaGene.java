@@ -20,28 +20,39 @@ public enum HlaGene
     HLA_DPB1(CLASS_2, false),
     HLA_DQA1(CLASS_2, false),
     HLA_DRB1(CLASS_2, false),
+    HLA_DRB3(CLASS_2, false, false, false),
+    HLA_DRB4(CLASS_2, false, false, false),
+    HLA_DRB5(CLASS_2, false, false, false),
 
     NONE(CLASS_1, false, true); // used for debugging
 
     private final MhcClass mMhcClass;
     private final boolean mIsPseudo;
     private final boolean mIsDebug;
+    private final boolean mHasFrequencies;
 
     HlaGene(final MhcClass mhcClass, final boolean isPseudo)
     {
-        this(mhcClass, isPseudo, false);
+        this(mhcClass, isPseudo, false, true);
     }
 
     HlaGene(final MhcClass mhcClass, final boolean isPseudo, final boolean isDebug)
     {
+        this(mhcClass, isPseudo, isDebug, true);
+    }
+
+    HlaGene(final MhcClass mhcClass, final boolean isPseudo, final boolean isDebug, final boolean hasFrequencies)
+    {
         mMhcClass = mhcClass;
         mIsPseudo = isPseudo;
         mIsDebug = isDebug;
+        mHasFrequencies = hasFrequencies;
     }
 
     public MhcClass mhcClass() { return mMhcClass; }
     public boolean isPseudo() { return mIsPseudo; }
     public boolean isDebug() { return mIsDebug; }
+    public boolean hasFrequencies() { return mHasFrequencies; }
 
     public static HlaGene fromString(final String s)
     {

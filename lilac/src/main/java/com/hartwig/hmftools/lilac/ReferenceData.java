@@ -110,7 +110,7 @@ public class ReferenceData
             GENE_EXON_BOUNDARIES.computeIfAbsent(gene, k -> Lists.newArrayList()).addAll(GENE_CACHE.AminoAcidExonBoundaries.get(gene));
 
         HLA_CONTEXT_FACTORY = new HlaContextFactory(mConfig, GENE_EXON_BOUNDARIES);
-        NUC_GENE_FRAG_ENRICHMENT = config.Genes.coversMhcClass1() ? new NucleotideGeneEnrichment(GENE_EXON_BOUNDARIES) : null;
+        NUC_GENE_FRAG_ENRICHMENT = NucleotideGeneEnrichment.create(GENE_EXON_BOUNDARIES);
 
         mAlleleCache = new HlaAlleleCache();
 
@@ -372,7 +372,7 @@ public class ReferenceData
         int codingEndIndex = fieldsIndexMap.get("CodingEnd");
 
         String currentGene = "";
-        TranscriptData currentTrans = null;
+        TranscriptData currentTrans;
         List<ExonData> exonDataList = null;
 
         for(String line : hlaTranscriptData)
