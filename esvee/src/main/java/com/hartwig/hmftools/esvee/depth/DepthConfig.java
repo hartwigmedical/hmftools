@@ -66,6 +66,7 @@ public class DepthConfig
 
     protected static final int DEFAULT_PROXIMITY_DISTANCE = 2000;
     protected static final double DEFAULT_VAF_CAP = 0.001;
+    protected static final double UNMAPPED_VAF_THRESHOLD = 0.9;
 
     public DepthConfig(final ConfigBuilder configBuilder)
     {
