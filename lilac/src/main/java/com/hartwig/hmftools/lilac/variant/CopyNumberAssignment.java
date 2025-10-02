@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -35,8 +36,14 @@ public class CopyNumberAssignment
 
         try
         {
+
+            Predicate<GeneCopyNumber> filterPredicate = x ->
+            {
+                HlaGene gene = HlaGene.fromString(x.geneName());
+                return gene != null && GENE_CACHE.GeneNames.contains(gene);
+            };
             List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                    .filter(x -> GENE_CACHE.GeneNames.contains(HlaGene.fromString(x.geneName()))).toList();
+                    .filter(filterPredicate).toList();
 
             List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
                     .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.MinMinorAlleleCopyNumber))
