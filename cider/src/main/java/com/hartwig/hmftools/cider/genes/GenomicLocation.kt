@@ -14,6 +14,9 @@ data class GenomicLocation(
         require(position.start() <= position.end())
     }
 
+    val inPrimaryAssembly: Boolean
+        get() = contig.type.inPrimaryAssembly
+
     override fun toString(): String
     {
         return "${contig}:${position}(${strand.asChar()})"
