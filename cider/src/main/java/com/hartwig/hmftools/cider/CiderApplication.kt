@@ -87,7 +87,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
             CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES
         )
 
-        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(layoutBuildResults.mapValues { (_, v) -> v.layouts })
+        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(
+            layoutBuildResults.mapValues { (_, v) -> v.layouts }, mParams.threadCount)
         var primerMatchList: List<VdjPrimerMatch> = emptyList()
 
         if (mParams.primerCsv != null)
