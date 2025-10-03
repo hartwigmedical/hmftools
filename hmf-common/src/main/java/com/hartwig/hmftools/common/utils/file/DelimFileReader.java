@@ -246,6 +246,10 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
                     nextLine = null;
                     assert line != null;
 
+                    String[] values = line.split(mDelim, -1);
+
+                    /* revert to in-built split call, investigate further
+
                     // Split the line on the delimiter. This algorithm is about twice as fast as String.split().
                     String[] values = new String[mColumnIndexMap.size()];
                     int fieldBegin = 0;
@@ -259,6 +263,8 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
                         values[i] = line.substring(fieldBegin, delimIdx);
                         fieldBegin = delimIdx + 1;
                     }
+                    */
+
                     return new Row(mColumnIndexMap, values);
                 }
                 else

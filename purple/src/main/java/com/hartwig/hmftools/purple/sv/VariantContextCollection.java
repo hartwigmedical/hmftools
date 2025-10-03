@@ -33,7 +33,9 @@ public class VariantContextCollection
 
     public void clear()
     {
-        mVariantContexts.clear();
+        if(mVariantContexts != null)
+            mVariantContexts.clear();
+
         mVariants.clear();
     }
 
