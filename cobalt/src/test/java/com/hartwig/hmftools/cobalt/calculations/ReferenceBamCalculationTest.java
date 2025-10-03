@@ -23,6 +23,6 @@ public class ReferenceBamCalculationTest
     public void createMegaBaseScaleNormaliser()
     {
         Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
-        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser() instanceof DiploidNormaliser);
+        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(Mockito.any()) instanceof DiploidNormaliser);
     }
 }

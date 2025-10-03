@@ -9,6 +9,7 @@ import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public abstract class BamCalculation
 {
@@ -16,15 +17,18 @@ public abstract class BamCalculation
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final GenomeFilter mGenomeFilter;
     protected final CobaltScope mScope;
-    private final GcBucketStatistics bucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
-    private final ReadDepthStatisticsNormaliser meanNormaliser = createReadDepthsNormaliser();
-    private final ResultsNormaliser megaBaseScaleNormaliser = createMegaBaseScaleNormaliser();
-    private final ResultsNormaliser finalNormaliser = createFinalNormaliser();
+    private GcBucketStatistics BucketStatistics;
+    private final ReadDepthStatisticsNormaliser meanNormaliser;
+    final ResultsNormaliser megaBaseScaleNormaliser;
+    private final ResultsNormaliser finalNormaliser;
 
-    public BamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope)
+    public BamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
         this.mGenomeFilter = mGenomeFilter;
         this.mScope = scope;
+        meanNormaliser = createReadDepthsNormaliser();
+        finalNormaliser = createFinalNormaliser();
+        megaBaseScaleNormaliser = createMegaBaseScaleNormaliser(version);
     }
 
     public void addReading(Chromosome chromosome, DepthReading readDepth)
@@ -39,13 +43,14 @@ public abstract class BamCalculation
 
     public ListMultimap<Chromosome, BamRatio> calculateRatios()
     {
+        BucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
         mWindowsByChromosome.forEach((chromosome, window) ->
         {
             // Normalise each reading according to its GC bucket, then enrich according
             // to supplied per-window values, then record this result in the mean normaliser.
             BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, mScope.onTarget(chromosome, window.Position));
-            bamRatio.normaliseForGc(bucketStatistics.medianReadDepth(window.GcBucket));
+            bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
             bamRatio.applyEnrichment(mScope.enrichmentQuotient(chromosome, window.mDepthReading));
             meanNormaliser.recordValue(bamRatio);
             bamResults.put(chromosome, bamRatio);
@@ -76,12 +81,12 @@ public abstract class BamCalculation
     GcMedianReadDepth medianReadDepths()
     {
         // todo test
-        return new GcMedianReadDepth(meanNormaliser.readDepthMean(), meanNormaliser.readDepthMedian(), mGCPailsList.bucketToMedianReadDepth());
+        return new GcMedianReadDepth(meanNormaliser.readDepthMean(), meanNormaliser.readDepthMedian(), BucketStatistics.bucketToMedianReadDepth());
     }
 
     abstract ReadDepthStatisticsNormaliser createReadDepthsNormaliser();
 
-    abstract ResultsNormaliser createMegaBaseScaleNormaliser();
+    abstract ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version);
 
     abstract ResultsNormaliser createFinalNormaliser();
 }

@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
+import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
 public class GcBucketStatistics
 {
@@ -33,6 +37,20 @@ public class GcBucketStatistics
             }
         }
         MeanDepths[100] = -1.0;
+    }
+
+    public Map<GCBucket, Double> bucketToMedianReadDepth()
+    {
+        // todo test
+        Map<GCBucket, Double> bucketToMedian = new HashMap<>();
+        for (int i=0; i<101; i++)
+        {
+            if(MeanDepths[i] > 0)
+            {
+                bucketToMedian.put(new ImmutableGCBucket(i), MeanDepths[i]);
+            }
+        }
+        return bucketToMedian;
     }
 
     public boolean isAllowed(GCPail gcPail)
