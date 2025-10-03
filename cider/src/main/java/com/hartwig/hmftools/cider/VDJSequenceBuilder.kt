@@ -79,6 +79,8 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         sLogger.debug("Merging identical VDJ sequences")
         vdjList.clear()
+        // Naive multithreading because otherwise this step can take over an hour on samples with many sequences.
+        // It's likely that a few genes have most of the sequences, which will limit the parallel speedup, but it's better than nothing.
         TaskExecutor.executeRunnables(vjGeneToVdjMap.values.map { vdjs ->
                 Runnable {
                     val merged = mergeIdentical(vdjs, minBaseQuality)
