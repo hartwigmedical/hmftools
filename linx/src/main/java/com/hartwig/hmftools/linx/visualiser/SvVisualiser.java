@@ -133,11 +133,7 @@ public class SvVisualiser implements AutoCloseable
     private void submitDefaultEvents()
     {
         List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
-
-        for(Integer clusterId : clusterIds)
-        {
-            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-        }
+        submitClusters(clusterIds);
 
         Set<String> chromosomes = Sets.newHashSet();
         mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
@@ -147,27 +143,15 @@ public class SvVisualiser implements AutoCloseable
             submitChromosome(Lists.newArrayList(chromosome));
         }
 
-        if(!mSampleData.PurpleGeneCNVs.isEmpty())
-        {
-            for(DriverCatalog gene : mSampleData.PurpleGeneCNVs)
-            {
-                String geneName = gene.gene();
-                DriverType geneDriverType = gene.driver();
-                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
-                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
-            }
-        }
-
+        submitGeneCNVs();
     }
 
     private void submitReportableEvents()
     {
         Set<Integer> reportableClusterIds = mSampleData.findReportableClusters();
+        submitClusters(Lists.newArrayList(reportableClusterIds));
 
-        for(Integer clusterId : reportableClusterIds)
-        {
-            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
-        }
+        submitGeneCNVs();
     }
 
     private void submitSelectedEvents()
@@ -201,6 +185,28 @@ public class SvVisualiser implements AutoCloseable
                             geneDriverType, geneName);
                 }
 
+                submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
+            }
+        }
+    }
+
+    private void submitClusters(List<Integer> clusterIds)
+    {
+        for(Integer clusterId : clusterIds)
+        {
+            submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
+        }
+    }
+
+    private void submitGeneCNVs()
+    {
+        if(!mSampleData.PurpleGeneCNVs.isEmpty())
+        {
+            for(DriverCatalog gene : mSampleData.PurpleGeneCNVs)
+            {
+                String geneName = gene.gene();
+                DriverType geneDriverType = gene.driver();
+                String geneChromosome = mEnsemblDataCache.getGeneDataByName(geneName).Chromosome;
                 submitChromosome(Lists.newArrayList(geneChromosome), geneName, geneDriverType);
             }
         }
