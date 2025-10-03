@@ -37,14 +37,14 @@ public abstract class BamMetricsSummary
 
     public abstract double lowMapQualPercent();
     public abstract double duplicatePercent();
-    public abstract double unpairedPercent();
+    public abstract double unmappedPercent();
     public abstract double lowBaseQualPercent();
     public abstract double overlappingReadPercent();
     public abstract double cappedCoveragePercent();
 
     public double totalFilteredPercent()
     {
-        return lowMapQualPercent() + duplicatePercent() + unpairedPercent() + lowBaseQualPercent()
+        return lowMapQualPercent() + duplicatePercent() + unmappedPercent() + lowBaseQualPercent()
                 + overlappingReadPercent() + cappedCoveragePercent();
     }
 
@@ -88,7 +88,7 @@ public abstract class BamMetricsSummary
     public static final String MAD_COVERAGE_COLUMN = "MadCoverage";
     public static final String LOW_MAPQ_COLUMN = "LowMapQualPercent";
     public static final String DUPLICATE_PCT_COLUMN = "DuplicatePercent";
-    public static final String UNPAIRED_COLUMN = "UnpairedPercent";
+    public static final String UNMAPPED_COLUMN = "UnmappedPercent";
     public static final String LOW_BASEQ_COLUMN = "LowBaseQualPercent";
     public static final String OVERLAP_READ_COLUMN = "OverlappingReadPercent";
     public static final String CAPPED_COVERAGE_COLUMN = "CappedCoverage";
@@ -110,7 +110,7 @@ public abstract class BamMetricsSummary
         header.add(MAD_COVERAGE_COLUMN);
         header.add(LOW_MAPQ_COLUMN);
         header.add(DUPLICATE_PCT_COLUMN);
-        header.add(UNPAIRED_COLUMN);
+        header.add(UNMAPPED_COLUMN);
         header.add(LOW_BASEQ_COLUMN);
         header.add(OVERLAP_READ_COLUMN);
         header.add(CAPPED_COVERAGE_COLUMN);
@@ -135,7 +135,7 @@ public abstract class BamMetricsSummary
 
         values.add(format("%.5f", lowMapQualPercent()));
         values.add(format("%.5f", duplicatePercent()));
-        values.add(format("%.5f", unpairedPercent()));
+        values.add(format("%.5f", unmappedPercent()));
         values.add(format("%.5f", lowBaseQualPercent()));
         values.add(format("%.5f", overlappingReadPercent()));
         values.add(format("%.5f", cappedCoveragePercent()));
@@ -189,7 +189,7 @@ public abstract class BamMetricsSummary
                 .madCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
                 .lowMapQualPercent(Double.parseDouble(values[fieldsIndexMap.get(LOW_MAPQ_COLUMN)]))
                 .duplicatePercent(Double.parseDouble(values[fieldsIndexMap.get(DUPLICATE_PCT_COLUMN)]))
-                .unpairedPercent(Double.parseDouble(values[fieldsIndexMap.get(UNPAIRED_COLUMN)]))
+                .unmappedPercent(Double.parseDouble(values[fieldsIndexMap.get(UNMAPPED_COLUMN)]))
                 .lowBaseQualPercent(Double.parseDouble(values[fieldsIndexMap.get(LOW_BASEQ_COLUMN)]))
                 .overlappingReadPercent(Double.parseDouble(values[fieldsIndexMap.get(OVERLAP_READ_COLUMN)]))
                 .cappedCoveragePercent(Double.parseDouble(values[fieldsIndexMap.get(CAPPED_COVERAGE_COLUMN)]))
