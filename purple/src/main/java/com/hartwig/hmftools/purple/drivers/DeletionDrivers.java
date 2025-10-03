@@ -64,11 +64,11 @@ public class DeletionDrivers
 
             DriverType driverType = DriverType.UNKNOWN;
 
-            if(geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
+            if(driverGene.reportDeletion() && geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
             {
                 driverType = DEL;
             }
-            else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
+            else if(driverGene.reportHetDeletion() && ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
             {
                 double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
 
