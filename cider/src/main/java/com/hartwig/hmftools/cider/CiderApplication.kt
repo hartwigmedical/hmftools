@@ -149,9 +149,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                region.genomeLocation.bases.chromosome(),
-                region.genomeLocation.bases.start() - mParams.approxMaxFragmentLength,
-                region.genomeLocation.bases.end() + mParams.approxMaxFragmentLength))
+                region.genomeLocation.chromosome,
+                region.genomeLocation.position.start() - mParams.approxMaxFragmentLength,
+                region.genomeLocation.position.end() + mParams.approxMaxFragmentLength))
         }
 
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)

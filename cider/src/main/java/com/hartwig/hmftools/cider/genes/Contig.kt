@@ -11,7 +11,8 @@ enum class ContigType {
     UNPLACED,           // E.g. un_xxx
     OTHER;
 
-    fun inPrimaryAssembly() = this == HUMAN_CHROMOSOME || this == MITOCHONDRIAL || this == UNLOCALISED || this == UNPLACED
+    val inPrimaryAssembly: Boolean
+        get() = this == HUMAN_CHROMOSOME || this == MITOCHONDRIAL || this == UNLOCALISED || this == UNPLACED
 }
 
 data class Contig(
