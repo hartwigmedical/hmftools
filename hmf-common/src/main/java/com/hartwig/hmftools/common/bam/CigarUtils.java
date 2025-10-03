@@ -402,6 +402,7 @@ public final class CigarUtils
             if(checkLeftShift)
             {
                 byte[] repeatBases = new byte[element.getLength()];
+                boolean isHomopolymer = true;
 
                 for(int j = 0; j < repeatBases.length; ++j)
                 {
@@ -409,6 +410,14 @@ public final class CigarUtils
                         return false;
 
                     repeatBases[j] = readBases[readIndex + j];
+
+                    if(j >= 1 && repeatBases[j] != repeatBases[0])
+                        isHomopolymer = false;
+                }
+
+                if(isHomopolymer && repeatBases.length > 1)
+                {
+                    repeatBases = new byte[] { repeatBases[0] };
                 }
 
                 // search backwards through the previous aligned section

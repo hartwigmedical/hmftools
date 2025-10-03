@@ -244,6 +244,19 @@ public class CigarUtilsTest
         assertEquals(2, cigarElements.get(1).getLength());
         assertEquals(16, cigarElements.get(2).getLength());
 
+        // 2-base repeat which can be moved by part of a repeat unit
+        cigarElements.clear();
+        cigarElements.add(new CigarElement(6, M));
+        cigarElements.add(new CigarElement(2, I));
+        cigarElements.add(new CigarElement(4, M));
+
+        readBases = "ACGAAA" + "AA" + "GGTT";
+        assertTrue(checkLeftAlignment(cigarElements, readBases.getBytes()));
+
+        assertEquals(3, cigarElements.get(0).getLength());
+        assertEquals(2, cigarElements.get(1).getLength());
+        assertEquals(7, cigarElements.get(2).getLength());
+
         // no need for realignment
         cigarElements.clear();
         cigarElements.add(new CigarElement(6, M));

@@ -492,7 +492,7 @@ public class SbxDuplexIndelBuilder
         }
         else
         {
-            while(targetReadIndex > readBaseInfo.Index)
+            while(targetReadIndex < readBaseInfo.Index)
             {
                 movePrevious(readBaseInfo);
             }

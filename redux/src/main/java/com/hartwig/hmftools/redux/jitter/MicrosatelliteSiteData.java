@@ -112,8 +112,12 @@ public class MicrosatelliteSiteData
 
         mPassingReadCount++;
 
-        if(isSbx() && consensusType == ConsensusType.SINGLE) // count towards passing count but nothing else
-            return;
+        if(isSbx())
+        {
+            // count towards passing count but nothing else if formed from simplex reads
+            if(consensusType == ConsensusType.SINGLE || msRead.hasMediumQualBases())
+                return;
+        }
 
         Integer consensusCount = mCountsByConsensusType.get(consensusType);
         mCountsByConsensusType.put(consensusType, consensusCount != null ? consensusCount + 1 : 1);

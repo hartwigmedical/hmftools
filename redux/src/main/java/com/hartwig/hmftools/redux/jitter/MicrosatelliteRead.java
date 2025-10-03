@@ -17,6 +17,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -38,7 +39,7 @@ public class MicrosatelliteRead
 
     private int mAlignedBases;
     private int mInsertedBases;
-    private int mDeletedBases;
+    private boolean mHasMediumQuals;
 
     private int mRepeatUnits;
     private int mRepeatLength;
@@ -66,6 +67,7 @@ public class MicrosatelliteRead
         return mRepeatUnits;
     }
     public int jitter() { return mJitterLength; }
+    public boolean hasMediumQualBases() { return mHasMediumQuals; }
 
     @VisibleForTesting
     public void analyse(final MicrosatelliteSite microsatelliteRepeat, final SAMRecord record, final ConsensusMarker consensusMarker)
@@ -106,11 +108,7 @@ public class MicrosatelliteRead
 
             if(element.getOperator() == D)
             {
-                if(refPosition >= msPosStart && endRefPos <= msPosEnd)
-                {
-                    mDeletedBases += element.getLength();
-                }
-                else if((refPosition < msPosStart && endRefPos >= msPosStart - 1) || (refPosition <= msPosEnd + 1 && endRefPos > msPosEnd))
+                if((refPosition < msPosStart && endRefPos >= msPosStart - 1) || (refPosition <= msPosEnd + 1 && endRefPos > msPosEnd))
                 {
                     // drop the read if the delete covers the start or the end of the repeat or is just before its start
                     return;
@@ -193,7 +191,7 @@ public class MicrosatelliteRead
 
         mAlignedBases = 0;
         mInsertedBases = 0;
-        mDeletedBases = 0;
+        mHasMediumQuals = false;
         mRepeatUnits = 0;
         mRepeatLength = 0;
         mJitterLength = 0;
@@ -211,6 +209,8 @@ public class MicrosatelliteRead
         {
             if(BaseQualAdjustment.isUncertainBaseQual(record.getBaseQualities()[i]))
                 return false;
+
+            mHasMediumQuals |= SbxBamUtils.isMediumBaseQual(record.getBaseQualities()[i]);
         }
 
         return true;
