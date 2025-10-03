@@ -148,7 +148,7 @@ public class ProbeQualityProfile
 
         result.forEach((chromosome, windows) ->
                 LOGGER.trace("Loaded chromosome {} with {} windows", chromosome, windows.size()));
-        LOGGER.debug("Loading complete, secs({})", secondsSinceNow(startTimeMs));
+        LOGGER.trace("Loading complete, secs({})", secondsSinceNow(startTimeMs));
         return result;
     }
 
