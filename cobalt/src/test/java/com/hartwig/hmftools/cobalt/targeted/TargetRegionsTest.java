@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -89,6 +90,12 @@ public class TargetRegionsTest
     public void finalNormaliserTest()
     {
         assertTrue(enricher.finalNormaliser() instanceof UnityNormaliser);
+    }
+
+    @Test
+    public void medianByMeanNormaliserTest()
+    {
+        assertTrue(enricher.medianByMeanNormaliser() instanceof NoOpReadDepthStatisticsNormaliser);
     }
 
     void check(double expected, Chromosome chromosome, int position)

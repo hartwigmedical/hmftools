@@ -73,6 +73,8 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, readDepth, true);
         ratio.normaliseForGc(0.0);
         checkBlanked(ratio);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
     }
 
     @Test
@@ -81,6 +83,8 @@ public class BamRatioTest
         BamRatio ratio = new BamRatio(_1, readDepth, true);
         ratio.normaliseForGc(-1.0);
         checkBlanked(ratio);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
     }
 
     @Test
@@ -110,7 +114,5 @@ public class BamRatioTest
     private void checkBlanked(BamRatio ratio)
     {
         assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(-1.0, ratio.readDepth(), 0.001);
-        assertEquals(-1.0, ratio.gcContent(), 0.001);
     }
 }

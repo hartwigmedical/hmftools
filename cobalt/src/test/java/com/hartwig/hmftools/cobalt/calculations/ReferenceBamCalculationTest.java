@@ -13,7 +13,7 @@ public class ReferenceBamCalculationTest
     private ReferenceBamCalculation Calculation;
 
     @Test
-    public void createFinalNormaliser()
+    public void createReadDepthsNormaliser()
     {
         Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
         Assert.assertTrue(Calculation.createReadDepthsNormaliser() instanceof ReadDepthStatisticsNormaliser);

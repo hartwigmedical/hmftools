@@ -15,7 +15,7 @@ public class GcBucketStatisticsTest
         GcBucketStatistics bucketStatistics = new GcBucketStatistics(pailsList, 20, 70);
         for (int i=0; i<100; i++)
         {
-            double expectedMedian = (i < 20 || i > 69) ? -1.0 : 0.0;
+            double expectedMedian = (i < 21 || i > 69) ? -1.0 : 0.0;
             assertEquals(expectedMedian, bucketStatistics.medianReadDepth(new GCPail(i)), 0.001);
         }
     }
@@ -132,7 +132,7 @@ public class GcBucketStatisticsTest
         GcBucketStatistics bucketStatistics = new GcBucketStatistics(pailsList, 19, 80);
         assertEquals(-1.0, bucketStatistics.medianReadDepth(new GCPail(0)), 0.001);
         assertEquals(-1.0, bucketStatistics.medianReadDepth(new GCPail(10)), 0.001);
-        assertEquals(19.0, bucketStatistics.medianReadDepth(new GCPail(19)), 0.001);
+        assertEquals(-1.0, bucketStatistics.medianReadDepth(new GCPail(19)), 0.001);
         assertEquals(20.0, bucketStatistics.medianReadDepth(new GCPail(20)), 0.001);
         assertEquals(50.0, bucketStatistics.medianReadDepth(new GCPail(50)), 0.001);
         assertEquals(79.0, bucketStatistics.medianReadDepth(new GCPail(79)), 0.001);
@@ -149,7 +149,7 @@ public class GcBucketStatisticsTest
         GcBucketStatistics bucketStatistics = new GcBucketStatistics(pailsList, 24, 68);
         for (int i=0; i<100; i++)
         {
-            if (i < 24 || i > 68)
+            if (i < 25 || i > 68)
             {
                 assertFalse(bucketStatistics.isAllowed(new GCPail(i)));
             }

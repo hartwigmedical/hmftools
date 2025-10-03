@@ -22,7 +22,17 @@ public class TumorBamCalculationTest
         CobaltScope scope = Mockito.mock(CobaltScope.class);
         when(scope.finalNormaliser()).thenReturn(theLast);
         Calculation = new TumorBamCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
-        Assert.assertEquals(theLast, Calculation.createReadDepthsNormaliser());
+        Assert.assertEquals(theLast, Calculation.createFinalNormaliser());
+    }
+
+    @Test
+    public void createReadDepthsNormaliser()
+    {
+        ReadDepthStatisticsNormaliser theMeanOne = Mockito.mock(ReadDepthStatisticsNormaliser.class);
+        CobaltScope scope = Mockito.mock(CobaltScope.class);
+        when(scope.medianByMeanNormaliser()).thenReturn(theMeanOne);
+        Calculation = new TumorBamCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
+        Assert.assertEquals(theMeanOne, Calculation.createReadDepthsNormaliser());
     }
 
     @Test

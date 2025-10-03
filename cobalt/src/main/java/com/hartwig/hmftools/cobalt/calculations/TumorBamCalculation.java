@@ -19,10 +19,4 @@ public class TumorBamCalculation extends BamCalculation
     {
         return new DoNothingNormaliser();
     }
-
-    @Override
-    ResultsNormaliser createFinalNormaliser()
-    {
-        return mScope.finalNormaliser();
-    }
 }

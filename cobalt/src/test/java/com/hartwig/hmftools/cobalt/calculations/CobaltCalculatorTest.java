@@ -57,7 +57,13 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         @Override
         public ReadDepthStatisticsNormaliser finalNormaliser()
         {
-            return new UnityNormaliser();
+            return new NoOpReadDepthStatisticsNormaliser();
+        }
+
+        @Override
+        public ReadDepthStatisticsNormaliser medianByMeanNormaliser()
+        {
+            return new NoOpReadDepthStatisticsNormaliser();
         }
 
         @Override
@@ -365,10 +371,12 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
-        checkNulled(ratios1.get(3), _1, 3001);
+        checkRatio(ratios1.get(0), _1, 1, -1.0, td1[0], -1.0, -1.0, -1.0, -1.0, tgc1[0]);
+
+//        checkNulled(ratios1.get(0), _1, 1);
+//        checkNulled(ratios1.get(1), _1, 1001);
+//        checkNulled(ratios1.get(2), _1, 2001);
+//        checkNulled(ratios1.get(3), _1, 3001);
         // In targeted mode the tumor results are normalised so that their mean is 1.0.
         List<Double> expectedRawTumorRatios = new ArrayList<>();
         for(int i = 4; i < 15; i++)

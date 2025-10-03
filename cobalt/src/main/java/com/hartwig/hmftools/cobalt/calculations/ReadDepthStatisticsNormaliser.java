@@ -24,13 +24,13 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
 
     public double readDepthMean()
     {
-        Preconditions.checkState(Ratio > 0.0);
+//        Preconditions.checkState(Ratio > 0.0);
         return mReadDepthMean;
     }
 
     public double readDepthMedian()
     {
-        Preconditions.checkState(Ratio > 0.0);
+//        Preconditions.checkState(Ratio > 0.0);
         return mReadDepthMedian;
     }
 

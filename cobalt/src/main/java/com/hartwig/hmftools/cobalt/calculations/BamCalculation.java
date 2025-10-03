@@ -88,5 +88,8 @@ public abstract class BamCalculation
 
     abstract ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version);
 
-    abstract ResultsNormaliser createFinalNormaliser();
+    ResultsNormaliser createFinalNormaliser()
+    {
+        return mScope.finalNormaliser();
+    }
 }
