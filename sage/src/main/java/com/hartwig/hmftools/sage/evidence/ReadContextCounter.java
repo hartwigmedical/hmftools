@@ -437,7 +437,7 @@ public class ReadContextCounter
             {
                 VariantReadSupport readSupport = matchType.toReadSupport();
 
-                registerReadSupport(record, readSupport, readVarIndex, combinedQuality, seqTechBaseQuality);
+                registerReadSupport(record, readSupport, readVarIndex, combinedQuality, seqTechBaseQuality, qualityScores.IsMediumQual);
 
                 mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -447,7 +447,7 @@ public class ReadContextCounter
                 logReadEvidence(record, matchType, readVarIndex, combinedQuality);
                 countAltSupportMetrics(record, fragmentData);
 
-                if(readSupport == FULL && JitterMatch.hasValidBaseQuals(mReadContext, mMatcher, record, readVarIndex))
+                if(readSupport == FULL && JitterMatch.hasValidBaseQuals(mReadContext, mMatcher.altIndexUpper(), record, readVarIndex))
                     mJitterData.addValidQualFullSupport();
 
                 return readMatchInfo.ExactMatch && matchType.FullAltSupport ? ALT_SUPPORT_EXACT : ALT_SUPPORT_LOW_QUAL_MISMATCHES;
@@ -469,7 +469,8 @@ public class ReadContextCounter
             if(realignedType != RealignedType.NONE)
             {
                 // recompute qual off this realigned index
-                qualityScores = mQualityCalculator.calculateQualityScores(this, realignedReadIndex, record, adjustedNumOfEvents);
+                qualityScores = mQualityCalculator.calculateQualityScores(
+                        this, realignedReadIndex, record, adjustedNumOfEvents);
 
                 if(!qualityScores.valid())
                 {
@@ -489,7 +490,7 @@ public class ReadContextCounter
                 if(realignedType == EXACT || realignedType == LOW_QUAL_MISMATCHES)
                 {
                     matchType = ReadContextMatch.REALIGNED;
-                    registerReadSupport(record, REALIGNED, readVarIndex, combinedQuality, seqTechBaseQuality);
+                    registerReadSupport(record, REALIGNED, readVarIndex, combinedQuality, seqTechBaseQuality, qualityScores.IsMediumQual);
 
                     mQualCounters.update(qualityScores, record.getMappingQuality(), matchType);
 
@@ -541,7 +542,7 @@ public class ReadContextCounter
         mNonAltFragmentStrandBias.registerFragment(record);
         mNonAltReadStrandBias.registerRead(record, fragmentData, this);
 
-        registerReadSupport(record, readSupport, readVarIndex, combinedQuality, seqTechBaseQuality);
+        registerReadSupport(record, readSupport, readVarIndex, combinedQuality, seqTechBaseQuality, qualityScores.IsMediumQual);
         mReadEdgeDistance.update(record, fragmentData, false);
         mFragmentLengths.processRead(record, false);
 
@@ -587,7 +588,7 @@ public class ReadContextCounter
 
     private void registerReadSupport(
             final SAMRecord record, @Nullable final VariantReadSupport support, int readVarIndex, double combinedQuality,
-            double seqTechBaseQuality)
+            double seqTechBaseQuality, boolean isMediumQual)
     {
         boolean supportsAlt = false;
         boolean supportsAltStrong = false;
@@ -608,7 +609,7 @@ public class ReadContextCounter
         {
             if(isHighBaseQual(seqTechBaseQuality))
                 ++mHighQualStrongSupport;
-            else if(isMediumBaseQual(seqTechBaseQuality))
+            else if(isMediumQual)
                 ++mMediumQualStrongSupport;
         }
 

@@ -202,8 +202,8 @@ public class MsiJitterCalcs
             }
         }
 
-        // TODO: check Ultima and SBX specific default params
-        return new PerSampleJitterParams(sampleParamList, comparisonScore < 0);
+        // TODO: set different jitter defaults for SBX and Ultima, and reference those instead
+        return new PerSampleJitterParams(sampleParamList, false);
     }
 
     public double calcErrorRate(final VariantReadContext readContext, final String sampleId)

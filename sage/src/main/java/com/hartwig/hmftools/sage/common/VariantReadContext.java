@@ -37,6 +37,7 @@ public class VariantReadContext
     private final SimpleVariant mVariant;
 
     private final String mReadCigarStr;
+    private final boolean mHasIndelInCore;
 
     private IlluminaArtefactContext mIlluminaArtefactContext;
 
@@ -62,6 +63,7 @@ public class VariantReadContext
         AllRepeats = allRepeats;
 
         mReadCigarStr = CigarUtils.cigarElementsToStr(readCigar);
+        mHasIndelInCore = ReadCigarInfo.hasIndelInCore(readCigar, CoreIndexStart, CoreIndexEnd);
 
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
@@ -127,6 +129,7 @@ public class VariantReadContext
 
     public final String trinucleotideStr() { return new String(trinucleotide()); }
     public final String readCigar() { return mReadCigarStr; }
+    public final boolean hasIndelInCore() { return mHasIndelInCore; }
 
     public IlluminaArtefactContext artefactContext() { return mIlluminaArtefactContext; }
     public void setArtefactContext(final IlluminaArtefactContext context) { mIlluminaArtefactContext = context; }

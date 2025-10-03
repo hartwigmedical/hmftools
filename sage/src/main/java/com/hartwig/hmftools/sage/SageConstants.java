@@ -71,10 +71,6 @@ public class SageConstants
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
-    // CHECK: whehther or how to set these
-    public static final int ULTIMA_MIN_AVG_BASE_QUALITY = 20;
-    public static final int ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
-
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
@@ -122,7 +118,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 / DEFAULT_READ_LENGTH; // since now scaled
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 * DEFAULT_READ_LENGTH; // since now scaled
 
     // filters
     public static final int MAP_QUAL_FACTOR_FIXED_PENALTY = 25;

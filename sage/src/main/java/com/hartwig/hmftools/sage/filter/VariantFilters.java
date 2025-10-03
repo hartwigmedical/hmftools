@@ -304,8 +304,9 @@ public class VariantFilters
         double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltRecalibratedBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
         int mediumSupportContribution = (int)(strongNonMediumSupport * recalibratedAltMediumBaseQualityTotal/recalibratedAltNonMediumBaseQualityTotal);
         int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
+        double altNonMediumFinalBaseQualityTotal = primaryTumor.qualCounters().altFinalBaseQualityTotal() - primaryTumor.qualCounters().altMediumFinalBaseQualityTotal();
 
-        int qualPerRead = (int)round(recalibratedAltNonMediumBaseQualityTotal / strongNonMediumSupport);
+        int qualPerRead = (int)round(altNonMediumFinalBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
@@ -516,7 +517,8 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        return primaryTumor.strongHighQualSupport() < strongSupportThreshold;
+        int strongSupport = primaryTumor.useMsiErrorRate() ? primaryTumor.strongAltSupport() : primaryTumor.strongHighQualSupport();
+        return strongSupport < strongSupportThreshold;
     }
 
     private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)

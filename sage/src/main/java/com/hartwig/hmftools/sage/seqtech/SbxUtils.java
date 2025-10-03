@@ -2,13 +2,11 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.minQual;
-import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_SIMPLEX_QUAL;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.minBaseQualAcrossRange;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
@@ -18,6 +16,8 @@ import htsjdk.samtools.SAMRecord;
 
 public final class SbxUtils
 {
+    public static final byte MATCHING_BASE_QUALITY_SBX = 10;
+
     public static ConsensusType determineConsensusType(final VariantReadContext readContext, int readVarIndex, final SAMRecord record)
     {
         ConsensusType consensusType = extractConsensusType(record);
@@ -49,17 +49,6 @@ public final class SbxUtils
         if(baseLength <= 0)
             return 0;
 
-        double quality = 0;
-        boolean hasMedium = false;
-
-        for(int i = readIndexStart; i <= readIndexEnd; i++)
-        {
-            quality += record.getBaseQualities()[i];
-            hasMedium |= record.getBaseQualities()[i] == SBX_SIMPLEX_QUAL;
-        }
-
-        double avgQual = (int)round(quality / baseLength);
-
-        return hasMedium && avgQual > SBX_SIMPLEX_QUAL ? SBX_SIMPLEX_QUAL : avgQual;
+        return minBaseQualAcrossRange(readIndexStart, readIndexEnd, record);
     }
 }

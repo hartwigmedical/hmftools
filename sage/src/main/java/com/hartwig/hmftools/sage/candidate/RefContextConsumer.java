@@ -128,7 +128,8 @@ public class RefContextConsumer
 
         updateRegionBlockDepth(readStart, readEnd);
 
-        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadMapQualEventsPenalty);
+        double scEventProportion = (double)scEvents / record.getReadLength();
+        int scAdjustedMapQual = (int)round(adjustedMapQual - scEventProportion * mConfig.Quality.ReadMapQualEventsPenalty);
         readInfo.ReadExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record, readInfo.AlignedLength);
 

@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.DOUBLE_JITTER_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isMediumBaseQual;
+import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MATCHING_BASE_QUALITY_SBX;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
@@ -20,9 +23,9 @@ public enum JitterMatch
     NONE;
 
     public static boolean hasValidBaseQuals(
-            final VariantReadContext readContext, final ReadContextMatcher matcher, final SAMRecord record, int readVarIndex)
+            final VariantReadContext readContext, int altIndexUpper, final SAMRecord record, int readVarIndex)
     {
-        int altIndexUpper = matcher.altIndexUpper();
+        // int altIndexUpper = matcher.altIndexUpper();
 
         // for each read try shortening and then lengthening it
         int flankReadIndexStart = readVarIndex - readContext.leftLength();
@@ -66,7 +69,7 @@ public enum JitterMatch
             return JitterMatch.NONE;
 
         final byte[] readBases = record.getReadBases();
-        final byte[] readQuals = record.getBaseQualities();
+        final byte[] readQuals = isUltima() ? null : record.getBaseQualities();
         boolean checkDoubleJitter = readContext.MaxRepeat != null && readContext.MaxRepeat.Count >= DOUBLE_JITTER_REPEAT_COUNT;
 
         // try each repeat covering the read context in turn
@@ -198,11 +201,6 @@ public enum JitterMatch
                 readContextBase = (byte)repeat.Bases.charAt(repeatBaseIndex);
             }
 
-            if(readBases[readIndex] == readContextBase)
-                continue;
-
-            boolean differencePermitted = false;
-
             boolean withinCore = readContextIndex >= readContext.CoreIndexStart && readContextIndex <= readContext.CoreIndexEnd;
 
             boolean withinPermittedRange = withinCore
@@ -214,7 +212,13 @@ public enum JitterMatch
             if(withinCore && isMediumBaseQual(readQuals[readIndex]))
                 return false;
 
-            if(readQuals[readIndex] < MATCHING_BASE_QUALITY)
+            if(readBases[readIndex] == readContextBase)
+                continue;
+
+            boolean differencePermitted = false;
+
+            byte lowQualThreshold = isSbx() ? MATCHING_BASE_QUALITY_SBX : MATCHING_BASE_QUALITY;
+            if(readQuals != null && readQuals[readIndex] < lowQualThreshold)
             {
                 if(withinCore)
                 {

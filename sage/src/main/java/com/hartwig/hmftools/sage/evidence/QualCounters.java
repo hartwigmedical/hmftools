@@ -3,8 +3,6 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.isMediumBaseQual;
-
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 
@@ -18,6 +16,7 @@ public class QualCounters
     private double mStrongAltMediumRecalibratedBaseQualityTotal;
 
     private double mAltFinalBaseQualityTotal;
+    private double mAltMediumFinalBaseQualityTotal;
 
     private int mMapQualityTotal; // raw read map qual
     private int mAltMapQualityTotal;
@@ -31,6 +30,7 @@ public class QualCounters
         mAltRecalibratedBaseQualityTotal = 0;
         mAltSeqTechBaseQualityTotal = 0;
         mAltFinalBaseQualityTotal = 0;
+        mAltMediumFinalBaseQualityTotal = 0;
         mStrongAltRecalibratedBaseQualityTotal = 0;
         mStrongAltMediumRecalibratedBaseQualityTotal = 0;
         mMapQualityTotal = 0;
@@ -50,8 +50,11 @@ public class QualCounters
 
             mStrongAltRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
-            if(isMediumBaseQual(qualityScores.SeqTechBaseQuality))
+            if(qualityScores.IsMediumQual)
+            {
                 mStrongAltMediumRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+                mAltMediumFinalBaseQualityTotal += qualityScores.FinalBaseQuality;
+            }
 
             mAltFinalMapQualityTotal += qualityScores.FinalMapQuality;
         }
@@ -78,6 +81,8 @@ public class QualCounters
     public double strongAltRecalibratedBaseQualityTotal() { return mStrongAltRecalibratedBaseQualityTotal; }
 
     public double altFinalBaseQualityTotal() { return mAltFinalBaseQualityTotal; }
+    public double altMediumFinalBaseQualityTotal() { return mAltMediumFinalBaseQualityTotal; }
+
 
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
