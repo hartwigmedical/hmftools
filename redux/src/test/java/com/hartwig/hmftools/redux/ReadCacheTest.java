@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
@@ -272,86 +271,6 @@ public class ReadCacheTest
 
         assertEquals(5, fragmentCoordsReads.DuplicateGroups.size());
         assertEquals(2, fragmentCoordsReads.SingleReads.size());
-        assertEquals(15, fragmentCoordsReads.totalReadCount());
-    }
-
-    @Test
-    public void testBiomodalDuplicateGroupCollapsing()
-    {
-        ReadCache readCache = new ReadCache(100, 100, false, BIOMODAL);
-
-        // no collapsing
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 110, 210, false));
-
-        FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
-
-        assertEquals(0, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(2, fragmentCoordsReads.SingleReads.size());
-        assertEquals(2, fragmentCoordsReads.totalReadCount());
-
-        // no collapsing of forward and reverse reads
-        readCache.clear();
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 50, 100, true));
-
-        fragmentCoordsReads = readCache.evictAll();
-
-        assertEquals(0, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(2, fragmentCoordsReads.SingleReads.size());
-        assertEquals(2, fragmentCoordsReads.totalReadCount());
-
-        // simple collapsing
-        readCache.clear();
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200, false));
-
-        fragmentCoordsReads = readCache.evictAll();
-
-        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(0, fragmentCoordsReads.SingleReads.size());
-        assertEquals(2, fragmentCoordsReads.totalReadCount());
-
-        // no multi-coord duplicate groups
-        readCache.clear();
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-
-        fragmentCoordsReads = readCache.evictAll();
-
-        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(0, fragmentCoordsReads.SingleReads.size());
-        assertEquals(2, fragmentCoordsReads.totalReadCount());
-
-        // a more complex scenario
-        readCache.clear();
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 200, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 250, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 250, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 250, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 300, false));
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
-        readCache.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 110, 150, false));
-
-        readCache.processRead(createUnpairedRecord(CHR_1, 120, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 120, 150, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 120, 200, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 120, 250, false));
-        readCache.processRead(createUnpairedRecord(CHR_1, 120, 300, false));
-
-        fragmentCoordsReads = readCache.evictAll();
-
-        assertEquals(3, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(1, fragmentCoordsReads.SingleReads.size());
         assertEquals(15, fragmentCoordsReads.totalReadCount());
     }
 

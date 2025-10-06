@@ -149,7 +149,7 @@ public class BaseBuilder
         }
         else
         {
-            // TODO: decide for Ultima and Biomodal
+            // TODO: decide for Ultima
             return BaseQualPair.INVALID;
         }
     }

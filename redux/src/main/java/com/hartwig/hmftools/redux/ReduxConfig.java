@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.mappability.UnmappedRegions.UNMAP_REGIONS_FILE;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
@@ -326,7 +325,6 @@ public class ReduxConfig
     public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
     public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
-    public static boolean isBiomodal() { return SEQUENCING_TYPE == BIOMODAL; }
 
     public boolean isValid() { return mIsValid; }
 

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.redux.jitter;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.jitter.JitterConstants.DEFAULT_MAX_SINGLE_SITE_ALT_CONTRIBUTION;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
@@ -121,10 +120,6 @@ public class MsJitterConfig
             consensusTypes.add(ConsensusType.DUAL);
         }
         else if(SEQUENCING_TYPE == ULTIMA)
-        {
-            consensusTypes.add(ConsensusType.DUAL);
-        }
-        else if(SEQUENCING_TYPE == BIOMODAL)
         {
             consensusTypes.add(ConsensusType.DUAL);
         }

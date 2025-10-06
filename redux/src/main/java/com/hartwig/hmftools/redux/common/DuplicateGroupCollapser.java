@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 
@@ -24,8 +23,6 @@ import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.SAMRecord;
-
 @FunctionalInterface
 public interface DuplicateGroupCollapser
 {
@@ -36,9 +33,6 @@ public interface DuplicateGroupCollapser
         if(config.Sequencing == ULTIMA)
             return DuplicateGroupCollapser::ultimaCollapse;
 
-        if(config.Sequencing == BIOMODAL)
-            return DuplicateGroupCollapser::biomodalCollapse;
-
         if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
             return sbxCollapserFactory(config.SbxMaxDuplicateDistance);
 
@@ -48,9 +42,6 @@ public interface DuplicateGroupCollapser
     static boolean isEnabled(final DuplicateGroupCollapseConfig config)
     {
         if(config.Sequencing == ULTIMA)
-            return true;
-
-        if(config.Sequencing == BIOMODAL)
             return true;
 
         if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
@@ -190,38 +181,6 @@ public interface DuplicateGroupCollapser
             duplicateGroups.forEach(collapser::addDuplicateGroup);
 
         return collapser.getCollapsedGroups();
-    }
-
-    static FragmentCoordReads biomodalCollapse(
-            @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
-    {
-        Map<String, DuplicateGroup> fivePrimeGroups = Maps.newHashMap();
-
-        if(singleReads != null)
-        {
-            for(ReadInfo readInfo : singleReads)
-            {
-                SAMRecord read = readInfo.read();
-                FragmentCoords coords = readInfo.coordinates();
-                String fivePrimeKey = collapseToFivePrimeKey(coords);
-                DuplicateGroup duplicateGroup = new DuplicateGroup(null, read, coords);
-                fivePrimeGroups.merge(fivePrimeKey, duplicateGroup, DUPLICATE_GROUP_MERGER);
-            }
-        }
-
-        if(duplicateGroups != null)
-        {
-            for(DuplicateGroup duplicateGroup : duplicateGroups)
-            {
-                String fivePrimeKey = collapseToFivePrimeKey(duplicateGroup.fragmentCoordinates());
-                fivePrimeGroups.merge(fivePrimeKey, duplicateGroup, DUPLICATE_GROUP_MERGER);
-            }
-        }
-
-        if(fivePrimeGroups.isEmpty())
-            return null;
-
-        return getFragmentCoordReads(fivePrimeGroups.values());
     }
 
     class SbxCollapser
