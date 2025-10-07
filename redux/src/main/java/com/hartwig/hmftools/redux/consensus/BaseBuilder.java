@@ -51,14 +51,8 @@ public class BaseBuilder
         int readCount = reads.size();
         String chromosome = reads.get(0).getContig();
 
-        int[] readOffsets = new int[readCount];
         boolean[] isFirstInPair = new boolean[readCount];
         boolean isDualStrand = mSequencingType == ILLUMINA && isDualStrandAndIsFirstInPair(reads, isFirstInPair);
-
-        for(int i = 0; i < readCount; ++i)
-        {
-            readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
-        }
 
         int[] readPositionStartOffsets = setReadPositionStartOffsets(reads, consensusState.UnclippedPosStart, true);
 

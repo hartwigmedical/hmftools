@@ -39,8 +39,6 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelI
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
-import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBase;
-import static com.hartwig.hmftools.redux.consensus.CommonUtils.findMostCommonBaseCount;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
@@ -437,7 +435,6 @@ public final class SbxRoutines
     {
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
-        int outerAlignedPosition = -1;
         int outerUnclippedPosition = -1;
 
         for(ReadParseState read : readStates)
@@ -445,9 +442,6 @@ public final class SbxRoutines
             if(consensusState.IsForward)
             {
                 int readStart = read.Read.getAlignmentStart();
-
-                if(outerAlignedPosition < 0 || readStart < outerAlignedPosition)
-                    outerAlignedPosition = readStart;
 
                 int readUnclippedPosition = readStart - leftSoftClipLength(read.Read);
 
@@ -457,8 +451,6 @@ public final class SbxRoutines
             else
             {
                 int readEnd = read.Read.getAlignmentEnd();
-                outerAlignedPosition = max(outerAlignedPosition, readEnd);
-
                 int readUnclippedPosition = readEnd + rightSoftClipLength(read.Read);
                 outerUnclippedPosition = max(outerUnclippedPosition, readUnclippedPosition);
             }
@@ -533,8 +525,11 @@ public final class SbxRoutines
 
         if(consensusState.IsForward)
         {
-            consensusAlignmentStart = outerAlignedPosition;
             consensusUnclippedStart = outerUnclippedPosition;
+            consensusAlignmentStart = outerUnclippedPosition;
+
+            if(cigarElements.get(0).getOperator() == S)
+                consensusAlignmentStart += cigarElements.get(0).getLength();
 
             consensusAlignmentEnd = consensusAlignmentStart + refBaseLength - 1;
 
@@ -545,8 +540,11 @@ public final class SbxRoutines
         }
         else
         {
-            consensusAlignmentEnd = outerAlignedPosition;
             consensusUnclippedEnd = outerUnclippedPosition;
+            consensusAlignmentEnd = consensusUnclippedEnd;
+
+            if(cigarElements.get(cigarElements.size() - 1).getOperator() == S)
+                consensusAlignmentEnd -= cigarElements.get(cigarElements.size() - 1).getLength();
 
             consensusAlignmentStart = consensusAlignmentEnd - refBaseLength + 1;
 
@@ -1078,6 +1076,35 @@ public final class SbxRoutines
 
         record.setBaseQualities(newBaseQuals);
     }
+
+    private static int findMostCommonBaseCount(final int[] baseCounts)
+    {
+        int maxCount = 0;
+
+        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
+        {
+            maxCount = max(maxCount, baseCounts[b]);
+        }
+
+        return maxCount;
+    }
+
+    private static byte findMostCommonBase(final int[] baseCounts, final byte refBase, final int maxCount)
+    {
+        byte maxBase = DNA_N_BYTE;
+
+        for(int b = 0; b < DNA_BASE_BYTES.length; ++b)
+        {
+            if(baseCounts[b] == maxCount)
+            {
+                if(DNA_BASE_BYTES[b] == refBase || maxBase == DNA_N_BYTE)
+                    maxBase = DNA_BASE_BYTES[b];
+            }
+        }
+
+        return maxBase;
+    }
+
 
     // unused methods for now
     public static int determineBaseMatchQual(int existingQual, byte newQual)

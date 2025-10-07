@@ -74,7 +74,6 @@ public class ReadParseState
     public int readIndex() { return mReadIndex; }
     public byte base() { return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex]; }
     public byte baseQual() { return mExhausted ? NO_BASE : Read.getBaseQualities()[mReadIndex]; }
-
     public int refPosition() { return mCurrentRefPosition; }
 
     public boolean beforeUnclippedPosition(int refPosition)

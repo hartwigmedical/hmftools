@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
-import static com.hartwig.hmftools.redux.consensus.CommonUtils.hasValidBases;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.alignedOrClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
@@ -55,5 +55,16 @@ public enum ReadValidReason
             return ReadValidReason.INVALID_BASE;
 
         return ReadValidReason.OK;
+    }
+
+    public static boolean hasValidBases(final SAMRecord record)
+    {
+        for(int i = 0; i < record.getReadBases().length; ++i)
+        {
+            if(record.getReadBases()[i] == NO_BASE)
+                return false;
+        }
+
+        return true;
     }
 }

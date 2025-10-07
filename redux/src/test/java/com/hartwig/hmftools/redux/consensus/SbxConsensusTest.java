@@ -483,8 +483,6 @@ public class SbxConsensusTest
         // requires ability to have different unclipped and/or aligned start locations
         List<SAMRecord> reads = Lists.newArrayList();
 
-        int position = 1;
-
         // 1:   ACGT AAC CGG TT AC
         //      SSSS MMM MMMDMM MS
 
@@ -527,9 +525,59 @@ public class SbxConsensusTest
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
-        assertEquals(readStart3, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readStart1, readInfo.ConsensusRead.getAlignmentStart());
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+
+        reads.clear();
+
+        // on the reverse strand
+        // 1:     C AACC C GGTT AAA
+        //        S MMMM I MMMM SSS
+
+        // 2:    AC AACC C GGTT TA
+        //       SS MMMM I MMMM MS
+
+        // 3:   AAA AACC C GGTT T
+        //      SSM MMMM I MMMM S
+
+        // net: AAC AACC C GGTT TAA
+        //      SSM MMMM I MMMM MSS
+
+        readBases1 = "CAACCCGGTTAAA";
+        readCigar1 = "1S4M1I4M3S";
+        readStart1 = 5; // unclipped start is 4
+
+        readBases2 = "ACAACCCGGTTTA";
+        readCigar2 = "2S4M1I5M1S";
+        readStart2 = 5; // unclipped start is 3
+
+        readBases3 = "AAAAACCCGGTTT";
+        readCigar3 = "2S5M1I4M1S";
+        readStart3 = 4; // unclipped start is 2
+
+        readBasesNet = "AAAAACCCGGTTTAA"; // takes Ms over Ss when disagrees
+        readCigarNet = "2S5M1I4M3S";
+
+        readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        reads.add(read1);
+
+        readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        readBaseQuals3 = buildBaseQuals(readBases3.length(), RAW_SIMPLEX_QUAL);
+        read3 = createSamRecord(readBases3, readStart3, readBaseQuals3, readCigar3);
+        reads.add(read3);
+
+        reads.forEach(x -> x.setReadNegativeStrandFlag(true));
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart3, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
     }
 
     @Test
