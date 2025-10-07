@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MIN;
 
@@ -24,13 +25,11 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
 
     public double readDepthMean()
     {
-//        Preconditions.checkState(Ratio > 0.0);
         return mReadDepthMean;
     }
 
     public double readDepthMedian()
     {
-//        Preconditions.checkState(Ratio > 0.0);
         return mReadDepthMedian;
     }
 

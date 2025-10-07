@@ -13,75 +13,74 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public abstract class BamCalculation
 {
-    private final ListMultimap<Chromosome, CobaltWindow> mWindowsByChromosome = ArrayListMultimap.create();
+    private final ListMultimap<Chromosome, CobaltWindow> WindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
     private final GenomeFilter mGenomeFilter;
-    protected final CobaltScope mScope;
+    protected final CobaltScope Scope;
     private GcBucketStatistics BucketStatistics;
-    private final ReadDepthStatisticsNormaliser meanNormaliser;
-    final ResultsNormaliser megaBaseScaleNormaliser;
-    private final ResultsNormaliser finalNormaliser;
+    private final ReadDepthStatisticsNormaliser MeanNormaliser;
+    final ResultsNormaliser MegaBaseScaleNormaliser;
+    private final ResultsNormaliser FinalNormaliser;
 
     public BamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
         this.mGenomeFilter = mGenomeFilter;
-        this.mScope = scope;
-        meanNormaliser = createReadDepthsNormaliser();
-        finalNormaliser = createFinalNormaliser();
-        megaBaseScaleNormaliser = createMegaBaseScaleNormaliser(version);
+        this.Scope = scope;
+        MeanNormaliser = createReadDepthsNormaliser();
+        FinalNormaliser = createFinalNormaliser();
+        MegaBaseScaleNormaliser = createMegaBaseScaleNormaliser(version);
     }
 
     public void addReading(Chromosome chromosome, DepthReading readDepth)
     {
         // Use the supplied filters to set the state of the reading and assign it to a GC bucket.
         final boolean isExcluded = mGenomeFilter.exclude(chromosome, readDepth);
-        final boolean isInTargetRegion = mScope.onTarget(chromosome, readDepth.StartPosition);
+        final boolean isInTargetRegion = Scope.onTarget(chromosome, readDepth.StartPosition);
         final GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
         final CobaltWindow rawWindow = new CobaltWindow(chromosome, readDepth, isExcluded, isInTargetRegion);
-        mWindowsByChromosome.put(chromosome, rawWindow.bucketed(bucket));
+        WindowsByChromosome.put(chromosome, rawWindow.bucketed(bucket));
     }
 
     public ListMultimap<Chromosome, BamRatio> calculateRatios()
     {
         BucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
-        mWindowsByChromosome.forEach((chromosome, window) ->
+        WindowsByChromosome.forEach((chromosome, window) ->
         {
             // Normalise each reading according to its GC bucket, then enrich according
             // to supplied per-window values, then record this result in the mean normaliser.
-            BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, mScope.onTarget(chromosome, window.Position));
+            BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, Scope.onTarget(chromosome, window.Position));
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
-            bamRatio.applyEnrichment(mScope.enrichmentQuotient(chromosome, window.mDepthReading));
-            meanNormaliser.recordValue(bamRatio);
+            bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.mDepthReading));
+            MeanNormaliser.recordValue(bamRatio);
             bamResults.put(chromosome, bamRatio);
         });
 
         // Apply the mean normaliser and record the normalised values in the mega-base scale normaliser.
-        meanNormaliser.dataCollectionFinished();
+        MeanNormaliser.dataCollectionFinished();
         bamResults.forEach(((chromosome, bamRatio) ->
         {
-            meanNormaliser.normalise(bamRatio);
-            megaBaseScaleNormaliser.recordValue(bamRatio);
+            MeanNormaliser.normalise(bamRatio);
+            MegaBaseScaleNormaliser.recordValue(bamRatio);
         }));
 
         // Apply the mega-base scale normaliser and record the normalised value for final normalisation.
-        megaBaseScaleNormaliser.dataCollectionFinished();
+        MegaBaseScaleNormaliser.dataCollectionFinished();
         bamResults.forEach(((chromosome, bamRatio) ->
         {
-            megaBaseScaleNormaliser.normalise(bamRatio);
-            finalNormaliser.recordValue(bamRatio);
+            MegaBaseScaleNormaliser.normalise(bamRatio);
+            FinalNormaliser.recordValue(bamRatio);
         }));
 
         // Apply the final normalisation step.
-        finalNormaliser.dataCollectionFinished();
-        bamResults.forEach(((chromosome, bamRatio) -> finalNormaliser.normalise(bamRatio)));
+        FinalNormaliser.dataCollectionFinished();
+        bamResults.forEach(((chromosome, bamRatio) -> FinalNormaliser.normalise(bamRatio)));
         return bamResults;
     }
 
     GcMedianReadDepth medianReadDepths()
     {
-        // todo test
-        return new GcMedianReadDepth(meanNormaliser.readDepthMean(), meanNormaliser.readDepthMedian(), BucketStatistics.bucketToMedianReadDepth());
+        return new GcMedianReadDepth(MeanNormaliser.readDepthMean(), MeanNormaliser.readDepthMedian(), BucketStatistics.bucketToMedianReadDepth());
     }
 
     abstract ReadDepthStatisticsNormaliser createReadDepthsNormaliser();
@@ -90,6 +89,6 @@ public abstract class BamCalculation
 
     ResultsNormaliser createFinalNormaliser()
     {
-        return mScope.finalNormaliser();
+        return Scope.finalNormaliser();
     }
 }

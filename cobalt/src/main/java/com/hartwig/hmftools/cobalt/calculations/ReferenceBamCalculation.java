@@ -18,7 +18,7 @@ public class ReferenceBamCalculation extends BamCalculation
 
     ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
     {
-        return mScope.medianByMeanNormaliser();
+        return Scope.medianByMeanNormaliser();
     }
 
     ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version)
@@ -28,6 +28,6 @@ public class ReferenceBamCalculation extends BamCalculation
 
     List<MedianRatio> medianRatios()
     {
-        return ((DiploidNormaliser)megaBaseScaleNormaliser).medianRatios();
+        return ((DiploidNormaliser) MegaBaseScaleNormaliser).medianRatios();
     }
 }

@@ -12,7 +12,7 @@ public class TumorBamCalculation extends BamCalculation
 
     ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
     {
-        return mScope.medianByMeanNormaliser();
+        return Scope.medianByMeanNormaliser();
     }
 
     ResultsNormaliser createMegaBaseScaleNormaliser(RefGenomeVersion version)
