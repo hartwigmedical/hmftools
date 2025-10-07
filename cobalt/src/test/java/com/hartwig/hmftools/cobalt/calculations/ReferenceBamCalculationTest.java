@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
+import static org.mockito.Mockito.when;
+
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 
 import org.junit.Assert;
@@ -15,8 +17,11 @@ public class ReferenceBamCalculationTest
     @Test
     public void createReadDepthsNormaliser()
     {
-        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
-        Assert.assertTrue(Calculation.createReadDepthsNormaliser() instanceof ReadDepthStatisticsNormaliser);
+        ReadDepthStatisticsNormaliser theMeanOne = Mockito.mock(ReadDepthStatisticsNormaliser.class);
+        CobaltScope scope = Mockito.mock(CobaltScope.class);
+        when(scope.medianByMeanNormaliser()).thenReturn(theMeanOne);
+        Calculation = new ReferenceBamCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
+        Assert.assertEquals(theMeanOne, Calculation.createReadDepthsNormaliser());
     }
 
     @Test

@@ -42,6 +42,18 @@ public class BamRatio
         normalise(mean);
     }
 
+    public void normaliseDiploidAdjustedRatio(double factor)
+    {
+        if (factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio <= 0)
+        {
+            DiploidAdjustedRatio = -1.0;
+        }
+        else
+        {
+            DiploidAdjustedRatio = DiploidAdjustedRatio / factor;
+        }
+    }
+
     public void setDiploidAdjustedRatio(double ratio)
     {
         DiploidAdjustedRatio = ratio;
@@ -54,8 +66,9 @@ public class BamRatio
 
     private void normalise(final double factor)
     {
-        if (!Included)
+        if (!Included | Ratio <= 0)
         {
+            Ratio = -1.0;
             return;
         }
         if(factor <= 0 || Double.isNaN(factor))

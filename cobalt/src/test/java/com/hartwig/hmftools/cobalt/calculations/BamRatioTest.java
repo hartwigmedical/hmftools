@@ -14,6 +14,83 @@ public class BamRatioTest
     DepthReading readDepth = new DepthReading("1", 1001, 82, 0.49);
 
     @Test
+    public void normaliseByMean()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        ratio.normaliseByMean(0.5);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(164, ratio.ratio(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+    }
+
+    @Test
+    public void normalise0ByMean()
+    {
+        DepthReading rd0 = new DepthReading("1", 1001, 0.0, 0.49);
+        BamRatio ratio = new BamRatio(_1, rd0, true);
+        ratio.normaliseByMean(0.5);
+        assertEquals(0.0, ratio.readDepth(), 0.001);
+        assertEquals(-1.0, ratio.ratio(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+    }
+
+    @Test
+    public void normaliseNaNByMean()
+    {
+        DepthReading rdNaN = new DepthReading("1", 1001, Double.NaN, 0.49);
+        BamRatio ratio = new BamRatio(_1, rdNaN, true);
+        ratio.normaliseByMean(0.5);
+        assertEquals(_1, ratio.mChromosome);
+        assertEquals(1001, ratio.Position);
+        assertEquals(-1.0, ratio.ratio(), 0.001);
+        assertEquals(-1.0, ratio.readDepth(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+    }
+
+    @Test
+    public void normaliseDiploidRatioWhenNotSet()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.normaliseDiploidAdjustedRatio(0.5);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82.0, ratio.ratio(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
+    public void normaliseDiploidRatio()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        ratio.setDiploidAdjustedRatio(1.8);
+        assertEquals(1.8, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.normaliseDiploidAdjustedRatio(2.0);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(0.9, ratio.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
+    public void normaliseDiploidRatioByNaN()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        ratio.setDiploidAdjustedRatio(1.8);
+        assertEquals(1.8, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.normaliseDiploidAdjustedRatio(Double.NaN);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
+    public void normaliseDiploidRatioByZero()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        ratio.setDiploidAdjustedRatio(1.8);
+        assertEquals(1.8, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.normaliseDiploidAdjustedRatio(0.0);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
     public void handleNaNDepthInConstructor()
     {
         DepthReading rdNaN = new DepthReading("1", 1001, Double.NaN, 0.49);
@@ -35,6 +112,7 @@ public class BamRatioTest
         assertEquals(34, ratio.ratio(), 0.001);
         assertEquals(34, ratio.readDepth(), 0.001);
         assertEquals(-1.0, ratio.gcContent(), 0.001);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
     }
 
     @Test

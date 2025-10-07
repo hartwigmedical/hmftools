@@ -38,22 +38,23 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         ratios.forEach(normaliser::recordRatio);
 
         normaliser.dataCollectionFinished();
-//        assertEquals(13, normaliser.count());
+        normaliser.setExpectedRatio(1.0);
+        assertEquals(11, normaliser.count());
         assertEquals(0.51, normaliser.median(), 0.0001);
 
         assertEquals(-1.0, normaliser.normalise(ratios.get(0)), EPSILON);
-        assertEquals(0.5, normaliser.normalise(ratios.get(1)), EPSILON);
-        assertEquals(0.51, normaliser.normalise(ratios.get(2)), EPSILON);
-        assertEquals(0.51, normaliser.normalise(ratios.get(3)), EPSILON);
-        assertEquals(0.51, normaliser.normalise(ratios.get(4)), EPSILON);
-        assertEquals(0.49, normaliser.normalise(ratios.get(5)), EPSILON);
-        assertEquals(0.58, normaliser.normalise(ratios.get(6)), EPSILON);
-        assertEquals(0.51, normaliser.normalise(ratios.get(7)), EPSILON);
-        assertEquals(0.58, normaliser.normalise(ratios.get(8)), EPSILON);
-        assertEquals(0.4998, normaliser.normalise(ratios.get(9)), EPSILON);
-        assertEquals(0.46710280373831786, normaliser.normalise(ratios.get(10)), EPSILON);
+        assertEquals(0.5/0.51, normaliser.normalise(ratios.get(1)), EPSILON);
+        assertEquals(1.0, normaliser.normalise(ratios.get(2)), EPSILON);
+        assertEquals(1.0, normaliser.normalise(ratios.get(3)), EPSILON);
+        assertEquals(1.0, normaliser.normalise(ratios.get(4)), EPSILON);
+        assertEquals(0.49/0.51, normaliser.normalise(ratios.get(5)), EPSILON);
+        assertEquals(0.58/0.51, normaliser.normalise(ratios.get(6)), EPSILON);
+        assertEquals(1.0, normaliser.normalise(ratios.get(7)), EPSILON);
+        assertEquals(0.58/0.51, normaliser.normalise(ratios.get(8)), EPSILON);
+        assertEquals(0.49/0.51, normaliser.normalise(ratios.get(9)), EPSILON);
+        assertEquals(0.49/0.51, normaliser.normalise(ratios.get(10)), EPSILON);
         assertEquals(-1.0, normaliser.normalise(ratios.get(11)), EPSILON);
-        assertEquals(0.5572222222222222, normaliser.normalise(ratios.get(12)), EPSILON);
+        assertEquals(0.59/0.50, normaliser.normalise(ratios.get(12)), EPSILON);
     }
 
     @Test
@@ -62,7 +63,7 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         final List<Double> input = Arrays.asList(0.0, 0.0, 0.002, 0.0, 0.0);
         maxWindowDistance = 5;
         minWindowCoverage = 5;
-        final List<Double> output = doNormalisation(input);//1.0, 5, 5, input).get();
+        final List<Double> output = doNormalisation(input, 1.0);//1.0, 5, 5, input).get();
         assertEquals(input.size(), output.size());
         assertRatio(input.get(0), output.get(0), 1);
         assertRatio(input.get(1), output.get(1), 1);
@@ -77,13 +78,14 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         final List<Double> input = Arrays.asList(1.0, 1.5, -1.0, 1.1, 1.2);
         maxWindowDistance = 2;
         minWindowCoverage = 1;
-        List<Double> output = doNormalisation(input);
+        List<Double> output = doNormalisation(input, 1.15);
+
         assertEquals(input.size(), output.size());
-        assertEquals(0.9199999999999999, output.get(0), EPSILON);
-        assertEquals(1.568181818181818, output.get(1), EPSILON);
+        assertEquals(1.15 /1.1, output.get(0), EPSILON);
+        assertEquals(1.5*1.15/1.15, output.get(1), EPSILON);
         assertEquals(-1.0, output.get(2), EPSILON);
-        assertEquals(1.0541666666666667, output.get(3), EPSILON);
-        assertEquals(1.2, output.get(4), EPSILON);
+        assertEquals(1.1*1.15/1.15, output.get(3), EPSILON);
+        assertEquals(1.2*1.15/1.2, output.get(4), EPSILON);
     }
 
     @Test
@@ -92,7 +94,7 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         final List<Double> input = Arrays.asList(1.0, 1.5, 2.0, -1.0, -1.0);
         maxWindowDistance = 1;
         minWindowCoverage = 3;
-        List<Double> output = doNormalisation(input);
+        List<Double> output = doNormalisation(input, 1.5);
         assertEquals(input.size(), output.size());
         assertEquals(1.0, output.get(0), EPSILON);
         assertEquals(1.5, output.get(1), EPSILON);
@@ -101,7 +103,7 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         assertEquals(-1.0, output.get(4), EPSILON);
     }
 
-    private List<Double> doNormalisation(List<Double> inputs)
+    private List<Double> doNormalisation(List<Double> inputs, double expectedRatio)
     {
         int position = 1;
         List<BamRatio> ratios = new ArrayList<>(inputs.size());
@@ -112,6 +114,7 @@ public class DiploidRatioNormaliserTest extends CalculationsTestBase
         DiploidRatioNormaliser normaliser = new DiploidRatioNormaliser(maxWindowDistance, minWindowCoverage);
         ratios.forEach(normaliser::recordRatio);
         normaliser.dataCollectionFinished();
+        normaliser.setExpectedRatio(expectedRatio);
 
         List<Double> results = new ArrayList<>();
         ratios.forEach(b -> results.add(normaliser.normalise(b)));

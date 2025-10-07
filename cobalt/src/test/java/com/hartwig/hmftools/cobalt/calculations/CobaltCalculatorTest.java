@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -47,6 +48,9 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     Map<Double, Double> refGcRatios = new HashMap<>();
     Map<Double, Double> tumGcRatios = new HashMap<>();
     Map<Double, Double> tumGcRatiosTargeted = new HashMap<>();
+    Map<Double, Double> refGcRatiosTargeted = new HashMap<>();
+    double TumorMeanMedianRatio;
+    double ReferenceMeanMedianRatio;
     CobaltConfig config;
 
     final ListMultimap<HumanChromosome, DepthReading> tumorDepths = ArrayListMultimap.create();
@@ -55,9 +59,9 @@ public class CobaltCalculatorTest extends CalculationsTestBase
     CobaltScope targetedScope = new CobaltScope()
     {
         @Override
-        public ReadDepthStatisticsNormaliser finalNormaliser()
+        public ResultsNormaliser finalNormaliser()
         {
-            return new NoOpReadDepthStatisticsNormaliser();
+            return new UnityNormaliser();
         }
 
         @Override
@@ -137,6 +141,13 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         tumGcRatiosTargeted.put(0.39, (24.5) / 3.0);
         tumGcRatiosTargeted.put(0.40, (24.5 + 26) / 3.0);
         tumGcRatiosTargeted.put(0.41, (24.5 + 26 + 23) / 3.0);
+        // Similarly for reference values.
+        refGcRatiosTargeted.putAll(refGcRatios);
+        // 0.50: 100 (masked out), 12, 12 => median = 12
+        // 0.51: 110 (masked out), 16, 16, 17 => median = 16
+        // 49: 12/3, 50: (12+16)/3, 51: (12+16+18)/3, 52: (16+18+12)/3, etc
+        //        refGcRatiosTargeted.put(0.50, (14 + 16) / 3.0);
+        //        refGcRatiosTargeted.put(0.51, (24.5 + 26 + 23) / 3.0);
 
         // Set up gc profile data to have everything mappable but for one region on chr1.
         ListMultimap<Chromosome, GCProfile> gcProfileData = ArrayListMultimap.create();
@@ -180,6 +191,26 @@ public class CobaltCalculatorTest extends CalculationsTestBase
             referenceDepths.put(_2, dr(_2, position, rd2[i], rgc2[i]));
             tumorDepths.put(_2, dr(_2, position, td2[i], tgc2[i]));
         }
+
+        // Get the median and mean read depths for the included regions.
+        DescriptiveStatistics tumorStats = new DescriptiveStatistics();
+        DescriptiveStatistics referenceStats = new DescriptiveStatistics();
+        for(int i = 3; i < 15; i++)
+        {
+            tumorStats.addValue(td1[i]);
+            referenceStats.addValue(rd1[i]);
+        }
+        for(int i = 0; i < 6; i++)
+        {
+            tumorStats.addValue(td2[i]);
+            referenceStats.addValue(rd2[i]);
+        }
+        double tumorMean = tumorStats.getMean();
+        double tumorMedian = tumorStats.getPercentile(50);
+        TumorMeanMedianRatio = tumorMean / tumorMedian;
+        double referenceMean = referenceStats.getMean();
+        double referenceMedian = referenceStats.getPercentile(50);
+        ReferenceMeanMedianRatio = referenceMean / referenceMedian;
     }
 
     @Test
@@ -192,16 +223,18 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
+        checkRatio(ratios1.get(0), _1, 1, rd1[0], td1[0], -1.0, -1.0, -1.0, rgc1[0], tgc1[0]);
+        checkRatio(ratios1.get(1), _1, 1001, rd1[1], td1[1], -1.0, -1.0, -1.0, rgc1[1], tgc1[1]);
+        checkRatio(ratios1.get(2), _1, 2001, rd1[2], td1[2], -1.0, -1.0, -1.0, rgc1[2], tgc1[2]);
         List<Double> referenceRatios1 = new ArrayList<>();
         for(int i = 3; i < 15; i++)
         {
             int position = i * 1000 + 1;
             double refRatio = rd1[i] / refGcRatios.get(rgc1[i]);
+            refRatio = refRatio / ReferenceMeanMedianRatio;
             referenceRatios1.add(refRatio);
             double tumRatio = td1[i] / tumGcRatios.get(tgc1[i]);
+            tumRatio = tumRatio / TumorMeanMedianRatio;
             // Diploid normalisation has no effect over these ranges so refRatio == refGcDiploidRatio
             checkRatio(ratios1.get(i), _1, position, rd1[i], td1[i], refRatio, tumRatio, refRatio, rgc1[i], tgc1[i]);
         }
@@ -213,8 +246,10 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         {
             int position = i * 1000 + 1;
             double refRatio = rd2[i] / refGcRatios.get(rgc2[i]);
+            refRatio = refRatio / ReferenceMeanMedianRatio;
             referenceRatios2.add(refRatio);
             double tumRatio = td2[i] / tumGcRatios.get(tgc2[i]);
+            tumRatio = tumRatio / TumorMeanMedianRatio;
             checkRatio(ratios2.get(i), _2, position, rd2[i], td2[i], refRatio, tumRatio, refRatio, rgc2[i], tgc2[i]);
         }
 
@@ -238,13 +273,14 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
+        checkRatio(ratios1.get(0), _1, 1, -1.0, td1[0], -1.0, -1.0, -1.0, -1.0, tgc1[0]);
+        checkRatio(ratios1.get(1), _1, 1001, -1.0, td1[1], -1.0, -1.0, -1.0, -1.0, tgc1[1]);
+        checkRatio(ratios1.get(2), _1, 2001, -1.0, td1[2], -1.0, -1.0, -1.0, -1.0, tgc1[2]);
         for(int i = 3; i < 15; i++)
         {
             int position = i * 1000 + 1;
             double tumRatio = td1[i] / tumGcRatios.get(tgc1[i]);
+            tumRatio = tumRatio / TumorMeanMedianRatio;
             checkRatio(ratios1.get(i), _1, position, -1.0, td1[i], -1.0, tumRatio, -1.0, -1.0, tgc1[i]);
         }
 
@@ -254,6 +290,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         {
             int position = i * 1000 + 1;
             double tumRatio = td2[i] / tumGcRatios.get(tgc2[i]);
+            tumRatio = tumRatio / TumorMeanMedianRatio;
             checkRatio(ratios2.get(i), _2, position, -1.0, td2[i], -1.0, tumRatio, -1.0, -1.0, tgc2[i]);
         }
 
@@ -271,14 +308,15 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
+        checkRatio(ratios1.get(0), _1, 1, rd1[0], -1.0, -1.0, -1.0, -1.0, rgc1[0], -1.0);
+        checkRatio(ratios1.get(1), _1, 1001, rd1[1], -1.0, -1.0, -1.0, -1.0, rgc1[1], -1.0);
+        checkRatio(ratios1.get(2), _1, 2001, rd1[2], -1.0, -1.0, -1.0, -1.0, rgc1[2], -1.0);
         List<Double> referenceRatios1 = new ArrayList<>();
         for(int i = 3; i < 15; i++)
         {
             int position = i * 1000 + 1;
             double refRatio = rd1[i] / refGcRatios.get(rgc1[i]);
+            refRatio = refRatio / ReferenceMeanMedianRatio;
             referenceRatios1.add(refRatio);
             // Diploid normalisation has no effect over these ranges so refRatio == refGcDiploidRatio
             checkRatio(ratios1.get(i), _1, position, rd1[i], -1.0, refRatio, -1.0, refRatio, rgc1[i], -1.0);
@@ -291,6 +329,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         {
             int position = i * 1000 + 1;
             double refRatio = rd2[i] / refGcRatios.get(rgc2[i]);
+            refRatio = refRatio / ReferenceMeanMedianRatio;
             referenceRatios2.add(refRatio);
             checkRatio(ratios2.get(i), _2, position, rd2[i], -1.0, refRatio, -1.0, refRatio, rgc2[i], -1.0);
         }
@@ -315,28 +354,33 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(2, cobaltRatios.keySet().size());
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
-        checkNulled(ratios1.get(3), _1, 3001);
+        checkRatio(ratios1.get(0), _1, 1, rd1[0], td1[0], -1.0, -1.0, -1.0, rgc1[0], tgc1[0]);
+        checkRatio(ratios1.get(1), _1, 1001, rd1[1], td1[1], -1.0, -1.0, -1.0, rgc1[1], tgc1[1]);
+        checkRatio(ratios1.get(2), _1, 2001, rd1[2], td1[2], -1.0, -1.0, -1.0, rgc1[2], tgc1[2]);
+        checkRatio(ratios1.get(3), _1, 3001, rd1[3], td1[3], -1.0, -1.0, -1.0, rgc1[3], tgc1[3]);
         List<Double> referenceRatios1 = new ArrayList<>();
-        // In targeted mode the tumor results are normalised so that their mean is 1.0.
+        // In targeted mode the results are normalised so that their mean is 1.0.
         List<Double> expectedRawTumorRatios = new ArrayList<>();
+        List<Double> expectedRawReferenceRatios = new ArrayList<>();
         for(int i = 4; i < 15; i++)
         {
             expectedRawTumorRatios.add(td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1));
+            expectedRawReferenceRatios.add(rd1[i] / (refGcRatiosTargeted.get(rgc1[i]) * EF1));
         }
         for(int i = 0; i < 6; i++)
         {
             expectedRawTumorRatios.add(td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2));
+            expectedRawReferenceRatios.add(rd2[i] / (refGcRatiosTargeted.get(rgc2[i]) * EF2));
         }
-        double normalisationFactor = expectedRawTumorRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+        double tumorNormalisationFactor = expectedRawTumorRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+        double referenceNormalisationFactor = expectedRawReferenceRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
         for(int i = 4; i < 15; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
-            referenceRatios1.add(refRatio);
-            double tumRatio = td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1 * normalisationFactor);
+            double rawRefRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
+            referenceRatios1.add(rawRefRatio);
+            double refRatio = rawRefRatio / referenceNormalisationFactor;
+            double tumRatio = td1[i] / (tumGcRatiosTargeted.get(tgc1[i]) * EF1 * tumorNormalisationFactor);
             checkRatio(ratios1.get(i), _1, position, rd1[i], td1[i], refRatio, tumRatio, refRatio, rgc1[i], tgc1[i]);
         }
         List<CobaltRatio> ratios2 = cobaltRatios.get(_2);
@@ -345,9 +389,10 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         for(int i = 0; i < 6; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
-            referenceRatios2.add(refRatio);
-            double tumRatio = td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2 * normalisationFactor);
+            double rawRefRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
+            referenceRatios2.add(rawRefRatio);
+            double refRatio = rawRefRatio / referenceNormalisationFactor;
+            double tumRatio = td2[i] / (tumGcRatiosTargeted.get(tgc2[i]) * EF2 * tumorNormalisationFactor);
             checkRatio(ratios2.get(i), _2, position, rd2[i], td2[i], refRatio, tumRatio, refRatio, rgc2[i], tgc2[i]);
         }
 
@@ -372,12 +417,11 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
         checkRatio(ratios1.get(0), _1, 1, -1.0, td1[0], -1.0, -1.0, -1.0, -1.0, tgc1[0]);
+        checkRatio(ratios1.get(1), _1, 1001, -1.0, td1[1], -1.0, -1.0, -1.0, -1.0, tgc1[1]);
+        checkRatio(ratios1.get(2), _1, 2001, -1.0, td1[2], -1.0, -1.0, -1.0, -1.0, tgc1[2]);
+        checkRatio(ratios1.get(3), _1, 3001, -1.0, td1[3], -1.0, -1.0, -1.0, -1.0, tgc1[3]);
 
-//        checkNulled(ratios1.get(0), _1, 1);
-//        checkNulled(ratios1.get(1), _1, 1001);
-//        checkNulled(ratios1.get(2), _1, 2001);
-//        checkNulled(ratios1.get(3), _1, 3001);
-        // In targeted mode the tumor results are normalised so that their mean is 1.0.
+        // In targeted mode the results are normalised so that their mean is 1.0.
         List<Double> expectedRawTumorRatios = new ArrayList<>();
         for(int i = 4; i < 15; i++)
         {
@@ -415,18 +459,30 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         CobaltCalculator calculator = new CobaltCalculator(ArrayListMultimap.create(), referenceDepths, config);
         ListMultimap<Chromosome, CobaltRatio> cobaltRatios = calculator.getCalculatedRatios();
         assertEquals(2, cobaltRatios.keySet().size());
+        List<Double> expectedRawReferenceRatios = new ArrayList<>();
+        for(int i = 4; i < 15; i++)
+        {
+            expectedRawReferenceRatios.add(rd1[i] / (refGcRatiosTargeted.get(rgc1[i]) * EF1));
+        }
+        for(int i = 0; i < 6; i++)
+        {
+            expectedRawReferenceRatios.add(rd2[i] / (refGcRatiosTargeted.get(rgc2[i]) * EF2));
+        }
+        double referenceNormalisationFactor = expectedRawReferenceRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkNulled(ratios1.get(0), _1, 1);
-        checkNulled(ratios1.get(1), _1, 1001);
-        checkNulled(ratios1.get(2), _1, 2001);
-        checkNulled(ratios1.get(3), _1, 3001);
+        checkRatio(ratios1.get(0), _1, 1, rd1[0], -1.0, -1.0, -1.0, -1.0, rgc1[0],    -1.0);
+        checkRatio(ratios1.get(1), _1, 1001, rd1[1], -1.0, -1.0, -1.0, -1.0, rgc1[1], -1.0);
+        checkRatio(ratios1.get(2), _1, 2001, rd1[2], -1.0, -1.0, -1.0, -1.0, rgc1[2], -1.0);
+        checkRatio(ratios1.get(3), _1, 3001, rd1[3], -1.0, -1.0, -1.0, -1.0, rgc1[3], -1.0);
         List<Double> referenceRatios1 = new ArrayList<>();
         for(int i = 4; i < 15; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
-            referenceRatios1.add(refRatio);
+            double rawRefRatio = rd1[i] / (refGcRatios.get(rgc1[i]) * EF1);
+            referenceRatios1.add(rawRefRatio);
+            double refRatio = rawRefRatio / referenceNormalisationFactor;
+            referenceRatios1.add(rawRefRatio);
             checkRatio(ratios1.get(i), _1, position, rd1[i], -1.0, refRatio, -1.0, refRatio, rgc1[i], -1.0);
         }
         List<CobaltRatio> ratios2 = cobaltRatios.get(_2);
@@ -435,8 +491,10 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         for(int i = 0; i < 6; i++)
         {
             int position = i * 1000 + 1;
-            double refRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
-            referenceRatios2.add(refRatio);
+            double rawRefRatio = rd2[i] / (refGcRatios.get(rgc2[i]) * EF2);
+            referenceRatios2.add(rawRefRatio);
+            double refRatio = rawRefRatio / referenceNormalisationFactor;
+            referenceRatios2.add(rawRefRatio);
             checkRatio(ratios2.get(i), _2, position, rd2[i], -1.0, refRatio, -1.0, refRatio, rgc2[i], -1.0);
         }
 
@@ -448,20 +506,6 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         assertEquals(V38.versionedChromosome(_2), medianRatios.get(1).Chromosome);
         assertEquals(Doubles.median(referenceRatios2), medianRatios.get(1).MedianRatio, 0.001);
         assertEquals(6, medianRatios.get(1).Count, 0.001);
-    }
-
-
-    private void checkNulled(CobaltRatio ratio, Chromosome chromosome, int position)
-    {
-        assertEquals(V38.versionedChromosome(chromosome), ratio.chromosome());
-        assertEquals(position, ratio.position());
-        assertEquals(-1.0, ratio.referenceReadDepth(), 0.0001);
-        assertEquals(-1.0, ratio.tumorReadDepth(), 0.0001);
-        assertEquals(-1.0, ratio.referenceGCRatio(), 0.0001);
-        assertEquals(-1.0, ratio.tumorGCRatio(), 0.0001);
-        assertEquals(-1.0, ratio.referenceGCDiploidRatio(), 0.0001);
-        assertEquals(-1.0, ratio.referenceGcContent(), 0.0001);
-        assertEquals(-1.0, ratio.tumorGcContent(), 0.0001);
     }
 
     private void checkRatio(CobaltRatio ratio, Chromosome chromosome, int position,

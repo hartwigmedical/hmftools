@@ -28,12 +28,12 @@ public class CobaltCalculator
         GenomeFilter mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.excludedRegions());
         CobaltScope scope = config.scope();
 
-        TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, scope, config.RefGenVersion);
+        TumorBamCalculation tumorBamCalculation = new TumorBamCalculation(mWindowStatuses, scope, config.genomeVersion());
         tumourDepthReadings.forEach(tumorBamCalculation::addReading);
         ListMultimap<Chromosome, BamRatio> tumorResults = tumorBamCalculation.calculateRatios();
         mTumorMedianReadDepths = tumorBamCalculation.medianReadDepths();
 
-        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, scope, config.RefGenVersion);
+        ReferenceBamCalculation referenceBamCalculation = new ReferenceBamCalculation(mWindowStatuses, scope, config.genomeVersion());
         referenceDepthReadings.forEach(referenceBamCalculation::addReading);
         ListMultimap<Chromosome, BamRatio> referenceResults = referenceBamCalculation.calculateRatios();
         mMedianRatios = referenceBamCalculation.medianRatios();

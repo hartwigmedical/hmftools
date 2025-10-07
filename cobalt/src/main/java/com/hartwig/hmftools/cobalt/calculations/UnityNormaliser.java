@@ -4,7 +4,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class UnityNormaliser implements ResultsNormaliser
 {
-    private final DescriptiveStatistics descriptiveStatistics = new DescriptiveStatistics();
+    private final DescriptiveStatistics RatiosStatistics = new DescriptiveStatistics();
+    private final DescriptiveStatistics MegaBaseScaleRatioStatistics = new DescriptiveStatistics();
 
     @Override
     public void recordValue(final BamRatio bamRatio)
@@ -16,14 +17,23 @@ public class UnityNormaliser implements ResultsNormaliser
         double ratio = bamRatio.ratio();
         if (ratio > 0.0)
         {
-            descriptiveStatistics.addValue(ratio);
+            RatiosStatistics.addValue(ratio);
+        }
+        double mbScaleRatio = bamRatio.getDiploidAdjustedRatio();
+        if (mbScaleRatio > 0.0)
+        {
+            MegaBaseScaleRatioStatistics.addValue(mbScaleRatio);
         }
     }
 
     @Override
     public void normalise(BamRatio bamRatio)
     {
-        double mean = descriptiveStatistics.getMean();
+        double mean = RatiosStatistics.getMean();
         bamRatio.normaliseByMean(mean);
+        if (MegaBaseScaleRatioStatistics.getN() > 0)
+        {
+            bamRatio.normaliseDiploidAdjustedRatio(MegaBaseScaleRatioStatistics.getMean());
+        }
     }
 }

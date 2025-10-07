@@ -99,35 +99,35 @@ public class DiploidNormaliserTest extends CalculationsTestBase
         List<BamRatio> chr1RatiosNormalised = ChromosomeToBamRatio.get(_1);
         assertEquals(6, chr1RatiosNormalised.size());
         int index = 0;
-        assertEquals( 0.225, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.225, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.25, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.225, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.225, chr1RatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 20.0/22.5, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 25.0/22.5, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr1RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr1RatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
 
         List<BamRatio> chr4RatiosNormalised = ChromosomeToBamRatio.get(_4);
         assertEquals(7, chr4RatiosNormalised.size());
         index = 0;
-        assertEquals( 0.2, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.24, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.2, chr4RatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 30.0/25.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 1.0, chr4RatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
 
         List<BamRatio> chrXRatiosNormalised = ChromosomeToBamRatio.get(_X);
         assertEquals(8, chrXRatiosNormalised.size());
         index = 0;
         assertEquals( -1.0, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.3, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.3, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
         assertEquals( 0.5, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.3, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.257, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.3, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
-        assertEquals( 0.343, chrXRatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5 * 50.0/30.0, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5 * 30.0/35.0, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5, chrXRatiosNormalised.get(index++).getDiploidAdjustedRatio(), 0.001);
+        assertEquals( 0.5 * 40.0/35.0, chrXRatiosNormalised.get(index).getDiploidAdjustedRatio(), 0.001);
 
         // ChrY does not get normalised.
         List<BamRatio> chrYRatiosNormalised = ChromosomeToBamRatio.get(_Y);

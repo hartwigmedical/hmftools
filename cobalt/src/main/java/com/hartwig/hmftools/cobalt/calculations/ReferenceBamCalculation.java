@@ -26,12 +26,6 @@ public class ReferenceBamCalculation extends BamCalculation
         return new DiploidNormaliser(ROLLING_MEDIAN_MAX_DISTANCE, ROLLING_MEDIAN_MIN_COVERAGE, version);
     }
 
-    @Override
-    ResultsNormaliser createFinalNormaliser()
-    {
-        return mScope.finalNormaliser();
-    }
-
     List<MedianRatio> medianRatios()
     {
         return ((DiploidNormaliser)megaBaseScaleNormaliser).medianRatios();

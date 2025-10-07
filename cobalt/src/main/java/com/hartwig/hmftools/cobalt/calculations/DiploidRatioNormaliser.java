@@ -43,7 +43,7 @@ class DiploidRatioNormaliser
         mMedian = mRatioStatistics.getPercentile(50);
     }
 
-    void setmExpectedRatio(double expectedRatio)
+    void setExpectedRatio(double expectedRatio)
     {
         mExpectedRatio = expectedRatio;
     }

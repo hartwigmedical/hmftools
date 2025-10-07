@@ -59,7 +59,7 @@ public class DiploidNormaliser implements ResultsNormaliser
             {
                 expectedRatio = cobaltChromosome.actualRatio();
             }
-            chromosomeToNormaliser.get(cobaltChromosome.humanChromosome()).setmExpectedRatio(expectedRatio);
+            chromosomeToNormaliser.get(cobaltChromosome.humanChromosome()).setExpectedRatio(expectedRatio);
         }
     }
 
