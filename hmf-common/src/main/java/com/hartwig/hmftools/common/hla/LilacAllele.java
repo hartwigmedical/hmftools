@@ -5,9 +5,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExt
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -86,9 +88,9 @@ public abstract class LilacAllele
 
         List<LilacAllele> alleles = Lists.newArrayList();
 
-        for(int i = 0; i < lines.size(); ++i)
+        for(String line : lines)
         {
-            String[] values = lines.get(i).split(delim);
+            String[] values = line.split(delim);
 
             alleles.add(ImmutableLilacAllele.builder()
                     .allele(values[fieldsIndexMap.get(FLD_ALLELE)])
@@ -116,9 +118,15 @@ public abstract class LilacAllele
         return alleles;
     }
 
-    public static void write(final String filename, List<LilacAllele> alleles) throws IOException
+    public static void write(final BufferedWriter writer, final List<LilacAllele> alleles, final Collection<String> existingLines) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(alleles));
+        List<String> lines = Lists.newArrayList(toLines(alleles));
+        lines.addAll(existingLines);
+        for(String line : lines)
+        {
+            writer.write(line);
+            writer.newLine();
+        }
     }
 
     private static List<String> toLines(final List<LilacAllele> alleles)

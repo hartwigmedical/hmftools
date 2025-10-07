@@ -239,7 +239,11 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return OutputDir + Sample + LILAC_FILE_ID + fileId; }
+    public String formFileId(final String fileId) { return formFileId(fileId, true); }
+    public String formFileId(final String fileId, boolean includeGenes)
+    {
+        return OutputDir + Sample + LILAC_FILE_ID + (includeGenes ? Genes.toString() + "." : "") + fileId;
+    }
 
     public void logParams()
     {

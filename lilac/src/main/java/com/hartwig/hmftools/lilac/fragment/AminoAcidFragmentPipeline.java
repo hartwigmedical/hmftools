@@ -197,13 +197,17 @@ public class AminoAcidFragmentPipeline
         for(Map.Entry<HlaGene, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
             HlaGene gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene.shortName() + ".aminoacids.txt"), RAW_REF_AMINO_ACID_COUNTS.get(gene));
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".aminoacids.txt", false),
+                    RAW_REF_AMINO_ACID_COUNTS.get(gene));
         }
 
         for(Map.Entry<HlaGene, SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
             HlaGene gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene.shortName() + ".nucleotides.txt"), RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".nucleotides.txt", false),
+                    RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
         }
     }
 }
