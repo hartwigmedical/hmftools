@@ -1,31 +1,21 @@
 package com.hartwig.hmftools.redux.common;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNSET_COUNT;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
-import static com.hartwig.hmftools.common.collect.Cluster.clusterCount;
-import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.getReadNameAttributes;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.calculatePCRClusterCount;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.ConsensusType;
-import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.IlluminaReadNameAttributes;
-import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.TileCoord;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 
@@ -37,18 +27,19 @@ public class DuplicateGroup
 
     // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
     private final FragmentCoords mFragmentCoords;
+
     // contains reads that have potentially been merged due to UMI merging, all of these will be used for consensus read building
     private final List<SAMRecord> mReads;
+
     // contains reads that have been merged into this group due to jitter, these will not be used for consensus building
     private final List<SAMRecord> mNonConsensusReads;
+
     // contains reads that have been merged into this group due to poly-g UMI tail, these will not be used for consensus building
     private final List<SAMRecord> mPolyGUmiReads;
 
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
-
-    private int mPCRClusterCount;
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
     {
@@ -71,8 +62,6 @@ public class DuplicateGroup
         mConsensusRead = null;
         mPrimaryRead = null;
         mDualStrand = false;
-
-        mPCRClusterCount = UNSET_COUNT;
     }
 
     public void addRead(final SAMRecord read) { mReads.add(read); }
@@ -83,7 +72,12 @@ public class DuplicateGroup
     public List<SAMRecord> reads() { return mReads; }
     public List<SAMRecord> nonConsensusReads() { return mNonConsensusReads; }
     public List<SAMRecord> polyGUmiReads() { return mPolyGUmiReads; }
-    public List<SAMRecord> allReads() { return Stream.concat(Stream.concat(mReads.stream(), mNonConsensusReads.stream()), mPolyGUmiReads.stream()).toList(); }
+
+    public List<SAMRecord> allReads()
+    {
+        return Stream.concat(Stream.concat(mReads.stream(), mNonConsensusReads.stream()), mPolyGUmiReads.stream()).toList();
+    }
+
     public int readCount() { return mReads.size() + mNonConsensusReads.size() + mPolyGUmiReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
@@ -118,7 +112,9 @@ public class DuplicateGroup
 
             ConsensusType consensusType = mDualStrand ? DUAL : SINGLE;
 
-            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount(), nonPolyGFirstInPairCount, consensusType, mPCRClusterCount);
+            int pcrClusterCount = isIllumina() ? calculatePCRClusterCount(this) : UNSET_COUNT;
+
+            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount(), nonPolyGFirstInPairCount, consensusType, pcrClusterCount);
 
             mConsensusRead = consensusReadInfo.ConsensusRead;
         }
@@ -132,76 +128,6 @@ public class DuplicateGroup
             }
 
             e.printStackTrace();
-        }
-    }
-
-    private static final Set<Integer> OPTICAL_DUPLICATE_TILE_DIFFERENCE = Sets.newHashSet(0, 1, 999, 1000, 1001);
-    private static final int OPTICAL_DUPLICATE_DISTANCE_THRESHOLD = 2_500;
-
-    public void setPCRClusterCount(final SequencingType sequencingType)
-    {
-        if(sequencingType != ILLUMINA)
-            return;
-
-        List<IlluminaReadNameAttributes> readNameAttributes = Lists.newArrayList();
-        Iterator<SAMRecord> allReadsIterator = Stream.concat(Stream.concat(mReads.stream(), mNonConsensusReads.stream()), mPolyGUmiReads.stream()).iterator();
-        while(allReadsIterator.hasNext())
-        {
-            SAMRecord read = allReadsIterator.next();
-            IlluminaReadNameAttributes attributes = getReadNameAttributes(read.getReadName());
-            if(attributes == null)
-                return;
-
-            readNameAttributes.add(attributes);
-        }
-
-        if(readNameAttributes.size() == 2)
-        {
-            IlluminaReadNameAttributes readNameAttributes1 = readNameAttributes.get(0);
-            IlluminaReadNameAttributes readNameAttributes2 = readNameAttributes.get(1);
-            int tileDifference = abs(readNameAttributes1.tileNumber() - readNameAttributes2.tileNumber());
-            if(readNameAttributes1.laneKey().equals(readNameAttributes2.laneKey())
-                    && OPTICAL_DUPLICATE_TILE_DIFFERENCE.contains(tileDifference))
-            {
-                mPCRClusterCount = 1;
-                return;
-            }
-
-            mPCRClusterCount = 2;
-            return;
-        }
-
-        Map<String, List<TileCoord>> tileCoordsByTile = Maps.newHashMap();
-        for(IlluminaReadNameAttributes attributes : readNameAttributes)
-        {
-            String tileKey = attributes.tileKey();
-            TileCoord tileCoord = attributes.tileCoord();
-            tileCoordsByTile.computeIfAbsent(tileKey, key -> Lists.newArrayList());
-            tileCoordsByTile.get(tileKey).add(tileCoord);
-        }
-
-        mPCRClusterCount = 0;
-        for(List<TileCoord> tileCoords : tileCoordsByTile.values())
-        {
-            if(tileCoords.size() == 1)
-            {
-                mPCRClusterCount++;
-                continue;
-            }
-
-            if(tileCoords.size() == 2)
-            {
-                TileCoord tileCoord1 = tileCoords.get(0);
-                TileCoord tileCoord2 = tileCoords.get(1);
-                if(tileCoord1.distance(tileCoord2) <= OPTICAL_DUPLICATE_DISTANCE_THRESHOLD)
-                    mPCRClusterCount++;
-                else
-                    mPCRClusterCount += 2;
-
-                continue;
-            }
-
-            mPCRClusterCount += clusterCount(tileCoords, TileCoord::distance, OPTICAL_DUPLICATE_DISTANCE_THRESHOLD);
         }
     }
 

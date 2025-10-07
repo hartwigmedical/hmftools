@@ -1,18 +1,32 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNSET_COUNT;
+import static com.hartwig.hmftools.common.collect.Cluster.clusterCount;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
+import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.getReadNameAttributes;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.sequencing.IlluminaBamUtils;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
+import com.hartwig.hmftools.redux.common.DuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -286,5 +300,74 @@ public final class IlluminaRoutines
         }
 
         return isDualStrand;
+    }
+
+    private static final Set<Integer> OPTICAL_DUPLICATE_TILE_DIFFERENCE = Sets.newHashSet(0, 1, 999, 1000, 1001);
+    private static final int OPTICAL_DUPLICATE_DISTANCE_THRESHOLD = 2_500;
+
+    public static int calculatePCRClusterCount(final DuplicateGroup duplicateGroup)
+    {
+        List<IlluminaBamUtils.IlluminaReadNameAttributes> readNameAttributes = Lists.newArrayList();
+
+        for(SAMRecord read : duplicateGroup.allReads())
+        {
+            IlluminaBamUtils.IlluminaReadNameAttributes attributes = getReadNameAttributes(read.getReadName());
+            if(attributes == null)
+                return UNSET_COUNT;
+
+            readNameAttributes.add(attributes);
+        }
+
+        if(readNameAttributes.size() == 2)
+        {
+            IlluminaBamUtils.IlluminaReadNameAttributes readNameAttributes1 = readNameAttributes.get(0);
+            IlluminaBamUtils.IlluminaReadNameAttributes readNameAttributes2 = readNameAttributes.get(1);
+            int tileDifference = abs(readNameAttributes1.tileNumber() - readNameAttributes2.tileNumber());
+
+            if(readNameAttributes1.laneKey().equals(readNameAttributes2.laneKey())
+            && OPTICAL_DUPLICATE_TILE_DIFFERENCE.contains(tileDifference))
+            {
+                return 1;
+            }
+
+            return 2;
+        }
+
+        Map<String, List<IlluminaBamUtils.TileCoord>> tileCoordsByTile = Maps.newHashMap();
+
+        for(IlluminaBamUtils.IlluminaReadNameAttributes attributes : readNameAttributes)
+        {
+            String tileKey = attributes.tileKey();
+            IlluminaBamUtils.TileCoord tileCoord = attributes.tileCoord();
+            tileCoordsByTile.computeIfAbsent(tileKey, key -> Lists.newArrayList());
+            tileCoordsByTile.get(tileKey).add(tileCoord);
+        }
+
+        int pcrClusterCount = 0;
+        for(List<IlluminaBamUtils.TileCoord> tileCoords : tileCoordsByTile.values())
+        {
+            if(tileCoords.size() == 1)
+            {
+                pcrClusterCount++;
+                continue;
+            }
+
+            if(tileCoords.size() == 2)
+            {
+                IlluminaBamUtils.TileCoord tileCoord1 = tileCoords.get(0);
+                IlluminaBamUtils.TileCoord tileCoord2 = tileCoords.get(1);
+
+                if(tileCoord1.distance(tileCoord2) <= OPTICAL_DUPLICATE_DISTANCE_THRESHOLD)
+                    pcrClusterCount++;
+                else
+                    pcrClusterCount += 2;
+
+                continue;
+            }
+
+            pcrClusterCount += clusterCount(tileCoords, IlluminaBamUtils.TileCoord::distance, OPTICAL_DUPLICATE_DISTANCE_THRESHOLD);
+        }
+
+        return pcrClusterCount;
     }
 }

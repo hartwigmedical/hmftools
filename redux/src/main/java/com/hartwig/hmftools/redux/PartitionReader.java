@@ -409,7 +409,6 @@ public class PartitionReader
             // do not form consensus if duplicateGroup only contains one non poly-g umi read
             if(mConfig.FormConsensus && duplicateGroup.readCount() - duplicateGroup.polyGUmiReads().size() >= 2)
             {
-                duplicateGroup.setPCRClusterCount(SEQUENCING_TYPE);
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
             }
