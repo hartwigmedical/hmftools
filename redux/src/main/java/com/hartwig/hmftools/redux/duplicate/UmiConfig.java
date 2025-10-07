@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIFF;
-import static com.hartwig.hmftools.redux.umi.UmiType.SINGLE;
-import static com.hartwig.hmftools.redux.umi.UmiType.TSO500_DUPEX_DELIM;
-import static com.hartwig.hmftools.redux.umi.UmiType.TWIST_DUPEX_DELIM;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.SINGLE;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.TSO500_DUPEX_DELIM;
+import static com.hartwig.hmftools.redux.duplicate.UmiType.TWIST_DUPEX_DELIM;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.exceedsUmiIdDiff;
 
 import java.io.IOException;
 import java.nio.file.Files;

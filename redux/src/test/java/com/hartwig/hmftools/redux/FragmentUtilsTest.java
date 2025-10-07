@@ -26,7 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import org.junit.Test;
 

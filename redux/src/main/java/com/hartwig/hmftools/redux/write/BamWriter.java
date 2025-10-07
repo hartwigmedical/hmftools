@@ -17,9 +17,9 @@ import com.hartwig.hmftools.redux.bqr.BqrRegionReader;
 import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 

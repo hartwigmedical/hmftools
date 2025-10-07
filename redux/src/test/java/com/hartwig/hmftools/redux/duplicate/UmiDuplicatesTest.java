@@ -1,11 +1,10 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
@@ -18,31 +17,23 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusReads.formConsensusReadId;
-import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
-import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
-import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.collapsePolyGDuplexUmis;
+import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.buildUmiGroups;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -51,16 +42,14 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.PartitionReader;
-import com.hartwig.hmftools.redux.ReadCache;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.TestBamWriter;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.FragmentCoordReads;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
-import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.TemplateReads;
+import com.hartwig.hmftools.redux.duplicate.PositionFragmentCounts;
+import com.hartwig.hmftools.redux.duplicate.UmiConfig;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;

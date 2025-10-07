@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 public enum UmiType
 {

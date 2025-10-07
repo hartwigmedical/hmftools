@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.round;
 

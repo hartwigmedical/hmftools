@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.DuplicateFrequency.roundFrequency;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateFrequency.roundFrequency;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.consensus.ConsensusStatistics;
-import com.hartwig.hmftools.redux.umi.UmiStatistics;
+import com.hartwig.hmftools.redux.duplicate.DuplicateFrequency;
+import com.hartwig.hmftools.redux.duplicate.UmiStatistics;
 
 public class Statistics
 {
@@ -27,7 +28,7 @@ public class Statistics
     public long DuplicateReads;
     public long DuplicateGroups;
 
-    public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
+    public final Map<Integer, DuplicateFrequency> DuplicateFrequencies;
 
     public final UmiStatistics UmiStats;
 

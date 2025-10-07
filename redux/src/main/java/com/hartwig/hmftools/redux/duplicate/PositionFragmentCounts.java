@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 

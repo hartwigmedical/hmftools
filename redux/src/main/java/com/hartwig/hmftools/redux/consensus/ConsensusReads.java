@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.isValidRead;
-import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.redux.duplicate.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;

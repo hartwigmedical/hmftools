@@ -3,7 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupBuilder.calcBaseQualAverage;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;

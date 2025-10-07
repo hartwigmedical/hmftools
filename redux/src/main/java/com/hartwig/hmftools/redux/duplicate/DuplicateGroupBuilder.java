@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 
@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.umi.UmiConfig;
-import com.hartwig.hmftools.redux.umi.UmiGroupBuilder;
+import com.hartwig.hmftools.redux.common.ReadInfo;
+import com.hartwig.hmftools.redux.common.Statistics;
 
 import htsjdk.samtools.SAMRecord;
 

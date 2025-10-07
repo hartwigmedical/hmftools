@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 
@@ -6,8 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-
-import htsjdk.samtools.SAMRecord;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 public class FragmentCoordReads
 {

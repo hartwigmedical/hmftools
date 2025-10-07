@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.sequencing.SequencingType;
-import com.hartwig.hmftools.redux.common.DuplicatesConfig;
-import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.TestUtils;
 
 import org.junit.After;
 import org.junit.Test;

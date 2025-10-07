@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 
@@ -10,13 +10,13 @@ import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STR
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import org.junit.Test;
 
@@ -39,7 +39,8 @@ public class DuplicateGroupCollapserTest
     private void checkCollapseToKeyWithoutCoordinatesUnmappedRead(boolean firstOfPair, boolean mateReversed)
     {
         SAMRecord read = SamRecordTestUtils.createSamRecord(
-                "READ_001", NO_CHROMOSOME_NAME, NO_POSITION, TEST_READ_BASES, NO_CIGAR, CHR_1, 1_000, false, false, null,
+                "READ_001", NO_CHROMOSOME_NAME, NO_POSITION, TEST_READ_BASES, NO_CIGAR, CHR_1,
+                1_000, false, false, null,
                 mateReversed, TEST_READ_CIGAR);
         read.setReadUnmappedFlag(true);
         read.setFirstOfPairFlag(firstOfPair);

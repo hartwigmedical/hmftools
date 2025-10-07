@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
@@ -15,9 +15,10 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroupBuilder;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import org.junit.Test;
 

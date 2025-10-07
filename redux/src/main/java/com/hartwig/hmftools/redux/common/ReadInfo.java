@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.redux.common;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import htsjdk.samtools.SAMRecord;
 

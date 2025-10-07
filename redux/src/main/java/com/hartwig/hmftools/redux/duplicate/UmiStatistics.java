@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -7,7 +7,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.calcUmiIdDiff;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.calcUmiIdDiff;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.redux.ReduxConfig;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 

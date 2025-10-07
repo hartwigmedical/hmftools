@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.duplicate;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

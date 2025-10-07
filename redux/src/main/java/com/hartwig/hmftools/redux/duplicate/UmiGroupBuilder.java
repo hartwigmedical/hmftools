@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -12,12 +12,12 @@ import static com.hartwig.hmftools.redux.ReduxConstants.MAX_IMBALANCED_UMI_BASE_
 import static com.hartwig.hmftools.redux.ReduxConstants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.redux.ReduxConstants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.ReduxConstants.MIN_POLYG_UMI_TAIL_LENGTH;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.polyGTailLength;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.trimPolyGTail;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.polyGTailLength;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.trimPolyGTail;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -40,8 +40,6 @@ import com.hartwig.hmftools.common.collect.Union;
 import com.hartwig.hmftools.common.collect.UnionFind;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.apache.commons.lang3.tuple.Pair;

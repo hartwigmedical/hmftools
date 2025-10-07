@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.common;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.String.format;
 
@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.redux.common.SupplementaryReadInfo;
 
 import htsjdk.samtools.SAMRecord;
 

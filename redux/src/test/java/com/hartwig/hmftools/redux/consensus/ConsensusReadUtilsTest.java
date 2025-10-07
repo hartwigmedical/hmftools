@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
-import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM_STR;
+import static com.hartwig.hmftools.redux.duplicate.UmiConfig.READ_ID_DELIM_STR;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,7 +23,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import org.junit.Test;
 

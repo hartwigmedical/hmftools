@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class MsiJitterReadTest
+public class MsJitterReadTest
 {
     @Test
     public void testMicrosatelliteRead()

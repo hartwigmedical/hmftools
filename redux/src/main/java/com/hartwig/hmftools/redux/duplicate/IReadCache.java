@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.duplicate;
 
-import com.hartwig.hmftools.redux.common.FragmentCoordReads;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoordReads;
 
 import htsjdk.samtools.SAMRecord;
 

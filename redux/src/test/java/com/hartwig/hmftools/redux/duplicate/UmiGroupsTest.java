@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.redux.umi;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
@@ -6,10 +6,10 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM;
-import static com.hartwig.hmftools.redux.umi.UmiConfig.extractUmiIdFromReadId;
-import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.buildUmiGroups;
-import static com.hartwig.hmftools.redux.umi.UmiGroupBuilder.hasDuplexUmiMatch;
-import static com.hartwig.hmftools.redux.umi.UmiUtils.exceedsUmiIdDiff;
+import static com.hartwig.hmftools.redux.duplicate.UmiConfig.extractUmiIdFromReadId;
+import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.buildUmiGroups;
+import static com.hartwig.hmftools.redux.duplicate.UmiGroupBuilder.hasDuplexUmiMatch;
+import static com.hartwig.hmftools.redux.duplicate.UmiUtils.exceedsUmiIdDiff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,8 +19,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.UmiConfig;
 
 import org.junit.Test;
 

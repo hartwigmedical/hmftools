@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.redux;
+package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.getFragmentCoordReads;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.getFragmentCoordReads;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,9 +30,6 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import com.hartwig.hmftools.common.collect.Union;
 import com.hartwig.hmftools.common.collect.UnionQuickFind;
-import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.FragmentCoordReads;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.apache.commons.lang3.tuple.Pair;
