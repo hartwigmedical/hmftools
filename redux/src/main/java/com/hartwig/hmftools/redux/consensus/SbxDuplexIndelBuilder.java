@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL;
+
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -90,47 +93,14 @@ public class SbxDuplexIndelBuilder
 
     public List<SbxDuplexIndel> duplexIndels() { return mDuplexIndels; }
 
-    private int tryRightAligningRepeat(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, int duplexIndelIndexEnd)
-    {
-        ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
-        moveTo(readBaseInfo, duplexIndelIndexEnd + 1);
-
-        int repeatLength = repeatBases.length;
-        int repeatStrIndex = 0;
-        int repeatCount = 0;
-
-        while(readBaseInfo.Index >= 0)
-        {
-            if(!readBaseInfo.Valid)
-                break;
-
-            if(readBaseInfo.CigarOp != I && readBaseInfo.CigarOp != M)
-                break;
-
-            if(repeatBases[repeatStrIndex] != readBaseInfo.Base)
-                break;
-
-            ++repeatStrIndex;
-
-            if(repeatStrIndex == repeatLength)
-            {
-                ++repeatCount;
-                repeatStrIndex = 0;
-            }
-
-            moveNext(readBaseInfo);
-        }
-
-        return repeatCount * repeatLength;
-    }
-
     private void processDuplexIndel(final ReadBaseInfo readBaseInfo, int duplexIndelIndexStart, int duplexIndelIndexEnd)
     {
         int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
         byte[] repeatBases = findDuplexMismatchRepeat(mRecord.getReadBases(), duplexIndelIndexStart, duplexIndelIndexEnd);
-        int repeatLength = repeatBases.length;
 
-        if(mRecord.getReadNegativeStrandFlag())
+        boolean rightAlignmentDuplexIndel = SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL == !mRecord.getReadNegativeStrandFlag();
+
+        if(rightAlignmentDuplexIndel)
         {
             int rightShift = tryRightAligningRepeat(readBaseInfo, repeatBases, duplexIndelIndexEnd);
 
@@ -141,9 +111,6 @@ public class SbxDuplexIndelBuilder
                 moveTo(readBaseInfo, duplexIndelIndexStart);
             }
         }
-
-        int repeatStrIndex = repeatLength - 1;
-        int insertRepeatCount = 0;
 
         // count inserted bases within the duplex mismatch bases
         int duplexMismatchInsertCount = 0;
@@ -163,41 +130,29 @@ public class SbxDuplexIndelBuilder
 
         // search backwards and within inserted bases to find the start of the repeat
         moveTo(readBaseInfo, duplexIndelIndexStart);
+        int insertShiftCount = findRepeatShiftLength(readBaseInfo, repeatBases, false);
 
-        while(readBaseInfo.Index >= 0)
+        // find the earliest insert base from this shift
+        for(int i = 0; i < abs(insertShiftCount); ++i)
         {
             movePrevious(readBaseInfo);
 
             if(!readBaseInfo.Valid)
                 break;
 
-            if(readBaseInfo.CigarOp != I && readBaseInfo.CigarOp != M)
-                break;
-
-            if(repeatBases[repeatStrIndex] != readBaseInfo.Base)
-                break;
-
-            --repeatStrIndex;
-
-            if(repeatStrIndex < 0)
-            {
-                ++insertRepeatCount;
-                repeatStrIndex = repeatLength - 1;
-
-                if(readBaseInfo.CigarOp == I)
-                    firstReadInsertIndex = readBaseInfo.Index;
-            }
+            if(readBaseInfo.CigarOp == I)
+                firstReadInsertIndex = readBaseInfo.Index;
         }
 
         // the repeat must be either wholy contained within the inserted bases or continue on past the insert without a gap
-        if(firstReadInsertIndex < 0 || (insertRepeatCount == 0 && !duplexMismatchInInsert))
+        if(firstReadInsertIndex < 0 || (insertShiftCount == 0 && !duplexMismatchInInsert))
             return;
 
-        int insertRepeatLength = insertRepeatCount * repeatLength;
+        int insertRepeatShift = abs(insertShiftCount);
 
-        int totalRepeatBaseLength = insertRepeatLength + duplexMismatchLength - duplexMismatchInsertCount;
+        int totalRepeatBaseLength = insertRepeatShift + duplexMismatchLength - duplexMismatchInsertCount;
 
-        int trimLength = insertRepeatLength > 0 ? min(insertRepeatLength, duplexMismatchLength) : duplexMismatchLength;
+        int trimLength = insertRepeatShift > 0 ? min(insertRepeatShift, duplexMismatchLength) : duplexMismatchLength;
 
         int lowBaseQualCount = duplexMismatchLength;
 
@@ -285,13 +240,91 @@ public class SbxDuplexIndelBuilder
                 isHomopolymer = false;
         }
 
+        /*
+
         // convert to 1-base homopolymer if all bases match
         if(repeatBases.length > 1 && isHomopolymer)
         {
             repeatBases = new byte[] { repeatBases[0] };
         }
+        */
 
         return repeatBases;
+    }
+
+    private static boolean isAlignedOrInsert(final CigarOperator operator) { return operator == M || operator == I; }
+
+    public int findRepeatShiftLength(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, boolean shiftNext)
+    {
+        // look for shifts of the repeat in either direction, including a partial shift
+        int shiftBases = 0;
+
+        // first look for full-length shifts
+        int repeatLength = repeatBases.length;
+
+        while(true)
+        {
+            int targetStartIndex = initialBaseInfo.Index + shiftBases + (shiftNext ? repeatLength : -repeatLength);
+            ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
+            moveTo(readBaseInfo, targetStartIndex);
+
+            // test for a repeat match
+            boolean matched = true;
+
+            for(int i = 0; i < repeatLength; ++i)
+            {
+                if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[i] != readBaseInfo.Base)
+                {
+                    matched = false;
+                    break;
+                }
+
+                moveNext(readBaseInfo);
+            }
+
+            if(!matched)
+                break;
+
+            shiftBases += shiftNext ? repeatLength : -repeatLength;
+        }
+
+        if(repeatLength > 1)
+        {
+            // then consider a partial shift
+            for(int i = 1; i < repeatLength; ++i)
+            {
+                int targetStartIndex = initialBaseInfo.Index + shiftBases + (shiftNext ? i : -i);
+                ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
+                moveTo(readBaseInfo, targetStartIndex);
+
+                boolean matched = true;
+
+                for(int j = 0; j < repeatLength; ++j)
+                {
+                    if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[j] != readBaseInfo.Base)
+                    {
+                        matched = false;
+                        break;
+                    }
+
+                    moveNext(readBaseInfo);
+                }
+
+                if(!matched)
+                    break;
+
+                shiftBases += shiftNext ? 1 : -1;
+            }
+        }
+
+        return shiftBases;
+    }
+
+
+    private int tryRightAligningRepeat(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, int duplexIndelIndexEnd)
+    {
+        // check if the repeat bases can be shifted right while matching the read
+        return findRepeatShiftLength(initialBaseInfo, repeatBases, true);
     }
 
     private void buildAdjustedSupplementaryCigar()

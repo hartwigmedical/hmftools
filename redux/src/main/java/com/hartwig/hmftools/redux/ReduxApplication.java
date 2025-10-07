@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.BamSampler;
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
 import com.hartwig.hmftools.redux.consensus.SbxBamSampler;
-import com.hartwig.hmftools.redux.consensus.SbxRoutines;
 import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.perf.TaskQueue;
