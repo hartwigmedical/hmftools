@@ -88,9 +88,9 @@ public abstract class LilacAllele
 
         List<LilacAllele> alleles = Lists.newArrayList();
 
-        for(int i = 0; i < lines.size(); ++i)
+        for(String line : lines)
         {
-            String[] values = lines.get(i).split(delim);
+            String[] values = line.split(delim);
 
             alleles.add(ImmutableLilacAllele.builder()
                     .allele(values[fieldsIndexMap.get(FLD_ALLELE)])

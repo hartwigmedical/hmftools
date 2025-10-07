@@ -110,7 +110,7 @@ public class ResultsWriter
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(WRITE_TYPES.toString(), false,
+        configBuilder.addConfigItem(WRITE_TYPES, false,
                 "Write types: SUMMARY (default), FRAGMENTS, READS, REF_COUNTS or ALL", WriteType.SUMMARY.toString());
     }
 
@@ -144,7 +144,7 @@ public class ResultsWriter
     }
 
     public void writeReferenceFragments(
-            final Iterable<ComplexCoverage> rankedComplexes, final List<Fragment> refNucleotideFrags,
+            final Iterable<ComplexCoverage> rankedComplexes, final Iterable<Fragment> refNucleotideFrags,
             final List<FragmentAlleles> refFragAlleles)
     {
         if(!mWriteTypes.contains(WriteType.FRAGMENTS))
