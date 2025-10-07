@@ -6,14 +6,12 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.collect.MergeUtils.clusterMerger;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
@@ -28,23 +26,17 @@ public interface DuplicateGroupCollapser
 {
     FragmentCoordReads collapse(@Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads);
 
-    static DuplicateGroupCollapser from(final DuplicateGroupCollapseConfig config)
+    static DuplicateGroupCollapser from(final DuplicatesConfig config)
     {
-        if(config.Sequencing == ULTIMA)
-            return DuplicateGroupCollapser::ultimaCollapse;
-
-        if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
+        if(isSbx() && config.SbxMaxDuplicateDistance > 0)
             return sbxCollapserFactory(config.SbxMaxDuplicateDistance);
 
         return null;
     }
 
-    static boolean isEnabled(final DuplicateGroupCollapseConfig config)
+    static boolean isEnabled(final DuplicatesConfig config)
     {
-        if(config.Sequencing == ULTIMA)
-            return true;
-
-        if(config.Sequencing == SBX && config.SbxMaxDuplicateDistance > 0)
+        if(isSbx() && config.SbxMaxDuplicateDistance > 0)
             return true;
 
         return false;
@@ -119,69 +111,6 @@ public interface DuplicateGroupCollapser
 
     int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
     Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount).reversed();
-
-    class UltimaCollapser
-    {
-        private final Map<String, TreeMap<Integer, DuplicateGroup>> mFivePrimeGroups;
-
-        public UltimaCollapser()
-        {
-            mFivePrimeGroups = Maps.newHashMap();
-        }
-
-        public void addSingleRead(final ReadInfo readInfo)
-        {
-            addDuplicateGroup(new DuplicateGroup(null, readInfo.read(), readInfo.coordinates()));
-        }
-
-        public void addDuplicateGroup(final DuplicateGroup duplicateGroup)
-        {
-            FragmentCoords coords = duplicateGroup.fragmentCoordinates();
-            int fragEndPos = coords.ReadIsLower ? coords.PositionUpper : coords.PositionLower;
-            String fivePrimeKey = collapseToFivePrimeKey(coords);
-            TreeMap<Integer, DuplicateGroup> fivePrimeGroup = getOrCreateFivePrimeGroup(fivePrimeKey);
-            fivePrimeGroup.merge(fragEndPos, duplicateGroup, DUPLICATE_GROUP_MERGER);
-        }
-
-        public FragmentCoordReads getCollapsedGroups()
-        {
-            if(mFivePrimeGroups.isEmpty())
-                return null;
-
-            List<DuplicateGroup> collapsedGroups = Lists.newArrayList();
-            for(TreeMap<Integer, DuplicateGroup> fivePrimeGroup : mFivePrimeGroups.values())
-            {
-                collapsedGroups.addAll(clusterMerger(
-                        fivePrimeGroup,
-                        (x, y) -> abs(x - y) <= SINGLE_END_JITTER_COLLAPSE_DISTANCE,
-                        DUPLICATE_GROUP_COMPARATOR,
-                        DUPLICATE_GROUP_MERGER,
-                        null));
-            }
-
-            return getFragmentCoordReads(collapsedGroups);
-        }
-
-        private TreeMap<Integer, DuplicateGroup> getOrCreateFivePrimeGroup(final String fivePrimeKey)
-        {
-            mFivePrimeGroups.computeIfAbsent(fivePrimeKey, key -> Maps.newTreeMap());
-            return mFivePrimeGroups.get(fivePrimeKey);
-        }
-    }
-
-    static FragmentCoordReads ultimaCollapse(
-            @Nullable final List<DuplicateGroup> duplicateGroups, @Nullable final List<ReadInfo> singleReads)
-    {
-        UltimaCollapser collapser = new UltimaCollapser();
-
-        if(singleReads != null)
-            singleReads.forEach(collapser::addSingleRead);
-
-        if(duplicateGroups != null)
-            duplicateGroups.forEach(collapser::addDuplicateGroup);
-
-        return collapser.getCollapsedGroups();
-    }
 
     class SbxCollapser
     {

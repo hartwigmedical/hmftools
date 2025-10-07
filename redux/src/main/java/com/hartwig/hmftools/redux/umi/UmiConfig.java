@@ -24,7 +24,6 @@ public class UmiConfig
     public final boolean Enabled;
     public final boolean Duplex; // collapse duplex UMI groups
     public final String DuplexDelim;
-    public final boolean CollapseReversed;
     public final boolean BaseStats;
     public final int PermittedBaseDiff;
 
@@ -48,7 +47,6 @@ public class UmiConfig
         Enabled = enabled;
         Duplex = duplex;
         DuplexDelim = duplexDelim;
-        CollapseReversed = true;
         BaseStats = baseStats;
         PermittedBaseDiff = DEFAULT_MAX_UMI_BASE_DIFF;
         mUmiLength = 0;

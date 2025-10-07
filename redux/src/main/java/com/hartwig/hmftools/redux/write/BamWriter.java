@@ -55,7 +55,7 @@ public abstract class BamWriter
         mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
 
         mRecomputeFragCoords = mReadDataWriter.enabled()
-                && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateGroupCollapse) || (isIllumina() && config.UMIs.Enabled));
+                && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateConfig) || (isIllumina() && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);

@@ -83,12 +83,12 @@ public class PartitionReader
             if(mConfig.UMIs.Enabled)
             {
                 mReadCache = new JitterReadCache(new ReadCache(
-                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse));
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateConfig));
             }
             else
             {
                 mReadCache = new ReadCache(
-                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
             }
         }
         else
@@ -97,7 +97,7 @@ public class PartitionReader
             // larger than the sampled max read length extra room is required
             mReadCache = new ReadCache(
                     3 * mConfig.readLength(),
-                    2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateGroupCollapse);
+                    2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
         }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);

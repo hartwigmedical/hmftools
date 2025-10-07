@@ -146,6 +146,7 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         String readChromosome;
         int readPosition;
 
+        // 'mate' coords here will be the 3' end for unpaired reads
         Orientation mateOrient = null;
         String mateChromosome = NO_CHROMOSOME_NAME;
         int matePosition = NO_POSITION;

@@ -341,7 +341,7 @@ public class IlluminaUmiGroupJitterTest
         Collections.sort(chr2Reads, Comparator.comparingInt(SAMRecord::getAlignmentStart));
 
         // duplicate group forming
-        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true, ILLUMINA);
+        ReadCache readCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true);
 
         chr1Reads.forEach(readCache::processRead);
         FragmentCoordReads chr1FragmentCoordsReads = readCache.evictAll();

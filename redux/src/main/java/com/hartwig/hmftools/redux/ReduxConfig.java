@@ -61,7 +61,7 @@ import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
+import com.hartwig.hmftools.redux.common.DuplicatesConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
 import com.hartwig.hmftools.redux.jitter.MsJitterConfig;
 import com.hartwig.hmftools.redux.umi.UmiConfig;
@@ -88,7 +88,7 @@ public class ReduxConfig
 
     public final ValidationStringency BamStringency;
 
-    public final DuplicateGroupCollapseConfig DuplicateGroupCollapse;
+    public final DuplicatesConfig DuplicateConfig;
 
     // UMI group config
     public final UmiConfig UMIs;
@@ -246,7 +246,7 @@ public class ReduxConfig
             SkipDuplicateMarking = configBuilder.hasFlag(SKIP_DUPLICATE_MARKING);
         }
 
-        DuplicateGroupCollapse = DuplicateGroupCollapseConfig.from(SEQUENCING_TYPE, configBuilder);
+        DuplicateConfig = DuplicatesConfig.from(configBuilder);
 
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
@@ -410,7 +410,7 @@ public class ReduxConfig
         UmiConfig.addConfig(configBuilder);
 
         MsJitterConfig.addConfig(configBuilder);
-        DuplicateGroupCollapseConfig.addConfig(configBuilder);
+        DuplicatesConfig.addConfig(configBuilder);
 
         addThreadOptions(configBuilder);
         configBuilder.addInteger(PARTIION_THREAD_RATIO, "Partitions per thread, impacts BAM-writing performance", 2);
@@ -435,8 +435,9 @@ public class ReduxConfig
     }
 
     @VisibleForTesting
-    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
-            final ReadUnmapper readUnmapper, final SequencingType sequencingType, int sbxMaxDuplicateDistance)
+    public ReduxConfig(
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+            final ReadUnmapper readUnmapper, int sbxMaxDuplicateDistance)
     {
         mIsValid = true;
         SampleId = "";
@@ -467,7 +468,7 @@ public class ReduxConfig
         BqrAndJitterMsiOnly = false;
         JitterConfig = null;
 
-        DuplicateGroupCollapse = new DuplicateGroupCollapseConfig(sequencingType, sbxMaxDuplicateDistance);
+        DuplicateConfig = new DuplicatesConfig(sbxMaxDuplicateDistance);
 
         WriteBam = false;
         MultiBam = false;
@@ -493,10 +494,11 @@ public class ReduxConfig
     }
 
     @VisibleForTesting
-    public ReduxConfig(final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
+    public ReduxConfig(
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
             final ReadUnmapper readUnmapper, final SequencingType sequencingType)
     {
-        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, sequencingType, 0);
+        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, 0);
     }
 
     @VisibleForTesting

@@ -21,7 +21,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
-import com.hartwig.hmftools.redux.common.DuplicateGroupCollapseConfig;
+import com.hartwig.hmftools.redux.common.DuplicatesConfig;
 import com.hartwig.hmftools.redux.common.DuplicateGroupCollapser;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
@@ -54,7 +54,7 @@ public class ReadCache implements IReadCache
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
 
     public ReadCache(
-            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicateGroupCollapseConfig groupCollapseConfig)
+            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig groupCollapseConfig)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
@@ -69,9 +69,9 @@ public class ReadCache implements IReadCache
     }
 
     @VisibleForTesting
-    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final SequencingType sequencingType)
+    public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation)
     {
-        this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicateGroupCollapseConfig(sequencingType));
+        this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicatesConfig(0));
     }
 
     @Override

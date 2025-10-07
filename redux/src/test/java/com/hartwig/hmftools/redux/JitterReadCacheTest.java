@@ -42,7 +42,7 @@ public class JitterReadCacheTest
     public void testHandlesReadCachePossibleHoldingBackOfReadsForPerformanceReasons()
     {
         JitterReadCache readCache =  new JitterReadCache(
-                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true, ILLUMINA));
+                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, true));
         String readBases = "A".repeat(143);
         String cigar = "143M";
 
@@ -106,7 +106,7 @@ public class JitterReadCacheTest
     public void testReadFlows()
     {
         JitterReadCache readCache = new JitterReadCache(
-                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA));
+                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));
 
         assertEquals(-1, readCache.minCachedReadStart());
         assertEquals(0, readCache.cachedReadCount());
@@ -170,7 +170,7 @@ public class JitterReadCacheTest
     public void testSingleMateUnmappedFragment()
     {
         JitterReadCache readCache = new JitterReadCache(
-                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA));
+                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));
 
         SAMRecord read = createSamRecord(
                 "READ_001", CHR_1, 100, TEST_READ_BASES, TEST_CIGAR, CHR_1, 100, false,
@@ -206,7 +206,7 @@ public class JitterReadCacheTest
     @Test
     public void testReadCacheBoundary()
     {
-        ReadCache innerReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA);
+        ReadCache innerReadCache = new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false);
         JitterReadCache readCache = new JitterReadCache(innerReadCache);
 
         SAMRecord read1 = createSamRecord(
@@ -226,7 +226,7 @@ public class JitterReadCacheTest
     public void testDoNotGroupCoordsThatDoNotMatchOnAtLeastOneEnd()
     {
         JitterReadCache readCache = new JitterReadCache(
-                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false, ILLUMINA));
+                new ReadCache(ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, false));
 
         SAMRecord read1 = createSamRecord(
                 "READ_001", CHR_1, 1_000, TEST_READ_BASES, TEST_CIGAR, CHR_2, 1_000, false,
