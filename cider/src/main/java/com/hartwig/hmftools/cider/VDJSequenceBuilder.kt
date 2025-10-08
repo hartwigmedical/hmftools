@@ -77,21 +77,11 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             vjGeneToVdjMap.computeIfAbsent(key) { ArrayList() }.add(vdj)
         }
 
-        sLogger.debug("Merging identical VDJ sequences")
         vdjList.clear()
-        // Naive multithreading because otherwise this step can take over an hour on samples with many sequences.
-        // It's likely that a few genes have most of the sequences, which will limit the parallel speedup, but it's better than nothing.
-        TaskExecutor.executeRunnables(vjGeneToVdjMap.values.map { vdjs ->
-                Runnable {
-                    val merged = mergeIdentical(vdjs, minBaseQuality)
-                    synchronized(vdjList) {
-                        vdjList.addAll(merged)
-                    }
-                }},
-            threadCount)
+        vdjList.addAll(mergeIdentical(vjGeneToVdjMap, minBaseQuality, threadCount))
 
         // sort again
-        vdjList.sortByDescending({ vdj -> vdj.numReads })
+        vdjList.sortByDescending { vdj -> vdj.numReads }
 
         sLogger.info("{} vdj sequences after merge", vdjList.size)
 
@@ -589,8 +579,26 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     {
         private val sLogger = LogManager.getLogger(VDJSequenceBuilder::class.java)
 
+        private fun mergeIdentical(vjGeneToVdjMap: Map<Pair<VJGeneType?, VJGeneType?>, List<VDJSequence>>, minBaseQuality: Byte,
+                                   threadCount: Int): List<VDJSequence>
+        {
+            val results = ArrayList<VDJSequence>()
+            sLogger.debug("Merging identical VDJ sequences")
+            // Naive multithreading because otherwise this step can take over an hour on samples with many sequences.
+            // It's likely that a few genes have most of the sequences, which will limit the parallel speedup, but it's better than nothing.
+            TaskExecutor.executeRunnables(vjGeneToVdjMap.values.map { vdjs ->
+                Runnable {
+                    val merged = mergeIdentical(vdjs, minBaseQuality)
+                    synchronized(results) {
+                        results.addAll(merged)
+                    }
+                }},
+                threadCount)
+            return results
+        }
+
         // for VDJ sequences that are identical, we put them together
-        fun mergeIdentical(vdjList: List<VDJSequence>, minBaseQuality: Byte) : List<VDJSequence>
+        private fun mergeIdentical(vdjList: List<VDJSequence>, minBaseQuality: Byte) : ArrayList<VDJSequence>
         {
             /*
             // first parse we do it in a fast way to find the ones that are exactly the same
@@ -694,7 +702,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return outVDJList
         }
 
-        fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
+        private fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
         {
             var numBaseDiff = 0
             val diffAccumulator = { baseSupport1: Map.Entry<Byte, Int>, baseSupport2: Map.Entry<Byte, Int> ->
