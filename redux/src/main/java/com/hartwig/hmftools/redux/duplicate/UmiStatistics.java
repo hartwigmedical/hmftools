@@ -156,7 +156,7 @@ public class UmiStatistics
 
     public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
-        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId()));
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umi()));
 
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -204,7 +204,7 @@ public class UmiStatistics
 
         for(SAMRecord read : umiGroup.allReads())
         {
-            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umi());
 
             if(diff <= MAX_EDIT_DISTANCE)
                 ++umiGroupStats.EditDistanceFrequency[diff];
@@ -223,7 +223,7 @@ public class UmiStatistics
 
             for(SAMRecord read : readsGroup.allReads())
             {
-                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umi());
 
                 if(diff <= MAX_EDIT_DISTANCE)
                     ++umiGroupStats.EditDistanceFrequency[diff];

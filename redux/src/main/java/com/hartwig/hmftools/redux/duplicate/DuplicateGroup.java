@@ -24,7 +24,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroup
 {
-    private final String mUmiId; // the UMI if enabled
+    private final String mUmi; // the UMI if enabled
 
     // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
     private final FragmentCoords mFragmentCoords;
@@ -54,9 +54,9 @@ public class DuplicateGroup
         this(null, reads, fragmentCoords);
     }
 
-    public DuplicateGroup(final String id, final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
+    public DuplicateGroup(final String umi, final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
     {
-        mUmiId = id;
+        mUmi = umi;
         mFragmentCoords = fragmentCoords;
         mReads = reads;
         mNonConsensusReads = Lists.newArrayList();
@@ -92,7 +92,7 @@ public class DuplicateGroup
     public void setPrimaryRead(final SAMRecord read) { mPrimaryRead = read; }
     public boolean isPrimaryRead(final SAMRecord read) { return mPrimaryRead == read; }
 
-    public String umiId() { return mUmiId; }
+    public String umi() { return mUmi; }
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
@@ -101,7 +101,7 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmi);
 
             // set consensus read attributes
             ConsensusType consensusType = mDualStrand ? DUAL : SINGLE;
@@ -143,6 +143,6 @@ public class DuplicateGroup
 
     public String toString()
     {
-        return format("id(%s) reads(%d) coords(%s)", mUmiId, totalReadCount(), mFragmentCoords.Key);
+        return format("id(%s) reads(%d) coords(%s)", mUmi, totalReadCount(), mFragmentCoords.Key);
     }
 }

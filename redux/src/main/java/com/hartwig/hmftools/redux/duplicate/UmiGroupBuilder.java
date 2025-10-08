@@ -191,7 +191,7 @@ public class UmiGroupBuilder
         // order groups by descending number of fragments
         List<DuplicateGroup> orderedGroups = groups.values()
                 .stream()
-                .sorted((new UmiUtils.SizeComparator()).thenComparing(DuplicateGroup::umiId))
+                .sorted((new UmiUtils.SizeComparator()).thenComparing(DuplicateGroup::umi))
                 .collect(Collectors.toList());
 
         // then apply the directional model, where smaller groups are merged into larger ones
@@ -211,7 +211,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.totalReadCount() >= second.totalReadCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
+                    if(existing.totalReadCount() >= second.totalReadCount() && !exceedsUmiIdDiff(existing.umi(), second.umi(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -253,7 +253,7 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    if(!exceedsUmiIdDiff(first.umiId(), second.umiId(), config.PermittedBaseDiff + 1))
+                    if(!exceedsUmiIdDiff(first.umi(), second.umi(), config.PermittedBaseDiff + 1))
                     {
                         first.addReads(second.reads());
                         orderedGroups.remove(j);
@@ -286,7 +286,7 @@ public class UmiGroupBuilder
                     double maxCountRatio = first.totalReadCount() >= second.totalReadCount() ?
                             first.totalReadCount() / (double)second.totalReadCount() : second.totalReadCount() / (double)first.totalReadCount();
 
-                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
+                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umi(), second.umi(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
                         first.addReads(second.reads());
                         orderedGroups.remove(j);
@@ -407,7 +407,7 @@ public class UmiGroupBuilder
             if(first instanceof DuplicateGroup)
             {
                 firstGroup = (DuplicateGroup) first;
-                firstUmi = firstGroup.umiId();
+                firstUmi = firstGroup.umi();
                 firstFragCoords = firstGroup.fragmentCoordinates();
             }
             else
@@ -428,7 +428,7 @@ public class UmiGroupBuilder
                 if(second instanceof DuplicateGroup)
                 {
                     secondGroup = (DuplicateGroup) second;
-                    secondUmi = secondGroup.umiId();
+                    secondUmi = secondGroup.umi();
                 }
                 else
                 {
@@ -554,7 +554,7 @@ public class UmiGroupBuilder
                 continue;
             }
 
-            String key = coords.lowerCoordinate() + ":" + group.umiId();
+            String key = coords.lowerCoordinate() + ":" + group.umi();
             pairedUnmappedGroups.computeIfAbsent(key, k -> new UnmappedPair());
             if(coords.UnmappedSourced)
             {
@@ -574,7 +574,7 @@ public class UmiGroupBuilder
             int i = fragments.size();
             fragments.add(Union.createRight(unmappedPair));
             umiGroupMerger.add(i);
-            String umiId = unmappedPair.MappedGroup.umiId();
+            String umiId = unmappedPair.MappedGroup.umi();
             if(polyGTailLength(umiId) < MIN_POLYG_UMI_TAIL_LENGTH)
                 continue;
 
@@ -591,7 +591,7 @@ public class UmiGroupBuilder
         {
             Union<DuplicateGroup, UnmappedPair> fragment = fragments.get(i);
             DuplicateGroup group = fragment.hasLeft() ? fragment.left() : fragment.right().MappedGroup;
-            String umiId = group.umiId();
+            String umiId = group.umi();
             FragmentCoords coords = group.fragmentCoordinates();
             int position = coords.PositionUpper == NO_POSITION || coords.ReadIsLower ? coords.PositionLower : coords.PositionUpper;
             Orientation orient = coords.PositionUpper == NO_POSITION || coords.ReadIsLower ? coords.OrientLower : coords.OrientUpper;
@@ -606,7 +606,7 @@ public class UmiGroupBuilder
                     continue;
 
                 UnmappedPair unmappedPair = fragments.get(j).right();
-                String unmappedUmiId = unmappedPair.MappedGroup.umiId();
+                String unmappedUmiId = unmappedPair.MappedGroup.umi();
                 String unmappedUmiIdPrefix = trimPolyGTail(unmappedUmiId);
                 String umiIdPrefix = trimPolyGTail(umiId);
 
@@ -817,7 +817,7 @@ public class UmiGroupBuilder
             for(DuplicateGroup group : keyGroup)
             {
                 FragmentCoords coords = group.fragmentCoordinates();
-                String umiId = group.umiId();
+                String umiId = group.umi();
                 JitterCollapseElementKey key = new JitterCollapseElementKey(keyId, coords, umiId);
                 keyId++;
                 elements.put(key, group);

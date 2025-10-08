@@ -121,7 +121,7 @@ public abstract class BamWriter
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
-                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
+                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umi());
         }
 
         // is poly-g umi collapsing the only reason this is a duplicate group?
@@ -130,12 +130,12 @@ public abstract class BamWriter
         {
             SAMRecord read = group.reads().get(0);
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
+                read.setAttribute(UMI_ATTRIBUTE, group.umi());
 
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
-            writeRead(read, PRIMARY, fragCoords, group.umiId());
+            writeRead(read, PRIMARY, fragCoords, group.umi());
 
             remainingReads = group.polyGUmiReads();
         }
@@ -147,13 +147,13 @@ public abstract class BamWriter
         for(SAMRecord read : remainingReads)
         {
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
+                read.setAttribute(UMI_ATTRIBUTE, group.umi());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
-            writeRead(read, fragmentStatus, fragCoords, group.umiId());
+            writeRead(read, fragmentStatus, fragCoords, group.umi());
         }
     }
 
