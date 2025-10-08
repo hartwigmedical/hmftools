@@ -181,7 +181,12 @@ public class SomaticVariantAnnotation
 
     private boolean inHlaCodingRegion(final VariantContextDecorator variant)
     {
-        if(!variant.chromosome().equals(LilacConstants.HLA_CHR))
+        // TODO: Get from transcrips.
+//        if(!variant.chromosome().equals(LilacConstants.HLA_CHR))
+//            return false;
+
+        // TODO: V37
+        if(!variant.chromosome().equals("1"))
             return false;
 
         int posStart = variant.position();

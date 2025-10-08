@@ -24,6 +24,9 @@ public enum HlaGene
     HLA_DRB4(CLASS_2, false, false, false),
     HLA_DRB5(CLASS_2, false, false, false),
 
+    // TODO: what does class do?
+    DPYD(CLASS_2, false),
+
     NONE(CLASS_1, false, true); // used for debugging
 
     private final MhcClass mMhcClass;
@@ -56,6 +59,9 @@ public enum HlaGene
 
     public static HlaGene fromString(final String s)
     {
+        if(s.equals("DPYD"))
+            return DPYD;
+
         String geneStr = s.startsWith(HLA_PREFIX) ? s.substring(HLA_PREFIX.length()) : s;
         try
         {
@@ -86,6 +92,9 @@ public enum HlaGene
     {
         if(this == NONE)
             return "";
+
+        if(this == DPYD)
+            return longName();
 
         return super.toString().substring(HLA_PREFIX.length());
     }

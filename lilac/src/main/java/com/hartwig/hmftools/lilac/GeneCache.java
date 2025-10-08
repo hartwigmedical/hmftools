@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -22,7 +23,7 @@ public class GeneCache
     public final int ExpectAlleleCount;
 
     public final Map<HlaGene, List<Integer>> AminoAcidExonBoundaries;
-    public final int MaxCommonAminoAcidExonBoundary;
+    public final OptionalInt MaxCommonAminoAcidExonBoundary_;
 
     public final Map<HlaGene, List<Integer>> NucleotideExonBoundaries;
     public final Map<HlaGene, Integer> NucleotideLengths;
@@ -46,7 +47,7 @@ public class GeneCache
         for(HlaGene geneName : GeneNames)
             setExonBoundaryValues(geneName, GeneTranscriptMap.get(geneName));
 
-        MaxCommonAminoAcidExonBoundary = findMaxCommonAminoAcidBoundary();
+        MaxCommonAminoAcidExonBoundary_ = findMaxCommonAminoAcidBoundary();
     }
 
     private void setExonBoundaryValues(final HlaGene geneName, final TranscriptData transcriptData)
@@ -122,11 +123,20 @@ public class GeneCache
         NucleotideLengths.put(geneName, totalCodingBases);
     }
 
-    private int findMaxCommonAminoAcidBoundary()
+    private OptionalInt findMaxCommonAminoAcidBoundary()
     {
-        int maxCommonAminoAcidBoundary = 0;
+        OptionalInt maxCommonAminoAcidBoundary = OptionalInt.empty();
 
         List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries.values().stream().toList();
+
+        // TODO:
+        if(aminoAcidBoundaries.isEmpty())
+        {
+            throw new RuntimeException("No genes");
+        }
+
+        if(aminoAcidBoundaries.size() == 1)
+            return OptionalInt.empty();
 
         List<Integer> firstSet = aminoAcidBoundaries.get(0);
 
@@ -147,7 +157,7 @@ public class GeneCache
 
             if(allPresent)
             {
-                maxCommonAminoAcidBoundary = aaExonBoundary;
+                maxCommonAminoAcidBoundary = OptionalInt.of(aaExonBoundary);
             }
         }
 

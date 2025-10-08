@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.lilac.GeneSelector.HLA_DRB1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
+import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR_;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_H;
@@ -103,7 +103,7 @@ public class ReferenceData
         if(config.Genes == HLA_DRB1)
             hlaTranscriptMap = trimDrb1Transcripts(hlaTranscriptMap);
 
-        HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
+        HLA_CHR_ = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
         GENE_CACHE = new GeneCache(hlaTranscriptMap);
 
@@ -330,7 +330,7 @@ public class ReferenceData
         if(mConfig.Genes.coversMhcClass1())
         {
             STOP_LOSS_ON_C_INDEL = mConfig.RefGenVersion.is38() ?
-                    new Indel(HLA_CHR, 31269338, "CN", "C") : new Indel(HLA_CHR, 31237115, "CN", "C");
+                    new Indel(HLA_CHR_, 31269338, "CN", "C") : new Indel(HLA_CHR_, 31237115, "CN", "C");
 
             KnownStopLossIndelAlleles.put(STOP_LOSS_ON_C_INDEL, mAlleleCache.requestFourDigit(STOP_LOSS_ON_C_ALLELE));
         }

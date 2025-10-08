@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -125,10 +127,15 @@ public class AminoAcidFragmentPipeline
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
                 context, geneRefNucFrags, highQualFrags);
 
-        int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
+        OptionalInt maxCommonAminoAcidExonBoundary_ = GENE_CACHE.MaxCommonAminoAcidExonBoundary_;
 
-        Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
-                .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
+        // TODO: if max common boundary is zero, is fine value for empty? Maybe -1.
+        Optional<Set<Integer>> aminoAcidBoundaries = Optional.empty();
+        if(maxCommonAminoAcidExonBoundary_.isPresent())
+        {
+            aminoAcidBoundaries = Optional.of(context.AminoAcidBoundaries.stream()
+                    .filter(x -> x <= maxCommonAminoAcidExonBoundary_.getAsInt()).collect(Collectors.toSet()));
+        }
 
         NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
