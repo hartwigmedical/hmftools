@@ -117,15 +117,19 @@ somatic_ploidy_pdf <- function(somaticBuckets) {
   cnColours = c("#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69")
   cnColours = setNames(cnColours, c("CN0", "CN1","CN2","CN3","CN4", "CN5", "CN6+"))
   
-  maxPloidy = somaticBuckets %>%
-    mutate(bucket = ceiling(variantCopyNumberBucket)) %>%
-    group_by(bucket) %>%
-    summarise(n = sum(count)) %>%
-    mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
-    arrange(proportion) %>%
-    filter(proportion > 0.95)   %>%
-    filter(row_number() == 1) %>%
-    pull(bucket)
+  if(nrow(somaticBuckets) > 0){
+    maxPloidy = somaticBuckets %>%
+      mutate(bucket = ceiling(variantCopyNumberBucket)) %>%
+      group_by(bucket) %>%
+      summarise(n = sum(count)) %>%
+      mutate(cumn = cumsum(n), proportion =  cumn / max(cumn)) %>%
+      arrange(proportion) %>%
+      filter(proportion > 0.95)   %>%
+      filter(row_number() == 1) %>%
+      pull(bucket)
+  } else {
+    maxPloidy = NA
+  }
   
   somatics = somaticBuckets %>%
     mutate(
