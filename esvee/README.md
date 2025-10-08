@@ -445,6 +445,7 @@ minLength<sup>2</sup>  | All | EndPos-StartPos+InsSeqLength | 32 | NA | NA | 32
 shortFrags | All | Lengthmedian - NumSD * LengthstdDev/sqrt(VF)<sup>3</sup>   | 3 | NA | NA | 3 
 minAnchorLength | All | AlignLength – repeatLength – Homology | 50 | NA | 50<sup>4</sup>  | 50 
 sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
+invShortIsolated | All (targeted panel only) | Candidate inversion distance to nearest non-artefact breakend<sup>9</sup> | 100 | NA | NA | NA
 
 <sup>1. For pairs of SGL breakends which resemble a likely LINE insertion site (see above) the SUM(Qual) is used for both breakends. </sup>
 
@@ -461,6 +462,8 @@ sbArtefact<sup>6</sup> | All | SB | NA | NA | 1.0 | NA
 <sup>7. Only applied to variants with type=INV and LEN<300bp. ShortINVRate = proportion of fragments genome wide that support a short INV < 1kb </sup>
 
 <sup>8. Only applied to variants with type=DEL, IHOMLEN>=10, AVGLEN+LEN >= 1.5*99.75th percentile of fragment lengths, and LEN<3kb </sup>
+
+<sup>9. Candidate inversions are inversions <100bp that are unchained or have unique fragment positions (UFP) < 4. Eligible non-artefact breakends face and are within 100bp of the candidate inversion's breakend, and are not filtered by PON or any inversion-specific filters </sup>
 
 Note that for pairs of breakends at LINE insertion sites, if one has a PASS filter we should always PASS the other side.   
 
