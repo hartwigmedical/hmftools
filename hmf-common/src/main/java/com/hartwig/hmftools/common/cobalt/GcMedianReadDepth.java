@@ -11,6 +11,8 @@ public class GcMedianReadDepth
     private final double mMedian;
     private final Map<GCBucket, Double> mMedianReadDepthPerGCBucket;
 
+    public static final double NO_READ_DEPTH_VALUE = -1.0;
+
     public GcMedianReadDepth(final double mean, final double median, final Map<GCBucket,Double> medianReadCountPerGCBucket)
     {
         mMean = mean;
@@ -28,9 +30,11 @@ public class GcMedianReadDepth
         return mMedian;
     }
 
+    public Map<GCBucket, Double> medianReadDepthPerGCBucket() { return mMedianReadDepthPerGCBucket; }
+
     public double medianReadDepth(final GCBucket bucket)
     {
-        return mMedianReadDepthPerGCBucket.getOrDefault(bucket, -1.0);
+        return mMedianReadDepthPerGCBucket.getOrDefault(bucket, NO_READ_DEPTH_VALUE);
     }
 
     public double medianReadDepth(final GCProfile profile)
