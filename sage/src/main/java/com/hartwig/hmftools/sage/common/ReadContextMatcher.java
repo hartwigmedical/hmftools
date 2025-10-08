@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
@@ -17,6 +18,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.SIMPLE_ALT;
 import static com.hartwig.hmftools.sage.common.ReadMatchInfo.NO_MATCH;
 import static com.hartwig.hmftools.sage.common.SageVariant.isLongInsert;
+import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MATCHING_BASE_QUALITY_SBX;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -101,7 +103,12 @@ public class ReadContextMatcher
         int altIndexLower = readContext.VarIndex;
         int altIndexUpper = determineAltIndexUpper(readContext.variant(), readContext.VarIndex, readContext.Homology);
 
-        if(!mIsReference && !readContext.AllRepeats.isEmpty())
+        if(isSbx() && !mContext.variant().isIndel() && mContext.hasIndelInCore())
+        {
+            altIndexLower = readContext.CoreIndexStart;
+            altIndexUpper = readContext.CoreIndexEnd;
+        }
+        else if(!mIsReference && !readContext.AllRepeats.isEmpty())
         {
             // expand alt boundaries to cover any repeats on that side
             int minRepeatIndex = readContext.AllRepeats.get(0).Index - 1;
@@ -467,6 +474,8 @@ public class ReadContextMatcher
 
         int mismatchCount = 0;
 
+        byte lowQualThreshold = isSbx() ? MATCHING_BASE_QUALITY_SBX : MATCHING_BASE_QUALITY;
+
         for(int i = baseIndexStart, j = readIndexStart; i <= baseIndexEnd && j <= readIndexEnd; ++i, ++j)
         {
             if(bases[i] == readBases[j])
@@ -478,7 +487,7 @@ public class ReadContextMatcher
             if(lowQualExclusion != null && lowQualExclusion.coversIndex(i))
                 return BaseMatchType.MISMATCH;
 
-            if(baseQuals[j] < MATCHING_BASE_QUALITY)
+            if(baseQuals[j] < lowQualThreshold)
             {
                 ++mismatchCount;
 
