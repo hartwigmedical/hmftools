@@ -181,7 +181,7 @@ public class SomaticVariantAnnotation
 
     private boolean inHlaCodingRegion(final VariantContextDecorator variant)
     {
-        if(!variant.chromosome().equals(LilacConstants.HLA_CHR))
+        if(!variant.chromosome().equals(LilacConstants.GENE_CHR))
             return false;
 
         int posStart = variant.position();

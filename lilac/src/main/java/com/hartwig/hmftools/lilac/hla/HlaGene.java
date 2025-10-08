@@ -1,47 +1,50 @@
 package com.hartwig.hmftools.lilac.hla;
 
+import static com.hartwig.hmftools.lilac.GeneClass.MHC_CLASS_1;
+import static com.hartwig.hmftools.lilac.GeneClass.MHC_CLASS_2;
+import static com.hartwig.hmftools.lilac.GeneClass.PGX;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
-import static com.hartwig.hmftools.lilac.MhcClass.CLASS_1;
-import static com.hartwig.hmftools.lilac.MhcClass.CLASS_2;
 
-import com.hartwig.hmftools.lilac.MhcClass;
+import com.hartwig.hmftools.lilac.GeneClass;
 
 public enum HlaGene
 {
-    HLA_A(CLASS_1, false),
-    HLA_B(CLASS_1, false),
-    HLA_C(CLASS_1, false),
+    HLA_A(MHC_CLASS_1, false),
+    HLA_B(MHC_CLASS_1, false),
+    HLA_C(MHC_CLASS_1, false),
 
-    HLA_Y(CLASS_1, true),
-    HLA_H(CLASS_1, true),
+    HLA_Y(MHC_CLASS_1, true),
+    HLA_H(MHC_CLASS_1, true),
 
-    HLA_DQB1(CLASS_2, false),
-    HLA_DPA1(CLASS_2, false),
-    HLA_DPB1(CLASS_2, false),
-    HLA_DQA1(CLASS_2, false),
-    HLA_DRB1(CLASS_2, false),
-    HLA_DRB3(CLASS_2, false, false, false),
-    HLA_DRB4(CLASS_2, false, false, false),
-    HLA_DRB5(CLASS_2, false, false, false),
+    HLA_DQB1(MHC_CLASS_2, false),
+    HLA_DPA1(MHC_CLASS_2, false),
+    HLA_DPB1(MHC_CLASS_2, false),
+    HLA_DQA1(MHC_CLASS_2, false),
+    HLA_DRB1(MHC_CLASS_2, false),
+    HLA_DRB3(MHC_CLASS_2, false, false, false),
+    HLA_DRB4(MHC_CLASS_2, false, false, false),
+    HLA_DRB5(MHC_CLASS_2, false, false, false),
 
-    NONE(CLASS_1, false, true); // used for debugging
+    DPYD(PGX, false),
 
-    private final MhcClass mMhcClass;
+    NONE(MHC_CLASS_1, false, true); // used for debugging
+
+    private final GeneClass mMhcClass;
     private final boolean mIsPseudo;
     private final boolean mIsDebug;
     private final boolean mHasFrequencies;
 
-    HlaGene(final MhcClass mhcClass, final boolean isPseudo)
+    HlaGene(final GeneClass mhcClass, final boolean isPseudo)
     {
         this(mhcClass, isPseudo, false, true);
     }
 
-    HlaGene(final MhcClass mhcClass, final boolean isPseudo, final boolean isDebug)
+    HlaGene(final GeneClass mhcClass, final boolean isPseudo, final boolean isDebug)
     {
         this(mhcClass, isPseudo, isDebug, true);
     }
 
-    HlaGene(final MhcClass mhcClass, final boolean isPseudo, final boolean isDebug, final boolean hasFrequencies)
+    HlaGene(final GeneClass mhcClass, final boolean isPseudo, final boolean isDebug, final boolean hasFrequencies)
     {
         mMhcClass = mhcClass;
         mIsPseudo = isPseudo;
@@ -49,13 +52,16 @@ public enum HlaGene
         mHasFrequencies = hasFrequencies;
     }
 
-    public MhcClass mhcClass() { return mMhcClass; }
+    public GeneClass mhcClass() { return mMhcClass; }
     public boolean isPseudo() { return mIsPseudo; }
     public boolean isDebug() { return mIsDebug; }
     public boolean hasFrequencies() { return mHasFrequencies; }
 
     public static HlaGene fromString(final String s)
     {
+        if(s.equals("DPYD"))
+            return DPYD;
+
         String geneStr = s.startsWith(HLA_PREFIX) ? s.substring(HLA_PREFIX.length()) : s;
         try
         {
@@ -86,6 +92,9 @@ public enum HlaGene
     {
         if(this == NONE)
             return "";
+
+        if(mMhcClass == PGX)
+            return longName();
 
         return super.toString().substring(HLA_PREFIX.length());
     }

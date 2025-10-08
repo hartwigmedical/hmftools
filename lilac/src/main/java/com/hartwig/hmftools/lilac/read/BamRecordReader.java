@@ -5,7 +5,6 @@ import static java.lang.Math.floor;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
 import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
@@ -31,6 +30,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.lilac.LilacConfig;
+import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
@@ -76,7 +76,7 @@ public class BamRecordReader implements BamReader
         for(HlaGene geneName : GENE_CACHE.GeneNames)
         {
             TranscriptData transcriptData = transcripts.get(geneName);
-            mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
+            mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, LilacConstants.GENE_CHR, transcriptData));
         }
 
         mFragmentFactory = factory;
@@ -286,7 +286,7 @@ public class BamRecordReader implements BamReader
 
     private boolean bothEndsInRangeOfCodingTranscripts(final SAMRecord record)
     {
-        if(!record.getMateReferenceName().equals(HLA_CHR))
+        if(!record.getMateReferenceName().equals(LilacConstants.GENE_CHR))
             return false;
 
         // this check allows records to span across HLA genes, since a read may be mismapped

@@ -4,14 +4,12 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
-import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
-import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.GeneSelector.HLA_DRB1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.CLASS_1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
+import static com.hartwig.hmftools.lilac.LilacConstants.GENE_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_H;
@@ -35,6 +33,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -103,7 +102,9 @@ public class ReferenceData
         if(config.Genes == HLA_DRB1)
             hlaTranscriptMap = trimDrb1Transcripts(hlaTranscriptMap);
 
-        HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
+        GENE_CHR = config.Genes.Chromosome;
+        if(config.RefGenVersion.is38())
+            GENE_CHR = RefGenomeFunctions.enforceChrPrefix(GENE_CHR);
 
         GENE_CACHE = new GeneCache(hlaTranscriptMap);
 
@@ -330,7 +331,7 @@ public class ReferenceData
         if(mConfig.Genes.coversMhcClass1())
         {
             STOP_LOSS_ON_C_INDEL = mConfig.RefGenVersion.is38() ?
-                    new Indel(HLA_CHR, 31269338, "CN", "C") : new Indel(HLA_CHR, 31237115, "CN", "C");
+                    new Indel(GENE_CHR, 31269338, "CN", "C") : new Indel(GENE_CHR, 31237115, "CN", "C");
 
             KnownStopLossIndelAlleles.put(STOP_LOSS_ON_C_INDEL, mAlleleCache.requestFourDigit(STOP_LOSS_ON_C_ALLELE));
         }
