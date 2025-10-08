@@ -44,11 +44,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.PartitionReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.TestBamWriter;
-import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.TemplateReads;
-import com.hartwig.hmftools.redux.duplicate.PositionFragmentCounts;
-import com.hartwig.hmftools.redux.duplicate.UmiConfig;
 
 import org.junit.Test;
 
