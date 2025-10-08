@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_MAX_UMI_BASE_DIF
 
 import java.util.Comparator;
 
-import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-
 public final class UmiUtils
 {
     public static boolean exceedsUmiIdDiff(final String first, final String second)
@@ -54,9 +52,9 @@ public final class UmiUtils
     {
         public int compare(final DuplicateGroup first, final DuplicateGroup second)
         {
-            if(first.readCount() < second.readCount())
+            if(first.totalReadCount() < second.totalReadCount())
                 return 1;
-            else if(first.readCount() > second.readCount())
+            else if(first.totalReadCount() > second.totalReadCount())
                 return -1;
             else
                 return 0;

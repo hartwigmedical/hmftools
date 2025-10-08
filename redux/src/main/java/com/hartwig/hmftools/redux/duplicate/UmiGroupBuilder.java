@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.redux.ReduxConstants.MAX_IMBALANCED_UMI_BASE_
 import static com.hartwig.hmftools.redux.ReduxConstants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.redux.ReduxConstants.MAX_UMI_BASE_DIFF_JITTER_COLLAPSE;
 import static com.hartwig.hmftools.redux.ReduxConstants.MIN_POLYG_UMI_TAIL_LENGTH;
-import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
+import static com.hartwig.hmftools.redux.duplicate.CollapseUtils.collapseToNonOrientedKeyWithoutCoordinates;
 import static com.hartwig.hmftools.redux.duplicate.UmiUtils.exceedsUmiIdDiff;
 import static com.hartwig.hmftools.redux.duplicate.UmiUtils.polyGTailLength;
 import static com.hartwig.hmftools.redux.duplicate.UmiUtils.trimPolyGTail;
@@ -128,7 +128,7 @@ public class UmiGroupBuilder
 
         for(DuplicateGroup umiGroup : allUmiGroups)
         {
-            if(umiGroup.readCount() == 1)
+            if(umiGroup.totalReadCount() == 1)
             {
                 // drop any single fragments
                 singleFragments.add(new ReadInfo(umiGroup.reads().get(0), umiGroup.fragmentCoordinates()));
@@ -211,7 +211,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.readCount() >= second.readCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
+                    if(existing.totalReadCount() >= second.totalReadCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -269,7 +269,7 @@ public class UmiGroupBuilder
         }
 
         // run a check allowing collapsing of UMIs with 4-base differences where significant imbalance exists
-        boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.readCount() >= MAX_IMBALANCED_UMI_COUNT);
+        boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.totalReadCount() >= MAX_IMBALANCED_UMI_COUNT);
 
         if(orderedGroups.size() > 1 && hasLargeGroups)
         {
@@ -283,8 +283,8 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    double maxCountRatio = first.readCount() >= second.readCount() ?
-                            first.readCount() / (double)second.readCount() : second.readCount() / (double)first.readCount();
+                    double maxCountRatio = first.totalReadCount() >= second.totalReadCount() ?
+                            first.totalReadCount() / (double)second.totalReadCount() : second.totalReadCount() / (double)first.totalReadCount();
 
                     if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
@@ -494,7 +494,8 @@ public class UmiGroupBuilder
     }
 
     @VisibleForTesting
-    public static void collapsePolyGDuplexUmis(final SequencingType sequencingType, final UmiConfig umiConfig,
+    public static void collapsePolyGDuplexUmis(
+            final SequencingType sequencingType, final UmiConfig umiConfig,
             final List<DuplicateGroup> umiGroups, final List<ReadInfo> singleFragments)
     {
         if(umiGroups.isEmpty() && singleFragments.isEmpty())
@@ -624,8 +625,8 @@ public class UmiGroupBuilder
                 .comparingInt((final Union<DuplicateGroup, UnmappedPair> x) -> x.hasLeft() ? 0 : 1)
                 .thenComparing(Comparator.comparingInt((final Union<DuplicateGroup, UnmappedPair> x) ->
                         x.hasLeft()
-                        ? x.left().readCount()
-                        : x.right().MappedGroup.readCount()).reversed())
+                        ? x.left().totalReadCount()
+                        : x.right().MappedGroup.totalReadCount()).reversed())
                 .thenComparing((final Union<DuplicateGroup, UnmappedPair> x) -> selectTemplateRead(
                         x.hasLeft()
                         ? x.left().reads()
@@ -709,7 +710,7 @@ public class UmiGroupBuilder
 
         for(DuplicateGroup group : mergedUmiGroups)
         {
-            if(group.readCount() == 1)
+            if(group.totalReadCount() == 1)
             {
                 singleFragments.add(new ReadInfo(group.reads().get(0), group.fragmentCoordinates()));
                 continue;
@@ -727,7 +728,7 @@ public class UmiGroupBuilder
         return acc;
     }
 
-    private static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::readCount)
+    private static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::totalReadCount)
             .reversed()
             .thenComparing(x -> selectTemplateRead(x.reads(), x.fragmentCoordinates()).getReadName());
 
@@ -932,10 +933,10 @@ public class UmiGroupBuilder
         {
             ++mStats.UmiGroups;
 
-            if(umiGroup.readCount() > maxUmiFragmentCount)
+            if(umiGroup.totalReadCount() > maxUmiFragmentCount)
             {
                 maxUmiGroup = umiGroup;
-                maxUmiFragmentCount = umiGroup.readCount();
+                maxUmiFragmentCount = umiGroup.totalReadCount();
             }
         }
 

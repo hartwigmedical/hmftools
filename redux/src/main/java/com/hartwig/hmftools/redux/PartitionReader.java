@@ -409,8 +409,9 @@ public class PartitionReader
         // write single fragments and duplicate groups
         for(DuplicateGroup duplicateGroup : duplicateGroups)
         {
-            // do not form consensus if duplicateGroup only contains one non poly-g umi read
-            if(mConfig.FormConsensus && duplicateGroup.readCount() - duplicateGroup.polyGUmiReads().size() >= 2)
+            // do not form consensus if duplicateGroup only contains one non poly-G read, but even if only 1 read is to be used to make
+            // the consensus read (the other being non-consensus), still make it to include its attributes and to mark the others as duplicates
+            if(mConfig.FormConsensus && duplicateGroup.totalReadCount() - duplicateGroup.polyGUmiReads().size() >= 2)
             {
                 duplicateGroup.formConsensusRead(mConsensusReads);
                 mBamWriter.setBoundaryPosition(duplicateGroup.consensusRead().getAlignmentStart(), false);
@@ -419,9 +420,9 @@ public class PartitionReader
             postProcessPrimaryRead(duplicateGroup);
             mBamWriter.writeDuplicateGroup(duplicateGroup);
 
-            if(mConfig.LogDuplicateGroupSize > 0 && duplicateGroup.readCount() >= mConfig.LogDuplicateGroupSize)
+            if(mConfig.LogDuplicateGroupSize > 0 && duplicateGroup.totalReadCount() >= mConfig.LogDuplicateGroupSize)
             {
-                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.readCount(), duplicateGroup.fragmentCoordinates());
+                RD_LOGGER.debug("dup group size({}) coords({})", duplicateGroup.totalReadCount(), duplicateGroup.fragmentCoordinates());
             }
         }
 

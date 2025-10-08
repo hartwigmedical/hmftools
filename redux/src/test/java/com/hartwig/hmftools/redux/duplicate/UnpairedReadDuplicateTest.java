@@ -152,7 +152,7 @@ public class UnpairedReadDuplicateTest
         FragmentCoordReads fragmentCoordsReads = readCache.evictAll();
 
         assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
-        assertEquals(5, fragmentCoordsReads.DuplicateGroups.get(0).readCount());
+        assertEquals(5, fragmentCoordsReads.DuplicateGroups.get(0).totalReadCount());
         assertEquals(1, fragmentCoordsReads.SingleReads.size());
         assertEquals(6, fragmentCoordsReads.totalReadCount());
     }

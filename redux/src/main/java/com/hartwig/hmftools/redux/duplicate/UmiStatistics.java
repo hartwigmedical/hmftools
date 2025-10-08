@@ -126,9 +126,9 @@ public class UmiStatistics
         ++posFragData.Frequency;
         posFragData.MaxCoordUmiCount = max(posFragData.MaxCoordUmiCount, maxCoordUmiCount);
 
-        if(duplicateGroup != null && duplicateGroup.readCount() > posFragData.MaxUmiReadsCount)
+        if(duplicateGroup != null && duplicateGroup.totalReadCount() > posFragData.MaxUmiReadsCount)
         {
-            posFragData.MaxUmiReadsCount = duplicateGroup.readCount();
+            posFragData.MaxUmiReadsCount = duplicateGroup.totalReadCount();
 
             posFragData.UmiGroupDetails = format("%s %s",
                     duplicateGroup.fragmentCoordinates().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
@@ -199,7 +199,7 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.totalReadCount());
         ++umiGroupStats.GroupCount;
 
         for(SAMRecord read : umiGroup.allReads())
@@ -213,7 +213,7 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup group1, final DuplicateGroup group2)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.readCount() + group2.readCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.totalReadCount() + group2.totalReadCount());
         ++umiGroupStats.GroupCount;
 
         for(int groupIndex = 0; groupIndex <= 1; ++groupIndex)

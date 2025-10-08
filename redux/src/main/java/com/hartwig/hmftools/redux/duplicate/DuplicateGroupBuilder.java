@@ -39,7 +39,7 @@ public class DuplicateGroupBuilder
             {
                 for(DuplicateGroup umiGroup: umiGroups)
                 {
-                    mStats.addUmiGroup(umiGroup.readCount(), umiGroup.hasDualStrand());
+                    mStats.addUmiGroup(umiGroup.totalReadCount(), umiGroup.hasDualStrand());
                 }
             }
 
@@ -50,7 +50,7 @@ public class DuplicateGroupBuilder
         {
             for(DuplicateGroup duplicateGroup : rawDuplicateGroups)
             {
-                mStats.addDuplicateGroup(duplicateGroup.readCount());
+                mStats.addDuplicateGroup(duplicateGroup.totalReadCount());
 
                 if(!mFormConsensus)
                     setPrimaryRead(duplicateGroup);

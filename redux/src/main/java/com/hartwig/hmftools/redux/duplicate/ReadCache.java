@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class ReadCache implements IReadCache
     private final int mGroupSize;
     private final int mMaxSoftClipLength;
     private final boolean mUseFragmentOrientation;
-    private final DuplicateGroupCollapser mDuplicateGroupCollapser;
+    private final SbxDuplicateCollapser mSbxDuplicateCollapser;
 
     private int mCurrentReadMinPosition;
     private String mCurrentChromosome;
@@ -48,12 +49,15 @@ public class ReadCache implements IReadCache
     private static final int LOG_READ_COUNT_THRESHOLD = 100000;
 
     public ReadCache(
-            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig groupCollapseConfig)
+            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
         mUseFragmentOrientation = useFragmentOrientation;
-        mDuplicateGroupCollapser = DuplicateGroupCollapser.from(groupCollapseConfig);
+
+        mSbxDuplicateCollapser = isSbx() && duplicatesConfig.SbxMaxDuplicateDistance > 0 ?
+                new SbxDuplicateCollapser(duplicatesConfig.SbxMaxDuplicateDistance) : null;
+
         mPositionGroups = Lists.newArrayList();
         mCurrentReadMinPosition = 0;
         mCurrentChromosome = "";
@@ -215,10 +219,10 @@ public class ReadCache implements IReadCache
         if(duplicateGroups == null && singleReads == null)
             return null;
 
-        if(mDuplicateGroupCollapser == null)
+        if(mSbxDuplicateCollapser == null)
             return new FragmentCoordReads(duplicateGroups, singleReads);
-
-        return mDuplicateGroupCollapser.collapse(duplicateGroups, singleReads);
+        else
+            return mSbxDuplicateCollapser.collapseGroups(duplicateGroups, singleReads);
     }
 
     @Override

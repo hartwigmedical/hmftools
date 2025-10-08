@@ -21,7 +21,7 @@ public class FragmentCoordReads
 
     public int duplicateGroupReadCount()
     {
-        return DuplicateGroups.stream().mapToInt(x -> x.readCount()).sum();
+        return DuplicateGroups.stream().mapToInt(x -> x.totalReadCount()).sum();
     }
     public int totalReadCount() { return duplicateGroupReadCount() + SingleReads.size(); }
     public int coordinateCount() { return DuplicateGroups.size() + SingleReads.size(); }

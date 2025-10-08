@@ -5,9 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
-import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.collapseToNonOrientedKeyWithoutCoordinates;
-import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser.getFragmentCoordReads;
+import static com.hartwig.hmftools.redux.ReduxConstants.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
+import static com.hartwig.hmftools.redux.duplicate.CollapseUtils.collapseToNonOrientedKeyWithoutCoordinates;
+import static com.hartwig.hmftools.redux.duplicate.CollapseUtils.getFragmentCoordReads;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -326,7 +326,7 @@ public class JitterReadCache implements IReadCache
 
         public int cachedReadCount()
         {
-            return mDuplicateGroupLookup.values().stream().mapToInt(DuplicateGroup::readCount).sum();
+            return mDuplicateGroupLookup.values().stream().mapToInt(DuplicateGroup::totalReadCount).sum();
         }
 
         public int cachedFragCoordGroups()
