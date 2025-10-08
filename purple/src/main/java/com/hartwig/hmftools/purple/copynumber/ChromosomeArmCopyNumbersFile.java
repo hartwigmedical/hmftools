@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 
 public class ChromosomeArmCopyNumbersFile
 {
-    public static final String EXTENSION = ".purple.chromosome.arms.tsv";
+    public static final String EXTENSION = ".purple.chromosome_arm.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {

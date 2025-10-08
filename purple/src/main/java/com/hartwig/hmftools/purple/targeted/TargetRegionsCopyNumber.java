@@ -14,10 +14,8 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
-public record TargetRegionsCopyNumber(CobaltRatio cobaltRatio,
-                                      List<TaggedRegion> overlappingRegions,
-                                      PurpleCopyNumber purpleCopyNumber,
-                                      GermlineStatus germlineStatus)
+public record TargetRegionsCopyNumber(
+        CobaltRatio cobaltRatio, List<TaggedRegion> overlappingRegions, PurpleCopyNumber purpleCopyNumber, GermlineStatus germlineStatus)
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
