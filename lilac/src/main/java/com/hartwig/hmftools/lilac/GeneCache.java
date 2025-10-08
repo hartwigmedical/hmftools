@@ -124,11 +124,13 @@ public class GeneCache
 
     private int findMaxCommonAminoAcidBoundary()
     {
-        int maxCommonAminoAcidBoundary = 0;
+        int maxCommonAminoAcidBoundary = -1;
 
         List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries.values().stream().toList();
 
         List<Integer> firstSet = aminoAcidBoundaries.get(0);
+        if(aminoAcidBoundaries.size() == 1)
+            return firstSet.get(firstSet.size() - 1);
 
         for(Integer aaExonBoundary : firstSet)
         {
