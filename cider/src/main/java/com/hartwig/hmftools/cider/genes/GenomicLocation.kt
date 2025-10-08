@@ -24,11 +24,11 @@ data class GenomicLocation(
 
     companion object
     {
-        fun fromNullableFields(contig: Contig?, position: BaseRegion?, strand: Strand?): GenomicLocation?
+        fun fromNullableFields(contig: String?, position: BaseRegion?, strand: Strand?): GenomicLocation?
         {
             return if (contig != null && position != null && strand != null)
             {
-                GenomicLocation(contig, position, strand)
+                GenomicLocation(Contig(contig), position, strand)
             }
             else
             {

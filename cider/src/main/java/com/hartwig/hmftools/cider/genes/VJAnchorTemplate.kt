@@ -23,9 +23,6 @@ data class VJAnchorTemplate
 
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
-    val chromosome: String? get() { return geneLocation?.bases?.chromosome() }
-    //val startPosition: Int get() { return geneLocation?.start() ?: -1 }
-    //val endPosition: Int get() { return geneLocation?.end() ?: -1 }
     val strand: Strand? get() { return geneLocation?.strand }
 }
 
@@ -33,14 +30,14 @@ data class VJAnchorTemplate
 data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation: GenomicLocation)
 {
     val vj: VJ get() = vjGeneType.vj
-    val chromosome: String get() = genomeLocation.bases.chromosome()
-    val start: Int get() = genomeLocation.bases.start()
-    val end: Int get() = genomeLocation.bases.end()
+    val contig: Contig get() = genomeLocation.contig
+    val start: Int get() = genomeLocation.position.start()
+    val end: Int get() = genomeLocation.position.end()
     val strand: Strand get() = genomeLocation.strand
 
     fun baseLength() : Int
     {
-        return genomeLocation.bases.baseLength()
+        return genomeLocation.position.baseLength()
     }
 
     // get the reference position of the end of the anchor
@@ -50,11 +47,11 @@ data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation
         return if (vjGeneType.vj == VJ.V && genomeLocation.strand == Strand.FORWARD ||
             vjGeneType.vj == VJ.J && genomeLocation.strand == Strand.REVERSE)
             {
-                genomeLocation.bases.end()
+                genomeLocation.position.end()
             }
             else
             {
-                genomeLocation.bases.start()
+                genomeLocation.position.start()
             }
     }
 }

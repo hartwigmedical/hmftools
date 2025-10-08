@@ -16,42 +16,21 @@ enum class ContigType {
 }
 
 data class Contig(
+    // Example possibilities:
+    // chr1
+    // chrM
+    // chr1_KI270763v1_alt
+    // chr15_KI270727v1_random
+    // chrUn_KI270423v1
+    // The chr prefix may or may not be present and does affect the identity of the contig.
     val name: String,
-    val type: ContigType,
-    // Only present if it's a main human chromosome contig. I.e. 1, 2, ..., X, Y
-    val chromosome: HumanChromosome?
 ) {
-    override fun toString() = name
-
-    companion object {
-        fun fromName(contigName: String): Contig {
-            if (contigName.isEmpty()) {
-                throw IllegalArgumentException("contigName must not be empty")
+    val type: ContigType
+        get() =
+            if (chromosome != null) {
+                ContigType.HUMAN_CHROMOSOME
             }
-
-            // Example possibilities
-            // chr1
-            // chrM
-            // chr1_KI270763v1_alt
-            // chr15_KI270727v1_random
-            // chrUn_KI270423v1
-
-            val normalisedContig = stripChrPrefix(contigName)
-            val humanChromosome = try {
-                HumanChromosome.fromString(normalisedContig)
-            } catch (e: IllegalArgumentException) {
-                null
-            }
-            val parts = normalisedContig.split("_", limit = 1)
-            val baseChromosome = parts[0]
-            val extension = parts.getOrNull(1)
-            val isAltLocus = extension?.endsWith("_alt") ?: false
-            val isUnlocalised = extension?.endsWith("_random") ?: false
-            val baseChromosomeLower = baseChromosome.lowercase()
-            val isUnplaced = baseChromosomeLower.startsWith("un_")
-            val isMitochondrial = baseChromosomeLower == "mt" || baseChromosomeLower == "m"
-
-            val contigType = if (isUnplaced) {
+            else if (isUnplaced) {
                 ContigType.UNPLACED
             } else if (isAltLocus) {
                 ContigType.ALTERNATE_LOCUS
@@ -59,17 +38,37 @@ data class Contig(
                 ContigType.UNLOCALISED
             } else if (isMitochondrial) {
                 ContigType.MITOCHONDRIAL
-            } else if (humanChromosome != null) {
-                ContigType.HUMAN_CHROMOSOME
             } else {
                 ContigType.OTHER
             }
 
-            return Contig(
-                contigName,
-                contigType,
-                if (contigType == ContigType.HUMAN_CHROMOSOME) humanChromosome else null
-            )
+    val chromosome: HumanChromosome?
+        get() = try {
+            HumanChromosome.fromString(normalisedContig)
+        } catch (e: IllegalArgumentException) {
+            null
         }
-    }
+
+    override fun toString() = name
+
+    private val normalisedContig: String
+        get() = stripChrPrefix(name)
+
+    private val baseChromosome: String
+        get() = normalisedContig.split("_", limit = 2)[0].lowercase()
+
+    private val extension: String?
+        get() = normalisedContig.split("_", limit = 2).getOrNull(1)
+
+    private val isAltLocus: Boolean
+        get() = extension?.endsWith("_alt") ?: false
+
+    private val isUnlocalised: Boolean
+        get() = extension?.endsWith("_random") ?: false
+
+    private val isUnplaced: Boolean
+        get() = baseChromosome.startsWith("un_")
+
+    private val isMitochondrial: Boolean
+        get() = baseChromosome == "mt" || baseChromosome == "m"
 }

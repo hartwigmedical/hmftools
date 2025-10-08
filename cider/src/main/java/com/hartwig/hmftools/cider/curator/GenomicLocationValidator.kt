@@ -43,17 +43,17 @@ class GenomicLocationValidator(val refGenome: IndexedFastaSequenceFile)
 
     fun queryRefSequence(refGenome: IndexedFastaSequenceFile, genomicLocation: GenomicLocation): String
     {
-        var chromosome = genomicLocation.bases.chromosome()
+        var contig = genomicLocation.contig.name
 
-        if (!refGenome.index.hasIndexEntry(chromosome))
+        if (!refGenome.index.hasIndexEntry(contig))
         {
             // maybe need to try removing chr
-            chromosome = chromosome.replace("chr", "")
+            contig = contig.replace("chr", "")
         }
 
         val forwardSeq = refGenome.getSubsequenceAt(
-            chromosome,
-            genomicLocation.bases.start().toLong(), genomicLocation.bases.end().toLong()
+            contig,
+            genomicLocation.position.start().toLong(), genomicLocation.position.end().toLong()
         ).baseString
         return if (genomicLocation.strand == Strand.FORWARD)
             forwardSeq

@@ -51,7 +51,7 @@ object AlignmentUtil
 
     fun toGenomicLocation(alignment: BwaMemAlignment): GenomicLocation?
     {
-        val contig = Contig.fromName(alignment.refContig)
+        val contig = Contig(alignment.refContig)
 
         if (contig.type == ContigType.MITOCHONDRIAL || contig.type == ContigType.UNPLACED)
         {

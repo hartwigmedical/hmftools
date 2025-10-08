@@ -12,6 +12,7 @@ import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_ANCHOR_LE
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.IMGT_V_ANCHOR_INDEX
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.SPECIES
 import com.hartwig.hmftools.cider.curator.ImgtGeneCuratorSettings.jAnchorSignatures
+import com.hartwig.hmftools.cider.genes.Contig
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.anchorGenomicLocation
 import com.hartwig.hmftools.common.bwa.BwaUtils
@@ -26,7 +27,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.deriveRefGenomeVersion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.region.ChrBaseRegion
+import com.hartwig.hmftools.common.region.BaseRegion
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
@@ -260,16 +261,17 @@ class ImgtGeneCurator
                 else -> null
             }
 
+            require(anchorData == null || geneData.genomicLocation?.contig == anchorData.second?.contig)
             return IgTcrGene(
                 geneData.geneName,
                 geneData.allele,
                 region,
                 geneData.functionality,
-                geneData.genomicLocation?.bases,
+                geneData.genomicLocation?.contig?.name,
+                geneData.genomicLocation?.position,
                 geneData.genomicLocation?.strand,
-                geneData.genomicLocation?.inPrimaryAssembly,
                 anchorData?.first,
-                anchorData?.second?.bases
+                anchorData?.second?.position
             )
         }
 
@@ -330,16 +332,16 @@ class ImgtGeneCurator
                 anchorLocation = if (geneLocation.strand == Strand.FORWARD)
                 {
                     geneLocation.copy(
-                        bases = ChrBaseRegion(geneLocation.bases.chromosome(),
-                            geneLocation.bases.end() - anchorOffsetFromEnd - anchor.length + 1,
-                            geneLocation.bases.end() - anchorOffsetFromEnd
+                        position = BaseRegion(
+                            geneLocation.position.end() - anchorOffsetFromEnd - anchor.length + 1,
+                            geneLocation.position.end() - anchorOffsetFromEnd
                         ))
                 } else
                 {
                     geneLocation.copy(
-                        bases = ChrBaseRegion(geneLocation.bases.chromosome(),
-                            geneLocation.bases.start() + anchorOffsetFromEnd,
-                            geneLocation.bases.start() + anchorOffsetFromEnd + anchor.length - 1
+                        position = BaseRegion(
+                            geneLocation.position.start() + anchorOffsetFromEnd,
+                            geneLocation.position.start() + anchorOffsetFromEnd + anchor.length - 1
                         ))
                 }
             }
@@ -391,18 +393,16 @@ class ImgtGeneCurator
                 anchorLocation = if (geneLocation.strand == Strand.FORWARD)
                 {
                     geneLocation.copy(
-                        bases = ChrBaseRegion(
-                            geneLocation.bases.chromosome(),
-                            geneLocation.bases.start() + anchorIndex,
-                            geneLocation.bases.start() + anchorIndex + anchor.length - 1
+                        position = BaseRegion(
+                            geneLocation.position.start() + anchorIndex,
+                            geneLocation.position.start() + anchorIndex + anchor.length - 1
                         ))
                 } else
                 {
                     geneLocation.copy(
-                        bases = ChrBaseRegion(
-                            geneLocation.bases.chromosome(),
-                            geneLocation.bases.end() - anchorIndex - anchor.length + 1,
-                            geneLocation.bases.end() - anchorIndex
+                        position = BaseRegion(
+                            geneLocation.position.end() - anchorIndex - anchor.length + 1,
+                            geneLocation.position.end() - anchorIndex
                         ))
                 }
             }
@@ -415,7 +415,7 @@ class ImgtGeneCurator
         }
 
         fun findGenomicLocatons(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
-                                genomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
+                                refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
         {
             val constantGenes = imgtGeneDataList.filter { gene -> gene.region == IgTcrRegion.CONSTANT }
             val nonConstantGenes = imgtGeneDataList.filter { gene -> gene.region != IgTcrRegion.CONSTANT }
@@ -424,12 +424,12 @@ class ImgtGeneCurator
             // reason is that ensembl is easier, and we do not need the alt locations for the constant genes. Another reason
             // is that we do not need to be very precise with the location of the anchor for constant genes
             // if we use ensembl for V / J gene, we need to use the fasta file to validate the anchor location is precise
-            alignForGenomicLocation(nonConstantGenes, refGenomeDict, bwaIndexImage, genomeVersion, numThreads, ensemblDataCache)
+            alignForGenomicLocation(nonConstantGenes, refGenomeDict, bwaIndexImage, refGenomeVersion, numThreads, ensemblDataCache)
 
             for (geneData in constantGenes)
             {
                 val ensemblGene = ensemblDataCache.getGeneDataByName(geneData.geneName) ?: continue
-                geneData.genomicLocation = toGenomicLocation(ensemblGene)
+                geneData.genomicLocation = toGenomicLocation(ensemblGene, refGenomeVersion)
             }
 
             // also apply genomic location overrides
@@ -437,7 +437,7 @@ class ImgtGeneCurator
             {
                 if (geneData.genomicLocation == null)
                 {
-                    val geneLocationOverride = ImgtGeneCuratorSettings.getGenomicLocationOverrides(geneData.geneName, genomeVersion)
+                    val geneLocationOverride = ImgtGeneCuratorSettings.getGenomicLocationOverrides(geneData.geneName, refGenomeVersion)
                     if (geneLocationOverride != null)
                     {
                         geneData.genomicLocation = geneLocationOverride
@@ -448,7 +448,7 @@ class ImgtGeneCurator
 
         // for each imgt gene segment, use alignment to find the genomic location
         fun alignForGenomicLocation(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
-                                    genomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
+                                    refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
         {
             // assign a key to each VDJ, such that we can keep track of them
             var key = 0
@@ -467,7 +467,7 @@ class ImgtGeneCurator
                     .filter { a -> a.editDistance <= ALIGNMENT_MAX_MISMATCH &&
                             a.queryAlignEnd - a.queryAlignStart + 1 >= a.querySeq.length - ALIGNMENT_MAX_MISMATCH }
                     .mapNotNull { a ->
-                        AlignmentUtil.toGenomicLocation(a, genomeVersion)?.let { location -> Pair(a, location) }
+                        AlignmentUtil.toGenomicLocation(a)?.let { location -> Pair(a, location) }
                     }
                     // Order by alignment score then primary assembly first
                     .sortedWith(compareBy( { p -> -p.first.alignmentScore }, { p -> !p.second.inPrimaryAssembly }))
@@ -488,10 +488,11 @@ class ImgtGeneCurator
                         // if they have same score, we want to choose the one that overlaps with ensembl gene
                         sLogger.debug("considering ensembl gene {}", ensemblGene)
                         if (ensemblGene != null &&
-                            ensemblGene.Chromosome == location.bases.chromosome() &&
+                            // TODO: check if it's chromosome or contig
+                            ensemblGene.Chromosome == location.contig.name &&
                             ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD) &&
-                            ensemblGene.GeneStart <= location.bases.start() &&
-                            ensemblGene.GeneEnd >= location.bases.end())
+                            ensemblGene.GeneStart <= location.position.start() &&
+                            ensemblGene.GeneEnd >= location.position.end())
                         {
                             bestAlignment = alignment
                             sLogger.debug("gene: {}*{}, using alignment that overlaps with ensembl", geneData.geneName, geneData.allele)
@@ -508,14 +509,14 @@ class ImgtGeneCurator
                         if (geneData.region == IgTcrRegion.D_REGION)
                         {
                             // use ensembl for D region
-                            geneData.genomicLocation = toGenomicLocation(ensemblGene)
+                            geneData.genomicLocation = toGenomicLocation(ensemblGene, refGenomeVersion)
                         }
                     }
                     sLogger.info("gene: {}*{}, no full match", geneData.geneName, geneData.allele)
                 }
                 else
                 {
-                    geneData.genomicLocation = alignmentToQueryGenomicLocation(bestAlignment, genomeVersion)
+                    geneData.genomicLocation = alignmentToQueryGenomicLocation(bestAlignment)
                     sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestAlignment, geneData.genomicLocation)
                 }
             }
@@ -523,19 +524,21 @@ class ImgtGeneCurator
 
         fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
 
-        fun toGenomicLocation(ensemblGene: GeneData) : GenomicLocation
+        fun toGenomicLocation(ensemblGene: GeneData, refGenomeVersion: RefGenomeVersion) : GenomicLocation
         {
+            // TODO: what is ensembleGene.Chromosome compared to contig?
+            val contig = Contig(refGenomeVersion.versionedChromosome(ensemblGene.Chromosome))
             return GenomicLocation(
-                ChrBaseRegion(ensemblGene.Chromosome, ensemblGene.GeneStart,ensemblGene.GeneEnd),
+                contig, BaseRegion(ensemblGene.GeneStart,ensemblGene.GeneEnd),
                 Strand.valueOf(ensemblGene.Strand.toInt()))
         }
 
-        fun alignmentToQueryGenomicLocation(alignment: AlignmentUtil.BwaMemAlignment, genomeVersion: RefGenomeVersion) : GenomicLocation
+        fun alignmentToQueryGenomicLocation(alignment: AlignmentUtil.BwaMemAlignment) : GenomicLocation
         {
             // we need to correct for the ends to make sure things align properly
             val startExtend = alignment.queryAlignStart - 1
             val endExtend = alignment.querySeq.length - alignment.queryAlignEnd
-            val alignGenomicLoc = AlignmentUtil.toGenomicLocation(alignment, genomeVersion)!!
+            val alignGenomicLoc = AlignmentUtil.toGenomicLocation(alignment)!!
 
             if (startExtend == 0 && endExtend == 0)
             {
@@ -545,19 +548,17 @@ class ImgtGeneCurator
             return if (alignGenomicLoc.strand == Strand.FORWARD)
             {
                 alignGenomicLoc.copy(
-                    bases = ChrBaseRegion(
-                        alignGenomicLoc.bases.chromosome(),
-                        alignGenomicLoc.bases.start() - startExtend,
-                        alignGenomicLoc.bases.end() + endExtend
+                    position = BaseRegion(
+                        alignGenomicLoc.position.start() - startExtend,
+                        alignGenomicLoc.position.end() + endExtend
                     ))
             }
             else
             {
                 alignGenomicLoc.copy(
-                    bases = ChrBaseRegion(
-                        alignGenomicLoc.bases.chromosome(),
-                        alignGenomicLoc.bases.start() - endExtend,
-                        alignGenomicLoc.bases.end() + startExtend
+                    position = BaseRegion(
+                        alignGenomicLoc.position.start() - endExtend,
+                        alignGenomicLoc.position.end() + startExtend
                     ))
             }
         }
@@ -575,7 +576,7 @@ class ImgtGeneCurator
                     if (!genomicLocationValidator.validateAgainstRefGenome(gene.anchorSequence!!, anchorGenomicLocation))
                     {
                         sLogger.error("gene: {} anchor location: {} does not match anchor seq: {}",
-                            gene.geneAllele, gene.anchorLocation, gene.anchorSequence)
+                            gene.geneAllele, gene.anchorPosition, gene.anchorSequence)
                         throw RuntimeException()
                     }
                 }

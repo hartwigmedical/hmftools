@@ -139,7 +139,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             require(anchorGenomeLoc.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                anchorGenomeLoc.chromosome,
+                anchorGenomeLoc.contig.name,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
                 anchorGenomeLoc.end + mParams.approxMaxFragmentLength))
         }
@@ -149,7 +149,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                region.genomeLocation.chromosome,
+                region.genomeLocation.contig.name,
                 region.genomeLocation.position.start() - mParams.approxMaxFragmentLength,
                 region.genomeLocation.position.end() + mParams.approxMaxFragmentLength))
         }
