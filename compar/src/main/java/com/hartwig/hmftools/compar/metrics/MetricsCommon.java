@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.metrics;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 
 public class MetricsCommon
 {
@@ -15,10 +15,10 @@ public class MetricsCommon
     protected static final double DUPLICATE_PERCENTAGE_ABS_THRESHOLD = 0.05;
     protected static final double DUPLICATE_PERCENTAGE_PCT_THRESHOLD = 0;
 
-    public static BamMetricsSummary loadBamMetricsSummary(final String sampleId, String directory) throws IOException
+    public static BamMetricSummary loadBamMetricsSummary(final String sampleId, String directory) throws IOException
     {
-        String currentFileName = BamMetricsSummary.generateFilename(directory, sampleId);
-        return BamMetricsSummary.read(currentFileName);
+        String currentFileName = BamMetricSummary.generateFilename(directory, sampleId);
+        return BamMetricSummary.read(currentFileName);
     }
 
     public static String determineFlagStatsFilePath(final String sampleId, final String directory)

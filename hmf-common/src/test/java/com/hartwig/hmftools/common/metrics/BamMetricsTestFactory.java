@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 public final class BamMetricsTestFactory
 {
     @NotNull
-    public static BamMetricsSummary createMinimalTestWGSMetrics()
+    public static BamMetricSummary createMinimalTestWGSMetrics()
     {
         List<Integer> coverageLevels = List.of(10, 20, 30, 60);
         List<Double> coveragePercents = List.of(0.0, 0.0, 0.0, 0.0);
 
-        return ImmutableBamMetricsSummary.builder()
+        return ImmutableBamMetricSummary.builder()
                 .totalReads(0)
                 .totalRegionBases(0)
                 .duplicateReads(0)

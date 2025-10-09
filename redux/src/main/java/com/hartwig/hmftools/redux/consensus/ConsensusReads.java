@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -288,7 +289,10 @@ public class ConsensusReads
         // reads
         for(int i = 0; i < reads.size(); ++i)
         {
-            RD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
+            SAMRecord read = reads.get(i);
+
+            RD_LOGGER.debug("read {}: unclippedPos({}-{}) {}",
+                    i, getUnclippedPosition(read, true), getUnclippedPosition(read, false), readToString(read));
         }
     }
 }

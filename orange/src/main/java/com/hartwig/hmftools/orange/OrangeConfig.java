@@ -47,7 +47,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -298,7 +298,7 @@ public interface OrangeConfig
         }
 
         String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, defaultToolDirectories.tumorMetricsDir());
-        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(metricsDir, tumorSampleId)));
+        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricSummary.generateFilename(metricsDir, tumorSampleId)));
         builder.tumorSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(metricsDir, tumorSampleId)));
 
         if(experimentType == ExperimentType.WHOLE_GENOME)

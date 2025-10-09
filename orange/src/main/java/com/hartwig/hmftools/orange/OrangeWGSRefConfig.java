@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.redux.BqrFile;
@@ -128,7 +128,7 @@ public interface OrangeWGSRefConfig
                 builder.peachGenotypeTsv(peachGenotypeTsv);
             }
 
-            builder.refSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(refMetricsDir, refSampleId)));
+            builder.refSampleWGSMetricsFile(mandatoryPath(BamMetricSummary.generateFilename(refMetricsDir, refSampleId)));
             builder.refSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(refMetricsDir, refSampleId)));
         }
 
