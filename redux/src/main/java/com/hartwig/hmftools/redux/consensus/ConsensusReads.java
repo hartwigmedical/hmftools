@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -76,7 +77,7 @@ public class ConsensusReads
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, templateRead.getFirstOfPairFlag());
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, firstInPair(templateRead));
 
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }

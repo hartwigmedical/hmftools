@@ -23,6 +23,7 @@ public class ReadParseState
     private int mElementLength;
     private CigarOperator mElementType;
 
+    private boolean mActive;
     private boolean mExhausted;
 
     private int mCurrentRefPosition;
@@ -39,6 +40,7 @@ public class ReadParseState
     public void reset()
     {
         mExhausted = false;
+        mActive = false;
 
         if(mIsForward)
         {
@@ -78,6 +80,9 @@ public class ReadParseState
 
     public boolean beforeUnclippedPosition(int refPosition)
     {
+        if(mActive)
+            return false;
+
         return mIsForward ? mCurrentRefPosition > refPosition : mCurrentRefPosition < refPosition;
     }
 
@@ -92,6 +97,8 @@ public class ReadParseState
     {
         if(mExhausted)
             return;
+
+        mActive |= true;
 
         ++mElementIndex;
 
@@ -109,6 +116,7 @@ public class ReadParseState
             if(mCigarIndex < 0 || mCigarIndex >= Read.getCigar().getCigarElements().size())
             {
                 mExhausted = true;
+                mActive = false;
                 return;
             }
 
@@ -186,6 +194,6 @@ public class ReadParseState
         int effectElementIndex = (mIsForward ? mElementIndex : mElementLength - mElementIndex) + 1;
         return format("index(%d) refPos(%d) cigar(%d: %s element=%d/%d) %s",
                 mReadIndex, mCurrentRefPosition, mCigarIndex, mElementType, effectElementIndex, mElementLength,
-                mExhausted ? "exhausted" : "active");
+                mExhausted ? "exhausted" : (mActive ? "active" : "pre-start"));
     }
 }

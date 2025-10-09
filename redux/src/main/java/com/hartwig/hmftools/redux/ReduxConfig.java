@@ -120,7 +120,7 @@ public class ReduxConfig
 
     public final boolean KeepInterimBams;
     public final SpecificRegions SpecificChrRegions;
-    public final List<String> LogReadIds;
+    public static final List<String> LogReadIds = Lists.newArrayList();
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
@@ -305,7 +305,7 @@ public class ReduxConfig
         MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
-        LogReadIds = parseLogReadIds(configBuilder);
+        LogReadIds.addAll(parseLogReadIds(configBuilder));
 
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
@@ -480,7 +480,6 @@ public class ReduxConfig
         LogReadType = NONE;
         FailOnMissingSuppMateCigar = false;
 
-        LogReadIds = Lists.newArrayList();
         Threads = 0;
         PartitionThreadRatio = 1;
         PerfDebugTime = 0;

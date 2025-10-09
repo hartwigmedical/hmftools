@@ -6,12 +6,15 @@ import static java.lang.String.format;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMRecord;
 
 public class SbxDuplicateCollapser
 {
@@ -20,6 +23,11 @@ public class SbxDuplicateCollapser
     public SbxDuplicateCollapser(int maxDuplicateDistance)
     {
         mMaxDuplicateDistance = maxDuplicateDistance;
+    }
+
+    private static boolean withinRange(int firstPosLower, int firstPosUpper, int secondPosLower, int secondPosUpper, int maxDistance)
+    {
+        return abs(firstPosLower - secondPosLower) + abs(firstPosUpper - secondPosUpper) <= maxDistance;
     }
 
     private class GroupInfo implements Comparable<GroupInfo>
@@ -58,7 +66,8 @@ public class SbxDuplicateCollapser
 
         public boolean withinRange(final GroupInfo other)
         {
-            return abs(PositionLower - other.PositionLower) + abs(PositionUpper - other.PositionUpper) <= mMaxDuplicateDistance;
+            return SbxDuplicateCollapser.withinRange(
+                    PositionLower, PositionUpper, other.PositionLower, other.PositionUpper, mMaxDuplicateDistance);
         }
 
         @Override
@@ -71,6 +80,14 @@ public class SbxDuplicateCollapser
             }
 
             return PositionUpper - o.PositionUpper;
+        }
+
+        public String readId()
+        {
+            if(Group instanceof ReadInfo)
+                return ((ReadInfo)Group).id();
+            else
+                return ((DuplicateGroup)Group).reads().get(0).getReadName();
         }
 
         public String toString() { return format("coords(%d - %d) size(%d)", PositionLower, PositionUpper, mSize); }
@@ -109,6 +126,17 @@ public class SbxDuplicateCollapser
         {
             for(DuplicateGroup duplicateGroup : duplicateGroups)
             {
+                /*
+                // check for special case of extra supplementaries for the same primary read
+                List<SAMRecord> extraSuppReads = extractSupplementaryDuplicates(duplicateGroup.reads());
+
+                for(SAMRecord read : extraSuppReads)
+                {
+                    // these will be dropped from the BAM
+                    duplicateGroup.reads().remove(read);
+                }
+                */
+
                 String key = collapseKey(duplicateGroup.fragmentCoordinates());
 
                 List<GroupInfo> groups = keyGroups.get(key);
@@ -119,9 +147,21 @@ public class SbxDuplicateCollapser
                     keyGroups.put(key, groups);
                 }
 
-                GroupInfo groupInfo = new GroupInfo(
-                        duplicateGroup, duplicateGroup.fragmentCoordinates().PositionLower,
-                        duplicateGroup.fragmentCoordinates().PositionUpper, duplicateGroup.reads().size());
+                GroupInfo groupInfo;
+                if(duplicateGroup.reads().size() == 1)
+                {
+                    SAMRecord singleRead = duplicateGroup.reads().get(0);
+                    ReadInfo readInfo = new ReadInfo(singleRead, duplicateGroup.fragmentCoordinates());
+
+                    groupInfo = new GroupInfo(
+                            readInfo, readInfo.coordinates().PositionLower, readInfo.coordinates().PositionUpper, 1);
+                }
+                else
+                {
+                    groupInfo = new GroupInfo(
+                            duplicateGroup, duplicateGroup.fragmentCoordinates().PositionLower,
+                            duplicateGroup.fragmentCoordinates().PositionUpper, duplicateGroup.reads().size());
+                }
 
                 groups.add(groupInfo);
             }
@@ -169,6 +209,8 @@ public class SbxDuplicateCollapser
                 if(finalDuplicateGroups == null)
                     finalDuplicateGroups = Lists.newArrayListWithCapacity(maxCapacity);
 
+                checkSupplementaryConsistency(duplicateGroup);
+
                 finalDuplicateGroups.add(duplicateGroup);
             }
         }
@@ -209,6 +251,14 @@ public class SbxDuplicateCollapser
                 break;
 
             GroupInfo mainGroup = groups.get(groupIndex);
+
+            /*
+            if(ReduxConfig.LogReadIds.stream().anyMatch(x -> x.equals(mainGroup.readId())))
+            {
+                RD_LOGGER.debug("SBX duplicate collapse: {}", mainGroup.readId());
+            }
+            */
+
             List<GroupInfo> collapseGroups = findGroupsToCollapse(groups, groupIndex);
 
             for(GroupInfo otherGroup : collapseGroups)
@@ -291,5 +341,60 @@ public class SbxDuplicateCollapser
         }
 
         return key;
+    }
+
+    private void checkSupplementaryConsistency(final DuplicateGroup duplicateGroup)
+    {
+        // supplementaries are not guaranteed to align, especially if the primaries were grouped with jitter
+        // in which case discard any read which is outside the valid jitter range to help with consensus
+
+        List<SAMRecord> suppReads = duplicateGroup.reads().stream().filter(x -> x.getSupplementaryAlignmentFlag()).collect(Collectors.toList());
+
+        if(suppReads.isEmpty())
+            return;
+
+        SAMRecord templateRead;
+
+        if(suppReads.size() == duplicateGroup.reads().size())
+        {
+            // could instead choose the most common by cigar or frag coords
+            templateRead = duplicateGroup.reads().get(0);
+        }
+        else
+        {
+            templateRead = duplicateGroup.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).findFirst().orElse(null);
+
+            if(templateRead == null)
+                templateRead = duplicateGroup.reads().get(0);
+        }
+
+        // discard from consensus any read not within range of the template read's coords
+        FragmentCoords templateCoords = FragmentCoords.fromRead(templateRead, true, false);
+
+        List<SAMRecord> nonConsensusReads = null;
+
+        for(SAMRecord read : duplicateGroup.reads())
+        {
+            if(read == templateRead)
+                continue;
+
+            FragmentCoords readCoords = FragmentCoords.fromRead(read, true, false);
+
+            if(!SbxDuplicateCollapser.withinRange(
+                    templateCoords.PositionLower, templateCoords.PositionUpper, readCoords.PositionLower, readCoords.PositionUpper,
+                    mMaxDuplicateDistance))
+            {
+                if(nonConsensusReads == null)
+                    nonConsensusReads = Lists.newArrayList();
+
+                nonConsensusReads.add(read);
+            }
+        }
+
+        if(nonConsensusReads != null)
+        {
+            nonConsensusReads.forEach(x -> duplicateGroup.reads().remove(x));
+            duplicateGroup.addNonConsensusReads(nonConsensusReads);
+        }
     }
 }

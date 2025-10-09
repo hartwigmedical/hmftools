@@ -143,6 +143,11 @@ public class FragmentCoords implements Comparable<FragmentCoords>
 
     public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation)
     {
+        return fromRead(read, useFragmentOrientation, read.getSupplementaryAlignmentFlag());
+    }
+
+    public static FragmentCoords fromRead(final SAMRecord read, boolean useFragmentOrientation, boolean isSupplementary)
+    {
         Orientation readOrient;
         String readChromosome;
         int readPosition;
@@ -153,7 +158,6 @@ public class FragmentCoords implements Comparable<FragmentCoords>
         int matePosition = NO_POSITION;
 
         boolean isPaired = read.getReadPairedFlag();
-        boolean isSupplementary = read.getSupplementaryAlignmentFlag();
 
         boolean isUnmapped = read.getReadUnmappedFlag();
 

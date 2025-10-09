@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.consensus.SbxIndelConsensus.determineIndelConsensus;
 import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
@@ -12,7 +13,6 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusState.alignedOrClipp
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.determineIndelConsensus;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
