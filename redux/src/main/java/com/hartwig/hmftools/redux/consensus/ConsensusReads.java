@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SINGLE_READ;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.INVALID_BASE;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.getInvalidBases;
@@ -82,8 +82,7 @@ public class ConsensusReads
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
             SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, firstInPair(templateRead));
-
-            return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
+            return new ConsensusReadInfo(consensusRead, templateRead, SINGLE_READ);
         }
 
         List<SAMRecord> readsView;
@@ -158,6 +157,13 @@ public class ConsensusReads
             if(validReason != ReadValidReason.OK)
             {
                 logInvalidConsensusRead(readsView, consensusRead, consensusState, validReason.toString());
+
+                if(isSbx())
+                {
+                    // use a template read and continue on
+                    consensusRead = buildFromRead(templateRead, consensusReadId, firstInPair(templateRead));
+                    return new ConsensusReadInfo(consensusRead, templateRead, SINGLE_READ);
+                }
             }
         }
 

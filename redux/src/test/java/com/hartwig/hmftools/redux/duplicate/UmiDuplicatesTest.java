@@ -330,8 +330,8 @@ public class UmiDuplicatesTest
         assertEquals(1, positionFragmentCounts.Frequency);
 
         assertEquals(2, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.size());
-        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandFrequency);
-        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandFrequency);
+        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandCount);
+        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandCount);
     }
 
     @Test

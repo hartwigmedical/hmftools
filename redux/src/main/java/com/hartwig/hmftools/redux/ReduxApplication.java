@@ -185,19 +185,16 @@ public class ReduxApplication
             }
         }
 
-        if(mConfig.WriteStats)
+        combinedStats.writeDuplicateStats(mConfig);
+
+        if(mConfig.UMIs.Enabled)
         {
-            combinedStats.writeDuplicateStats(mConfig);
+            combinedStats.UmiStats.writePositionFragmentsData(mConfig);
 
-            if(mConfig.UMIs.Enabled)
+            if(mConfig.UMIs.BaseStats)
             {
-                combinedStats.UmiStats.writePositionFragmentsData(mConfig);
-
-                if(mConfig.UMIs.BaseStats)
-                {
-                    combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
-                    combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
-                }
+                combinedStats.UmiStats.writeUmiBaseDiffStats(mConfig);
+                combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
             }
         }
 

@@ -56,7 +56,8 @@ public final class TestUtils
 
     public static ReduxConfig createTestConfig()
     {
-        return new ReduxConfig(new MockRefGenome(), false, false, false, READ_UNMAPPER_DISABLED);
+        return new ReduxConfig(
+                new MockRefGenome(), false, false, false, READ_UNMAPPER_DISABLED);
     }
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)

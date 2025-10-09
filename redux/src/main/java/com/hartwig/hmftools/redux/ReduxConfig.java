@@ -107,7 +107,6 @@ public class ReduxConfig
     public final String OutputId;
     public final boolean WriteBam;
     public final boolean MultiBam;
-    public final boolean WriteStats;
 
     public final int Threads;
     public final int PartitionThreadRatio;
@@ -144,7 +143,6 @@ public class ReduxConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String BQR_JITTER_MSI_ONLY = "bqr_jitter_msi_only";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
@@ -307,7 +305,6 @@ public class ReduxConfig
 
         LogReadIds.addAll(parseLogReadIds(configBuilder));
 
-        WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
@@ -403,7 +400,6 @@ public class ReduxConfig
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(SKIP_DUPLICATE_MARKING, "Skip duplicate marking routine");
-        configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         configBuilder.addFlag(BQR_JITTER_MSI_ONLY, "Jitter MSi output only, no duplicate processing");
         addValidationStringencyOption(configBuilder);
@@ -436,8 +432,7 @@ public class ReduxConfig
 
     @VisibleForTesting
     public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
-            final ReadUnmapper readUnmapper, int sbxMaxDuplicateDistance)
+            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus, final ReadUnmapper readUnmapper)
     {
         mIsValid = true;
         SampleId = "";
@@ -468,7 +463,7 @@ public class ReduxConfig
         BqrAndJitterMsiOnly = false;
         JitterConfig = null;
 
-        DuplicateConfig = new DuplicatesConfig(sbxMaxDuplicateDistance);
+        DuplicateConfig = new DuplicatesConfig(0);
 
         WriteBam = false;
         MultiBam = false;
@@ -484,27 +479,10 @@ public class ReduxConfig
         PartitionThreadRatio = 1;
         PerfDebugTime = 0;
         RunChecks = true;
-        WriteStats = false;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
         LogDuplicateGroupSize = 0;
 
         mReadChecker = new ReadChecker(false);
-    }
-
-    @VisibleForTesting
-    public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
-            final ReadUnmapper readUnmapper, final SequencingType sequencingType)
-    {
-        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, 0);
-    }
-
-    @VisibleForTesting
-    public ReduxConfig(
-            final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus,
-            final ReadUnmapper readUnmapper)
-    {
-        this(refGenome, umiEnabled, duplexUmi, formConsensus, readUnmapper, ILLUMINA);
     }
 }
