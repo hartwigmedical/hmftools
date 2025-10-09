@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.LinkedListMultimap
 import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
@@ -16,55 +14,58 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 {
     fun buildVDJSequences(layoutMultimap: Map<VJGeneType, List<ReadLayout>>) : List<VDJSequence>
     {
+        // Care is taken here to populate this list in a deterministic order, otherwise the output can be somewhat different between runs,
+        // which is confusing.
+        // Note that the iteration order of maps and sets is not defined and may vary.
         val vdjList = ArrayList<VDJSequence>()
 
         // remember the layouts which are not used
-        val oneSidedLayouts: LinkedListMultimap<VJGeneType, ReadLayout> = LinkedListMultimap.create()
-
-        for ((geneType, layouts) in layoutMultimap)
+        val oneSidedLayouts = HashMap<VJGeneType, ArrayList<ReadLayout>>()
+        for ((geneType, layouts) in layoutMultimap.entries)
         {
-            for (l in layouts)
-            {
-                oneSidedLayouts.put(geneType, l)
-            }
+            oneSidedLayouts[geneType] = ArrayList(layouts)
         }
 
         // try to join together the layouts
         joinVjLayouts(oneSidedLayouts, vdjList)
-
         sLogger.info("built {} vdj by joining V with J layouts", vdjList.size)
 
         // for the remaining ones, we try to complete with blosum
-        val itr = oneSidedLayouts.entries().iterator()
-        while (itr.hasNext())
+        for ((geneType, layouts) in oneSidedLayouts.entries.sortedBy { it.key })
         {
-            val (geneType, layout) = itr.next()
-            val vdj = tryCompleteLayoutWithBlosum(geneType, layout)
-
-            if (vdj != null)
+            val itr = layouts.iterator()
+            while (itr.hasNext())
             {
-                vdjList.add(vdj)
-                itr.remove()
+                val layout = itr.next()
+                val vdj = tryCompleteLayoutWithBlosum(geneType, layout)
+
+                if (vdj != null)
+                {
+                    vdjList.add(vdj)
+                    itr.remove()
+                }
             }
         }
 
         // add all of the VDJ with only one side
-        for ((geneType, layout) in oneSidedLayouts.entries())
+        for ((geneType, layouts) in oneSidedLayouts.entries.sortedBy { it.key })
         {
-            val vdj = tryCreateOneSidedVdj(geneType, layout)
-            if (vdj != null)
+            for (layout in layouts)
             {
-                vdjList.add(vdj)
+                val vdj = tryCreateOneSidedVdj(geneType, layout)
+                if (vdj != null)
+                {
+                    vdjList.add(vdj)
+                }
             }
         }
 
         // sort them by number of reads
-        vdjList.sortByDescending({ vdj -> vdj.numReads })
+        vdjList.sortByDescending { vdj -> vdj.numReads }
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
 
-        val vjGeneToVdjMap: ArrayListMultimap<Pair<VJGeneType?, VJGeneType?>, VDJSequence> = ArrayListMultimap.create()
-
+        val vjGeneToVdjMap = HashMap<Pair<VJGeneType?, VJGeneType?>, ArrayList<VDJSequence>>()
         for (vdj in vdjList)
         {
             if (vdj.vAnchor == null && vdj.jAnchor == null)
@@ -72,18 +73,18 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 assert(false)
                 continue
             }
-            vjGeneToVdjMap.put(Pair(vdj.vAnchor?.geneType, vdj.jAnchor?.geneType), vdj)
+            val key = Pair(vdj.vAnchor?.geneType, vdj.jAnchor?.geneType)
+            vjGeneToVdjMap.computeIfAbsent(key) { ArrayList() }.add(vdj)
         }
 
         vdjList.clear()
-
-        for (vjType in vjGeneToVdjMap.keySet())
+        for ((_, vdjs) in vjGeneToVdjMap.entries.sortedWith(compareBy({ it.key.first }, { it.key.second })))
         {
-            vdjList.addAll(mergeIdentical(vjGeneToVdjMap.get(vjType), minBaseQuality))
+            vdjList.addAll(mergeIdentical(vdjs, minBaseQuality))
         }
 
         // sort again
-        vdjList.sortByDescending({ vdj -> vdj.numReads })
+        vdjList.sortByDescending { vdj -> vdj.numReads }
 
         sLogger.info("{} vdj sequences after merge", vdjList.size)
 
@@ -91,21 +92,25 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     }
 
     private fun joinVjLayouts(
-        oneSidedLayouts: LinkedListMultimap<VJGeneType, ReadLayout>,
-        vdjList: ArrayList<VDJSequence>)
+        oneSidedLayouts: Map<VJGeneType, MutableList<ReadLayout>>,
+        vdjList: MutableList<VDJSequence>)
     {
-        for (vGeneType: VJGeneType in oneSidedLayouts.keySet().filter({ vjGeneType -> vjGeneType.vj == VJ.V }))
+        val geneTypes = oneSidedLayouts.keys.filter { vjGeneType -> vjGeneType.vj == VJ.V }.sorted()
+        for (vGeneType: VJGeneType in geneTypes)
         {
             for (jGeneType: VJGeneType in vGeneType.pairedVjGeneTypes())
             {
-                joinVjLayouts(vGeneType, jGeneType, oneSidedLayouts[vGeneType], oneSidedLayouts[jGeneType], vdjList)
+                joinVjLayouts(vGeneType, jGeneType,
+                    oneSidedLayouts[vGeneType] ?: ArrayList(),
+                    oneSidedLayouts[jGeneType] ?: ArrayList(),
+                    vdjList)
             }
         }
     }
 
     private fun joinVjLayouts(vGeneType: VJGeneType, jGeneType: VJGeneType,
                               vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                              vdjList: ArrayList<VDJSequence>)
+                              vdjList: MutableList<VDJSequence>)
     {
         joinVjLayoutsBySharedReads(vGeneType, jGeneType, vLayouts, jLayouts, vdjList)
         joinVjLayoutsByWordHash(vGeneType, jGeneType, vLayouts, jLayouts, vdjList)
@@ -115,17 +120,17 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // that share reads. The layout that share the largest number of reads are tested first.
     fun joinVjLayoutsBySharedReads(vGeneType: VJGeneType, jGeneType: VJGeneType,
                               vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                              vdjList: ArrayList<VDJSequence>)
+                              vdjList: MutableList<VDJSequence>)
     {
         val consumedLayouts: MutableSet<ReadLayout> = Collections.newSetFromMap(IdentityHashMap())
 
         // first we use the read IDs
-        val readIdMultimap = ArrayListMultimap.create<String, ReadLayout>()
+        val readIdMultimap = HashMap<String, ArrayList<ReadLayout>>()
 
         // put all v layout read IDs into the map
         for (jLayout in jLayouts)
         {
-            jLayout.reads.forEach { r -> readIdMultimap.put(r.readKey.readName, jLayout) }
+            jLayout.reads.forEach { r -> readIdMultimap.computeIfAbsent(r.readKey.readName) { ArrayList() }.add(jLayout) }
         }
 
         val vLayoutItr: MutableIterator<ReadLayout> = vLayouts.iterator()
@@ -140,15 +145,16 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             // look up using the read ids
             for (read in vLayout.reads)
             {
-                readIdMultimap.get(read.readKey.readName).forEach { l ->
-                    jReadMatchCount.merge(l, 1, { exitingCount: Int, _ -> exitingCount + 1 })
+                (readIdMultimap[read.readKey.readName] ?: continue).forEach { l ->
+                    jReadMatchCount.merge(l, 1) { exitingCount: Int, _ -> exitingCount + 1 }
                 }
             }
 
             // sort the layouts by their number of reads that are shared
             val jCandidates = jReadMatchCount.entries
                 .filter { (jLayout, _) -> !consumedLayouts.contains(jLayout) }
-                .sortedByDescending { o -> o.value }
+                // Include stable ID to produce deterministic order in the case of tied number of reads.
+                .sortedWith(compareBy({ -it.value }, { it.key.id }))
 
             for ((jLayout, _) in jCandidates)
             {
@@ -183,12 +189,12 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // v layouts from my tests)
     fun joinVjLayoutsByWordHash(vGeneType: VJGeneType, jGeneType: VJGeneType,
                                 vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
-                                vdjList: ArrayList<VDJSequence>)
+                                vdjList: MutableList<VDJSequence>)
     {
         // for v and j layouts that have not found a match yet,
         // we calculate a key for each 5 high qual bases. The hash is actually a match since
         // we use 2bits per base
-        val baseHashMultimap = ArrayListMultimap.create<Int, ReadLayout>()
+        val baseHashMultimap = HashMap<Int, ArrayList<ReadLayout>>()
 
         for (jLayout in jLayouts)
         {
@@ -206,7 +212,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             val hashList = VdjBuilderUtils.calcSequenceWordHashes(seq, CiderConstants.VJ_JOIN_HASH_WORD_SIZE)
             for (hash in hashList)
             {
-                baseHashMultimap.put(hash, jLayout)
+                baseHashMultimap.computeIfAbsent(hash) { ArrayList() }.add(jLayout)
             }
         }
 
@@ -238,15 +244,16 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             // look up using the read ids
             for (hash in hashList)
             {
-                baseHashMultimap.get(hash).forEach { l ->
-                    jHashMatchCount.merge(l, 1, { exitingCount: Int, _ -> exitingCount + 1 })
+                (baseHashMultimap[hash] ?: continue).forEach { l ->
+                    jHashMatchCount.merge(l, 1) { exitingCount: Int, _ -> exitingCount + 1 }
                 }
             }
 
             // sort descending by the number of hashes that are shared
             val jCandidates = jHashMatchCount.entries
                 .filter { (jLayout, _) -> !consumedLayouts.contains(jLayout) }
-                .sortedByDescending { o -> o.value }
+                // Include stable ID to produce deterministic order in the case of tied number of hashes.
+                .sortedWith(compareBy({ -it.value }, { it.key.id }))
 
             for ((jLayout, _) in jCandidates)
             {
@@ -584,12 +591,12 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         // for VDJ sequences that are identical, we put them together
         fun mergeIdentical(vdjList: List<VDJSequence>, minBaseQuality: Byte) : List<VDJSequence>
         {
+            /*
             // first parse we do it in a fast way to find the ones that are exactly the same
             val seqHashMap: ArrayListMultimap<String, VDJSequence> = ArrayListMultimap.create()
 
             vdjList.forEach({ vdj -> seqHashMap.put(vdj.sequence, vdj) })
 
-            /*
             val outVDJList = ArrayList<VDJSequence>()
 
             for (seq in seqHashMap.keySet())

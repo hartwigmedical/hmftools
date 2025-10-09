@@ -215,7 +215,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         // give each an ID
         var nextId = 1
-        for ((_, layoutResult) in layoutResults)
+        // Sort to give deterministic IDs
+        for ((_, layoutResult) in layoutResults.entries.sortedBy { it.key })
         {
             for (layout in layoutResult.layouts)
             {
