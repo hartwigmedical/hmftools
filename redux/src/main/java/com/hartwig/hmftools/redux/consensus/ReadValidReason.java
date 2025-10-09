@@ -1,11 +1,18 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarBaseLength;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.alignedOrClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.redux.ReduxConfig;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -66,5 +73,28 @@ public enum ReadValidReason
         }
 
         return true;
+    }
+
+    public static List<Integer> getInvalidBases(final SAMRecord record)
+    {
+        List<Integer> invalidBases = Lists.newArrayList();
+
+        for(int i = 0; i < record.getReadBases().length; ++i)
+        {
+            if(record.getReadBases()[i] == NO_BASE)
+                invalidBases.add(i);
+        }
+
+        return invalidBases;
+    }
+
+    public static void checkIsValidRead(final SAMRecord read)
+    {
+        ReadValidReason validReason = isValidRead(read);
+
+        if(validReason != ReadValidReason.OK)
+        {
+            RD_LOGGER.error("invalid read({}): {}", validReason, readToString(read));
+        }
     }
 }

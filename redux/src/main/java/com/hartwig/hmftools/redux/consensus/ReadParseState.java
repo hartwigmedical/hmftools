@@ -174,10 +174,17 @@ public class ReadParseState
             else
                 --mReadIndex;
         }
+
+        mCurrentRefPosition += mIsForward ? 1 : -1;
     }
 
     public void moveToRefPosition(int targetPosition)
     {
+        if(mCurrentRefPosition == targetPosition)
+        {
+            mActive = true;
+        }
+
         if((mIsForward && mCurrentRefPosition >= targetPosition) || (!mIsForward && mCurrentRefPosition <= targetPosition))
             return;
 

@@ -152,8 +152,15 @@ public class IndelConsensusReads
                     if(read.elementType() == I)
                         read.skipInsertElement();
 
-                    if(deleteOrSplit(read.elementType()) || alignedOrClipped(read.elementType()))
+                    if(deleteOrSplit(read.elementType()))
                     {
+                        read.moveNextBase();
+                    }
+                    else if(alignedOrClipped(read.elementType()))
+                    {
+                        if(read.refPosition() == newRefPosition)
+                            break;
+
                         read.moveNextBase();
                     }
                 }

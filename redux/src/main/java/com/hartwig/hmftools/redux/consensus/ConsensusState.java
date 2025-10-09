@@ -25,6 +25,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusState
 {
+    public final String ReadId;
     public final boolean IsForward;
     public final String Chromosome;
     public final Map<String, Object> Attributes;
@@ -45,8 +46,9 @@ public class ConsensusState
     private int mCurrentCigarElementLength;
     private CigarOperator mCurrentCigarElementOperator;
 
-    public ConsensusState(final boolean isForward, final String chromosome, final RefGenome refGenome)
+    public ConsensusState(final String readId, final boolean isForward, final String chromosome, final RefGenome refGenome)
     {
+        ReadId = readId;
         IsForward = isForward;
         Chromosome = chromosome;
         Attributes = Maps.newHashMap();

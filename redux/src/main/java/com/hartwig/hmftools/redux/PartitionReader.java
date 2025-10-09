@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.checkIsValidRead;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
 
 import static org.apache.logging.log4j.Level.DEBUG;
@@ -210,6 +211,9 @@ public class PartitionReader
             try
             {
                 stripDuplexIndels(read);
+
+                if(ReduxConfig.RunChecks)
+                    checkIsValidRead(read);
             }
             catch(Exception e)
             {
@@ -243,7 +247,7 @@ public class PartitionReader
             }
             catch(Exception e)
             {
-                RD_LOGGER.error("finaluse read error: {}", readToString(read));
+                RD_LOGGER.error("finalise read error: {}", readToString(read));
             }
         }
         else if(isUltima())

@@ -623,9 +623,69 @@ public class SbxConsensusTest
         assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
+
+        // test a delete overlapping soft-clips and prior to aligned read starts
+        reads.clear();
+
+        // 1:      T AACC
+        //         S MMMM
+
+        // 2:     TT AACC
+        //        SS MMMM
+
+        // 3:        AACC
+        //           MMMM
+
+        // 4:    GT  AACC
+        //       MMD MMMM
+
+        // new:  GT  AACC
+        //       MMD MMMM
+        // cigar: 2M 1D 4M
+
+        readBases1 = "TAACC";
+        readCigar1 = "1S4M";
+        readStart1 = 10; // unclipped start is 9
+
+        readBases2 = "TTAACC";
+        readCigar2 = "2S4M";
+        readStart2 = 10; // unclipped start is 8
+
+        String readBases3 = "AACC";
+        String readCigar3 = "4M";
+        int readStart3 = 10; // unclipped start is 10
+
+        String readBases4 = "GTAACC";
+        String readCigar4 = "2M1D4M";
+        int readStart4 = 7; // unclipped start is 7
+
+        readBasesNet = readBases4;
+        readCigarNet = readCigar4;
+
+        readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        reads.add(read1);
+
+        readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        byte[] readBaseQuals3 = buildBaseQuals(readBases3.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read3 = createSamRecord(readBases3, readStart3, readBaseQuals3, readCigar3);
+        reads.add(read3);
+
+        byte[] readBaseQuals4 = buildBaseQuals(readBases4.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read4 = createSamRecord(readBases4, readStart4, readBaseQuals4, readCigar4);
+        reads.add(read4);
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart4, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
     }
 
-        @Test
+    @Test
     public void testSbxFinaliseReads()
     {
         int position = 1;

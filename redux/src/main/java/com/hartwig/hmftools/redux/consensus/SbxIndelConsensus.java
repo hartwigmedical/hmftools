@@ -80,19 +80,7 @@ public class SbxIndelConsensus
         {
             CigarElement element = cigarElements.get(cigarIndex);
 
-            //try
-            //{
             indelConsensusReads.addElementBases(consensusState, readStates, element, baseIndex, refPosition, false, isFirstInPair);
-            //            }
-            //            catch(Exception e)
-            //            {
-            //                RD_LOGGER.error("consensus({}:{}) reads({}) failed to add next cigar element({}{}) from baseIndex({})",
-            //                        consensusState.Chromosome, consensusAlignmentStart, readStates.size(),
-            //                        element.getLength(), element.getOperator(), baseIndex);
-            //                e.printStackTrace();
-            //                consensusState.setOutcome(INDEL_FAIL);
-            //                break;
-            //            }
 
             if(consensusState.outcome() == INDEL_FAIL)
                 break;
