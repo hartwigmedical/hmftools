@@ -15,6 +15,8 @@ import java.util.Map;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
@@ -78,6 +80,12 @@ public class CobaltCalculatorTest extends CalculationsTestBase
                 return EF1;
             }
             return EF2;
+        }
+
+        @Override
+        public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
+        {
+            return new NoOpConsolidator();
         }
 
         @Override
@@ -176,7 +184,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         config = Mockito.mock(CobaltConfig.class);
         when(config.gcProfileData()).thenReturn(gcProfileData);
         when(config.excludedRegions()).thenReturn(excludedRegions);
-        when(config.genomeVersion()).thenReturn(V38);
+        when(config.genome()).thenReturn(V38);
 
         // Create the reference and tumor depth readings
         for(int i = 0; i < 15; i++)

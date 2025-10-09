@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.cobalt.lowcov;
+package com.hartwig.hmftools.cobalt.consolidation;
 
 import static com.hartwig.hmftools.cobalt.CobaltColumns.READ_GC_CONTENT;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+import static com.hartwig.hmftools.cobalt.ratio.RatioSupplier.printTable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -27,7 +27,7 @@ import tech.tablesaw.api.*;
 
 public class LowCoverageRatioMapper implements RatioMapper
 {
-    private static final String BUCKET_ID_COLUMN = "lowCovBucketId";
+    public static final String BUCKET_ID_COLUMN = "lowCovBucketId";
 
     private int mConsolidationCount = 0;
     private @Nullable Multimap<String, LowCovBucket> mConsolidateBoundaries;
@@ -156,7 +156,7 @@ public class LowCoverageRatioMapper implements RatioMapper
 
         // now we assign a bucket id per row, we can do with it
         rawRatios.addColumns(bucketIdCol);
-
+printTable(rawRatios, "RawRatiosLCRM");
         //
         Table lowCovRatio = rawRatios.summarize(
                 CobaltColumns.RATIO,
@@ -190,7 +190,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     @Nullable
     public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios, final double medianReadDepth)
     {
-        int consolidationCount = calcConsolidationCount(medianReadDepth);
+        int consolidationCount = ResultsConsolidator.calcConsolidationCount(medianReadDepth);
 
         if(consolidationCount == 1)
         {
@@ -221,7 +221,7 @@ public class LowCoverageRatioMapper implements RatioMapper
                     .and(rawRatios.doubleColumn(CobaltColumns.RATIO).isNonNegative()))
                     .intColumn(CobaltColumns.POSITION).asList();
 
-            List<LowCovBucket> consolidatedBuckets = consolidateIntoBuckets(nonMaskedPositions, consolidationCount);
+            List<LowCovBucket> consolidatedBuckets = ResultsConsolidator.consolidateIntoBuckets(nonMaskedPositions, consolidationCount);
 
             boundaries.putAll(chromosome, consolidatedBuckets);
 
@@ -229,107 +229,5 @@ public class LowCoverageRatioMapper implements RatioMapper
         }
 
         return boundaries;
-    }
-
-    static int calcConsolidationCount(final double medianReadDepth)
-    {
-        // consolidation starts when mean read depth <= 8
-        double c = 80.0 / medianReadDepth;
-
-        if(c < 10.0)
-        {
-            return 1;
-        }
-
-        // max 1000
-        if(c >= 1_000)
-        {
-            return 1_000;
-        }
-
-        // round to one significant digit
-        double roundBy = Math.pow(10, Math.floor(Math.log10(c)));
-        return (int) (Math.round(c / roundBy) * roundBy);
-    }
-
-    private static int roundDownToWindowBoundary(double p)
-    {
-        return (int) (Math.floor(p / CobaltConstants.WINDOW_SIZE) * CobaltConstants.WINDOW_SIZE) + 1;
-    }
-
-    // given the list of non masked windows, get the list of consolidated buckets
-    @SuppressWarnings("UnstableApiUsage")
-    static List<LowCovBucket> consolidateIntoBuckets(List<Integer> windowPositions, int consolidationCount)
-    {
-        // make sure position is sorted
-        Validate.isTrue(Comparators.isInStrictOrder(windowPositions, Comparator.naturalOrder()));
-
-        List<LowCovBucket> buckets = new ArrayList<>();
-
-        if(windowPositions.isEmpty())
-        {
-            return buckets;
-        }
-
-        int windowCount = 0;
-        int bucketStart = windowPositions.get(0);
-
-        for (int i = 0; i < windowPositions.size(); ++i)
-        {
-            int position = windowPositions.get(i);
-
-            if((position - bucketStart) >= CobaltConstants.MAX_SPARSE_CONSOLIDATE_DISTANCE)
-            {
-                // do not let the bucket to consolidate over 3M bases. This is done to avoid consolidating
-                // over centromere
-                // use the last bucket
-                if(i > 0)
-                {
-                    int lastPosition = windowPositions.get(i - 1);
-                    int bucketEnd = lastPosition + CobaltConstants.WINDOW_SIZE;
-                    int bucketPos = roundDownToWindowBoundary((bucketStart + bucketEnd) * 0.5);
-                    buckets.add(new LowCovBucket(bucketStart, bucketEnd, bucketPos));
-                }
-
-                // reset bucket start position, we do not want to put the start in the middle since
-                // it would sit inside the centromere
-                bucketStart = position;
-
-                // also reset window count
-                windowCount = 0;
-            }
-
-            if(windowCount == consolidationCount)
-            {
-                // we want to put the bucket boundary in the middle of the two windows
-                int lastPosition = windowPositions.get(i - 1);
-                int bucketEnd = roundDownToWindowBoundary((lastPosition + position) * 0.5);
-
-                // bucket position is at the middle
-                int bucketPos = roundDownToWindowBoundary((bucketStart + bucketEnd) * 0.5);
-
-                buckets.add(new LowCovBucket(bucketStart, bucketEnd, bucketPos));
-
-                // next bucket starts right after this
-                bucketStart = bucketEnd + CobaltConstants.WINDOW_SIZE;
-
-                // also reset window count
-                windowCount = 0;
-            }
-
-            windowCount++;
-        }
-
-        // add a final window
-        if(windowCount > 0)
-        {
-            int bucketEnd = windowPositions.get(windowPositions.size() - 1) + CobaltConstants.WINDOW_SIZE;
-
-            // bucket position is at the middle
-            int bucketPos = roundDownToWindowBoundary((bucketStart + bucketEnd) * 0.5);
-            buckets.add(new LowCovBucket(bucketStart, bucketEnd, bucketPos));
-        }
-
-        return buckets;
     }
 }

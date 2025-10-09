@@ -313,7 +313,7 @@ public class CobaltConfig
         return mExcludedRegions;
     }
 
-    public RefGenomeVersion genomeVersion()
+    public RefGenomeVersion genome()
     {
         return RefGenVersion;
     }

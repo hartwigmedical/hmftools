@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
+import java.util.Objects;
+
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -25,6 +27,16 @@ public class BamRatio
         {
             Ratio = -1.0;
         }
+    }
+
+    public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent)
+    {
+        mChromosome = chromosome;
+        Position = position;
+        mReadDepth = readDepth;
+        Ratio = readDepth;
+        GcContent = gcContent;
+        Included = true;
     }
 
     public void normaliseForGc(double medianReadDepthForGcBucket)
@@ -95,6 +107,27 @@ public class BamRatio
     public double gcContent()
     {
         return GcContent;
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        final BamRatio bamRatio = (BamRatio) o;
+        return Position == bamRatio.Position && Double.compare(mReadDepth, bamRatio.mReadDepth) == 0
+                && Double.compare(Ratio, bamRatio.Ratio) == 0
+                && Double.compare(DiploidAdjustedRatio, bamRatio.DiploidAdjustedRatio) == 0
+                && Double.compare(GcContent, bamRatio.GcContent) == 0 && Included == bamRatio.Included
+                && Objects.equals(mChromosome, bamRatio.mChromosome);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(mChromosome, Position, mReadDepth, Ratio, DiploidAdjustedRatio, GcContent, Included);
     }
 
     @Override

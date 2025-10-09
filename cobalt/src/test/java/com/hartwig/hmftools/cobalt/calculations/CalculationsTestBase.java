@@ -8,7 +8,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class CalculationsTestBase
 {
-    BamRatio br(Chromosome chromosome, int pos, double depth, double gc, boolean onTarget)
+    protected BamRatio br(Chromosome chromosome, int pos, double depth, double gc, boolean onTarget)
     {
         return new BamRatio(chromosome, dr(chromosome, pos, depth, gc), onTarget);
     }

@@ -5,15 +5,19 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COV
 
 import java.util.List;
 
+import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class ReferenceBamCalculation extends BamCalculation
+public class ReferenceCalculation extends BamCalculation
 {
-    public ReferenceBamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
+    private final ResultsConsolidator mResultsConsolidator;
+    public ReferenceCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version,
+            final ResultsConsolidator mResultsConsolidator)
     {
         super(mGenomeFilter, scope, version);
+        this.mResultsConsolidator = mResultsConsolidator;
     }
 
     ReadDepthStatisticsNormaliser createReadDepthsNormaliser()
@@ -29,5 +33,11 @@ public class ReferenceBamCalculation extends BamCalculation
     List<MedianRatio> medianRatios()
     {
         return ((DiploidNormaliser) MegaBaseScaleNormaliser).medianRatios();
+    }
+
+    @Override
+    ResultsConsolidator consolidator()
+    {
+        return mResultsConsolidator;
     }
 }

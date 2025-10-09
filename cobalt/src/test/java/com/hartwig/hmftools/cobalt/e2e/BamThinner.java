@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Random;
 
 import com.hartwig.hmftools.common.bam.FastBamWriter;
 
@@ -19,12 +20,15 @@ public class BamThinner
     private final File InputBam;
     private final File OutputDirectory;
     private final RecordMatcher Matcher;
+    private final Random mRandom = new Random();
+    private final double FractionOfRecordsToKeep;
 
     public BamThinner(final File inputBam, final File outputDirectory, final double fractionOfRecordsToKeep)
     {
         InputBam = inputBam;
         OutputDirectory = outputDirectory;
         Matcher = new RecordMatcher(fractionOfRecordsToKeep);
+        FractionOfRecordsToKeep = fractionOfRecordsToKeep;
     }
 
     public void run()
@@ -40,7 +44,12 @@ public class BamThinner
             File interimOutputFile = new File(OutputDirectory, "thinned_" + InputBam.getName());
             try(SAMFileWriter bamWriter = new FastBamWriter(newHeader, interimOutputFile.getAbsolutePath()))
             {
-                samReader.forEach(record -> Matcher.process(record).forEach(bamWriter::addAlignment));
+//                samReader.forEach(record -> Matcher.process(record).forEach(bamWriter::addAlignment));
+                samReader.forEach(samRecord -> {
+                    if (mRandom.nextDouble() <= FractionOfRecordsToKeep) {
+                        bamWriter.addAlignment(samRecord);
+                    }
+                });
             }
             catch(Exception e)
             {
@@ -61,9 +70,9 @@ public class BamThinner
 
     public static void main(final String[] args)
     {
-//        File inputBam = new File("/Users/timlavers/work/data/COLO829/COLO829T.bam");
-        File inputBam = new File("/Users/timlavers/work/scratch/datasets/pmhaem/bam/Sample_13927535.bam");
+        File inputBam = new File("/Users/timlavers/work/data/COLO829/COLO829T.bam");
+//        File inputBam = new File("/Users/timlavers/work/scratch/datasets/pmhaem/bam/Sample_13927535.bam");
         File outputDirectory = new File("/Users/timlavers/work/junk/rubbish");
-        new BamThinner(inputBam, outputDirectory, 0.01).run();
+        new BamThinner(inputBam, outputDirectory, 0.1).run();
     }
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.lowcov;
+package com.hartwig.hmftools.cobalt.consolidation;
 
 public class LowCovBucket
 {

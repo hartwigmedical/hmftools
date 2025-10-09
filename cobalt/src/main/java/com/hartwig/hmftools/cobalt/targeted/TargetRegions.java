@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +11,9 @@ import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormalise
 import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
+import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -56,6 +61,21 @@ public class TargetRegions implements CobaltScope
     public ResultsNormaliser finalNormaliser()
     {
         return new UnityNormaliser();
+    }
+
+    @Override
+    public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
+    {
+        int consolidationCount = ResultsConsolidator.calcConsolidationCount(medianReadDepth);
+
+        if(consolidationCount == 1)
+        {
+            CB_LOGGER.info("median read depth: {}, not using sparse consolidation", medianReadDepth);
+            return new NoOpConsolidator();
+        }
+
+        CB_LOGGER.info("median read depth: {}, sparse consolidation count: {}", medianReadDepth, consolidationCount);
+        return new LowCoverageConsolidator( consolidationCount);
     }
 
     @Override

@@ -41,7 +41,6 @@ public class GcBucketStatistics
 
     public Map<GCBucket, Double> bucketToMedianReadDepth()
     {
-        // todo test
         Map<GCBucket, Double> bucketToMedian = new HashMap<>();
         for (int i=0; i<101; i++)
         {

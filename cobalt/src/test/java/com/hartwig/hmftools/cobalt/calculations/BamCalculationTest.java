@@ -8,6 +8,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
@@ -93,6 +95,12 @@ public class BamCalculationTest extends CalculationsTestBase
         ResultsNormaliser createFinalNormaliser()
         {
             return FinalNormaliser;
+        }
+
+        @Override
+        ResultsConsolidator consolidator()
+        {
+            return new NoOpConsolidator();
         }
     }
 

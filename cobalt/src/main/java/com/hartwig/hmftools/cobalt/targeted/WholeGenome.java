@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cobalt.targeted;
 import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -30,5 +32,11 @@ public class WholeGenome implements CobaltScope
     public boolean onTarget(final Chromosome chromosome, final int position)
     {
         return true; //todo
+    }
+
+    @Override
+    public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
+    {
+        return new NoOpConsolidator();
     }
 }

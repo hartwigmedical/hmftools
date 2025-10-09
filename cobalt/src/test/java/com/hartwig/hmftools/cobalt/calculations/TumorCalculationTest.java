@@ -5,15 +5,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static org.mockito.Mockito.when;
 
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class TumorBamCalculationTest
+public class TumorCalculationTest
 {
-    private TumorBamCalculation Calculation;
+    private TumorCalculation Calculation;
 
     @Test
     public void createFinalNormaliser()
@@ -21,7 +20,7 @@ public class TumorBamCalculationTest
         ResultsNormaliser theLast = Mockito.mock(ResultsNormaliser.class);
         CobaltScope scope = Mockito.mock(CobaltScope.class);
         when(scope.finalNormaliser()).thenReturn(theLast);
-        Calculation = new TumorBamCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
+        Calculation = new TumorCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
         Assert.assertEquals(theLast, Calculation.createFinalNormaliser());
     }
 
@@ -31,14 +30,14 @@ public class TumorBamCalculationTest
         ReadDepthStatisticsNormaliser theMeanOne = Mockito.mock(ReadDepthStatisticsNormaliser.class);
         CobaltScope scope = Mockito.mock(CobaltScope.class);
         when(scope.medianByMeanNormaliser()).thenReturn(theMeanOne);
-        Calculation = new TumorBamCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
+        Calculation = new TumorCalculation(Mockito.mock(GenomeFilter.class), scope, V38);
         Assert.assertEquals(theMeanOne, Calculation.createReadDepthsNormaliser());
     }
 
     @Test
     public void createMegaBaseScaleNormaliser()
     {
-        Calculation = new TumorBamCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
+        Calculation = new TumorCalculation(Mockito.mock(GenomeFilter.class), Mockito.mock(CobaltScope.class), V38);
         Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(V38) instanceof DoNothingNormaliser);
     }
 }

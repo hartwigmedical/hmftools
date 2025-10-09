@@ -28,19 +28,15 @@ public class RecordMatcher
         if(mRecordsByName.containsKey(record.getReadName()))
         {
             SAMRecord match = mRecordsByName.remove(record.getReadName());
-            if (mRandom.nextDouble() <= FractionOfRecordsToKeep)
-            {
-                Retained += 2;
-                return List.of(record, match);
-            }
-            else
-            {
-                return List.of();
-            }
+            return List.of(record, match);
         }
         else
         {
-            mRecordsByName.put(record.getReadName(), record);
+            if (mRandom.nextDouble() <= FractionOfRecordsToKeep)
+            {
+                Retained += 2;
+                mRecordsByName.put(record.getReadName(), record);
+            }
             return List.of();
         }
     }
