@@ -178,9 +178,7 @@ public class ReadParseState
 
     public void moveToRefPosition(int targetPosition)
     {
-        if(mIsForward && mCurrentRefPosition >= targetPosition)
-            return;
-        else if(!mIsForward && mCurrentRefPosition <= targetPosition)
+        if((mIsForward && mCurrentRefPosition >= targetPosition) || (!mIsForward && mCurrentRefPosition <= targetPosition))
             return;
 
         while(mCurrentRefPosition != targetPosition && !mExhausted)

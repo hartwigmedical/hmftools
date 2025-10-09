@@ -175,6 +175,7 @@ public class IndelConsensusReads
             for(int r = 0; r < readCount; ++r)
             {
                 locationBases[r] = NO_BASE;
+                locationQuals[r] = 0;
             }
 
             for(int r = 0; r < readCount; ++r)

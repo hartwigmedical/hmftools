@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.collect.Cluster.clusterCount;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.sequencing.IlluminaBamUtils.getReadNameAttributes;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
+import static com.hartwig.hmftools.redux.consensus.BaseQualPair.INVALID;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import java.util.Collections;
@@ -75,6 +76,9 @@ public final class IlluminaRoutines
 
         BaseQualPair firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position, refGenome);
         BaseQualPair secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position, refGenome);
+
+        if(!firstBaseAndQual.isValid() && !secondBaseAndQual.isValid())
+            return INVALID;
 
         if(!firstBaseAndQual.isValid())
             return secondBaseAndQual;
@@ -176,7 +180,7 @@ public final class IlluminaRoutines
             }
         }
 
-        return BaseQualPair.INVALID;
+        return INVALID;
     }
 
     public static BaseQualPair determineBaseAndQual(
@@ -184,7 +188,7 @@ public final class IlluminaRoutines
     {
         BaseQualPair baseQualPair = checkCommonBaseAndQual(locationBases, locationQuals, chromosome, position, refGenome);
 
-        if(baseQualPair != BaseQualPair.INVALID)
+        if(baseQualPair != INVALID)
             return baseQualPair;
 
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
@@ -220,7 +224,7 @@ public final class IlluminaRoutines
 
         if(distinctBases.isEmpty())
         {
-            return BaseQualPair.INVALID;
+            return INVALID;
         }
 
         byte maxBase = distinctBases.get(0);

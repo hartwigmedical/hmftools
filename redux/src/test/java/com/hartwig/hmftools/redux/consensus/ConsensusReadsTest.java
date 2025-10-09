@@ -55,7 +55,6 @@ public class ConsensusReadsTest
         NEXT_BASE_MAP.put('C', 'A');
         NEXT_BASE_MAP.put('A', 'T');
         NEXT_BASE_MAP.put('T', 'G');
-
     }
 
     public static final String UMI_ID_1 = "TAGTAG";

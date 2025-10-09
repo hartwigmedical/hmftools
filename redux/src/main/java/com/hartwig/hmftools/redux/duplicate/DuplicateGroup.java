@@ -29,10 +29,10 @@ public class DuplicateGroup
     // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
     private final FragmentCoords mFragmentCoords;
 
-    // contains reads that have potentially been merged due to UMI merging, all of these will be used for consensus read building
+    // contains raw duplicate reads and those merged due to UMI matching and these will be used for consensus
     private final List<SAMRecord> mReads;
 
-    // contains reads that have been merged into this group due to jitter, these will not be used for consensus building
+    // contains reads that have been merged due to jitter (poly-G, UMI) but will not be used for consensus
     private final List<SAMRecord> mNonConsensusReads;
 
     // contains reads that have been merged into this group due to poly-g UMI tail, these will not be used for consensus building
