@@ -126,17 +126,6 @@ public class SbxDuplicateCollapser
         {
             for(DuplicateGroup duplicateGroup : duplicateGroups)
             {
-                /*
-                // check for special case of extra supplementaries for the same primary read
-                List<SAMRecord> extraSuppReads = extractSupplementaryDuplicates(duplicateGroup.reads());
-
-                for(SAMRecord read : extraSuppReads)
-                {
-                    // these will be dropped from the BAM
-                    duplicateGroup.reads().remove(read);
-                }
-                */
-
                 String key = collapseKey(duplicateGroup.fragmentCoordinates());
 
                 List<GroupInfo> groups = keyGroups.get(key);
@@ -147,21 +136,9 @@ public class SbxDuplicateCollapser
                     keyGroups.put(key, groups);
                 }
 
-                GroupInfo groupInfo;
-                if(duplicateGroup.reads().size() == 1)
-                {
-                    SAMRecord singleRead = duplicateGroup.reads().get(0);
-                    ReadInfo readInfo = new ReadInfo(singleRead, duplicateGroup.fragmentCoordinates());
-
-                    groupInfo = new GroupInfo(
-                            readInfo, readInfo.coordinates().PositionLower, readInfo.coordinates().PositionUpper, 1);
-                }
-                else
-                {
-                    groupInfo = new GroupInfo(
+                GroupInfo groupInfo = new GroupInfo(
                             duplicateGroup, duplicateGroup.fragmentCoordinates().PositionLower,
                             duplicateGroup.fragmentCoordinates().PositionUpper, duplicateGroup.reads().size());
-                }
 
                 groups.add(groupInfo);
             }
