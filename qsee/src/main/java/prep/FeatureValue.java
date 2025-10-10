@@ -1,17 +1,19 @@
 package prep;
 
-public class FeatureValue
+public class FeatureValue<T>
 {
-    public String mFeature;
-    public String mValue;
-    public DataType mDataType;
-    public FeatureType mFeatureType;
+    public String mName;
+    public T mValue;
+    public FeatureType mType;
 
-    public FeatureValue(String feature, String value, DataType dataType, FeatureType featureType)
+    public FeatureValue(String name, T value, FeatureType type)
     {
-        mFeature = feature;
+        mName = name;
         mValue = value;
-        mDataType = dataType;
-        mFeatureType = featureType;
+        mType = type;
+    }
+
+    public Class<?> getDataType() {
+        return mValue.getClass();
     }
 }

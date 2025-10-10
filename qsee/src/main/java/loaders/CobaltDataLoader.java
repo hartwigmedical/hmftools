@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 
-import prep.DataType;
 import prep.FeatureType;
 import prep.FeatureValue;
 import prep.PrepConfig;
@@ -25,9 +24,8 @@ public class CobaltDataLoader
         mConfig = config;
     }
 
-    public List<FeatureValue> loadCobaltGcMedians(String sampleId)
+    public List<FeatureValue<Double>> loadCobaltGcMedians(String sampleId)
     {
-
         try {
             String filePath = CobaltGcMedianFile.generateFilename(mConfig.getCobaltDir(sampleId), sampleId);
 
@@ -36,7 +34,7 @@ public class CobaltDataLoader
             Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
             double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
 
-            List<FeatureValue> featureValues = new ArrayList<>();
+            List<FeatureValue<Double>> featureValues = new ArrayList<>();
 
             for(GCBucket bucket : medianReadDepths.keySet())
             {
@@ -47,10 +45,9 @@ public class CobaltDataLoader
 
                 double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-                FeatureValue featureValue = new FeatureValue(
+                FeatureValue<Double> featureValue = new FeatureValue<>(
                         bucket.toString(),
-                        Double.toString(normalisedDepth),
-                        DataType.NUMBER,
+                        normalisedDepth,
                         FeatureType.COBALT_GC_MEDIAN
                 );
 
