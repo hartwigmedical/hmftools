@@ -589,19 +589,25 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         private fun mergeIdentical(vjGeneToVdjMap: Map<Pair<VJGeneType?, VJGeneType?>, List<VDJSequence>>, minBaseQuality: Byte,
                                    threadCount: Int): List<VDJSequence>
         {
-            val results = ArrayList<VDJSequence>()
             sLogger.debug("Merging identical VDJ sequences")
+
             // Naive multithreading because otherwise this step can take over an hour on samples with many sequences.
             // It's likely that a few genes have most of the sequences, which will limit the parallel speedup, but it's better than nothing.
-            TaskExecutor.executeRunnables(vjGeneToVdjMap.values.map { vdjs ->
-                Runnable {
-                    val merged = mergeIdentical(vdjs, minBaseQuality)
-                    synchronized(results) {
-                        results.addAll(merged)
-                    }
-                }},
-                threadCount)
-            return results
+
+            // Note we are careful to collect the results in a fixed order to produce deterministic results.
+            val threadResults = vjGeneToVdjMap.entries.map { ArrayList<VDJSequence>() }.toMutableList()
+            val runnables = vjGeneToVdjMap.entries.sortedWith(compareBy({ it.key.first }, { it.key.second }))
+                .map { it.value }
+                .withIndex()
+                .map { (index, vdjs) ->
+                    Runnable {
+                        val merged = mergeIdentical(vdjs, minBaseQuality)
+                        synchronized(threadResults) {
+                            threadResults[index] = merged
+                        }
+                    }}
+            TaskExecutor.executeRunnables(runnables, threadCount)
+            return threadResults.flatten()
         }
 
         // for VDJ sequences that are identical, we put them together
