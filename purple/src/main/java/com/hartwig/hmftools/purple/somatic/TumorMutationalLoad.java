@@ -22,13 +22,16 @@ import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 public class TumorMutationalLoad
 {
     private final TargetRegionsData mTargetRegions;
+    private final boolean mTumorOnly;
     private double mLoad;
     private double mBurden;
     private int mUnclearVariants;
 
-    public TumorMutationalLoad(final TargetRegionsData targetRegions)
+    public TumorMutationalLoad(final TargetRegionsData targetRegions, boolean tumorOnly)
     {
         mTargetRegions = targetRegions;
+        mTumorOnly = tumorOnly;
+
         mLoad = 0;
         mBurden = 0;
         mUnclearVariants = 0;
@@ -99,16 +102,23 @@ public class TumorMutationalLoad
         if(gnomadFreq > 0)
             return;
 
-        SomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
-                SomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
+        if(mTumorOnly)
+        {
+            SomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
+                    SomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
 
-        if(somaticLikelihood == HIGH)
+            if(somaticLikelihood == HIGH)
+            {
+                ++mBurden;
+            }
+            else if(somaticLikelihood == MEDIUM)
+            {
+                ++mUnclearVariants;
+            }
+        }
+        else
         {
             ++mBurden;
-        }
-        else if(somaticLikelihood == MEDIUM)
-        {
-            ++mUnclearVariants;
         }
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
