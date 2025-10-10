@@ -463,7 +463,7 @@ class ImgtGeneCurator
             {
                 sLogger.debug("Processing alignments for gene {}", geneData)
 
-                val alignmentsWithLocations = alignments[k]
+                val alignmentsWithLocations = (alignments[k] ?: emptyList())
                     .filter { a -> a.editDistance <= ALIGNMENT_MAX_MISMATCH &&
                             a.queryAlignEnd - a.queryAlignStart + 1 >= a.querySeq.length - ALIGNMENT_MAX_MISMATCH }
                     .mapNotNull { a ->
