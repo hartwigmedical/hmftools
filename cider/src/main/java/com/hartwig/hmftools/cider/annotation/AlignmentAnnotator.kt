@@ -39,7 +39,7 @@ class AlignmentAnnotator
     private val mVdjGenes: Map<Pair<Contig, Strand>, List<IgTcrGene>>
 
     // class to help associate the data back
-    data class AlignmentRunData(val vdj: VDJSequence, val key: Int, val querySeqRange: IntRange, val querySeq: String)
+    data class AlignmentRunData(val vdj: VDJSequence, val querySeqRange: IntRange, val querySeq: String)
 
     constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
@@ -82,39 +82,16 @@ class AlignmentAnnotator
     {
         sLogger.info("Running alignment annotation")
 
-        // assign a key to each VDJ, such that we can keep track of them
-        var key = 0
-        val alignmentRunDataMap : MutableMap<Int, AlignmentRunData> = HashMap()
-
-        for (vdj in vdjList)
-        {
-            val querySeqRange = alignmentQuerySeqRange(vdj)
-            val alignmentRunData = AlignmentRunData(vdj,
-                key++,
-                querySeqRange,
-                vdj.layout.consensusSequenceString().substring(querySeqRange))
-            alignmentRunDataMap[alignmentRunData.key] = alignmentRunData
+        val alignmentRunDatas = vdjList.map {
+            val querySeqRange = alignmentQuerySeqRange(it)
+            AlignmentRunData(it, querySeqRange, it.layout.consensusSequenceString().substring(querySeqRange))
         }
 
         val alignmentResults = AlignmentUtil.runBwaMem(
-            alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
+            alignmentRunDatas.map { it.querySeq },
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
-        val vdjToAlignment = HashMap<AlignmentRunData, ArrayList<AlignmentUtil.BwaMemAlignment>>()
-        for ((vdjKey, alignments) in alignmentResults.entries)
-        {
-            val alignmentRunData = alignmentRunDataMap[vdjKey]
-
-            if (alignmentRunData == null)
-            {
-                sLogger.fatal("error processing alignment results: cannot find key: {}", vdjKey)
-                throw RuntimeException("error processing alignment results: cannot find key: $vdjKey")
-            }
-
-            vdjToAlignment.computeIfAbsent(alignmentRunData) { ArrayList() }.addAll(alignments)
-        }
-
-        val annotations = processAlignments(alignmentRunDataMap.values, vdjToAlignment)
+        val annotations = processAlignments(alignmentRunDatas, alignmentResults)
 
         AlignmentMatchTsvWriter.write(outputDir, sampleId, annotations)
 
@@ -122,16 +99,15 @@ class AlignmentAnnotator
     }
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
-    // NOTE: we cannot use alignments.keys, as it might not include some VDJs that returned no match
-    private fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
-                          alignments: Map<AlignmentRunData, List<AlignmentUtil.BwaMemAlignment>>)
+    private fun processAlignments(alignmentRunDataList: List<AlignmentRunData>, alignments: List<List<AlignmentUtil.BwaMemAlignment>>)
     : Collection<AlignmentAnnotation>
     {
         sLogger.debug("Processing alignments")
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
-        for (runData in alignmentRunDataList)
+        require(alignmentRunDataList.size == alignments.size)
+        for ((runData, vdjAlignments) in alignmentRunDataList.zip(alignments))
         {
-            alignmentAnnotations.add(processAlignments(runData, alignments[runData] ?: emptyList()))
+            alignmentAnnotations.add(processAlignments(runData, vdjAlignments))
         }
         sLogger.debug("Done processing alignments")
         return alignmentAnnotations

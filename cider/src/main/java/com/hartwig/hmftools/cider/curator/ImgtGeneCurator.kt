@@ -92,13 +92,14 @@ class ImgtGeneCurator
 
         BwaUtils.loadAlignerLibrary(bwaLibPath)
 
-        val imgtGeneList: List<ImgtGene> = readImgtGenesFromFasta(inputImgtFasta)
+        val imgtGeneList = readImgtGenesFromFasta(inputImgtFasta)
+        imgtGeneList.addAll(getCustomGenes())
 
         val refGenomeDict = "$refGenomePath.dict"
-        val geneLocations = findGenomicLocatons(imgtGeneList, refGenomeDict, bwaIndexImagePath, refGenomeVersion, threadCount, ensemblDataCache)
+        val geneLocations = findGeneLocations(imgtGeneList, refGenomeDict, bwaIndexImagePath, refGenomeVersion, threadCount, ensemblDataCache)
+        require(geneLocations.size == imgtGeneList.size)
 
         val igTcrGeneList = ArrayList<IgTcrGene>()
-
         for ((geneData, geneLocation) in imgtGeneList.zip(geneLocations))
         {
             processImgtGene(geneData, geneLocation)?.let { igTcrGeneList.add(it) }
@@ -209,11 +210,11 @@ class ImgtGeneCurator
                 region = igTcrRegionFromImgtCode(tokens[4]), sequenceWithGaps = sequenceWithGaps, partial = partial)
         }
 
-        fun readImgtGenesFromFasta(imgtFastaPath: String): List<ImgtGene>
+        fun readImgtGenesFromFasta(imgtFastaPath: String): ArrayList<ImgtGene>
         {
             val imgtFastaFile = FastaSequenceFile(File(imgtFastaPath), false)
 
-            val imgtGeneList: MutableList<ImgtGene> = ArrayList()
+            val imgtGeneList = ArrayList<ImgtGene>()
 
             while (true)
             {
@@ -228,19 +229,20 @@ class ImgtGeneCurator
                 sLogger.info("imgt gene: {}", imgtGeneData)
             }
 
-            // add IGKINTR and IGKDEL
-            imgtGeneList.add(ImgtGene(
-                geneName = VJGeneType.IGKINTR, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
-                region = IgTcrRegion.V_REGION, sequenceWithGaps = IGKINTR_SEQ
-            ))
-
-            imgtGeneList.add(ImgtGene(
-                geneName = VJGeneType.IGKDEL, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
-                region = IgTcrRegion.J_REGION, sequenceWithGaps = IGKDEL_SEQ
-            ))
-
             return imgtGeneList
         }
+
+        fun getCustomGenes(): List<ImgtGene> =
+            // add IGKINTR and IGKDEL
+            listOf(
+                ImgtGene(
+                    geneName = VJGeneType.IGKINTR, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
+                    region = IgTcrRegion.V_REGION, sequenceWithGaps = IGKINTR_SEQ
+                ),
+                ImgtGene(
+                    geneName = VJGeneType.IGKDEL, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
+                    region = IgTcrRegion.J_REGION, sequenceWithGaps = IGKDEL_SEQ
+                ))
 
         fun processImgtGene(geneData: ImgtGene, geneLocation: GenomicLocation?): IgTcrGene?
         {
@@ -255,8 +257,8 @@ class ImgtGeneCurator
 
             val anchorData: Pair<String, GenomicLocation?>? = when (region)
             {
-                IgTcrRegion.V_REGION -> findVAnchor(geneData)
-                IgTcrRegion.J_REGION -> findJAnchor(geneData)
+                IgTcrRegion.V_REGION -> findVAnchor(geneData, geneLocation)
+                IgTcrRegion.J_REGION -> findJAnchor(geneData, geneLocation)
                 else -> null
             }
 
@@ -274,7 +276,7 @@ class ImgtGeneCurator
             )
         }
 
-        fun findVAnchor(geneData: ImgtGene): Pair<String, GenomicLocation?>?
+        fun findVAnchor(geneData: ImgtGene, geneLocation: GenomicLocation?): Pair<String, GenomicLocation?>?
         {
             // some sequences are longer
             val seqWithGaps = geneData.sequenceWithGaps
@@ -324,8 +326,6 @@ class ImgtGeneCurator
 
             var anchorLocation: GenomicLocation? = null
 
-            val geneLocation = geneData.genomicLocation
-
             if (geneLocation != null && anchorIndex != -1)
             {
                 anchorLocation = if (geneLocation.strand == Strand.FORWARD)
@@ -359,7 +359,7 @@ class ImgtGeneCurator
             return Pair(anchor, anchorLocation)
         }
 
-        fun findJAnchor(geneData: ImgtGene): Pair<String, GenomicLocation?>?
+        fun findJAnchor(geneData: ImgtGene, geneLocation: GenomicLocation?): Pair<String, GenomicLocation?>?
         {
             // J gene rules
             // 30 base sequence starting with TGGGG (W) or TTTG and TTCG (F)
@@ -384,8 +384,6 @@ class ImgtGeneCurator
             }
 
             var anchorLocation: GenomicLocation? = null
-
-            val geneLocation = geneData.genomicLocation
 
             if (geneLocation != null)
             {
@@ -413,64 +411,65 @@ class ImgtGeneCurator
             return Pair(anchor, anchorLocation)
         }
 
-        fun findGenomicLocatons(imgtGeneList: List<ImgtGene>, refGenomeDict: String, bwaIndexImage: String,
-                                refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
+        fun findGeneLocations(genes: List<ImgtGene>, refGenomeDict: String, bwaIndexImage: String,
+                              refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
             : List<GenomicLocation?>
         {
-            val constantGenes = imgtGeneList.filter { gene -> gene.region == IgTcrRegion.CONSTANT }
-            val nonConstantGenes = imgtGeneList.filter { gene -> gene.region != IgTcrRegion.CONSTANT }
+            // First, apply any hardcoded location overrides, which take precedence.
+            val locations = genes.map { ImgtGeneCuratorSettings.getGenomicLocationOverride(it.geneName, refGenomeVersion) }
+                .toMutableList()
 
+            // Find locations of constant genes.
+            for ((i, gene) in genes.withIndex())
+            {
+                if (locations[i] == null && gene.region == IgTcrRegion.CONSTANT)
+                {
+                    val ensemblGene = ensemblDataCache.getGeneDataByName(gene.geneName)
+                    if (ensemblGene != null)
+                    {
+                        locations[i] = toGenomicLocation(ensemblGene, refGenomeVersion)
+                    }
+                }
+            }
+
+            val nonConstantGenes = genes.withIndex().filter { locations[it.index] == null && it.value.region != IgTcrRegion.CONSTANT }
             // V / D / J gene use alignment, constant genes use ensembl
             // reason is that ensembl is easier, and we do not need the alt locations for the constant genes. Another reason
             // is that we do not need to be very precise with the location of the anchor for constant genes
             // if we use ensembl for V / J gene, we need to use the fasta file to validate the anchor location is precise
-            alignForGenomicLocation(nonConstantGenes, refGenomeDict, bwaIndexImage, refGenomeVersion, numThreads, ensemblDataCache)
-
-            for (geneData in constantGenes)
+            val nonConstantGeneLocations = alignForGenomicLocation(
+                nonConstantGenes.map { it.value }, refGenomeDict, bwaIndexImage, refGenomeVersion, numThreads, ensemblDataCache)
+            for ((gene, location) in nonConstantGenes.zip(nonConstantGeneLocations))
             {
-                val ensemblGene = ensemblDataCache.getGeneDataByName(geneData.geneName) ?: continue
-                geneData.genomicLocation = toGenomicLocation(ensemblGene, refGenomeVersion)
+                locations[gene.index] = location
             }
 
-            // also apply genomic location overrides
-            for (geneData in imgtGeneList)
-            {
-                if (geneData.genomicLocation == null)
-                {
-                    val geneLocationOverride = ImgtGeneCuratorSettings.getGenomicLocationOverride(geneData.geneName, refGenomeVersion)
-                    if (geneLocationOverride != null)
-                    {
-                        geneData.genomicLocation = geneLocationOverride
-                    }
-                }
-            }
+            return locations
         }
 
         // for each imgt gene segment, use alignment to find the genomic location
         fun alignForGenomicLocation(imgtGeneList: List<ImgtGene>, refGenomeDict: String, bwaIndexImage: String,
                                     refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
+            : List<GenomicLocation?>
         {
-            // assign a key to each VDJ, such that we can keep track of them
-            var key = 0
-            val keyToGeneDataMap: Map<Int, ImgtGene> = imgtGeneList.associateBy { ++key }
+            val locations = ArrayList<GenomicLocation?>()
 
             val alignments = AlignmentUtil.runBwaMem(
-                keyToGeneDataMap.mapValues { geneData -> geneData.value.sequenceWithoutGaps },
+                imgtGeneList.map { it.sequenceWithoutGaps },
                 refGenomeDict, bwaIndexImage,
                 0, numThreads)
 
-            for ((k, geneData) in keyToGeneDataMap)
+            for ((geneData, geneAlignments) in imgtGeneList.zip(alignments))
             {
                 sLogger.debug("Processing alignments for gene {}", geneData)
 
-                val alignmentsWithLocations = (alignments[k] ?: emptyList())
-                    .filter { a -> a.editDistance <= ALIGNMENT_MAX_MISMATCH &&
-                            a.queryAlignEnd - a.queryAlignStart + 1 >= a.querySeq.length - ALIGNMENT_MAX_MISMATCH }
-                    .mapNotNull { a ->
-                        AlignmentUtil.toGenomicLocation(a)?.let { location -> Pair(a, location) }
-                    }
-                    // Order by alignment score then primary assembly first
-                    .sortedWith(compareBy( { p -> -p.first.alignmentScore }, { p -> !p.second.inPrimaryAssembly }))
+                val alignmentsWithLocations = geneAlignments
+                    .filter { it.editDistance <= ALIGNMENT_MAX_MISMATCH &&
+                            it.queryAlignEnd - it.queryAlignStart + 1 >= it.querySeq.length - ALIGNMENT_MAX_MISMATCH }
+                    .mapNotNull {AlignmentUtil.toGenomicLocation(it)?.let { location -> Pair(it, location) } }
+                    // Order by alignment score then primary assembly first, with position as a tie-breaker
+                    .sortedWith(compareBy(
+                        { -it.first.alignmentScore }, { !it.second.inPrimaryAssembly }, { it.first.refContig }, { it.first.refStart }))
 
                 val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
                 var bestAlignment: AlignmentUtil.BwaMemAlignment? = null
@@ -502,6 +501,7 @@ class ImgtGeneCurator
                     }
                 }
 
+                var location: GenomicLocation? = null
                 if (bestAlignment == null)
                 {
                     if (ensemblGene != null)
@@ -511,17 +511,20 @@ class ImgtGeneCurator
                         if (geneData.region == IgTcrRegion.D_REGION)
                         {
                             // use ensembl for D region
-                            geneData.genomicLocation = toGenomicLocation(ensemblGene, refGenomeVersion)
+                            location = toGenomicLocation(ensemblGene, refGenomeVersion)
                         }
                     }
                     sLogger.info("gene: {}*{}, no full match", geneData.geneName, geneData.allele)
                 }
                 else
                 {
-                    geneData.genomicLocation = alignmentToQueryGenomicLocation(bestAlignment)
-                    sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestAlignment, geneData.genomicLocation)
+                    location = alignmentToQueryGenomicLocation(bestAlignment)
+                    sLogger.info("gene: {}*{}, match: {}, gene loc: {}", geneData.geneName, geneData.allele, bestAlignment, location)
                 }
+                locations.add(location)
             }
+
+            return locations
         }
 
         fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
