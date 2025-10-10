@@ -16,6 +16,14 @@ import org.apache.logging.log4j.Logger;
 
 public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 {
+    public final String mTag;
+
+    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
+    {
+        super(chromosome, posStart, posEnd);
+        this.mTag = mTag;
+    }
+
     private static final Logger LOGGER = LogManager.getLogger(TaggedRegion.class);
 
     public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(final String bedFile)
@@ -40,14 +48,6 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
             LOGGER.error("failed to load BED file({}): {}", bedFile, e.toString());
             return null;
         }
-    }
-
-    public final String mTag;
-
-    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
-    {
-        super(chromosome, posStart, posEnd);
-        this.mTag = mTag;
     }
 
     public String formatted()
