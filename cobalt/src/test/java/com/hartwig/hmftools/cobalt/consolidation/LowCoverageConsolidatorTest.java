@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.cobalt.consolidation;
 
-import static com.hartwig.hmftools.cobalt.CobaltColumns.ENCODED_CHROMOSOME_POS;
-import static com.hartwig.hmftools.cobalt.CobaltColumns.POSITION;
-import static com.hartwig.hmftools.cobalt.CobaltColumns.RATIO;
-import static com.hartwig.hmftools.cobalt.CobaltColumns.READ_GC_CONTENT;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 
@@ -13,36 +9,14 @@ import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
-import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
-import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-import org.junit.Before;
 import org.junit.Test;
-
-import tech.tablesaw.api.BooleanColumn;
-import tech.tablesaw.api.DoubleColumn;
-import tech.tablesaw.api.IntColumn;
-import tech.tablesaw.api.LongColumn;
-import tech.tablesaw.api.Row;
-import tech.tablesaw.api.StringColumn;
-import tech.tablesaw.api.Table;
 
 public class LowCoverageConsolidatorTest extends CalculationsTestBase
 {
-    private ChromosomePositionCodec Codec;
-
-    @Before
-    public void setup()
-    {
-        Codec = new ChromosomePositionCodec();
-    }
-
     @Test
     public void ratioAndGcAreAveragedInConsolidation()
     {
@@ -59,16 +33,9 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
         ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
 
-        Table asTable = toTable(ratios);
-
-        Multimap<String, LowCovBucket> consolidated = LowCoverageRatioMapper.calcConsolidateBuckets(asTable, 8.0);
-        assert consolidated != null;
-        Table consolidatedTable = new LowCoverageRatioMapper(consolidated, Codec).mapRatios(asTable);
-        ListMultimap<Chromosome, BamRatio> roundTripped = toRatios(consolidatedTable);
-
-        assertEquals(2, roundTripped.keySet().size());
-        List<BamRatio> ratios1 = roundTripped.get(_1);
-        List<BamRatio> ratios2 = roundTripped.get(_2);
+        assertEquals(2, result.keySet().size());
+        List<BamRatio> ratios1 = result.get(_1);
+        List<BamRatio> ratios2 = result.get(_2);
         assertEquals(4, ratios1.size());
         assertEquals(4, ratios2.size());
         assertEquals(4001, ratios1.get(0).Position);
@@ -86,18 +53,51 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(35001, ratios1.get(3).Position);
         assertEquals(10.345, ratios1.get(3).ratio(), 0.0001);
         assertEquals(0.745, ratios1.get(3).gcContent(), 0.0001);
+    }
 
-        assertEquals(roundTripped, result);
+    @Test
+    public void useConsolidationCount()
+    {
+        ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
+        for(int i = 0; i < 40; i++)
+        {
+            int position = i * 1000 + 1;
+            double depth = 10 + i * 0.01;
+            double gc = 0.40 + i * 0.01;
+            ratios.put(_1, br(_1, position, depth, gc, true));
+            ratios.put(_2, br(_2, position, depth, gc, true));
+        }
+        int consolidationCount = ResultsConsolidator.calcConsolidationCount(4.0);
+        LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
+        ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
+
+        assertEquals(2, result.keySet().size());
+        List<BamRatio> ratios1 = result.get(_1);
+        List<BamRatio> ratios2 = result.get(_2);
+        assertEquals(2, ratios1.size());
+        assertEquals(2, ratios2.size());
+        assertEquals(9001, ratios1.get(0).Position);
+        assertEquals(10.095, ratios1.get(0).ratio(), 0.0001);
+        assertEquals(0.495, ratios1.get(0).gcContent(), 0.0001);
+        assertEquals(9001, ratios2.get(0).Position);
+        assertEquals(10.095, ratios2.get(0).ratio(), 0.0001);
+        assertEquals(0.495, ratios2.get(0).gcContent(), 0.0001);
+        assertEquals(30001, ratios1.get(1).Position);
+        assertEquals(10.295, ratios1.get(1).ratio(), 0.0001);
+        assertEquals(0.695, ratios1.get(1).gcContent(), 0.0001);
+        assertEquals(30001, ratios2.get(1).Position);
+        assertEquals(10.295, ratios2.get(1).ratio(), 0.0001);
+        assertEquals(0.695, ratios2.get(1).gcContent(), 0.0001);
     }
 
     @Test
     public void maskedRatiosAreSkippedInConsolidation()
     {
         ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
-        for (int i = 0; i < 200; i++)
+        for(int i = 0; i < 200; i++)
         {
             int position = i * 1000 + 1;
-            if (i % 5 == 0)
+            if(i % 5 == 0)
             {
                 ratios.put(_1, br(_1, position, 10.0, 0.5, true));
             }
@@ -110,15 +110,8 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
         ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
 
-        Table asTable = toTable(ratios);
-
-        Multimap<String, LowCovBucket> consolidated = LowCoverageRatioMapper.calcConsolidateBuckets(asTable, 8.0);
-        assert consolidated != null;
-        Table consolidatedTable = new LowCoverageRatioMapper(consolidated, Codec).mapRatios(asTable);
-        ListMultimap<Chromosome, BamRatio> roundTripped = toRatios(consolidatedTable);
-
-        assertEquals(1, roundTripped.keySet().size());
-        List<BamRatio> ratios1 = roundTripped.get(_1);
+        assertEquals(1, result.keySet().size());
+        List<BamRatio> ratios1 = result.get(_1);
         assertEquals(4, ratios1.size());
         assertEquals(23001, ratios1.get(0).Position);
         assertEquals(10.0, ratios1.get(0).ratio(), 0.0001);
@@ -128,18 +121,16 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(0.5, ratios1.get(1).gcContent(), 0.0001);
         assertEquals(122001, ratios1.get(2).Position);
         assertEquals(172001, ratios1.get(3).Position);
-
-        assertEquals(roundTripped, result);
     }
 
     @Test
     public void consolidatedRegionsAreLimitedInExtent()
     {
         ListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
-        for (int i = 0; i < 200; i++)
+        for(int i = 0; i < 200; i++)
         {
             int position = i * 100_000 + 1;
-            if (i % 10 == 0)
+            if(i % 10 == 0)
             {
                 ratios.put(_1, br(_1, position, 10.0, 0.5, true));
             }
@@ -153,15 +144,8 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
         ListMultimap<Chromosome, BamRatio> result = consolidator.consolidate(ratios);
 
-        Table asTable = toTable(ratios);
-
-        Multimap<String, LowCovBucket> consolidated = LowCoverageRatioMapper.calcConsolidateBuckets(asTable, 8.0);
-        assert consolidated != null;
-        Table consolidatedTable = new LowCoverageRatioMapper(consolidated, Codec).mapRatios(asTable);
-        ListMultimap<Chromosome, BamRatio> roundTripped = toRatios(consolidatedTable);
-
-        assertEquals(1, roundTripped.keySet().size());
-        List<BamRatio> ratios1 = roundTripped.get(_1);
+        assertEquals(1, result.keySet().size());
+        List<BamRatio> ratios1 = result.get(_1);
         assertEquals(7, ratios1.size());
         assertEquals(1_000_001, ratios1.get(0).Position);
         assertEquals(4_000_001, ratios1.get(1).Position);
@@ -170,45 +154,45 @@ public class LowCoverageConsolidatorTest extends CalculationsTestBase
         assertEquals(13_000_001, ratios1.get(4).Position);
         assertEquals(16_000_001, ratios1.get(5).Position);
         assertEquals(18_500_001, ratios1.get(6).Position);
-
-        assertEquals(roundTripped, result);
     }
 
-    private Table toTable(ListMultimap<Chromosome, BamRatio> ratios)
+    @Test
+    public void boundariesAreReused()
     {
-        Table table = Table.create(
-                StringColumn.create(CobaltColumns.CHROMOSOME),
-                LongColumn.create(ENCODED_CHROMOSOME_POS),
-                DoubleColumn.create(RATIO),
-                DoubleColumn.create(READ_GC_CONTENT),
-                BooleanColumn.create("isAutosome"),
-                IntColumn.create(POSITION));
-
-        ratios.keySet().stream().sorted().forEach(chromosome -> {
-            List<BamRatio> ratiosForChromosome = ratios.get(chromosome);
-            ratiosForChromosome.forEach(bamRatio ->
+        ListMultimap<Chromosome, BamRatio> tumorRatios = ArrayListMultimap.create();
+        for(int i = 0; i < 1000; i++)
+        {
+            int position = i * 1000 + 1;
+            if(i % 10 == 0)
             {
-                Row bucketRow = table.appendRow();
-                bucketRow.setString(CobaltColumns.CHROMOSOME, chromosome.contig());
-                bucketRow.setLong(ENCODED_CHROMOSOME_POS, Codec.encodeChromosomePosition(chromosome.contig(), bamRatio.Position));
-                bucketRow.setDouble(RATIO, bamRatio.ratio());
-                bucketRow.setDouble(READ_GC_CONTENT, bamRatio.gcContent());
-                bucketRow.setInt(POSITION, bamRatio.Position);
-                bucketRow.setBoolean("isAutosome", true);
-            });
-        });
-        return table;
-    }
+                tumorRatios.put(_1, br(_1, position, 10.0, 0.5, true));
+                tumorRatios.put(_2, br(_2, position, 12.0, 0.52, true));
+            }
+            else
+            {
+                tumorRatios.put(_1, br(_1, position, -1.0, 0.4, true));
+                tumorRatios.put(_2, br(_2, position, -1.0, 0.42, true));
+            }
+        }
 
-    private ListMultimap<Chromosome, BamRatio>  toRatios(Table table)
-    {
-        ArrayListMultimap<Chromosome, BamRatio> ratios = ArrayListMultimap.create();
-        table.forEach(row -> {
-            Chromosome chr = HumanChromosome.fromString(row.getString(CobaltColumns.CHROMOSOME));
-            DepthReading depthReading = new DepthReading(chr.contig(), row.getInt(POSITION), row.getDouble(RATIO), row.getDouble(READ_GC_CONTENT) );
-            BamRatio ratio = new BamRatio(chr, depthReading, true);
-            ratios.put(chr, ratio);
-        });
-        return ratios;
+        int consolidationCount = ResultsConsolidator.calcConsolidationCount(8.0);
+        LowCoverageConsolidator consolidator = new LowCoverageConsolidator(consolidationCount);
+        ListMultimap<Chromosome, BamRatio> tumCons = consolidator.consolidate(tumorRatios);
+
+        ListMultimap<Chromosome, BamRatio> referenceRatios = ArrayListMultimap.create();
+        for(int i = 0; i < 1000; i++)
+        {
+            int position = i * 1000 + 1;
+            referenceRatios.put(_1, br(_1, position, 11.0, 0.51, true));
+            referenceRatios.put(_2, br(_2, position, 13.0, 0.53, true));
+        }
+        ListMultimap<Chromosome, BamRatio> refCons = consolidator.consolidate(referenceRatios);
+
+        List<Integer> consolidatedTumorRatioPositionsChr1 = tumCons.get(_1).stream().map(bamRatio -> bamRatio.Position).toList();
+        List<Integer> consolidatedTumorRatioPositionsChr2 = tumCons.get(_2).stream().map(bamRatio -> bamRatio.Position).toList();
+        List<Integer> consolidatedRefRatioPositionsChr1 = refCons.get(_1).stream().map(bamRatio -> bamRatio.Position).toList();
+        List<Integer> consolidatedRefRatioPositionsChr2 = refCons.get(_2).stream().map(bamRatio -> bamRatio.Position).toList();
+        assertEquals(consolidatedTumorRatioPositionsChr1, consolidatedRefRatioPositionsChr1);
+        assertEquals(consolidatedTumorRatioPositionsChr2, consolidatedRefRatioPositionsChr2);
     }
 }

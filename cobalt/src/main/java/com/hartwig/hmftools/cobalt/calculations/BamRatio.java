@@ -39,6 +39,16 @@ public class BamRatio
         Included = true;
     }
 
+    public BamRatio(Chromosome chromosome, int position, double readDepth, double ratio, double gcContent)
+    {
+        mChromosome = chromosome;
+        Position = position;
+        mReadDepth = readDepth;
+        Ratio = ratio;
+        GcContent = gcContent;
+        Included = true;
+    }
+
     public void normaliseForGc(double medianReadDepthForGcBucket)
     {
         normalise(medianReadDepthForGcBucket);
@@ -76,6 +86,11 @@ public class BamRatio
         return DiploidAdjustedRatio;
     }
 
+    public void setRatio(double ratio)
+    {
+        Ratio = ratio;
+    }
+
     private void normalise(final double factor)
     {
         if (!Included | Ratio <= 0)
@@ -92,6 +107,11 @@ public class BamRatio
         {
             Ratio = Ratio / factor;
         }
+    }
+
+    public int position()
+    {
+        return Position;
     }
 
     public double readDepth()
@@ -117,17 +137,13 @@ public class BamRatio
             return false;
         }
         final BamRatio bamRatio = (BamRatio) o;
-        return Position == bamRatio.Position && Double.compare(mReadDepth, bamRatio.mReadDepth) == 0
-                && Double.compare(Ratio, bamRatio.Ratio) == 0
-                && Double.compare(DiploidAdjustedRatio, bamRatio.DiploidAdjustedRatio) == 0
-                && Double.compare(GcContent, bamRatio.GcContent) == 0 && Included == bamRatio.Included
-                && Objects.equals(mChromosome, bamRatio.mChromosome);
+        return Position == bamRatio.Position && Objects.equals(mChromosome, bamRatio.mChromosome);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(mChromosome, Position, mReadDepth, Ratio, DiploidAdjustedRatio, GcContent, Included);
+        return Objects.hash(mChromosome, Position);
     }
 
     @Override

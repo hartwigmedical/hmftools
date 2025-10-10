@@ -12,6 +12,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -84,6 +85,13 @@ public class TargetRegionsTest
         assertFalse(enricher.onTarget(_1, 8_000));
 
         assertFalse(enricher.onTarget(_3, 5_001));
+    }
+
+    @Test
+    public void resultsConsolidator()
+    {
+        assertTrue(enricher.resultsConsolidator(0.67) instanceof NoOpConsolidator);
+        assertTrue(enricher.resultsConsolidator(670.0) instanceof NoOpConsolidator);
     }
 
     @Test

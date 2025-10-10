@@ -6,7 +6,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 public class TumorCalculation extends BamCalculation
 {
-
     private ResultsConsolidator mResultsConsolidator;
     public TumorCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
@@ -26,9 +25,9 @@ public class TumorCalculation extends BamCalculation
     @Override
     ResultsConsolidator consolidator()
     {
-        if (mResultsConsolidator != null)
+        if (mResultsConsolidator == null)
         {
-            mResultsConsolidator = Scope.resultsConsolidator(MeanNormaliser.readDepthMean());
+            mResultsConsolidator = Scope.resultsConsolidator(MeanNormaliser.readDepthMedian());
         }
         return mResultsConsolidator;
     }

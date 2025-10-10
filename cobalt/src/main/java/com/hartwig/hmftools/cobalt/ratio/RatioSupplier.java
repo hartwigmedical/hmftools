@@ -421,11 +421,11 @@ public class RatioSupplier
 
     public static void printTable(Table table, String fileName)
     {
-        if (table != null)
+        if (table == null)
         {
             return;
         }
-        File dir = new File("/Users/timlavers/work/junk/rubbish/colo_chr21");
+        File dir = new File("/Users/timlavers/work/junk/outputs");
         dir.mkdirs();
         File outputFile = new File(dir, fileName + ".tsv");
 

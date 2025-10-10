@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
@@ -35,6 +37,14 @@ public class WholeGenomeTest
         check(_2, 4001);
         check(_3, 1);
         check(_3, 9001);
+    }
+
+    @Test
+    public void resultsConsolidator()
+    {
+        assertTrue(scope.resultsConsolidator(7.9) instanceof LowCoverageConsolidator);
+        assertTrue(scope.resultsConsolidator(8.0) instanceof LowCoverageConsolidator);
+        assertTrue(scope.resultsConsolidator(8.1) instanceof NoOpConsolidator);
     }
 
     @Test

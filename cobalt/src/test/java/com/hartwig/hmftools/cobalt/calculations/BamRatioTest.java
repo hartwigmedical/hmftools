@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
@@ -192,5 +194,53 @@ public class BamRatioTest
     private void checkBlanked(BamRatio ratio)
     {
         assertEquals(-1.0, ratio.ratio(), 0.001);
+    }
+
+    @Test
+    public void testEquals()
+    {
+        // Same objects should be equal
+        BamRatio ratio1 = new BamRatio(_1, readDepth, true);
+        BamRatio ratio2 = new BamRatio(_1, readDepth, true);
+        assertEquals(ratio1, ratio2);
+
+        // Different chromosome
+        BamRatio differentChromosome = new BamRatio(_2, new DepthReading("2", 1001, 82, 0.49), true);
+        assertNotEquals(ratio1, differentChromosome);
+
+        // Different position
+        BamRatio differentPosition = new BamRatio(_1, new DepthReading("1", 2001, 82, 0.49), true);
+        assertNotEquals(ratio1, differentPosition);
+
+        // Different read depth
+        BamRatio differentReadDepth = new BamRatio(_1, new DepthReading("1", 1001, 100, 0.49), true);
+        assertEquals(ratio1, differentReadDepth);
+
+        // Different GC content
+        BamRatio differentGcContent = new BamRatio(_1, new DepthReading("1", 1001, 82, 0.6), true);
+        assertEquals(ratio1, differentGcContent);
+
+        // Different included status
+        BamRatio differentIncluded = new BamRatio(_1, readDepth, false);
+        assertEquals(ratio1, differentIncluded);
+
+        // Different diploid adjusted ratio
+        BamRatio differentDiploidRatio = new BamRatio(_1, readDepth, true);
+        differentDiploidRatio.setDiploidAdjustedRatio(2.0);
+        assertEquals(ratio1, differentDiploidRatio);
+
+        // Null comparison
+        assertNotEquals(null, ratio1);
+
+        // Different class comparison
+        assertNotEquals("Not a BamRatio", ratio1);
+    }
+
+    @Test
+    public void testHashCode()
+    {
+        BamRatio ratio1 = new BamRatio(_1, readDepth, true);
+        BamRatio ratio2 = new BamRatio(_1, readDepth, true);
+        assertEquals(ratio1.hashCode(), ratio2.hashCode());
     }
 }

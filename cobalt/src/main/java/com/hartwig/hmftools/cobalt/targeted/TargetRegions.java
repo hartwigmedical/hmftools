@@ -28,19 +28,19 @@ public class TargetRegions implements CobaltScope
 
     public TargetRegions(ListMultimap<Chromosome, TargetRegionEnrichment> enrichments, ChromosomeData chromosomeData)
     {
-        for (Chromosome chromosome : enrichments.keySet())
+        for(Chromosome chromosome : enrichments.keySet())
         {
             int length = chromosomeData.length(chromosome);
             int numberOfSlots = length / 1000;
             ArrayList<TargetRegionEnrichment> enrichmentsForChromosome = new ArrayList<>(numberOfSlots);
             int position = 1;
             Map<Integer, TargetRegionEnrichment> positionToSuppliedItem = new HashMap<>();
-            for (TargetRegionEnrichment enrichment : enrichments.get(chromosome))
+            for(TargetRegionEnrichment enrichment : enrichments.get(chromosome))
             {
                 positionToSuppliedItem.put(enrichment.Position, enrichment);
             }
 
-            for (int i = 0; i < numberOfSlots; i++)
+            for(int i = 0; i < numberOfSlots; i++)
             {
                 TargetRegionEnrichment suppliedItem = positionToSuppliedItem.get(position);
                 enrichmentsForChromosome.add(i, suppliedItem);
@@ -49,7 +49,6 @@ public class TargetRegions implements CobaltScope
             mEnrichments.put(chromosome, enrichmentsForChromosome);
         }
     }
-
 
     @Override
     public ReadDepthStatisticsNormaliser medianByMeanNormaliser()
@@ -66,16 +65,7 @@ public class TargetRegions implements CobaltScope
     @Override
     public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
     {
-        int consolidationCount = ResultsConsolidator.calcConsolidationCount(medianReadDepth);
-
-        if(consolidationCount == 1)
-        {
-            CB_LOGGER.info("median read depth: {}, not using sparse consolidation", medianReadDepth);
-            return new NoOpConsolidator();
-        }
-
-        CB_LOGGER.info("median read depth: {}, sparse consolidation count: {}", medianReadDepth, consolidationCount);
-        return new LowCoverageConsolidator( consolidationCount);
+        return new NoOpConsolidator();
     }
 
     @Override
@@ -93,7 +83,7 @@ public class TargetRegions implements CobaltScope
 
     private TargetRegionEnrichment getEnrichment(final Chromosome chromosome, final int position)
     {
-        if (mEnrichments.containsKey(chromosome))
+        if(mEnrichments.containsKey(chromosome))
         {
             return mEnrichments.get(chromosome).get(position / 1000);
         }

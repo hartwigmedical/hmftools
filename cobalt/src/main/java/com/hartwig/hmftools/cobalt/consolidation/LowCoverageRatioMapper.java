@@ -15,7 +15,6 @@ import com.google.common.collect.Comparators;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
-import com.hartwig.hmftools.cobalt.CobaltConstants;
 import com.hartwig.hmftools.cobalt.ratio.RatioMapper;
 
 import org.apache.commons.lang3.Validate;
@@ -156,7 +155,7 @@ public class LowCoverageRatioMapper implements RatioMapper
 
         // now we assign a bucket id per row, we can do with it
         rawRatios.addColumns(bucketIdCol);
-printTable(rawRatios, "RawRatiosLCRM");
+
         //
         Table lowCovRatio = rawRatios.summarize(
                 CobaltColumns.RATIO,
@@ -175,7 +174,7 @@ printTable(rawRatios, "RawRatiosLCRM");
         // consolidated ratios to gc normalisation this is needed.
         lowCovRatio.addColumns(BooleanColumn.create(CobaltColumns.IS_MAPPABLE,
                 Collections.nCopies(lowCovRatio.rowCount(), true)));
-
+printTable(bucketTable, "LowCoverageBuckets");
         // merge in the bucket, this is required to get the bucket position
         lowCovRatio = lowCovRatio.joinOn(BUCKET_ID_COLUMN).inner(bucketTable);
 
@@ -183,6 +182,7 @@ printTable(rawRatios, "RawRatiosLCRM");
         mChromosomePositionCodec.addEncodedChrPosColumn(lowCovRatio, false);
 
         CB_LOGGER.debug("low cov table: {}", lowCovRatio);
+        printTable(lowCovRatio, "LowCovRatioTableAfterJoin");
 
         return lowCovRatio;
     }
