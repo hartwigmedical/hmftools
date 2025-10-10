@@ -73,7 +73,7 @@ public class BamRatiosTest extends CalculationsTestBase
             public void dataCollectionFinished()
             {
                 // This should be called after collection but before normalisation.
-                assertEquals(ratiosRecorded.size(), mBamRatios.ratios().size());
+                assertEquals(ratiosRecorded.size(), mBamRatios.Ratios.size());
                 assertTrue(ratiosNormalised.isEmpty());
                 DataCollectionFinishedCalled = true;
             }
@@ -136,6 +136,50 @@ public class BamRatiosTest extends CalculationsTestBase
             if (i % 10 == 0)
             {
                 int c = (i / 10) - 1;
+                assertEquals(position,mBamRatios.Ratios.get(_1).get(i).position());
+                assertEquals(position, consolidatedRatios.get(_1).get(c).position());
+                assertEquals(consolidatedRatios.get(_1).get(c).ratio(),mBamRatios.Ratios.get(_1).get(i).ratio(),  0.0001);
+                assertEquals(consolidatedRatios.get(_2).get(c).ratio(),mBamRatios.Ratios.get(_2).get(i).ratio(),  0.0001);
+                assertEquals(consolidatedRatios.get(_3).get(c).ratio(),mBamRatios.Ratios.get(_3).get(i).ratio(),  0.0001);
+            }
+            else
+            {
+                assertEquals(-1.0,mBamRatios.Ratios.get(_1).get(i).ratio(),  0.0001);
+                assertEquals(-1.0,mBamRatios.Ratios.get(_2).get(i).ratio(),  0.0001);
+                assertEquals(-1.0,mBamRatios.Ratios.get(_3).get(i).ratio(),  0.0001);
+            }
+        }
+    }
+
+    @Test
+    public void consolidateBy30()
+    {
+        ListMultimap<Chromosome, BamRatio> consolidatedRatios = ArrayListMultimap.create();
+        for (int i=1; i<=3; i++)
+        {
+            int position = i * 30_000 + 1;
+            consolidatedRatios.put(_1, randomRatio(_1, position));
+            consolidatedRatios.put(_2, randomRatio(_2, position));
+            consolidatedRatios.put(_3, randomRatio(_3, position));
+        }
+        ResultsConsolidator consolidator = Mockito.mock(ResultsConsolidator.class);
+        when(consolidator.consolidate(mBamRatios.Ratios)).thenReturn(consolidatedRatios);
+
+        mBamRatios.consolidate(consolidator);
+
+        // The positions, depths and gc values should be unchanged.
+        assertEquals(OriginalPositions, extractPositions());
+        assertEquals(OriginalGCs, extractGCs());
+        assertEquals(OriginalDepths, extractDepths());
+
+        // The ratios are -1.0 if the position does not match that of a consolidated ratio,
+        // and the value of the corresponding consolidated ratio if it does.
+        for (int i=1; i<100; i++)
+        {
+            int position = i * 1000 + 1;
+            if (i % 30 == 0)
+            {
+                int c = (i / 30) - 1;
                 assertEquals(position,mBamRatios.Ratios.get(_1).get(i).position());
                 assertEquals(position, consolidatedRatios.get(_1).get(c).position());
                 assertEquals(consolidatedRatios.get(_1).get(c).ratio(),mBamRatios.Ratios.get(_1).get(i).ratio(),  0.0001);

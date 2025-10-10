@@ -70,7 +70,7 @@ public class BamThinner
 
     public static void main(final String[] args)
     {
-        File inputBam = new File("/Users/timlavers/work/data/COLO829/COLO829T.bam");
+        File inputBam = new File("/Users/timlavers/work/data/COLO829/COLO829R.bam");
 //        File inputBam = new File("/Users/timlavers/work/scratch/datasets/pmhaem/bam/Sample_13927535.bam");
         File outputDirectory = new File("/Users/timlavers/work/junk/rubbish");
         new BamThinner(inputBam, outputDirectory, 0.1).run();

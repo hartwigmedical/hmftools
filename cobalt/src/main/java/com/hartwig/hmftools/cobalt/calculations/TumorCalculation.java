@@ -27,6 +27,7 @@ public class TumorCalculation extends BamCalculation
     {
         if (mResultsConsolidator == null)
         {
+            // todo make it null if empty
             mResultsConsolidator = Scope.resultsConsolidator(MeanNormaliser.readDepthMedian());
         }
         return mResultsConsolidator;

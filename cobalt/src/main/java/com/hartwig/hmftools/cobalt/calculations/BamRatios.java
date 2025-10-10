@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -62,11 +61,12 @@ public class BamRatios
                     }
                 }
             });
+            // Any beyond the last consolidated window get masked out.
+            while (originalsIterator.hasNext())
+            {
+                BamRatio originalRatio = originalsIterator.next();
+                originalRatio.setRatio(-1.0);
+            }
         });
-    }
-
-    public ListMultimap<Chromosome, BamRatio> ratios()
-    {
-        return ArrayListMultimap.create(Ratios);
     }
 }

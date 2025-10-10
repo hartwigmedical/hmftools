@@ -40,6 +40,10 @@ public class WholeGenome implements CobaltScope
     @Override
     public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
     {
+        if (Double.isNaN(medianReadDepth))
+        {
+            return new NoOpConsolidator();
+        }
         int consolidationCount = ResultsConsolidator.calcConsolidationCount(medianReadDepth);
         if(consolidationCount == 1)
         {

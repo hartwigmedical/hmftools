@@ -178,7 +178,7 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(1).tumorReadDepth(), 0.01);
         assertEquals(1.0, ratios.get(1).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(1).tumorGCRatio(), 0.01);
-        //        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01);// todo reinstate this!!!!!!!!
+        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01);
         assertEquals(0.5, ratios.get(1).referenceGcContent(), 0.01);
         assertEquals(-1.0, ratios.get(1).tumorGcContent(), 0.01);
 
@@ -194,7 +194,8 @@ public class ProcessBamTest
         // Check the median ratios file.
         assertEquals(1, medianRatioResults.size());
         assertEquals("chr1", medianRatioResults.get(0).Chromosome);
-        assertEquals(1.0, medianRatioResults.get(0).MedianRatio, 0.0001);
+        double expectedMedianRatio = 100.0/33.333; // Smoothed median gc for bucket is 100/3
+        assertEquals(expectedMedianRatio, medianRatioResults.get(0).MedianRatio, 0.0001);
         assertEquals(1, medianRatioResults.get(0).Count);
     }
 
@@ -224,7 +225,7 @@ public class ProcessBamTest
         assertEquals(100.0, ratios.get(1).tumorReadDepth(), 0.01);
         assertEquals(1.0, ratios.get(1).referenceGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
-//        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01); // todo reinstate this!!!!
+        assertEquals(1.0, ratios.get(1).referenceGCDiploidRatio(), 0.01); // todo reinstate this!!!!
         assertEquals(0.5, ratios.get(1).referenceGcContent(), 0.01);
         assertEquals(0.5, ratios.get(1).tumorGcContent(), 0.01);
 
@@ -240,7 +241,8 @@ public class ProcessBamTest
         // Check the median ratios file.
         assertEquals(1, medianRatioResults.size());
         assertEquals("chr1", medianRatioResults.get(0).Chromosome);
-        assertEquals(1.0, medianRatioResults.get(0).MedianRatio, 0.0001);
+        double expectedMedianRatio = 100.0/33.333; // Smoothed median gc for bucket is 100/3
+        assertEquals(expectedMedianRatio, medianRatioResults.get(0).MedianRatio, 0.0001);
         assertEquals(1, medianRatioResults.get(0).Count);
     }
 
@@ -306,8 +308,8 @@ public class ProcessBamTest
         {
             if(representativeWindows.contains(i))
             {
-                assertEquals(2.0 / 3.0, ratios1.get(i).tumorGCRatio(), 0.01);
-                assertEquals(4.0 / 3.0, ratios2.get(i).tumorGCRatio(), 0.01);
+                assertEquals(2.0, ratios1.get(i).tumorGCRatio(), 0.01);
+                assertEquals(4.0, ratios2.get(i).tumorGCRatio(), 0.01);
             }
             else
             {
@@ -423,7 +425,7 @@ public class ProcessBamTest
             assertEquals(0.01 * (i), ratios.get(i).tumorGcContent(), 0.01);
             assertEquals(-1.0, cobaltRatio.tumorGCRatio(), 0.01);
         }
-        for(int i = 24; i < 68; i++)
+        for(int i = 25; i < 68; i++)
         {
             assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
@@ -434,7 +436,7 @@ public class ProcessBamTest
     }
 
     @Test
-    public void filterOutWindowsWhereGcProfileDataIsMissing() throws Exception
+    public void filterOutUnmappableWindows() throws Exception
     {
         // 1 chr of length 5000
         // 1:1001-4000 depth 100
@@ -444,15 +446,20 @@ public class ProcessBamTest
         gcProfile = new File(tempDir, "GC_profile.1000bp.38.cnp");
         GcProfilesUtilities gcFileWriter = new GcProfilesUtilities();
         gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset, regionOffset, 0.99));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 1000, regionOffset + 1000, 0.05));
         gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 2000, regionOffset + 2_000, 0.99));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 3000, regionOffset + 3_000, 0.99));
+        gcFileWriter.addSection(new ConstantMappablePercentageGcFileSection(_1, regionOffset + 4000, regionOffset + 4_000, 0.99));
         gcFileWriter.write(gcProfile);
 
         runCobalt();
 
         List<CobaltRatio> ratios = tumorRatioResults.get(_1);
-        assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(1).tumorGCRatio(), 0.01);
+        assertEquals(1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(3).tumorGCRatio(), 0.01);
+        assertEquals(-1.0, ratios.get(4).tumorGCRatio(), 0.01);
     }
 
     @Test
@@ -564,7 +571,7 @@ public class ProcessBamTest
         // 2:1001-40_000 depth approximately 100
         // 2:40_001-70_000 depth approximately 10
         // 2:70_001-100_000 depth approximately 100
-        // GC ration 0.5 throughout.
+        // GC ratio 0.5 throughout.
         // Each window is depth +-5% (random) of the value it approximates.
         // If we have constant read depths then the segmentation algorithm assigns a cost of 0
         // to segment creation, with the result that many segments are created instead of the
@@ -664,30 +671,33 @@ public class ProcessBamTest
         // There is only one GC bucket, and it has median read depth 104
         // (the sex chromosomes don't contribute to this median).
         // Because of GC bucket smoothing, this median gets divided by 3.
-        double smoothedGcNormalisation = 104.0/3;
+        double normalisationFactor = 104.0/3;
+        // In whole genome mode the ratios are further normalised by the
+        // median/mean read depth for allosome reads (100, 110, 104, 110, 100, 104)
+        normalisationFactor /= 104.0/((100.0 + 110.0 + 104.0)/3.0);
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(3, ratios1.size());
-        assertEquals(100.0 / smoothedGcNormalisation, ratios1.get(0).tumorGCRatio(), 0.01);
-        assertEquals(110.0 / smoothedGcNormalisation, ratios1.get(1).tumorGCRatio(), 0.01);
-        assertEquals(104.0 /smoothedGcNormalisation, ratios1.get(2).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / normalisationFactor, ratios1.get(0).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / normalisationFactor, ratios1.get(1).tumorGCRatio(), 0.01);
+        assertEquals(104.0 /normalisationFactor, ratios1.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(3, ratios2.size());
-        assertEquals(110.0 / smoothedGcNormalisation, ratios2.get(0).tumorGCRatio(), 0.01);
-        assertEquals(100.0 / smoothedGcNormalisation, ratios2.get(1).tumorGCRatio(), 0.01);
-        assertEquals(104.0/smoothedGcNormalisation, ratios2.get(2).tumorGCRatio(), 0.01);
+        assertEquals(110.0 / normalisationFactor, ratios2.get(0).tumorGCRatio(), 0.01);
+        assertEquals(100.0 / normalisationFactor, ratios2.get(1).tumorGCRatio(), 0.01);
+        assertEquals(104.0/normalisationFactor, ratios2.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratiosX = tumorRatioResults.get(_X);
         assertEquals(3, ratiosX.size());
-        assertEquals(60.0 / smoothedGcNormalisation, ratiosX.get(0).tumorGCRatio(), 0.01);
-        assertEquals(60.0 / smoothedGcNormalisation, ratiosX.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0 / smoothedGcNormalisation, ratiosX.get(2).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / normalisationFactor, ratiosX.get(0).tumorGCRatio(), 0.01);
+        assertEquals(60.0 / normalisationFactor, ratiosX.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / normalisationFactor, ratiosX.get(2).tumorGCRatio(), 0.01);
 
         List<CobaltRatio> ratiosY = tumorRatioResults.get(_Y);
         assertEquals(3, ratiosY.size());
-        assertEquals(40.0 / smoothedGcNormalisation, ratiosY.get(0).tumorGCRatio(), 0.01);
-        assertEquals(40.0 / smoothedGcNormalisation, ratiosY.get(1).tumorGCRatio(), 0.01);
-        assertEquals(50.0 / smoothedGcNormalisation, ratiosY.get(2).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / normalisationFactor, ratiosY.get(0).tumorGCRatio(), 0.01);
+        assertEquals(40.0 / normalisationFactor, ratiosY.get(1).tumorGCRatio(), 0.01);
+        assertEquals(50.0 / normalisationFactor, ratiosY.get(2).tumorGCRatio(), 0.01);
     }
 
     @Test
@@ -716,6 +726,11 @@ public class ProcessBamTest
         // These values get divided by three during GC bucket smoothing.
         double refGCMean = 6.0 / 3.0;
         double tumorGCMean = 11.0 / 3.0;
+        // In whole genome mode the tumor and reference ratios are all divided by a normalisation
+        // factor which is the median/mean of positive read depths. For this tumor this ratio is 1.0.
+        // For this reference sample the value is 34.0/6.0/6.0
+        double meanMedianNormalisationRef = 34.0/36.0;
+        refGCMean = refGCMean * meanMedianNormalisationRef;
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         assertEquals(10, ratios1.size());
         assertEquals(5.0, ratios1.get(0).referenceReadDepth(), 0.01);

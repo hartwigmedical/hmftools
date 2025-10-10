@@ -45,6 +45,7 @@ public class WholeGenomeTest
         assertTrue(scope.resultsConsolidator(7.9) instanceof LowCoverageConsolidator);
         assertTrue(scope.resultsConsolidator(8.0) instanceof LowCoverageConsolidator);
         assertTrue(scope.resultsConsolidator(8.1) instanceof NoOpConsolidator);
+        assertTrue(scope.resultsConsolidator(Double.NaN) instanceof NoOpConsolidator);
     }
 
     @Test

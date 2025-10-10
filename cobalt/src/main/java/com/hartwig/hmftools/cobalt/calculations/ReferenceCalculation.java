@@ -38,6 +38,7 @@ public class ReferenceCalculation extends BamCalculation
     @Override
     ResultsConsolidator consolidator()
     {
+        // todo if null was passed in at construction, get the scope to build the consolidator
         return mResultsConsolidator;
     }
 }
