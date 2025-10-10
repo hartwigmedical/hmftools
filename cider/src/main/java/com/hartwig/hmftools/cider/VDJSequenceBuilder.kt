@@ -5,6 +5,7 @@ import com.google.common.collect.LinkedListMultimap
 import com.hartwig.hmftools.cider.CiderConstants.MIN_ANCHOR_LENGTH_BASES
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
+import com.hartwig.hmftools.common.perf.TaskExecutor
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
@@ -14,7 +15,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                          private val minBaseQuality: Byte,
                          private val minOverlappedBases: Int)
 {
-    fun buildVDJSequences(layoutMultimap: Map<VJGeneType, List<ReadLayout>>) : List<VDJSequence>
+    fun buildVDJSequences(layoutMultimap: Map<VJGeneType, List<ReadLayout>>, threadCount: Int) : List<VDJSequence>
     {
         val vdjList = ArrayList<VDJSequence>()
 
@@ -63,7 +64,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         sLogger.info("found {} vdj sequences before merge", vdjList.size)
 
-        val vjGeneToVdjMap: ArrayListMultimap<Pair<VJGeneType?, VJGeneType?>, VDJSequence> = ArrayListMultimap.create()
+        val vjGeneToVdjMap = HashMap<Pair<VJGeneType?, VJGeneType?>, ArrayList<VDJSequence>>()
 
         for (vdj in vdjList)
         {
@@ -72,18 +73,15 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
                 assert(false)
                 continue
             }
-            vjGeneToVdjMap.put(Pair(vdj.vAnchor?.geneType, vdj.jAnchor?.geneType), vdj)
+            val key = Pair(vdj.vAnchor?.geneType, vdj.jAnchor?.geneType)
+            vjGeneToVdjMap.computeIfAbsent(key) { ArrayList() }.add(vdj)
         }
 
         vdjList.clear()
-
-        for (vjType in vjGeneToVdjMap.keySet())
-        {
-            vdjList.addAll(mergeIdentical(vjGeneToVdjMap.get(vjType), minBaseQuality))
-        }
+        vdjList.addAll(mergeIdentical(vjGeneToVdjMap, minBaseQuality, threadCount))
 
         // sort again
-        vdjList.sortByDescending({ vdj -> vdj.numReads })
+        vdjList.sortByDescending { vdj -> vdj.numReads }
 
         sLogger.info("{} vdj sequences after merge", vdjList.size)
 
@@ -377,7 +375,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         val vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, jAnchor)
 
-        sLogger.debug("built VDJ sequence: {}, {}",
+        sLogger.trace("built VDJ sequence: {}, {}",
             vdj.aminoAcidSequenceFormatted, vdj.sequenceFormatted)
 
         return vdj
@@ -482,7 +480,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             vAnchor = null
             // we no longer trim to the v anchor start
             layoutSliceStart = 0
-            sLogger.debug("VDJ vAnchorBoundary({}) < jAnchorBoundary({}), setting v anchor to null",
+            sLogger.trace("VDJ vAnchorBoundary({}) < jAnchorBoundary({}), setting v anchor to null",
                 vAnchorBoundary, jAnchorBoundary)
         }
 
@@ -493,7 +491,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         val vdj = VDJSequence(combinedVjLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
-        sLogger.debug("built VDJ sequence: {}, by overlapping V layout({}): {} and J layout({}): {}",
+        sLogger.trace("built VDJ sequence: {}, by overlapping V layout({}): {} and J layout({}): {}",
             vdj.aminoAcidSequenceFormatted,
             vLayout.id, vLayout.consensusSequenceString(), jLayout.id, jLayout.consensusSequenceString())
 
@@ -502,7 +500,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
     fun tryCreateOneSidedVdj(layoutGeneType: VJGeneType, layout: ReadLayout): VDJSequence?
     {
-        sLogger.debug("create one sided {} layout: {}", layoutGeneType, layout.consensusSequenceString())
+        sLogger.trace("create one sided {} layout: {}", layoutGeneType, layout.consensusSequenceString())
 
         // we want to use the indices to work where things are
         val layoutAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
@@ -531,7 +529,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             )
             vdj = VDJSequence(layout, layoutStart, layoutEnd, vAnchor, null)
 
-            sLogger.debug("built V only sequence: {}-{}",
+            sLogger.trace("built V only sequence: {}-{}",
                 Codons.aminoAcidFromBases(vdj.vAnchorSequence),
                 Codons.aminoAcidFromBases(vdj.cdr3SequenceShort))
         }
@@ -550,7 +548,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             )
             vdj = VDJSequence(layout, layoutStart, layoutEnd, null, jAnchor)
 
-            sLogger.debug("built J only sequence: {}-{}",
+            sLogger.trace("built J only sequence: {}-{}",
                 Codons.aminoAcidFromBases(vdj.cdr3SequenceShort),
                 Codons.aminoAcidFromBases(vdj.jAnchorSequence))
         }
@@ -581,15 +579,33 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     {
         private val sLogger = LogManager.getLogger(VDJSequenceBuilder::class.java)
 
-        // for VDJ sequences that are identical, we put them together
-        fun mergeIdentical(vdjList: List<VDJSequence>, minBaseQuality: Byte) : List<VDJSequence>
+        private fun mergeIdentical(vjGeneToVdjMap: Map<Pair<VJGeneType?, VJGeneType?>, List<VDJSequence>>, minBaseQuality: Byte,
+                                   threadCount: Int): List<VDJSequence>
         {
+            val results = ArrayList<VDJSequence>()
+            sLogger.debug("Merging identical VDJ sequences")
+            // Naive multithreading because otherwise this step can take over an hour on samples with many sequences.
+            // It's likely that a few genes have most of the sequences, which will limit the parallel speedup, but it's better than nothing.
+            TaskExecutor.executeRunnables(vjGeneToVdjMap.values.map { vdjs ->
+                Runnable {
+                    val merged = mergeIdentical(vdjs, minBaseQuality)
+                    synchronized(results) {
+                        results.addAll(merged)
+                    }
+                }},
+                threadCount)
+            return results
+        }
+
+        // for VDJ sequences that are identical, we put them together
+        private fun mergeIdentical(vdjList: List<VDJSequence>, minBaseQuality: Byte) : ArrayList<VDJSequence>
+        {
+            /*
             // first parse we do it in a fast way to find the ones that are exactly the same
             val seqHashMap: ArrayListMultimap<String, VDJSequence> = ArrayListMultimap.create()
 
             vdjList.forEach({ vdj -> seqHashMap.put(vdj.sequence, vdj) })
 
-            /*
             val outVDJList = ArrayList<VDJSequence>()
 
             for (seq in seqHashMap.keySet())
@@ -666,7 +682,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
                 if (VdjBuilderUtils.vdjSequenceCompare(vdj1, vdj2, diffAccumulator))
                 {
-                    sLogger.debug("removing {} as it is similar to {}",
+                    sLogger.trace("removing {} as it is similar to {}",
                         vdj2.aminoAcidSequenceFormatted, vdj1.aminoAcidSequenceFormatted)
 
                     // remove vdj2 from the list
@@ -686,7 +702,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             return outVDJList
         }
 
-        fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
+        private fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
         {
             var numBaseDiff = 0
             val diffAccumulator = { baseSupport1: Map.Entry<Byte, Int>, baseSupport2: Map.Entry<Byte, Int> ->
