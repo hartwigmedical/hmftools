@@ -52,12 +52,12 @@ public class BamRatios
                     BamRatio originalRatio = originalsIterator.next();
                     if (originalRatio.Position == consolidatedRatio.Position)
                     {
-                        originalRatio.setRatio(consolidatedRatio.ratio());
+                        originalRatio.overrideRatio(consolidatedRatio.ratio());
                         seekingMatch = false;
                     }
                     else
                     {
-                        originalRatio.setRatio(-1.0);
+                        originalRatio.overrideRatio(-1.0);
                     }
                 }
             });
@@ -65,7 +65,7 @@ public class BamRatios
             while (originalsIterator.hasNext())
             {
                 BamRatio originalRatio = originalsIterator.next();
-                originalRatio.setRatio(-1.0);
+                originalRatio.overrideRatio(-1.0);
             }
         });
     }

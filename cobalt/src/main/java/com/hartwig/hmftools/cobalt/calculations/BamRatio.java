@@ -31,12 +31,7 @@ public class BamRatio
 
     public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent)
     {
-        mChromosome = chromosome;
-        Position = position;
-        mReadDepth = readDepth;
-        Ratio = readDepth;
-        GcContent = gcContent;
-        Included = true;
+        this(chromosome, position, readDepth, readDepth, gcContent);
     }
 
     public BamRatio(Chromosome chromosome, int position, double readDepth, double ratio, double gcContent)
@@ -86,9 +81,13 @@ public class BamRatio
         return DiploidAdjustedRatio;
     }
 
-    public void setRatio(double ratio)
+    public void overrideRatio(double ratio)
     {
         Ratio = ratio;
+        if (Ratio > 0)
+        {
+            Included = true;
+        }
     }
 
     private void normalise(final double factor)

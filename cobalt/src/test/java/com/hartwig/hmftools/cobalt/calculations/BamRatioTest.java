@@ -2,8 +2,11 @@ package com.hartwig.hmftools.cobalt.calculations;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -14,6 +17,57 @@ import org.junit.Test;
 public class BamRatioTest
 {
     DepthReading readDepth = new DepthReading("1", 1001, 82, 0.49);
+
+    @Test
+    public void constructors()
+    {
+        BamRatio br = new BamRatio(_Y, 19_001, 123.4, 0.55);
+        assertEquals(_Y, br.mChromosome);
+        assertEquals(19_001, br.position());
+        assertEquals(123.4, br.ratio(), 0.001);
+        assertEquals(123.4, br.readDepth(), 0.001);
+        assertEquals(0.55, br.gcContent(), 0.001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.001);
+
+        br = new BamRatio(_X, 19_001, 123.4, 12.34,0.34);
+        assertEquals(_X, br.mChromosome);
+        assertEquals(19_001, br.position());
+        assertEquals(12.34, br.ratio(), 0.001);
+        assertEquals(123.4, br.readDepth(), 0.001);
+        assertEquals(0.34, br.gcContent(), 0.001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
+    public void overrideRatio()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(82.0, ratio.ratio(), 0.001);
+        assertEquals(0.49, ratio.gcContent(), 0.001);
+        ratio.overrideRatio(1.8);
+        assertEquals(1.8, ratio.ratio(), 0.001);
+    }
+
+    @Test
+    public void overrideRatioSetsIncludedStatus()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, false);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(-1.0, ratio.ratio(), 0.001); // sanity
+        ratio.overrideRatio(1.8);
+        assertEquals(1.8, ratio.ratio(), 0.001);
+    }
+
+    @Test
+    public void overrideWithNegativeRatioSetsIncludedStatus()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, false);
+        assertEquals(82, ratio.readDepth(), 0.001);
+        assertEquals(-1.0, ratio.ratio(), 0.001);
+        ratio.overrideRatio(-1.0);
+        assertEquals(-1.0, ratio.ratio(), 0.001);
+    }
 
     @Test
     public void normaliseByMean()
@@ -191,6 +245,13 @@ public class BamRatioTest
         assertTrue(new BamRatio(_1, readDepth, true).toString().contains("82"));
     }
 
+    @Test
+    public void position()
+    {
+        BamRatio ratio = new BamRatio(_1, readDepth, true);
+        assertEquals(1001, ratio.position());
+    }
+
     private void checkBlanked(BamRatio ratio)
     {
         assertEquals(-1.0, ratio.ratio(), 0.001);
@@ -230,10 +291,10 @@ public class BamRatioTest
         assertEquals(ratio1, differentDiploidRatio);
 
         // Null comparison
-        assertNotEquals(null, ratio1);
+        assertFalse(ratio1.equals(null));
 
         // Different class comparison
-        assertNotEquals("Not a BamRatio", ratio1);
+        assertFalse(ratio1.equals("whatever"));
     }
 
     @Test
