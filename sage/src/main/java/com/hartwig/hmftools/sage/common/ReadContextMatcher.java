@@ -245,10 +245,10 @@ public class ReadContextMatcher
 
     public boolean coversVariant(final SAMRecord record, final int readVarIndex)
     {
-        return coversVariant(record.getReadBases(), record.getBaseQualities(), readVarIndex);
+        return coversVariant(record.getReadBases(), readVarIndex);
     }
 
-    public boolean coversVariant(final byte[] readBases, final byte[] baseQuals, final int readVarIndex)
+    public boolean coversVariant(final byte[] readBases, final int readVarIndex)
     {
         if(readVarIndex < 0)
             return false;
@@ -260,13 +260,21 @@ public class ReadContextMatcher
         if(requiredReadIndexLower < 0 || requiredReadIndexUpper >= readBases.length)
             return false;
 
-        for(int i = requiredReadIndexLower; i <= requiredReadIndexUpper; ++i)
+        return true;
+    }
+
+    public boolean hasUncertainCoreBases(final byte[] baseQuals, final int readVarIndex)
+    {
+        int requiredReadIndexLower = readVarIndex - mContext.VarIndex + mAltIndexLower;
+        int requiredReadIndexUpper = readVarIndex - mContext.VarIndex + mAltIndexUpper;
+
+        for(int i = max(requiredReadIndexLower, 0); i <= min(requiredReadIndexUpper, baseQuals.length - 1); ++i)
         {
             if(isUncertainBaseQual(baseQuals[i]))
-                return false;
+                return true;
         }
 
-        return true;
+        return false;
     }
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readVarIndex)

@@ -136,6 +136,7 @@ public final class VariantContextFactory
 
         int depth = counter.depth();
         int altSupport = counter.altSupport();
+        int refSupport = counter.refSupport();
         int strongSupport = counter.strongAltSupport();
 
         int avgMapQuality = depth > 0 ? (int) round(qualCounters.mapQualityTotal() / (double)depth) : 0;
@@ -161,8 +162,25 @@ public final class VariantContextFactory
             vaf = altSupport / (double)readCounts.Total;
         }
 
+        // add back reads with uncertain bases in the core to depth and proportionally to ref and alt support
+        int uncertainCoreBaseCount = counter.uncertainCoreBaseCount();
+
+        if(uncertainCoreBaseCount > 0)
+        {
+            depth += uncertainCoreBaseCount;
+            int altAdjustment = (int)round(vaf * uncertainCoreBaseCount);
+            altSupport += altAdjustment;
+
+            if(refSupport > 0)
+            {
+                double altRefRatio = altSupport / (double)refSupport;
+                int refAdjustment = (int)round(altRefRatio / altRefRatio);
+                refSupport += refAdjustment;
+            }
+        }
+
         builder.DP(depth)
-                .AD(new int[] { counter.refSupport(), altSupport })
+                .AD(new int[] { refSupport, altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, readCounts.toArray())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
