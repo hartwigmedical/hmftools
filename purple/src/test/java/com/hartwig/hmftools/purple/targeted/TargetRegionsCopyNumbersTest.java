@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.targeted;
 import static java.util.List.of;
 
 import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.readWithGender;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.purple.Gender.FEMALE;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
@@ -13,34 +14,72 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
-import org.junit.Before;
 import org.junit.Test;
 
-public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
+public class TargetRegionsCopyNumbersTest
 {
-    @Before
-    public void setup()
+    private static final RefGenomeVersion refGenomeVersion = V38;
+
+    String cobaltFilePath(String fileName)
     {
-        super.setup();
+        return resourceFilePath("cobalt", fileName);
+    }
+    String purpleFilePath(String fileName)
+    {
+        return resourceFilePath("purple", fileName);
+    }
+
+    private static String resourceFilePath(String directory, String fileName)
+    {
+        return Paths.get("src", "test", "resources", directory, fileName).toAbsolutePath().toString();
+    }
+
+    protected PurpleSegment ps(String chromosome, int start, int end, GermlineStatus status)
+    {
+        return new PurpleSegment(chromosome, start, end, false, SegmentSupport.TELOMERE,
+                123, 0.33, 123, 0.34, 0.45, 0.34,
+                status, true, 0.44, 123, 324, 0.45, 0.45,
+                0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45);
+    }
+
+    private static Map<String,List<TaggedRegion>> loadPanelRegions(final String panelFile)
+    {
+        String resourcePath = resourceFilePath("panel", panelFile);
+        Map<Chromosome,List<TaggedRegion>> targetRegionsMap = TaggedRegion.loadRegionsFromBedFile(resourcePath);
+
+        Map<String,List<TaggedRegion>> chrTargetRegions = Maps.newHashMap();
+
+        for(Map.Entry<Chromosome,List<TaggedRegion>> entry : targetRegionsMap.entrySet())
+        {
+            String chrStr = refGenomeVersion.versionedChromosome(entry.getKey().toString());
+            chrTargetRegions.put(chrStr, entry.getValue());
+        }
+
+        return chrTargetRegions;
     }
 
     @Test
     public void multipleChromosomes() throws IOException
     {
-        targetRegionsData.loadTargetRegionsBed(panelFilePath("panel_1.bed"), ensemblDataCache);
+        Map<String,List<TaggedRegion>> targetRegions = loadPanelRegions("panel_1.bed");
+
         Map<Chromosome, List<CobaltRatio>> cobaltData = readWithGender(cobaltFilePath("sample_1.ratios.tsv"), FEMALE, true);
+
         List<PurpleCopyNumber> purpleCopyNumbers = PurpleCopyNumberFile.read(purpleFilePath("segments_1.tsv"));
         PurpleSegment ps0 = ps("chr1", 1001, 26694000, DIPLOID);
         PurpleSegment ps1 = ps("chr1", 26694001, 250_000_000, HOM_DELETION);
@@ -49,18 +88,15 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         PurpleSegment ps4 = ps("chr7", 1, 55035000, NOISE);
 
         List<PurpleSegment> segments = of(ps0, ps1, ps2, ps3, ps4);
-        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, segments);
-        TargetRegionsCopyNumbers trc = new TargetRegionsCopyNumbers(dataSource, cobaltData, purpleCopyNumbers);
-
-        List<TargetRegionsCopyNumber> copyNumberData = trc.copyNumbersData();
-        assertEquals(4, copyNumberData.size());
 
         TargetRegionDataBuilder targetRegionDataBuilder = new TargetRegionDataBuilder(
-                refGenomeVersion, targetRegionsData.targetRegions(), segments, cobaltData, purpleCopyNumbers);
+                refGenomeVersion, targetRegions, segments, cobaltData, purpleCopyNumbers);
 
         targetRegionDataBuilder.buildTargetRegionData();
-        List<TargetRegionsCopyNumber> results = targetRegionDataBuilder.targetRegionData();
-        copyNumberData = results;
+        List<TargetRegionsCopyNumber> copyNumberData = targetRegionDataBuilder.targetRegionData();
+
+        assertEquals(4, copyNumberData.size());
+
 
         TargetRegionsCopyNumber cn0 = copyNumberData.get(0);
         assertEquals("chr1", cn0.cobaltRatio().chromosome());
@@ -99,7 +135,8 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         // 1. We simply assign the Cobalt data to each new segment, with no attempt to re-calculate it per sub-window.
         // 2. We also assign each sub-window the panel regions for the entire Cobalt segment, with no
         //    attempt to assign these more accurately to the sub-windows.
-        targetRegionsData.loadTargetRegionsBed(panelFilePath("panel_2.bed"), ensemblDataCache);
+
+        Map<String,List<TaggedRegion>> targetRegions = loadPanelRegions("panel_2.bed");
 
         Map<Chromosome, List<CobaltRatio>> cobaltData = readWithGender(cobaltFilePath("sample_2.ratios.tsv"), FEMALE, true);
         List<PurpleCopyNumber> purpleCopyNumbers = PurpleCopyNumberFile.read(purpleFilePath("segments_2.tsv"));
@@ -109,17 +146,11 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         PurpleSegment ps1 = ps("chr19", 1001, 26694000, DIPLOID);
         List<PurpleSegment> segments = List.of(ps0, ps1);
 
-        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, segments);
-        TargetRegionsCopyNumbers trc = new TargetRegionsCopyNumbers(dataSource, cobaltData, purpleCopyNumbers);
-
-        List<TargetRegionsCopyNumber> copyNumberData = trc.copyNumbersData();
-
         TargetRegionDataBuilder targetRegionDataBuilder = new TargetRegionDataBuilder(
-                refGenomeVersion, targetRegionsData.targetRegions(), segments, cobaltData, purpleCopyNumbers);
+                refGenomeVersion, targetRegions, segments, cobaltData, purpleCopyNumbers);
 
         targetRegionDataBuilder.buildTargetRegionData();
-        List<TargetRegionsCopyNumber> results = targetRegionDataBuilder.targetRegionData();
-        // copyNumberData = results;
+        List<TargetRegionsCopyNumber> copyNumberData = targetRegionDataBuilder.targetRegionData();
 
         assertEquals(13, copyNumberData.size());
 

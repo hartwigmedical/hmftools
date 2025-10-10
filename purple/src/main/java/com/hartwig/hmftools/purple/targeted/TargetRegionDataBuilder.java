@@ -94,9 +94,9 @@ public class TargetRegionDataBuilder
                 currentTargetRegion = targetRegions.get(targetRegionIndex);
             }
 
-            if(currentCopyNumber == null || !overlapsPurpleCopyNumber(cobaltRegion, currentCopyNumber))
+            if(currentCopyNumber == null || !overlapsCopyNumber(cobaltRegion, currentCopyNumber))
             {
-                int newIndex = findPurpleCopyNumberIndex(purpleCopyNumbers, copyNumberIndex, cobaltRegion);
+                int newIndex = findCopyNumberIndex(purpleCopyNumbers, copyNumberIndex, cobaltRegion);
 
                 if(newIndex == INVALID_DATA_INDEX)
                     continue;
@@ -121,27 +121,52 @@ public class TargetRegionDataBuilder
                 }
             }
 
-            // now have all matching data, compile it
+            // collect any overlapping target region
             List<TaggedRegion> overlappingTargetRegions = findOverlappingTargetRegions(targetRegions, targetRegionIndex, cobaltRegion);
 
+            // split ratio windows if a copy number window is fully contained within it
             // could also check for a window overlapping multiple copy numbers but given the typical size difference this isn't worth it
+            List<PurpleCopyNumber> overlappingCopyNumbers = findInternalCopyNumbers(purpleCopyNumbers, copyNumberIndex, cobaltRegion);
 
-            TargetRegionsCopyNumber targetRegionData = new TargetRegionsCopyNumber(
-                    cobaltRatio, overlappingTargetRegions, currentCopyNumber,
-                    currentSegment != null ? currentSegment.GermlineState : GermlineStatus.UNKNOWN);
+            if(overlappingCopyNumbers.size() == 1)
+            {
+                TargetRegionsCopyNumber targetRegionData = new TargetRegionsCopyNumber(
+                        cobaltRatio, overlappingTargetRegions, currentCopyNumber,
+                        currentSegment != null ? currentSegment.GermlineState : GermlineStatus.UNKNOWN);
 
-            mTargetRegionData.add(targetRegionData);
+                mTargetRegionData.add(targetRegionData);
+            }
+            else
+            {
+                for(int i = 0; i < overlappingCopyNumbers.size(); ++i)
+                {
+                    PurpleCopyNumber copyNumber = overlappingCopyNumbers.get(i);
+
+                    CobaltRatio internalCobaltRatio;
+
+                    if(i == 0)
+                        internalCobaltRatio = cobaltRatio;
+                    else
+                        internalCobaltRatio = cobaltRatio.realign(copyNumber.start());
+
+                    TargetRegionsCopyNumber targetRegionData = new TargetRegionsCopyNumber(
+                            internalCobaltRatio, overlappingTargetRegions, copyNumber,
+                            currentSegment != null ? currentSegment.GermlineState : GermlineStatus.UNKNOWN);
+
+                    mTargetRegionData.add(targetRegionData);
+                }
+            }
         }
     }
 
     private static final int INVALID_DATA_INDEX = -1;
 
-    private static boolean overlapsPurpleCopyNumber(final ChrBaseRegion cobaltRegion, final PurpleCopyNumber copyNumber)
+    private static boolean overlapsCopyNumber(final ChrBaseRegion cobaltRegion, final PurpleCopyNumber copyNumber)
     {
         return cobaltRegion.overlaps(copyNumber.chromosome(), copyNumber.start(), copyNumber.end());
     }
 
-    private static int findPurpleCopyNumberIndex(
+    private static int findCopyNumberIndex(
             final List<PurpleCopyNumber> copyNumbers, int currentIndex, final ChrBaseRegion cobaltRegion)
     {
         if(copyNumbers.get(currentIndex).start() > cobaltRegion.end())
@@ -152,7 +177,7 @@ public class TargetRegionDataBuilder
         {
             PurpleCopyNumber copyNumber = copyNumbers.get(currentIndex);
 
-            if(overlapsPurpleCopyNumber(cobaltRegion, copyNumber))
+            if(overlapsCopyNumber(cobaltRegion, copyNumber))
                 return currentIndex;
 
             if(copyNumber.start() > cobaltRegion.end())
@@ -162,6 +187,24 @@ public class TargetRegionDataBuilder
         }
 
         return INVALID_DATA_INDEX;
+    }
+
+    private static List<PurpleCopyNumber> findInternalCopyNumbers(
+            final List<PurpleCopyNumber> copyNumbers, final int currentIndex, final ChrBaseRegion cobaltRegion)
+    {
+        List<PurpleCopyNumber> overlaps = Lists.newArrayList(copyNumbers.get(currentIndex));
+
+        for(int i = currentIndex + 1; i < copyNumbers.size(); ++i)
+        {
+            PurpleCopyNumber copyNumber = copyNumbers.get(i);
+
+            if(overlapsCopyNumber(cobaltRegion, copyNumber))
+                overlaps.add(copyNumber);
+            else
+                break;
+        }
+
+        return overlaps;
     }
 
     private static boolean overlapsTargetRegion(final ChrBaseRegion cobaltRegion, final TaggedRegion targetRegion)
