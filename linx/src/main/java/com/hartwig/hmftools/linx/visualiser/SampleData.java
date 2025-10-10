@@ -180,11 +180,8 @@ public class SampleData
         if(mConfig.PurpleDir != null)
         {
             final String purpleSegmentFile = PurpleSegment.generateFilename(mConfig.PurpleDir, mConfig.Sample);
-            List<PurpleSegment> purpleSegmentsUnfiltered = PurpleSegment.read(purpleSegmentFile);
-            List<PurpleSegment> purpleSegmentsFiltered = purpleSegmentsUnfiltered.stream()
-                    .filter(x -> x.GermlineState == GermlineStatus.DIPLOID)
-                    .toList();
-            PurpleSegments.addAll(purpleSegmentsFiltered);
+            List<PurpleSegment> purpleSegments = PurpleSegment.read(purpleSegmentFile);
+            PurpleSegments.addAll(purpleSegments);
 
             VIS_LOGGER.debug("loaded {} PURPLE segment entries", PurpleSegments.size());
 

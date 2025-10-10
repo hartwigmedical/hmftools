@@ -165,7 +165,9 @@ class ScalePosition
 
             PurpleSegment newPurpleSegment = purpleSegment.withModifiedCoordinates(
                     purpleSegment.Chromosome,
-                    positionMap.interpolate(purpleSegment.PosStart),
+                    // PosStart is an interpolated segment start position and does not align with COBALT/AMBER segment boundary points.
+                    // We need to use the MaxStart instead
+                    positionMap.interpolate(purpleSegment.MaxStart),
                     positionMap.interpolate(purpleSegment.PosEnd)
             );
 
