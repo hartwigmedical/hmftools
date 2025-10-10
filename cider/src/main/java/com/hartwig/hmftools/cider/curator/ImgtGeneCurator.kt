@@ -492,8 +492,8 @@ class ImgtGeneCurator
                             // TODO: check if it's chromosome or contig
                             ensemblGene.Chromosome == location.contig.name &&
                             ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD) &&
-                            ensemblGene.GeneStart <= location.position.start() &&
-                            ensemblGene.GeneEnd >= location.position.end())
+                            ensemblGene.GeneStart <= location.position.end() &&
+                            ensemblGene.GeneEnd >= location.position.start())
                         {
                             bestAlignment = alignment
                             sLogger.debug("gene: {}*{}, using alignment that overlaps with ensembl", geneData.geneName, geneData.allele)
