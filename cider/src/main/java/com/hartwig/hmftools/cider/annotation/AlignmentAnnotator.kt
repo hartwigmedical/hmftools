@@ -120,7 +120,7 @@ class AlignmentAnnotator
     }
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
-    // NOTE: we cannot use matches.keySet(), as it might not include some VDJs that returned no match
+    // NOTE: we cannot use alignments.keys, as it might not include some VDJs that returned no match
     fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
                           alignments: Map<AlignmentRunData, List<AlignmentUtil.BwaMemAlignment>>)
     : Collection<AlignmentAnnotation>
