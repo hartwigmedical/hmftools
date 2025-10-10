@@ -123,7 +123,7 @@ class AlignmentAnnotator
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
     // NOTE: we cannot use alignments.keys, as it might not include some VDJs that returned no match
-    fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
+    private fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
                           alignments: Map<AlignmentRunData, List<AlignmentUtil.BwaMemAlignment>>)
     : Collection<AlignmentAnnotation>
     {
@@ -137,7 +137,7 @@ class AlignmentAnnotator
         return alignmentAnnotations
     }
 
-    fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.BwaMemAlignment>)
+    private fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.BwaMemAlignment>)
     : AlignmentAnnotation
     {
         val vdjSequence: VDJSequence = alignmentRunData.vdj
@@ -279,7 +279,7 @@ class AlignmentAnnotator
             alignmentStatus = alignmentStatus)
     }
 
-    fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
+    private fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
     {
         val location = AlignmentUtil.toGenomicLocation(alignment)
         if (location == null)
@@ -312,7 +312,7 @@ class AlignmentAnnotator
         return bestGene
     }
 
-    companion object
+    private companion object
     {
         // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
         // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches

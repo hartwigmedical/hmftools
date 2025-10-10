@@ -28,7 +28,7 @@ object ImgtGeneCuratorSettings
         )
     )
 
-    fun getGenomicLocationOverrides(geneName: String, refGenomeVersion: RefGenomeVersion): GenomicLocation?
+    fun getGenomicLocationOverride(geneName: String, refGenomeVersion: RefGenomeVersion): GenomicLocation?
     {
         return genomicLocationOverrides[refGenomeVersion]?.get(geneName)
     }

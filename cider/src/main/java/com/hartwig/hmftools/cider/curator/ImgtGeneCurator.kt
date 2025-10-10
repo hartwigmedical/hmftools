@@ -70,9 +70,8 @@ class ImgtGeneCurator
     @Parameter(names = ["-log_level"], required = false)
     var logLevel: String = "info"
 
-    data class ImgtGeneData(val geneName: String, val allele: String, val species: String, val functionality: IgTcrFunctionality,
-                            val region: IgTcrRegion?, val sequenceWithGaps: String, val partial: Boolean = false,
-                            var genomicLocation: GenomicLocation? = null)
+    data class ImgtGene(val geneName: String, val allele: String, val species: String, val functionality: IgTcrFunctionality,
+                        val region: IgTcrRegion?, val sequenceWithGaps: String, val partial: Boolean = false)
     {
         val sequenceWithoutGaps: String get() { return sequenceWithGaps.replace(".", "") }
     }
@@ -85,24 +84,24 @@ class ImgtGeneCurator
         val ensemblDataCache = EnsemblDataCache(ensemblDataDir, refGenomeVersion)
         val ensemblLoadOk = ensemblDataCache.load(true)
 
-        BwaUtils.loadAlignerLibrary(bwaLibPath)
-
         if (!ensemblLoadOk)
         {
             sLogger.error("Ensembl data cache load failed")
             throw RuntimeException("Ensembl data cache load failed")
         }
 
-        val imgtGeneDataList: List<ImgtGeneData> = readGeneDataFromFasta(inputImgtFasta)
+        BwaUtils.loadAlignerLibrary(bwaLibPath)
+
+        val imgtGeneList: List<ImgtGene> = readImgtGenesFromFasta(inputImgtFasta)
 
         val refGenomeDict = "$refGenomePath.dict"
-        findGenomicLocatons(imgtGeneDataList, refGenomeDict, bwaIndexImagePath, refGenomeVersion, threadCount, ensemblDataCache)
+        val geneLocations = findGenomicLocatons(imgtGeneList, refGenomeDict, bwaIndexImagePath, refGenomeVersion, threadCount, ensemblDataCache)
 
         val igTcrGeneList = ArrayList<IgTcrGene>()
 
-        for (geneData in imgtGeneDataList)
+        for ((geneData, geneLocation) in imgtGeneList.zip(geneLocations))
         {
-            processImgtGeneData(geneData)?.let { igTcrGeneList.add(it) }
+            processImgtGene(geneData, geneLocation)?.let { igTcrGeneList.add(it) }
         }
 
         // validate anchor locations
@@ -192,7 +191,7 @@ class ImgtGeneCurator
          */
         // >IMGT000128|IGHA1*06|Homo sapiens|F|M|g,1187575..1187786|213 nt|1|+1| | | |213+0=213| | |
         // https://www.imgt.org/IMGTScientificChart/SequenceDescription/IMGTfunctionality.html
-        fun parseGeneData(seqName: String, sequenceWithGaps: String): ImgtGeneData
+        fun parseImgtGeneData(seqName: String, sequenceWithGaps: String): ImgtGene
         {
             val tokens = seqName.split('|')
             require(tokens.size > 10)
@@ -205,16 +204,16 @@ class ImgtGeneCurator
 
             val partial = tokens[13].contains("partial")
 
-            return ImgtGeneData(
+            return ImgtGene(
                 geneName = geneAllele[0], allele = geneAllele[1], species = tokens[2], functionality = functionality,
                 region = igTcrRegionFromImgtCode(tokens[4]), sequenceWithGaps = sequenceWithGaps, partial = partial)
         }
 
-        fun readGeneDataFromFasta(imgtFastaPath: String): List<ImgtGeneData>
+        fun readImgtGenesFromFasta(imgtFastaPath: String): List<ImgtGene>
         {
             val imgtFastaFile = FastaSequenceFile(File(imgtFastaPath), false)
 
-            val imgtGeneDataList: MutableList<ImgtGeneData> = ArrayList()
+            val imgtGeneList: MutableList<ImgtGene> = ArrayList()
 
             while (true)
             {
@@ -223,27 +222,27 @@ class ImgtGeneCurator
                 if (sequence == null)
                     break
 
-                val imgtGeneData = parseGeneData(sequence.name, sequence.baseString.uppercase())
-                imgtGeneDataList.add(imgtGeneData)
+                val imgtGeneData = parseImgtGeneData(sequence.name, sequence.baseString.uppercase())
+                imgtGeneList.add(imgtGeneData)
 
                 sLogger.info("imgt gene: {}", imgtGeneData)
             }
 
             // add IGKINTR and IGKDEL
-            imgtGeneDataList.add(ImgtGeneData(
+            imgtGeneList.add(ImgtGene(
                 geneName = VJGeneType.IGKINTR, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
                 region = IgTcrRegion.V_REGION, sequenceWithGaps = IGKINTR_SEQ
             ))
 
-            imgtGeneDataList.add(ImgtGeneData(
+            imgtGeneList.add(ImgtGene(
                 geneName = VJGeneType.IGKDEL, allele = "01", species = SPECIES, functionality = IgTcrFunctionality.ORF,
                 region = IgTcrRegion.J_REGION, sequenceWithGaps = IGKDEL_SEQ
             ))
 
-            return imgtGeneDataList
+            return imgtGeneList
         }
 
-        fun processImgtGeneData(geneData: ImgtGeneData): IgTcrGene?
+        fun processImgtGene(geneData: ImgtGene, geneLocation: GenomicLocation?): IgTcrGene?
         {
             // we filter by species
             if (geneData.species != SPECIES)
@@ -261,21 +260,21 @@ class ImgtGeneCurator
                 else -> null
             }
 
-            require(anchorData == null || geneData.genomicLocation?.contig == anchorData.second?.contig)
+            require(anchorData == null || geneLocation?.contig == anchorData.second?.contig)
             return IgTcrGene(
                 geneData.geneName,
                 geneData.allele,
                 region,
                 geneData.functionality,
-                geneData.genomicLocation?.contig?.name,
-                geneData.genomicLocation?.position,
-                geneData.genomicLocation?.strand,
+                geneLocation?.contig?.name,
+                geneLocation?.position,
+                geneLocation?.strand,
                 anchorData?.first,
                 anchorData?.second?.position
             )
         }
 
-        fun findVAnchor(geneData: ImgtGeneData): Pair<String, GenomicLocation?>?
+        fun findVAnchor(geneData: ImgtGene): Pair<String, GenomicLocation?>?
         {
             // some sequences are longer
             val seqWithGaps = geneData.sequenceWithGaps
@@ -360,7 +359,7 @@ class ImgtGeneCurator
             return Pair(anchor, anchorLocation)
         }
 
-        fun findJAnchor(geneData: ImgtGeneData): Pair<String, GenomicLocation?>?
+        fun findJAnchor(geneData: ImgtGene): Pair<String, GenomicLocation?>?
         {
             // J gene rules
             // 30 base sequence starting with TGGGG (W) or TTTG and TTCG (F)
@@ -414,11 +413,12 @@ class ImgtGeneCurator
             return Pair(anchor, anchorLocation)
         }
 
-        fun findGenomicLocatons(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
+        fun findGenomicLocatons(imgtGeneList: List<ImgtGene>, refGenomeDict: String, bwaIndexImage: String,
                                 refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
+            : List<GenomicLocation?>
         {
-            val constantGenes = imgtGeneDataList.filter { gene -> gene.region == IgTcrRegion.CONSTANT }
-            val nonConstantGenes = imgtGeneDataList.filter { gene -> gene.region != IgTcrRegion.CONSTANT }
+            val constantGenes = imgtGeneList.filter { gene -> gene.region == IgTcrRegion.CONSTANT }
+            val nonConstantGenes = imgtGeneList.filter { gene -> gene.region != IgTcrRegion.CONSTANT }
 
             // V / D / J gene use alignment, constant genes use ensembl
             // reason is that ensembl is easier, and we do not need the alt locations for the constant genes. Another reason
@@ -433,11 +433,11 @@ class ImgtGeneCurator
             }
 
             // also apply genomic location overrides
-            for (geneData in imgtGeneDataList)
+            for (geneData in imgtGeneList)
             {
                 if (geneData.genomicLocation == null)
                 {
-                    val geneLocationOverride = ImgtGeneCuratorSettings.getGenomicLocationOverrides(geneData.geneName, refGenomeVersion)
+                    val geneLocationOverride = ImgtGeneCuratorSettings.getGenomicLocationOverride(geneData.geneName, refGenomeVersion)
                     if (geneLocationOverride != null)
                     {
                         geneData.genomicLocation = geneLocationOverride
@@ -447,12 +447,12 @@ class ImgtGeneCurator
         }
 
         // for each imgt gene segment, use alignment to find the genomic location
-        fun alignForGenomicLocation(imgtGeneDataList: List<ImgtGeneData>, refGenomeDict: String, bwaIndexImage: String,
+        fun alignForGenomicLocation(imgtGeneList: List<ImgtGene>, refGenomeDict: String, bwaIndexImage: String,
                                     refGenomeVersion: RefGenomeVersion, numThreads: Int, ensemblDataCache: EnsemblDataCache)
         {
             // assign a key to each VDJ, such that we can keep track of them
             var key = 0
-            val keyToGeneDataMap: Map<Int, ImgtGeneData> = imgtGeneDataList.associateBy { ++key }
+            val keyToGeneDataMap: Map<Int, ImgtGene> = imgtGeneList.associateBy { ++key }
 
             val alignments = AlignmentUtil.runBwaMem(
                 keyToGeneDataMap.mapValues { geneData -> geneData.value.sequenceWithoutGaps },
@@ -474,6 +474,8 @@ class ImgtGeneCurator
 
                 val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
                 var bestAlignment: AlignmentUtil.BwaMemAlignment? = null
+
+                // TODO: should resolve equal alignments similar to how it's done in cider main app
 
                 for ((alignment, location) in alignmentsWithLocations)
                 {
