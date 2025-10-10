@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.cider.annotation
 
-import com.google.common.collect.Multimap
-import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
@@ -101,8 +98,8 @@ class AlignmentAnnotator
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
-        val vdjToAlignment: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment> = Multimaps.newListMultimap(IdentityHashMap()) { ArrayList() }
-        for ((vdjKey, alignment) in alignmentResults.entries())
+        val vdjToAlignment = HashMap<AlignmentRunData, ArrayList<AlignmentUtil.BwaMemAlignment>>()
+        for ((vdjKey, alignments) in alignmentResults.entries)
         {
             val alignmentRunData = alignmentRunDataMap[vdjKey]
 
@@ -112,7 +109,7 @@ class AlignmentAnnotator
                 throw RuntimeException("error processing alignment results: cannot find key: $vdjKey")
             }
 
-            vdjToAlignment.put(alignmentRunData, alignment)
+            vdjToAlignment.computeIfAbsent(alignmentRunData) { ArrayList() }.addAll(alignments)
         }
 
         val annotations = processAlignments(alignmentRunDataMap.values, vdjToAlignment)
@@ -123,15 +120,16 @@ class AlignmentAnnotator
     }
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
-    // NOTE: we cannot use matches.keySet(), as it might not include some VDJs that returned no match
-    fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>, alignments: Multimap<AlignmentRunData, AlignmentUtil.BwaMemAlignment>)
+    // NOTE: we cannot use alignments.keys, as it might not include some VDJs that returned no match
+    fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
+                          alignments: Map<AlignmentRunData, List<AlignmentUtil.BwaMemAlignment>>)
     : Collection<AlignmentAnnotation>
     {
         sLogger.debug("Processing alignments")
         val alignmentAnnotations = ArrayList<AlignmentAnnotation>()
         for (runData in alignmentRunDataList)
         {
-            alignmentAnnotations.add(processAlignments(runData, alignments[runData]))
+            alignmentAnnotations.add(processAlignments(runData, alignments[runData] ?: emptyList()))
         }
         sLogger.debug("Done processing alignments")
         return alignmentAnnotations

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
@@ -115,15 +114,15 @@ object AlignmentUtil
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            Multimap<Int, BwaMemAlignment>
+            Map<Int, ArrayList<BwaMemAlignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences")
 
         val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
-        val keys = sequences.keys.toList()
-        val results = ArrayListMultimap.create<Int, BwaMemAlignment>()
+        val keys = sequences.keys.sorted()
+        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
         // Alignments are batches because with our BWA-MEM settings, too much memory is allocated with large BAMs.
         for (i in 0 until keys.size step ALIGNMENT_BATCH_SIZE) {
             val batchKeys = keys.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, keys.size))
@@ -133,7 +132,7 @@ object AlignmentUtil
             System.gc()
             val batchAlignments = aligner.alignSeqs(batchByteSeqs)
             val batchResults = parseBwaMemAlignments(sequences, batchKeys, batchAlignments, refGenSeqDict)
-            results.putAll(batchResults)
+            batchResults.forEach { (key, value) -> results.computeIfAbsent(key) { ArrayList() }.addAll(value) }
         }
         sLogger.debug("Alignment complete")
         return results
@@ -167,9 +166,9 @@ object AlignmentUtil
 
     private fun parseBwaMemAlignments(sequences: Map<Int, String>, keys: List<Int>,
                                       alignments: List<List<org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment>>,
-                                      refGenSeqDict: SAMSequenceDictionary): Multimap<Int, BwaMemAlignment>
+                                      refGenSeqDict: SAMSequenceDictionary): Map<Int, List<BwaMemAlignment>>
     {
-        val results = ArrayListMultimap.create<Int, BwaMemAlignment>()
+        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
                 if (alignment.samFlag and 0x4 != 0)
@@ -203,7 +202,7 @@ object AlignmentUtil
                     alignment.alignerScore,
                     percentIdentity
                 )
-                results.put(key.value, resAlignment)
+                results.computeIfAbsent(key.value) { ArrayList() }.add(resAlignment)
             }
         }
         return results
