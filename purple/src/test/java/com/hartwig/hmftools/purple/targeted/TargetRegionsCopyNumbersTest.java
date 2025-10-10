@@ -13,14 +13,17 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.common.region.TaggedRegion;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,20 +42,28 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         targetRegionsData.loadTargetRegionsBed(panelFilePath("panel_1.bed"), ensemblDataCache);
         Map<Chromosome, List<CobaltRatio>> cobaltData = readWithGender(cobaltFilePath("sample_1.ratios.tsv"), FEMALE, true);
         List<PurpleCopyNumber> purpleCopyNumbers = PurpleCopyNumberFile.read(purpleFilePath("segments_1.tsv"));
-        PurpleSegment ps0 = ps("1", 1001, 26694000, DIPLOID);
-        PurpleSegment ps1 = ps("1", 26694001, 250_000_000, HOM_DELETION);
-        PurpleSegment ps2 = ps("7", 1, 55020000, HET_DELETION);
-        PurpleSegment ps3 = ps("7", 55020001, 55035000, UNKNOWN);
-        PurpleSegment ps4 = ps("7", 1, 55035000, NOISE);
+        PurpleSegment ps0 = ps("chr1", 1001, 26694000, DIPLOID);
+        PurpleSegment ps1 = ps("chr1", 26694001, 250_000_000, HOM_DELETION);
+        PurpleSegment ps2 = ps("chr7", 1, 55020000, HET_DELETION);
+        PurpleSegment ps3 = ps("chr7", 55020001, 55035000, UNKNOWN);
+        PurpleSegment ps4 = ps("chr7", 1, 55035000, NOISE);
 
-        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, of(ps0, ps1, ps2, ps3, ps4));
+        List<PurpleSegment> segments = of(ps0, ps1, ps2, ps3, ps4);
+        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, segments);
         TargetRegionsCopyNumbers trc = new TargetRegionsCopyNumbers(dataSource, cobaltData, purpleCopyNumbers);
 
         List<TargetRegionsCopyNumber> copyNumberData = trc.copyNumbersData();
         assertEquals(4, copyNumberData.size());
 
+        TargetRegionDataBuilder targetRegionDataBuilder = new TargetRegionDataBuilder(
+                refGenomeVersion, targetRegionsData.targetRegions(), segments, cobaltData, purpleCopyNumbers);
+
+        targetRegionDataBuilder.buildTargetRegionData();
+        List<TargetRegionsCopyNumber> results = targetRegionDataBuilder.targetRegionData();
+        copyNumberData = results;
+
         TargetRegionsCopyNumber cn0 = copyNumberData.get(0);
-        assertEquals("1", cn0.cobaltRatio().chromosome());
+        assertEquals("chr1", cn0.cobaltRatio().chromosome());
         assertEquals(26694001, cn0.cobaltRatio().position());
         assertEquals(3, cn0.overlappingRegions().size());
         assertEquals(26694021, cn0.overlappingRegions().get(0).start());
@@ -64,7 +75,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         assertEquals(HOM_DELETION, cn0.germlineStatus());
 
         TargetRegionsCopyNumber cn2 = copyNumberData.get(2);
-        assertEquals("7", cn2.cobaltRatio().chromosome());
+        assertEquals("chr7", cn2.cobaltRatio().chromosome());
         assertEquals(55020001, cn2.cobaltRatio().position());
         assertEquals(1, cn2.overlappingRegions().size());
         assertEquals(55020021, cn2.overlappingRegions().get(0).start());
@@ -92,17 +103,31 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
 
         Map<Chromosome, List<CobaltRatio>> cobaltData = readWithGender(cobaltFilePath("sample_2.ratios.tsv"), FEMALE, true);
         List<PurpleCopyNumber> purpleCopyNumbers = PurpleCopyNumberFile.read(purpleFilePath("segments_2.tsv"));
-        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, of());
+
+        // these won't match
+        PurpleSegment ps0 = ps("chr12", 1001, 26694000, DIPLOID);
+        PurpleSegment ps1 = ps("chr19", 1001, 26694000, DIPLOID);
+        List<PurpleSegment> segments = List.of(ps0, ps1);
+
+        TargetRegionsDataSource dataSource = new TargetRegionsDataSource(targetRegionsData, refGenomeVersion, segments);
         TargetRegionsCopyNumbers trc = new TargetRegionsCopyNumbers(dataSource, cobaltData, purpleCopyNumbers);
 
         List<TargetRegionsCopyNumber> copyNumberData = trc.copyNumbersData();
+
+        TargetRegionDataBuilder targetRegionDataBuilder = new TargetRegionDataBuilder(
+                refGenomeVersion, targetRegionsData.targetRegions(), segments, cobaltData, purpleCopyNumbers);
+
+        targetRegionDataBuilder.buildTargetRegionData();
+        List<TargetRegionsCopyNumber> results = targetRegionDataBuilder.targetRegionData();
+        // copyNumberData = results;
+
         assertEquals(13, copyNumberData.size());
 
         //        12	11801001	-1	733.03	-1	0.9016	-1	-1	0.4732
         //        12	11801067	11801187	ETV6_UP_STREAM
         //        12	1	11804000	0.1036	7	0.5478	1.0000	TELOMERE	NONE	BAF_WEIGHTED	16	0.4816	1	1	0.0000	0.1036
         TargetRegionsCopyNumber cn0 = copyNumberData.get(0);
-        assertEquals("12", cn0.cobaltRatio().chromosome());
+        assertEquals("chr12", cn0.cobaltRatio().chromosome());
         assertEquals(11801001, cn0.cobaltRatio().position());
         assertEquals(1, cn0.overlappingRegions().size());
         assertEquals(11801068, cn0.overlappingRegions().get(0).start());
@@ -114,7 +139,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        12	11803061	11803094	ETV6_CODING
         //        12	1	11804000	0.1036	7	0.5478	1.0000	TELOMERE	NONE	BAF_WEIGHTED	16	0.4816	1	1	0.0000	0.1036
         TargetRegionsCopyNumber cn1 = copyNumberData.get(1);
-        assertEquals("12", cn1.cobaltRatio().chromosome());
+        assertEquals("chr12", cn1.cobaltRatio().chromosome());
         assertEquals(11803001, cn1.cobaltRatio().position());
         assertEquals(1, cn1.overlappingRegions().size());
         assertEquals(11803062, cn1.overlappingRegions().get(0).start());
@@ -127,7 +152,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        12	11804453	11804573	ETV6_INTRONIC_LONG
         //        12	11804001	36356693	2.2018	26	0.5217	0.5513	NONE	CENTROMERE	BAF_WEIGHTED	70	0.4028	11804001	11804001	0.9879	1.2139
         TargetRegionsCopyNumber cn2 = copyNumberData.get(2);
-        assertEquals("12", cn2.cobaltRatio().chromosome());
+        assertEquals("chr12", cn2.cobaltRatio().chromosome());
         assertEquals(11804001, cn2.cobaltRatio().position());
         assertEquals(1, cn2.overlappingRegions().size());
         assertEquals(11804454, cn2.overlappingRegions().get(0).start());
@@ -140,7 +165,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        19	1610705	1610755	TCF3_CODING
         //        19	1610001	1611050	6.1096	1	0.5616	0.7935	NONE	NONE	BAF_WEIGHTED	1	0.6448	1612001	1612001	1.2616	4.8479
         TargetRegionsCopyNumber cn3 = copyNumberData.get(3);
-        assertEquals("19", cn3.cobaltRatio().chromosome());
+        assertEquals("chr19", cn3.cobaltRatio().chromosome());
         assertEquals(1610001, cn3.cobaltRatio().position());
         assertEquals(1, cn3.overlappingRegions().size());
         assertEquals(1610706, cn3.overlappingRegions().get(0).start());
@@ -153,7 +178,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        19	1611705	1611755	TCF3_CODING
         //        19	1610001	1611050	6.1096	1	0.5616	0.7935	NONE	NONE	BAF_WEIGHTED	1	0.6448	1612001	1612001	1.2616	4.8479
         TargetRegionsCopyNumber cn4 = copyNumberData.get(4);
-        assertEquals("19", cn4.cobaltRatio().chromosome());
+        assertEquals("chr19", cn4.cobaltRatio().chromosome());
         assertEquals(1611001, cn4.cobaltRatio().position());
         assertEquals(1, cn4.overlappingRegions().size());
         assertEquals(1611706, cn4.overlappingRegions().get(0).start());
@@ -166,7 +191,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        19	1611705	1611755	TCF3_CODING
         //        19	1611051	1611150	6.1096	1	0.5616	0.7935	NONE	NONE	BAF_WEIGHTED	1	0.6448	1612001	1612001	1.2616	4.8479
         TargetRegionsCopyNumber cn5 = copyNumberData.get(5);
-        assertEquals("19", cn5.cobaltRatio().chromosome());
+        assertEquals("chr19", cn5.cobaltRatio().chromosome());
         assertEquals(1611051, cn5.cobaltRatio().position());
         assertEquals(1, cn5.overlappingRegions().size());
         assertEquals(1611706, cn5.overlappingRegions().get(0).start());
@@ -179,7 +204,7 @@ public class TargetRegionsCopyNumbersTest extends TargetRegionsTestBase
         //        19	1611705	1611755	TCF3_CODING
         //        19	1611151	1611350	8.1096	1	0.5636	0.7935	NONE	NONE	BAF_WEIGHTED	1	0.6448	1612001	1612001	1.2616	4.8479
         TargetRegionsCopyNumber cn6 = copyNumberData.get(6);
-        assertEquals("19", cn6.cobaltRatio().chromosome());
+        assertEquals("chr19", cn6.cobaltRatio().chromosome());
         assertEquals(1611151, cn6.cobaltRatio().position());
         assertEquals(1, cn6.overlappingRegions().size());
         assertEquals(1611706, cn6.overlappingRegions().get(0).start());

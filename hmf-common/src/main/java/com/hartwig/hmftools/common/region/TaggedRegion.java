@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.region;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +52,7 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 
     public String formatted()
     {
-        return String.format("%s:%d-%d", mTag, start(), end());
+        return !mTag.isEmpty() ? format("%s:%d-%d", mTag, start(), end()) : format("%d-%d", start(), end());
     }
 
     @Override

@@ -161,7 +161,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
         return regions.stream().filter(t -> this.overlaps(t.chrBaseRegion())).collect(Collectors.toList());
     }
 
-    public  <T extends ChrBaseRegionProvider> List<Pair<ChrBaseRegion,T>> splitByOverlappingRegions(List<T> overlaps)
+    public <T extends ChrBaseRegionProvider> List<Pair<ChrBaseRegion,T>> splitByOverlappingRegions(List<T> overlaps)
     {
         ArrayList<Pair<ChrBaseRegion,T>> regions = new ArrayList<>();
         for(T t : overlaps)
