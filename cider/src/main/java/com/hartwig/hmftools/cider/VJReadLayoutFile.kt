@@ -32,7 +32,7 @@ object VJReadLayoutFile
         val filePath = generateFilename(outputDir, sampleId)
 
         createGzipBufferedWriter(filePath).use { writer ->
-            for ((geneType, overlayList) in overlayMap)
+            for ((geneType, overlayList) in overlayMap.entries.sortedBy { it.key })
             {
                 writeLayouts(writer, geneType, overlayList)
             }
