@@ -24,8 +24,8 @@ import com.hartwig.hmftools.common.region.TaggedRegion;
 
 public class TargetRegionsData
 {
-    private final Map<String, List<TaggedRegion>> mTargetRegions;
-    private final Map<String, List<Integer>> mTargetRegionsMsiIndels;
+    private final Map<String,List<TaggedRegion>> mTargetRegions;
+    private final Map<String,List<Integer>> mTargetRegionsMsiIndels;
 
     private int mTotalBases;
     private int mCodingBases;
@@ -67,6 +67,7 @@ public class TargetRegionsData
         loadTargetRegionsRatios(ratiosFile);
     }
 
+    public Map<String,List<TaggedRegion>> targetRegions() { return mTargetRegions; }
     public boolean hasTargetRegions()
     {
         return !mTargetRegions.isEmpty();

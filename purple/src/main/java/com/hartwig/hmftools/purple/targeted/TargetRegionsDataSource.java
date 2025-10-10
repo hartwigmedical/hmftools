@@ -14,14 +14,17 @@ public class TargetRegionsDataSource implements TargetRegionsCopyNumbers.DataSup
     private final TargetRegionsData mReferenceDataTargetRegions;
     private final RefGenomeVersion mRefGenomeVersion;
     private final List<PurpleSegment> mSegments;
-    private PurpleSegment mLastSegmentReturned = null;
 
-    public TargetRegionsDataSource(final TargetRegionsData targetRegionsData, final RefGenomeVersion genomeVersion,
-            final List<PurpleSegment> mSegments)
+    private PurpleSegment mLastSegmentReturned;
+
+    public TargetRegionsDataSource(
+            final TargetRegionsData targetRegionsData, final RefGenomeVersion genomeVersion, final List<PurpleSegment> segments)
     {
-        this.mReferenceDataTargetRegions = targetRegionsData;
-        this.mRefGenomeVersion = genomeVersion;
-        this.mSegments = mSegments;
+        mReferenceDataTargetRegions = targetRegionsData;
+        mRefGenomeVersion = genomeVersion;
+        mSegments = segments;
+
+        mLastSegmentReturned = null;
     }
 
     @Override
@@ -39,6 +42,7 @@ public class TargetRegionsDataSource implements TargetRegionsCopyNumbers.DataSup
         {
             return mLastSegmentReturned.GermlineState;
         }
+
         for(PurpleSegment segment : mSegments)
         {
             if(segment.containsPosition(position))

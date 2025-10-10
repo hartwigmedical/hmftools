@@ -28,13 +28,15 @@ public class TargetRegionsCopyNumbers
         GermlineStatus germlineStatus(final GenomePosition position);
     }
 
-    private final List<TargetRegionsCopyNumber> mCopyNumbers = new ArrayList<>();
+    private final List<TargetRegionsCopyNumber> mCopyNumbers;
 
     public TargetRegionsCopyNumbers(
             final DataSupplier dataSupplier,
             final Map<Chromosome, List<CobaltRatio>> cobaltData,
             final List<PurpleCopyNumber> purpleCopyNumbers)
     {
+        mCopyNumbers = new ArrayList<>();
+
         SortedMap<CobaltRatio, List<TaggedRegion>> relevantCobaltRegions = new TreeMap<>();
         cobaltData.forEach((chromosome, cobaltRatios) ->
         {
@@ -55,7 +57,7 @@ public class TargetRegionsCopyNumbers
             List<PurpleCopyNumber> overlaps = cobaltRatio.window().findOverlaps(purpleCopyNumbers);
             if(overlaps.isEmpty())
             {
-                PPL_LOGGER.info("No Purple regions for position {} on chromosome {}", cobaltRatio.position(), cobaltRatio.chromosome());
+                PPL_LOGGER.debug("No Purple regions for position {} on chromosome {}", cobaltRatio.position(), cobaltRatio.chromosome());
             }
             else
             {
@@ -72,8 +74,5 @@ public class TargetRegionsCopyNumbers
         });
     }
 
-    public List<TargetRegionsCopyNumber> copyNumbersData()
-    {
-        return mCopyNumbers;
-    }
+    public List<TargetRegionsCopyNumber> copyNumbersData() { return mCopyNumbers; }
 }

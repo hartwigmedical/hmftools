@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.targeted;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.text.DecimalFormat;
@@ -44,11 +45,13 @@ public record TargetRegionsCopyNumber(
     public String toTSV()
     {
         ChrBaseRegion cobaltRegion = cobaltRatio.window();
-        StringJoiner panelRegionsStringJoiner = new StringJoiner(":");
+        StringJoiner panelRegionsStringJoiner = new StringJoiner(ITEM_DELIM);
+
         for(TaggedRegion region : overlappingRegions)
         {
             panelRegionsStringJoiner.add(region.formatted());
         }
+
         boolean masked = cobaltRatio.tumorGCRatio() < 0;
         return new StringJoiner(TSV_DELIM).add(cobaltRatio.chromosome())
                 .add(String.valueOf(cobaltRegion.start()))
