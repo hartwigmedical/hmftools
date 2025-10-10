@@ -116,7 +116,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
     // this method of joining V and J layout finds the candidate matches by looking for layouts
     // that share reads. The layout that share the largest number of reads are tested first.
-    fun joinVjLayoutsBySharedReads(vGeneType: VJGeneType, jGeneType: VJGeneType,
+    private fun joinVjLayoutsBySharedReads(vGeneType: VJGeneType, jGeneType: VJGeneType,
                               vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
                               vdjList: MutableList<VDJSequence>)
     {
@@ -185,7 +185,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // until the J anchor start. The reason for doing it this way is that the V and J anchor sequences
     // are very repetitive and cause too many spurious hash matches (80% of j layouts will match with any
     // v layouts from my tests)
-    fun joinVjLayoutsByWordHash(vGeneType: VJGeneType, jGeneType: VJGeneType,
+    internal fun joinVjLayoutsByWordHash(vGeneType: VJGeneType, jGeneType: VJGeneType,
                                 vLayouts: MutableList<ReadLayout>, jLayouts: MutableList<ReadLayout>,
                                 vdjList: MutableList<VDJSequence>)
     {
@@ -283,7 +283,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     // we already have one side of the anchor
     // use the blosum searcher to find the other side
     // if it is found then build a VDJSequence
-    fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout)
+    internal fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout)
             : VDJSequence?
     {
         sLogger.trace("try complete {} layout: {}", layoutGeneType, layout.consensusSequenceString())
@@ -389,7 +389,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     }
 
     // we should probably say allow some more leeway if a position has very little support
-    fun tryOverlapVJ(vLayout: ReadLayout, jLayout: ReadLayout, vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType): VDJSequence?
+    internal fun tryOverlapVJ(vLayout: ReadLayout, jLayout: ReadLayout, vLayoutGeneType: VJGeneType, jLayoutGeneType: VJGeneType): VDJSequence?
     {
         assert(vLayoutGeneType.vj == VJ.V)
         assert(jLayoutGeneType.vj == VJ.J)
@@ -505,7 +505,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         return vdj
     }
 
-    fun tryCreateOneSidedVdj(layoutGeneType: VJGeneType, layout: ReadLayout): VDJSequence?
+    internal fun tryCreateOneSidedVdj(layoutGeneType: VJGeneType, layout: ReadLayout): VDJSequence?
     {
         sLogger.trace("create one sided {} layout: {}", layoutGeneType, layout.consensusSequenceString())
 
@@ -563,7 +563,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         return vdj
     }
 
-    fun createVJAnchorByReadMatch(
+    private fun createVJAnchorByReadMatch(
         anchorBoundary: Int,
         layout: ReadLayout,
         vjGeneType: VJGeneType) : VJAnchorByReadMatch
