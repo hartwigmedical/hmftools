@@ -193,7 +193,7 @@ public class SageVariant
     {
         if(!variant.isIndel())
             return "";
-        
+
         return variant.isInsert() ? variant.Alt.substring(1) : variant.Ref.substring(1);
     }
 
