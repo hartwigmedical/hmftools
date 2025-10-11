@@ -40,13 +40,9 @@ public class IndelConsensusReads
 
         if(!hasCigarMismatch)
         {
-            int baseLength = templateRead.getReadBases().length;
-            consensusState.setBaseLength(baseLength);
-            consensusState.setBoundaries(templateRead);
-
+            consensusState.setFromRead(templateRead, false);
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
-            consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
             return;
         }
 
@@ -227,7 +223,7 @@ public class IndelConsensusReads
                     }
                     else if(selectedElement.getOperator() == I)
                     {
-                        if(read.elementType() == M || deleteOrSplit(read.elementType()))
+                        if(read.elementType() == M || deleteOrSplit(read.elementType()) || read.elementType() == S)
                         {
                             moveNext = false;
                             useBase = false;

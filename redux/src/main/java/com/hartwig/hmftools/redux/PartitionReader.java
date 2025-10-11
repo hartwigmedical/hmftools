@@ -204,58 +204,6 @@ public class PartitionReader
 
     private static final int LOG_READ_COUNT = 1000000;
 
-    private void preprocessSamRecord(final SAMRecord read)
-    {
-        if(isSbx())
-        {
-            try
-            {
-                stripDuplexIndels(read);
-
-                if(ReduxConfig.RunChecks)
-                    checkIsValidRead(read);
-            }
-            catch(Exception e)
-            {
-                RD_LOGGER.error("preprocess read({}) error: {}", readToString(read), e.toString());
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void postProcessSingleReads(final List<ReadInfo> singleReads)
-    {
-        singleReads.forEach(x -> finaliseRead(x.read()));
-    }
-
-    private void postProcessPrimaryRead(final DuplicateGroup duplicateGroup)
-    {
-        if(duplicateGroup.consensusRead() != null)
-            finaliseRead(duplicateGroup.consensusRead());
-        else if(duplicateGroup.primaryRead() != null)
-            finaliseRead(duplicateGroup.primaryRead());
-    }
-
-    private void finaliseRead(final SAMRecord read)
-    {
-        // TODO: make an interface for seq-tech routines
-        if(isSbx())
-        {
-            try
-            {
-                SbxRoutines.finaliseRead(mConfig.RefGenome, read);
-            }
-            catch(Exception e)
-            {
-                RD_LOGGER.error("finalise read error: {}", readToString(read));
-            }
-        }
-        else if(isUltima())
-        {
-            UltimaRoutines.finaliseRead(mConfig.RefGenome, read);
-        }
-    }
-
     private void processSamRecord(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
@@ -282,6 +230,7 @@ public class PartitionReader
 
         if(mConfig.BqrAndJitterMsiOnly)
         {
+            // assumes the primary / consensus reads have been marked correctly, and any pre & post processing has also been done
             mBamWriter.captureReadInfo(read);
             return;
         }
@@ -336,12 +285,12 @@ public class PartitionReader
             }
         }
 
-        preprocessSamRecord(read);
+        preProcessRead(read);
 
         if(read.isSecondaryAlignment() || mConfig.SkipDuplicateMarking)
         {
             if(mConfig.SkipDuplicateMarking)
-                finaliseRead(read);
+                postProcessRead(read);
 
             mBamWriter.setBoundaryPosition(readStart, false);
             mBamWriter.writeNonDuplicateRead(read);
@@ -360,6 +309,57 @@ public class PartitionReader
             RD_LOGGER.error("read({}) exception: {}", readToString(read), e.toString());
             e.printStackTrace();
             System.exit(1);
+        }
+    }
+
+    private void preProcessRead(final SAMRecord read)
+    {
+        if(isSbx())
+        {
+            try
+            {
+                stripDuplexIndels(read);
+
+                if(ReduxConfig.RunChecks)
+                    checkIsValidRead(read);
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("pre-process read({}) error: {}", readToString(read), e.toString());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void postProcessSingleReads(final List<ReadInfo> singleReads)
+    {
+        singleReads.forEach(x -> postProcessRead(x.read()));
+    }
+
+    private void postProcessPrimaryRead(final DuplicateGroup duplicateGroup)
+    {
+        if(duplicateGroup.consensusRead() != null)
+            postProcessRead(duplicateGroup.consensusRead());
+        else if(duplicateGroup.primaryRead() != null)
+            postProcessRead(duplicateGroup.primaryRead());
+    }
+
+    private void postProcessRead(final SAMRecord read)
+    {
+        if(isSbx())
+        {
+            try
+            {
+                SbxRoutines.finaliseRead(mConfig.RefGenome, read);
+            }
+            catch(Exception e)
+            {
+                RD_LOGGER.error("post-process read error: {}", readToString(read));
+            }
+        }
+        else if(isUltima())
+        {
+            UltimaRoutines.finaliseRead(mConfig.RefGenome, read);
         }
     }
 

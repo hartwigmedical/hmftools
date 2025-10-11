@@ -196,9 +196,9 @@ public class ReadParseState
 
     public String toString()
     {
-        int effectElementIndex = (mIsForward ? mElementIndex : mElementLength - mElementIndex) + 1;
+        int effectiveElementIndex = mIsForward ? mElementIndex + 1 : mElementLength - mElementIndex;
         return format("index(%d) refPos(%d) cigar(%d: %s element=%d/%d) %s",
-                mReadIndex, mCurrentRefPosition, mCigarIndex, mElementType, effectElementIndex, mElementLength,
+                mReadIndex, mCurrentRefPosition, mCigarIndex, mElementType, effectiveElementIndex, mElementLength,
                 mExhausted ? "exhausted" : (mActive ? "active" : "pre-start"));
     }
 }

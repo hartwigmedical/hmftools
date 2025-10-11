@@ -130,12 +130,9 @@ public class ConsensusReads
         }
         else
         {
-            consensusState.setBaseLength(templateRead.getBaseQualities().length);
-            consensusState.setBoundaries(templateRead);
+            consensusState.setFromRead(templateRead, false);
             mBaseBuilder.buildReadBases(readsView, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
-
-            consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
         }
 
         mConsensusStats.registerOutcome(consensusState.outcome());
@@ -244,7 +241,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
+    public static SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 

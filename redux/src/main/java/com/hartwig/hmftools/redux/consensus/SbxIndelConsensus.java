@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUA
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
 
@@ -25,6 +26,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.Arrays;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -32,9 +34,76 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxIndelConsensus
 {
+    public static SAMRecord checkSoftClipIndelPair(final List<SAMRecord> reads)
+    {
+        if(reads.size() != 2)
+            return null;
+
+        // check for a soft-clip overlapping indels and if found use the read with the soft-clips
+        for(int i = 0; i <= 1; ++i)
+        {
+            SAMRecord softClipRead = reads.get(i);
+            SAMRecord indelRead = reads.get(1 - i);
+
+            for(int j = 0; j <= 1; ++j)
+            {
+                boolean checkLeft = (j == 0);
+
+                int softClipLength = checkLeft ? leftSoftClipLength(softClipRead) : rightSoftClipLength(softClipRead);
+
+                if(softClipLength == 0)
+                    continue;
+
+                if(softClipOverlapsIndels(softClipLength, indelRead, checkLeft))
+                    return softClipRead;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean softClipOverlapsIndels(int softClipLength, final SAMRecord otherRead, boolean checkLeft)
+    {
+        int readBases = 0;
+        List<CigarElement> cigarElements = otherRead.getCigar().getCigarElements();
+        int cigarCount = cigarElements.size();
+        int cigarIndex = checkLeft ? 0 : cigarCount - 1;
+        while(cigarIndex >= 0 && cigarIndex < cigarCount)
+        {
+            CigarElement element = cigarElements.get(cigarIndex);
+
+            if(element.getOperator().consumesReadBases())
+            {
+                if(element.getOperator() == I && readBases <= softClipLength)
+                    return true;
+
+                readBases += element.getLength();
+
+                if(readBases > softClipLength)
+                    return false;
+            }
+
+            if(checkLeft)
+                ++cigarIndex;
+            else
+                --cigarIndex;
+        }
+
+        return false;
+    }
+
     public static void determineIndelConsensus(
             final IndelConsensusReads indelConsensusReads, final ConsensusState consensusState, final List<SAMRecord> reads)
     {
+        SAMRecord softClipOverIndelRead = checkSoftClipIndelPair(reads);
+
+        if(softClipOverIndelRead != null)
+        {
+            consensusState.setFromRead(softClipOverIndelRead, true);
+            consensusState.setOutcome(INDEL_SOFTCLIP);
+            return;
+        }
+
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
         int outerUnclippedPosition = -1;
@@ -179,7 +248,7 @@ public class SbxIndelConsensus
         while(true)
         {
             CigarOperator nextOperator = inFinalSoftClip ?
-                    S : determineConsensusCigarOperator(activeReadStates, inAlignedBases, refPosition, isForwardConsensus);
+                    S : determineConsensusCigarOperator(activeReadStates, inAlignedBases, elementOperator, refPosition, isForwardConsensus);
 
             if(elementOperator == null || elementOperator != nextOperator)
             {
@@ -227,23 +296,10 @@ public class SbxIndelConsensus
 
                     // when insert (I) is selected:
                     // - aligned or delete - pause the index and don't use the base
-                    if(nextOperator == M)
+                    if(nextOperator == I)
                     {
-                        if(deleteOrSplit(read.elementType()) || read.elementType() == S)
-                        {
-                            //
-                        }
-                        else if(read.elementType() == I)
-                        {
-                            return Collections.emptyList();
-                        }
-                    }
-                    else if(nextOperator == I)
-                    {
-                        if(read.elementType() == M || deleteOrSplit(read.elementType()))
-                        {
-                            moveNext = false;
-                        }
+                        // keep all other operators fixed, including soft-clips
+                        moveNext = false;
                     }
                 }
 
@@ -282,7 +338,8 @@ public class SbxIndelConsensus
     }
 
     private static CigarOperator determineConsensusCigarOperator(
-            final List<ReadParseState> readStates, boolean inAlignedBases, int refPosition, boolean isForwardConsensus)
+            final List<ReadParseState> readStates, boolean inAlignedBases, final CigarOperator currentOperator,
+            int refPosition, boolean isForwardConsensus)
     {
         CigarOperator operator = null;
         boolean matched = true;
@@ -292,11 +349,16 @@ public class SbxIndelConsensus
             if(read.beforeUnclippedPosition(refPosition))
                 continue;
 
+            CigarOperator readOperator = read.elementType();
+
+            if(currentOperator != null && !isValidOperatorTransition(currentOperator, readOperator))
+                continue;
+
             if(operator == null)
             {
-                operator = read.elementType();
+                operator = readOperator;
             }
-            else if(operator != read.elementType())
+            else if(operator != readOperator)
             {
                 matched = false;
                 break;
@@ -327,6 +389,9 @@ public class SbxIndelConsensus
                 continue;
 
             CigarOperator readOperator = read.elementType();
+
+            if(currentOperator != null && !isValidOperatorTransition(currentOperator, readOperator))
+                continue;
 
             if(inAlignedBases && readOperator == S)
             {
@@ -418,6 +483,15 @@ public class SbxIndelConsensus
     private static boolean useFirstCigarOperator(final CigarOperator first, final CigarOperator second)
     {
         return first.ordinal() <= second.ordinal();
+    }
+
+    private static boolean isValidOperatorTransition(final CigarOperator current, final CigarOperator proposed)
+    {
+        if(current == proposed || current == M)
+            return true;
+
+        // all others must transition to aligned
+        return proposed == M;
     }
 
     private enum SbxQualType

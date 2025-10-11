@@ -79,6 +79,14 @@ public final class SbxRoutines
             throw new IllegalArgumentException(format("read missing %s tag: %s", SBX_YC_TAG, readToString(record)));
         }
 
+        // convert inserts to soft-clips if required
+        if(hasInvalidCigar(record))
+        {
+            List<CigarElement> fixedElements = Lists.newArrayList(record.getCigar().getCigarElements());
+            correctInvalidCigar(fixedElements);
+            record.setCigar(new Cigar(fixedElements));
+        }
+
         List<Integer> duplexIndelIndices = getDuplexIndelIndices(ycTagStr);
 
         if(duplexIndelIndices == null)
@@ -250,8 +258,7 @@ public final class SbxRoutines
         newCigarElements.add(new CigarElement(currentCigarLength, curentCigarOp));
 
         // convert any initial insert to soft-clip, as keeping with alignment expectations
-        if(newCigarElements.get(0).getOperator() == I)
-            newCigarElements.set(0, new CigarElement(newCigarElements.get(0).getLength(), S));
+        correctInvalidCigar(newCigarElements);
 
         checkLeftAlignment(newCigarElements, readBases);
 
@@ -298,6 +305,36 @@ public final class SbxRoutines
             {
                 RD_LOGGER.debug("invalid read({}) reason({}) details: {}", record.getReadName(), validReason, readToString(record));
             }
+        }
+    }
+
+    private static boolean hasInvalidCigar(final SAMRecord record)
+    {
+        if(record.getCigar().getCigarElements().get(0).getOperator() == I)
+            return true;
+
+        if(record.getCigar().getCigarElements().size() > 1)
+        {
+            if(record.getCigar().getCigarElements().get(record.getCigar().getCigarElements().size() - 1).getOperator() == I)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void correctInvalidCigar(final List<CigarElement> cigarElements)
+    {
+        // no attempt is made at this stage to correct the alignment score or num of mutations
+        if(cigarElements.get(0).getOperator() == I)
+        {
+            cigarElements.set(0, new CigarElement(cigarElements.get(0).getLength(), S));
+        }
+
+        if(cigarElements.size() > 1)
+        {
+            int lastIndex = cigarElements.size() - 1;
+            if(cigarElements.get(lastIndex).getOperator() == I)
+                cigarElements.set(lastIndex, new CigarElement(cigarElements.get(lastIndex).getLength(), S));
         }
     }
 
