@@ -31,7 +31,7 @@ public class ChrBaseRegionTest
 
         assertFalse(theRegion.containsPosition(new GP(1500, "18")));
     }
-    
+
     @Test
     public void findIntersectingRegionsWithEmpty()
     {
