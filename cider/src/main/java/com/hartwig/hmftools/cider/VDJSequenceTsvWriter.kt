@@ -200,7 +200,7 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
-    private fun zeroBaseAlignStart(alignment: AlignmentUtil.BwaMemAlignment?) : Int?
+    private fun zeroBaseAlignStart(alignment: AlignmentUtil.Alignment?) : Int?
     {
         return if (alignment == null) null else alignment.queryAlignStart - 1
     }

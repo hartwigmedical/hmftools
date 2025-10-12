@@ -463,43 +463,20 @@ class ImgtGeneCurator
             {
                 sLogger.debug("Processing alignments for gene {}", geneData)
 
+                val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
+                sLogger.debug("Ensembl gene: {}", ensemblGene)
+
                 val alignmentsWithLocations = geneAlignments
                     .filter { it.editDistance <= ALIGNMENT_MAX_MISMATCH &&
                             it.queryAlignEnd - it.queryAlignStart + 1 >= it.querySeq.length - ALIGNMENT_MAX_MISMATCH }
-                    .mapNotNull {AlignmentUtil.toGenomicLocation(it)?.let { location -> Pair(it, location) } }
-                    // Order by alignment score then primary assembly first, with position as a tie-breaker
-                    .sortedWith(compareBy(
-                        { -it.first.alignmentScore }, { !it.second.inPrimaryAssembly }, { it.first.refContig }, { it.first.refStart }))
+                    .mapNotNull { AlignmentUtil.toGenomicLocation(it)?.let { location -> Pair(it, location) } }
+                    .sortedWith(Comparator { a, b -> compareAlignments(a.first, a.second, b.first, b.second, ensemblGene) })
 
-                val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
-                var bestAlignment: AlignmentUtil.BwaMemAlignment? = null
+                alignmentsWithLocations.forEach { sLogger.debug("Alignment: {}, location: {}", it.first, it.second) }
+
+                val bestAlignment = alignmentsWithLocations.firstOrNull()?.first
 
                 // TODO: should resolve equal alignments similar to how it's done in cider main app
-
-                for ((alignment, location) in alignmentsWithLocations)
-                {
-                    sLogger.debug("considering alignment: {}", alignment)
-
-                    if (bestAlignment == null) {
-                        bestAlignment = alignment
-                    }
-
-                    else if (bestAlignment.alignmentScore == alignment.alignmentScore)
-                    {
-                        // if they have same score, we want to choose the one that overlaps with ensembl gene
-                        sLogger.debug("considering ensembl gene {}", ensemblGene)
-                        if (ensemblGene != null &&
-                            // TODO: check if it's chromosome or contig
-                            ensemblGene.Chromosome == location.contig.name &&
-                            ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD) &&
-                            ensemblGene.GeneStart <= location.position.end() &&
-                            ensemblGene.GeneEnd >= location.position.start())
-                        {
-                            bestAlignment = alignment
-                            sLogger.debug("gene: {}*{}, using alignment that overlaps with ensembl", geneData.geneName, geneData.allele)
-                        }
-                    }
-                }
 
                 var location: GenomicLocation? = null
                 if (bestAlignment == null)
@@ -527,6 +504,64 @@ class ImgtGeneCurator
             return locations
         }
 
+        // Returns: -1 if alignment1 is better, 0 if equal, 1 if alignment2 is better
+        fun compareAlignments(alignment1: AlignmentUtil.Alignment, location1: GenomicLocation,
+                              alignment2: AlignmentUtil.Alignment, location2: GenomicLocation, ensemblGene: GeneData?)
+            : Int
+        {
+            // Always prefer higher alignment score
+            if (alignment1.alignmentScore > alignment2.alignmentScore)
+            {
+                return -1
+            }
+            else if (alignment1.alignmentScore < alignment2.alignmentScore)
+            {
+                return 1
+            }
+
+            // Then prefer the primary assembly.
+            if (location1.inPrimaryAssembly && !location2.inPrimaryAssembly)
+            {
+                return -1
+            }
+            else if (!location1.inPrimaryAssembly && location2.inPrimaryAssembly)
+            {
+                return 1
+            }
+
+            // Then prefer the location that overlaps the ensembl gene.
+            if (ensemblGene != null) {
+                val overlapsEnsembl1 = overlapsEnsemblGene(location1, ensemblGene)
+                val overlapsEnsembl2 = overlapsEnsemblGene(location2, ensemblGene)
+                if (overlapsEnsembl1 && !overlapsEnsembl2)
+                {
+                    return -1
+                }
+                else if (!overlapsEnsembl1 && overlapsEnsembl2)
+                {
+                    return 1
+                }
+            }
+
+            // Tie breaker by position to make it deterministic.
+            if (alignment1.refContig != alignment2.refContig)
+            {
+                return alignment1.refContig.compareTo(alignment2.refContig)
+            }
+            if (alignment1.refStart != alignment2.refStart)
+            {
+                return alignment1.refStart.compareTo(alignment2.refStart)
+            }
+            return 0
+        }
+
+        fun overlapsEnsemblGene(location: GenomicLocation, ensemblGene: GeneData) =
+            // TODO: check if it's chromosome or contig
+            ensemblGene.Chromosome == location.contig.name
+                    && ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD)
+                    && ensemblGene.GeneStart <= location.position.end()
+                    && ensemblGene.GeneEnd >= location.position.start()
+
         fun toEnsemblGeneName(name: String) = name.replace("/", "").uppercase()
 
         fun toGenomicLocation(ensemblGene: GeneData, refGenomeVersion: RefGenomeVersion) : GenomicLocation
@@ -538,7 +573,7 @@ class ImgtGeneCurator
                 Strand.valueOf(ensemblGene.Strand.toInt()))
         }
 
-        fun alignmentToQueryGenomicLocation(alignment: AlignmentUtil.BwaMemAlignment) : GenomicLocation
+        fun alignmentToQueryGenomicLocation(alignment: AlignmentUtil.Alignment) : GenomicLocation
         {
             // we need to correct for the ends to make sure things align properly
             val startExtend = alignment.queryAlignStart - 1

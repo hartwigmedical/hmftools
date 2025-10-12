@@ -31,7 +31,7 @@ object AlignmentUtil
 
     private val sLogger = LogManager.getLogger(AlignmentUtil::class.java)
 
-    data class BwaMemAlignment(
+    data class Alignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
@@ -49,7 +49,7 @@ object AlignmentUtil
         }
     }
 
-    fun toGenomicLocation(alignment: BwaMemAlignment): GenomicLocation?
+    fun toGenomicLocation(alignment: Alignment): GenomicLocation?
     {
         val contig = Contig(alignment.refContig)
 
@@ -64,14 +64,14 @@ object AlignmentUtil
     }
 
     fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            List<List<BwaMemAlignment>>
+            List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences")
 
         val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
-        val results = ArrayList<List<BwaMemAlignment>>()
+        val results = ArrayList<List<Alignment>>()
         // Alignments are batches because with our BWA-MEM settings, too much memory is allocated with large BAMs.
         for (i in 0 until sequences.size step ALIGNMENT_BATCH_SIZE) {
             val batchSequences = sequences.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, sequences.size))
@@ -115,7 +115,7 @@ object AlignmentUtil
 
     private fun parseBwaMemAlignments(sequences: List<String>,
                                       alignments: List<List<org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment>>,
-                                      refGenSeqDict: SAMSequenceDictionary): List<List<BwaMemAlignment>>
+                                      refGenSeqDict: SAMSequenceDictionary): List<List<Alignment>>
     {
         require(sequences.size == alignments.size)
         return sequences.zip(alignments)
@@ -125,7 +125,7 @@ object AlignmentUtil
 
     private fun parseBwaMemAlignment(querySeq: String, alignment: org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment,
                                      refGenSeqDict: SAMSequenceDictionary)
-        : BwaMemAlignment?
+        : Alignment?
     {
         if (alignment.samFlag and 0x4 != 0)
         {
@@ -146,7 +146,7 @@ object AlignmentUtil
         // nMismatches is not the best name - it's actually the edit distance.
         // Which means this calculation is correct for mismatches and gaps.
         val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
-        return BwaMemAlignment(
+        return Alignment(
             querySeq,
             queryAlignStart,
             queryAlignEnd,
