@@ -61,13 +61,13 @@ data class Contig(
         get() = normalisedContig.split("_", limit = 2).getOrNull(1)
 
     private val isAltLocus: Boolean
-        get() = extension?.endsWith("_alt") ?: false
+        get() = extension?.endsWith("alt") ?: false
 
     private val isUnlocalised: Boolean
-        get() = extension?.endsWith("_random") ?: false
+        get() = extension?.endsWith("random") ?: false
 
     private val isUnplaced: Boolean
-        get() = baseChromosome.startsWith("un_")
+        get() = baseChromosome.startsWith("un")
 
     private val isMitochondrial: Boolean
         get() = baseChromosome == "mt" || baseChromosome == "m"
