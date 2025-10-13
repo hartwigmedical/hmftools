@@ -476,8 +476,6 @@ class ImgtGeneCurator
 
                 val bestAlignment = alignmentsWithLocations.firstOrNull()?.first
 
-                // TODO: should resolve equal alignments similar to how it's done in cider main app
-
                 var location: GenomicLocation? = null
                 if (bestAlignment == null)
                 {
@@ -556,7 +554,6 @@ class ImgtGeneCurator
         }
 
         fun overlapsEnsemblGene(location: GenomicLocation, ensemblGene: GeneData) =
-            // TODO: check if it's chromosome or contig
             ensemblGene.Chromosome == location.contig.name
                     && ensemblGene.forwardStrand() == (location.strand == Strand.FORWARD)
                     && ensemblGene.GeneStart <= location.position.end()
@@ -566,7 +563,6 @@ class ImgtGeneCurator
 
         fun toGenomicLocation(ensemblGene: GeneData, refGenomeVersion: RefGenomeVersion) : GenomicLocation
         {
-            // TODO: what is ensembleGene.Chromosome compared to contig?
             val contig = Contig(refGenomeVersion.versionedChromosome(ensemblGene.Chromosome))
             return GenomicLocation(
                 contig, BaseRegion(ensemblGene.GeneStart,ensemblGene.GeneEnd),
