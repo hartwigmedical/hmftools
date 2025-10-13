@@ -33,6 +33,7 @@ import java.util.Set;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.CobaltApplication;
+import com.hartwig.hmftools.cobalt.testutils.DiploidRegionsFileWriter;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
@@ -486,61 +487,46 @@ public class ProcessBamTest
         runCobalt();
 
         // Normalisation calculations
-        // Step 1: get mean and median of non-zero depths and calculate median/mean.
-        // There are 59 read windows. Apart from the 4 depth 0 windows (positions > 56000) the depths are:
-        // 10, 10, 10, 11, 11, 11, ..., 19, 19, 19, 20, 20, 20, 20, 21, 22, ...,30, 50, 51, ..., 60
-        // The median is the 28th, which is 19:
-        // 1-3 10, 4-6 11, ... , 28-30 19
-        // The total is  3 * (10 + 11 + ... + 20) + (20 + 21 + ... + 30) + (50 + 51 + ... + 60) = 3 * 165 + 275 + 605 = 1375
-        // mean = 1375 / 55 = 25
-        // GC median normalisation factor = median/mean = 19/25 = 0.76
-
-        // Step 2: assign each window to a GC bucket. Calculate the bucket median depths and smooth these median values
+        // Assign each read window to a GC bucket. Calculate the bucket median depths and smooth these median values
         // gc buckets:
         // bucket median count
         // 40 10 5
         // 41 11 5
+        // 42 12 5
         // ...
         // 50 20 5
-        // These get smoothed to:
-        // 41 11 5
+        //
+        // These buckets get smoothed to:
+        // 39 10/3
+        // 40 21/3
+        // 41 33/11
         // ...
-        // 49 19 5
-        // (so no change except the first and last values are removed).
+        // 49 57/3
+        // 50 39/3
+        // 51 20/3
 
-        // Step 3: multiply each window's read depth by the median normalisation factor
-        // and divide by the median depth for that gc value. Note that the median
-        // depths are 0.41 11, 0.42 12,..., 0.49 19
-        // 6001, 7001, 8001: 11 -> 11*0.76/11
-        // 9001 21 -> 21*0.76/11
-        // 10_001 51 -> 51*0.76/11
-        // 11_001, 12_001, 13_001: 12 -> 12*0.76/12
-        // 14_001 22 -> 22*0.76/12
-        // 15_001 51 -> 53*0.76/12
+        // GC-normalise by multiplying each window's read depth by the smoothed
+        // median read depth for windows belonging to the same GC bucket.
+        // Note that the median depths are 0.40, 0.41 11, 0.42 12,..., 0.49 19
+        // 1001, 2001, 3001, 4001, 5001: divide by 7.0
+        // 6001, 7001, 8001, 9001, 10001: 11 -> divide by 11.0
         // ...
 
-        // Step 4: get the median of the on-target windows and normalise by dividing by this.
-        // The median is 0.76 so the
-        // 6001, 7001, 8001: 11 -> 11/11
-        // 9001 21 -> 21/11
-        // 10_001 51 -> 51/11
-        // 11_001, 12_001, 13_001: 12 -> 12/12
-        // 14_001 22 -> 22/12
-        // 15_001 51 -> 53/12
-        // ...
-        // ????????????????? We've now multiplied by the median and then divided by it.
-        // Maybe we should not do either of these steps.
-
-        // Step 5: normalise by dividing by the mean of the non-negative values
+        // Finally, normalise by dividing by the mean of the non-negative values
         // so that the mean of the result is 1.0.
         // The values are:
-        // (11, 11, 11, 21, 51)/11, (12, 12, 12, 22, 52)/12, ..., (19, 19, 19, 29, 59)/19
-        // Total = 105/11 + 110/12 + ... + 145/19 = 75.94
-        // Count = 45, so mean = 1.688
-        double mean = 1.688;
+        // (10, 10, 10, 20, 50)/7, (11, 11, 11, 21, 51)/11, (12, 12, 12, 22, 52)/12, ..., (19, 19, 19, 29, 59)/19, (20, 20, 20, 30, 60)/13
+        // Total = 100/7.0 + 105/11 + 110/12 + ... + 145/19 = 101.76275
+        // Count = 55, so mean = 1.850231745
+        double mean = 1.850231745;
 
-        // 1-1000 0 reads, 1001-6000 blocked out because of gc bucket smoothing
-        checkChr1TumorRatio(-1.0, 0, 1, 2, 3, 4, 5);
+        // 1-1000 0 reads
+        checkChr1TumorRatio(-1.0, 0);
+
+        // 1001-5001 gc ratio = 1.0/7.0, depth = 10, 10, 10, 20, 50
+        checkChr1TumorRatio(10.0/7.0/mean, 1, 2, 3);
+        checkChr1TumorRatio(20.0/7.0/mean, 4);
+        checkChr1TumorRatio(50.0/7.0/mean, 5);
 
         // 6001-11_000 gc 0.41 and read depths 11, 11, 11, 21, 51
         checkChr1TumorRatio(1.0 / mean, 6, 7, 8);
@@ -552,13 +538,18 @@ public class ProcessBamTest
         checkChr1TumorRatio(22.0 / 12.0 / mean, 14);
         checkChr1TumorRatio(52.0 / 12.0 / mean, 15);
 
-        // 46_001-51_000 gc 0.42 and read depths 19, 19, 19, 29, 59
+        // 46_001-51_000 gc 0.49 and read depths 19, 19, 19, 29, 59
         checkChr1TumorRatio(1.0 / mean, 46, 47, 48);
         checkChr1TumorRatio(29.0 / 19.0 / mean, 49);
         checkChr1TumorRatio(59.0 / 19.0 / mean, 50);
 
-        // 51_001-56_000 blocked out because of gc bucket smoothing
-        checkChr1TumorRatio(-1.0, 51, 52, 53, 54, 55);
+        // 52_001-56_000 gc 0.50 and read depths 20, 20, 20, 30, 60
+        checkChr1TumorRatio(20.0/13.0 / mean, 51, 52, 53);
+        checkChr1TumorRatio(30.0 / 13.0 / mean, 54);
+        checkChr1TumorRatio(60.0 / 13.0 / mean, 55);
+
+        // 56_001-59_000 blocke
+        checkChr1TumorRatio(-1.0, 56, 57, 58, 59);
     }
 
     @Test

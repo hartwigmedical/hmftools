@@ -40,6 +40,8 @@ import java.util.concurrent.ExecutorService;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.count.BRC;
+import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
+import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
 import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
@@ -52,6 +54,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -277,6 +280,23 @@ public class CobaltConfig
             return ArrayListMultimap.create();
         }
     }
+
+    public ListMultimap<Chromosome, DiploidStatus> diploidRegions()
+    {
+        if (TumorOnlyDiploidBed == null)
+        {
+            return ArrayListMultimap.create();
+        }
+        try {
+            return new DiploidRegionLoader(new ChromosomePositionCodec(), TumorOnlyDiploidBed).regions();
+        }
+        catch (IOException e)
+        {
+            CB_LOGGER.error("failed to load diploid regions bed file: {}", e.toString());
+            return ArrayListMultimap.create();
+        }
+    }
+
 
     public BRC tumorBamReader(ExecutorService executorService) throws IOException
     {

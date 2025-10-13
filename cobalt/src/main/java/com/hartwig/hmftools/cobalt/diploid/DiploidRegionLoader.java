@@ -7,12 +7,15 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,18 +24,23 @@ import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.readers.LineIterator;
-
-import tech.tablesaw.api.*;
+import tech.tablesaw.api.IntColumn;
+import tech.tablesaw.api.Row;
+import tech.tablesaw.api.StringColumn;
+import tech.tablesaw.api.Table;
 
 public class DiploidRegionLoader implements Consumer<Locatable>
 {
     private final Table mResult;
     private final Table mContigResult;
+    private final ListMultimap<Chromosome, DiploidStatus> Regions = ArrayListMultimap.create();
+
 
     private final ChromosomePositionCodec mChromosomePosCodec;
 
     private String mChromosome = null;
-    private int mStart = 0;
+    private Chromosome CurrentChromosome;
+    private int mPosition = 0;
 
     public DiploidRegionLoader(final ChromosomePositionCodec chromosomePosCodec, final String diploidBedPath) throws IOException
     {
@@ -66,18 +74,30 @@ public class DiploidRegionLoader implements Consumer<Locatable>
         {
             finaliseCurrent();
             mChromosome = bed.getContig();
-            mStart = 1;
+            CurrentChromosome = HumanChromosome.fromString(mChromosome);
+            mPosition = 1;
         }
-
         createRatio(bed.getContig(), bed.getStart(), bed.getEnd());
-        mStart = bed.getEnd() + 1;
+        mPosition = bed.getEnd() + 1;
     }
 
     private void createRatio(String contig, int start, int end)
     {
+        // Add non-diploid entries from current position to the start of this block.
+        int nonDiploidPosition = mPosition;
+        while(nonDiploidPosition < start)
+        {
+            DiploidStatus region = new DiploidStatus(contig, nonDiploidPosition, nonDiploidPosition + WINDOW_SIZE - 1, false);
+            Regions.put(CurrentChromosome, region);
+            nonDiploidPosition += WINDOW_SIZE;
+        }
+
         int position = start;
         while(position < end)
         {
+            DiploidStatus region = new DiploidStatus(contig, position, position + WINDOW_SIZE - 1, true);
+            Regions.put(CurrentChromosome, region);
+
             Row row = mContigResult.appendRow();
             row.setString(CobaltColumns.CHROMOSOME, contig);
             row.setInt(CobaltColumns.POSITION, position);
@@ -87,7 +107,7 @@ public class DiploidRegionLoader implements Consumer<Locatable>
 
     private void finaliseCurrent()
     {
-        if(mChromosome != null && mStart > 0)
+        if(mChromosome != null && mPosition > 0)
         {
             mResult.append(mContigResult);
         }
@@ -101,5 +121,10 @@ public class DiploidRegionLoader implements Consumer<Locatable>
         finaliseCurrent();
         mChromosomePosCodec.addEncodedChrPosColumn(mResult, false);
         return mResult;
+    }
+
+    public ListMultimap<Chromosome, DiploidStatus> regions()
+    {
+        return Regions;
     }
 }

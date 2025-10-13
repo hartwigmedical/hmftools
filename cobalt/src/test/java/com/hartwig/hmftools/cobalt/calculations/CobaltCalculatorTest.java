@@ -184,6 +184,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         config = Mockito.mock(CobaltConfig.class);
         when(config.gcProfileData()).thenReturn(gcProfileData);
         when(config.excludedRegions()).thenReturn(excludedRegions);
+        when(config.diploidRegions()).thenReturn(ArrayListMultimap.create());
         when(config.genome()).thenReturn(V38);
 
         // Create the reference and tumor depth readings

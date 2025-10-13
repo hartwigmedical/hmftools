@@ -421,7 +421,7 @@ public class RatioSupplier
 
     public static void printTable(Table table, String fileName)
     {
-        if (table == null)
+        if (table != null)
         {
             return;
         }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.e2e;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.COMPARISON_VALUES_DIR;
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.ORIGINAL_VALUES_DIR;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
@@ -21,6 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.hartwig.hmftools.cobalt.CobaltApplication;
+import com.hartwig.hmftools.cobalt.CobaltApplicationOld;
 import com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison;
 
 import org.junit.Ignore;
@@ -30,9 +32,10 @@ import org.junit.Test;
 public class CobaltBatchLocal
 {
     String bamBase = "/Users/timlavers/work/scratch/datasets/pmhaem/bam/";
-    String cobaltOutputBase = "/Users/timlavers/work/junk/rubbish/new/";
+    String cobaltOutputBase = "/Users/timlavers/work/junk/rubbish/";
     String gcProfile =
             "/Users/timlavers/work/data/pipeline_resources/hmf_pipeline_resources.37_v2.0--3/dna/copy_number/GC_profile.1000bp.37.cnp";
+    String diploidBed = "/Users/timlavers/work/data/pipeline_resources/hmf_pipeline_resources.37_v2.0--3/dna/copy_number/DiploidRegions.37.bed";
     String panel = "/Users/timlavers/work/scratch/datasets/pmhaem/resources/cobalt_normalisation.pmh-panel-v1-1.37.tsv";
 
     @Test
@@ -80,7 +83,7 @@ public class CobaltBatchLocal
     {
         String bamFile = bamBase + sample + ".bam";
         String outputDir = cobaltOutputBase + sample;
-        String[] args = new String[14];
+        String[] args = new String[16];
         int index = 0;
 //        args[index++] = String.format("-%s", SPECIFIC_REGIONS);
 //        args[index++] = String.format("%s", "1:2491001-2496001");
@@ -97,12 +100,15 @@ public class CobaltBatchLocal
         args[index++] = String.format("-%s", OUTPUT_DIR);
         args[index++] = String.format("%s", outputDir);
         args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
-        args[index] = String.format("%s", panel);
+        args[index++] = String.format("%s", panel);
+        args[index++] = String.format("-%s", TUMOR_ONLY_DIPLOID_BED);
+        args[index] = String.format("%s", diploidBed);
+
         //2491001
 
         try
         {
-            CobaltApplication.main(args);
+            CobaltApplicationOld.main(args);
         }
         catch(Exception e)
         {
