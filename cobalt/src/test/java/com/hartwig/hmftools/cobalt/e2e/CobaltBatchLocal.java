@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.COMPARIS
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.ORIGINAL_VALUES_DIR;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
@@ -22,7 +21,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.hartwig.hmftools.cobalt.CobaltApplication;
-import com.hartwig.hmftools.cobalt.CobaltApplicationOld;
 import com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison;
 
 import org.junit.Ignore;
@@ -108,7 +106,7 @@ public class CobaltBatchLocal
 
         try
         {
-            CobaltApplicationOld.main(args);
+            CobaltApplication.main(args);
         }
         catch(Exception e)
         {
