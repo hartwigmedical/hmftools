@@ -1,19 +1,46 @@
 package prep;
 
+import java.util.StringJoiner;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 public class FeatureValue<T>
 {
-    public String mName;
+    public String mKey;
     public T mValue;
     public FeatureType mType;
 
-    public FeatureValue(String name, T value, FeatureType type)
+    // For multi-field keys
+    private static final String KEY_VALUE_SEPARATOR = "=";
+    private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
+
+
+    public FeatureValue(String key, T value, FeatureType type)
     {
-        mName = name;
+        mKey = key;
         mValue = value;
         mType = type;
     }
 
     public Class<?> getDataType() {
         return mValue.getClass();
+    }
+
+    public static String keyFromPair(String fieldName, String fieldValue)
+    {
+        return fieldName + KEY_VALUE_SEPARATOR + fieldValue;
+    }
+
+    @SafeVarargs
+    public static String keyFromPairs(Pair<String, String>... pairs)
+    {
+        StringJoiner joiner = new StringJoiner(KEY_VALUE_PAIR_SEPARATOR);
+
+        for(Pair<String, String> pair : pairs)
+        {
+            joiner.add(keyFromPair(pair.getKey(), pair.getValue()));
+        }
+
+        return joiner.toString();
     }
 }
