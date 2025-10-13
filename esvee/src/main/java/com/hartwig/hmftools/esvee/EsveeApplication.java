@@ -30,11 +30,17 @@ public class EsveeApplication
         // run prep
         runPrep();
 
+        System.gc();
+
         // run assembly
         runAssembly();
 
+        System.gc();
+
         // run depth annotation
         runDepthAnnotation();
+
+        System.gc();
 
         // run calling
         runCaller();
@@ -46,7 +52,6 @@ public class EsveeApplication
     {
         PrepApplication prepApplication = new PrepApplication(mConfigBuilder);
         prepApplication.run();
-        System.gc();
     }
 
     private void runAssembly()
@@ -54,14 +59,12 @@ public class EsveeApplication
         AssemblyApplication assemblyApplication = new AssemblyApplication(mConfigBuilder);
         assemblyApplication.run();
         assemblyApplication.close();
-        System.gc();
     }
 
     private void runDepthAnnotation()
     {
         DepthAnnotator depthAnnotator = new DepthAnnotator(mConfigBuilder);
         depthAnnotator.run();
-        System.gc();
     }
 
     private void runCaller()
