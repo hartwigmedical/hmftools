@@ -15,16 +15,16 @@ import prep.FeatureType;
 import prep.FeatureValue;
 import prep.PrepConfig;
 
-public class CobaltDataLoader
+public class CobaltGcMediansPrep
 {
     PrepConfig mConfig;
 
-    public CobaltDataLoader(PrepConfig config)
+    public CobaltGcMediansPrep(PrepConfig config)
     {
         mConfig = config;
     }
 
-    public List<FeatureValue<Double>> loadCobaltGcMedians(String sampleId)
+    public List<FeatureValue<Double>> extractSampleData(String sampleId)
     {
         try {
             String filePath = CobaltGcMedianFile.generateFilename(mConfig.getCobaltDir(sampleId), sampleId);
