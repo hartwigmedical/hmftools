@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY
 import com.hartwig.hmftools.cider.genes.Contig
 import com.hartwig.hmftools.cider.genes.genomicLocation
 import com.hartwig.hmftools.common.cider.IgTcrGene
@@ -134,8 +135,8 @@ class AlignmentAnnotator
         // Check if any alignments cover the whole sequence, in which case there is no VDJ rearrangement.
         for (alignment in alignments)
         {
-            if (alignment.percentageIdent >= CiderConstants.ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
-                alignmentRunData.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + 5
+            if (alignment.percentageIdent >= ALIGNMENT_MATCH_FULL_MATCH_IDENTITY &&
+                alignmentRunData.querySeq.length <= (alignment.queryAlignEnd - alignment.queryAlignStart) + (100 - ALIGNMENT_MATCH_FULL_MATCH_IDENTITY)
             )
             {
                 return AlignmentAnnotation(
