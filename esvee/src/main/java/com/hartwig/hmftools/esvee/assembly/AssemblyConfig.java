@@ -193,7 +193,7 @@ public class AssemblyConfig
 
         if(TumorIds.isEmpty() && ReferenceIds.isEmpty())
         {
-            SV_LOGGER.error("no tumor oe reference IDs provided");
+            SV_LOGGER.error("no tumor or reference IDs provided");
             System.exit(1);
         }
 
@@ -201,6 +201,15 @@ public class AssemblyConfig
         {
             SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
+        }
+
+        if(asSubRoutine)
+        {
+            if(!TumorBams.isEmpty())
+                SV_LOGGER.debug("processing tumor prep bam(s): {}", TumorBams);
+
+            if(!ReferenceBams.isEmpty())
+                SV_LOGGER.debug("processing reference prep bam(s): {}", ReferenceBams);
         }
 
         // in germline mode, transfer to reference values to the tumor ones
