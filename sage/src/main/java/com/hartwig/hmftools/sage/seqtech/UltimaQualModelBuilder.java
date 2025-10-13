@@ -36,7 +36,7 @@ public class UltimaQualModelBuilder
 
         UltimaRealignedQualModels qualModels;
 
-        if(!canSkipRealignedModels(readContext))
+        if(canSkipRealignedModels(readContext))
         {
             qualModels = new UltimaRealignedQualModels(qualModel);
         }

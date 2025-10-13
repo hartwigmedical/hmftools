@@ -206,11 +206,14 @@ public enum JitterMatch
             boolean withinPermittedRange = withinCore
                     && readContextIndex >= permittedLowQualRangeLower && readContextIndex <= permittedLowQualRangeUpper;
 
-            if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseQual(readQuals[readIndex]))
-                return false;
+            if(readQuals != null)
+            {
+                if(withinPermittedRange && BaseQualAdjustment.isUncertainBaseQual(readQuals[readIndex]))
+                    return false;
 
-            if(withinCore && isMediumBaseQual(readQuals[readIndex]))
-                return false;
+                if(withinCore && isMediumBaseQual(readQuals[readIndex]))
+                    return false;
+            }
 
             if(readBases[readIndex] == readContextBase)
                 continue;
