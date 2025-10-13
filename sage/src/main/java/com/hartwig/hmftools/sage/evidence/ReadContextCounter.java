@@ -190,7 +190,7 @@ public class ReadContextCounter
             if(mQualCache.usesMsiIndelErrorQual() && mQualCache.msiIndelRepeat() != null)
             {
                 String altBases = indelAltBases(mVariant);
-                altBaseDiff = getImpliedAltChange(mVariant.isDelete(), altBases, mQualCache.msiIndelRepeat());
+                altBaseDiff = abs(getImpliedAltChange(mVariant.isDelete(), altBases, mQualCache.msiIndelRepeat()));
             }
             else
             {

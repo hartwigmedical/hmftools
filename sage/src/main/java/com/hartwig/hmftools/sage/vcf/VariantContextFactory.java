@@ -167,16 +167,12 @@ public final class VariantContextFactory
 
         if(uncertainCoreBaseCount > 0)
         {
-            depth += uncertainCoreBaseCount;
-            int altAdjustment = (int)round(vaf * uncertainCoreBaseCount);
-            altSupport += altAdjustment;
+            double altRatio = altSupport / (double)depth;
+            double refRatio = refSupport / (double)depth;
 
-            if(refSupport > 0)
-            {
-                double altRefRatio = altSupport / (double)refSupport;
-                int refAdjustment = (int)round(altRefRatio / altRefRatio);
-                refSupport += refAdjustment;
-            }
+            depth += uncertainCoreBaseCount;
+            refSupport += (int)round(uncertainCoreBaseCount * refRatio);
+            altSupport += (int)round(uncertainCoreBaseCount * altRatio);
         }
 
         builder.DP(depth)
