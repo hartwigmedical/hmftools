@@ -1,4 +1,4 @@
-package loaders;
+package prep;
 
 import static common.QSeeConstants.QC_LOGGER;
 
@@ -11,9 +11,8 @@ import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 
-import prep.FeatureType;
-import prep.FeatureValue;
-import prep.PrepConfig;
+import feature.FeatureType;
+import feature.FeatureValue;
 
 public class CobaltGcMediansPrep
 {

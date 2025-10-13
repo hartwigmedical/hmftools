@@ -1,4 +1,4 @@
-package prep;
+package feature;
 
 public enum FeatureType
 {
@@ -8,8 +8,8 @@ public enum FeatureType
     COBALT_GC_MEDIAN,
     REDUX_DUPLICATE_FREQ,
     REDUX_MS_TABLE,
-    SAGE_BQR_PER_SNV96_CONTEXT,
-    SAGE_BQR_PER_ORIG_QUAL,
+    REDUX_BQR_PER_SNV96_CONTEXT,
+    REDUX_BQR_PER_ORIG_QUAL,
     ESVEE_PREP_DISC_STATS,
 
     AMBER_QC,

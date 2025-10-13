@@ -1,6 +1,6 @@
-package prep;
+package feature;
 
-public enum DataType
+public enum DataFormat
 {
     NUMBER,
     PROPORTION,
