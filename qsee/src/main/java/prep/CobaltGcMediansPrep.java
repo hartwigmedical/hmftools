@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import feature.FeatureType;
 import feature.FeatureValue;
 
-public class CobaltGcMediansPrep
+public class CobaltGcMediansPrep implements CategoryPrep<Double>
 {
     PrepConfig mConfig;
 
@@ -25,7 +25,8 @@ public class CobaltGcMediansPrep
 
     public List<FeatureValue<Double>> extractSampleData(String sampleId)
     {
-        try {
+        try
+        {
             String filePath = CobaltGcMedianFile.generateFilename(mConfig.getCobaltDir(sampleId), sampleId);
 
             GcMedianReadDepth gcMedianReadDepth = CobaltGcMedianFile.read(filePath);
@@ -40,7 +41,9 @@ public class CobaltGcMediansPrep
                 double medianReadDepth = medianReadDepths.get(bucket);
 
                 if(medianReadDepth == GcMedianReadDepth.NO_READ_DEPTH_VALUE)
+                {
                     medianReadDepth = 0;
+                }
 
                 double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
@@ -55,7 +58,7 @@ public class CobaltGcMediansPrep
 
             return featureValues;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             QC_LOGGER.error("Failed to load Cobalt GC median read depth file: {}", e.toString());
             e.printStackTrace();
