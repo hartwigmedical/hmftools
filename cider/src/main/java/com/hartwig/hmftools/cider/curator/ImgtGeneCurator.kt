@@ -461,10 +461,10 @@ class ImgtGeneCurator
 
             for ((geneData, geneAlignments) in imgtGeneList.zip(alignments))
             {
-                sLogger.debug("Processing alignments for gene {}", geneData)
+                sLogger.trace("Processing alignments for gene {}", geneData)
 
                 val ensemblGene = ensemblDataCache.getGeneDataByName(toEnsemblGeneName(geneData.geneName))
-                sLogger.debug("Ensembl gene: {}", ensemblGene)
+                sLogger.trace("Ensembl gene: {}", ensemblGene)
 
                 val alignmentsWithLocations = geneAlignments
                     .filter { it.editDistance <= ALIGNMENT_MAX_MISMATCH &&
@@ -472,7 +472,7 @@ class ImgtGeneCurator
                     .mapNotNull { AlignmentUtil.toGenomicLocation(it)?.let { location -> Pair(it, location) } }
                     .sortedWith(Comparator { a, b -> compareAlignments(a.first, a.second, b.first, b.second, ensemblGene) })
 
-                alignmentsWithLocations.forEach { sLogger.debug("Alignment: {}, location: {}", it.first, it.second) }
+                alignmentsWithLocations.forEach { sLogger.trace("Alignment: {}, location: {}", it.first, it.second) }
 
                 val bestAlignment = alignmentsWithLocations.firstOrNull()?.first
 
