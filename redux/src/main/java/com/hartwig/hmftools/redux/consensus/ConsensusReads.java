@@ -256,12 +256,13 @@ public class ConsensusReads
         record.setAlignmentStart(read.getAlignmentStart());
         record.setCigar(read.getCigar());
         record.setFlags(read.getFlags());
-        record.setFirstOfPairFlag(isFirstOfPair);
-        record.setSecondOfPairFlag(!isFirstOfPair);
         record.setDuplicateReadFlag(false);
+
         if(!record.getReadPairedFlag())
             return record;
 
+        record.setFirstOfPairFlag(isFirstOfPair);
+        record.setSecondOfPairFlag(!isFirstOfPair);
         record.setMateReferenceName(read.getMateReferenceName());
         record.setMateAlignmentStart(read.getMateAlignmentStart());
         record.setMateReferenceIndex(read.getMateReferenceIndex());
