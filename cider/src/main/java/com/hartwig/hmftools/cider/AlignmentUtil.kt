@@ -12,6 +12,8 @@ import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import java.io.FileInputStream
+import java.io.InputStream
+import kotlin.io.path.createTempFile
 
 object AlignmentUtil
 {
@@ -115,11 +117,15 @@ object AlignmentUtil
     }
 
     fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+            List<List<Alignment>> =
+        runBwaMem(sequences, FileInputStream(refGenomeDictPath), refGenomeIndexPath, alignScoreThreshold, numThreads)
+
+    fun runBwaMem(sequences: List<String>, refGenomeDict: InputStream, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences with BWA-MEM")
 
-        val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
+        val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(refGenomeDict)
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
         val results = ArrayList<List<Alignment>>()
@@ -211,15 +217,18 @@ object AlignmentUtil
         )
     }
 
-    // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ.
+    // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
     fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
-
-        // TODO!!!
-        val refDict = "/Users/reecejones/GenomicData/GRCh37_patch/chr7_gl582971_fix/chr7_gl582971_fix.fasta.dict"
-        val refIndexImage = "/Users/reecejones/GenomicData/GRCh37_patch/chr7_gl582971_fix/chr7_gl582971_fix.fasta.img"
-
-        return runBwaMem(sequences, refDict, refIndexImage, alignScoreThreshold, threadCount)
+        val refFasta = "chr7_gl582971_fix.fasta"
+        val refDict = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.dict")!!
+        val refIndexImage = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.img")!!
+        // Unfortunately, the BWA-MEM API requires a file for the index image, which I don't think we can get straight from the resource.
+        // So we have to write the contents to a temporary file first.
+        val refIndexImageFile = createTempFile().toFile()
+        refIndexImageFile.deleteOnExit()
+        refIndexImageFile.writeBytes(refIndexImage.readAllBytes())
+        return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
     }
 }
