@@ -245,14 +245,18 @@ object AlignmentUtil
     private fun parseLocalAlignment(alignment: LocalSequenceAligner.Alignment, contig: String): Alignment
     {
         val sequence = alignment.firstSequence
+        val queryAlignStart = alignment.firstSequenceAlignStart + 1     // Apparently local aligner gives 0-based index
+        val queryAlignEnd = alignment.firstSequenceAlignEnd
+        val refStart = alignment.secondSequenceAlignStart + 1
+        val refEnd = alignment.secondSequenceAlignEnd
         val matches = alignment.operators.count { it == AlignmentOperator.MATCH }
         val editDistance = sequence.length - matches
-        val percentIdentity = 100 * matches.toDouble() / sequence.length.toDouble()
+        val percentIdentity = 100 * matches.toDouble() / (queryAlignEnd - queryAlignStart + 1)
         return Alignment(
             sequence,
-            alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd,
+            queryAlignStart, queryAlignEnd,
             contig,
-            alignment.secondSequenceAlignStart, alignment.secondSequenceAlignEnd,
+            refStart, refEnd,
             // TODO: strand handling?
             Strand.FORWARD,
             alignment.score,
