@@ -6,6 +6,7 @@ public class UnityNormaliser implements ResultsNormaliser
 {
     private final DescriptiveStatistics RatiosStatistics = new DescriptiveStatistics();
     private final DescriptiveStatistics MegaBaseScaleRatioStatistics = new DescriptiveStatistics();
+    private double Mean;
 
     @Override
     public void recordValue(final BamRatio bamRatio)
@@ -27,10 +28,15 @@ public class UnityNormaliser implements ResultsNormaliser
     }
 
     @Override
+    public void dataCollectionFinished()
+    {
+        Mean = RatiosStatistics.getMean();
+    }
+
+    @Override
     public void normalise(BamRatio bamRatio)
     {
-        double mean = RatiosStatistics.getMean();
-        bamRatio.normaliseByMean(mean);
+        bamRatio.normaliseByMean(Mean);
         if (MegaBaseScaleRatioStatistics.getN() > 0)
         {
             bamRatio.normaliseDiploidAdjustedRatio(MegaBaseScaleRatioStatistics.getMean());
