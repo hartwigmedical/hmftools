@@ -18,45 +18,19 @@ public class CobaltGcMediansPrep implements CategoryPrep<Double>
 {
     PrepConfig mConfig;
 
+    private static final String KEY_FLD_GC_BUCKET = "GCBucket";
+
     public CobaltGcMediansPrep(PrepConfig config)
     {
         mConfig = config;
     }
 
-    public List<FeatureValue<Double>> extractSampleData(String sampleId)
+    private GcMedianReadDepth loadCobaltGcMedianFile(String sampleId)
     {
         try
         {
             String filePath = CobaltGcMedianFile.generateFilename(mConfig.getCobaltDir(sampleId), sampleId);
-
-            GcMedianReadDepth gcMedianReadDepth = CobaltGcMedianFile.read(filePath);
-
-            Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
-            double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
-
-            List<FeatureValue<Double>> featureValues = new ArrayList<>();
-
-            for(GCBucket bucket : medianReadDepths.keySet())
-            {
-                double medianReadDepth = medianReadDepths.get(bucket);
-
-                if(medianReadDepth == GcMedianReadDepth.NO_READ_DEPTH_VALUE)
-                {
-                    medianReadDepth = 0;
-                }
-
-                double normalisedDepth = medianReadDepth / overallMedianReadDepth;
-
-                FeatureValue<Double> featureValue = new FeatureValue<>(
-                        bucket.toString(),
-                        normalisedDepth,
-                        FeatureType.COBALT_GC_MEDIAN
-                );
-
-                featureValues.add(featureValue);
-            }
-
-            return featureValues;
+            return CobaltGcMedianFile.read(filePath);
         }
         catch(IOException e)
         {
@@ -64,5 +38,43 @@ public class CobaltGcMediansPrep implements CategoryPrep<Double>
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static List<FeatureValue<Double>> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
+    {
+        Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
+
+        double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
+
+        List<FeatureValue<Double>> featureValues = new ArrayList<>();
+
+        for(GCBucket bucket : medianReadDepths.keySet())
+        {
+            double medianReadDepth = medianReadDepths.get(bucket);
+            if(medianReadDepth == GcMedianReadDepth.NO_READ_DEPTH_VALUE)
+            {
+                medianReadDepth = 0;
+            }
+
+            double normalisedDepth = medianReadDepth / overallMedianReadDepth;
+
+            FeatureValue<Double> featureValue = new FeatureValue<>(
+                    FeatureValue.keyFromPair(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket())),
+                    normalisedDepth,
+                    FeatureType.COBALT_GC_MEDIAN
+            );
+
+            featureValues.add(featureValue);
+        }
+
+        return featureValues;
+    }
+
+    public List<FeatureValue<Double>> extractSampleData(String sampleId)
+    {
+        GcMedianReadDepth gcMedianReadDepth = loadCobaltGcMedianFile(sampleId);
+        List<FeatureValue<Double>> featureValues = normaliseMedianReadDepths(gcMedianReadDepth);
+
+        return featureValues;
     }
 }
