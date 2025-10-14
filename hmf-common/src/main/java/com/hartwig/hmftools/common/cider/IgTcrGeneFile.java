@@ -21,6 +21,7 @@ public class IgTcrGeneFile
         allele,
         region,
         functionality,
+        sequence,
         contig,
         posStart,
         posEnd,
@@ -66,7 +67,7 @@ public class IgTcrGeneFile
                 String allele = record.get(Column.allele);
                 IgTcrRegion region = IgTcrRegion.valueOf(record.get(Column.region));
                 IgTcrFunctionality functionality = IgTcrFunctionality.fromCode(record.get(Column.functionality));
-
+                String sequence = record.get(Column.sequence);
                 String anchorSequence = record.getOrNull(Column.anchorSequence);
 
                 String contig = record.getOrNull(Column.contig);
@@ -107,7 +108,7 @@ public class IgTcrGeneFile
                 }
 
                 igTcrGenes.add(new IgTcrGene(
-                        geneName, allele, region, functionality, contig, geneLocation, strand, anchorSequence, anchorLocation));
+                        geneName, allele, region, functionality, sequence, contig, geneLocation, strand, anchorSequence, anchorLocation));
             }
         }
 
@@ -123,6 +124,7 @@ public class IgTcrGeneFile
                     row.set(Column.allele, gene.allele());
                     row.set(Column.region, String.valueOf(gene.region()));
                     row.set(Column.functionality, gene.functionality().toCode());
+                    row.set(Column.sequence, gene.sequence());
                     row.setOrNull(Column.contig, gene.contigName());
                     row.setOrNull(Column.posStart, gene.genePosition() != null ? gene.genePosition().start() : null);
                     row.setOrNull(Column.posEnd, gene.genePosition() != null ? gene.genePosition().end() : null);

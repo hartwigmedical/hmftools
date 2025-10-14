@@ -61,7 +61,7 @@ class ImgtGeneCurator
     @Parameter(names = ["-${BwaUtils.BWA_LIB_PATH}"], required = false)
     var bwaLibPath: String? = null
 
-    @Parameter(names = ["-output"], required = true, description = "Output TSV file")
+    @Parameter(names = ["-output"], required = true, description = "Output file prefix")
     lateinit var output: String
 
     @Parameter(names = ["-threads"], description = "Number of threads")
@@ -109,7 +109,9 @@ class ImgtGeneCurator
         sLogger.info("validating anchor locations")
         validateAnchorLocations(igTcrGeneList, refGenomePath)
 
-        IgTcrGeneFile.write(output, igTcrGeneList)
+        IgTcrGeneFile.write("$output.tsv", igTcrGeneList)
+
+        writeGeneFasta(igTcrGeneList, "$output.fasta")
 
         return 0
     }
@@ -268,6 +270,7 @@ class ImgtGeneCurator
                 geneData.allele,
                 region,
                 geneData.functionality,
+                geneData.sequenceWithoutGaps,
                 geneLocation?.contig?.name,
                 geneLocation?.position,
                 geneLocation?.strand,
@@ -617,6 +620,17 @@ class ImgtGeneCurator
                     }
                 }
             }
+        }
+
+        fun writeGeneFasta(genes: List<IgTcrGene>, file: String)
+        {
+            val fastaFile = File(file)
+            val writer = fastaFile.printWriter()
+            genes.withIndex().forEach { (idx, gene) ->
+                writer.println(">$idx\t${gene.geneName}\t${gene.allele}\t${gene.region}")
+                writer.println(gene.sequence)
+            }
+            writer.close()
         }
     }
 }

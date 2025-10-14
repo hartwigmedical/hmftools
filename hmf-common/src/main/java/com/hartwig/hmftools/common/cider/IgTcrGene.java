@@ -10,6 +10,7 @@ public record IgTcrGene(
         String allele, // 01 etc
         IgTcrRegion region,
         IgTcrFunctionality functionality,
+        String sequence,
         @Nullable String contigName,    // From the reference genome. Can be a chromosome or another contig type.
         @Nullable BaseRegion genePosition,
         @Nullable Strand geneStrand,
