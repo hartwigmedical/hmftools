@@ -184,7 +184,7 @@ public class SageAppendApplication
         final Map<String, BqrRecordMap> recalibrationMap = bqrCache.getSampleRecalibrationMap();
 
         MsiJitterCalcs msiJitterCalcs = MsiJitterCalcs.build(
-                mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterParamsDir : null,
+                mConfig.Common.ReferenceIds, !mConfig.Common.SkipMsiJitter ? mConfig.Common.JitterBqrDir : null,
                 mConfig.Common.Quality.HighDepthMode);
 
         ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);

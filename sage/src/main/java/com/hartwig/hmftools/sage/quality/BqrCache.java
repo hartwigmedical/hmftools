@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.Collections;
@@ -48,9 +49,11 @@ public class BqrCache
     private void loadBqrFiles()
     {
         Map<String,String> sampleFileNames = Maps.newHashMap();
-        String outputDir = mConfig.outputDir();
-        mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, BqrFile.generateFilename(outputDir, x)));
-        mTumorIds.forEach(x -> sampleFileNames.put(x, BqrFile.generateFilename(outputDir, x)));
+
+        String bqrDirectory = mConfig.JitterBqrDir != null ? mConfig.JitterBqrDir : mConfig.outputDir();
+
+        mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, BqrFile.generateFilename(bqrDirectory, x)));
+        mTumorIds.forEach(x -> sampleFileNames.put(x, BqrFile.generateFilename(bqrDirectory, x)));
 
         for(Map.Entry<String,String> entry : sampleFileNames.entrySet())
         {

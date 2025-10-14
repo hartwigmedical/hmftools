@@ -73,7 +73,7 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final boolean SkipBqr;
-    public final String JitterParamsDir;
+    public final String JitterBqrDir;
     public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
@@ -119,7 +119,7 @@ public class SageConfig
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
-    private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String JITTER_BQR_DIR = "jitter_bqr_dir";
     private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
@@ -191,29 +191,29 @@ public class SageConfig
 
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
 
-        if(configBuilder.hasValue(JITTER_PARAMS_DIR))
+        if(configBuilder.hasValue(JITTER_BQR_DIR))
         {
-            JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
+            JitterBqrDir = configBuilder.getValue(JITTER_BQR_DIR);
         }
         else
         {
             // otherwise assume these are located with the BAMs
             if(!ReferenceBams.isEmpty())
             {
-                JitterParamsDir = pathFromFile(ReferenceBams.get(0));
+                JitterBqrDir = pathFromFile(ReferenceBams.get(0));
             }
             else if(!SampleDataDir.isEmpty())
             {
-                JitterParamsDir = SampleDataDir;
+                JitterBqrDir = SampleDataDir;
             }
             else if(configBuilder.hasValue(TUMOR_BAM))
             {
                 String tumorBam = configBuilder.getValue(TUMOR_BAM).split(SAMPLE_DELIM)[0];
-                JitterParamsDir = pathFromFile(tumorBam);
+                JitterBqrDir = pathFromFile(tumorBam);
             }
             else
             {
-                JitterParamsDir = null;
+                JitterBqrDir = null;
             }
         }
 
@@ -402,7 +402,7 @@ public class SageConfig
         SequencingType.registerConfig(configBuilder);
         UltimaQualRecalibration.registerConfig(configBuilder);
 
-        configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
+        configBuilder.addPath(JITTER_BQR_DIR, false, "Path to sample jitter and BQR files, otherise uses BAM directory");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
@@ -431,7 +431,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
         SkipBqr = true;
-        JitterParamsDir = null;
+        JitterBqrDir = null;
         SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
