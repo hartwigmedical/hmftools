@@ -33,6 +33,7 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
+    private val mRefGenomeVersion: RefGenomeVersion
     private val mRefGenomeDictPath: String
     private val mRefGenomeBwaIndexImagePath: String
     private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
@@ -42,6 +43,7 @@ class AlignmentAnnotator
 
     constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
     {
+        mRefGenomeVersion = refGenomeVersion
         mRefGenomeDictPath = refGenomeDictPath
         mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
 
@@ -86,9 +88,18 @@ class AlignmentAnnotator
             AlignmentRunData(it, querySeqRange, it.layout.consensusSequenceString().substring(querySeqRange))
         }
 
-        val alignmentResults = AlignmentUtil.runBwaMem(
-            alignmentRunDatas.map { it.querySeq },
-             mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
+        // Align to the normal reference genome to get most of the alignments.
+        // For GRCh37, also align to a patch assembly which contains some genes (e.g. TRBJ1) which are missing from the main assembly.
+        // The issue does not exist in GRCh38 as that assembly is more complete.
+        val querySequences = alignmentRunDatas.map { it.querySeq }
+        val mainAlignments = AlignmentUtil.runBwaMem(
+            querySequences,
+             mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ALIGNMENT_SCORE_MIN, numThreads)
+        val patchAlignments = if(mRefGenomeVersion == RefGenomeVersion.V37)
+            AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN)
+            else emptyList()
+        require(mainAlignments.size == patchAlignments.size)
+        val alignmentResults = mainAlignments.zip(patchAlignments).map { it.first + it.second }
 
         val annotations = processAlignments(alignmentRunDatas, alignmentResults)
 
@@ -120,7 +131,7 @@ class AlignmentAnnotator
         val alignStartOffset = alignmentRunData.querySeqRange.start
 
         val alignments = alignments
-            .filter { m -> m.alignmentScore >= BWA_ALIGNMENT_SCORE_MIN }
+            .filter { m -> m.alignmentScore >= ALIGNMENT_SCORE_MIN }
             .map {
                 // we also need to fix up the matches, since we did not use the full sequence to query, the queryAlignStart
                 // and queryAlignEnd indices are off
@@ -287,7 +298,7 @@ class AlignmentAnnotator
     {
         // Require a match of minimum ~20 bases. If we want to match D segment that is shorter
         // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
-        const val BWA_ALIGNMENT_SCORE_MIN = 19
+        const val ALIGNMENT_SCORE_MIN = 19
 
         const val FLANKING_BASES = 50
 

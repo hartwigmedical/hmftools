@@ -120,7 +120,7 @@ object AlignmentUtil
     fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
             List<List<Alignment>>
     {
-        sLogger.debug("Aligning ${sequences.size} sequences")
+        sLogger.debug("Aligning ${sequences.size} sequences with BWA-MEM")
 
         val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
@@ -217,15 +217,16 @@ object AlignmentUtil
     // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ.
     fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int): List<List<Alignment>>
     {
+        sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
         // TODO!!!
         val contig = "chr7_gl582971_fix"
-        val reference = File("/Users/reecejones/GenomicData/GRCh37_patch").readText()
+        val reference = File("/Users/reecejones/GenomicData/GRCh37_patch/chr7_gl582971_fix.txt").readText()
         val aligner = LocalSequenceAligner(MATCH_SCORE, MISMATCH_SCORE, GAP_OPENING_SCORE, GAP_EXTEND_SCORE)
         return sequences
-            .map { aligner.alignSequence(it, reference) }
-            .filter { it.score >= alignScoreThreshold }
-            .map { parseLocalAlignment(it, contig) }
-            .map { listOf(it) }
+            .map { listOf(aligner.alignSequence(it, reference)) }
+            .map { alignments ->
+                alignments.filter { it.score >= alignScoreThreshold }
+                    .map { parseLocalAlignment(it, contig) } }
     }
 
     private fun parseLocalAlignment(alignment: LocalSequenceAligner.Alignment, contig: String): Alignment
