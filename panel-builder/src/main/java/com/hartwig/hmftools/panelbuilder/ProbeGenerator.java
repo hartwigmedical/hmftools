@@ -65,12 +65,11 @@ public class ProbeGenerator
     public static ProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
             final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        ProbeFactory probeFactory = new ProbeFactory(refGenome, probeQualityProfile, probeQualityModel);
-        return new ProbeGenerator(
-                probeFactory,
-                new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths()),
-                new ProbeEvaluator(candidateCallback)
-        );
+        ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
+        ProbeFactory probeFactory = new ProbeFactory(refGenome);
+        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(probeQualityScorer, candidateCallback);
+        return new ProbeGenerator(probeFactory, candidateProbeGenerator, probeEvaluator);
     }
 
     // General purpose method for generating the best acceptable probes to cover an entire region.
@@ -123,8 +122,8 @@ public class ProbeGenerator
 
         String chromosome = uncoveredRegion.chromosome();
 
-        Stream<Probe> allPlausibleProbes = mCandidateGenerator.allOverlapping(uncoveredRegion, metadata)
-                .map(candidate -> mProbeEvaluator.evaluateProbe(candidate, evalCriteria))
+        Stream<Probe> allPlausibleProbes = mProbeEvaluator.evaluateProbes(
+                        mCandidateGenerator.allOverlapping(uncoveredRegion, metadata), evalCriteria)
                 .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.

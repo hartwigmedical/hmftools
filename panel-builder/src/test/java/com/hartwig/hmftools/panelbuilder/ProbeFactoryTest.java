@@ -31,7 +31,7 @@ public class ProbeFactoryTest
         refGenome.ChromosomeLengths =
                 refGenome.RefGenomeMap.entrySet().stream().collect(
                         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().length()));
-        mFactory = new ProbeFactory(refGenome, null, null);
+        mFactory = new ProbeFactory(refGenome);
     }
 
     @Test

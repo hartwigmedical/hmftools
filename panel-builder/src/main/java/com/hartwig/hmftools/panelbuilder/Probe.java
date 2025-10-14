@@ -12,7 +12,8 @@ public record Probe(
         @Nullable ProbeEvaluator.Criteria evalCriteria,
         // null if the probe is acceptable.
         @Nullable String rejectionReason,
-        double qualityScore,
+        // null if the probe hasn't been evaluated yet or the probe was rejected by another criteria.
+        @Nullable Double qualityScore,
         double gcContent
 )
 {
@@ -49,11 +50,28 @@ public record Probe(
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
     {
+        if(evalCriteria != null)
+        {
+            throw new IllegalArgumentException("evalCriteria already set");
+        }
         return new Probe(definition, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
     }
 
     public Probe withRejectionReason(final String value)
     {
+        if(rejectionReason != null)
+        {
+            throw new IllegalArgumentException("rejectionReason already set");
+        }
         return new Probe(definition, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
+    }
+
+    public Probe withQualityScore(double value)
+    {
+        if(qualityScore != null)
+        {
+            throw new IllegalArgumentException("qualityScore already set");
+        }
+        return new Probe(definition, sequence, metadata, evalCriteria, rejectionReason, value, gcContent);
     }
 }

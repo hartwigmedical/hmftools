@@ -14,12 +14,14 @@ import org.jetbrains.annotations.Nullable;
 // Common candidate probe filtering.
 public class ProbeEvaluator
 {
+    private final ProbeQualityScorer mProbeQualityScorer;
     // Hook to catch all candidate probes for output.
     @Nullable
     private final Consumer<Probe> mCandidateCallback;
 
-    public ProbeEvaluator(final @Nullable Consumer<Probe> candidateCallback)
+    public ProbeEvaluator(final ProbeQualityScorer probeQualityScorer, final @Nullable Consumer<Probe> candidateCallback)
     {
+        mProbeQualityScorer = probeQualityScorer;
         mCandidateCallback = candidateCallback;
     }
 
@@ -41,13 +43,15 @@ public class ProbeEvaluator
 
     public Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
     {
-        return probes.map(probe -> evaluateProbe(probe, criteria));
+        // TODO: can avoid computing quality score if GC content criteria fails
+        return mProbeQualityScorer.getQualityScore(probes).stream()
+                .map(probe -> evaluateProbe(probe, criteria));
     }
 
     private static Probe evaluateQualityScore(Probe probe)
     {
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double qualityScore = probe.qualityScore();
+        double qualityScore = requireNonNull(probe.qualityScore());
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
             probe = probe.withRejectionReason("QS");
