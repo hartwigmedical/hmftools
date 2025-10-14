@@ -467,7 +467,7 @@ public class ReferenceData
             String alleleStr = items[0];
 
             HlaAllele allele = isProteinFile ? mAlleleCache.requestFourDigit(alleleStr) : mAlleleCache.request(alleleStr);
-            if(!mConfig.Genes.contains(allele.Gene))
+            if(!mConfig.Genes.allGenes().contains(allele.Gene))
                 continue;
 
             boolean isDefaultTemplate = isProteinFile && mDeflatedSequenceTemplate == null && allele.matches(DEFLATE_TEMPLATE);
