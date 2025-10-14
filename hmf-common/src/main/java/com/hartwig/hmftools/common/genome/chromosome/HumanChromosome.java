@@ -190,8 +190,8 @@ public enum HumanChromosome implements Chromosome
         }
     }
 
-    public static List<ChrBaseRegion> formHumanChromosomeRegions(final SpecificRegions specificRegions,
-            final RefGenomeVersion refGenomeVersion)
+    public static List<ChrBaseRegion> formHumanChromosomeRegions(
+            final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)
     {
         List<ChrBaseRegion> inputRegions = Lists.newArrayList();
 

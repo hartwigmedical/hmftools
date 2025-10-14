@@ -216,7 +216,8 @@ public class ReduxApplication
         List<PartitionThread> partitionThreads = Lists.newArrayListWithCapacity(partitionThreadCount);
 
         List<List<ChrBaseRegion>> partitionRegions = splitRegionsIntoPartitions(
-                mConfig.SpecificChrRegions, partitionCount, mConfig.RefGenVersion, mConfig.RefGenome);
+                mConfig.SpecificChrRegions, partitionCount, mConfig.RefGenVersion,
+                mConfig.StandardChromosomes ? null : mConfig.RefGenome); // by not passing the ref genome its sequences will be ignored
 
         if(partitionRegions.isEmpty())
             return Collections.emptyList();

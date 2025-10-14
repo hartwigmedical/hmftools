@@ -98,9 +98,6 @@ public class ReduxConfig
     public final BqrConfig BQR;
 
     public final ReadUnmapper UnmapRegions;
-    public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
-    public final boolean UnmapAltDecoys;
-    public final boolean SkipDuplicateMarking;
 
     public final String OutputBam;
     public final String OutputDir;
@@ -117,7 +114,11 @@ public class ReduxConfig
     // debug
     public static boolean RunChecks;
 
+    public final boolean StandardChromosomes;
     public final boolean KeepInterimBams;
+    public final boolean SkipUnmapping; // to skip unmapping in-built excluded regions
+    public final boolean UnmapAltDecoys;
+    public final boolean SkipDuplicateMarking;
     public final SpecificRegions SpecificChrRegions;
     public static final List<String> LogReadIds = Lists.newArrayList();
     public final FilterReadsType SpecificRegionsFilterType;
@@ -145,12 +146,13 @@ public class ReduxConfig
 
     private static final String DROP_DUPLICATES = "drop_duplicates";
     private static final String BQR_JITTER_MSI_ONLY = "bqr_jitter_msi_only";
-    private static final String PARTIION_THREAD_RATIO = "partition_ratio";
-    private static final String PARALLEL_CONCATENATION = "parallel_concat";
+    private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
+
+    // subset of standard
+    private static final String STANDARD_CHROMOSOMES = "std_chr_only";
     private static final String SKIP_FULL_UNMAPPED_READS = "skip_fully_unmapped";
     private static final String SKIP_DUPLICATE_MARKING = "skip_duplicate_marking";
     private static final String SKIP_UNMAPPING = "skip_unmapping";
-    private static final String FAIL_SUPP_NO_MATE_CIGAR = "fail_supp_no_mate_cigar";
     private static final String UNMAP_MITOCHONDRIAL = "unmap_mt";
     private static final String UNMAP_NON_ALT_DECOY = "unmap_alt_decoy";
 
@@ -161,6 +163,8 @@ public class ReduxConfig
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
     private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
     private static final String LOG_DUPLICATE_GROUP_SIZE = "log_dup_group_size";
+    private static final String PARTIION_THREAD_RATIO = "partition_ratio";
+    private static final String PARALLEL_CONCATENATION = "parallel_concat";
 
     public ReduxConfig(final ConfigBuilder configBuilder)
     {
@@ -275,6 +279,7 @@ public class ReduxConfig
         }
 
         UnmapAltDecoys = configBuilder.hasFlag(UNMAP_NON_ALT_DECOY);
+        StandardChromosomes = configBuilder.hasFlag(STANDARD_CHROMOSOMES);
 
         BamStringency = BamUtils.validationStringency(configBuilder);
 
@@ -415,6 +420,7 @@ public class ReduxConfig
         configBuilder.addFlag(SKIP_UNMAPPING, "Skip unmapping routine, including excluded regions");
         configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
         configBuilder.addFlag(UNMAP_NON_ALT_DECOY, "Unmap non-standard contig reads");
+        configBuilder.addFlag(STANDARD_CHROMOSOMES, "Run on human chromosomes only");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
@@ -472,6 +478,7 @@ public class ReduxConfig
         SkipDuplicateMarking = false;
         SkipUnmapping = false;
         UnmapAltDecoys = false;
+        StandardChromosomes = false;
         LogReadType = NONE;
         FailOnMissingSuppMateCigar = false;
 

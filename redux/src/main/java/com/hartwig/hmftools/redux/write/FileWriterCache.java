@@ -98,15 +98,8 @@ public class FileWriterCache
             mUnmappingSortedBamFilename = null;
         }
 
-        if(mConfig.SkipFullyUnmappedReads)
-        {
-            mFullUnmappedWriter = null;
-        }
-        else
-        {
-            String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
-            mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
-        }
+        String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
+        mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
     }
 
     public List<PartitionInfo> partitions() { return mPartitions; }
