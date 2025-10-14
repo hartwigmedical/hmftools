@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.common.aligner.AlignmentOperator
+import com.hartwig.hmftools.common.aligner.LocalSequenceAligner
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -11,6 +13,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
+import java.io.File
 import java.io.FileInputStream
 
 object AlignmentUtil
@@ -89,7 +92,7 @@ object AlignmentUtil
             .run(sequences)
     }
 
-    data class BwaMemAlignment(
+    data class Alignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
@@ -114,7 +117,7 @@ object AlignmentUtil
     }
 
     fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            Map<Int, ArrayList<BwaMemAlignment>>
+            Map<Int, ArrayList<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences")
 
@@ -122,7 +125,7 @@ object AlignmentUtil
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
         val keys = sequences.keys.sorted()
-        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
+        val results = HashMap<Int, ArrayList<Alignment>>()
         // Alignments are batches because with our BWA-MEM settings, too much memory is allocated with large BAMs.
         for (i in 0 until keys.size step ALIGNMENT_BATCH_SIZE) {
             val batchKeys = keys.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, keys.size))
@@ -166,9 +169,9 @@ object AlignmentUtil
 
     private fun parseBwaMemAlignments(sequences: Map<Int, String>, keys: List<Int>,
                                       alignments: List<List<org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment>>,
-                                      refGenSeqDict: SAMSequenceDictionary): Map<Int, List<BwaMemAlignment>>
+                                      refGenSeqDict: SAMSequenceDictionary): Map<Int, List<Alignment>>
     {
-        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
+        val results = HashMap<Int, ArrayList<Alignment>>()
         for (key in keys.withIndex()) {
             for (alignment in alignments[key.index]) {
                 if (alignment.samFlag and 0x4 != 0)
@@ -191,7 +194,7 @@ object AlignmentUtil
                 // nMismatches is not the best name - it's actually the edit distance.
                 // Which means this calculation is correct for mismatches and gaps.
                 val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
-                val resAlignment = BwaMemAlignment(
+                val resAlignment = Alignment(
                     querySeq,
                     queryAlignStart,
                     queryAlignEnd,
@@ -203,6 +206,36 @@ object AlignmentUtil
                     percentIdentity
                 )
                 results.computeIfAbsent(key.value) { ArrayList() }.add(resAlignment)
+            }
+        }
+        return results
+    }
+
+    // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ.
+    fun runGRCh37PatchAlignment(sequences: Map<Int, String>, alignScoreThreshold: Int): Map<Int, Alignment>
+    {
+        // TODO!!!
+        val contig = "chr7_gl582971_fix"
+        val reference = File("/Users/reecejones/GenomicData/GRCh37_patch").readText()
+        val results = HashMap<Int, Alignment>()
+        val aligner = LocalSequenceAligner(MATCH_SCORE, MISMATCH_SCORE, GAP_OPENING_SCORE, GAP_EXTEND_SCORE)
+        for ((key, sequence) in sequences.entries)
+        {
+            val alignment = aligner.alignSequence(sequence, reference)
+            if (alignment.score >= alignScoreThreshold)
+            {
+                val matches = alignment.operators.count { it == AlignmentOperator.MATCH }
+                val percentIdentity = 100 * matches.toDouble() / sequence.length.toDouble()
+                val resAlignment = Alignment(
+                    sequence,
+                    alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd,
+                    contig,
+                    alignment.secondSequenceAlignStart, alignment.secondSequenceAlignEnd,
+                    // TODO: strand handling?
+                    Strand.FORWARD,
+                    alignment.score, percentIdentity
+                )
+                results[key] = resAlignment
             }
         }
         return results

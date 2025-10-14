@@ -22,10 +22,10 @@ data class AlignmentAnnotation(
     val dGeneSupplementary: List<IgTcrGene> = emptyList(),
     val jGene: IgTcrGene? = null,
     val jGeneSupplementary: List<IgTcrGene> = emptyList(),
-    val vAlignment: AlignmentUtil.BwaMemAlignment? = null,
-    val dAlignment: AlignmentUtil.BwaMemAlignment? = null,
-    val jAlignment: AlignmentUtil.BwaMemAlignment? = null,
-    val fullAlignment: AlignmentUtil.BwaMemAlignment? = null,
+    val vAlignment: AlignmentUtil.Alignment? = null,
+    val dAlignment: AlignmentUtil.Alignment? = null,
+    val jAlignment: AlignmentUtil.Alignment? = null,
+    val fullAlignment: AlignmentUtil.Alignment? = null,
     val alignmentStatus: AlignmentStatus)
 
 class AlignmentAnnotator
@@ -98,7 +98,7 @@ class AlignmentAnnotator
             alignmentRunDataMap.mapValues { runData -> runData.value.querySeq },
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, BWA_ALIGNMENT_SCORE_MIN, numThreads)
 
-        val vdjToAlignment = HashMap<AlignmentRunData, ArrayList<AlignmentUtil.BwaMemAlignment>>()
+        val vdjToAlignment = HashMap<AlignmentRunData, ArrayList<AlignmentUtil.Alignment>>()
         for ((vdjKey, alignments) in alignmentResults.entries)
         {
             val alignmentRunData = alignmentRunDataMap[vdjKey]
@@ -122,7 +122,7 @@ class AlignmentAnnotator
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
     // NOTE: we cannot use alignments.keys, as it might not include some VDJs that returned no match
     fun processAlignments(alignmentRunDataList: Collection<AlignmentRunData>,
-                          alignments: Map<AlignmentRunData, List<AlignmentUtil.BwaMemAlignment>>)
+                          alignments: Map<AlignmentRunData, List<AlignmentUtil.Alignment>>)
     : Collection<AlignmentAnnotation>
     {
         sLogger.debug("Processing alignments")
@@ -135,7 +135,7 @@ class AlignmentAnnotator
         return alignmentAnnotations
     }
 
-    fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.BwaMemAlignment>)
+    fun processAlignments(alignmentRunData: AlignmentRunData, alignments: Collection<AlignmentUtil.Alignment>)
     : AlignmentAnnotation
     {
         val vdjSequence: VDJSequence = alignmentRunData.vdj
@@ -174,9 +174,9 @@ class AlignmentAnnotator
         require(locus != null)
 
         // Find candidate gene matches, from which we will then select the best and supplementary matches.
-        val vGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
-        val dGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
-        val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>> = ArrayList()
+        val vGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
+        val dGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
+        val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
         for (alignment in alignments)
         {
             val vdjGene: IgTcrGene? = findGene(alignment)
@@ -277,7 +277,7 @@ class AlignmentAnnotator
             alignmentStatus = alignmentStatus)
     }
 
-    fun findGene(alignment: AlignmentUtil.BwaMemAlignment) : IgTcrGene?
+    fun findGene(alignment: AlignmentUtil.Alignment) : IgTcrGene?
     {
         val chromosome = parseChromosome(alignment.refContig)
 
@@ -334,9 +334,9 @@ class AlignmentAnnotator
             return range
         }
 
-        data class GeneMatch(val gene: IgTcrGene, val alignment: AlignmentUtil.BwaMemAlignment, val supplementaryGenes: List<IgTcrGene>)
+        data class GeneMatch(val gene: IgTcrGene, val alignment: AlignmentUtil.Alignment, val supplementaryGenes: List<IgTcrGene>)
 
-        fun selectBestGene(candidateGenes: List<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>) : GeneMatch?
+        fun selectBestGene(candidateGenes: List<Pair<IgTcrGene, AlignmentUtil.Alignment>>) : GeneMatch?
         {
             if (candidateGenes.isEmpty())
             {
@@ -344,9 +344,9 @@ class AlignmentAnnotator
             }
 
             // Find the best gene match. There may be multiple, in which case we use a tie breaker and select the rest as supplementary matches.
-            val baseComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>
+            val baseComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.Alignment>>
                 { p1, p2 -> compareGeneMatch(p1.second, p1.first, p2.second, p2.first) }
-            val tieBreakerComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.BwaMemAlignment>>
+            val tieBreakerComparator = Comparator<Pair<IgTcrGene, AlignmentUtil.Alignment>>
                 { p1, p2 -> geneMatchTieBreaker(p1.first, p2.first) }
             val best = candidateGenes.minWith(baseComparator.thenComparing(tieBreakerComparator))
             val supplementary = candidateGenes.filter { it != best && baseComparator.compare(it, best) == 0 }.map { it.first }
@@ -354,7 +354,7 @@ class AlignmentAnnotator
         }
 
         // Better gene match compares less than.
-        fun compareGeneMatch(alignment1: AlignmentUtil.BwaMemAlignment, gene1: IgTcrGene, alignment2: AlignmentUtil.BwaMemAlignment, gene2: IgTcrGene)
+        fun compareGeneMatch(alignment1: AlignmentUtil.Alignment, gene1: IgTcrGene, alignment2: AlignmentUtil.Alignment, gene2: IgTcrGene)
             : Int
         {
             // Always prefer higher alignment score
