@@ -228,6 +228,7 @@ object AlignmentUtil
             if (alignment.score >= alignScoreThreshold)
             {
                 val matches = alignment.operators.count { it == AlignmentOperator.MATCH }
+                val editDistance = sequence.length - matches
                 val percentIdentity = 100 * matches.toDouble() / sequence.length.toDouble()
                 val resAlignment = Alignment(
                     sequence,
@@ -236,7 +237,9 @@ object AlignmentUtil
                     alignment.secondSequenceAlignStart, alignment.secondSequenceAlignEnd,
                     // TODO: strand handling?
                     Strand.FORWARD,
-                    alignment.score, percentIdentity
+                    alignment.score,
+                    editDistance,
+                    percentIdentity
                 )
                 results[key] = resAlignment
             }
