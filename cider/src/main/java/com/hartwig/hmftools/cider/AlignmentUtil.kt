@@ -215,35 +215,35 @@ object AlignmentUtil
     }
 
     // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ.
-    fun runGRCh37PatchAlignment(sequences: Map<Int, String>, alignScoreThreshold: Int): Map<Int, Alignment>
+    fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int): List<List<Alignment>>
     {
         // TODO!!!
         val contig = "chr7_gl582971_fix"
         val reference = File("/Users/reecejones/GenomicData/GRCh37_patch").readText()
-        val results = HashMap<Int, Alignment>()
         val aligner = LocalSequenceAligner(MATCH_SCORE, MISMATCH_SCORE, GAP_OPENING_SCORE, GAP_EXTEND_SCORE)
-        for ((key, sequence) in sequences.entries)
-        {
-            val alignment = aligner.alignSequence(sequence, reference)
-            if (alignment.score >= alignScoreThreshold)
-            {
-                val matches = alignment.operators.count { it == AlignmentOperator.MATCH }
-                val editDistance = sequence.length - matches
-                val percentIdentity = 100 * matches.toDouble() / sequence.length.toDouble()
-                val resAlignment = Alignment(
-                    sequence,
-                    alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd,
-                    contig,
-                    alignment.secondSequenceAlignStart, alignment.secondSequenceAlignEnd,
-                    // TODO: strand handling?
-                    Strand.FORWARD,
-                    alignment.score,
-                    editDistance,
-                    percentIdentity
-                )
-                results[key] = resAlignment
-            }
-        }
-        return results
+        return sequences
+            .map { aligner.alignSequence(it, reference) }
+            .filter { it.score >= alignScoreThreshold }
+            .map { parseLocalAlignment(it, contig) }
+            .map { listOf(it) }
+    }
+
+    private fun parseLocalAlignment(alignment: LocalSequenceAligner.Alignment, contig: String): Alignment
+    {
+        val sequence = alignment.firstSequence
+        val matches = alignment.operators.count { it == AlignmentOperator.MATCH }
+        val editDistance = sequence.length - matches
+        val percentIdentity = 100 * matches.toDouble() / sequence.length.toDouble()
+        return Alignment(
+            sequence,
+            alignment.firstSequenceAlignStart, alignment.firstSequenceAlignEnd,
+            contig,
+            alignment.secondSequenceAlignStart, alignment.secondSequenceAlignEnd,
+            // TODO: strand handling?
+            Strand.FORWARD,
+            alignment.score,
+            editDistance,
+            percentIdentity
+        )
     }
 }
