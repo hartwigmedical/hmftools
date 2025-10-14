@@ -3,8 +3,6 @@ package com.hartwig.hmftools.cider
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.common.aligner.AlignmentOperator
-import com.hartwig.hmftools.common.aligner.LocalSequenceAligner
 import com.hartwig.hmftools.common.blastn.BlastnMatch
 import com.hartwig.hmftools.common.blastn.BlastnRunner
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -13,10 +11,7 @@ import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
-import java.io.File
 import java.io.FileInputStream
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 
 object AlignmentUtil
 {
