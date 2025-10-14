@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrRecord;
@@ -23,7 +24,7 @@ public class ReduxBqrPrep
     private final PrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
 
-    private final int HI_QUAL_THRESHOLD = 30;
+    private static final int HI_QUAL_THRESHOLD = 30;
 
     private static final String KEY_FLD_READ_TYPE = "readType";
     private static final String KEY_FLD_STANDARD_MUTATION = "standardMutation";
@@ -35,7 +36,8 @@ public class ReduxBqrPrep
         mConfig = config;
     }
 
-    private static class ExtendedBqrRecord
+    @VisibleForTesting
+    public static class ExtendedBqrRecord
     {
         private final ConsensusType ReadType;
         private final String StandardMutation;
@@ -44,15 +46,12 @@ public class ReduxBqrPrep
         private final double RecalibratedQuality;
         private final int Count;
 
-        private ExtendedBqrRecord(BqrRecord bqrRecord)
+        public ExtendedBqrRecord(ConsensusType readType, char refBase, char altBase, String trinucContext, int count, byte originalQual, double recalibratedQual)
         {
-            ReadType = bqrRecord.Key.ReadType;
-            OriginalQuality = bqrRecord.Key.Quality;
-            RecalibratedQuality = bqrRecord.RecalibratedQuality;
-            Count = bqrRecord.Count;
-
-            char refBase = (char) bqrRecord.Key.Ref;
-            char altBase = (char) bqrRecord.Key.Alt;
+            ReadType = readType;
+            OriginalQuality = originalQual;
+            RecalibratedQuality = recalibratedQual;
+            Count = count;
 
             char standardRefBase = refBase;
             char standardAltBase = altBase;
@@ -64,26 +63,34 @@ public class ReduxBqrPrep
 
             String standardMutation = String.format("%s>%s", standardRefBase, standardAltBase);
 
-            String standardTrinucContext = new String(
-                    refBase == standardRefBase
-                    ? bqrRecord.Key.TrinucleotideContext
-                    : reverseComplementBases(bqrRecord.Key.TrinucleotideContext)
-            );
+            String standardTrinucContext = (refBase == standardRefBase)
+                    ? trinucContext
+                    : reverseComplementBases(trinucContext);
 
             StandardMutation = standardMutation;
             StandardTrinucContext = standardTrinucContext;
         }
 
+        private ExtendedBqrRecord(BqrRecord bqrRecord)
+        {
+            this(bqrRecord.Key.ReadType,
+                    (char) bqrRecord.Key.Ref,
+                    (char) bqrRecord.Key.Alt,
+                    new String(bqrRecord.Key.TrinucleotideContext),
+                    bqrRecord.Count,
+                    bqrRecord.Key.Quality,
+                    bqrRecord.RecalibratedQuality);
+        }
+
         private String getOriginalQualBin()
         {
-            if(OriginalQuality < 20)
+            if(OriginalQuality < 20) {
                 return "0-19";
-
-            else if(OriginalQuality < 30)
+            } else if(OriginalQuality < 30) {
                 return "20-29";
-
-            else
+            } else {
                 return "30+";
+            }
         }
     }
 
@@ -134,9 +141,10 @@ public class ReduxBqrPrep
         return keyResultsMap;
     }
 
-    private List<FeatureValue<Double>> calcChangeInQualPerTrinucContext()
+    @VisibleForTesting
+    public static List<FeatureValue<Double>> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
     {
-        List<ExtendedBqrRecord> bqrRecords = mExtendedBqrRecords.stream()
+        bqrRecords = bqrRecords.stream()
                 .filter(x -> x.OriginalQuality >= HI_QUAL_THRESHOLD)
                 .toList();
 
@@ -160,10 +168,11 @@ public class ReduxBqrPrep
                 .toList();
     }
 
-    private List<FeatureValue<Double>> calcChangeInQualPerOriginalQual()
+    @VisibleForTesting
+    public static List<FeatureValue<Double>> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
     {
         Map<String, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
-        for(ExtendedBqrRecord bqrRecord : mExtendedBqrRecords)
+        for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
             String key = FeatureValue.keyFromPairs(
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
@@ -188,8 +197,8 @@ public class ReduxBqrPrep
 
         List<FeatureValue<Double>> featureValues = new ArrayList<>();
 
-        featureValues.addAll(calcChangeInQualPerOriginalQual());
-        featureValues.addAll(calcChangeInQualPerTrinucContext());
+        featureValues.addAll(calcChangeInQualPerOriginalQual(mExtendedBqrRecords));
+        featureValues.addAll(calcChangeInQualPerTrinucContext(mExtendedBqrRecords));
 
         return featureValues;
     }
