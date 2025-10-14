@@ -96,7 +96,7 @@ class AlignmentAnnotator
             querySequences,
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ALIGNMENT_SCORE_MIN, numThreads)
         val patchAlignments = if(mRefGenomeVersion == RefGenomeVersion.V37)
-            AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN)
+            AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN, numThreads)
             else emptyList()
         require(mainAlignments.size == patchAlignments.size)
         val alignmentResults = mainAlignments.zip(patchAlignments).map { it.first + it.second }
