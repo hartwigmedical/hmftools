@@ -15,6 +15,8 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import java.io.File
 import java.io.FileInputStream
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 
 object AlignmentUtil
 {
@@ -218,15 +220,26 @@ object AlignmentUtil
     fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int): List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
+
         // TODO!!!
         val contig = "chr7_gl582971_fix"
         val reference = File("/Users/reecejones/GenomicData/GRCh37_patch/chr7_gl582971_fix.txt").readText()
-        val aligner = LocalSequenceAligner(MATCH_SCORE, MISMATCH_SCORE, GAP_OPENING_SCORE, GAP_EXTEND_SCORE)
-        return sequences
-            .map { listOf(aligner.alignSequence(it, reference)) }
-            .map { alignments ->
-                alignments.filter { it.score >= alignScoreThreshold }
-                    .map { parseLocalAlignment(it, contig) } }
+
+        // TODO: thread count
+        val executor = Executors.newFixedThreadPool(4)
+        return sequences.map {
+                Callable {
+                    val aligner = LocalSequenceAligner(MATCH_SCORE, MISMATCH_SCORE, GAP_OPENING_SCORE, GAP_EXTEND_SCORE)
+                    val alignment = aligner.alignSequence(it, reference)
+                    if (alignment.score >= alignScoreThreshold) {
+                        listOf(parseLocalAlignment(alignment, contig))
+                    } else {
+                        emptyList()
+                    }
+                }
+            }
+            .map { executor.submit(it) }
+            .map { it.get() }
     }
 
     private fun parseLocalAlignment(alignment: LocalSequenceAligner.Alignment, contig: String): Alignment
