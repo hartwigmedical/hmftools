@@ -286,7 +286,7 @@ public class ConsensusReads
             logReason += format(" zero-bases%s", invalidBases);
         }
 
-        RD_LOGGER.error("invalid consensus read({}): readCount({}) {} read: {}",
+        RD_LOGGER.warn("invalid consensus read({}): readCount({}) {} read: {}",
                 logReason, reads.size(), consensusState.IsForward ? "forward" : "reverse",
                 consensusRead != null ? readToString(consensusRead) : format("%s:none", consensusState.ReadId));
 

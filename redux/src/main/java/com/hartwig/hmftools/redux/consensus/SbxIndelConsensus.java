@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
@@ -12,6 +13,7 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMAT
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.hasValidCigar;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -131,6 +133,12 @@ public class SbxIndelConsensus
         readStates.forEach(x -> x.moveToRefPosition(initialRefPosition));
 
         List<CigarElement> cigarElements = determineConsensusCigar(readStates, consensusState.IsForward, initialRefPosition);
+
+        if(!hasValidCigar(cigarElements))
+        {
+            consensusState.setOutcome(INDEL_FAIL);
+            return;
+        }
 
         int baseLength = cigarElements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
         consensusState.setBaseLength(baseLength);
