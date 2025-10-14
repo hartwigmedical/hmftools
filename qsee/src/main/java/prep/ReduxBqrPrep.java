@@ -1,8 +1,7 @@
 package prep;
 
-import static java.util.Map.entry;
-
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -52,19 +51,21 @@ public class ReduxBqrPrep
             RecalibratedQuality = bqrRecord.RecalibratedQuality;
             Count = bqrRecord.Count;
 
-            String mutation = String.format("%s>%s", bqrRecord.Key.Ref, bqrRecord.Key.Alt);
+            char refBase = (char) bqrRecord.Key.Ref;
+            char altBase = (char) bqrRecord.Key.Alt;
 
-            Map<String, String> STANDARD_MUTATION_MAPPING = Map.ofEntries(
-                    entry("G>T", "C>A"),
-                    entry("G>C", "C>G"),
-                    entry("G>A", "C>T"),
-                    entry("A>T", "T>A"),
-                    entry("A>G", "T>C"),
-                    entry("A>C", "T>G")
-            );
-            String standardMutation = STANDARD_MUTATION_MAPPING.getOrDefault(mutation, mutation);
+            char standardRefBase = refBase;
+            char standardAltBase = altBase;
+            if(refBase == 'G' || refBase == 'A')
+            {
+                standardRefBase = swapDnaBase(refBase);
+                standardAltBase = swapDnaBase(altBase);
+            }
 
-            String standardTrinucContext = new String(mutation.equals(standardMutation)
+            String standardMutation = String.format("%s>%s", standardRefBase, standardAltBase);
+
+            String standardTrinucContext = new String(
+                    refBase == standardRefBase
                     ? bqrRecord.Key.TrinucleotideContext
                     : reverseComplementBases(bqrRecord.Key.TrinucleotideContext)
             );
@@ -94,17 +95,17 @@ public class ReduxBqrPrep
 
         List<BqrRecord> bqrRecordsFiltered = bqrRecords.stream().filter(x -> x.Key.Ref != x.Key.Alt).toList();
 
+        List<ExtendedBqrRecord> extendedBqrRecords = bqrRecordsFiltered.stream().map(ExtendedBqrRecord::new).toList();
+
         // Sort here to control the eventual order in which features are plotted in R
-        List<BqrRecord> bqrRecordsSorted = bqrRecordsFiltered.stream()
-                .sorted(Comparator.comparing((BqrRecord x) -> x.Key.ReadType)
-                        .thenComparing(x -> x.Key.Ref)
-                        .thenComparing(x -> x.Key.Alt)
-                        .thenComparing(x -> new String(x.Key.TrinucleotideContext)))
+        List<ExtendedBqrRecord> extendedBqrRecordsSorted = extendedBqrRecords.stream()
+                .sorted(Comparator.comparing((ExtendedBqrRecord x) -> x.ReadType)
+                        .thenComparing(x -> x.StandardMutation)
+                        .thenComparing(x -> x.StandardTrinucContext)
+                )
                 .toList();
 
-        List<ExtendedBqrRecord> extendedBqrRecords = bqrRecordsSorted.stream().map(ExtendedBqrRecord::new).toList();
-
-        mExtendedBqrRecords.addAll(extendedBqrRecords);
+        mExtendedBqrRecords.addAll(extendedBqrRecordsSorted);
     }
 
     private static Map<String, Double> calcMeanChangeInQualPerGroup(Map<String, List<ExtendedBqrRecord>> bqrRecordGroups)
@@ -149,6 +150,7 @@ public class ReduxBqrPrep
             );
 
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
+            bqrRecordGroups.get(key).add(bqrRecord);
         }
 
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
@@ -168,7 +170,9 @@ public class ReduxBqrPrep
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
                     Pair.of(KEY_FLD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin())
             );
+
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
+            bqrRecordGroups.get(key).add(bqrRecord);
         }
 
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
