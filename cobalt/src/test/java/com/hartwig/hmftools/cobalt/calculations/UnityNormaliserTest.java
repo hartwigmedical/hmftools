@@ -27,10 +27,36 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(-1.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0, br3.ratio(), 0.001);
 
+        normaliser.dataCollectionFinished();
+
         bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0/20.0, br1.ratio(), 0.001);
         Assert.assertEquals(-1.0, br2.ratio(), 0.001);
         Assert.assertEquals(30.0/20.0, br3.ratio(), 0.001);
+    }
+
+    @Test
+    public void megabaseScaleValuesAreNormalisedTest()
+    {
+        BamRatio br1 = br(_1, 1001, 10.0, 0.45, true);
+        br1.setDiploidAdjustedRatio(10.0);
+        BamRatio br2 = br(_1, 2001, 20.0, 0.46, false);
+        br2.setDiploidAdjustedRatio(-1.0);
+        BamRatio br3 = br(_3, 2001, 30.0, 0.46, true);
+        br3.setDiploidAdjustedRatio(12.0);
+        List<BamRatio> bamRatios = of(br1, br2, br3);
+        UnityNormaliser normaliser = new UnityNormaliser();
+        bamRatios.forEach(normaliser::recordValue);
+        normaliser.dataCollectionFinished();
+
+        Assert.assertEquals(10.0, br1.getDiploidAdjustedRatio(), 0.001);
+        Assert.assertEquals(-1.0, br2.getDiploidAdjustedRatio(), 0.001);
+        Assert.assertEquals(12.0, br3.getDiploidAdjustedRatio(), 0.001);
+
+        bamRatios.forEach(normaliser::normalise);
+        Assert.assertEquals(10.0/11.0, br1.getDiploidAdjustedRatio(), 0.001);
+        Assert.assertEquals(-1.0, br2.getDiploidAdjustedRatio(), 0.001);
+        Assert.assertEquals(12.0/11.0, br3.getDiploidAdjustedRatio(), 0.001);
     }
 
     @Test
@@ -45,6 +71,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(1.0, br1.ratio(), 0.001);
         Assert.assertEquals(2.0, br2.ratio(), 0.001);
         Assert.assertEquals(3.0, br3.ratio(), 0.001);
+        normaliser.dataCollectionFinished();
 
         bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(1.0, br1.ratio(), 0.001);
@@ -67,6 +94,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
         Assert.assertEquals(0.0, br2.ratio(), 0.001);
         Assert.assertEquals(50.0, br3.ratio(), 0.001);
         Assert.assertEquals(-1.0, br4.ratio(), 0.001);
+        normaliser.dataCollectionFinished();
 
         bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0/30.0, br1.ratio(), 0.001);

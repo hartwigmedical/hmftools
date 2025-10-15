@@ -34,12 +34,17 @@ public abstract class BamCalculation
 
     public void addReading(Chromosome chromosome, DepthReading readDepth)
     {
-        // Use the supplied filters to set the state of the reading and assign it to a GC bucket.
+        // The genome filter takes into account gc mappability, excluded pseudo-gene regions
+        // and excluded non-diploid regions, depending on the mode.
         final boolean isExcluded = mGenomeFilter.exclude(chromosome, readDepth);
+        // All windows will be on-target in whole-genome mode.
         final boolean isInTargetRegion = Scope.onTarget(chromosome, readDepth.StartPosition);
-        final GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
         final CobaltWindow rawWindow = new CobaltWindow(chromosome, readDepth, isExcluded, isInTargetRegion);
-        WindowsByChromosome.put(chromosome, rawWindow.bucketed(bucket));
+        final GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
+        // Assign a bucket to the window, recording the GC statistics at the same time.
+        // The bucket will be set to null in the bucketed window for excluded or off-target readings.
+        final CobaltWindow bucketedWindow = rawWindow.bucketed(bucket);
+        WindowsByChromosome.put(chromosome, bucketedWindow);
     }
 
     public ListMultimap<Chromosome, BamRatio> calculateRatios()
@@ -48,13 +53,17 @@ public abstract class BamCalculation
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
         WindowsByChromosome.forEach((chromosome, window) ->
         {
-            // Create a reading for each window, normalise according to its GC bucket,
-            // then enrich according to supplied per-window values.
+            // Windows are converted to BamRatios. The essential value of a BamRatio is its ratio,
+            // which is set to either the depth or -1.0 if the window is off-target (always false in whole genome mode).
+            // Subsequent normalisation steps adjust the ratio value, but leave values of -1.0 unchanged.
             BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, Scope.onTarget(chromosome, window.Position));
+            // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 it the bucket is null.
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
+            // Apply enrichment (does nothing in whole genome mode).
             bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.mDepthReading));
             bamResults.put(chromosome, bamRatio);
         });
+        // Apply the remaining normalisation and consolidation steps. Some of these are no-ops depending on the mode.
         BamRatios bamRatios = new BamRatios(bamResults);
         bamRatios.normalise(MeanNormaliser);
         bamRatios.consolidate(consolidator());
