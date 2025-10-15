@@ -235,7 +235,7 @@ class AlignmentAnnotator
             alignmentStatus = alignmentStatus)
     }
 
-    private fun parseGene(alignment: AlignmentUtil.Alignment) : IgTcrGene
+    private fun parseGene(alignment: AlignmentUtil.Alignment) : IgTcrGene?
     {
         // We aligned to a custom FASTA with all the gene sequences. The gene ID is encoded in the sequence header.
         val geneData = alignment.refContig.split('|')
@@ -243,7 +243,7 @@ class AlignmentAnnotator
         val name = geneData[1]
         val allele = geneData[2]
         val region = IgTcrRegion.valueOf(geneData[3])
-        val gene = mVdjGenes[index]!!
+        val gene = mVdjGenes[index] ?: return null
         // Double-check the gene data matches.
         require(gene.geneName == name)
         require(gene.allele == allele)
