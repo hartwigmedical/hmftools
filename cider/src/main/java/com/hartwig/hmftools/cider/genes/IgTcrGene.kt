@@ -8,6 +8,7 @@ typealias IgTcrFunctionality = com.hartwig.hmftools.common.cider.IgTcrFunctional
 
 typealias IgTcrRegion = com.hartwig.hmftools.common.cider.IgTcrRegion
 
+// TODO: fix this
 // use kotlin data class to use the nicer kotlin functionality
 data class IgTcrGene(
     val geneName: String,
@@ -43,7 +44,6 @@ data class IgTcrGene(
                 gene.functionality,
                 toChrBaseRegion(gene.geneLocation),
                 gene.geneLocation?.strand,
-                gene.geneLocation?.altAssemblyName,
                 gene.anchorSequence,
                 toChrBaseRegion(gene.anchorLocation)
             )

@@ -71,7 +71,7 @@ class AlignmentAnnotator
         // This gives us the best estimate of which gene the sequence belongs to.
 
         // TODO!!!!
-        val refDict = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.37.dict"
+        val refDict = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.37.fasta.dict"
         val refIndexImage = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.37.fasta.img"
 
         val querySequences = alignmentRunDatas.map { it.querySeq }
@@ -238,7 +238,7 @@ class AlignmentAnnotator
     private fun parseGene(alignment: AlignmentUtil.Alignment) : IgTcrGene
     {
         // We aligned to a custom FASTA with all the gene sequences. The gene ID is encoded in the sequence header.
-        val geneData = alignment.refContig.split('\t')
+        val geneData = alignment.refContig.split('|')
         val index = geneData[0].toInt()
         val name = geneData[1]
         val allele = geneData[2]

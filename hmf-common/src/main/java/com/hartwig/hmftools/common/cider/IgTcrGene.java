@@ -12,7 +12,6 @@ public record IgTcrGene(
         IgTcrFunctionality functionality,
         @Nullable ChrBaseRegion geneLocation,
         @Nullable Strand geneStrand,
-        @Nullable String altAssemblyName, // not null if is not in primary assembly
         @Nullable String anchorSequence,  // only valid for V / J gene
         @Nullable ChrBaseRegion anchorLocation)
 {
@@ -24,10 +23,5 @@ public record IgTcrGene(
     public boolean isFunctional()
     {
         return functionality == IgTcrFunctionality.FUNCTIONAL;
-    }
-
-    public boolean inPrimaryAssembly()
-    {
-        return altAssemblyName == null;
     }
 }
