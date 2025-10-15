@@ -13,7 +13,6 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import java.io.FileInputStream
 import java.io.InputStream
-import kotlin.io.path.createTempFile
 
 object AlignmentUtil
 {
@@ -107,13 +106,6 @@ object AlignmentUtil
             require(refStart <= refEnd)
             require(queryAlignStart <= queryAlignEnd)
         }
-    }
-
-    fun parseChromosome(contig: String): String
-    {
-        // Parses ref genome contig to the primary assembly chromosome. E.g.:
-        // chr14_KI270726v1_random
-        return contig.split("_")[0]
     }
 
     fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
@@ -215,20 +207,5 @@ object AlignmentUtil
             alignment.nMismatches,
             percentIdentity
         )
-    }
-
-    // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
-    fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
-    {
-        sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
-        val refFasta = "chr7_gl582971_fix.fasta"
-        val refDict = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.dict")!!
-        val refIndexImage = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.img")!!
-        // Unfortunately, the BWA-MEM API requires a file for the index image, which I don't think we can get straight from the resource.
-        // So we have to write the contents to a temporary file first.
-        val refIndexImageFile = createTempFile().toFile()
-        refIndexImageFile.deleteOnExit()
-        refIndexImageFile.writeBytes(refIndexImage.readAllBytes())
-        return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
     }
 }

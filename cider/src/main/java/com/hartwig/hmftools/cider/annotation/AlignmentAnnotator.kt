@@ -2,11 +2,9 @@ package com.hartwig.hmftools.cider.annotation
 
 import com.hartwig.hmftools.cider.*
 import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
-import com.hartwig.hmftools.cider.AlignmentUtil.parseChromosome
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
 import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
-import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.logging.log4j.LogManager
 import java.util.*
 
@@ -33,49 +31,20 @@ class AlignmentAnnotator
 {
     private val sLogger = LogManager.getLogger(AlignmentAnnotator::class.java)
 
-    private val mRefGenomeVersion: RefGenomeVersion
-    private val mRefGenomeDictPath: String
-    private val mRefGenomeBwaIndexImagePath: String
-    private val mVdjGenes: Map<Pair<String, Strand>, List<IgTcrGene>>
+    private val mVdjGenes: Map<Int, IgTcrGene>
 
     // class to help associate the data back
     data class AlignmentRunData(val vdj: VDJSequence, val querySeqRange: IntRange, val querySeq: String)
 
-    constructor(refGenomeVersion: RefGenomeVersion, refGenomeDictPath: String, refGenomeBwaIndexImagePath: String)
+    constructor()
     {
-        mRefGenomeVersion = refGenomeVersion
-        mRefGenomeDictPath = refGenomeDictPath
-        mRefGenomeBwaIndexImagePath = refGenomeBwaIndexImagePath
-
-        // Explicitly using an ArrayList here to give a deterministic iteration order when finding genes later.
-        val vdjGenes: HashMap<Pair<String, Strand>, ArrayList<IgTcrGene>> = HashMap()
-
-        val igTcrGenes = IgTcrGeneFile.read(refGenomeVersion)
+        // TODO!!!!!!
+        val refGenomeVersion = RefGenomeVersion.V37
+        mVdjGenes = IgTcrGeneFile.read(refGenomeVersion)
             .map { o -> fromCommonIgTcrGene(o) }
-
-        // find all the genes that we need
-        for (geneData in igTcrGenes)
-        {
-            if (geneData.region !in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION))
-            {
-                continue
-            }
-
-            if (geneData.geneLocation == null)
-            {
-                continue
-            }
-
-            val key = Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand)
-            vdjGenes.computeIfAbsent(key) { ArrayList() }.add(geneData)
-
-            /* sLogger.debug(
-                "found constant region gene: {}, type: {}, location: {}",
-                geneData.GeneName, igConstantRegionType, genomeRegionStrand
-            )*/
-        }
-
-        mVdjGenes = vdjGenes
+            .withIndex()
+            .filter { it.value.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION) }
+            .associate { it.index to it.value }
     }
 
     fun runAnnotate(sampleId: String, vdjList: List<VDJSequence>, outputDir: String, numThreads: Int)
@@ -87,25 +56,26 @@ class AlignmentAnnotator
             val querySeqRange = alignmentQuerySeqRange(it)
             AlignmentRunData(it, querySeqRange, it.layout.consensusSequenceString().substring(querySeqRange))
         }
+        val alignments = runAlignment(alignmentRunDatas, numThreads)
 
-        // Align to the normal reference genome to get most of the alignments.
-        // For GRCh37, also align to a patch assembly which contains some genes (e.g. TRBJ1) which are missing from the main assembly.
-        // The issue does not exist in GRCh38 as that assembly is more complete.
-        val querySequences = alignmentRunDatas.map { it.querySeq }
-        val mainAlignments = AlignmentUtil.runBwaMem(
-            querySequences,
-             mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ALIGNMENT_SCORE_MIN, numThreads)
-        val patchAlignments = if(mRefGenomeVersion == RefGenomeVersion.V37)
-            AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN, numThreads)
-            else emptyList()
-        require(mainAlignments.size == patchAlignments.size)
-        val alignmentResults = mainAlignments.zip(patchAlignments).map { it.first + it.second }
-
-        val annotations = processAlignments(alignmentRunDatas, alignmentResults)
+        val annotations = processAlignments(alignmentRunDatas, alignments)
 
         AlignmentMatchTsvWriter.write(outputDir, sampleId, annotations)
 
         return annotations
+    }
+
+    private fun runAlignment(alignmentRunDatas: List<AlignmentRunData>, threadCount: Int): List<List<AlignmentUtil.Alignment>>
+    {
+        // Align the VDJ sequences to a FASTA which contains all the IMGT gene sequences.
+        // This gives us the best estimate of which gene the sequence belongs to.
+
+        // TODO!!!!
+        val refDict = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.37.dict"
+        val refIndexImage = "/Users/reecejones/Dev/hmftools/temp/cider-gene-curator/output/igtcr_gene.37.fasta.img"
+
+        val querySequences = alignmentRunDatas.map { it.querySeq }
+        return AlignmentUtil.runBwaMem(querySequences, refDict, refIndexImage, ALIGNMENT_SCORE_MIN, threadCount)
     }
 
     // process the alignment matches for each VDJ, and set the alignmentAnnotation in the VdjAnnotation
@@ -167,7 +137,7 @@ class AlignmentAnnotator
         val jGeneCandidates: MutableList<Pair<IgTcrGene, AlignmentUtil.Alignment>> = ArrayList()
         for (alignment in alignments)
         {
-            val vdjGene: IgTcrGene? = findGene(alignment)
+            val vdjGene: IgTcrGene? = parseGene(alignment)
             if (vdjGene == null)
             {
                 continue
@@ -265,33 +235,20 @@ class AlignmentAnnotator
             alignmentStatus = alignmentStatus)
     }
 
-    private fun findGene(alignment: AlignmentUtil.Alignment) : IgTcrGene?
+    private fun parseGene(alignment: AlignmentUtil.Alignment) : IgTcrGene
     {
-        val chromosome = parseChromosome(alignment.refContig)
-
-        val geneDataList = mVdjGenes[Pair(chromosome, alignment.strand)] ?: return null
-
-        var bestGene : IgTcrGene? = null
-
-        for (gene in geneDataList)
-        {
-            val geneLocation = gene.geneLocation ?: continue
-
-            require(geneLocation.chromosome == chromosome)
-            require(geneLocation.strand == alignment.strand)
-
-            if (bestGene == null || !bestGene.isFunctional)
-            {
-                // check if they overlap. We prioritise functional genes
-                if (geneLocation.posStart <= alignment.refEnd + GENE_REGION_TOLERANCE &&
-                    geneLocation.posEnd >= alignment.refStart - GENE_REGION_TOLERANCE)
-                {
-                    bestGene = gene
-                }
-            }
-        }
-
-        return bestGene
+        // We aligned to a custom FASTA with all the gene sequences. The gene ID is encoded in the sequence header.
+        val geneData = alignment.refContig.split('\t')
+        val index = geneData[0].toInt()
+        val name = geneData[1]
+        val allele = geneData[2]
+        val region = IgTcrRegion.valueOf(geneData[3])
+        val gene = mVdjGenes[index]!!
+        // Double-check the gene data matches.
+        require(gene.geneName == name)
+        require(gene.allele == allele)
+        require(gene.region == region)
+        return gene
     }
 
     private companion object
@@ -301,10 +258,6 @@ class AlignmentAnnotator
         const val ALIGNMENT_SCORE_MIN = 19
 
         const val FLANKING_BASES = 50
-
-        // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
-        // an alignment to the gene
-        const val GENE_REGION_TOLERANCE = 50
 
         fun alignmentQuerySeqRange(vdj: VDJSequence) : IntRange
         {
