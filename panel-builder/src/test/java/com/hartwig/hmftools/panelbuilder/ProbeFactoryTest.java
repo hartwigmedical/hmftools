@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.DEFAULT_PROBE_QUALITY;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
@@ -39,7 +37,7 @@ public class ProbeFactoryTest
     {
         SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 10));
         Optional<Probe> actual = mFactory.createProbe(def, METADATA);
-        Optional<Probe> expected = Optional.of(new Probe(def, "AAAAAAAAAA", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0));
+        Optional<Probe> expected = Optional.of(new Probe(def, "AAAAAAAAAA", METADATA, null, null, 0.0, 0));
         assertEquals(expected, actual);
     }
 
@@ -54,7 +52,7 @@ public class ProbeFactoryTest
                 Orientation.REVERSE);
         Optional<Probe> actual = mFactory.createProbe(def, METADATA);
         Optional<Probe> expected =
-                Optional.of(new Probe(def, "AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC", METADATA, null, null, DEFAULT_PROBE_QUALITY, 0.5));
+                Optional.of(new Probe(def, "AAAAAAAAAAGCGCGCGCGCTTTTTCCCCC", METADATA, null, null, 0.0, 0.5));
         assertEquals(expected, actual);
     }
 

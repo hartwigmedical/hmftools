@@ -50,26 +50,29 @@ public class ProbeGenerator
 {
     private final ProbeFactory mProbeFactory;
     private final CandidateProbeGenerator mCandidateGenerator;
-    private final ProbeEvaluator mProbeEvaluator;
+    private final ProbeQualityScorer mProbeQualityScorer;
+    // Hook to catch all candidate probes for output.
+    @Nullable
+    private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
     public ProbeGenerator(final ProbeFactory probeFactory, final CandidateProbeGenerator candidateGenerator,
-            final ProbeEvaluator probeEvaluator)
+            final ProbeQualityScorer probeQualityScorer, final @Nullable Consumer<Probe> candidateCallback)
     {
         mProbeFactory = probeFactory;
         mCandidateGenerator = candidateGenerator;
-        mProbeEvaluator = probeEvaluator;
+        mProbeQualityScorer = probeQualityScorer;
+        mCandidateCallback = candidateCallback;
     }
 
     public static ProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
             final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
         ProbeFactory probeFactory = new ProbeFactory(refGenome);
         CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
-        ProbeEvaluator probeEvaluator = new ProbeEvaluator(probeQualityScorer, candidateCallback);
-        return new ProbeGenerator(probeFactory, candidateProbeGenerator, probeEvaluator);
+        ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
+        return new ProbeGenerator(probeFactory, candidateProbeGenerator, probeQualityScorer, candidateCallback);
     }
 
     // General purpose method for generating the best acceptable probes to cover an entire region.
@@ -122,8 +125,8 @@ public class ProbeGenerator
 
         String chromosome = uncoveredRegion.chromosome();
 
-        Stream<Probe> allPlausibleProbes = mProbeEvaluator.evaluateProbes(
-                        mCandidateGenerator.allOverlapping(uncoveredRegion, metadata), evalCriteria)
+        Stream<Probe> allPlausibleProbes = evaluateProbes(
+                mCandidateGenerator.allOverlapping(uncoveredRegion, metadata), evalCriteria)
                 .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.
@@ -455,7 +458,7 @@ public class ProbeGenerator
                 });
     }
 
-    // Generates the one best acceptable probe that centered on one of the given positions.
+    // Generates the one best acceptable probe that is centered on one of the given positions.
     public ProbeGenerationResult coverOnePosition(Stream<BasePosition> positions, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, final PanelCoverage coverage)
     {
@@ -534,7 +537,7 @@ public class ProbeGenerator
             return mProbeFactory.createProbe(definition, metadata)
                     .map(probe ->
                     {
-                        probe = mProbeEvaluator.evaluateProbe(probe, evalCriteria);
+                        probe = evaluateProbes(Stream.of(probe), evalCriteria);
                         if(probe.accepted())
                         {
                             return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
@@ -557,7 +560,22 @@ public class ProbeGenerator
     public Optional<Probe> selectBestCandidate(Stream<Probe> candidates, final ProbeEvaluator.Criteria evalCriteria,
             final ProbeSelector.Strategy selectStrategy)
     {
-        Stream<Probe> evaluatedCandidates = mProbeEvaluator.evaluateProbes(candidates, evalCriteria);
+        Stream<Probe> evaluatedCandidates = evaluateProbes(candidates, evalCriteria);
         return selectBestProbe(evaluatedCandidates, selectStrategy);
+    }
+
+    private Stream<Probe> evaluateProbes(Stream<Probe> probes, final ProbeEvaluator.Criteria criteria)
+    {
+        // TODO? maybe can avoid computing quality score if probe is rejected for other reasons first
+        return ProbeEvaluator.evaluateProbes(mProbeQualityScorer.getQualityScores(probes), criteria).map(this::logCandidateProbe);
+    }
+
+    private Probe logCandidateProbe(final Probe probe)
+    {
+        if(mCandidateCallback != null)
+        {
+            mCandidateCallback.accept(probe);
+        }
+        return probe;
     }
 }
