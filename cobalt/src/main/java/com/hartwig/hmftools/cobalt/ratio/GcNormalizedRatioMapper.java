@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.cobalt.CobaltColumns;
-import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
 import tech.tablesaw.aggregate.AggregateFunctions;
@@ -38,6 +38,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
     public Table mapRatios(final Table inputRatios)
     {
         CB_LOGGER.info("applying ratio GC normalisation");
+        RatioSupplier.printTable(inputRatios, "GCNRM_1_inputRatios");
 
         // add a gc bucket column if not already have one
         if(!inputRatios.containsColumn(CobaltColumns.GC_BUCKET))
@@ -45,13 +46,31 @@ public class GcNormalizedRatioMapper implements RatioMapper
             inputRatios.addColumns(inputRatios.doubleColumn(READ_GC_CONTENT)
                     .multiply(100).round().asIntColumn().setName(CobaltColumns.GC_BUCKET));
         }
+        RatioSupplier.printTable(inputRatios, "GCNRM_2_inputRatios");
+/*
+        Table gcMedianCalcDf = inputRatios.where(
+                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThanOrEqualTo(0.0) // TODO: change to >= 0.0
+                        .and(
+                                inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX)
+                                        .or(
+                                                inputRatios.doubleColumn(CobaltColumns.READ_DEPTH).isEqualTo(0.0)
+                                        )
+                        )
+                        .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
+                        .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
+ */
         // create a gc normalisation df
 
         // skipped masked regions
         Table gcMedianCalcDf = inputRatios.where(
-                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0) // TODO: change to >= 0.0
-                        .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX))
+                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThanOrEqualTo(0.0) // TODO: change to >= 0.0
+                        .and(
+                                inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX)
+                                        .or(
+                                                inputRatios.doubleColumn(CobaltColumns.READ_DEPTH).isEqualTo(0.0)
+                                        )
+                        )
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
@@ -76,6 +95,8 @@ public class GcNormalizedRatioMapper implements RatioMapper
         gcMedianCalcDf.column(String.format("Median [%s]", CobaltColumns.RATIO)).setName("gcMedianCount");
         gcMedianCalcDf.column(String.format("Count [%s]", CobaltColumns.RATIO)).setName("windowCount");
 
+        RatioSupplier.printTable(inputRatios, "999_2_inputRatios_pre_join");
+        RatioSupplier.printTable(gcMedianCalcDf, "999_3_gcMedianCalcDf_pre_join");
         // merge in the gc median count
         Table ratiosWithMedianCount = inputRatios
                 .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())

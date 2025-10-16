@@ -425,7 +425,7 @@ public class RatioSupplier
         {
             return;
         }
-        File dir = new File("/Users/timlavers/work/junk/outputs");
+        File dir = new File("/Users/timlavers/work/junk/outputs_old");
         dir.mkdirs();
         File outputFile = new File(dir, fileName + ".tsv");
 

@@ -20,7 +20,19 @@ public class RawCobaltRatioFile
 
     public static void write(final String fileName, Collection<RawCobaltRatio> ratios) throws IOException
     {
-        CobaltRatioFile.Column[] columns = new CobaltRatioFile.Column[7];
+        CobaltRatioFile.Column[] columns = new CobaltRatioFile.Column[9];
+        /*
+                chromosome,
+        position,
+        referenceReadDepth,
+        tumorReadDepth,
+        referenceGCRatio,
+        tumorGCRatio,
+        referenceGCDiploidRatio,
+        referenceGCContent,
+        tumorGCContent
+
+         */
         columns[0] = chromosome;
         columns[1] = position;
         columns[2] = referenceReadDepth;
@@ -28,6 +40,8 @@ public class RawCobaltRatioFile
         columns[4] = referenceGCRatio;
         columns[5] = tumorGCRatio;
         columns[6] = referenceGCDiploidRatio;
+        columns[7] = referenceGCContent;
+        columns[8] = tumorGCContent;
         try(BufferedWriter writer = createGzipBufferedWriter(fileName))
         {
             DelimFileWriter.write(writer, columns, ratios,
@@ -39,6 +53,8 @@ public class RawCobaltRatioFile
                         row.set(referenceGCRatio, ratio.referenceGcRatio(), FORMAT);
                         row.set(tumorGCRatio, ratio.tumorGcRatio(), FORMAT);
                         row.set(referenceGCDiploidRatio, ratio.referenceGcDiploidRatio(), FORMAT);
+                        row.set(referenceGCContent, ratio.referenceGCContent(), FORMAT);
+                        row.set(tumorGCContent, ratio.tumorGCContent(), FORMAT);
                     });
         }
     }
@@ -60,6 +76,8 @@ public class RawCobaltRatioFile
             Integer refGcRatioIndex = reader.getColumnIndex(referenceGCRatio);
             Integer tumorGcRatioIndex = reader.getColumnIndex(tumorGCRatio);
             Integer refGcDiploidRatioIndex = reader.getColumnIndex(referenceGCDiploidRatio);
+            Integer refGcContentIndex = reader.getColumnIndex(referenceGCContent);
+            Integer tumorGcContentIndex = reader.getColumnIndex(tumorGCContent);
 
             for(DelimFileReader.Row row : reader)
             {
@@ -70,7 +88,9 @@ public class RawCobaltRatioFile
                         row.getDouble(tumorReadCountIndex),
                         row.getDouble(refGcRatioIndex),
                         row.getDouble(tumorGcRatioIndex),
-                        row.getDouble(refGcDiploidRatioIndex));
+                        row.getDouble(refGcDiploidRatioIndex),
+                        row.getDouble(refGcContentIndex),
+                        row.getDouble(tumorGcContentIndex));
 
                 ratios.add(ratio);
             }

@@ -7,14 +7,22 @@ public class DoubleDifference
 
     public DoubleDifference(Double original, Double comparison, Double epsilon)
     {
-        if (original == 0 && comparison == 0)
+        if (original == 0)
         {
-            difference = 0.0;
-            hasDifference = false;
+            if(comparison == 0)
+            {
+                difference = 0.0;
+                hasDifference = false;
+            }
+            else
+            {
+                difference = comparison;
+                hasDifference = true;
+            }
         }
         else
         {
-            double diff = ((original - comparison) * 2) / (Math.abs(original) + Math.abs(comparison));
+            double diff = ((original - comparison));
             if(Math.abs(diff) < epsilon)
             {
                 difference = 0.0;
