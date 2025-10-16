@@ -683,11 +683,28 @@ of that allele (i.e. any amino acid is deemed a match to a wildcard)
 
 #### Scoring
 
-The score for a complex is calculated based on `total_coverage` (sum of the fragments aligned to each allele), and several penalties: 
+The score for a complex is calculated based on `total_coverage` (sum of the fragments aligned to each allele) and several penalties as 
+shown below. Each penalty is described in the subsections below. 
 
 ```
 score = total_coverage - frequency_penalty - solution_complexity_penalty - recovery_penalty
 ```
+
+Two performance optimisations are made at this stage of scoring:
+- If there are predicted to be >1,000,000 complexes, the evidence phase is first performed individually for complexes of 2
+  alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and
+  then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase
+  is then subsequently run using this reduced set of candidate alleles.
+- Complexes are scored with the number of fragments is downsampled to a maximum of 10,000
+
+Then, complexes within `top_score * 0.005` (`top_score_threshold`) are rescored with all fragments (i.e. without downsampling) to calculate
+the actual complex scores and rankings.
+
+The complex with the top score is chosen as the final solution. If 2 or more complexes have the exact same score, the solution with the
+lowest alphabetical 4-digit alleles is chosen.
+
+
+##### Frequency penalty
 
 `frequency_penalty` penalises solutions with rare alleles:
 ```
@@ -698,39 +715,37 @@ sum_log_frequency = sum(-log10(frequencies_filled))
 frequency_penalty = total_coverage * sum_log_frequency * 0.009 # frequency_penalty_weight
 ```
 
+##### Solution complexity penalty
+
 `solution_complexity_penalty` penalises solutions with more alleles (i.e. favor simpler solutions):
 
 ```
 # Allele sequences in complex:
-| exon    | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
-| allele1 | MAVM | SHSM | SHTV | APKT | LSSQ | RKGG | SDSA |
-| allele2 | MRVT | SHSM | SHII | PPKT | LSSQ | GKGG | SDSA |
-| allele3 | MRVM | SHSM | SHTL | HPKT | LSSQ | GKGG | SNSA |
+| exon_chunk | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
+|------------|------|------|------|------|------|------|------|
+| allele_1   | MAVM | SHSM | SHTV | APKT | LSSQ | RKGG | SDSA |
+| allele_2   | MRVT | SHSM | SHII | PPKT | LSSQ | GKGG | SDSA |
+| allele_3   | MRVM | SHSM | SHTL | HPKT | LSSQ | GKGG | SNSA |
 
-unique_sequences_per_exon = [ 3, 1, 3, 3, 1, 2, 2 ]
-solution_complexity = sum(unique_sequences_per_exon)
+# Chunk refers to an exon, or half of an exon for long exons
+unique_sequences_per_chunk = [ 3, 1, 3, 3, 1, 2, 2 ] 
+
+solution_complexity = sum(unique_sequences_per_chunk)
 
 solution_complexity_penalty = total_coverage * solution_complexity * 0.002 # solution_complexity_penalty_weight
 ```
+
+Note that long exons (>= 85 amino acids / 255 nucleotides) are split into equal halves, with `unique_sequences_per_chunk` being calculated 
+separately for each half. This is because fragments which typically ~151 bp in length can only span (and provide phased support for) half 
+of these long exons, and thus the window for calculating `unique_sequences_per_chunk` reflects this.
+
+##### Recovery penalty
 
 `recovery_penalty` penalises solutions having recovered alleles (note: `recovery_penalty` is currently turned off):
 
 ```
 recovery_penalty = total_coverage * recovered_alleles_count * 0 # recovery_penalty_weight
 ```
-
-Two performance optimisations are made at this stage of scoring:
-- If there are predicted to be >1,000,000 complexes, the evidence phase is first performed individually for complexes of 2
-alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and 
-then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase 
-is then subsequently run using this reduced set of candidate alleles.
-- Complexes are scored with the number of fragments is downsampled to a maximum of 10,000
-
-Then, complexes within `top_score * 0.005` (`top_score_threshold`) are rescored with all fragments (i.e. without downsampling) to calculate 
-the actual complex scores and rankings. 
-
-The complex with the top score is chosen as the final solution. If 2 or more complexes have the exact same score, the solution with the 
-lowest alphabetical 4-digit alleles is chosen.
 
 ### Tumor and RNA status of alleles
 
