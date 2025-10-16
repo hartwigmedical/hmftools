@@ -13,7 +13,9 @@ public record RawCobaltRatio(
         double tumorReadCount,
         double referenceGcRatio,
         double tumorGcRatio,
-        double referenceGcDiploidRatio
+        double referenceGcDiploidRatio,
+        double referenceGCContent,
+        double tumorGCContent
 )
 {
     public boolean matchesPosition(final RawCobaltRatio other)
@@ -29,10 +31,19 @@ public record RawCobaltRatio(
         differences.add(new DoubleDifference(referenceGcRatio, other.referenceGcRatio, epsilon));
         differences.add(new DoubleDifference(tumorGcRatio, other.tumorGcRatio, epsilon));
         differences.add(new DoubleDifference(referenceGcDiploidRatio, other.referenceGcDiploidRatio, epsilon));
+        differences.add(new DoubleDifference(referenceGCContent, other.referenceGCContent, epsilon));
+        differences.add(new DoubleDifference(tumorGCContent, other.tumorGCContent, epsilon));
         boolean hasDifference = differences.stream().anyMatch(diff -> diff.hasDifference);
         if(hasDifference)
         {
-            return new RawCobaltRatio(chromosome, position, differences.get(0).difference, differences.get(1).difference, differences.get(2).difference, differences.get(3).difference, differences.get(4).difference);
+            return new RawCobaltRatio(chromosome, position,
+                    differences.get(0).difference,
+                    differences.get(1).difference,
+                    differences.get(2).difference,
+                    differences.get(3).difference,
+                    differences.get(4).difference,
+                    differences.get(5).difference,
+                    differences.get(6).difference);
         }
         return null;
     }
