@@ -16,8 +16,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
-import static com.hartwig.hmftools.redux.consensus.ReadValidReason.checkIsValidRead;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.stripDuplexIndels;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.prepProcessRead;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -316,18 +315,7 @@ public class PartitionReader
     {
         if(isSbx())
         {
-            try
-            {
-                stripDuplexIndels(read);
-
-                if(ReduxConfig.RunChecks)
-                    checkIsValidRead(read);
-            }
-            catch(Exception e)
-            {
-                RD_LOGGER.error("pre-process read({}) error: {}", readToString(read), e.toString());
-                e.printStackTrace();
-            }
+            SbxRoutines.prepProcessRead(read);
         }
     }
 
