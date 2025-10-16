@@ -426,7 +426,7 @@ A*30:220Q amino acids: MAVMAPRTLL...SG
 The starting data for the LILAC algorithm is:
 - HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences), excluding the following due to their high similarity closely 
 related pseudogenes:
-  - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
+  - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`, `B*40:278`
   - HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
 - All fragments in a BAM aligned to HLA-A, HLA-B and HLA-C gene regions, which:
   - Are not duplicates
@@ -559,26 +559,42 @@ Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid c
 ```
 
 Note that:
-- Amino acids with 0 fragment support not shown and amino acids derived from soft-clipped bases are represented as multi-character strings
+- Amino acids with 0 fragment support are not shown, and amino acids derived from soft-clipped bases are represented as multi-character strings
 - `raw_counts` only includes fragments aligned at that gene, whereas `count` can include [fragments from other genes](#shared-fragment-support-across-genes)
 - Positions with multiple amino acid candidates are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**
 
-Amino acid matrix construction has the similar conditions/caveats as for the nucleotide matrix, namely: 
+Amino acid matrix construction has similar conditions/caveats as for the nucleotide matrix, namely: 
 - [Shared fragment support across genes](#shared-fragment-support-across-genes) is taken into account
 - Fragments with in-frame indels only contribute to counts in the matrix if the indel matches an existing HLA allele, 
 and fragments with out-of-frame indels are always excluded
 - Amino acid candidates are filtered for those with at least `min_fragment_support` and `min_hi_qual_fragment_support` 
 (see [Filtering for nucleotide candidates](#filtering-for-nucleotide-candidates)) for all nucleotides in each codon
 
-Additionally, exon boundary 'enrichment', is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
-(i.e. before nucleotide index 894, amino acid index 298). For codons crossing these exon boundaries, any associated fragment is enriched 
-with **homozygous** nucleotide candidates on the other side of the exon boundary so that an amino acid can constructed.
+Additionally, exon boundary enrichment is performed as described below.
+
+##### Exon boundary enrichment
+
+Exon boundary enrichment ensures that the start or end of each fragment's sequence forms a complete codon. It is only applied to exons 
+1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes) (i.e. before nucleotide index 894 / amino acid index 298).
+
+A fragment may, for example, cover 1 nucleotide of a codon at the end of one exon, but not cover the remaining 2 nucleotides at the 
+start of the next exon (because there is an intron gap between the exons). **Homozygous** candidate nucleotides from the start of the next 
+exon are added to the sequence of the fragment so that an amino acid can be constructed.
 
 #### Elimination based on amino acid matrix
 
-Alleles are eliminated based on the amino acid matrix in the same way as for the 
-[nucleotide matrix](#elimination-based-on-nucleotide-matrix), i.e. any alleles with an amino acid or inframe indel that do not match the 
-possible sequences of amino acid matrix are eliminated.
+Alleles are eliminated based on the amino acid matrix in the same way as for the [nucleotide matrix](#elimination-based-on-nucleotide-matrix), 
+i.e. any alleles with an amino acid or inframe indel that do not match the possible sequences of amino acid matrix are eliminated. 
+
+Additionally, exon boundary filtering is performed as described below.
+
+##### Exon boundary filtering
+
+For each pair of exons, fragments are collected which span these exons (i.e. the exon boundary) to determine the valid candidate exon 
+boundary amino acids, since the 3 nucleotides of a codon may be split across 2 exons. Alleles are removed if the amino acid at the 
+respective exon boundary position does not match one of the candidate exon boundary amino acids.
+
+Exon boundary filtering is only performed when there are >=10 fragments spanning the exon boundary.
 
 #### Elimination based on phased haplotypes
 
