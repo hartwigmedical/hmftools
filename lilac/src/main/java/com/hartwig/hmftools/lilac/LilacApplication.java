@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
+import static com.hartwig.hmftools.lilac.LilacConstants.SOLUTION_COMPLEXITY_PENALTY_WEIGHT;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
@@ -156,6 +158,8 @@ public class LilacApplication
 
     public void run()
     {
+        SOLUTION_COMPLEXITY_PENALTY_WEIGHT = OptionalDouble.of(mConfig.Genes.coversMhcClass1() ? 0.002 : 0.005);
+
         long startTimeMs = System.currentTimeMillis();
 
         mConfig.logParams();
@@ -377,7 +381,9 @@ public class LilacApplication
 
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
-        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
+        // TODO: make part of config
+        final int minComplexCount = 10;
+        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, minComplexCount, mRefData);
         mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
 
         if(mRankedComplexes.isEmpty())
@@ -394,7 +400,7 @@ public class LilacApplication
                     filteredComplexes.size(), mRefFragAlleles.size());
 
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
-            complexRanker = new ComplexCoverageRanking(0, mRefData);
+            complexRanker = new ComplexCoverageRanking(0, 0, mRefData);
             mRankedComplexes.clear();
             mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
         }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import java.util.List;
+import java.util.OptionalDouble;
 
 import com.google.common.collect.Lists;
 
@@ -51,7 +52,7 @@ public final class LilacConstants
     public static final double DEFAULT_FREQUENCY_SCORE_PENALTY = 0.0009;
     public static double FREQUENCY_SCORE_PENALTY = DEFAULT_FREQUENCY_SCORE_PENALTY;
 
-    public static final double SOLUTION_COMPLEXITY_PENALTY_WEIGHT = 0.002;
+    public static OptionalDouble SOLUTION_COMPLEXITY_PENALTY_WEIGHT = OptionalDouble.empty();
     public static final int EXON_CHUNK_SIZE = 46;
     public static final double RECOVERY_SCORE_PENALTY = 0;
 
@@ -75,7 +76,7 @@ public final class LilacConstants
             "A*30:205", "A*30:207", "A*30:225", "A*30:228", "A*01:81", "A*01:237",
 
             // Similar to HLA-H
-            "B*40:278");
+            "B*40:278", "A*03:423");
 
     public static final List<String> HLA_DRB1_EXCLUDED_ALLELES = Lists.newArrayList(
             "DRB1*14:242", // Similar to Exon 3 of DRB3

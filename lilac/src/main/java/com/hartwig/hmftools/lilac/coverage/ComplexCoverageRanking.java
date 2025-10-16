@@ -39,11 +39,13 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 public class ComplexCoverageRanking
 {
     private final double mMaxScoreDifference;
+    private final int mMinComplexCount;
     private final ReferenceData mRefData;
 
-    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
+    public ComplexCoverageRanking(double maxScoreDifference, int minComplexCount, final ReferenceData refData)
     {
         mMaxScoreDifference = maxScoreDifference;
+        mMinComplexCount = minComplexCount;
         mRefData = refData;
     }
 
@@ -58,7 +60,7 @@ public class ComplexCoverageRanking
             calcScore(complexCoverage, recoveredAlleles, sequences);
         }
 
-        if(mMaxScoreDifference == 0)
+        if(mMaxScoreDifference == 0 || mMinComplexCount == 0)
         {
             Collections.sort(complexes, new ComplexCoverageSorter());
             return complexes;
@@ -71,13 +73,16 @@ public class ComplexCoverageRanking
         // initial cull before sort
         double baseThreshold = topScore - 0.25 * topCoverage;
         List<ComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
+        if(candidateResults.size() < mMinComplexCount)
+            candidateResults = Lists.newArrayList(complexes);
+
         Collections.sort(candidateResults, new ComplexCoverageSorter());
 
         List<ComplexCoverage> results = Lists.newArrayList();
 
         for(ComplexCoverage complexCoverage : candidateResults)
         {
-            if(complexCoverage.getScore() >= inclusionThreshold || results.size() < 2)
+            if(complexCoverage.getScore() >= inclusionThreshold || results.size() < mMinComplexCount)
             {
                 results.add(complexCoverage);
             }
@@ -151,10 +156,15 @@ public class ComplexCoverageRanking
 
     private void calcComplexScore(final ComplexCoverage complexCoverage)
     {
+        if(SOLUTION_COMPLEXITY_PENALTY_WEIGHT.isEmpty())
+        {
+            throw new RuntimeException("SOLUTION_COMPLEXITY_PENALTY_WEIGHT not set");
+        }
+
         int totalCoverage = complexCoverage.TotalCoverage;
 
         int complexity = solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
-        double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
+        double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT.getAsDouble() * totalCoverage;
         double cohortFrequencyPenalty = complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
         double score = totalCoverage
                 + cohortFrequencyPenalty
