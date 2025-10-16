@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -27,9 +29,9 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLIC
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.NON_ILLUMINA_MAX_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
@@ -174,7 +176,19 @@ public class SageConfig
             MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         }
 
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
+        if(configBuilder.hasValue(READ_LENGTH))
+        {
+            mReadLength = configBuilder.getInteger(READ_LENGTH);
+        }
+        else if(isUltima() || isSbx())
+        {
+            mReadLength = NON_ILLUMINA_MAX_READ_LENGTH;
+        }
+        else
+        {
+            mReadLength = 0; // will be set from sampling the BAM
+        }
+
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
@@ -282,6 +296,10 @@ public class SageConfig
 
     public void setReadLength(int readLength)
     {
+        if(isUltima() || isSbx())
+        {
+            readLength = max(readLength, NON_ILLUMINA_MAX_READ_LENGTH);
+        }
         if(readLength != DEFAULT_READ_LENGTH)
         {
             SG_LOGGER.info("max observed read length set({})", readLength);

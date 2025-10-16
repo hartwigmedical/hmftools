@@ -6,7 +6,9 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -185,6 +187,9 @@ public class RefContextConsumer
                 processSoftClip(record, element.getLength(), readIndex, mRefSequence, readInfo, false);
             }
         };
+
+        // debug for read cache and evicting investigations
+        // SG_LOGGER.debug("read({})", readToString(record));
 
         CigarHandler.traverseCigar(record, handler);
 
