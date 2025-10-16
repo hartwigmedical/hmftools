@@ -14,7 +14,6 @@ RUN chmod +x ${RUN_SCRIPT}
 RUN micromamba install -y -n base -c bioconda -c conda-forge \
     "openjdk>=8,<=21" \
     procps-ng \
-    blast \
     && micromamba clean --all --yes
 
 ENV PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}"

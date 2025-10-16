@@ -7,6 +7,7 @@ import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
 import com.hartwig.hmftools.cider.annotation.AlignmentAnnotator
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
 import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatchTsv
@@ -138,7 +139,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             require(anchorGenomeLoc.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                anchorGenomeLoc.chromosome,
+                anchorGenomeLoc.contig.name,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
                 anchorGenomeLoc.end + mParams.approxMaxFragmentLength))
         }
@@ -148,9 +149,9 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                region.genomeLocation.chromosome,
-                region.genomeLocation.posStart - mParams.approxMaxFragmentLength,
-                region.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
+                region.genomeLocation.contig.name,
+                region.genomeLocation.position.start() - mParams.approxMaxFragmentLength,
+                region.genomeLocation.position.end() + mParams.approxMaxFragmentLength))
         }
 
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)

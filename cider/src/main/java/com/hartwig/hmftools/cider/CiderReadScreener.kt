@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cider
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -151,7 +153,7 @@ class CiderReadScreener(// collect the reads and sort by types
         val anchorLength: Int = anchorLocation.baseLength()
         if (anchorLength != 30)
         {
-            throw RuntimeException("unexpected anchor length")
+            throw RuntimeException("unexpected anchor length $anchorLength")
         }
         val readAnchorRange = extrapolateAnchorReadRange(samRecord, anchorLocation) ?: return null
         var readAnchorStart = readAnchorRange.left
@@ -336,11 +338,12 @@ class CiderReadScreener(// collect the reads and sort by types
             return null
 
         val readLength = samRecord.readLength
-        val (chromosome, posStart, posEnd, strand, _) = igTcrConstantDiversityRegion.genomeLocation
+        val genomeLocation = igTcrConstantDiversityRegion.genomeLocation
 
         // see if the anchor location is mapped around here
-        if (posStart - readLength < mapped.end() &&
-            posEnd + readLength > mapped.start() && chromosome == mapped.chromosome()
+        if (genomeLocation.position.start() - readLength < mapped.end() &&
+            genomeLocation.position.end() + readLength > mapped.start() &&
+            genomeLocation.contig.name == mapped.chromosome()
         )
         {
             // this is mapped to an IG constant region
@@ -353,7 +356,7 @@ class CiderReadScreener(// collect the reads and sort by types
             // in negative strand, it would be right soft clip
             val anchorBlosumMatch: AnchorBlosumMatch?
 
-            if (strand == Strand.FORWARD)
+            if (genomeLocation.strand == Strand.FORWARD)
             {
                 val leftSoftClip = CigarUtils.leftSoftClipLength(samRecord)
                 if (leftSoftClip == 0) return null
@@ -388,7 +391,7 @@ class CiderReadScreener(// collect the reads and sort by types
                     samRecord,
                     anchorBlosumMatch.templateGenes,
                     MatchMethod.BLOSUM,
-                    strand == Strand.REVERSE,
+                    genomeLocation.strand == Strand.REVERSE,
                     anchorBlosumMatch.anchorStart,
                     anchorBlosumMatch.anchorEnd
                 )
@@ -470,7 +473,7 @@ class CiderReadScreener(// collect the reads and sort by types
 
         fun isMappedToAnchorLocation(mapped: GenomeRegion, anchorLocation: VJAnchorGenomeLocation): Boolean
         {
-            if (anchorLocation.chromosome != mapped.chromosome()) return false
+            if (anchorLocation.contig.name != mapped.chromosome()) return false
             return anchorLocation.start <= mapped.end() && mapped.start() <= anchorLocation.end
         }
 
@@ -479,7 +482,7 @@ class CiderReadScreener(// collect the reads and sort by types
                                        anchorLocation: VJAnchorGenomeLocation,
                                        maxReadDistanceFromAnchor: Int): Boolean
         {
-            if (anchorLocation.chromosome != mapped.chromosome()) return false
+            if (anchorLocation.contig.name != mapped.chromosome()) return false
 
             // for V we only allow reads that are mapped upstream
             // for J we only allow reads that are mapped downstream
@@ -605,7 +608,7 @@ class CiderReadScreener(// collect the reads and sort by types
             if (!read.readPairedFlag || read.mateUnmappedFlag)
                 return false
 
-            if (anchorLocation.chromosome != read.mateReferenceName)
+            if (anchorLocation.contig.name != read.mateReferenceName)
                 return false
 
             val mateMappedStrand: Strand = if (read.mateNegativeStrandFlag) Strand.REVERSE else Strand.FORWARD
@@ -660,7 +663,7 @@ class CiderReadScreener(// collect the reads and sort by types
             if (!read.readPairedFlag || read.mateUnmappedFlag)
                 return false
 
-            if (constantRegionLocation.chromosome != read.mateReferenceName)
+            if (constantRegionLocation.contig.name != read.mateReferenceName)
                 return false
 
             val mateMappedStart: Int = read.mateAlignmentStart
@@ -669,8 +672,8 @@ class CiderReadScreener(// collect the reads and sort by types
             val inferredMateMappedEnd: Int = mateMappedStart + read.readLength
 
             // too far away
-            if ((mateMappedStart - constantRegionLocation.posEnd) >= maxFragmentLength ||
-                (constantRegionLocation.posStart - inferredMateMappedEnd) >= maxFragmentLength)
+            if ((mateMappedStart - constantRegionLocation.position.end()) >= maxFragmentLength ||
+                (constantRegionLocation.position.start() - inferredMateMappedEnd) >= maxFragmentLength)
             {
                 return false
             }

@@ -1,58 +1,39 @@
 package com.hartwig.hmftools.cider.genes
 
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.region.ChrBaseRegion
+import com.hartwig.hmftools.common.region.BaseRegion
 
-// Represents a location inside the genome. Can be inside non primary assembly.
-// posStart is 1 based and end is inclusive, consistent with reference genome convention
-data class GenomicLocation(val chromosome: String,
-                           val posStart: Int,
-                           val posEnd: Int,
-                           val strand: Strand,
-                           val altAssemblyName: String? = null)
+data class GenomicLocation(
+    val contig: Contig,
+    val position: BaseRegion,
+    val strand: Strand,
+)
 {
     init
     {
-        require(posStart <= posEnd)
-        require(altAssemblyName == null || altAssemblyName.isNotEmpty())
+        require(position.start() <= position.end())
     }
 
-    val inPrimaryAssembly: Boolean get() { return altAssemblyName == null }
-
-    fun baseLength(): Int
-    {
-        return posEnd - posStart + 1
-    }
-
-    /*
-    operator fun compareTo(other: GenomicLocation): Int
-    {
-        val baseRegionCompare = super.compareTo(other)
-        return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
-    }*/
+    val inPrimaryAssembly: Boolean
+        get() = contig.type.inPrimaryAssembly
 
     override fun toString(): String
     {
-        return "${if (inPrimaryAssembly) "" else ("$altAssemblyName ") }${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
+        return "${contig}:${position}(${strand.asChar()})"
     }
 
     companion object
     {
-        fun fromChrBaseRegionStrand(chrBaseRegion: ChrBaseRegion?, strand: Strand?): GenomicLocation?
+        fun fromNullableFields(contig: String?, position: BaseRegion?, strand: Strand?): GenomicLocation?
         {
-            return if (chrBaseRegion != null && strand != null)
-                GenomicLocation(chrBaseRegion.chromosome(),
-                    chrBaseRegion.start(),
-                    chrBaseRegion.end(),
-                    strand)
-            else null
-        }
-
-        fun toChrBaseRegion(genomicLocation: GenomicLocation?): ChrBaseRegion?
-        {
-            return if (genomicLocation != null)
-                ChrBaseRegion(genomicLocation.chromosome, genomicLocation.posStart, genomicLocation.posEnd)
-            else null
+            return if (contig != null && position != null && strand != null)
+            {
+                GenomicLocation(Contig(contig), position, strand)
+            }
+            else
+            {
+                null
+            }
         }
     }
 }

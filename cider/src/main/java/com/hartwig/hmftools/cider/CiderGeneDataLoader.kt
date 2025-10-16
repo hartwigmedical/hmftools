@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.IgTcrGene.Companion.fromCommonIgTcrGene
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
+import com.hartwig.hmftools.cider.genes.anchorGenomicLocation
+import com.hartwig.hmftools.cider.genes.genomicLocation
+import com.hartwig.hmftools.common.cider.IgTcrGene
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile
+import com.hartwig.hmftools.common.cider.IgTcrRegion
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import org.apache.logging.log4j.LogManager
 
@@ -13,15 +17,17 @@ object CiderGeneDataLoader
 
     fun loadConstantDiversityRegions(refGenomeVersion: RefGenomeVersion): List<IgTcrConstantDiversityRegion>
     {
-        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion).map { o -> fromCommonIgTcrGene(o) }
+        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion)
 
         val igTcrConstantDiversityRegions = ArrayList<IgTcrConstantDiversityRegion>()
         for (geneData in igTcrGenes)
         {
-            if (geneData.geneLocation == null)
+            val genomicLocation = geneData.genomicLocation()
+
+            if (genomicLocation == null)
                 continue
 
-            if (!geneData.geneLocation.inPrimaryAssembly)
+            if (!genomicLocation.inPrimaryAssembly)
                 continue
 
             // we have to fix the naming. It is actually constant + diversity
@@ -30,7 +36,7 @@ object CiderGeneDataLoader
 
             val igTcrLocus: IgTcrLocus = IgTcrLocus.fromGeneName(geneData.geneName)
 
-            val constantRegionGene = IgTcrConstantDiversityRegion(igTcrLocus, geneData.geneLocation, geneData.geneName)
+            val constantRegionGene = IgTcrConstantDiversityRegion(igTcrLocus, genomicLocation, geneData.geneName)
 
             if (igTcrConstantDiversityRegions.contains(constantRegionGene))
                 continue
@@ -45,7 +51,7 @@ object CiderGeneDataLoader
 
     fun loadAnchorTemplates(refGenomeVersion: RefGenomeVersion): List<VJAnchorTemplate>
     {
-        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion).map { o -> fromCommonIgTcrGene(o) }
+        val igTcrGenes: List<IgTcrGene> = IgTcrGeneFile.read(refGenomeVersion)
 
         val vjAnchorTemplateList: MutableList<VJAnchorTemplate> = ArrayList()
 
@@ -64,11 +70,12 @@ object CiderGeneDataLoader
             val geneType = VJGeneType.fromGeneName(geneData.geneName)
 
             // we only use primary assembly gene location, need to filter out the ALT locations
-            val geneLocation = primaryAssemblyLocation(geneData.geneLocation)
-            val anchorLocation = primaryAssemblyLocation(geneData.anchorLocation)
+            val geneLocation = primaryAssemblyLocation(geneData.genomicLocation())
+            val anchorLocation = primaryAssemblyLocation(geneData.anchorGenomicLocation())
 
             val vjAnchorTemplate = VJAnchorTemplate(
-                geneType, geneData.geneName, geneData.allele, geneLocation, geneData.anchorSequence, anchorLocation)
+                geneType, geneData.geneName, geneData.allele, geneLocation, geneData.anchorSequence!!, anchorLocation
+            )
 
             vjAnchorTemplateList.add(vjAnchorTemplate)
         }

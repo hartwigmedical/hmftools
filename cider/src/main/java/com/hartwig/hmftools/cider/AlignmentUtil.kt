@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
+import com.hartwig.hmftools.cider.genes.Contig
+import com.hartwig.hmftools.cider.genes.ContigType
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.common.blastn.BlastnMatch
-import com.hartwig.hmftools.common.blastn.BlastnRunner
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.region.BaseRegion
 import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.ReferenceSequenceFileFactory
 import org.apache.logging.log4j.LogManager
@@ -29,75 +29,18 @@ object AlignmentUtil
 
     const val WORD_SIZE = 9
 
-    // This limits the number of hit each query can get. Necessary to protect against edge cases
-    const val MAX_TARGET_SEQUENCES = 5000
-
-    // val REF_GENOME_NAME = "GRCh38.p13"
-    val BLASTN_CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
-    val BLASTN_PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
-
     private val sLogger = LogManager.getLogger(AlignmentUtil::class.java)
 
-    fun toGenomicLocation(blastnMatch: BlastnMatch) : GenomicLocation?
-    {
-        // parse the chromosome / assembly
-        val m = BLASTN_CHROMOSOME_ASSEMBLY_REGEX.matchEntire(blastnMatch.subjectTitle)
-
-        if (m == null)
-        {
-            // might not have a chromosome, or it is mitochondrion
-            return null
-        }
-
-        val chromosome = CiderConstants.BLAST_REF_GENOME_VERSION.versionedChromosome(m.groupValues[1]).intern()
-        val assembly = m.groupValues[2].intern()
-
-        val start: Int
-        val end: Int
-
-        when (blastnMatch.subjectFrame)
-        {
-            Strand.FORWARD -> { start = blastnMatch.subjectAlignStart; end = blastnMatch.subjectAlignEnd }
-            Strand.REVERSE -> { start = blastnMatch.subjectAlignEnd; end = blastnMatch.subjectAlignStart }
-        }
-
-        val altAssemblyName = if (assembly == BLASTN_PRIMARY_ASSEMBLY_NAME) null else assembly
-
-        return GenomicLocation(chromosome, start, end, blastnMatch.subjectFrame, altAssemblyName)
-    }
-
-    fun runBlastn(sampleId: String, blastDir: String, blastDb: String, sequences: Map<Int, String>, outputDir: String, numThreads: Int,
-                  expectedValueCutoff: Double)
-            : Multimap<Int, BlastnMatch>
-    {
-        return BlastnRunner.Builder()
-            .withTask("blastn")
-            .withPrefix(sampleId)
-            .withBlastDir(blastDir)
-            .withBlastDb(blastDb)
-            .withOutputDir(outputDir)
-            .withWordSize(WORD_SIZE)
-            .withReward(MATCH_SCORE)
-            .withPenalty(MISMATCH_SCORE)
-            .withGapOpen(-GAP_OPENING_SCORE)
-            .withGapExtend(-GAP_EXTEND_SCORE)
-            .withExpectedValueCutoff(expectedValueCutoff)
-            .withNumThreads(numThreads)
-            .withSubjectBestHit(true)
-            .withMaxTargetSeqs(MAX_TARGET_SEQUENCES)
-            .build()
-            .run(sequences)
-    }
-
-    data class BwaMemAlignment(
+    data class Alignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
-        val refContig: String,
+        val refContig: String,      // For GRCh38 this is prefixed with "chr", for GRCh37 it is not.
         val refStart: Int,
         val refEnd: Int,
-        val strand: Strand,
+        val refStrand: Strand,
         val alignmentScore: Int,
+        val editDistance: Int,
         val percentageIdent: Double,
     ) {
         init {
@@ -106,33 +49,39 @@ object AlignmentUtil
         }
     }
 
-    fun parseChromosome(contig: String): String
+    fun toGenomicLocation(alignment: Alignment): GenomicLocation?
     {
-        // Parses ref genome contig to the primary assembly chromosome. E.g.:
-        // chr14_KI270726v1_random
-        return contig.split("_")[0]
+        val contig = Contig(alignment.refContig)
+
+        if (contig.type == ContigType.MITOCHONDRIAL || contig.type == ContigType.UNPLACED)
+        {
+            // This matches previous behaviour with Blast.
+            // TODO: review?
+            return null
+        }
+
+        return GenomicLocation(contig, BaseRegion(alignment.refStart, alignment.refEnd), alignment.refStrand)
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            Map<Int, ArrayList<BwaMemAlignment>>
+    fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+            List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences")
 
         val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
-        val keys = sequences.keys.sorted()
-        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
+        val results = ArrayList<List<Alignment>>()
         // Alignments are batches because with our BWA-MEM settings, too much memory is allocated with large BAMs.
-        for (i in 0 until keys.size step ALIGNMENT_BATCH_SIZE) {
-            val batchKeys = keys.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, keys.size))
-            sLogger.debug("Running BWA-MEM on batch of ${batchKeys.size} sequences")
-            val batchByteSeqs = batchKeys.map { k -> sequences[k]!!.toByteArray() }
+        for (i in 0 until sequences.size step ALIGNMENT_BATCH_SIZE) {
+            val batchSequences = sequences.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, sequences.size))
+            sLogger.debug("Running BWA-MEM on batch of ${batchSequences.size} sequences")
+            val batchByteSeqs = batchSequences.map { it.toByteArray() }
             // Perform a JVM garbage collection before alignment to reduce memory pressure.
             System.gc()
             val batchAlignments = aligner.alignSeqs(batchByteSeqs)
-            val batchResults = parseBwaMemAlignments(sequences, batchKeys, batchAlignments, refGenSeqDict)
-            batchResults.forEach { (key, value) -> results.computeIfAbsent(key) { ArrayList() }.addAll(value) }
+            val batchResults = parseBwaMemAlignments(batchSequences, batchAlignments, refGenSeqDict)
+            results.addAll(batchResults)
         }
         sLogger.debug("Alignment complete")
         return results
@@ -164,47 +113,50 @@ object AlignmentUtil
         return aligner
     }
 
-    private fun parseBwaMemAlignments(sequences: Map<Int, String>, keys: List<Int>,
+    private fun parseBwaMemAlignments(sequences: List<String>,
                                       alignments: List<List<org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment>>,
-                                      refGenSeqDict: SAMSequenceDictionary): Map<Int, List<BwaMemAlignment>>
+                                      refGenSeqDict: SAMSequenceDictionary): List<List<Alignment>>
     {
-        val results = HashMap<Int, ArrayList<BwaMemAlignment>>()
-        for (key in keys.withIndex()) {
-            for (alignment in alignments[key.index]) {
-                if (alignment.samFlag and 0x4 != 0)
-                {
-                    // Not a real alignment, means the query is unmapped.
-                    continue
-                }
+        require(sequences.size == alignments.size)
+        return sequences.zip(alignments)
+            .map { (querySeq, queryAlignments) ->
+                queryAlignments.mapNotNull { parseBwaMemAlignment(querySeq, it, refGenSeqDict) } }
+    }
 
-                val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
-                val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
-                val refEnd = alignment.refEnd
-                require(refStart <= refEnd)
-                val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
-                val querySeq = sequences[key.value]!!
-                // Apparently these need to be inverted if the alignment reports the reverse strand
-                // Do this to match Blastn behaviour
-                val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.length - alignment.seqEnd } + 1
-                val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.length - alignment.seqStart }
-                require(queryAlignStart <= queryAlignEnd)
-                // nMismatches is not the best name - it's actually the edit distance.
-                // Which means this calculation is correct for mismatches and gaps.
-                val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
-                val resAlignment = BwaMemAlignment(
-                    querySeq,
-                    queryAlignStart,
-                    queryAlignEnd,
-                    refContig,
-                    refStart,
-                    refEnd,
-                    strand,
-                    alignment.alignerScore,
-                    percentIdentity
-                )
-                results.computeIfAbsent(key.value) { ArrayList() }.add(resAlignment)
-            }
+    private fun parseBwaMemAlignment(querySeq: String, alignment: org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment,
+                                     refGenSeqDict: SAMSequenceDictionary)
+        : Alignment?
+    {
+        if (alignment.samFlag and 0x4 != 0)
+        {
+            // Not a real alignment, means the query is unmapped.
+            return null
         }
-        return results
+
+        val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
+        val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
+        val refEnd = alignment.refEnd
+        require(refStart <= refEnd)
+        val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
+        // Apparently these need to be inverted if the alignment reports the reverse strand
+        // Do this to match Blastn behaviour
+        val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.length - alignment.seqEnd } + 1
+        val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.length - alignment.seqStart }
+        require(queryAlignStart <= queryAlignEnd)
+        // nMismatches is not the best name - it's actually the edit distance.
+        // Which means this calculation is correct for mismatches and gaps.
+        val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
+        return Alignment(
+            querySeq,
+            queryAlignStart,
+            queryAlignEnd,
+            refContig,
+            refStart,
+            refEnd,
+            strand,
+            alignment.alignerScore,
+            alignment.nMismatches,
+            percentIdentity
+        )
     }
 }

@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.cider
+package com.hartwig.hmftools.cider.genes
 
-import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.VJ
+import com.hartwig.hmftools.cider.VJGeneType
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.Strand
 
@@ -22,9 +23,6 @@ data class VJAnchorTemplate
 
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
-    val chromosome: String? get() { return geneLocation?.chromosome }
-    //val startPosition: Int get() { return geneLocation?.start() ?: -1 }
-    //val endPosition: Int get() { return geneLocation?.end() ?: -1 }
     val strand: Strand? get() { return geneLocation?.strand }
 }
 
@@ -32,14 +30,14 @@ data class VJAnchorTemplate
 data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation: GenomicLocation)
 {
     val vj: VJ get() = vjGeneType.vj
-    val chromosome: String get() = genomeLocation.chromosome
-    val start: Int get() = genomeLocation.posStart
-    val end: Int get() = genomeLocation.posEnd
+    val contig: Contig get() = genomeLocation.contig
+    val start: Int get() = genomeLocation.position.start()
+    val end: Int get() = genomeLocation.position.end()
     val strand: Strand get() = genomeLocation.strand
 
     fun baseLength() : Int
     {
-        return genomeLocation.baseLength()
+        return genomeLocation.position.baseLength()
     }
 
     // get the reference position of the end of the anchor
@@ -49,11 +47,11 @@ data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation
         return if (vjGeneType.vj == VJ.V && genomeLocation.strand == Strand.FORWARD ||
             vjGeneType.vj == VJ.J && genomeLocation.strand == Strand.REVERSE)
             {
-                genomeLocation.posEnd
+                genomeLocation.position.end()
             }
             else
             {
-                genomeLocation.posStart
+                genomeLocation.position.start()
             }
     }
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.annotation.AlignmentStatus
+import com.hartwig.hmftools.common.cider.IgTcrGene
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
@@ -199,7 +200,7 @@ object VDJSequenceTsvWriter
         csvPrinter.println()
     }
 
-    private fun zeroBaseAlignStart(alignment: AlignmentUtil.BwaMemAlignment?) : Int?
+    private fun zeroBaseAlignStart(alignment: AlignmentUtil.Alignment?) : Int?
     {
         return if (alignment == null) null else alignment.queryAlignStart - 1
     }

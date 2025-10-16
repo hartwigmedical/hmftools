@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.Contig
 import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.VJAnchorGenomeLocation
+import com.hartwig.hmftools.cider.genes.VJAnchorTemplate
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.region.BaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import htsjdk.samtools.SAMRecord
 import junit.framework.TestCase
 import org.junit.Test
@@ -125,6 +130,8 @@ class CiderReadScreenerTest
     @Test
     fun testIsRelevantToAnchorLocation1()
     {
+        val contig = Contig("1")
+
         val readLength = 150
         val mappedLength = 100
 
@@ -135,8 +142,8 @@ class CiderReadScreenerTest
         // this tests the function to work out if a read is potentially near and on the
         // correct side of the anchor genome location
         val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.IGHV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
-            VJAnchorGenomeLocation(VJGeneType.IGHJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE))
+            VJAnchorGenomeLocation(VJGeneType.IGHV, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.FORWARD)),
+            VJAnchorGenomeLocation(VJGeneType.IGHJ, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.REVERSE))
         )
         for (anchorLocation in anchorLocations)
         {
@@ -147,19 +154,19 @@ class CiderReadScreenerTest
             // first try reads that are lower
             var mappedEnd = anchorRefEnd - readLength + 15
             var mappedStart = mappedEnd - mappedLength
-            var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            var mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads with coords above and not overlapping anchor are not relevant
             mappedStart = anchorRefEnd + anchorLocation.baseLength()
             mappedEnd = mappedStart + mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads that overlap with anchor by 15 bases or more are relevant
             mappedEnd = anchorRefEnd + anchorLocation.baseLength() / 2
             mappedStart = mappedEnd - mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
         }
     }
@@ -167,6 +174,8 @@ class CiderReadScreenerTest
     @Test
     fun testIsRelevantToAnchorLocation2()
     {
+        val contig = Contig("1")
+
         val readLength = 150
         val mappedLength = 100
 
@@ -177,8 +186,8 @@ class CiderReadScreenerTest
         // this tests the function to work out if a read is potentially near and on the
         // correct side of the anchor genome location
         val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
-            VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD))
+            VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.REVERSE)),
+            VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.FORWARD))
         )
         for (anchorLocation in anchorLocations)
         {
@@ -189,19 +198,19 @@ class CiderReadScreenerTest
             // first try reads that are mapped at higher coord
             var mappedStart = anchorRefStart + readLength - 15
             var mappedEnd = mappedStart + mappedLength
-            var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            var mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads with coords below and not overlapping anchor are not relevant
             mappedEnd = anchorRefStart - anchorLocation.baseLength()
             mappedStart = mappedEnd - mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
 
             // reads that overlap with anchor by 15 bases or more are relevant
             mappedStart = anchorRefStart - anchorLocation.baseLength() / 2
             mappedEnd = mappedStart + mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
+            mapped = GenomeRegions.create(anchorLocation.contig.name, mappedStart, mappedEnd)
             TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
         }
     }
@@ -214,6 +223,8 @@ class CiderReadScreenerTest
         // GAATTCTCACAGGAGACGAGGGGGAAAAGGGTTGGGGCGGATGCACTCCCGGAAGAGACGGTGACCGTGGTCCCTTGGCCCCAGACGTCCATACCCGCCAAGCCATTACTATAAAATTTCGGTCTCGCACAGTAATACACAGCCGTGTCTT
         // FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         // NH:i:1	HI:i:1	AS:i:120	nM:i:3	NM:i:2	MD:Z:50T2G31	jM:B:c,2,0	jI:B:i,106322323,106329407,106329428,106330816	MC:Z:16S53M82S
+
+        val contig = Contig("14")
 
         // 50 bases alignment
         val alignmentStart = 106322274
@@ -240,9 +251,9 @@ class CiderReadScreenerTest
             VJGeneType.IGHJ,
             "IGHJ1",
             "01",
-            GenomicLocation("14", 106330701, 106330840, Strand.REVERSE),
+            GenomicLocation(contig, BaseRegion(106330701, 106330840), Strand.REVERSE),
             "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
-            GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
+            GenomicLocation(contig, BaseRegion(106330801, 106330830), Strand.REVERSE)
         )
         val vjGeneStore = TestCiderGeneDatastore(listOf(ighJ1))
         val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
@@ -261,7 +272,7 @@ class CiderReadScreenerTest
         // template loc: 14:106330801-106330830(-)
         val anchorLocation = VJAnchorGenomeLocation(
             VJGeneType.IGHJ,
-            GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
+            GenomicLocation(contig, BaseRegion(106330801, 106330830), Strand.REVERSE)
         )
         val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation, true)
         TestCase.assertNotNull(readCandidate)
@@ -273,14 +284,14 @@ class CiderReadScreenerTest
     @Test
     fun isUnamppedReadRelevantToAnchorLocV()
     {
-        val chr = "1"
+        val contig = Contig("1")
         // positive strand
         val anchorRefStart = 10000
         val anchorRefEnd = 10030
 
         // create a SAM record with soft clip on both sides
         val read = SAMRecord(null)
-        read.mateReferenceName = chr
+        read.mateReferenceName = contig.name
         read.cigarString = "*"
         // 100 bases here
         read.readString = "GACAACGCCAAGAACTCACTGTCTCTGCAAATGAATGACCTGCGAGTCGAAGACACGGCTGTGTATTACTGTGCGAGACCGAAATTTTATAGTAATGGCT"
@@ -300,7 +311,7 @@ class CiderReadScreenerTest
         // ======>  <=====
         //  mate     this
         //
-        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
+        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.FORWARD))
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
@@ -328,7 +339,7 @@ class CiderReadScreenerTest
         //                          ======>  <=====
         //                           this     mate
         //
-        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
+        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.REVERSE))
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -352,14 +363,14 @@ class CiderReadScreenerTest
     @Test
     fun isUnamppedReadRelevantToAnchorLocJ()
     {
-        val chr = "1"
+        val contig = Contig("1")
         // positive strand
         val anchorRefStart = 10000
         val anchorRefEnd = 10030
 
         // create a SAM record with soft clip on both sides
         val read = SAMRecord(null)
-        read.mateReferenceName = chr
+        read.mateReferenceName = contig.name
         read.cigarString = "*"
         // 100 bases here
         read.readString = "GACAACGCCAAGAACTCACTGTCTCTGCAAATGAATGACCTGCGAGTCGAAGACACGGCTGTGTATTACTGTGCGAGACCGAAATTTTATAGTAATGGCT"
@@ -379,7 +390,7 @@ class CiderReadScreenerTest
         //                      ======>  <=====
         //                       this     mate
         //
-        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
+        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.FORWARD))
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -407,7 +418,7 @@ class CiderReadScreenerTest
         // ======>  <=====
         //  mate     this
         //
-        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
+        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(contig, BaseRegion(anchorRefStart, anchorRefEnd), Strand.REVERSE))
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
@@ -431,14 +442,14 @@ class CiderReadScreenerTest
     @Test
     fun isUnamppedReadRelevantToConstantRegion()
     {
-        val chr = "1"
+        val contig = Contig("1")
         // positive strand
         val constantRegionRefStart = 10000
         val constantRegionRefEnd = 10030
 
         // create a SAM record with soft clip on both sides
         val read = SAMRecord(null)
-        read.mateReferenceName = chr
+        read.mateReferenceName = contig.name
         read.cigarString = "*"
         // 100 bases here
         read.readString = "GACAACGCCAAGAACTCACTGTCTCTGCAAATGAATGACCTGCGAGTCGAAGACACGGCTGTGTATTACTGTGCGAGACCGAAATTTTATAGTAATGGCT"
@@ -458,7 +469,7 @@ class CiderReadScreenerTest
         //         ======>  <=====
         //          this     mate
         //
-        var constantRegion = GenomicLocation(chr, constantRegionRefStart, constantRegionRefEnd, Strand.FORWARD)
+        var constantRegion = GenomicLocation(contig, BaseRegion(constantRegionRefStart, constantRegionRefEnd), Strand.FORWARD)
 
         read.mateAlignmentStart = constantRegionRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -487,7 +498,7 @@ class CiderReadScreenerTest
         //   ======>   <=====
         //     mate     this
         //
-        constantRegion = GenomicLocation(chr, constantRegionRefStart, constantRegionRefEnd, Strand.REVERSE)
+        constantRegion = GenomicLocation(contig, BaseRegion(constantRegionRefStart, constantRegionRefEnd), Strand.REVERSE)
 
         read.mateAlignmentStart = constantRegionRefStart - 500
         read.mateNegativeStrandFlag = false
