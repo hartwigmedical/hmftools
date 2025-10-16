@@ -2,10 +2,10 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
 import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;

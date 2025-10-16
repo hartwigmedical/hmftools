@@ -22,10 +22,16 @@ public final class UltimaBamUtils
     private static final String PPM_STRAND_AE = "ae";
     private static final String PPM_STRAND_TE = "te";
 
+    public static final String ULT_QUAL_TAG = "UQ";
+    public static final String ULT_QUAL_TAG_DELIM = ",";
+
     private static final int PPM_STRAND_MIN_SUM = 4;
     private static final int PPM_STRAND_MAX_SUM = 8;
     private static final double PPM_STRAND_BALANCED_LOW = 0.27;
     private static final double PPM_STRAND_BALANCED_HIGH = 1 - PPM_STRAND_BALANCED_LOW;
+
+    // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
+    public static final byte HALF_PHRED_SCORE_SCALING = 3;
 
     public static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
 

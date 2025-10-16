@@ -1,14 +1,10 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
-import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.BASE_SHIFT;
@@ -17,7 +13,6 @@ import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_DELE
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.HOMOPOLYMER_TRANSITION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.OTHER;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.SNV;
-import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.getStraddlingReadBases;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.SeqTechTestUtils;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.junit.After;
@@ -621,17 +617,7 @@ public class UltimaQualModelTest
     private static SAMRecord buildUltimaRead(
             final String readBases, final int readStart, final byte[] qualities, final byte[] tpValues, final byte[] t0Values)
     {
-        String cigar = format("%dM", qualities.length);
-        SAMRecord record = buildSamRecord(readStart, cigar, readBases, qualities);
-        record.setAttribute(ULTIMA_TP_TAG, tpValues);
-
-        for(int i = 0; i < t0Values.length; ++i)
-        {
-            t0Values[i] += PHRED_OFFSET;
-        }
-
-        record.setAttribute(ULTIMA_T0_TAG, new String(t0Values));
-        return record;
+        return SeqTechTestUtils.buildUltimaRead(READ_ID_GENERATOR.nextId(), CHR_1, readStart, readBases, qualities, tpValues, t0Values);
     }
 
     private static byte[] getStraddlingBases(final String refBases, final SimpleVariant variant)

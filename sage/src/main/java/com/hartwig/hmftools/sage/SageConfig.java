@@ -82,7 +82,6 @@ public class SageConfig
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
-    public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
@@ -113,7 +112,6 @@ public class SageConfig
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String SLICE_SIZE = "slice_size";
-    private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";
     private static final String READ_LENGTH = "read_length";
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
@@ -163,7 +161,6 @@ public class SageConfig
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
-        ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
@@ -379,10 +376,6 @@ public class SageConfig
 
         addRefGenomeConfig(configBuilder, true);
 
-        // is this common?
-        configBuilder.addInteger(
-                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_FLANK_LENGTH);
-
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
@@ -440,7 +433,6 @@ public class SageConfig
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
-        ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
@@ -450,7 +442,7 @@ public class SageConfig
         LogLpsData = false;
         PerfWarnTime = 0;
         RefGenVersion = V37;
-        BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
+        BamStringency = ValidationStringency.SILENT;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
