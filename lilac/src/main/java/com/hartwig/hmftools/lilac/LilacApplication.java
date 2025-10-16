@@ -595,7 +595,8 @@ public class LilacApplication
 
             mTumorCoverage = ComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles);
 
-            mTumorCoverage.populateMissingCoverage(winningAlleles);
+            mTumorCoverage.populateMissingCoverage(Sets.newLinkedHashSet(winningAlleles));
+            mTumorCoverage.expandToSixAlleles();
         }
 
         if(!mConfig.CopyNumberFile.isEmpty())

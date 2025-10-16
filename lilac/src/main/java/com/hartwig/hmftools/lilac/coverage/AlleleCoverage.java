@@ -74,7 +74,7 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
         Map<HlaAllele,Double> wildCoverageMap = Maps.newHashMap();
 
         // test whether a fragment has a single (unique) allele in its full list (with nothing in partial)
-        // if not, split te contribution across the alleles into combined and wild
+        // if not, split the contribution across the alleles into combined and wild
 
         for(FragmentAlleles fragment : fragAlleles)
         {

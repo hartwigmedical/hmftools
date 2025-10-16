@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class CoverageTest
         List<HlaAllele> alleleList = Lists.newArrayList(allele1, allele2, allele3, allele4, allele5, allele6);
 
         complexCoverage = ComplexCoverage.create(coverageList);
-        complexCoverage.populateMissingCoverage(alleleList);
+        complexCoverage.populateMissingCoverage(Sets.newLinkedHashSet(alleleList));
         assertEquals(GENE_CACHE.ExpectAlleleCount, complexCoverage.getAlleleCoverage().size());
         assertEquals(90, complexCoverage.TotalCoverage);
 
