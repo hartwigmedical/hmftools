@@ -13,6 +13,8 @@ public class SageConstants
 
     public static final int DEFAULT_READ_LENGTH = 151;
 
+    public static final int NON_ILLUMINA_MAX_READ_LENGTH = 800;
+
     // read context building
     public static final int DEFAULT_FLANK_LENGTH = 10;
     public static final int MIN_CORE_DISTANCE = 2;
