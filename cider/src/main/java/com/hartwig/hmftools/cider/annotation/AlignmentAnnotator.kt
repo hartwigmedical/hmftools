@@ -95,11 +95,14 @@ class AlignmentAnnotator
         val mainAlignments = AlignmentUtil.runBwaMem(
             querySequences,
              mRefGenomeDictPath, mRefGenomeBwaIndexImagePath, ALIGNMENT_SCORE_MIN, numThreads)
-        val patchAlignments = if(mRefGenomeVersion == RefGenomeVersion.V37)
-            AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN, numThreads)
-            else emptyList()
-        require(mainAlignments.size == patchAlignments.size)
-        val alignmentResults = mainAlignments.zip(patchAlignments).map { it.first + it.second }
+        val alignmentResults = if(mRefGenomeVersion == RefGenomeVersion.V37) {
+            val patchAlignments = AlignmentUtil.runGRCh37PatchAlignment(querySequences, ALIGNMENT_SCORE_MIN, numThreads)
+            require(mainAlignments.size == patchAlignments.size)
+            mainAlignments.zip(patchAlignments).map { it.first + it.second }
+        }
+        else {
+            mainAlignments
+        }
 
         val annotations = processAlignments(alignmentRunDatas, alignmentResults)
 
