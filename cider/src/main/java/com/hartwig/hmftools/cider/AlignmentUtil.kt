@@ -221,7 +221,7 @@ object AlignmentUtil
     fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
     {
         sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
-        val refFasta = "chr7_gl582971_fix.fasta"
+        val refFasta = "7_gl582971_fix.fasta"
         val refDict = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.dict")!!
         val refIndexImage = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.img")!!
         // Unfortunately, the BWA-MEM API requires a file for the index image, which I don't think we can get straight from the resource.
