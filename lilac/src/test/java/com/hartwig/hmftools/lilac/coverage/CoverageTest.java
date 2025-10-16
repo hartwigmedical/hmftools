@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import org.junit.Test;
@@ -24,12 +25,12 @@ public class CoverageTest
         HlaAllele allele6 = HlaAllele.fromString("C*02:01");
 
         // standard 6-allele solution
-        AlleleCoverage cov1 = new AlleleCoverage(allele1, 10,20, 0);
-        AlleleCoverage cov2 = new AlleleCoverage(allele2, 10,20, 0);
-        AlleleCoverage cov3 = new AlleleCoverage(allele3, 10,20, 0);
-        AlleleCoverage cov4 = new AlleleCoverage(allele4, 10,20, 0);
-        AlleleCoverage cov5 = new AlleleCoverage(allele5, 10,20, 0);
-        AlleleCoverage cov6 = new AlleleCoverage(allele6, 10,20, 0);
+        AlleleCoverage cov1 = new AlleleCoverage(allele1, 10, 20, 0);
+        AlleleCoverage cov2 = new AlleleCoverage(allele2, 10, 20, 0);
+        AlleleCoverage cov3 = new AlleleCoverage(allele3, 10, 20, 0);
+        AlleleCoverage cov4 = new AlleleCoverage(allele4, 10, 20, 0);
+        AlleleCoverage cov5 = new AlleleCoverage(allele5, 10, 20, 0);
+        AlleleCoverage cov6 = new AlleleCoverage(allele6, 10, 20, 0);
         List<AlleleCoverage> coverageList = Lists.newArrayList(cov1, cov2, cov3, cov4, cov5, cov6);
 
         ComplexCoverage complexCoverage = ComplexCoverage.create(coverageList);
@@ -56,7 +57,7 @@ public class CoverageTest
         List<HlaAllele> alleleList = Lists.newArrayList(allele1, allele2, allele3, allele4, allele5, allele6);
 
         complexCoverage = ComplexCoverage.create(coverageList);
-        complexCoverage.populateMissingCoverage(alleleList);
+        complexCoverage.populateMissingCoverage(Sets.newLinkedHashSet(alleleList));
         assertEquals(GENE_CACHE.ExpectAlleleCount, complexCoverage.getAlleleCoverage().size());
         assertEquals(90, complexCoverage.TotalCoverage);
 
@@ -66,6 +67,5 @@ public class CoverageTest
         assertEquals(0, complexCoverage.getAlleleCoverage().get(3).TotalCoverage, 0.01);
         assertEquals(30.0, complexCoverage.getAlleleCoverage().get(4).TotalCoverage, 0.01);
         assertEquals(0, complexCoverage.getAlleleCoverage().get(5).TotalCoverage, 0.01);
-
     }
 }

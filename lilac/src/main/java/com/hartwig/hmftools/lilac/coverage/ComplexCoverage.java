@@ -4,8 +4,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -142,7 +142,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return newCoverage;
     }
 
-    public void populateMissingCoverage(final Iterable<HlaAllele> alleles)
+    public void populateMissingCoverage(final LinkedHashSet<HlaAllele> alleles)
     {
         if(mAlleleCoverage.size() == GENE_CACHE.ExpectAlleleCount)
             return;

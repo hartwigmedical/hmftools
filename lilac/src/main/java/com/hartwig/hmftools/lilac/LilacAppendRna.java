@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
@@ -160,7 +161,8 @@ public class LilacAppendRna
 
         ComplexCoverage rnaCoverage = ComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
 
-        rnaCoverage.populateMissingCoverage(winningAlleles);
+        rnaCoverage.populateMissingCoverage(Sets.newLinkedHashSet(winningAlleles));
+        rnaCoverage.expandToSixAlleles();
 
         return rnaCoverage;
     }
