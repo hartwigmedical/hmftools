@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -47,31 +48,31 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
                 Allele.toString(), TotalCoverage, UniqueCoverage, SharedCoverage, WildCoverage);
     }
 
-    public static String toString(final List<AlleleCoverage> coverage)
+    public static String toString(final Iterable<AlleleCoverage> coverage)
     {
         StringJoiner sj = new StringJoiner(", ");
         coverage.forEach(x -> sj.add(x.toString()));
         return sj.toString();
     }
 
-    public static List<AlleleCoverage> proteinCoverage(final List<FragmentAlleles> fragAlleles)
+    public static List<AlleleCoverage> proteinCoverage(final Iterable<FragmentAlleles> fragAlleles)
     {
         return buildCoverage(fragAlleles, false);
     }
 
-    public static List<AlleleCoverage> groupCoverage(final List<FragmentAlleles> fragAlleles)
+    public static List<AlleleCoverage> groupCoverage(final Iterable<FragmentAlleles> fragAlleles)
     {
         return buildCoverage(fragAlleles, true);
     }
 
-    private static List<AlleleCoverage> buildCoverage(final List<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
+    private static List<AlleleCoverage> buildCoverage(final Iterable<FragmentAlleles> fragAlleles, boolean asAlleleGroup)
     {
         // attributes coverage counts to each allele amongst the set of alleles present across all fragments
         List<AlleleCoverage> results = Lists.newArrayList();
 
-        Map<HlaAllele,Integer> uniqueCoverageMap = Maps.newHashMap();
-        Map<HlaAllele,Double> combinedCoverageMap = Maps.newHashMap();
-        Map<HlaAllele,Double> wildCoverageMap = Maps.newHashMap();
+        Map<HlaAllele, Integer> uniqueCoverageMap = Maps.newHashMap();
+        Map<HlaAllele, Double> combinedCoverageMap = Maps.newHashMap();
+        Map<HlaAllele, Double> wildCoverageMap = Maps.newHashMap();
 
         // test whether a fragment has a single (unique) allele in its full list (with nothing in partial)
         // if not, split the contribution across the alleles into combined and wild
@@ -104,10 +105,10 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
         }
 
         // gather up the unique set of supported alleles, then tally their results into a single allele coverage container
-        List<HlaAllele> hlaAlleles = uniqueCoverageMap.keySet().stream().collect(Collectors.toList());
-        combinedCoverageMap.keySet().stream().filter(x -> !hlaAlleles.contains(x)).forEach(x -> hlaAlleles.add(x));
+        List<HlaAllele> hlaAlleles = Lists.newArrayList(uniqueCoverageMap.keySet());
+        combinedCoverageMap.keySet().stream().filter(x -> !hlaAlleles.contains(x)).forEach(hlaAlleles::add);
 
-        for (HlaAllele allele : hlaAlleles)
+        for(HlaAllele allele : hlaAlleles)
         {
             Integer uniqueCoverage = uniqueCoverageMap.get(allele);
             Double combinedCoverage = combinedCoverageMap.get(allele);
@@ -124,9 +125,9 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
         return results;
     }
 
-    private static void increment(final Map<HlaAllele,Integer> map, final HlaAllele allele, int value)
+    private static void increment(final Map<HlaAllele, Integer> map, final HlaAllele allele, int value)
     {
-        Map.Entry<HlaAllele,Integer> entry = map.entrySet().stream().filter(x -> x.getKey() == allele).findFirst().orElse(null);
+        Map.Entry<HlaAllele, Integer> entry = map.entrySet().stream().filter(x -> x.getKey() == allele).findFirst().orElse(null);
 
         if(entry == null)
         {
@@ -137,12 +138,12 @@ public class AlleleCoverage implements Comparable<AlleleCoverage>
         entry.setValue(entry.getValue() + value);
     }
 
-    private static void increment(final Map<HlaAllele,Double> map, final HlaAllele allele, double value)
+    private static void increment(final Map<HlaAllele, Double> map, final HlaAllele allele, double value)
     {
         map.merge(allele, value, Double::sum);
     }
 
-    public static List<HlaAllele> coverageAlleles(final List<AlleleCoverage> coverage)
+    public static List<HlaAllele> coverageAlleles(final Collection<AlleleCoverage> coverage)
     {
         return coverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
