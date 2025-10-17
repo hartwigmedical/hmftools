@@ -39,7 +39,7 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 | report_match_ref_seq       | Off              | When specified, reports VDJ sequences that match reference genome                                       |
 | num_trim_bases             | 0                | Number of bases to trim on each side of reads. Defaults to 0                                            |
 | max_low_qual_base_fraction | 0.1              | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
-| max_reads_per_gene         | 600,000          | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
+| max_reads_per_gene         | 100,000          | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
 | ref_genome                 |                  | Path to the reference genome FASTA                                                                      |
 | bwa_index_image            | {ref_genome}.img | Path to the reference genome BWA-MEM index GATK image                                                   |
 | primer_csv                 |                  | Path to csv file containing primers                                                                     |
