@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
@@ -27,9 +28,6 @@ public final class UltimaUtils
 
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
-
-    // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
-    protected static final int HALF_PHRED_SCORE_SCALING = 3;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 

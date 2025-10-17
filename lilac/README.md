@@ -426,7 +426,7 @@ A*30:220Q amino acids: MAVMAPRTLL...SG
 The starting data for the LILAC algorithm is:
 - HLA-A, HLA-B, HLA-C and HLA-Y [4-digit allele sequences](#allele-sequences), excluding the following due to their high similarity closely 
 related pseudogenes:
-  - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`
+  - HLA-H: `A*31:135`, `A*33:191`, `A*02:783`, `B*07:282`, `B*40:278`
   - HLA-Y: `A*30:205`, `A*30:207`, `A*30:225`, `A*30:228`, `A*01:81`, `A*01:237`
 - All fragments in a BAM aligned to HLA-A, HLA-B and HLA-C gene regions, which:
   - Are not duplicates
@@ -559,26 +559,42 @@ Similar to the nucleotide matrix, LILAC also constructs a matrix of amino acid c
 ```
 
 Note that:
-- Amino acids with 0 fragment support not shown and amino acids derived from soft-clipped bases are represented as multi-character strings
+- Amino acids with 0 fragment support are not shown, and amino acids derived from soft-clipped bases are represented as multi-character strings
 - `raw_counts` only includes fragments aligned at that gene, whereas `count` can include [fragments from other genes](#shared-fragment-support-across-genes)
 - Positions with multiple amino acid candidates are deemed **heterozygous**, and positions with only 1 are considered to be **homozygous**
 
-Amino acid matrix construction has the similar conditions/caveats as for the nucleotide matrix, namely: 
+Amino acid matrix construction has similar conditions/caveats as for the nucleotide matrix, namely: 
 - [Shared fragment support across genes](#shared-fragment-support-across-genes) is taken into account
 - Fragments with in-frame indels only contribute to counts in the matrix if the indel matches an existing HLA allele, 
 and fragments with out-of-frame indels are always excluded
 - Amino acid candidates are filtered for those with at least `min_fragment_support` and `min_hi_qual_fragment_support` 
 (see [Filtering for nucleotide candidates](#filtering-for-nucleotide-candidates)) for all nucleotides in each codon
 
-Additionally, exon boundary 'enrichment', is applied to exons 1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes)
-(i.e. before nucleotide index 894, amino acid index 298). For codons crossing these exon boundaries, any associated fragment is enriched 
-with **homozygous** nucleotide candidates on the other side of the exon boundary so that an amino acid can constructed.
+Additionally, exon boundary enrichment is performed as described below.
+
+##### Exon boundary enrichment
+
+Exon boundary enrichment ensures that the start or end of each fragment's sequence forms a complete codon. It is only applied to exons 
+1-4 where [exon boundaries are shared](#shared-fragment-support-across-genes) (i.e. before nucleotide index 894 / amino acid index 298).
+
+A fragment may, for example, cover 1 nucleotide of a codon at the end of one exon, but not cover the remaining 2 nucleotides at the 
+start of the next exon (because there is an intron gap between the exons). **Homozygous** candidate nucleotides from the start of the next 
+exon are added to the sequence of the fragment so that an amino acid can be constructed.
 
 #### Elimination based on amino acid matrix
 
-Alleles are eliminated based on the amino acid matrix in the same way as for the 
-[nucleotide matrix](#elimination-based-on-nucleotide-matrix), i.e. any alleles with an amino acid or inframe indel that do not match the 
-possible sequences of amino acid matrix are eliminated.
+Alleles are eliminated based on the amino acid matrix in the same way as for the [nucleotide matrix](#elimination-based-on-nucleotide-matrix), 
+i.e. any alleles with an amino acid or inframe indel that do not match the possible sequences of amino acid matrix are eliminated. 
+
+Additionally, exon boundary filtering is performed as described below.
+
+##### Exon boundary filtering
+
+For each pair of exons, fragments are collected which span these exons (i.e. the exon boundary) to determine the valid candidate exon 
+boundary amino acids, since the 3 nucleotides of a codon may be split across 2 exons. Alleles are removed if the amino acid at the 
+respective exon boundary position does not match one of the candidate exon boundary amino acids.
+
+Exon boundary filtering is only performed when there are >=10 fragments spanning the exon boundary.
 
 #### Elimination based on phased haplotypes
 
@@ -667,11 +683,28 @@ of that allele (i.e. any amino acid is deemed a match to a wildcard)
 
 #### Scoring
 
-The score for a complex is calculated based on `total_coverage` (sum of the fragments aligned to each allele), and several penalties: 
+The score for a complex is calculated based on `total_coverage` (sum of the fragments aligned to each allele) and several penalties as 
+shown below. Each penalty is described in the subsections below. 
 
 ```
 score = total_coverage - frequency_penalty - solution_complexity_penalty - recovery_penalty
 ```
+
+Two performance optimisations are made at this stage of scoring:
+- If there are predicted to be >1,000,000 complexes, the evidence phase is first performed individually for complexes of 2
+  alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and
+  then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase
+  is then subsequently run using this reduced set of candidate alleles.
+- Complexes are scored with the number of fragments is downsampled to a maximum of 10,000
+
+Then, complexes within `top_score * 0.005` (`top_score_threshold`) are rescored with all fragments (i.e. without downsampling) to calculate
+the actual complex scores and rankings.
+
+The complex with the top score is chosen as the final solution. If 2 or more complexes have the exact same score, the solution with the
+lowest alphabetical 4-digit alleles is chosen.
+
+
+##### Frequency penalty
 
 `frequency_penalty` penalises solutions with rare alleles:
 ```
@@ -682,39 +715,37 @@ sum_log_frequency = sum(-log10(frequencies_filled))
 frequency_penalty = total_coverage * sum_log_frequency * 0.009 # frequency_penalty_weight
 ```
 
+##### Solution complexity penalty
+
 `solution_complexity_penalty` penalises solutions with more alleles (i.e. favor simpler solutions):
 
 ```
 # Allele sequences in complex:
-| exon    | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
-| allele1 | MAVM | SHSM | SHTV | APKT | LSSQ | RKGG | SDSA |
-| allele2 | MRVT | SHSM | SHII | PPKT | LSSQ | GKGG | SDSA |
-| allele3 | MRVM | SHSM | SHTL | HPKT | LSSQ | GKGG | SNSA |
+| exon_chunk | 1    | 2    | 3    | 4    | 5    | 6    | 7    |
+|------------|------|------|------|------|------|------|------|
+| allele_1   | MAVM | SHSM | SHTV | APKT | LSSQ | RKGG | SDSA |
+| allele_2   | MRVT | SHSM | SHII | PPKT | LSSQ | GKGG | SDSA |
+| allele_3   | MRVM | SHSM | SHTL | HPKT | LSSQ | GKGG | SNSA |
 
-unique_sequences_per_exon = [ 3, 1, 3, 3, 1, 2, 2 ]
-solution_complexity = sum(unique_sequences_per_exon)
+# Chunk refers to an exon, or half of an exon for long exons
+unique_sequences_per_chunk = [ 3, 1, 3, 3, 1, 2, 2 ] 
+
+solution_complexity = sum(unique_sequences_per_chunk)
 
 solution_complexity_penalty = total_coverage * solution_complexity * 0.002 # solution_complexity_penalty_weight
 ```
+
+Note that long exons (>= 85 amino acids / 255 nucleotides) are split into equal halves, with `unique_sequences_per_chunk` being calculated 
+separately for each half. This is because fragments which typically ~151 bp in length can only span (and provide phased support for) half 
+of these long exons, and thus the window for calculating `unique_sequences_per_chunk` reflects this.
+
+##### Recovery penalty
 
 `recovery_penalty` penalises solutions having recovered alleles (note: `recovery_penalty` is currently turned off):
 
 ```
 recovery_penalty = total_coverage * recovered_alleles_count * 0 # recovery_penalty_weight
 ```
-
-Two performance optimisations are made at this stage of scoring:
-- If there are predicted to be >1,000,000 complexes, the evidence phase is first performed individually for complexes of 2
-alleles per gene to find the top candidates for each gene. LILAC retains only the top 5 pairs including each individual allele candidate and 
-then chooses the first 10 unique alleles appearing in the ranked list of pairs, with any common alleles also retained. The evidence phase 
-is then subsequently run using this reduced set of candidate alleles.
-- Complexes are scored with the number of fragments is downsampled to a maximum of 10,000
-
-Then, complexes within `top_score * 0.005` (`top_score_threshold`) are rescored with all fragments (i.e. without downsampling) to calculate 
-the actual complex scores and rankings. 
-
-The complex with the top score is chosen as the final solution. If 2 or more complexes have the exact same score, the solution with the 
-lowest alphabetical 4-digit alleles is chosen.
 
 ### Tumor and RNA status of alleles
 

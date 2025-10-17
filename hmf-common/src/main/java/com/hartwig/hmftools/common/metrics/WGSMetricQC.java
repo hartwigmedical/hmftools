@@ -12,7 +12,7 @@ public final class WGSMetricQC
     public static final int REF_COVERAGE_LEVEL_10x = 10;
     public static final int REF_COVERAGE_LEVEL_20x = 20;
 
-    public static boolean hasSufficientCoverage(final BamMetricsSummary tumorMetrics, final BamMetricsSummary refMetrics)
+    public static boolean hasSufficientCoverage(final BamMetricSummary tumorMetrics, final BamMetricSummary refMetrics)
     {
         boolean wgsQCRef10 = refMetrics.coveragePercent(REF_COVERAGE_LEVEL_10x) >= MIN_REF_10X_COVERAGE;
         boolean wgsQCRef20 = refMetrics.coveragePercent(REF_COVERAGE_LEVEL_20x) >= MIN_REF_20X_COVERAGE;

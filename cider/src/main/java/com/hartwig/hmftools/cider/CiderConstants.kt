@@ -36,14 +36,25 @@ object CiderConstants
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
 
+    // From some testing, 50k query sequences used 10GB of memory.
+    // Want to limit it to about use only a few GB.
+    const val ALIGNMENT_BATCH_SIZE = 20000
+
     // filter out matches that have too low identity
     // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
     // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.
     // those are probably too different to use. We use 90% for V / J identities, and 95%
     // cut off for full match
-    const val BLASTN_MATCH_MIN_VJ_IDENTITY = 90
-    const val BLASTN_MATCH_FULL_MATCH_IDENTITY = 95
+    const val ALIGNMENT_MATCH_MIN_VJ_IDENTITY = 90
+    const val ALIGNMENT_MATCH_FULL_MATCH_IDENTITY = 95
 
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
+
+    // Amino acids sequences which are known to match the reference genome but are not detected by alignment.
+    // This exists because of switching from Blastn to BWA-MEM, and some sequences cause significant discrepancies.
+    // These sequences are not in the ref genome for BWA-MEM to align to.
+    val MATCHES_REF_KNOWN_CDR3_AA = listOf(
+        Regex("CTXGPKXELRT.*")
+    )
 }

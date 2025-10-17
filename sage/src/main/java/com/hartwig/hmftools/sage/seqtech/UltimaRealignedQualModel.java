@@ -32,25 +32,6 @@ public class UltimaRealignedQualModel
 
     public UltimaQualModel qualModel() { return mQualModel; }
 
-    /*
-    private UltimaRealignedQualModel(final SimpleVariant variant, int varReadIndexOffset, int varIndex, int variantRefIndex)
-    {
-        mVariant = variant;
-        mBaseQualModel = null;
-        mVarReadIndexOffset = varReadIndexOffset;
-        mVarIndex = varIndex;
-        mVariantRefIndex = variantRefIndex;
-
-        mMsiJitterQualCache = null;
-    }
-
-    @VisibleForTesting
-    public UltimaRealignedQualModel(final SimpleVariant variant, int varReadIndexOffset)
-    {
-        this(variant, varReadIndexOffset, -1, -1);
-    }
-    */
-
     public byte calculateQual(final SAMRecord record, final int varReadIndex)
     {
         return mQualModel.calculateQual(record, varReadIndex + mVarReadIndexOffset);

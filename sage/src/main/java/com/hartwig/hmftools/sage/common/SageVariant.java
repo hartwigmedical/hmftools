@@ -189,7 +189,13 @@ public class SageVariant
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 
-    public boolean isLongInsert() { return isLongInsert(mCandidate.variant()); }
+    public static String indelAltBases(final SimpleVariant variant)
+    {
+        if(!variant.isIndel())
+            return "";
+
+        return variant.isInsert() ? variant.Alt.substring(1) : variant.Ref.substring(1);
+    }
 
     public static boolean isLongInsert(final SimpleVariant variant)
     {

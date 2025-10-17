@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.consensus.TemplateReads.selectTemplateRead;
-import static com.hartwig.hmftools.redux.umi.UmiConfig.READ_ID_DELIM_STR;
+import static com.hartwig.hmftools.redux.duplicate.UmiConfig.READ_ID_DELIM_STR;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,9 +23,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
-import com.hartwig.hmftools.redux.consensus.ConsensusReads;
-import com.hartwig.hmftools.redux.consensus.ReadParseState;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 
 import org.junit.Test;
 
@@ -109,31 +107,31 @@ public class ConsensusReadUtilsTest
         SAMRecord read1 = createSamRecord(TEST_READ_ID, 100, bases, indelCigar, TEST_READ_CIGAR);
 
         ReadParseState readState = new ReadParseState(read1, true);
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
+        assertEquals((byte)'A', readState.base());
+        assertEquals(DEFAULT_QUAL, readState.baseQual());
         assertEquals(S, readState.elementType());
         assertEquals(1, readState.elementLength());
 
         readState.moveNextBase();
-        assertEquals((byte)'G', readState.currentBase());
+        assertEquals((byte)'G', readState.base());
         assertEquals(M, readState.elementType());
         assertEquals(2, readState.elementLength());
 
         readState.moveNextBase();
         readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(I, readState.elementType());
         assertEquals(1, readState.elementLength());
 
         readState.moveNextBase();
         readState.moveNextBase();
         assertFalse(readState.exhausted());
-        assertEquals((byte)'G', readState.currentBase());
+        assertEquals((byte)'G', readState.base());
         assertEquals(M, readState.elementType());
 
         readState.moveNextBase();
         assertFalse(readState.exhausted());
-        assertEquals((byte)'A', readState.currentBase());
+        assertEquals((byte)'A', readState.base());
         assertEquals(S, readState.elementType());
 
         readState.moveNextBase();
@@ -141,8 +139,8 @@ public class ConsensusReadUtilsTest
 
         // and in reverse
         readState = new ReadParseState(read1, false);
-        assertEquals((byte)'A', readState.currentBase());
-        assertEquals(DEFAULT_QUAL, readState.currentBaseQual());
+        assertEquals((byte)'A', readState.base());
+        assertEquals(DEFAULT_QUAL, readState.baseQual());
         assertEquals(S, readState.elementType());
         assertEquals(1, readState.elementLength());
 
@@ -150,7 +148,7 @@ public class ConsensusReadUtilsTest
         readState.moveNextBase();
         readState.moveNextBase();
 
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(I, readState.elementType());
         assertEquals(1, readState.elementLength());
 
@@ -158,7 +156,7 @@ public class ConsensusReadUtilsTest
         readState.moveNextBase();
         readState.moveNextBase();
         assertFalse(readState.exhausted());
-        assertEquals((byte)'A', readState.currentBase());
+        assertEquals((byte)'A', readState.base());
         assertEquals(S, readState.elementType());
 
         readState.moveNextBase();
@@ -172,31 +170,31 @@ public class ConsensusReadUtilsTest
 
         readState = new ReadParseState(read1, true);
 
-        assertEquals((byte)'A', readState.currentBase());
+        assertEquals((byte)'A', readState.base());
         assertEquals(M, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(M, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(D, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(D, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'C', readState.currentBase());
+        assertEquals((byte)'C', readState.base());
         assertEquals(D, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'G', readState.currentBase());
+        assertEquals((byte)'G', readState.base());
         assertEquals(M, readState.elementType());
 
         readState.moveNextBase();
-        assertEquals((byte)'T', readState.currentBase());
+        assertEquals((byte)'T', readState.base());
         assertEquals(M, readState.elementType());
 
         readState.moveNextBase();

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.redux.write;
 
 import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
-import com.hartwig.hmftools.redux.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -12,9 +12,9 @@ public class BamWriterNone extends BamWriterSync
 {
     public BamWriterNone(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter,
-            @Nullable final JitterAnalyser jitterAnalyser, final BaseQualRecalibration bqr)
+            @Nullable final MsJitterAnalyser msJitterAnalyser, final BaseQualRecalibration bqr)
     {
-        super(filename, config, readDataWriter, null, jitterAnalyser, bqr);
+        super(filename, config, readDataWriter, null, msJitterAnalyser, bqr);
     }
 
     public boolean isSorted() { return false; }

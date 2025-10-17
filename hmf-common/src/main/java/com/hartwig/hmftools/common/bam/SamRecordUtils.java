@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
@@ -66,7 +68,6 @@ public final class SamRecordUtils
     {
         return !record.getReadPairedFlag() || record.getFirstOfPairFlag();
     }
-
     public static boolean secondInPair(final SAMRecord record)
     {
         return record.getReadPairedFlag() && record.getSecondOfPairFlag();
@@ -158,29 +159,29 @@ public final class SamRecordUtils
         return getReadBoundaryPosition(readStart, cigarStr, !forwardStrand, true);
     }
 
-    public static int getFivePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, true); }
-
-    public static int getThreePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, false); }
-
-    public static int getUnclippedPosition(final SAMRecord read, boolean fivePrime)
+    public static int getFivePrimeUnclippedPosition(final SAMRecord read)
     {
-        // returns the 5' or 3' position of the read, factoring in any soft-clipped bases
-        int position;
+        // returns the 5' position of the read, factoring in any soft-clipped bases
+        boolean useStart = !read.getReadNegativeStrandFlag();
+        return getUnclippedPosition(read, useStart);
+    }
 
-        if((orientation(read) == ORIENT_FWD) == fivePrime)
+    public static int getThreePrimeUnclippedPosition(final SAMRecord read)
+    {
+        boolean useStart = read.getReadNegativeStrandFlag();
+        return getUnclippedPosition(read, useStart);
+    }
+
+    public static int getUnclippedPosition(final SAMRecord read, boolean isStart)
+    {
+        if(isStart)
         {
-            position = read.getAlignmentStart();
-            if(read.getCigar().isLeftClipped())
-                position -= read.getCigar().getFirstCigarElement().getLength();
+            return read.getAlignmentStart() - leftSoftClipLength(read);
         }
         else
         {
-            position = read.getAlignmentEnd();
-            if(read.getCigar().isRightClipped())
-                position += read.getCigar().getLastCigarElement().getLength();
+            return read.getAlignmentEnd() + rightSoftClipLength(read);
         }
-
-        return position;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
@@ -261,8 +262,15 @@ public final class SamRecordUtils
 
     public static String readToString(final SAMRecord read)
     {
-        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+        if(read.getReadPairedFlag())
+        {
+            return format("id(%s) coords(%s:%d-%d) cigar(%s) baseLen(%d) mate(%s:%d) flags(%d)",
+                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                    read.getCigarString(), read.getReadBases().length, read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+        }
+
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) baseLen(%d) flags(%d)",
                 read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+                read.getCigarString(), read.getReadBases().length, read.getFlags());
     }
 }

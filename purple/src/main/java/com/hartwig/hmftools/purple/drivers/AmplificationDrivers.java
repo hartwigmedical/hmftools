@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -44,32 +42,37 @@ public final class AmplificationDrivers
         {
             DriverGene driverGene = amplificationDriverGenes.get(geneCopyNumber.geneName());
 
+            if(driverGene == null)
+                continue;
+
             if(isHighCopyNoise && !supportedByOneSV(geneCopyNumber))
                 continue;
 
-            double ampCopyNumberThreshold = driverGene != null ?
-                    ploidy * driverGene.amplificationRatio() : DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
+            double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
 
             double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
                     ? ampCopyNumberThreshold * 0.5 :  ampCopyNumberThreshold;
 
+            DriverType driverType = UNKNOWN;
+
             if(geneCopyNumber.minCopyNumber() > geneCopyNummberThreshold)
             {
-                geneCopyNumber.setDriverType(DriverType.AMP);
-                geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
-                result.add(createAmpDriver(geneCopyNumber));
-                continue;
+                driverType = DriverType.AMP;
             }
-
-            // partial AMPs are only allowed for WGS
-            if(!isTargetRegions || TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName()))
+            else if(!isTargetRegions || TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName()))
             {
                 if(geneCopyNumber.maxCopyNumber() > geneCopyNummberThreshold)
                 {
-                    geneCopyNumber.setDriverType(DriverType.PARTIAL_AMP);
-                    geneCopyNumber.setReportableStatus(driverGene != null ? ReportableStatus.REPORTED : ReportableStatus.CANDIDATE);
-                    result.add(createPartialAmpDriver(geneCopyNumber));
+                    driverType = DriverType.PARTIAL_AMP;
                 }
+            }
+
+            if(driverType != UNKNOWN)
+            {
+                geneCopyNumber.setDriverType(driverType);
+
+                geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED);
+                result.add(createAmpDriver(geneCopyNumber, driverType));
             }
         }
 
@@ -81,13 +84,8 @@ public final class AmplificationDrivers
         return geneCopyNumber.MinRegionStartSupport.isSV() || geneCopyNumber.MinRegionEndSupport.isSV();
     }
 
-    private static DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber)
+    private static DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber, final DriverType driverType)
     {
-        return createCopyNumberDriver(DriverCategory.ONCO, DriverType.AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
-    }
-
-    private static DriverCatalog createPartialAmpDriver(final GeneCopyNumber geneCopyNumber)
-    {
-        return createCopyNumberDriver(DriverCategory.ONCO, DriverType.PARTIAL_AMP, LikelihoodMethod.AMP, false, geneCopyNumber);
+        return createCopyNumberDriver(DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, 1, geneCopyNumber);
     }
 }

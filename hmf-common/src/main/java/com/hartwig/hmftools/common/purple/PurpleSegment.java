@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.Nullable;
@@ -259,4 +260,29 @@ public final class PurpleSegment extends ChrBaseRegion
                 MinorAlleleCopyNumberDeviation, MajorAlleleCopyNumberDeviation, DeviationPenalty, EventPenalty,
                 RefNormalisedCopyNumber, TumorCopyNumber, TumorBAF, FittedTumorCopyNumber, FittedBAF);
     }
+
+    public static Map<String,List<PurpleSegment>> buildChromosomeMap(final List<PurpleSegment> segments)
+    {
+        Map<String,List<PurpleSegment>> chrCopyNumberMap = Maps.newHashMap();
+
+        String currentChr = "";
+        List<PurpleSegment> chrSegments = null;
+
+        for(PurpleSegment segment : segments)
+        {
+            String chromosome = segment.chromosome();
+
+            if(!currentChr.equals(chromosome))
+            {
+                currentChr = chromosome;
+                chrSegments = Lists.newArrayList();
+                chrCopyNumberMap.put(chromosome, chrSegments);
+            }
+
+            chrSegments.add(segment);
+        }
+
+        return chrCopyNumberMap;
+    }
+
 }

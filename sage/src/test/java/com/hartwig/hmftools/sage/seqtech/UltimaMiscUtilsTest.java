@@ -126,7 +126,8 @@ public class UltimaMiscUtilsTest
 
         int alignmentStart = 1 + refPaddingSize - readPaddingSize;
         String cigar = readBases.length() + "M";
-        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
+        SAMRecord read = createSamRecordUnpaired(
+                "READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
 
         int varIndexInRead = readPaddingSize + variantMiddleIndex;
 
@@ -165,7 +166,8 @@ public class UltimaMiscUtilsTest
 
         int alignmentStart = 1 + refPaddingSize - readPaddingSize;
         String cigar = readBases.length() + "M";
-        SAMRecord read = createSamRecordUnpaired("READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
+        SAMRecord read = createSamRecordUnpaired(
+                "READ_001", CHR_1, alignmentStart, readBases, cigar, false, false, null);
 
         int varIndexInRead = readPaddingSize + variantMiddleIndex;
 

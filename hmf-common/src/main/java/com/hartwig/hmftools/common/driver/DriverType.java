@@ -7,6 +7,7 @@ public enum DriverType
     AMP,
     PARTIAL_AMP,
     DEL,
+    HET_DEL,
     HOM_DUP_DISRUPTION,
     HOM_DEL_DISRUPTION,
     DISRUPTION,
@@ -19,7 +20,7 @@ public enum DriverType
 
     public static final EnumSet<DriverType> DRIVERS_PURPLE_GERMLINE = EnumSet.of(GERMLINE_MUTATION, GERMLINE_DELETION);
 
-    public static final EnumSet<DriverType> DRIVERS_PURPLE_SOMATIC = EnumSet.of(AMP, PARTIAL_AMP, DEL, MUTATION);
+    public static final EnumSet<DriverType> DRIVERS_PURPLE_SOMATIC = EnumSet.of(AMP, PARTIAL_AMP, DEL, HET_DEL, MUTATION);
 
     public static final EnumSet<DriverType> DRIVERS_LINX_GERMLINE = EnumSet.of(GERMLINE_DISRUPTION, GERMLINE_HOM_DUP_DISRUPTION);
 

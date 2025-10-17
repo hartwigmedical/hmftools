@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
+import static com.hartwig.hmftools.redux.consensus.ConsensusState.setReadPositionStartOffsets;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
 
 import java.util.List;
@@ -52,14 +51,10 @@ public class BaseBuilder
         int readCount = reads.size();
         String chromosome = reads.get(0).getContig();
 
-        int[] readOffsets = new int[readCount];
         boolean[] isFirstInPair = new boolean[readCount];
         boolean isDualStrand = mSequencingType == ILLUMINA && isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
-        for(int i = 0; i < readCount; ++i)
-        {
-            readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
-        }
+        int[] readPositionStartOffsets = setReadPositionStartOffsets(reads, consensusState.UnclippedPosStart, true);
 
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
@@ -76,25 +71,15 @@ public class BaseBuilder
             for(int r = 0; r < readCount; ++r)
             {
                 // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
-                SAMRecord read = reads.get(r);
-
                 locationBases[r] = NO_BASE;
 
-                int readIndex;
-                if(consensusState.IsForward)
-                {
-                    readIndex = baseIndex;
+                int readIndex = baseIndex - readPositionStartOffsets[r];
 
-                    if(readOffsets[r] != 0 && baseIndex >= read.getReadBases().length)
-                        continue;
-                }
-                else
-                {
-                    readIndex = baseIndex + readOffsets[r];
+                // if a read has no position offset then its read bases can be read with the same index as the consensus (template) read
+                // if its read position offset is -ve, then it starts earlier and so its read index will be ahead to match up
 
-                    if(readIndex < 0)
-                        continue;
-                }
+                if(readIndex < 0 || readIndex >= reads.get(r).getReadBases().length)
+                    continue;
 
                 locationBases[r] = reads.get(r).getReadBases()[readIndex];
                 locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
@@ -121,7 +106,7 @@ public class BaseBuilder
             }
             else
             {
-                int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
+                int basePosition = consensusState.UnclippedPosStart + baseIndex; // works since there are no indels in this routine
 
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
@@ -158,7 +143,7 @@ public class BaseBuilder
         }
         else
         {
-            // TODO: decide for Ultima and Biomodal
+            // TODO: decide for Ultima
             return BaseQualPair.INVALID;
         }
     }

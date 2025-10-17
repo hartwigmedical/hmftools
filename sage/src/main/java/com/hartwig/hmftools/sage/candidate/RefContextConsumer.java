@@ -6,8 +6,11 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
@@ -62,7 +65,7 @@ public class RefContextConsumer
         mBounds = regionBounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
-        mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
+        mReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
         mConfig = config;
 
         mHotspotPositions = Sets.newHashSet();
@@ -128,7 +131,8 @@ public class RefContextConsumer
 
         updateRegionBlockDepth(readStart, readEnd);
 
-        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadMapQualEventsPenalty);
+        double scEventProportion = (double)scEvents / record.getReadLength();
+        int scAdjustedMapQual = (int)round(adjustedMapQual - scEventProportion * mConfig.Quality.ReadMapQualEventsPenalty);
         readInfo.ReadExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record, readInfo.AlignedLength);
 
@@ -183,6 +187,9 @@ public class RefContextConsumer
                 processSoftClip(record, element.getLength(), readIndex, mRefSequence, readInfo, false);
             }
         };
+
+        // debug for read cache and evicting investigations
+        // SG_LOGGER.debug("read({})", readToString(record));
 
         CigarHandler.traverseCigar(record, handler);
 
@@ -607,7 +614,7 @@ public class RefContextConsumer
 
     private boolean withinReadContext(int readIndex, final SAMRecord record)
     {
-        return readIndex >= mConfig.ReadContextFlankLength && readIndex < record.getReadLength() - mConfig.ReadContextFlankLength;
+        return readIndex >= DEFAULT_FLANK_LENGTH && readIndex < record.getReadLength() - DEFAULT_FLANK_LENGTH;
     }
 
     @VisibleForTesting

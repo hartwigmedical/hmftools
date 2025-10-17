@@ -77,6 +77,13 @@ public final class LilacConstants
             // Similar to HLA-H
             "B*40:278");
 
+    public static final List<String> HLA_DRB1_EXCLUDED_ALLELES = Lists.newArrayList(
+            "DRB1*14:242", // Similar to Exon 3 of DRB3
+            "DRB1*14:141", // Similar to Exon 2 of DRB3
+            "DRB1*14:262", // Similar to Exon 2 (1st half) of DRB3
+            "DRB1*12:57" // Similar to Exon 2 (2nd half) of DRB3
+    );
+
     // common INDEL associated with allele C*04:09N
     // TODO(mkcmkc): If we update the resources change to "C*04:09L"
     public static final String STOP_LOSS_ON_C_ALLELE = "C*04:09N";
@@ -91,12 +98,11 @@ public final class LilacConstants
     public static final String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
     public static final String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
     public static final String LILAC_FILE_FRAGMENTS = "fragments.tsv";
-    public static final String LILAC_FILE_READS = "reads.tsv";
 
     public static final String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
     public static final String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
     public static final String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
-    public static final String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
-    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
+    public static final String LILAC_FILE_HLA_Y_COVERAGE = "HLA_Y.coverage.tsv";
+    public static final String LILAC_FILE_HLA_Y_FRAGMENTS = "HLA_Y.fragments.tsv";
 }

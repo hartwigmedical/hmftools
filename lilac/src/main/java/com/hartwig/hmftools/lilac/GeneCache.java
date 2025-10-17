@@ -5,18 +5,15 @@ import static java.lang.Math.min;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class GeneCache
 {
-    public final MhcClass ClassType;
     public final Map<HlaGene, TranscriptData> GeneTranscriptMap;
     public final List<TranscriptData> Transcripts;
 
@@ -30,9 +27,8 @@ public class GeneCache
     public final Map<HlaGene, List<Integer>> NucleotideExonBoundaries;
     public final Map<HlaGene, Integer> NucleotideLengths;
 
-    public GeneCache(final MhcClass mhcClass, final Map<HlaGene, TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene, TranscriptData> hlaTranscriptMap)
     {
-        ClassType = mhcClass;
         GeneTranscriptMap = hlaTranscriptMap;
 
         // establish other properties and commonly used constants
@@ -128,11 +124,13 @@ public class GeneCache
 
     private int findMaxCommonAminoAcidBoundary()
     {
-        int maxCommonAminoAcidBoundary = 0;
+        int maxCommonAminoAcidBoundary = -1;
 
         List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries.values().stream().toList();
 
         List<Integer> firstSet = aminoAcidBoundaries.get(0);
+        if(aminoAcidBoundaries.size() == 1)
+            return firstSet.get(firstSet.size() - 1);
 
         for(Integer aaExonBoundary : firstSet)
         {

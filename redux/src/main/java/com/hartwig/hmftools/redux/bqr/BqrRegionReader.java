@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -26,6 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
@@ -99,6 +101,9 @@ public class BqrRegionReader implements CigarHandler
     public void initialise(final ChrBaseRegion region)
     {
         if(mRefGenome == null)
+            return;
+
+        if(!HumanChromosome.contains(region.Chromosome))
             return;
 
         List<ChrBaseRegion> overlappedBqrRegions = mAllBqrRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
@@ -370,6 +375,15 @@ public class BqrRegionReader implements CigarHandler
             int readIndex = startReadIndex + i;
 
             byte ref = mCurrentRefSequence.base(position);
+
+            /*
+            if(readIndex >= record.getReadBases().length)
+            {
+                RD_LOGGER.error("invalid BQR read index({}): {}", readIndex, readToString(record));
+                return;
+            }
+            */
+
             byte alt = record.getReadBases()[readIndex];
 
             if(alt == DNA_N_BYTE)

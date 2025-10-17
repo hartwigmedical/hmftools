@@ -46,4 +46,8 @@ public class ReduxConstants
     public static final double BQR_NON_DUAL_AF_LOW = 0.05;
     public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
     public static final int BQR_NON_DUAL_AD = 3;
+
+    // duplicate group collapsing
+    public static final int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
+
 }

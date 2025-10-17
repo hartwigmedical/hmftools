@@ -648,7 +648,7 @@ public class VariantVis
 
         String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
         String mateAlignmentStr = "unmapped";
-        if(!firstRead.getMateUnmappedFlag())
+        if(firstRead.getReadPairedFlag() && !firstRead.getMateUnmappedFlag())
         {
             String mateChromosome = firstRead.getMateReferenceName();
             int mateAlignmentStart = firstRead.getMateAlignmentStart();
@@ -665,8 +665,12 @@ public class VariantVis
         }
 
         readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
-
-        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(abs(firstRead.getInferredInsertSize())))));
+        int insertSize;
+        if(firstRead.getReadPairedFlag())
+            insertSize = abs(firstRead.getInferredInsertSize());
+        else
+            insertSize = firstRead.getAlignmentEnd() - firstRead.getAlignmentStart() + 1;
+        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(insertSize))));
         readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
 
         String firstMapQStr = String.valueOf(firstRead.getMappingQuality());

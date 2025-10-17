@@ -407,7 +407,7 @@ public class VariantFilters
 
     public void applyAdjacentFilters(final Map<String,List<Breakend>> chromosomeBreakends)
     {
-        // filter INVs which are short, unchained and isolated from other variants (exlcuding other similar INVs)
+        // filter INVs which are short, unchained and isolated from other variants (excluding other similar INVs)
         for(List<Breakend> breakends : chromosomeBreakends.values())
         {
             for(int i = 0; i < breakends.size(); ++i)

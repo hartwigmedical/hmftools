@@ -12,6 +12,7 @@ public class SbxBamUtils
 {
     public static final byte RAW_DUPLEX_QUAL = 93;
     public static final byte RAW_SIMPLEX_QUAL = 18;
+    public static final byte RAW_DUPLEX_MISMATCH_QUAL = 0;
 
     // values assigned by Redux, used in BQR and all downstream tools
     public static final byte SBX_SIMPLEX_QUAL = 27;
@@ -42,6 +43,11 @@ public class SbxBamUtils
     {
         Integer baseIndex = record.getIntegerAttribute(SBX_DUPLEX_READ_INDEX_TAG);
         return baseIndex != null ? baseIndex : -1;
+    }
+
+    public static boolean inDuplexRegion(final SAMRecord record, int baseIndex)
+    {
+        return inDuplexRegion(!record.getReadNegativeStrandFlag(), extractDuplexBaseIndex(record), baseIndex);
     }
 
     public static boolean inDuplexRegion(final boolean posOrientationRead, int duplexBaseIndex, int baseIndex)
@@ -82,6 +88,7 @@ public class SbxBamUtils
 
             switch(code)
             {
+                // indel related (ie not SNV)
                 case 'I':
                 case 'L':
                 case 'P':
@@ -107,16 +114,6 @@ public class SbxBamUtils
         return duplexIndels;
     }
 
-    public static void reverseDuplexIndelIndices(final List<Integer> duplexIndelIndices, final int readLength)
-    {
-        int maxIndex = readLength - 1;
-
-        for(int i = 0; i < duplexIndelIndices.size(); ++i)
-        {
-            duplexIndelIndices.set(i, maxIndex - duplexIndelIndices.get(i));
-        }
-    }
-
     @Nullable
     private static String parseInt(final String s, int start)
     {
@@ -136,5 +133,48 @@ public class SbxBamUtils
         }
 
         return intString.toString();
+    }
+
+    public static Boolean isHomopolymerLowBaseQualAtStart(final SAMRecord record)
+    {
+        byte previousBase = record.getReadBases()[0];
+        byte previousQual = record.getBaseQualities()[0];
+        byte hpStartQual = 0;
+        boolean inHomopolymer = false;
+
+        for(int i = 1; i < record.getReadBases().length; ++i)
+        {
+            byte base = record.getReadBases()[i];
+            byte qual = record.getBaseQualities()[i];
+
+            if(inHomopolymer)
+            {
+                if(base != previousBase)
+                {
+                    inHomopolymer = false;
+
+                    if(hpStartQual != previousQual)
+                    {
+                        if(hpStartQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                            return Boolean.TRUE;
+                        else if(previousQual <= SBX_DUPLEX_MISMATCH_QUAL)
+                            return Boolean.FALSE;
+                    }
+                }
+            }
+            else
+            {
+                if(base == previousBase)
+                {
+                    inHomopolymer = true;
+                    hpStartQual = previousQual;
+                }
+            }
+
+            previousQual = qual;
+            previousBase = base;
+        }
+
+        return null;
     }
 }

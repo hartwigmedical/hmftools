@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V37;
+import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V38;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
@@ -62,7 +64,16 @@ public class ReferenceData
         Annotators.add(Gnomad);
 
         StandardPon = new PonAnnotation(!hasPonAnnotation ? configBuilder.getValue(PON_FILE) : null, true);
-        StandardPon.loadFilters(configBuilder.getValue(PON_FILTERS));
+
+        if(configBuilder.hasValue(PON_FILTERS))
+        {
+            StandardPon.loadFilters(configBuilder.getValue(PON_FILTERS));
+        }
+        else
+        {
+            StandardPon.loadFilters(config.RefGenVersion.is37() ? PON_FILTERS_V37 : PON_FILTERS_V38);
+        }
+
         Annotators.add(StandardPon);
 
         ArtefactsPon = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE), false);

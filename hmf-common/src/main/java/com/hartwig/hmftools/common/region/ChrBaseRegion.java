@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrBaseRegionProvider
@@ -110,7 +108,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     {
         mStart = pos;
     }
-
     public void setEnd(int pos)
     {
         mEnd = pos;
@@ -120,7 +117,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     {
         return length() + 1;
     }
-
     public int length()
     {
         return mEnd - mStart;
@@ -130,12 +126,10 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     {
         return (!requireHuman || HumanChromosome.contains(Chromosome)) && hasValidPositions();
     }
-
     public boolean isValid()
     {
         return isValid(true);
     }
-
     public boolean hasValidPositions()
     {
         return mStart > 0 & mEnd >= mStart;
@@ -159,20 +153,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     public <T extends ChrBaseRegionProvider> List<T> findOverlaps(List<T> regions)
     {
         return regions.stream().filter(t -> this.overlaps(t.chrBaseRegion())).collect(Collectors.toList());
-    }
-
-    public  <T extends ChrBaseRegionProvider> List<Pair<ChrBaseRegion,T>> splitByOverlappingRegions(List<T> overlaps)
-    {
-        ArrayList<Pair<ChrBaseRegion,T>> regions = new ArrayList<>();
-        for(T t : overlaps)
-        {
-            ChrBaseRegion region = t.chrBaseRegion();
-            int start = Math.max(start(), region.start());
-            int end = Math.min(end(), region.end());
-            regions.add(Pair.of(new ChrBaseRegion(chromosome(), start, end), t));
-        }
-
-        return regions;
     }
 
     public boolean overlaps(final String chromosome, final int posStart, final int posEnd)
@@ -241,19 +221,13 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
     public boolean equals(Object obj)
     {
         if(obj == this)
-        {
             return true;
-        }
 
         if(obj == null)
-        {
             return false;
-        }
 
         if(!getClass().equals(obj.getClass()))
-        {
             return false;
-        }
 
         ChrBaseRegion other = (ChrBaseRegion) obj;
         return matches(other);

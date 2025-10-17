@@ -1,0 +1,26 @@
+amberDir	amber
+chordDir	chord
+ciderDir	cider
+cobaltDir	cobalt
+cuppaDir	cuppa
+esveeDir	esvee
+germlineFlagstatDir	bamtools/$_bamtools
+germlineMetricsDir	bamtools/$_bamtools
+isofoxDir	isofox
+lilacDir	lilac
+linxGermlineDir	linx/germline_annotations
+linxSomaticDir	linx/somatic_annotations
+orangeDir	orange
+paveGermlineDir	pave
+paveSomaticDir	pave
+peachDir	peach
+purpleDir	purple
+sageGermlineDir	sage/germline
+sageSomaticDir	sage/somatic
+sigsDir	sigs
+snpGenotypeDir	
+tealDir	teal
+tumorFlagstatDir	bamtools/*_bamtools
+tumorMetricsDir	bamtools/*_bamtools
+virusBreakendDir	virusbreakend
+virusInterpreterDir	virusinterpreter

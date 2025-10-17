@@ -1,28 +1,261 @@
 package com.hartwig.hmftools.common.pipeline;
 
-public final class PipelineToolDirectories
-{
-    public static final String AMBER_DIR = "amber";
-    public static final String CHORD_DIR = "chord";
-    public static final String CIDER_DIR = "cider";
-    public static final String COBALT_DIR = "cobalt";
-    public static final String CUPPA_DIR = "cuppa";
-    public static final String ESVEE_DIR = "esvee";
-    public static final String ISOFOX_DIR = "isofox";
-    public static final String LILAC_DIR = "lilac";
-    public static final String LINX_SOMATIC_DIR = "linx";
-    public static final String LINX_GERMLINE_DIR = "linx_germline";
-    public static final String ORANGE_DIR = "orange";
-    public static final String PAVE_SOMATIC_DIR = "pave_somatic";
-    public static final String PAVE_GERMLINE_DIR = "pave_germline";
-    public static final String PEACH_DIR = "peach";
-    public static final String PURPLE_DIR = "purple";
-    public static final String SAGE_SOMATIC_DIR = "sage_somatic";
-    public static final String SAGE_GERMLINE_DIR = "sage_germline";
-    public static final String SIGS_DIR = "sigs";
-    public static final String TEAL_DIR = "teal";
-    public static final String VIRUS_BREAKEND_DIR = "virusbreakend";
-    public static final String VIRUS_INTERPRETER_DIR = "virusintrprtr";
-    public static final String METRICS_DIR = "bam_metrics";
-    public static final String FLAGSTAT_DIR = "flagstat";
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+public record PipelineToolDirectories(
+        String amberDir,
+        String chordDir,
+        String ciderDir,
+        String cobaltDir,
+        String cuppaDir,
+        String esveeDir,
+        String germlineFlagstatDir,
+        String germlineMetricsDir,
+        String isofoxDir,
+        String lilacDir,
+        String linxGermlineDir,
+        String linxSomaticDir,
+        String orangeDir,
+        String paveGermlineDir,
+        String paveSomaticDir,
+        String peachDir,
+        String purpleDir,
+        String sageGermlineDir,
+        String sageSomaticDir,
+        String sigsDir,
+        String snpGenotypeDir,
+        String tealDir,
+        String tumorFlagstatDir,
+        String tumorMetricsDir,
+        String virusBreakendDir,
+        String virusInterpreterDir
+) {
+    public static final String PIPELINE_FORMAT_CFG = "pipeline_format";
+    public static final String PIPELINE_FORMAT_DESC =
+            "Assumed directory structure for tool directories. Possible values: " + Arrays.stream(PipelineOutputStructure.values())
+                    .map(Enum::name)
+                    .collect(Collectors.joining(", ")) + ". Default: " + PipelineOutputStructure.PIP5_V6_0.name();
+    public static final String PIPELINE_FORMAT_FILE_CFG = "pipeline_format_file";
+    public static final String PIPELINE_FORMAT_FILE_DESC = "File describing expected tool directory structure.";
+
+    public static final PipelineToolDirectories OA_V2_0_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$_bamtools",
+            "bamtools/$_bamtools",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave",
+            "pave",
+            "peach",
+            "purple",
+            "sage/germline",
+            "sage/somatic",
+            "sigs",
+            "",
+            "teal",
+            "bamtools/*_bamtools",
+            "bamtools/*_bamtools",
+            "virusbreakend",
+            "virusinterpreter"
+    );
+
+    public static final PipelineToolDirectories OA_V2_2_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$_bamtools",
+            "bamtools/$_bamtools",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave",
+            "pave",
+            "peach",
+            "purple",
+            "sage/germline",
+            "sage/somatic",
+            "sigs",
+            "",
+            "teal",
+            "bamtools/*_bamtools",
+            "bamtools/*_bamtools",
+            "virusbreakend",
+            "virusinterpreter"
+    );
+
+    public static final PipelineToolDirectories OA_V2_3_FORMAT = OA_V2_2_FORMAT;
+
+    public static final PipelineToolDirectories PIP5_V6_0_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "$/bam_metrics",
+            "$/bam_metrics",
+            "isofox",
+            "lilac",
+            "linx_germline",
+            "linx",
+            "orange",
+            "pave_germline",
+            "pave_somatic",
+            "peach",
+            "purple",
+            "sage_germline",
+            "sage_somatic",
+            "sigs",
+            "$/snp_genotype",
+            "teal",
+            "*/bam_metrics",
+            "*/bam_metrics",
+            "virusbreakend",
+            "virusintrprtr"
+    );
+
+    public static final PipelineToolDirectories DB_V6_0_FORMAT = new PipelineToolDirectories(
+            "amber",
+            "chord",
+            "cider",
+            "cobalt",
+            "cuppa",
+            "esvee",
+            "bamtools/$_bamtools",
+            "bamtools/$_bamtools",
+            "isofox",
+            "lilac",
+            "linx/germline_annotations",
+            "linx/somatic_annotations",
+            "orange",
+            "pave/germline",
+            "pave/somatic",
+            "peach",
+            "purple",
+            "sage/germline",
+            "sage/somatic",
+            "sigs",
+            "snp_genotype/$",
+            "teal",
+            "bamtools/*_bamtools",
+            "bamtools/*_bamtools",
+            "virusbreakend",
+            "virusinterpreter"
+    );
+
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+            final String pipelineFormatFileConfigStr, final String tumorSampleId)
+    {
+        return resolveToolDirectories(configBuilder, pipelineFormatConfigStr, pipelineFormatFileConfigStr, tumorSampleId, null);
+    }
+
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+            final String pipelineFormatFileConfigStr, final String tumorSampleId, final String normalSampleId)
+    {
+        PipelineToolDirectories withWildcardSampleIds =
+                resolveToolDirectories(configBuilder, pipelineFormatConfigStr, pipelineFormatFileConfigStr);
+        return withWildcardSampleIds.resolveSampleIds(tumorSampleId, normalSampleId);
+    }
+
+    public static PipelineToolDirectories resolveToolDirectories(
+            final ConfigBuilder configBuilder, final String pipelineFormatConfigStr,
+            final String pipelineFormatFileConfigStr)
+    {
+        if(configBuilder.hasValue(pipelineFormatFileConfigStr))
+        {
+            return resolveToolDirectoriesFromFile(configBuilder.getValue(pipelineFormatFileConfigStr));
+        }
+        else if(configBuilder.hasValue(pipelineFormatConfigStr))
+        {
+            PipelineOutputStructure outputStructure = PipelineOutputStructure.valueOf(configBuilder.getValue(pipelineFormatConfigStr));
+            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(outputStructure);
+        }
+        else
+        {
+            return PipelineToolDirectories.resolveToolDirectoriesFromDefault(PipelineOutputStructure.OA_V2_2);
+        }
+    }
+
+    public static void addPipelineFormatOptions(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(PIPELINE_FORMAT_CFG, false, PIPELINE_FORMAT_DESC);
+        configBuilder.addPath(PIPELINE_FORMAT_FILE_CFG, false, PIPELINE_FORMAT_FILE_DESC);
+    }
+
+    private static PipelineToolDirectories resolveToolDirectoriesFromDefault(final PipelineOutputStructure outputStructure)
+    {
+        return switch(outputStructure)
+        {
+            case OA_V2_0 -> OA_V2_0_FORMAT;
+            case OA_V2_2 -> OA_V2_2_FORMAT;
+            case OA_V2_3 -> OA_V2_3_FORMAT;
+            case PIP5_V6_0 -> PIP5_V6_0_FORMAT;
+            case DB_V6_0 -> DB_V6_0_FORMAT;
+        };
+    }
+
+    private static PipelineToolDirectories resolveToolDirectoriesFromFile(final String filePath)
+    {
+        try
+        {
+            return PipelineToolDirectoriesFile.read(filePath);
+        }
+        catch(IOException e)
+        {
+            throw new IllegalArgumentException("Could not load tool subdirectory config file: " + filePath, e);
+        }
+    }
+
+    private PipelineToolDirectories resolveSampleIds(final String tumorSampleId, final String normalSampleId)
+    {
+        return new PipelineToolDirectories(
+                convertWildcardSamplePath(amberDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(chordDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(ciderDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(cobaltDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(cuppaDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(esveeDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(germlineFlagstatDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(germlineMetricsDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(isofoxDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(lilacDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(linxGermlineDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(linxSomaticDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(orangeDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(paveGermlineDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(paveSomaticDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(peachDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(purpleDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(sageGermlineDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(sageSomaticDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(sigsDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(snpGenotypeDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(tealDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(tumorFlagstatDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(tumorMetricsDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(virusBreakendDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(virusInterpreterDir, tumorSampleId, normalSampleId)
+        );
+    }
 }

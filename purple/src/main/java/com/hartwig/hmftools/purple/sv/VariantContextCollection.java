@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -32,37 +31,21 @@ public class VariantContextCollection
         mVariants = Lists.newArrayList();
     }
 
-    public void add(final VariantContext variantContext)
+    public void clear()
+    {
+        if(mVariantContexts != null)
+            mVariantContexts.clear();
+
+        mVariants.clear();
+    }
+
+    public void addVariant(final VariantContext variantContext)
     {
         if(mVariantContexts == null)
             return;
 
         mModified = true;
-        if(variantContext.contains(variantContext))
-        {
-            mVariantContexts.remove(variantContext);
-            mVariantContexts.add(variantContext);
-        }
-    }
-
-    public int remove(final Predicate<VariantContext> removePredicate)
-    {
-        if(mVariantContexts == null)
-            return 0;
-
-        int removed = 0;
-        final Iterator<VariantContext> iterator = mVariantContexts.iterator();
-        while(iterator.hasNext())
-        {
-            final VariantContext variantContext = iterator.next();
-            if(removePredicate.test(variantContext))
-            {
-                iterator.remove();
-                removed++;
-                mModified = true;
-            }
-        }
-        return removed;
+        mVariantContexts.add(variantContext);
     }
 
     public List<StructuralVariant> variants()

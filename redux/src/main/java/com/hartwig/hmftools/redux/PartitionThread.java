@@ -107,7 +107,11 @@ public class PartitionThread extends Thread
             return partitionRegions;
         }
 
-        List<ChrBaseRegion> genomeRegions = getRefGenomeRegions(specificRegions, refGenomeVersion, refGenome);
+        List<ChrBaseRegion> genomeRegions;
+        if(refGenome == null)
+            genomeRegions = formHumanChromosomeRegions(specificRegions, refGenomeVersion); // limit to human chromosomes
+        else
+            genomeRegions = RefGenomeSource.formRefGenomeRegions(specificRegions, refGenome); // take all from ref genome sequences
 
         // divvy up standard chromosomes amongst the reads evenly by base length, but for other contigs just add them to the final thread
 
@@ -167,14 +171,5 @@ public class PartitionThread extends Thread
         }
 
         return partitionRegions.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
-    }
-
-    private static List<ChrBaseRegion> getRefGenomeRegions(
-            final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion, @Nullable final RefGenomeInterface refGenome)
-    {
-        if(refGenome == null)
-            return formHumanChromosomeRegions(specificRegions, refGenomeVersion);
-
-        return RefGenomeSource.formRefGenomeRegions(specificRegions, refGenome);
     }
 }

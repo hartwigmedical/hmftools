@@ -23,8 +23,10 @@ import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.evidence.JitterMatch;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.seqtech.SbxUtils;
 import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
@@ -56,13 +58,23 @@ public class QualityCalculator
     public static int calcEventPenalty(double numEvents, int readLength, double readMapQualEventsPenalty)
     {
         // penalise events as a function of read length
-        return (int)round(max(0, numEvents - 1) / readLength * readMapQualEventsPenalty);
+        double nmProportion = (double) round(max(0, numEvents - 1)) / readLength;
+        return (int) round(nmProportion * readMapQualEventsPenalty);
     }
 
     public QualityScores calculateQualityScores(
             final ReadContextCounter readContextCounter, int readVarIndex, final SAMRecord record, double numberOfEvents)
     {
-        double seqTechBaseQuality = calcSequencingTechBaseQuality(readContextCounter, readVarIndex, record);
+        boolean usesMsiIndelErrorQual = readContextCounter.qualCache().usesMsiIndelErrorQual();
+        boolean hasValidMsiJitterQuals = false;
+
+        if(usesMsiIndelErrorQual)
+        {
+            hasValidMsiJitterQuals = JitterMatch.hasValidBaseQuals(
+                    readContextCounter.readContext(), readContextCounter.matcher().altIndexUpper(), record, readVarIndex);
+        }
+
+        double seqTechBaseQuality = calcSequencingTechBaseQuality(readContextCounter, readVarIndex, record, hasValidMsiJitterQuals);
 
         if(seqTechBaseQuality == INVALID_BASE_QUAL)
             return QualityScores.INVALID_QUAL_SCORES;
@@ -84,6 +96,17 @@ public class QualityCalculator
             if(!readContextCounter.isIndel() && readContextCounter.artefactContext() == null)
             {
                 recalibratedBaseQuality = recalibratedBaseQuality(readContextCounter, readVarIndex, record);
+                int varLength = readContextCounter.variant().ref().length();
+
+                if(isSbx())
+                {
+                    if(readContextCounter.readContext().hasIndelInCore()
+                    && seqTechBaseQuality < minBaseQualAcrossRange(readVarIndex, readVarIndex + varLength - 1, record))
+                    {
+                        // don't boost recalibrated qual of SBX artefacts
+                        recalibratedBaseQuality = min(recalibratedBaseQuality, seqTechBaseQuality);
+                    }
+                }
             }
         }
 
@@ -103,8 +126,11 @@ public class QualityCalculator
 
         double combinedQuality = max(0, min(penalisedMapQuality, penalisedBaseQuality));
 
+        boolean isMediumQual = usesMsiIndelErrorQual ? !hasValidMsiJitterQuals : isMediumBaseQual(seqTechBaseQuality);
+
         return new QualityScores(
-                seqTechBaseQuality, recalibratedBaseQuality, max(0, penalisedMapQuality), max(0.0, penalisedBaseQuality), combinedQuality);
+                seqTechBaseQuality, recalibratedBaseQuality, max(0, penalisedMapQuality), max(0.0, penalisedBaseQuality), combinedQuality,
+                isMediumQual);
     }
 
     private static int calcMapQuality(
@@ -133,7 +159,8 @@ public class QualityCalculator
         return BaseQualAdjustment.isMediumBaseQual((byte)baseQual, SEQUENCING_TYPE);
     }
 
-    private static double calcSequencingTechBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
+    private static double calcSequencingTechBaseQuality(
+            final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record, boolean hasValidMsiJitterQuals)
     {
         if(isUltima())
         {
@@ -145,10 +172,20 @@ public class QualityCalculator
 
         if(readContextCounter.isIndel())
         {
+            double msiIndelErrorQualToUse = readContextCounter.qualCache().msiIndelErrorQual();
+
+            if(readContextCounter.qualCache().usesMsiIndelErrorQual())
+            {
+                if(!hasValidMsiJitterQuals)
+                {
+                    msiIndelErrorQualToUse /= 2;
+                }
+            }
+
             if(readContextCounter.qualCache().usesMsiIndelErrorQual() && artefactAdjustedQual != INVALID_BASE_QUAL)
             {
                 // min the min of the two models
-                return min(artefactAdjustedQual, readContextCounter.qualCache().msiIndelErrorQual());
+                return min(artefactAdjustedQual, msiIndelErrorQualToUse);
             }
 
             double avgCoreQuality = isSbx() ?
@@ -156,7 +193,7 @@ public class QualityCalculator
                     averageCoreQuality(readContextCounter.readContext(), record, readIndex);
 
             if(readContextCounter.qualCache().usesMsiIndelErrorQual())
-                return min(avgCoreQuality, readContextCounter.qualCache().msiIndelErrorQual());
+                return min(avgCoreQuality, msiIndelErrorQualToUse);
             else if(artefactAdjustedQual != INVALID_BASE_QUAL)
                 return min(avgCoreQuality, artefactAdjustedQual);
             else
@@ -166,19 +203,18 @@ public class QualityCalculator
         if(artefactAdjustedQual != INVALID_BASE_QUAL)
             return artefactAdjustedQual;
 
-        if(readContextCounter.isSnv())
-            return record.getBaseQualities()[readIndex];
+        if(isSbx() && readContextCounter.readContext().hasIndelInCore())
+            return SbxUtils.indelCoreQuality(readContextCounter.readContext(), record, readIndex);
 
         int varLength = readContextCounter.variant().ref().length();
+        return minBaseQualAcrossRange(readIndex, readIndex + varLength - 1, record);
+    }
 
-        // take the minimum base qual for MNVs
-        byte minBaseQual = record.getBaseQualities()[readIndex];
-
-        for(int i = readIndex + 1; i < readIndex + varLength; ++i)
-        {
+    public static double minBaseQualAcrossRange(final int startIndex, final int endIndex, final SAMRecord record)
+    {
+        byte minBaseQual = record.getBaseQualities()[startIndex];
+        for(int i = startIndex + 1; i <= endIndex; ++i)
             minBaseQual = minQual(minBaseQual, record.getBaseQualities()[i]);
-        }
-
         return minBaseQual;
     }
 

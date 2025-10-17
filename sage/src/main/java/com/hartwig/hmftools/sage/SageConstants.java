@@ -13,6 +13,8 @@ public class SageConstants
 
     public static final int DEFAULT_READ_LENGTH = 151;
 
+    public static final int NON_ILLUMINA_MAX_READ_LENGTH = 800;
+
     // read context building
     public static final int DEFAULT_FLANK_LENGTH = 10;
     public static final int MIN_CORE_DISTANCE = 2;
@@ -52,6 +54,12 @@ public class SageConstants
     public static final double MSI_JITTER_NOISE_RATE = 0.00025;
     public static final double MSI_JITTER_HARD_FILTER_NOISE_RATE = 0.05;
 
+    public static final double MSI_JITTER_MIN_RATIO = 2;
+    public static final double MSI_JITTER_MIN_RATIO_HOTSPOT = 1.5;
+    public static final double MSI_JITTER_RATIO_HOTSPOT_VAF = 0.025;
+
+    public static final int INDEL_UNCERTAIN_BASE_REPEAT_MIN = 3;
+
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
     public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.002;
@@ -60,6 +68,15 @@ public class SageConstants
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC = 10;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
     public static final double MAX_GERMLINE_REL_RAW_QUAL_RATIO = 0.1;
+
+    public static final double MAX_GERMLINE_VAF_THRESHOLD_MAX = 0.1;
+
+    public static final double MAX_GERMLINE_QUAL_HET_TUMOR_VAF = 0.5;
+    public static final double MAX_GERMLINE_QUAL_PROB_HOTSPOT = 0.01;
+    public static final double MAX_GERMLINE_QUAL_PROB_PANEL = 0.00025;
+    public static final double MAX_GERMLINE_QUAL_PROB_OTHER = 1e-7;
+    public static final double MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT = 0.5;
+    public static final double MAX_GERMLINE_QUAL_RATIO_THRESHOLD = 0.12;
 
     public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
@@ -70,10 +87,6 @@ public class SageConstants
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
-
-    // CHECK: whehther or how to set these
-    public static final int ULTIMA_MIN_AVG_BASE_QUALITY = 20;
-    public static final int ULTIMA_MIN_AVG_BASE_QUALITY_HOTSPOT = 13;
 
     public static final int MAX_MAP_QUALITY = 60;
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
@@ -122,7 +135,7 @@ public class SageConstants
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 / DEFAULT_READ_LENGTH; // since now scaled
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 * DEFAULT_READ_LENGTH; // since now scaled
 
     // filters
     public static final int MAP_QUAL_FACTOR_FIXED_PENALTY = 25;
@@ -137,24 +150,29 @@ public class SageConstants
 
     public static final double TQP_QUAL_LOG_MIN = 1e-20;
 
+    public static final int CORE_AF_MIN = 3;
+    public static final double CORE_AF_FULL_RATIO = 0.25;
+
     // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 
     public static final int VIS_VARIANT_BUFFER = 200;
 
+    public static final double DEFAULT_MAX_GERMLINE_VAF = 0.05;
+
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 1e-2, -6, 0.01,
-            0, 0, 0.1, 0.25);
+            0, 0, DEFAULT_MAX_GERMLINE_VAF, 0.25);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
             "panel", 1e-5, -6, 0.02,
-            0, 0, 0.04, 0.04);
+            0, 0, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 
     public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
             "high_confidence", 1e-8, 0, 0.025,
-            10, 6, 0.04, 0.04);
+            10, 6, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 
     public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
             "low_confidence", 1e-14, 0, 0.025,
-            10, 6, 0.04, 0.04);
+            10, 6, DEFAULT_MAX_GERMLINE_VAF, 0.04);
 }

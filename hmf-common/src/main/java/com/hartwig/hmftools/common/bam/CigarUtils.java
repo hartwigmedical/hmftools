@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.bam;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
@@ -7,6 +9,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.CigarOperator.X;
@@ -368,5 +371,127 @@ public final class CigarUtils
             elems.add(new CigarElement(currentLength, currentOp));
 
         return elems;
+    }
+
+    public static boolean checkLeftAlignment(final List<CigarElement> cigarElements, final byte[] readBases)
+    {
+        // shift any right-aligned inserts back to the left
+        boolean modified = false;
+        boolean convertFirstInsert = false;
+
+        int readIndex = 0;
+
+        for(int i = 0; i < cigarElements.size() - 1; ++i)
+        {
+            CigarElement element = cigarElements.get(i);
+            CigarElement nextElement = cigarElements.get(i + 1);
+            CigarElement prevElement = i > 0 ? cigarElements.get(i - 1) : null;
+
+            boolean checkLeftShift = prevElement != null && element.getOperator() == I
+                    && prevElement.getOperator() == M && nextElement.getOperator() == M;
+
+            if(checkLeftShift)
+            {
+                // cannot shift back through the previous element, but can convert it exactly to a soft-clip - see below
+                if(element.getLength() > prevElement.getLength())
+                    checkLeftShift = false;
+                else if(element.getLength() == prevElement.getLength() && i != 1)
+                    checkLeftShift = false;
+            }
+
+            if(checkLeftShift)
+            {
+                byte[] repeatBases = new byte[element.getLength()];
+                boolean isHomopolymer = true;
+
+                for(int j = 0; j < repeatBases.length; ++j)
+                {
+                    if(readIndex + j >= readBases.length) // invalid read bases if insert cannot extract corresponding bases
+                        return false;
+
+                    repeatBases[j] = readBases[readIndex + j];
+
+                    if(j >= 1 && repeatBases[j] != repeatBases[0])
+                        isHomopolymer = false;
+                }
+
+                if(isHomopolymer && repeatBases.length > 1)
+                {
+                    repeatBases = new byte[] { repeatBases[0] };
+                }
+
+                // search backwards through the previous aligned section
+                int priorIndex = readIndex;
+                int matchedRepeatCount = 0;
+
+                while(true)
+                {
+                    priorIndex -= repeatBases.length;
+
+                    if(priorIndex < 0)
+                        break;
+
+                    boolean matches = true;
+
+                    for(int j = 0; j < repeatBases.length; ++j)
+                    {
+                        if(repeatBases[j] != readBases[priorIndex + j])
+                        {
+                            matches = false;
+                            break;
+                        }
+                    }
+
+                    if(!matches)
+                        break;
+
+                    ++matchedRepeatCount;
+
+                    // cannot search back through the previous element
+                    if((matchedRepeatCount + 1) * repeatBases.length > prevElement.getLength())
+                        break;
+                }
+
+                if(matchedRepeatCount > 0)
+                {
+                    int alignmentShift = matchedRepeatCount * repeatBases.length;
+
+                    if(alignmentShift == prevElement.getLength())
+                    {
+                        if(i == 1)
+                        {
+                            // the first element will be removed and the insert converted to a soft-clip
+                            convertFirstInsert = true;
+                        }
+                        else
+                        {
+                            alignmentShift = (matchedRepeatCount - 1) * repeatBases.length;
+                        }
+                    }
+
+                    prevElement = new CigarElement(max(prevElement.getLength() - alignmentShift, 1), prevElement.getOperator());
+                    cigarElements.set(i - 1, prevElement);
+
+                    nextElement = new CigarElement(nextElement.getLength() + alignmentShift, nextElement.getOperator());
+                    cigarElements.set(i + 1, nextElement);
+
+                    readIndex -= alignmentShift; // to move back to start of next aligned section
+
+                    modified = true;
+                }
+            }
+
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
+        }
+
+        if(convertFirstInsert)
+        {
+            cigarElements.remove(0);
+            CigarElement firstElement = cigarElements.get(0);
+            cigarElements.set(0, new CigarElement(firstElement.getLength(), S));
+        }
+
+        return modified;
     }
 }

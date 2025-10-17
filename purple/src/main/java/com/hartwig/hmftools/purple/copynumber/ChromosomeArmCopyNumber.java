@@ -10,12 +10,9 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
 
-public record ChromosomeArmCopyNumber(HumanChromosome chromosome,
-                                      ChromosomeArm arm,
-                                      double meanCopyNumber,
-                                      double medianCopyNumber,
-                                      double minCopyNumber,
-                                      double maxCopyNumber)
+public record ChromosomeArmCopyNumber(
+        HumanChromosome chromosome,ChromosomeArm arm, double meanCopyNumber, double medianCopyNumber,
+        double minCopyNumber, double maxCopyNumber)
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 

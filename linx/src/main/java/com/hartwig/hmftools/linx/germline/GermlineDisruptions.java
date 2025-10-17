@@ -372,7 +372,7 @@ public class GermlineDisruptions
 
         for(Map.Entry<SvVarData,List<SvDisruptionData>> entry : svDisruptionsMap.entrySet())
         {
-            final SvVarData var = entry.getKey();
+            SvVarData var = entry.getKey();
 
             StructuralVariantData svData = var.getSvData();
             SvCluster cluster = var.getCluster();
@@ -530,7 +530,9 @@ public class GermlineDisruptions
         if(var.getSvData().ponCount() > MAX_PON_COUNT)
             return false;
 
-        if(disruptionData.CodingType == UTR_3P)
+        boolean isDelOrDup = var.type() == DEL || var.type() == DUP;
+
+        if(disruptionData.CodingType == UTR_3P && !isDelOrDup)
             return false;
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
@@ -564,6 +566,6 @@ public class GermlineDisruptions
             return true;
 
         // a clustered DEL or DUP is also reportable
-        return var.type() == DEL || var.type() == DUP;
+        return isDelOrDup;
     }
 }

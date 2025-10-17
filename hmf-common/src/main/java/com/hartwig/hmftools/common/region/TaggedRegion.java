@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.region;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,14 @@ import org.apache.logging.log4j.Logger;
 
 public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 {
+    public final String mTag;
+
+    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
+    {
+        super(chromosome, posStart, posEnd);
+        this.mTag = mTag;
+    }
+
     private static final Logger LOGGER = LogManager.getLogger(TaggedRegion.class);
 
     public static Map<Chromosome, List<TaggedRegion>> loadRegionsFromBedFile(final String bedFile)
@@ -40,17 +50,9 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
         }
     }
 
-    public final String mTag;
-
-    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
-    {
-        super(chromosome, posStart, posEnd);
-        this.mTag = mTag;
-    }
-
     public String formatted()
     {
-        return String.format("%s:%d-%d", mTag, start(), end());
+        return !mTag.isEmpty() ? format("%s:%d-%d", mTag, start(), end()) : format("%d-%d", start(), end());
     }
 
     @Override

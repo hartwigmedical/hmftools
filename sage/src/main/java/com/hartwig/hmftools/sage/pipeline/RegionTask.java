@@ -113,7 +113,7 @@ public class RegionTask
 
         if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.Common.PerfWarnTime)
         {
-            SG_LOGGER.warn("region({}) candidate({}) reads({}) processing time({})",
+            SG_LOGGER.warn("region({}) initial candidate({}) reads({}) processing time({})",
                     mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
                     String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
         }

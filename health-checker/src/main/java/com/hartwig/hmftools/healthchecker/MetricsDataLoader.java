@@ -19,34 +19,34 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 
 public class MetricsDataLoader
 {
     public static List<QCValue> loadMetricValues(final String sampleId, final String metricsDir, boolean isTumor)
     {
-        String summaryFilename = BamMetricsSummary.generateFilename(metricsDir, sampleId);
+        String summaryFilename = BamMetricSummary.generateFilename(metricsDir, sampleId);
         String flagStatsFilename = BamFlagStats.generateFilename(metricsDir, sampleId);
 
         try
         {
-            BamMetricsSummary bamMetricsSummary = BamMetricsSummary.read(summaryFilename);
+            BamMetricSummary bamMetricSummary = BamMetricSummary.read(summaryFilename);
             BamFlagStats bamFlagStats = BamFlagStats.read(flagStatsFilename);
 
             List<QCValue> qcValues = Lists.newArrayList();
 
             if(isTumor)
             {
-                addCoverageLevel(bamMetricsSummary, TUMOR_COVERAGE_LEVEL_30x, qcValues, TUM_COVERAGE_30X);
-                addCoverageLevel(bamMetricsSummary, TUMOR_COVERAGE_LEVEL_60x, qcValues, TUM_COVERAGE_60X);
+                addCoverageLevel(bamMetricSummary, TUMOR_COVERAGE_LEVEL_30x, qcValues, TUM_COVERAGE_30X);
+                addCoverageLevel(bamMetricSummary, TUMOR_COVERAGE_LEVEL_60x, qcValues, TUM_COVERAGE_60X);
 
                 qcValues.add(new QCValue(TUM_PROPORTION_MAPPED, String.valueOf(bamFlagStats.mappedProportion())));
                 qcValues.add(new QCValue(TUM_PROPORTION_DUPLICATE, String.valueOf(bamFlagStats.duplicateProportion())));
             }
             else
             {
-                addCoverageLevel(bamMetricsSummary, REF_COVERAGE_LEVEL_10x, qcValues, REF_COVERAGE_10X);
-                addCoverageLevel(bamMetricsSummary, REF_COVERAGE_LEVEL_20x, qcValues, REF_COVERAGE_20X);
+                addCoverageLevel(bamMetricSummary, REF_COVERAGE_LEVEL_10x, qcValues, REF_COVERAGE_10X);
+                addCoverageLevel(bamMetricSummary, REF_COVERAGE_LEVEL_20x, qcValues, REF_COVERAGE_20X);
 
                 qcValues.add(new QCValue(REF_PROPORTION_MAPPED, String.valueOf(bamFlagStats.mappedProportion())));
                 qcValues.add(new QCValue(REF_PROPORTION_DUPLICATE, String.valueOf(bamFlagStats.duplicateProportion())));
@@ -62,9 +62,9 @@ public class MetricsDataLoader
     }
 
     private static void addCoverageLevel(
-            final BamMetricsSummary bamMetricsSummary, int coverageLevel, final List<QCValue> qcValues, final QCValueType qcType)
+            final BamMetricSummary bamMetricSummary, int coverageLevel, final List<QCValue> qcValues, final QCValueType qcType)
     {
-        Double coveragePercent = bamMetricsSummary.getCoveragePercent(coverageLevel);
+        Double coveragePercent = bamMetricSummary.getCoveragePercent(coverageLevel);
 
         if(coveragePercent != null)
             qcValues.add(new QCValue(qcType, String.valueOf(coveragePercent)));

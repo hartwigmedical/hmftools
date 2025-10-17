@@ -2,11 +2,13 @@ package com.hartwig.hmftools.redux.jitter;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
-import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.LOW_BASE_QUAL_FLANKING_BASES;
-import static com.hartwig.hmftools.redux.jitter.JitterAnalyserConstants.MIN_FLANKING_BASE_MATCHES;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.LOW_BASE_QUAL_FLANKING_BASES;
+import static com.hartwig.hmftools.redux.jitter.JitterConstants.MIN_FLANKING_BASE_MATCHES;
+import static com.hartwig.hmftools.redux.jitter.MsJitterConfig.JITTER_APPLY_BQ_FILTER;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -15,6 +17,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -36,7 +39,7 @@ public class MicrosatelliteRead
 
     private int mAlignedBases;
     private int mInsertedBases;
-    private int mDeletedBases;
+    private boolean mHasMediumQuals;
 
     private int mRepeatUnits;
     private int mRepeatLength;
@@ -48,10 +51,10 @@ public class MicrosatelliteRead
     }
 
     public static MicrosatelliteRead from(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record, final ConsensusMarker consensusMarker)
+            final MicrosatelliteSite microsatelliteSite, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         MicrosatelliteRead instance = THREAD_INSTANCE.get();
-        instance.analyse(refGenomeMicrosatellite, record, consensusMarker);
+        instance.analyse(microsatelliteSite, record, consensusMarker);
         return instance;
     }
 
@@ -64,11 +67,14 @@ public class MicrosatelliteRead
         return mRepeatUnits;
     }
     public int jitter() { return mJitterLength; }
+    public boolean hasMediumQualBases() { return mHasMediumQuals; }
 
     @VisibleForTesting
-    public void analyse(final RefGenomeMicrosatellite microsatelliteRepeat, final SAMRecord record, final ConsensusMarker consensusMarker)
+    public void analyse(final MicrosatelliteSite microsatelliteRepeat, final SAMRecord record, final ConsensusMarker consensusMarker)
     {
         clear();
+
+        mConsensusType = consensusMarker.consensusType(microsatelliteRepeat, record);
 
         // this read needs to wholly contain the repeat to be counted
         int msPosStart = microsatelliteRepeat.referenceStart();
@@ -102,11 +108,7 @@ public class MicrosatelliteRead
 
             if(element.getOperator() == D)
             {
-                if(refPosition >= msPosStart && endRefPos <= msPosEnd)
-                {
-                    mDeletedBases += element.getLength();
-                }
-                else if((refPosition < msPosStart && endRefPos >= msPosStart - 1) || (refPosition <= msPosEnd + 1 && endRefPos > msPosEnd))
+                if((refPosition < msPosStart && endRefPos >= msPosStart - 1) || (refPosition <= msPosEnd + 1 && endRefPos > msPosEnd))
                 {
                     // drop the read if the delete covers the start or the end of the repeat or is just before its start
                     return;
@@ -172,12 +174,10 @@ public class MicrosatelliteRead
 
         int msReadIndexEnd = msReadIndexStart + msPosEnd - msPosStart;
 
-        if(!hasValidBaseQualities(record, msReadIndexStart, msReadIndexEnd))
+        if(JITTER_APPLY_BQ_FILTER && !hasValidBaseQualities(record, msReadIndexStart, msReadIndexEnd))
             return;
 
         mIsValidRead = true;
-
-        mConsensusType = consensusMarker.consensusType(microsatelliteRepeat, record);
 
         mRepeatLength = mAlignedBases + mInsertedBases;
         mRepeatUnits = mRepeatLength / microsatelliteRepeat.Unit.length;
@@ -191,7 +191,7 @@ public class MicrosatelliteRead
 
         mAlignedBases = 0;
         mInsertedBases = 0;
-        mDeletedBases = 0;
+        mHasMediumQuals = false;
         mRepeatUnits = 0;
         mRepeatLength = 0;
         mJitterLength = 0;
@@ -210,10 +210,16 @@ public class MicrosatelliteRead
             if(BaseQualAdjustment.isUncertainBaseQual(record.getBaseQualities()[i]))
                 return false;
 
-            if(BaseQualAdjustment.isMediumBaseQual(record.getBaseQualities()[i], SEQUENCING_TYPE))
-                return false;
+            mHasMediumQuals |= SbxBamUtils.isMediumBaseQual(record.getBaseQualities()[i]);
         }
 
         return true;
+    }
+
+    public String toString()
+    {
+        return format("ct(%s) %s aligned(%d ins=%d) repeat(unit=%d len=%d jit=%d)",
+                mConsensusType, mIsValidRead ? "valid" : "invalid", mAlignedBases, mInsertedBases,
+                mRepeatUnits, mRepeatLength, mJitterLength);
     }
 }

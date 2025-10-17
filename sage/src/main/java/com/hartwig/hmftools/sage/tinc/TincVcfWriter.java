@@ -1,20 +1,15 @@
 package com.hartwig.hmftools.sage.tinc;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.writeTincLevel;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_AVG_READS;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_MAX;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.filtersMatch;
 import static com.hartwig.hmftools.sage.tinc.TincAnalyser.filterOutVariant;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +24,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 

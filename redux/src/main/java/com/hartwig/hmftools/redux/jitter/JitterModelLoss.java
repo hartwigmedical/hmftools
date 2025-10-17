@@ -10,9 +10,9 @@ public class JitterModelLoss
 
     public JitterModelLoss(JitterTableRow statsTableRow, double numRepeats, double lengthMinusOneScale)
     {
-        this.mStatsTableRow = statsTableRow;
-        this.mNumRepeats = numRepeats;
-        this.mLengthMinusOneScale = lengthMinusOneScale;
+        mStatsTableRow = statsTableRow;
+        mNumRepeats = numRepeats;
+        mLengthMinusOneScale = lengthMinusOneScale;
     }
 
     // total loss is the sum of loss from jitter values from -5 to 5

@@ -12,18 +12,21 @@ public class QualityScores
 
     public final double CombinedQuality;
 
+    public final boolean IsMediumQual;
+
     public static final QualityScores INVALID_QUAL_SCORES = new QualityScores(
-            INVALID_BASE_QUAL, INVALID_BASE_QUAL, 0, INVALID_BASE_QUAL, 0);
+            INVALID_BASE_QUAL, INVALID_BASE_QUAL, 0, INVALID_BASE_QUAL, 0, false);
 
     public QualityScores(
             double seqTechBaseQuality, double recalibratedBaseQuality, int finalMapQuality,
-            double finalBaseQuality, double combinedQuality)
+            double finalBaseQuality, double combinedQuality, boolean isMediumQual)
     {
         SeqTechBaseQuality = seqTechBaseQuality;
         RecalibratedBaseQuality = recalibratedBaseQuality;
         FinalMapQuality = finalMapQuality;
         FinalBaseQuality = finalBaseQuality;
         CombinedQuality = combinedQuality;
+        IsMediumQual = isMediumQual;
     }
 
     public boolean valid() { return SeqTechBaseQuality != INVALID_BASE_QUAL; }

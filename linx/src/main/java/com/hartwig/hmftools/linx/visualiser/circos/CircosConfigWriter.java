@@ -49,7 +49,8 @@ public class CircosConfigWriter
     private final double labelSize;
     private final double labelPosition;
 
-    public CircosConfigWriter(final String filename, final String outputDir, final CircosData data, final CircosConfig config)
+    public CircosConfigWriter(final String filename, final String outputDir, final CircosData data, final CircosConfig config,
+            final boolean amberDirProvided, final boolean cobaltDirProvided)
     {
         this.sample = filename;
         this.circosData = data;
@@ -67,9 +68,9 @@ public class CircosConfigWriter
         double totalRelativeSize = geneRelativeSize + segmentRelativeSize + copyNumberRelativeSize;
 
         int numberOfGaps = 3;
-        if(displayGenes)                 numberOfGaps += 2;
-        if(!data.AmberBAFs.isEmpty())    numberOfGaps += 1;
-        if(!data.CobaltRatios.isEmpty()) numberOfGaps += 1;
+        if(displayGenes)      numberOfGaps += 2;
+        if(amberDirProvided)  numberOfGaps += 1;
+        if(cobaltDirProvided) numberOfGaps += 1;
 
         double totalSpaceAvailable = 1 - numberOfGaps * gapSize - config.InnerRadius;
         double purpleSpaceAvailable = copyNumberRelativeSize / totalRelativeSize * totalSpaceAvailable;
@@ -77,9 +78,10 @@ public class CircosConfigWriter
         int cnaLossRelativeSize = 2; // Diploid genome can only lose maximally 2 copies
         int mapGainRelativeSize = Math.max(1, (int) Math.round(Math.ceil(data.MinorAlleleCopyNumberMax - 1)));
         int mapLossRelativeSize = 1; // Diploid genome can only lose maximally 1 minor allele
-        int amberRelativeSize = !data.AmberBAFs.isEmpty() ? 2 : 0;
-        int cobaltRelativeSize = !data.CobaltRatios.isEmpty() ? 2 : 0;
-        int purpleRelativeSize = cnaGainRelativeSize + cnaLossRelativeSize + mapGainRelativeSize + mapLossRelativeSize + amberRelativeSize + cobaltRelativeSize;
+        int amberRelativeSize = amberDirProvided ? 2 : 0;
+        int cobaltRelativeSize = cobaltDirProvided ? 2 : 0;
+        int purpleRelativeSize = cnaGainRelativeSize + cnaLossRelativeSize + mapGainRelativeSize + mapLossRelativeSize + amberRelativeSize
+                + cobaltRelativeSize;
         double purpleTrackSize = purpleSpaceAvailable / purpleRelativeSize;
 
         // Radius positions for each track are calculated starting from the outermost track
@@ -100,16 +102,16 @@ public class CircosConfigWriter
             geneInnerRadius = exonInnerRadius + geneTrackSizeTrim;
         }
 
-        if(!data.CobaltRatios.isEmpty())
+        if(cobaltDirProvided)
         {
             cobaltOuterRadius = currentTrackOuterRadius - gapSize;
             cobaltInnerRadius = cobaltOuterRadius - cobaltRelativeSize * purpleTrackSize;
             currentTrackOuterRadius = cobaltInnerRadius;
         }
 
-        if(!data.AmberBAFs.isEmpty())
+        if(amberDirProvided)
         {
-            amberOuterRadius = cobaltInnerRadius - gapSize;
+            amberOuterRadius = currentTrackOuterRadius - gapSize;
             amberInnerRadius = amberOuterRadius - amberRelativeSize * purpleTrackSize;
             currentTrackOuterRadius = amberInnerRadius;
         }
@@ -130,7 +132,7 @@ public class CircosConfigWriter
 
         innermostRadius = currentTrackOuterRadius;
 
-        labelPosition = copyNumberMiddleRadius + purpleTrackSize*0.05; // Add slight offset so that the label isn't flush with the axis
+        labelPosition = copyNumberMiddleRadius + purpleTrackSize * 0.05; // Add slight offset so that the label isn't flush with the axis
     }
 
     public double svTrackRelative(int track)

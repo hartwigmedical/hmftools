@@ -7,11 +7,8 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LILAC_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_SOMATIC_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_SOMATIC_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_CFG;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PIPELINE_FORMAT_FILE_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -35,6 +32,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.OrangeWGSRefConfig.REFERENCE_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
@@ -49,9 +47,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.redux.BqrFile;
-import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
@@ -123,6 +121,7 @@ public interface OrangeConfig
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
+        PipelineToolDirectories.addPipelineFormatOptions(configBuilder);
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
@@ -261,12 +260,13 @@ public interface OrangeConfig
         PathResolver pathResolver = new PathResolver(configBuilder,
                 configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
                 configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
+        PipelineToolDirectories defaultToolDirectories = resolveDefaultPipelineDirectories(configBuilder);
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
-                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver))
+                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .samplingDate(samplingDate)
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
@@ -279,31 +279,31 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, PURPLE_DIR))
-                .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
-                .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, LINX_SOMATIC_DIR))
-                .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR)))
+                .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))
+                .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))
+                .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir()))
+                .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir())))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 
-        String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
+        String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
         builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
 
-        String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
+        String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         if(lilacDir != null)
         {
             builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
             builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
         }
 
-        String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, METRICS_DIR);
-        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricsSummary.generateFilename(metricsDir, tumorSampleId)));
+        String metricsDir = pathResolver.resolveMandatoryToolDirectory(TUMOR_METRICS_DIR_CFG, defaultToolDirectories.tumorMetricsDir());
+        builder.tumorSampleWGSMetricsFile(mandatoryPath(BamMetricSummary.generateFilename(metricsDir, tumorSampleId)));
         builder.tumorSampleFlagstatFile(mandatoryPath(BamFlagStats.generateFilename(metricsDir, tumorSampleId)));
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            builder.wgsRefConfig(OrangeWGSRefConfig.createConfig(configBuilder, pathResolver));
+            builder.wgsRefConfig(OrangeWGSRefConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories));
         }
 
         return builder.build();
@@ -357,5 +357,23 @@ public interface OrangeConfig
             throw new IllegalArgumentException("Could not parse output directory from configuration");
         }
         return mandatoryPath(dir);
+    }
+
+    @NotNull
+    private static PipelineToolDirectories resolveDefaultPipelineDirectories(final @NotNull ConfigBuilder configBuilder)
+    {
+        String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
+
+        if(configBuilder.hasValue(REFERENCE_SAMPLE_ID))
+        {
+            String referenceSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
+            return PipelineToolDirectories.resolveToolDirectories(
+                    configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG, tumorSampleId, referenceSampleId);
+        }
+        else
+        {
+            return PipelineToolDirectories.resolveToolDirectories(
+                    configBuilder, PIPELINE_FORMAT_CFG, PIPELINE_FORMAT_FILE_CFG, tumorSampleId);
+        }
     }
 }

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,11 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamMetrics
 {
@@ -122,6 +128,22 @@ public class BamMetrics
         }
 
         BT_LOGGER.info("all regions complete");
+
+        if(!mConfig.SpecificChrRegions.hasFilters())
+        {
+            // pass fully unmapped reads to flat stats
+            SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                    .open(new File(mConfig.BamFile));
+
+            SAMRecordIterator iterator = samReader.queryUnmapped();
+
+            while(iterator.hasNext())
+            {
+                SAMRecord record = iterator.next();
+                boolean passesQC = record.getReadFailsVendorQualityCheckFlag();
+                combinedStats.flagStats().increment(FlagStatType.TOTAL, passesQC);
+            }
+        }
 
         metricsWriter.close();
 

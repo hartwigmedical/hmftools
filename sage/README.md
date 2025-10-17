@@ -505,9 +505,9 @@ Filter  | Hotspot             | Panel               | High Confidence     | Low 
 min_tumor_qual<sup>1</sup>| 20<sup>2</sup>      | 50                  | 80                  | 140                 |Phred score of `TQP`, i.e. `QUAL`
 min_mqf<sup>7</sup>| -6                  | -6                  | 0                   | 0                   |`MQF`
 min_tumor_vaf<sup>5</sup>| 1.0%                | 2.0%                | 2.5%                | 2.5%                |`AF`
-min_germline_depth| 0                   | 0                   | 10                  | 10                  | Normal `RC_CNT[6]`
-min_germline_depth_allosome| 0                   | 0                   | 6                   | 6                   | Normal `RC_CNT[6]`
-max_germline_vaf<sup>3</sup>| 10%                 | 4%                  | 4%                  | 4%                  | Normal`RC_CNT[0+1+2+3+4]` / `RC_CNT[6]`
+min_germline_depth| 0                   | 0                   | 10                  | 10                  | Normal `RC_CNT[5]`
+min_germline_depth_allosome| 0                   | 0                   | 6                   | 6                   | Normal `RC_CNT[5]`
+max_germline_vaf<sup>3</sup>| 10%                 | 4%                  | 4%                  | 4%                  | Normal`RC_CNT[0+1+2+3]` / `RC_CNT[5]`
 max_germline_rel_raw_base_qual| 25%                 | 4%                  | 4%                  | 4%                  | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 max_map_qual_ref_alt_difference| 15                  | 15                  | 15                  | 15                  | Derived from `AMQ`
 maxEdgeDistance<sup>6</sup> | 0.001               | 0.001               | 0.001               | 0.001               | Derived from `MED` and `AD`
@@ -620,8 +620,8 @@ The outputs below are found in the VCF::
  `RC_QUAL[0,1,2,3,4,5]` | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`,`REFERENCE`, `TOTAL`\]             
  `RC_JIT[0,1]`          | Read Context Jitter \[`SHORTENED`, `LENGTHENED`\]    
  `RC_IPC`               | Read Context improper pair count
- `AD[0,1]`                | Allelic Depth  (=\[RC_CNT\[5\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] + RC_CNT\[4\]\] ) 
- `DP`                     | Read Depth (=RC_CNT\[6\])                                                                               
+ `AD[0,1]`                | Allelic Depth  (=\[RC_CNT\[4\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\] ) 
+ `DP`                     | Read Depth (=RC_CNT\[5\])                                                                               
  `TQP`                  | p-score associated with variant given `DP`, `AD` and base quality
  `MQF`                  | Mapping quality factor
  `AF`                     | Allelic Frequency (=AD\[1\] / DP)                                                                       

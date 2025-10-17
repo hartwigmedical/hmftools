@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -72,7 +72,7 @@ public class TumorBamMetricsComparer implements ItemComparer
         final List<ComparableItem> comparableItems = Lists.newArrayList();
         try
         {
-            BamMetricsSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
+            BamMetricSummary metrics = loadBamMetricsSummary(sampleId, fileSources.TumorBamMetrics);
             comparableItems.add(new TumorBamMetricsData(metrics));
         }
         catch(IOException e)

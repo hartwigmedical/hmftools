@@ -1,14 +1,8 @@
 package com.hartwig.hmftools.redux.jitter;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
-import static com.hartwig.hmftools.common.bam.ConsensusType.NONE;
 import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.BIOMODAL;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 
@@ -19,54 +13,48 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public abstract class ConsensusMarker
 {
-    public abstract ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record);
+    public abstract ConsensusType consensusType(final MicrosatelliteSite microsatelliteSite, final SAMRecord record);
 
     public static ConsensusMarker create()
     {
         if(SEQUENCING_TYPE == SBX)
             return new SBXConsensusMarker();
 
-        if(SEQUENCING_TYPE == BIOMODAL)
-            return new BiomodalConsensusMarker();
-
         return new StandardConsensusMarker();
     }
 
     private static final int INVALID_INDEX = -1;
 
-    private static Pair<Integer, Integer> getMicrosatelliteBoundaries(
-            final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+    private static Pair<Integer, Integer> getMicrosatelliteBoundaries(final MicrosatelliteSite microsatelliteSite, final SAMRecord record)
     {
         List<CigarElement> cigarElements = record.getCigar().getCigarElements();
-        int cigarIdx = 0;
-        int readIdx = 0;
+        int cigarIndex = 0;
+        int readIndex = 0;
         if(cigarElements.get(0).getOperator() == S)
         {
-            cigarIdx++;
-            readIdx += cigarElements.get(0).getLength();
+            cigarIndex++;
+            readIndex += cigarElements.get(0).getLength();
         }
         else if(cigarElements.get(0).getOperator() == H)
         {
-            cigarIdx++;
+            cigarIndex++;
         }
 
-        int refPos = record.getAlignmentStart();
-        int startReadIdx = INVALID_INDEX;
-        int endReadIdx = INVALID_INDEX;
-        for(; cigarIdx < cigarElements.size(); cigarIdx++)
+        int refPosition = record.getAlignmentStart();
+        int startReadIndex = INVALID_INDEX;
+        int endReadIndex = INVALID_INDEX;
+
+        for(; cigarIndex < cigarElements.size(); cigarIndex++)
         {
-            CigarElement el = cigarElements.get(cigarIdx);
+            CigarElement el = cigarElements.get(cigarIndex);
             if(el.getOperator().isClipping())
                 continue;
 
@@ -75,44 +63,44 @@ public abstract class ConsensusMarker
 
             if(isRead && isRef)
             {
-                int endRefPos = refPos + el.getLength() - 1;
-                if(startReadIdx == INVALID_INDEX && endRefPos >= refGenomeMicrosatellite.referenceStart())
+                int endRefPos = refPosition + el.getLength() - 1;
+                if(startReadIndex == INVALID_INDEX && endRefPos >= microsatelliteSite.referenceStart())
                 {
-                    if(refPos >= refGenomeMicrosatellite.referenceStart())
+                    if(refPosition >= microsatelliteSite.referenceStart())
                     {
-                        startReadIdx = readIdx;
+                        startReadIndex = readIndex;
                     }
                     else
                     {
-                        startReadIdx = readIdx + refGenomeMicrosatellite.referenceStart() - refPos;
+                        startReadIndex = readIndex + microsatelliteSite.referenceStart() - refPosition;
                     }
                 }
 
-                if(endRefPos <= refGenomeMicrosatellite.referenceEnd())
+                if(endRefPos <= microsatelliteSite.referenceEnd())
                 {
-                    endReadIdx = readIdx + el.getLength() - 1;
+                    endReadIndex = readIndex + el.getLength() - 1;
                 }
-                else if(refPos <= refGenomeMicrosatellite.referenceEnd())
+                else if(refPosition <= microsatelliteSite.referenceEnd())
                 {
-                    endReadIdx = readIdx + refGenomeMicrosatellite.referenceEnd() - refPos;
+                    endReadIndex = readIndex + microsatelliteSite.referenceEnd() - refPosition;
                 }
 
-                readIdx += el.getLength();
-                refPos += el.getLength();
+                readIndex += el.getLength();
+                refPosition += el.getLength();
             }
             else if(isRead)
             {
-                if(startReadIdx == INVALID_INDEX && refPos - 1 >= refGenomeMicrosatellite.referenceStart())
-                    startReadIdx = readIdx;
+                if(startReadIndex == INVALID_INDEX && refPosition - 1 >= microsatelliteSite.referenceStart())
+                    startReadIndex = readIndex;
 
-                if(refPos - 1 <= refGenomeMicrosatellite.referenceEnd())
-                    endReadIdx = readIdx + el.getLength() - 1;
+                if(refPosition - 1 <= microsatelliteSite.referenceEnd())
+                    endReadIndex = readIndex + el.getLength() - 1;
 
-                readIdx += el.getLength();
+                readIndex += el.getLength();
             }
             else if(isRef)
             {
-                refPos += el.getLength();
+                refPosition += el.getLength();
             }
             else
             {
@@ -120,16 +108,13 @@ public abstract class ConsensusMarker
             }
         }
 
-        Validate.isTrue(startReadIdx != INVALID_INDEX);
-        Validate.isTrue(endReadIdx != INVALID_INDEX);
-
-        return Pair.of(startReadIdx - 1, endReadIdx + 1);
+        return Pair.of(startReadIndex - 1, endReadIndex + 1);
     }
 
     public static class StandardConsensusMarker extends ConsensusMarker
     {
         @Override
-        public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+        public ConsensusType consensusType(final MicrosatelliteSite microsatelliteSite, final SAMRecord record)
         {
             return extractConsensusType(record);
         }
@@ -138,7 +123,7 @@ public abstract class ConsensusMarker
     public static class SBXConsensusMarker extends ConsensusMarker
     {
         @Override
-        public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
+        public ConsensusType consensusType(final MicrosatelliteSite microsatelliteSite, final SAMRecord record)
         {
             ConsensusType consensusType = extractConsensusType(record);
 
@@ -147,7 +132,7 @@ public abstract class ConsensusMarker
 
             int duplexBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
 
-            Pair<Integer,Integer> boundaries = getMicrosatelliteBoundaries(refGenomeMicrosatellite, record);
+            Pair<Integer,Integer> boundaries = getMicrosatelliteBoundaries(microsatelliteSite, record);
 
             if(record.getReadNegativeStrandFlag())
             {
@@ -159,26 +144,6 @@ public abstract class ConsensusMarker
                 int startIndex = boundaries.getLeft();
                 return SbxBamUtils.inDuplexRegion(true, duplexBaseIndex, startIndex) ? DUAL : SINGLE;
             }
-        }
-    }
-
-    public static class BiomodalConsensusMarker extends ConsensusMarker
-    {
-        @Override
-        public ConsensusType consensusType(final RefGenomeMicrosatellite refGenomeMicrosatellite, final SAMRecord record)
-        {
-            byte[] quals = record.getBaseQualities();
-            Pair<Integer, Integer> boundaries = getMicrosatelliteBoundaries(refGenomeMicrosatellite, record);
-            int startIdx = boundaries.getLeft();
-            int endIdx = boundaries.getRight();
-            int minQual = Integer.MAX_VALUE;
-            for(int i = startIdx; i <= endIdx; i++)
-                minQual = min(minQual, quals[i]);
-
-            if(minQual > LOW_QUAL_CUTOFF)
-                return DUAL;
-
-            return NONE;
         }
     }
 }

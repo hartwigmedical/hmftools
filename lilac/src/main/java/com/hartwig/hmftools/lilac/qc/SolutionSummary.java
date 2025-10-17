@@ -2,26 +2,32 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
-import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
-import com.hartwig.hmftools.common.hla.LilacAllele;
-import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
-import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
-
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
+import com.hartwig.hmftools.common.hla.LilacAllele;
+import com.hartwig.hmftools.common.utils.file.FileLock;
+import com.hartwig.hmftools.lilac.GeneSelector;
+import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
+import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 
 public class SolutionSummary
 {
+    private final GeneSelector mGenes;
+
     public final ComplexCoverage ReferenceCoverage;
     public final ComplexCoverage TumorCoverage;
     public final List<Double> TumorCopyNumber;
@@ -29,9 +35,10 @@ public class SolutionSummary
     public final ComplexCoverage RnaCoverage;
 
     public SolutionSummary(
-            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final GeneSelector genes, final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
             final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
     {
+        mGenes = genes;
         ReferenceCoverage = referenceCoverage;
         TumorCoverage = tumorCoverage;
         TumorCopyNumber = tumorCopyNumber;
@@ -58,19 +65,19 @@ public class SolutionSummary
 
         return ImmutableLilacAllele.builder()
                 .allele(refAllele.toString())
-                .refFragments((int)round(ref.TotalCoverage))
+                .refFragments((int) round(ref.TotalCoverage))
                 .refUnique(ref.UniqueCoverage)
-                .refShared((int)round(ref.SharedCoverage))
-                .refWild((int)round(ref.WildCoverage))
-                .tumorFragments((int)round(tumor.TotalCoverage))
+                .refShared((int) round(ref.SharedCoverage))
+                .refWild((int) round(ref.WildCoverage))
+                .tumorFragments((int) round(tumor.TotalCoverage))
                 .tumorUnique(tumor.UniqueCoverage)
-                .tumorShared((int)round(tumor.SharedCoverage))
-                .tumorWild((int)round(tumor.WildCoverage))
+                .tumorShared((int) round(tumor.SharedCoverage))
+                .tumorWild((int) round(tumor.WildCoverage))
                 .tumorCopyNumber(copyNumber)
-                .rnaFragments((int)round(rna.TotalCoverage))
+                .rnaFragments((int) round(rna.TotalCoverage))
                 .rnaUnique(rna.UniqueCoverage)
-                .rnaShared((int)round(rna.SharedCoverage))
-                .rnaWild((int)round(rna.WildCoverage))
+                .rnaShared((int) round(rna.SharedCoverage))
+                .rnaWild((int) round(rna.WildCoverage))
                 .somaticMissense(codingCount.missense())
                 .somaticNonsenseOrFrameshift(codingCount.nonsense())
                 .somaticSplice(codingCount.splice())
@@ -80,35 +87,53 @@ public class SolutionSummary
     }
 
     public static SolutionSummary create(
-            final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
-            final List<Double> tumorCopyNumber, final List<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
+            final GeneSelector genes, final ComplexCoverage referenceCoverage, final ComplexCoverage tumorCoverage,
+            final List<Double> tumorCopyNumber, final Iterable<SomaticCodingCount> somaticCodingCount, final ComplexCoverage rnaCoverage)
     {
-        List<SomaticCodingCount> sortedCodingCount = somaticCodingCount.stream().collect(Collectors.toList());
+        List<SomaticCodingCount> sortedCodingCount = Lists.newArrayList(somaticCodingCount);
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
-        return new SolutionSummary(referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
+        return new SolutionSummary(genes, referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
     }
 
-    public final void write(final String fileName)
+    public void write(final String fileName)
     {
-        try
+        List<LilacAllele> alleles = Lists.newArrayList();
+        Set<HlaGene> genes = Sets.newHashSet();
+        if(ReferenceCoverage != null)
         {
-            List<LilacAllele> alleles = Lists.newArrayList();
-
-            if(ReferenceCoverage != null)
+            for(int i = 0; i < ReferenceCoverage.getAlleles().size(); ++i)
             {
-                for(int i = 0; i < 6; ++i)
-                {
-                    alleles.add(buildAlleleData(i));
-                }
+                genes.add(ReferenceCoverage.getAlleles().get(i).Gene);
+                alleles.add(buildAlleleData(i));
+            }
+        }
+
+        File file = new File(fileName);
+        List<String> existingLines = Lists.newArrayList();
+        try(FileLock fileLock = FileLock.create(file))
+        {
+            BufferedReader reader = fileLock.getBufferedReader();
+            reader.readLine();
+            String line = reader.readLine();
+            while(line != null)
+            {
+                String geneStr = line.split("\\*")[0];
+                HlaGene gene = HlaGene.fromString(geneStr);
+                if(gene != null && !mGenes.contains(gene))
+                    existingLines.add(line);
+
+                line = reader.readLine();
             }
 
-            LilacAllele.write(fileName, alleles);
+            fileLock.clear();
+            BufferedWriter writer = fileLock.getBufferedWriter();
+            LilacAllele.write(writer, alleles, existingLines);
+            writer.flush();
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
+            LL_LOGGER.error("failed to update {}: {}", fileName, e.toString());
         }
     }
 

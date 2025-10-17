@@ -90,7 +90,7 @@ public class SomaticStream
         mPeakModelData = Lists.newArrayList();
         mOutputVCF = PurpleCommon.purpleSomaticVcfFile(config.OutputDir, config.TumorId);
         mEnabled = somaticVariantCache.hasData();
-        mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
+        mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions, config.tumorOnlyMode());
         mSomaticGermlineLikelihood = new SomaticGermlineLikelihood(mConfig, somaticVariantCache.genotypeIds());
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
@@ -227,7 +227,7 @@ public class SomaticStream
                 if(!HumanChromosome.contains(variant.chromosome()))
                     continue;
 
-                if(variant.isPass() || mConfig.WriteAllSomatics)
+                if(purityAdjuster != null && (variant.isPass() || mConfig.WriteAllSomatics))
                     mSomaticGermlineLikelihood.processVariant(variant, purityAdjuster.purity());
 
                 if(variant.isPass())

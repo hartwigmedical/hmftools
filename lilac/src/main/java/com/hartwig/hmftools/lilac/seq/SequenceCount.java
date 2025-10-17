@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_C;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -158,6 +159,20 @@ public final class SequenceCount
             geneHetLociMap.put(gene, hetLociMap);
         }
 
+        if(geneHetLociMap.containsKey(HLA_A))
+        {
+            addMhcClass1HeterozygousLociSequences(geneHetLociMap);
+        }
+        else if(geneHetLociMap.containsKey(HLA_DRB3))
+        {
+            addDrbHeterozygousLociSequences(geneHetLociMap);
+        }
+
+        return geneHetLociMap;
+    }
+
+    private static void addMhcClass1HeterozygousLociSequences(final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap)
+    {
         // for recovered alleles (the extra-seq-loci), any additional amino acid location prior to 337 needs to be evaluated against
         // all 3 genes and added to all of them. From 338 onwards, A and B should be shared with each other, but C needs to be separate.
         Map<Integer, Set<String>> aHetLociMap = geneHetLociMap.get(HLA_A);
@@ -200,8 +215,29 @@ public final class SequenceCount
                 bHetLociMap.put(locus, combinedSeqs);
             }
         }
+    }
 
-        return geneHetLociMap;
+    private static void addDrbHeterozygousLociSequences(final Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap)
+    {
+        // the HLA-DRB genes have the exact same structure: same lengths and exon boundaries
+        NavigableSet<Integer> allLoci = geneHetLociMap.values().stream()
+                .flatMap(x -> x.keySet().stream())
+                .collect(Collectors.toCollection(Sets::newTreeSet));
+
+        for(int locus : allLoci)
+        {
+            Set<String> combinedSeqs = Sets.newHashSet();
+            for(Map<Integer, Set<String>> hetLociMap : geneHetLociMap.values())
+            {
+                if(!hetLociMap.containsKey(locus))
+                    continue;
+
+                combinedSeqs.addAll(hetLociMap.get(locus));
+            }
+
+            for(Map<Integer, Set<String>> hetLociMap : geneHetLociMap.values())
+                hetLociMap.put(locus, combinedSeqs);
+        }
     }
 
     private Map<Integer, Set<String>> extractHeterozygousLociSequences(final Iterable<HlaSequenceLoci> extraSequences)

@@ -19,6 +19,8 @@ import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class NucleotideFragmentQualEnrichment
 {
     private NucleotideFragmentQualEnrichment() {}
@@ -42,7 +44,7 @@ public final class NucleotideFragmentQualEnrichment
 
     @VisibleForTesting
     public static Fragment applyQualityFilter(final Fragment fragment, final SequenceCount highQualityCount, final SequenceCount rawCount,
-            final SequenceCount rawNucleotideCounts)
+            @Nullable final SequenceCount rawNucleotideCounts)
     {
         // checks whether all nucleotides have qual above the required level - if so return this fragment, otherwise build a
         // new fragment just with these filtered loci
@@ -54,7 +56,7 @@ public final class NucleotideFragmentQualEnrichment
         {
             int locus = entry.getKey();
             Nucleotide nucleotide = entry.getValue();
-            if(rawNucleotideCounts.get(locus).size() < MIN_DEPTH_FILTER)
+            if(rawNucleotideCounts != null && rawNucleotideCounts.get(locus).size() < MIN_DEPTH_FILTER)
             {
                 filteredNucleotides.add(nucleotide);
                 continue;

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.common.codon.Codons
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil
@@ -9,7 +8,7 @@ import htsjdk.samtools.util.SequenceUtil
 // match perfectly. We just match by anchor
 data class VJReadCandidate(
     val read: SAMRecord,
-    val vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
+    val vjAnchorTemplates: List<VJAnchorTemplate>,
     val vjGeneType: VJGeneType,
     val templateAnchorSequence: String,
     val matchMethod: MatchMethod,

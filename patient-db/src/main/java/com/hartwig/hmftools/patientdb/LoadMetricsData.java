@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -39,19 +39,19 @@ public class LoadMetricsData
 
         String tumor = configBuilder.getValue(SAMPLE);
         String tumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
-        String tumorMetricsFile = BamMetricsSummary.generateFilename(tumorMetricsDir, tumor);
+        String tumorMetricsFile = BamMetricSummary.generateFilename(tumorMetricsDir, tumor);
 
         String reference = configBuilder.getValue(REFERENCE);
         String refMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
-        String refMetricsFile = BamMetricsSummary.generateFilename(refMetricsDir, reference);
+        String refMetricsFile = BamMetricSummary.generateFilename(refMetricsDir, reference);
 
         try (DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
             LOGGER.info("load tumor metrics from {}", tumorMetricsFile);
-            BamMetricsSummary tumorMetrics = BamMetricsSummary.read(tumorMetricsFile);
+            BamMetricSummary tumorMetrics = BamMetricSummary.read(tumorMetricsFile);
 
             LOGGER.info("load reference metrics from {}", refMetricsFile);
-            BamMetricsSummary referenceMetrics = BamMetricsSummary.read(refMetricsFile);
+            BamMetricSummary referenceMetrics = BamMetricSummary.read(refMetricsFile);
 
             dbWriter.writeMetrics(tumor, tumorMetrics, referenceMetrics);
 

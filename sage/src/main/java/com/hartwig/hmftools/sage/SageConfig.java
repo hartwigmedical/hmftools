@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -27,9 +29,9 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLIC
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.NON_ILLUMINA_MAX_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
@@ -73,7 +75,7 @@ public class SageConfig
     public final FilterConfig Filter;
     public final QualityConfig Quality;
     public final boolean SkipBqr;
-    public final String JitterParamsDir;
+    public final String JitterBqrDir;
     public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
@@ -82,7 +84,6 @@ public class SageConfig
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
-    public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
@@ -113,13 +114,12 @@ public class SageConfig
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String SLICE_SIZE = "slice_size";
-    private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";
     private static final String READ_LENGTH = "read_length";
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
-    private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String JITTER_BQR_DIR = "jitter_bqr_dir";
     private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
@@ -163,7 +163,6 @@ public class SageConfig
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
-        ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
@@ -177,7 +176,19 @@ public class SageConfig
             MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         }
 
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
+        if(configBuilder.hasValue(READ_LENGTH))
+        {
+            mReadLength = configBuilder.getInteger(READ_LENGTH);
+        }
+        else if(isUltima() || isSbx())
+        {
+            mReadLength = NON_ILLUMINA_MAX_READ_LENGTH;
+        }
+        else
+        {
+            mReadLength = 0; // will be set from sampling the BAM
+        }
+
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
@@ -191,29 +202,29 @@ public class SageConfig
 
         SkipBqr = configBuilder.hasFlag(SKIP_BQR);
 
-        if(configBuilder.hasValue(JITTER_PARAMS_DIR))
+        if(configBuilder.hasValue(JITTER_BQR_DIR))
         {
-            JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
+            JitterBqrDir = configBuilder.getValue(JITTER_BQR_DIR);
         }
         else
         {
             // otherwise assume these are located with the BAMs
             if(!ReferenceBams.isEmpty())
             {
-                JitterParamsDir = pathFromFile(ReferenceBams.get(0));
+                JitterBqrDir = pathFromFile(ReferenceBams.get(0));
             }
             else if(!SampleDataDir.isEmpty())
             {
-                JitterParamsDir = SampleDataDir;
+                JitterBqrDir = SampleDataDir;
             }
             else if(configBuilder.hasValue(TUMOR_BAM))
             {
                 String tumorBam = configBuilder.getValue(TUMOR_BAM).split(SAMPLE_DELIM)[0];
-                JitterParamsDir = pathFromFile(tumorBam);
+                JitterBqrDir = pathFromFile(tumorBam);
             }
             else
             {
-                JitterParamsDir = null;
+                JitterBqrDir = null;
             }
         }
 
@@ -285,6 +296,10 @@ public class SageConfig
 
     public void setReadLength(int readLength)
     {
+        if(isUltima() || isSbx())
+        {
+            readLength = max(readLength, NON_ILLUMINA_MAX_READ_LENGTH);
+        }
         if(readLength != DEFAULT_READ_LENGTH)
         {
             SG_LOGGER.info("max observed read length set({})", readLength);
@@ -379,10 +394,6 @@ public class SageConfig
 
         addRefGenomeConfig(configBuilder, true);
 
-        // is this common?
-        configBuilder.addInteger(
-                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_FLANK_LENGTH);
-
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
@@ -402,7 +413,7 @@ public class SageConfig
         SequencingType.registerConfig(configBuilder);
         UltimaQualRecalibration.registerConfig(configBuilder);
 
-        configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
+        configBuilder.addPath(JITTER_BQR_DIR, false, "Path to sample jitter and BQR files, otherise uses BAM directory");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
@@ -431,7 +442,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
         SkipBqr = true;
-        JitterParamsDir = null;
+        JitterBqrDir = null;
         SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
@@ -440,7 +451,6 @@ public class SageConfig
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
-        ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
@@ -450,7 +460,7 @@ public class SageConfig
         LogLpsData = false;
         PerfWarnTime = 0;
         RefGenVersion = V37;
-        BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
+        BamStringency = ValidationStringency.SILENT;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;

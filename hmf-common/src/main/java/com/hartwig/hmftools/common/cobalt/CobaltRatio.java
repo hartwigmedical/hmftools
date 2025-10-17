@@ -20,6 +20,7 @@ public record CobaltRatio(
         double tumorGcContent
 ) implements GenomePosition
 {
+    public static final double COBALT_MASKED_VALUE = -1.0;
 
     public CobaltRatio realign(int newPosition)
     {
@@ -35,7 +36,9 @@ public record CobaltRatio(
 
     public CobaltRatio mask()
     {
-        return new CobaltRatio(chromosome, position, referenceReadDepth, -1.0, -1.0, -1.0, tumorReadDepth, -1.0, -1.0);
+        return new CobaltRatio(
+                chromosome, position, referenceReadDepth, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE,
+                tumorReadDepth, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE);
     }
 
     public ChrBaseRegion window()

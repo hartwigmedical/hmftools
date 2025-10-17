@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.sage.SageConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
@@ -239,21 +240,16 @@ public class VariantReadContextBuilder
 
     private static boolean aboveMinBaseQual(final VariantReadContext readContext, final SAMRecord read, final int varReadIndex)
     {
-        int indexStart = varReadIndex - readContext.leftCoreLength();
-        int indexEnd = varReadIndex + readContext.rightCoreLength();
-
-        if(readContext.variant().isIndel())
-        {
-            indexStart -= readContext.leftFlankLength();
-            indexEnd += readContext.rightFlankLength();
-        }
+        int indexStart = varReadIndex - readContext.leftCoreLength() - readContext.leftFlankLength();
+        int indexEnd = varReadIndex + readContext.rightCoreLength() + readContext.rightFlankLength();
 
         if(indexStart < 0 || indexEnd >= read.getBaseQualities().length)
             return false;
 
         for(int i = indexStart; i <= indexEnd; ++i)
         {
-            if(BaseQualAdjustment.isUncertainBaseQual(read.getBaseQualities()[i]))
+            if(BaseQualAdjustment.isUncertainBaseQual(read.getBaseQualities()[i])
+            || BaseQualAdjustment.isMediumBaseQual(read.getBaseQualities()[i], SEQUENCING_TYPE))
                 return false;
         }
 

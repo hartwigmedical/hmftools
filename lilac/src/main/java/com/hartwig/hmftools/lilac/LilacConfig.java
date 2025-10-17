@@ -72,7 +72,7 @@ public class LilacConfig
     public final String SampleDataDir;
     public final String OutputDir;
 
-    public final MhcClass ClassType;
+    public final GeneSelector Genes;
 
     public final double HlaYPercentThreshold;
 
@@ -105,7 +105,7 @@ public class LilacConfig
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
-    public static final String MHC_CLASS = "mhc_class";
+    public static final String GENES = "genes";
 
     // constant overrides
     private static final String MIN_BASE_QUAL = "min_base_qual";
@@ -193,9 +193,9 @@ public class LilacConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        ClassType = MhcClass.valueOf(configBuilder.getValue(MHC_CLASS));
+        Genes = GeneSelector.valueOf(configBuilder.getValue(GENES));
 
-        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte)configBuilder.getInteger(MIN_BASE_QUAL);
+        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte) configBuilder.getInteger(MIN_BASE_QUAL);
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         LilacConstants.MIN_EVIDENCE_SUPPORT = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);
@@ -239,7 +239,11 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return OutputDir + Sample + LILAC_FILE_ID + fileId; }
+    public String formFileId(final String fileId) { return formFileId(fileId, true); }
+    public String formFileId(final String fileId, boolean includeGenes)
+    {
+        return OutputDir + Sample + LILAC_FILE_ID + (includeGenes ? Genes.toString() + "." : "") + fileId;
+    }
 
     public void logParams()
     {
@@ -274,7 +278,7 @@ public class LilacConfig
         RefGenome = "";
         RefGenVersion = V37;
 
-        ClassType = MhcClass.CLASS_1;
+        Genes = GeneSelector.MHC_CLASS_1;
 
         MaxRefFragments = DEFAULT_MAX_REF_FRAGMENTS;
 
@@ -310,6 +314,7 @@ public class LilacConfig
 
         registerCommonConfig(configBuilder);
 
+        configBuilder.addConfigItem(GENES, false, "Gene set to use", GeneSelector.MHC_CLASS_1.name());
         configBuilder.addInteger(MIN_BASE_QUAL, "Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
@@ -351,8 +356,6 @@ public class LilacConfig
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
-
-        configBuilder.addConfigItem(MHC_CLASS, false, "MHC Class Type", MhcClass.CLASS_1.toString());
     }
 
     private static List<HlaAllele> parseAlleleList(final String allelesStr)

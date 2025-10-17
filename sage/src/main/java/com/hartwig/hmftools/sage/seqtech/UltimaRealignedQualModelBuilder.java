@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.sage.seqtech;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.getStraddlingReadBases;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.INVALID_BASE;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isCleanSnv;
-
-import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.Comparator;
 import java.util.List;
@@ -18,14 +13,8 @@ import java.util.stream.IntStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.TextCigarCodec;
 
 public class UltimaRealignedQualModelBuilder
 {
@@ -220,42 +209,6 @@ public class UltimaRealignedQualModelBuilder
         }
 
         return mergedHomopolymers;
-    }
-
-    @VisibleForTesting
-    public static List<CigarElement> readContextCoreCigar(final VariantReadContext readContext)
-    {
-        List<CigarElement> coreCigar = Lists.newArrayList();
-        List<CigarElement> cigar = TextCigarCodec.decode(readContext.readCigar()).getCigarElements();
-        int readIndex = 0;
-        for(CigarElement el : cigar)
-        {
-            if(readIndex > readContext.CoreIndexEnd)
-                break;
-
-            if(!el.getOperator().consumesReadBases())
-            {
-                if(readIndex > readContext.CoreIndexStart)
-                    coreCigar.add(el);
-
-                continue;
-            }
-
-            int readIndexEnd = readIndex + el.getLength() - 1;
-            if(readIndexEnd < readContext.CoreIndexStart)
-            {
-                readIndex += el.getLength();
-                continue;
-            }
-
-            int readIndexStart = max(readIndex, readContext.CoreIndexStart);
-            readIndexEnd = min(readIndexEnd, readContext.CoreIndexEnd);
-            coreCigar.add(new CigarElement(readIndexEnd - readIndexStart + 1, el.getOperator()));
-
-            readIndex += el.getLength();
-        }
-
-        return coreCigar;
     }
 
     protected static UltimaRealignedQualModels buildUltimaRealignedQualModels(

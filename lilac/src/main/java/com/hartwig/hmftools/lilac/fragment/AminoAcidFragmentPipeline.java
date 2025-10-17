@@ -3,6 +3,8 @@ package com.hartwig.hmftools.lilac.fragment;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB4;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -102,13 +104,16 @@ public class AminoAcidFragmentPipeline
         // start with the unfiltered fragments again
         List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream().filter(x -> x.containsGene(gene)).toList();
 
-        List<Fragment> rawGeneNucFrags = mOriginalRefFragments.stream().filter(x -> x.readGene() == gene).toList();
-        SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, rawGeneNucFrags);
-        List<Fragment> geneRefAcidFrags = rawGeneNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
-        geneRefAcidFrags.forEach(Fragment::buildAminoAcids);
-        SequenceCount rawAcidCount = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, geneRefAcidFrags);
-        RAW_REF_NUCLEOTIDE_COUNTS.put(gene, rawNucCount);
-        RAW_REF_AMINO_ACID_COUNTS.put(gene, rawAcidCount);
+        if(context.Gene != HLA_DRB3 && context.Gene != HLA_DRB4)
+        {
+            List<Fragment> rawGeneNucFrags = mOriginalRefFragments.stream().filter(x -> x.readGene() == gene).toList();
+            SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, rawGeneNucFrags);
+            List<Fragment> geneRefAcidFrags = rawGeneNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
+            geneRefAcidFrags.forEach(Fragment::buildAminoAcids);
+            SequenceCount rawAcidCount = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, geneRefAcidFrags);
+            RAW_REF_NUCLEOTIDE_COUNTS.put(gene, rawNucCount);
+            RAW_REF_AMINO_ACID_COUNTS.put(gene, rawAcidCount);
+        }
 
         if(geneRefNucFrags.isEmpty())
             return Collections.emptyList();
@@ -192,13 +197,17 @@ public class AminoAcidFragmentPipeline
         for(Map.Entry<HlaGene, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
             HlaGene gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene.shortName() + ".aminoacids.txt"), RAW_REF_AMINO_ACID_COUNTS.get(gene));
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".aminoacids.txt", false),
+                    RAW_REF_AMINO_ACID_COUNTS.get(gene));
         }
 
         for(Map.Entry<HlaGene, SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
             HlaGene gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene.shortName() + ".nucleotides.txt"), RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".nucleotides.txt", false),
+                    RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
         }
     }
 }

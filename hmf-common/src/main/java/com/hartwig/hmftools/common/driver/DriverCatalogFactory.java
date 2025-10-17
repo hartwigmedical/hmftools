@@ -54,7 +54,7 @@ public final class DriverCatalogFactory
 
     public static DriverCatalog createCopyNumberDriver(
             DriverCategory category, DriverType driver, final LikelihoodMethod likelihoodMethod, final boolean biallelic,
-            final GeneCopyNumber geneCopyNumber)
+            final double likelihood, final GeneCopyNumber geneCopyNumber)
     {
         return ImmutableDriverCatalog.builder()
                 .chromosome(geneCopyNumber.chromosome())
@@ -67,7 +67,7 @@ public final class DriverCatalogFactory
                 .inframe(0)
                 .frameshift(0)
                 .splice(0)
-                .driverLikelihood(1)
+                .driverLikelihood(likelihood)
                 .driver(driver)
                 .likelihoodMethod(likelihoodMethod)
                 .category(category)

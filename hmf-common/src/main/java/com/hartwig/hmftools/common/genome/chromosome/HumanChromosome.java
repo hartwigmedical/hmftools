@@ -56,6 +56,12 @@ public enum HumanChromosome implements Chromosome
     public static final String MT_CHR_V37 = "MT";
     public static final String MT_CHR_V38 = "chrM";
 
+    public static final String CHR_X_STR = "X";
+    public static final String CHR_Y_STR = "Y";
+
+    public static final List<String> SHORT_ARM_CHROMOSOMES = List.of(
+            _13.shortName(), _14.shortName(), _15.shortName(), _21.shortName(), _22.shortName());
+
     @Override
     public String contig()
     {
@@ -108,7 +114,7 @@ public enum HumanChromosome implements Chromosome
             return integerContig >= 1 && integerContig <= 22;
         }
 
-        return trimmedContig.equals("X") || trimmedContig.equals("Y");
+        return trimmedContig.equals(CHR_X_STR) || trimmedContig.equals(CHR_Y_STR);
     }
 
     public int intValue()
@@ -136,8 +142,7 @@ public enum HumanChromosome implements Chromosome
 
     public static boolean hasShortArm(final String chromosome)
     {
-        return chromosome.equals("13") || chromosome.equals("14") || chromosome.equals("15")
-                || chromosome.equals("21") || chromosome.equals("22");
+        return SHORT_ARM_CHROMOSOMES.stream().anyMatch(x -> x.equals(chromosome));
     }
 
     public boolean hasShortArm()
@@ -168,15 +173,15 @@ public enum HumanChromosome implements Chromosome
     {
         String chrTrimmed = RefGenomeFunctions.stripChrPrefix(chromosome);
 
-        if(chrTrimmed.equalsIgnoreCase("X"))
+        if(chrTrimmed.equalsIgnoreCase(CHR_X_STR))
         {
             return 23;
         }
-        else if(chrTrimmed.equalsIgnoreCase("Y"))
+        else if(chrTrimmed.equalsIgnoreCase(CHR_Y_STR))
         {
             return 24;
         }
-        else if(chrTrimmed.equalsIgnoreCase("MT") || chrTrimmed.equalsIgnoreCase("M"))
+        else if(chrTrimmed.equalsIgnoreCase(MT_CHR_V37) || chrTrimmed.equalsIgnoreCase("M"))
         {
             return 25;
         }
@@ -193,8 +198,8 @@ public enum HumanChromosome implements Chromosome
         }
     }
 
-    public static List<ChrBaseRegion> formHumanChromosomeRegions(final SpecificRegions specificRegions,
-            final RefGenomeVersion refGenomeVersion)
+    public static List<ChrBaseRegion> formHumanChromosomeRegions(
+            final SpecificRegions specificRegions, final RefGenomeVersion refGenomeVersion)
     {
         List<ChrBaseRegion> inputRegions = Lists.newArrayList();
 
