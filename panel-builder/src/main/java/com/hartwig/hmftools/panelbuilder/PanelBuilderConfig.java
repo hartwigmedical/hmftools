@@ -28,6 +28,7 @@ public record PanelBuilderConfig(
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
         @Nullable String genesFile,
+        boolean includeCnBackbone,
         @Nullable String amberSitesFile,
         int cnBackboneResolution,
         boolean includeCdr3,
@@ -40,6 +41,8 @@ public record PanelBuilderConfig(
 {
     private static final String CFG_BWA_INDEX_IMAGE_FILE = "bwa_index_image";
     private static final String DESC_BWA_INDEX_IMAGE_FILE = "Reference genome BWA-MEM index GATK image file";
+    private static final String CFG_INCLUDE_CN_BACKBONE = "cn_backbone";
+    private static final String DESC_INCLUDE_CN_BACKBONE = "Include copy number backbone probes";
     private static final String CFG_AMBER_SITES_FILE = "amber_sites";
     private static final String DESC_AMBER_SITES_FILE = "Amber heterozygous sites TSV file";
     private static final String CFG_CN_BACKBONE_RESOLUTION = "cn_backbone_res_kb";
@@ -63,6 +66,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_BWA_INDEX_IMAGE_FILE, refGenomePath + ".img"),
                 configBuilder.getValue(BWA_LIB_PATH),
                 configBuilder.getValue(CFG_TARGET_GENES_FILE),
+                configBuilder.hasFlag(CFG_INCLUDE_CN_BACKBONE),
                 configBuilder.getValue(CFG_AMBER_SITES_FILE),
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
@@ -82,6 +86,7 @@ public record PanelBuilderConfig(
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_BWA_INDEX_IMAGE_FILE, false, DESC_BWA_INDEX_IMAGE_FILE);
 
+        configBuilder.addFlag(CFG_INCLUDE_CN_BACKBONE, DESC_INCLUDE_CN_BACKBONE);
         configBuilder.addPath(CFG_AMBER_SITES_FILE, false, DESC_AMBER_SITES_FILE);
         configBuilder.addInteger(CFG_CN_BACKBONE_RESOLUTION, DESC_CN_BACKBONE_RESOLUTION, CN_BACKBONE_RESOLUTION_KB_DEFAULT);
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);

@@ -27,22 +27,23 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type    | Default                     | Description                                                                                                                          |
-|--------------------|---------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                                               |
-| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                   |  
-| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd. If not specified, copy number backbone is not produced. |
-| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                      |
-| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                                                     |
-| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                    |
-| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                                               |
-| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                                              |
-| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                                                     |
-| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                  |
-| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                         |
-| output_id          | String  | (none)                      | Prefix for output files.                                                                                                             |
-| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                        |
-| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                            |
+| Argument           | Type    | Default                     | Description                                                                                                   |
+|--------------------|---------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
+| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                        |
+| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.            |
+| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                               |
+| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                               |
+| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                  |
+| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                              |
+| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.             |
+| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                        |
+| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                       |
+| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                              |
+| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                           |
+| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.  |
+| output_id          | String  | (none)                      | Prefix for output files.                                                                                      |
+| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time. |
+| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                     |
 
 ## Example Usage
 
@@ -54,6 +55,7 @@ java -jar panel-builder.jar \
   -probe_quality_profile panelbuilder_resources/probe_quality_profile.37.tsv.gz \
   -cdr3 \
   -amber_sites panelbuilder_resources/amber_sites.37.tsv.gz \
+  -cn_backbone \
   -genes genes_features.tsv \
   -custom_regions custom_regions.tsv \
   -sample COLO829T \
@@ -150,7 +152,7 @@ CDKN2A	TRUE	FALSE	TRUE	TRUE	TRUE	FALSE	ENST00000579755
 ### Copy Number Backbone
 
 A fixed set of probes aimed at improving purity estimation and copy number variation at a genome-wide scale.
-These probes are included if you specify the `amber_sites` argument.
+These probes are included if you specify the `cn_backbone` argument.
 
 Methodology for all chromosomes except Y:
 
