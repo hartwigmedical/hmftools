@@ -229,6 +229,11 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Using the GRCh37/hg19 reference genome for gene annotation, many TRB genes will not be annotated. This is a known issue with the reference genome and gene data, and will be fixed soon.
 
 # Version History and Download Links
+- 1.1
+  - Replace Blastn with BWA-MEM (large performance increase).
+  - Output additional gene annotation in the `*GeneSupplementary` fields.
+  - Make the output more consistent between identical runs.
+  - Improve the performance of VDJ merging.
 - [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)
   - Fix blastn performance issue when an assembly maps to a problematic region.   
 - [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)
