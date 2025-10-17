@@ -16,6 +16,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
@@ -41,6 +42,7 @@ public class SageApplication implements AutoCloseable
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
     private final FragmentLengthWriter mFragmentLengths;
+    private final CandidateWriter mCandidateWriter;
     private final TincConfig mTincConfig;
 
     private SageApplication(final ConfigBuilder configBuilder)
@@ -67,6 +69,7 @@ public class SageApplication implements AutoCloseable
         mVcfWriter = new VcfWriter(mConfig.Common, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome, mConfig.RunTinc);
 
         mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
+        mCandidateWriter = new CandidateWriter(mConfig);
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
 
@@ -112,13 +115,15 @@ public class SageApplication implements AutoCloseable
             if(!mConfig.Common.processChromosome(chromosome))
                 continue;
 
-            final ChromosomePipeline pipeline = new ChromosomePipeline(
-                    chromosome, mConfig, mRefData, recalibrationMap, msiJitterCalcs, mPhaseSetCounter, mVcfWriter, mFragmentLengths);
+            ChromosomePipeline pipeline = new ChromosomePipeline(
+                    chromosome, mConfig, mRefData, recalibrationMap, msiJitterCalcs, mPhaseSetCounter,
+                    mVcfWriter, mFragmentLengths, mCandidateWriter);
 
             pipeline.process();
         }
 
         mFragmentLengths.close();
+        mCandidateWriter.close();
         mVcfWriter.close();
 
         if(mTincConfig != null && !mConfig.Common.ReferenceIds.isEmpty())

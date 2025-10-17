@@ -144,7 +144,8 @@ public final class CandidateSerialisation
                     Collections.emptyList(), 0, 0);
         }
 
-        return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
+        return new Candidate(
+                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
 
     @VisibleForTesting

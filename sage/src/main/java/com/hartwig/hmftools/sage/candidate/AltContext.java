@@ -2,8 +2,11 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS_PERC;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,15 +17,13 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -74,9 +75,10 @@ public class AltContext extends SimpleVariant
     @Override
     public int position() { return RefContext.position(); }
 
-    public int readContextSupport() { return mCandidate.FullMatch; }
-
-    public int minNumberOfEvents() { return mCandidate.minNumberOfEvents(); }
+    public int fullMatchSupport() { return mCandidate.FullMatch; }
+    public int coreMatchSupport() { return mCandidate.CoreMatch; }
+    public int lowQualInCoreCount() { return mCandidate.LowQualInCoreCount; }
+    public int minNumberOfEvents() { return mCandidate.MinNumberOfEvents; }
 
     public boolean hasValidCandidate() { return mCandidate != null; }
     public boolean hasSecondCandidate() { return mSecondCandidate != null; }
@@ -100,6 +102,7 @@ public class AltContext extends SimpleVariant
                 case FULL:
                     candidate.incrementFull(1, numberOfEvents);
                     fullMatchCandidate = candidate;
+
                     break;
 
                 case CORE:
@@ -107,18 +110,31 @@ public class AltContext extends SimpleVariant
                     coreMatch++;
                     break;
             }
+
+            if(isUltima())
+            {
+                if(matchInfo.MatchType == FULL || matchInfo.MatchType == CORE)
+                {
+                    if(lowQualInCore(candidate.readContext(), read, variantReadIndex))
+                        ++candidate.LowQualInCoreCount;
+                }
+            }
         }
 
         if(fullMatchCandidate == null)
         {
             VariantReadContext readContext = readContextBuilder.createContext(this, read, variantReadIndex, refSequence);
 
-            if(readContext != null)
-            {
-                ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, readContext);
-                candidate.CoreMatch += coreMatch;
-                mReadContextCandidates.add(candidate);
-            }
+            if(readContext == null)
+                return;
+
+            ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, readContext);
+            candidate.CoreMatch += coreMatch;
+
+            if(isUltima() && lowQualInCore(candidate.readContext(), read, variantReadIndex))
+                ++candidate.LowQualInCoreCount;
+
+            mReadContextCandidates.add(candidate);
         }
 
         // keep enough reads to test the (unique) raw alt support limit
@@ -172,6 +188,25 @@ public class AltContext extends SimpleVariant
         mReadContextCandidates.clear();
     }
 
+    private boolean lowQualInCore(final VariantReadContext readContext, final SAMRecord read, int variantReadIndex)
+    {
+        List<Integer> lowQualIndices = UltimaBamUtils.extractLowQualTag(read);
+
+        if(lowQualIndices.isEmpty())
+            return false;
+
+        int coreIndexStart = variantReadIndex - readContext.leftCoreLength();
+        int coreIndexEnd = variantReadIndex + readContext.rightCoreLength();
+
+        for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
+        {
+            if(lowQualIndices.contains(index))
+                return true;
+        }
+
+        return false;
+    }
+
     public boolean aboveMinAltSupport() { return mAboveMinAltSupport; }
 
     @Override
@@ -205,47 +240,4 @@ public class AltContext extends SimpleVariant
                 chromosome(), position(), Ref, Alt, mReadContextCandidates != null ? mReadContextCandidates.size() : 0);
     }
 
-    protected class ReadContextCandidate implements Comparable<ReadContextCandidate>
-    {
-        private final VariantReadContext mReadContext;
-        private final ReadContextMatcher mMatcher;
-
-        public int FullMatch;
-        public int CoreMatch;
-        public int MinNumberOfEvents;
-
-        ReadContextCandidate(int numberOfEvents, final VariantReadContext readContext)
-        {
-            mReadContext = readContext;
-            mMatcher = new ReadContextMatcher(mReadContext, false, false);
-            MinNumberOfEvents = numberOfEvents;
-        }
-
-        public void incrementFull(int count, int numberOfEvents)
-        {
-            FullMatch += count;
-            MinNumberOfEvents = min(MinNumberOfEvents, numberOfEvents);
-        }
-
-        public int minNumberOfEvents() { return MinNumberOfEvents; }
-
-        public VariantReadContext readContext() { return mReadContext; }
-        public ReadContextMatcher matcher() { return mMatcher; }
-
-        @Override
-        public int compareTo(@NotNull final ReadContextCandidate other)
-        {
-            int fullCompare = -Integer.compare(FullMatch, other.FullMatch);
-
-            if(fullCompare != 0)
-                return fullCompare;
-
-            return -Integer.compare(CoreMatch, other.CoreMatch);
-        }
-
-        public String toString()
-        {
-            return String.format("matches(full=%d core=%d)", FullMatch, CoreMatch);
-        }
-    }
 }

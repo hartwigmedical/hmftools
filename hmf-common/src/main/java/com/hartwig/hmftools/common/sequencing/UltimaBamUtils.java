@@ -3,6 +3,10 @@ package com.hartwig.hmftools.common.sequencing;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import htsjdk.samtools.SAMRecord;
@@ -53,6 +57,39 @@ public final class UltimaBamUtils
             t0Values[i] -= PHRED_OFFSET;
         }
         return t0Values;
+    }
+
+    public static List<Integer> extractLowQualTag(final SAMRecord record)
+    {
+        String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
+
+        if(qualTag == null)
+            return Collections.emptyList();
+
+        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM);
+
+        List<Integer> lowQualValues = Lists.newArrayList();
+
+        for(String qualItem : qualItems)
+        {
+            if(qualItem.contains("-"))
+            {
+                String[] startEnd = qualItem.split("-", 2);
+                int indexStart = Integer.parseInt(startEnd[0]);
+                int indexEnd = Integer.parseInt(startEnd[1]);
+
+                for(int i = indexStart; i <= indexEnd; ++i)
+                {
+                    lowQualValues.add(i);
+                }
+            }
+            else
+            {
+                lowQualValues.add(Integer.parseInt(qualItem));
+            }
+        }
+
+        return lowQualValues;
     }
 
     public static ConsensusType deriveConsensusType(final SAMRecord record)

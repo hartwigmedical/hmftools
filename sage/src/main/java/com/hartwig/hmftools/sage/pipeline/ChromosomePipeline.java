@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
+import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
@@ -46,6 +47,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     private final VcfWriter mVcfWriter;
     private final FragmentLengthWriter mFragmentLengths;
+    private final CandidateWriter mCandidateWriter;
     private final Queue<PartitionTask> mPartitions;
     private final RegionResults mRegionResults;
 
@@ -58,7 +60,8 @@ public class ChromosomePipeline implements AutoCloseable
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
             final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
-            final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengthWriter fragmentLengths)
+            final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengthWriter fragmentLengths,
+            final CandidateWriter candidateWriter)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -69,6 +72,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         mVcfWriter = vcfWriter;
         mFragmentLengths = fragmentLengths;
+        mCandidateWriter = candidateWriter;
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
@@ -117,7 +121,8 @@ public class ChromosomePipeline implements AutoCloseable
         {
             workers.add(new RegionThread(
                     mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
-                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
+                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults,
+                    mFragmentLengths, mCandidateWriter));
         }
 
         if(!runThreadTasks(workers))
