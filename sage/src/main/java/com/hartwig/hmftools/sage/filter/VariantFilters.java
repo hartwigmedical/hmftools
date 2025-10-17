@@ -154,14 +154,12 @@ public class VariantFilters
         // setting ref sample count to zero disables the tumor-germline filters
         int maxReferenceSamples = min(refReadCounters.size(), mConfig.ReferenceSampleCount);
 
-        boolean isNearIndel = variant.nearIndel();
-
         // where there are multiple tumor samples, if any of them pass then clear any filters from the others
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
             Set<SoftFilter> tumorFilters = Sets.newHashSet();
 
-            applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters, isNearIndel);
+            applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
             if(!mIsGermline)
             {
@@ -186,8 +184,7 @@ public class VariantFilters
 
     // tumor-only tests
     public void applyTumorFilters(
-            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters,
-            boolean isNearIndel)
+            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
@@ -259,7 +256,7 @@ public class VariantFilters
                 filters.add(SoftFilter.MIN_AVG_HP_QUAL);
             }
 
-            if(belowExpectedT0Quals(primaryTumor, isNearIndel))
+            if(belowExpectedT0Quals(primaryTumor))
             {
                 filters.add(SoftFilter.MIN_AVG_T0_QUAL);
             }
@@ -518,7 +515,13 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        int strongSupport = primaryTumor.useMsiErrorRate() ? primaryTumor.jitter().validQualFullSupport() : primaryTumor.strongHighQualSupport();
+        int strongSupport;
+        if(primaryTumor.useMsiErrorRate())
+            strongSupport = primaryTumor.jitter().validQualFullSupport();
+        else if(isUltima())
+            strongSupport = primaryTumor.strongAltSupport();  // depending on HP lengths, may not have any high qual reads
+        else
+            strongSupport = primaryTumor.strongHighQualSupport();
         return strongSupport < strongSupportThreshold;
     }
 

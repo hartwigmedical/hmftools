@@ -58,11 +58,11 @@ class UltimaHomopolymerTransitionDeletion extends UltimaQualModel
         // cap at higher of BQR quals
         int lowerHpLength = mLowerHpEndIndex - mLowerHpStartIndex + 1;
         char lowerHpBase = (char)record.getReadBases()[varReadIndex + mLowerHpStartIndex];
-        int lowerBqrQual = BQR_CACHE.getTpRecalibratedQual(lowerHpLength, lowerHpBase, false);
+        int lowerBqrQual = BQR_CACHE.getTpRecalibratedQual(lowerHpLength, lowerHpBase, false, record.getReadNegativeStrandFlag());
 
         int upperHpLength = mUpperHpEndIndex - mUpperHpStartIndex + 1;
         char upperHpBase = (char)record.getReadBases()[varReadIndex + mUpperHpStartIndex];
-        int upperBqrQual = BQR_CACHE.getTpRecalibratedQual(upperHpLength, upperHpBase, false);
+        int upperBqrQual = BQR_CACHE.getTpRecalibratedQual(upperHpLength, upperHpBase, false, record.getReadNegativeStrandFlag());
 
         int maxBqrQual = max(lowerBqrQual, upperBqrQual);
 

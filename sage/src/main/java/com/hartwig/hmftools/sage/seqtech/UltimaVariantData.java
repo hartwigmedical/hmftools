@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
 import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
@@ -76,11 +75,9 @@ public class UltimaVariantData
             int lookupIndex = firstHomopolymer ? readIndex + hpLength - 1 : readIndex;
             int tpValue = tpValues[lookupIndex];
 
-            char homopolymerBase = (char)record.getReadBases()[lookupIndex];
-            byte readQual = baseQuals[lookupIndex];
-            byte homopolymerQual = BQR_CACHE.calcTpRecalibratedQual(readQual, hpLength, homopolymerBase, tpValue == 0);
+            byte homopolymerQual = baseQuals[lookupIndex];
 
-            if(tpValue > 0 && hpLength > 1)
+            if(tpValue != 0 && hpLength > 1)
                 homopolymerQual -= HALF_PHRED_SCORE_SCALING;
 
             homopolyerQuals.add(homopolymerQual);
@@ -109,14 +106,7 @@ public class UltimaVariantData
             int lookupIndex = firstHomopolymer ? readIndex + hpLength - 1 : readIndex;
             byte t0Value = t0Values[lookupIndex];
 
-            byte t0Qual = t0Value;
-
-            if(t0Qual == BQR_CACHE.maxRawQual())
-            {
-                t0Qual = BQR_CACHE.getT0RecalibratedQual(record, lookupIndex);
-            }
-
-            t0Quals.add(t0Qual);
+            t0Quals.add(t0Value);
 
             firstHomopolymer = false;
             readIndex += hpLength;

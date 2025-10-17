@@ -2,16 +2,18 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.minQual;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.seqtech.UltimaModelType.OTHER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_DEFAULT_ERROR_RATE;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.quality.MsiJitterQualCache;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -34,13 +36,13 @@ public class UltimaRealignedQualModels
 
     public double calculateQual(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        double modelQual;
+        Byte modelQual = null;
 
         if(mOriginalQualModel.type() == OTHER && readContextCounter.qualCache().usesMsiIndelErrorQual())
         {
             modelQual = readContextCounter.qualCache().msiIndelErrorQual();
         }
-        else
+        else if(mOriginalQualModel.canCompute())
         {
             modelQual = mOriginalQualModel.calculateQual(record, readIndex);
         }
@@ -48,23 +50,27 @@ public class UltimaRealignedQualModels
         if(modelQual < 0)
             return INVALID_BASE_QUAL;
 
-        if(mRealignedQualModels.isEmpty())
-            return modelQual;
-
         // take the minimum qual across the models
         for(UltimaRealignedQualModel realignedQualModel : mRealignedQualModels)
         {
             if(!realignedQualModel.qualModel().canCompute())
                 continue;
 
-            double realignedModelQual = realignedQualModel.calculateQual(record, readIndex);
+            byte realignedModelQual = realignedQualModel.calculateQual(record, readIndex);
 
             if(realignedModelQual < 0)
                 return INVALID_BASE_QUAL;
 
-            modelQual = min(realignedModelQual, modelQual);
+            if(modelQual == null)
+                modelQual = realignedModelQual;
+            else
+                modelQual = minQual(realignedModelQual, modelQual);
         }
 
-        return modelQual;
+        if(modelQual == null)
+            modelQual = (byte)(BQR_CACHE.maxRawQual() + DEFAULT_BASE_QUAL_FIXED_PENALTY); // pick a sensible default, i.e. the max raw qual after deducting fixed penalty
+
+        // floor the seq tech base qual due to realignment issues from nearby MSI sites dominating indel errors at quals above 40
+        return readContextCounter.isIndel() ? Math.min(modelQual, probabilityToPhredQual(MSI_JITTER_DEFAULT_ERROR_RATE)) : modelQual;
     }
 }

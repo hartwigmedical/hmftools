@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.BQR_CACHE;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.MAX_HOMOPOLYMER;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.findHomopolymerLength;
 
@@ -52,23 +51,16 @@ class UltimaBaseShift extends UltimaQualModel
 
         boolean validShiftRight = true;
 
-        if(validShiftLeft)
+        for(int i = 0; i < mnvLength - 1; ++i)
         {
-            validShiftRight = false;
-        }
-        else
-        {
-            for(int i = 0; i < mnvLength - 1; ++i)
-            {
-                // ie ACG -> TAC, or AC -> TA
-                char refBase = variant.ref().charAt(i);
-                char altBase = variant.alt().charAt(i + 1);
+            // ie ACG -> TAC, or AC -> TA
+            char refBase = variant.ref().charAt(i);
+            char altBase = variant.alt().charAt(i + 1);
 
-                if(refBase != altBase)
-                {
-                    validShiftRight = false;
-                    break;
-                }
+            if(refBase != altBase)
+            {
+                validShiftRight = false;
+                break;
             }
         }
 
@@ -81,6 +73,29 @@ class UltimaBaseShift extends UltimaQualModel
             return;
         }
 
+        // if both are viable options, take the higher prior shift direction
+        Adjustments adjustments = getAdjustments(
+                variant, refBases, refVarIndex, leftReadBase, rightReadBase, refGenome, mnvLength, validShiftLeft);
+
+        if(validShiftLeft && validShiftRight)
+        {
+            Adjustments otherAdjustments = getAdjustments(
+                    variant, refBases, refVarIndex, leftReadBase, rightReadBase, refGenome, mnvLength, false);
+
+            if(preferOtherAdjustments(adjustments, otherAdjustments))
+                adjustments = otherAdjustments;
+        }
+
+        mLeftAdjust = adjustments.leftAdjust();
+        mRightAdjust = adjustments.rightAdjust();
+        mLeftDeletion = adjustments.leftDeletion();
+        mRightDeletion = adjustments.rightDeletion();
+    }
+
+    private Adjustments getAdjustments(
+            final SimpleVariant variant, final byte[] refBases, int refVarIndex, byte leftReadBase, byte rightReadBase,
+            final RefGenomeInterface refGenome, int mnvLength, boolean validShiftLeft)
+    {
         // one side will be a delete (either partial or complete), the other a 1-base insert
         UltimaHomopolymerAdjustment leftAdjust = null;
         UltimaHomopolymerAdjustment rightAdjust = null;
@@ -113,7 +128,7 @@ class UltimaBaseShift extends UltimaQualModel
             else
             {
                 byte rightBase = (byte)variant.alt().charAt(1);
-                leftDeletion = UltimaHomopolymerDeletion.fromMnv(leftRefBase, leftAltBase, leftReadBase, rightBase);
+                leftDeletion = UltimaHomopolymerDeletion.fromMnv(0, leftRefBase, leftAltBase, leftReadBase, rightBase);
             }
 
             // check if the insertion on the right is an expansion or a novel insertion
@@ -155,7 +170,7 @@ class UltimaBaseShift extends UltimaQualModel
             else
             {
                 byte leftBase = (byte)variant.alt().charAt(mnvLength - 2);
-                rightDeletion = UltimaHomopolymerDeletion.fromMnv(rightRefBase, rightAltBase, leftBase, rightReadBase);
+                rightDeletion = UltimaHomopolymerDeletion.fromMnv(mnvLength - 1, rightRefBase, rightAltBase, leftBase, rightReadBase);
             }
 
             int leftHpEndIndex = 0;
@@ -177,17 +192,42 @@ class UltimaBaseShift extends UltimaQualModel
                 leftAdjust = new UltimaHomopolymerAdjustment(leftHpStartIndex, leftHpEndIndex, -1);
             }
         }
+        return new Adjustments(leftAdjust, rightAdjust, leftDeletion, rightDeletion);
+    }
 
-        mLeftAdjust = leftAdjust;
-        mRightAdjust = rightAdjust;
-        mLeftDeletion = leftDeletion;
-        mRightDeletion = rightDeletion;
+    public record Adjustments(
+            UltimaHomopolymerAdjustment leftAdjust, UltimaHomopolymerAdjustment rightAdjust,
+            UltimaHomopolymerDeletion leftDeletion, UltimaHomopolymerDeletion rightDeletion) {}
+
+    private static int refHpLen(UltimaHomopolymerAdjustment adjustment)
+    {
+        return adjustment != null ? adjustment.hpEndIndex() - adjustment.hpStartIndex() + 1 + adjustment.refAdjustCount() : 1;
+    }
+
+    private static boolean preferOtherAdjustments(final Adjustments adjustments, final Adjustments otherAdjustments)
+    {
+        if(!canCompute(otherAdjustments.leftAdjust, otherAdjustments.rightAdjust, otherAdjustments.leftDeletion, otherAdjustments.rightDeletion))
+            return false;
+        else if(!canCompute(adjustments.leftAdjust, adjustments.rightAdjust, adjustments.leftDeletion, adjustments.rightDeletion))
+            return true;
+
+        // if shift direction is ambiguous, prefer the more plausible interpretation (i.e. that a longer homopolymer is modified)
+        int maxAdjHpLen = max(refHpLen(adjustments.leftAdjust), refHpLen(adjustments.rightAdjust));
+        int maxOtherAdjHpLen = max(refHpLen(otherAdjustments.leftAdjust), refHpLen(otherAdjustments.rightAdjust));
+        return maxOtherAdjHpLen > maxAdjHpLen;
+    }
+
+    public static boolean canCompute(
+            final UltimaHomopolymerAdjustment leftAdjust, final UltimaHomopolymerAdjustment rightAdjust,
+            final UltimaHomopolymerDeletion leftDeletion, final UltimaHomopolymerDeletion rightDeletion)
+    {
+        return (leftAdjust != null || leftDeletion != null) && (rightAdjust != null || rightDeletion != null);
     }
 
     @Override
     public boolean canCompute()
     {
-        return (mLeftAdjust != null || mLeftDeletion != null) && (mRightAdjust != null || mRightDeletion != null);
+        return canCompute(mLeftAdjust, mRightAdjust, mLeftDeletion, mRightDeletion);
     }
 
     public byte calculateQual(final SAMRecord record, int varReadIndex)
@@ -210,15 +250,14 @@ class UltimaBaseShift extends UltimaQualModel
             return ULTIMA_INVALID_QUAL;
 
         int rightQual = 0;
-        int mnvEndReadIndex = varReadIndex + mMnvLength - 1;
 
         if(mRightAdjust != null)
         {
-            rightQual = mRightAdjust.calculateQual(record, mnvEndReadIndex);
+            rightQual = mRightAdjust.calculateQual(record, varReadIndex);
         }
         else
         {
-            rightQual = mRightDeletion.calculateQual(record, mnvEndReadIndex);
+            rightQual = mRightDeletion.calculateQual(record, varReadIndex);
         }
 
         if(rightQual == ULTIMA_INVALID_QUAL)
