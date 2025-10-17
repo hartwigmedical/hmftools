@@ -237,14 +237,7 @@ public class PartitionReader
         if(shouldFilterRead(read))
             return;
 
-        if(!read.isSecondaryAlignment() && read.getReadPairedFlag() && !read.getMateUnmappedFlag() && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
-        {
-            if(!read.getSupplementaryAlignmentFlag() || mConfig.FailOnMissingSuppMateCigar)
-            {
-                RD_LOGGER.error("read({}) missing mate CIGAR", readToString(read));
-                System.exit(1);
-            }
-        }
+        checkMissingMateCigar(read);
 
         ++mStats.TotalReads;
 
@@ -444,6 +437,21 @@ public class PartitionReader
         }
 
         mUnmapRegionState = new UnmapRegionState(mCurrentRegion, partitionRegions);
+    }
+
+    private void checkMissingMateCigar(final SAMRecord read)
+    {
+        if(!mConfig.FailOnMissingSuppMateCigar)
+            return;
+
+        if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment() || !read.getReadPairedFlag() || read.getMateUnmappedFlag())
+            return;
+
+        if(!read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        {
+            RD_LOGGER.error("read({}) missing mate CIGAR", readToString(read));
+            System.exit(1);
+        }
     }
 
     private void perfCountersStart()
