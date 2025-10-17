@@ -51,7 +51,12 @@ public class GcNormalizedRatioMapper implements RatioMapper
         // skipped masked regions
         Table gcMedianCalcDf = inputRatios.where(
                 inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0) // TODO: change to >= 0.0
-                        .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX))
+                        .and(
+                                inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX)
+                                        .or(
+                                                inputRatios.doubleColumn(CobaltColumns.READ_DEPTH).isEqualTo(0.0)
+                                        )
+                        )
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
