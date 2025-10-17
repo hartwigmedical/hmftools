@@ -106,11 +106,17 @@ public class PanelBuilderApplication
         }
         else
         {
-            EnsemblDataCache ensemblData = loadEnsemblData();
-            Genes.ExtraOutput extraOutput =
-                    Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData.
-            return extraOutput;
+            if(mConfig.ensemblDir() == null)
+            {
+                throw new UserInputError("Genes requested but Ensembl data directory not provided");
+            }
+            {
+                EnsemblDataCache ensemblData = loadEnsemblData();
+                Genes.ExtraOutput extraOutput =
+                        Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
+                // Result is stored into mPanelData.
+                return extraOutput;
+            }
         }
     }
 

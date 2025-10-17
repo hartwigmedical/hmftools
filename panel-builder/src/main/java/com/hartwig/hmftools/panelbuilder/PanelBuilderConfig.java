@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 public record PanelBuilderConfig(
         String refGenomeFile,
-        String ensemblDir,
+        @Nullable String ensemblDir,
         String probeQualityProfileFile,
         String bwaIndexImageFile,
         @Nullable String bwaLibPath,
@@ -81,7 +81,7 @@ public record PanelBuilderConfig(
     public static void registerConfig(ConfigBuilder configBuilder)
     {
         addRefGenomeFile(configBuilder, true);
-        addEnsemblDir(configBuilder, true);
+        addEnsemblDir(configBuilder, false);
         ProbeQualityProfile.registerConfig(configBuilder);
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
         configBuilder.addPath(CFG_BWA_INDEX_IMAGE_FILE, false, DESC_BWA_INDEX_IMAGE_FILE);

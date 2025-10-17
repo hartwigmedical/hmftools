@@ -20,7 +20,6 @@ You input the genomic features you are interested in and PanelBuilder creates th
 | Argument              | Type | Description                                                      |
 |-----------------------|------|------------------------------------------------------------------|
 | ref_genome            | Path | Reference genome FASTA file.                                     |
-| ensembl_data_dir      | Path | Ensembl cache directory.                                         |
 | bwa_index_image       | Path | BWA-MEM index file for the references genome.                    |
 | probe_quality_profile | Path | Probe quality resource file. May be GZIP'd.                      |
 | output_dir            | Path | Directory in which to store output. Created if it doesn't exist. |
@@ -29,6 +28,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 | Argument           | Type    | Default                     | Description                                                                                                   |
 |--------------------|---------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                      |
 | bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                        |
 | genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.            |
 | cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                               |
