@@ -44,6 +44,7 @@ import com.hartwig.hmftools.redux.duplicate.ReadCache;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 import com.hartwig.hmftools.redux.unmap.UnmapRegionState;
 import com.hartwig.hmftools.redux.write.BamWriter;
+import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import org.apache.logging.log4j.Level;
@@ -62,6 +63,7 @@ public class PartitionReader
 
     // state for current partition
     private BamWriter mBamWriter;
+    private final BamWriterSync mUnmappedBamWriter;
     private List<ChrBaseRegion> mSliceRegions;
     private ChrBaseRegion mCurrentRegion;
     private int mLastWriteLowerPosition;
@@ -75,10 +77,11 @@ public class PartitionReader
     private int mNextLogReadCount;
     private int mProcessedReads;
 
-    public PartitionReader(final ReduxConfig config, final BamReader bamReader)
+    public PartitionReader(final ReduxConfig config, final BamReader bamReader, final BamWriterSync unmappedBamWriter)
     {
         mConfig = config;
         mBamReader = bamReader;
+        mUnmappedBamWriter = unmappedBamWriter;
         mReadUnmapper = mConfig.UnmapRegions;
 
         if(isIllumina())
@@ -249,33 +252,8 @@ public class PartitionReader
             return;
         }
 
-        if(mReadUnmapper.enabled())
-        {
-            // any read in an unmapping region has already been tested by the RegionUnmapper - scenarios:
-            // 1. If the read was unmapped, it will have been relocated to its mate's coordinates and marked as internally unmapped
-            // 2. That same read will also be encountered again at its original location - it will again satisfy the criteria to be unmapped
-            // and then should be discarded from any further processing since it now a duplicate instance of the read in scenario 1
-            // 3. A read with its mate already unmapped (ie prior to running Redux) - with the read also now unmapped - both of these should
-            // be dropped without further processing
-
-            // Further more, any read which was unmapped by the RegionUnmapper and has now appeared here can skip being checked
-            boolean isUnmapped = read.getReadUnmappedFlag();
-            boolean internallyUnmapped = isUnmapped && read.hasAttribute(UNMAP_ATTRIBUTE);
-
-            if(!internallyUnmapped)
-            {
-                mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
-
-                boolean fullyUnmapped = fullyUnmapped(read);
-                boolean unmapped = !isUnmapped && read.getReadUnmappedFlag();
-
-                if(unmapped || fullyUnmapped)
-                {
-                    mConfig.readChecker().checkRead(read, mCurrentRegion.Chromosome, readStart, fullyUnmapped);
-                    return;
-                }
-            }
-        }
+        if(checkReadUnmapping(read, readStart))
+            return;
 
         preProcessRead(read);
 
@@ -304,11 +282,75 @@ public class PartitionReader
         }
     }
 
+    private boolean checkReadUnmapping(final SAMRecord read, final int readStart)
+    {
+        // returns true if the read cna be dropped from further processing
+
+        if(!mReadUnmapper.enabled())
+            return false;
+
+        // any read in an unmapping region has already been tested by the RegionUnmapper - scenarios:
+        // 1. If the read was unmapped, it will have been relocated to its mate's coordinates and marked as internally unmapped
+        // 2. That same read will also be encountered again at its original location - it will again satisfy the criteria to be unmapped
+        // and then should be discarded from any further processing since it now a duplicate instance of the read in scenario 1
+        // 3. A read with its mate already unmapped (ie prior to running Redux) - with the read also now unmapped - both of these should
+        // be dropped without further processing
+
+        if(mReadUnmapper.unmapPairedReads())
+        {
+            // Further more, any read which was unmapped by the RegionUnmapper and has now appeared here can skip being checked
+            boolean isUnmapped = read.getReadUnmappedFlag();
+            boolean internallyUnmapped = isUnmapped && read.hasAttribute(UNMAP_ATTRIBUTE);
+
+            if(!internallyUnmapped)
+            {
+                mReadUnmapper.checkTransformRead(read, mUnmapRegionState);
+
+                boolean fullyUnmapped = fullyUnmapped(read);
+                boolean unmapped = !isUnmapped && read.getReadUnmappedFlag();
+
+                if(unmapped || fullyUnmapped)
+                {
+                    mConfig.readChecker().checkRead(read, mCurrentRegion.Chromosome, readStart, fullyUnmapped);
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            if(mReadUnmapper.checkTransformRead(read, mUnmapRegionState))
+            {
+                if(!read.getReadUnmappedFlag())
+                    return false;
+
+                if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+                    return true;
+
+                if(!mConfig.SkipFullyUnmappedReads)
+                {
+                    if(isUltima())
+                        UltimaRoutines.stripAttributes(read);
+
+                    // write to unmapped primary reads to full-unmapped BAM, since no mate to realign them to
+                    mUnmappedBamWriter.writeRecordSync(read);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void preProcessRead(final SAMRecord read)
     {
         if(isSbx())
         {
             SbxRoutines.prepProcessRead(read);
+        }
+        else if(isUltima())
+        {
+            UltimaRoutines.preProcessRead(read);
         }
     }
 

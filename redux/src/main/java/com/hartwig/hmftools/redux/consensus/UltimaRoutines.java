@@ -3,12 +3,18 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isHighBaseQual;
 
+import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
@@ -16,17 +22,69 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public final class UltimaRoutines
 {
+    private static final Set<String> NON_ULTIMA_REQUIRED_ATTRIBUTES = Set.of(
+            SAMTag.AS.name(), SAMTag.RG.name(), SAMTag.NM.name(), XS_ATTRIBUTE, SUPPLEMENTARY_ATTRIBUTE);
+
+    private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
+
+    public static void stripAttributes(final SAMRecord record)
+    {
+        boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag();
+        boolean formConsensus = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment();
+
+        stripAttributes(record, formConsensus, keepUltimaRequired);
+    }
+
+    public static void stripAttributes(final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
+    {
+        ConsensusType consensusType = ConsensusType.NONE;
+        String lowQualTag = null;
+
+        if(formCustomTags)
+        {
+            consensusType = UltimaBamUtils.deriveConsensusType(record);
+            lowQualTag = formLowQualTag(record);
+        }
+
+        // clean-up unrequired attributes
+        List<SAMRecord.SAMTagAndValue> existingAttributes = record.getAttributes();
+
+        record.clearAttributes();
+
+        for(SAMRecord.SAMTagAndValue attribute : existingAttributes)
+        {
+            if(NON_ULTIMA_REQUIRED_ATTRIBUTES.contains(attribute.tag))
+                record.setAttribute(attribute.tag, attribute.value);
+
+            if(keepUltimaRawQuals && ULTIMA_RAW_QUAL_ATTRIBUTES.contains(attribute.tag))
+                record.setAttribute(attribute.tag, attribute.value);
+        }
+
+        if(formCustomTags)
+        {
+            record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
+            record.setAttribute(ULT_QUAL_TAG, lowQualTag);
+        }
+    }
+    public static void preProcessRead(final SAMRecord record)
+    {
+        stripAttributes(record);
+    }
+
     public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
     {
+    /*
         ConsensusType consensusType = UltimaBamUtils.deriveConsensusType(record);
         record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
         setLowQualTag(record);
+    */
     }
 
-    public static void setLowQualTag(final SAMRecord record)
+    public static String formLowQualTag(final SAMRecord record)
     {
         byte[] t0Values = extractT0Values(record);
 
@@ -123,8 +181,7 @@ public final class UltimaRoutines
             }
         }
 
-        if(sj != null)
-            record.setAttribute(ULT_QUAL_TAG, sj.toString());
+        return sj != null ? sj.toString() : null;
     }
 
     private static void addLowQualTagEntry(final StringJoiner sj, int lowQualStartIndex, int lowQualEndIndex)

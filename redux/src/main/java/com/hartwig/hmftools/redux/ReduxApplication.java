@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.isHomopolymerLo
 import static com.hartwig.hmftools.redux.PartitionThread.splitRegionsIntoPartitions;
 import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
@@ -69,7 +70,7 @@ public class ReduxApplication
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig, msJitterAnalyser, baseQualRecalibration);
         UnmapStats unmapStats = mConfig.UnmapRegions.stats();
 
-        if(mConfig.UnmapRegions.enabled())
+        if(mConfig.UnmapRegions.unmapPairedReads())
         {
             if(mConfig.UnmapAltDecoys)
             {
@@ -170,18 +171,25 @@ public class ReduxApplication
 
         if(mConfig.UnmapRegions.enabled())
         {
-            if(mConfig.RunChecks)
-                mConfig.readChecker().logUnmatchedUnmappedReads();
-
-            // check that the unmapping counts match the re-tested unmapped reads from the the partition readers
-            UnmapStats reunmapStats = mConfig.UnmapRegions.stats();
-
-            RD_LOGGER.debug("re-unmapped stats: {}", reunmapStats.toString());
-
-            if(reunmapStats.ReadCount.get() != unmapStats.ReadCount.get()
-            || reunmapStats.FullyUnmappedCount.get() != unmapStats.FullyUnmappedCount.get())
+            if(mConfig.UnmapRegions.unmapPairedReads())
             {
-                RD_LOGGER.warn("re-unmapped stats differ: {}", reunmapStats.toString());
+                if(mConfig.RunChecks)
+                    mConfig.readChecker().logUnmatchedUnmappedReads();
+
+                // check that the unmapping counts match the re-tested unmapped reads from the the partition readers
+                UnmapStats reunmapStats = mConfig.UnmapRegions.stats();
+
+                RD_LOGGER.debug("re-unmapped stats: {}", reunmapStats.toString());
+
+                if(reunmapStats.ReadCount.get() != unmapStats.ReadCount.get()
+                        || reunmapStats.FullyUnmappedCount.get() != unmapStats.FullyUnmappedCount.get())
+                {
+                    RD_LOGGER.warn("re-unmapped stats differ: {}", reunmapStats.toString());
+                }
+            }
+            else
+            {
+                RD_LOGGER.debug("unmapped stats: {}", mConfig.UnmapRegions.stats().unpairedStats());
             }
         }
 
@@ -241,7 +249,7 @@ public class ReduxApplication
 
         List<String> inputBamFiles = Lists.newArrayList(mConfig.BamFiles);
 
-        if(mConfig.UnmapRegions.enabled() && mConfig.WriteBam)
+        if(mConfig.UnmapRegions.unmapPairedReads() && mConfig.WriteBam)
             inputBamFiles.add(fileWriterCache.unmappedSortedBamFilename());
 
         for(int i = 0; i < partitionThreadCount; ++i)

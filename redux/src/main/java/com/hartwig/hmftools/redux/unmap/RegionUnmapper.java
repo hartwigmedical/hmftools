@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
 import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 
@@ -249,6 +250,7 @@ public class RegionUnmapper extends Thread
     public static void processFullyUnmappedReads(final ReduxConfig config, final BamWriterSync fullyUnmappedBamWriter)
     {
         int totalUnmappedReads = 0;
+        boolean isUltima = ReduxConfig.isUltima();
 
         for(String bamFilename : config.BamFiles)
         {
@@ -260,6 +262,10 @@ public class RegionUnmapper extends Thread
             while(iterator.hasNext())
             {
                 SAMRecord record = iterator.next();
+
+                if(isUltima)
+                    UltimaRoutines.stripAttributes(record);
+
                 fullyUnmappedBamWriter.writeRecordSync(record);
                 ++totalUnmappedReads;
             }

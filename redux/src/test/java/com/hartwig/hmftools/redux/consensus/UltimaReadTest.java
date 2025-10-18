@@ -2,11 +2,10 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
-import static com.hartwig.hmftools.redux.consensus.UltimaRoutines.setLowQualTag;
+import static com.hartwig.hmftools.redux.consensus.UltimaRoutines.formLowQualTag;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,9 +39,7 @@ public class UltimaReadTest
 
         SAMRecord read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        String ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        String ulqTag = formLowQualTag(read);
 
         assertNull(ulqTag);
 
@@ -61,9 +58,7 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
         assertEquals("1-3", ulqTag);
@@ -82,9 +77,7 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
         assertEquals("1-4", ulqTag);
@@ -107,9 +100,7 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
         assertEquals("0-1,5", ulqTag);

@@ -62,7 +62,7 @@ public final class TestUtils
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
     {
-        PartitionReader partitionReader = new PartitionReader(config, null);
+        PartitionReader partitionReader = new PartitionReader(config, null, null);
         partitionReader.setBamWriter(writer);
         return partitionReader;
     }
