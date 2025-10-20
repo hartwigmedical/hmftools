@@ -108,7 +108,7 @@ public class SageApplication implements AutoCloseable
                 mConfig.Common.Quality.HighDepthMode);
 
         final SAMSequenceDictionary dictionary = dictionary();
-        for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
+        for(SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 

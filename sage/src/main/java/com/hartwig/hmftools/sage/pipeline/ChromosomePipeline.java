@@ -74,7 +74,7 @@ public class ChromosomePipeline implements AutoCloseable
         mFragmentLengths = fragmentLengths;
         mCandidateWriter = candidateWriter;
 
-        final Chromosome chr = HumanChromosome.contains(chromosome)
+        Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
 
         mPanelRegions = refData.PanelWithHotspots.get(chr);

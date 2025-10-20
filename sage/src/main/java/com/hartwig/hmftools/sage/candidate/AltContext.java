@@ -190,7 +190,7 @@ public class AltContext extends SimpleVariant
 
     private boolean lowQualInCore(final VariantReadContext readContext, final SAMRecord read, int variantReadIndex)
     {
-        List<Integer> lowQualIndices = UltimaBamUtils.extractLowQualTag(read);
+        List<Integer> lowQualIndices = UltimaBamUtils.extractLowQualIndices(read);
 
         if(lowQualIndices.isEmpty())
             return false;
