@@ -20,6 +20,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -142,7 +143,7 @@ public class SvgRender
         svgCanvas.setFont(currentFont);
     }
 
-    public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, BaseRegion renderRegion, final BaseSeqViewModel bases,
+    public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
             boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
     {
         SVGGraphics2D svgCanvas = new SVGGraphics2D(
@@ -455,5 +456,216 @@ public class SvgRender
             Location = location;
             Col = col;
         }
+    }
+
+    public static SVGGraphics2D renderAminoAcidSeq(double baseBoxSizePx, final BaseRegion renderRegion)
+    {
+        // TODO: cleanup.
+
+        SVGGraphics2D svgCanvas_ = new SVGGraphics2D(
+                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
+        // work in units of BASE_BOX_SIZE
+        svgCanvas_.scale(baseBoxSizePx, baseBoxSizePx);
+
+//        svgCanvas.setFont(BASE_FONT);
+
+//        Integer firstBaseIdx = null;
+//        Integer lastBaseIdx = null;
+//        Integer firstOverlappingBaseIdx = null;
+//        Integer lastOverlappingBaseIdx = null;
+//        BaseViewModel prevBase = bases.getBase(renderRegion.start() - 1);
+//        int delLen = 0;
+
+        Color bgColour = Color.PINK;
+        for(int i = renderRegion.start(); i <= renderRegion.end(); ++i)
+        {
+            int boxIdx = i - renderRegion.start() + BOX_PADDING;
+
+            svgCanvas_.setColor(bgColour);
+            Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, 1.0, 1.0);
+            svgCanvas_.fill(box);
+
+//            BaseViewModel refBase = refBases == null ? BaseViewModel.createMissingBase() : refBases.getBase(i);
+//            BaseViewModel base = bases.getBase(i);
+
+//            if(!base.isMissing())
+//            {
+//                if(firstBaseIdx == null)
+//                {
+//                    firstBaseIdx = boxIdx;
+//                }
+//
+//                lastBaseIdx = boxIdx;
+//            }
+//
+//            if(base.isDel())
+//            {
+//                ++delLen;
+//            }
+//            else if(base.hasCharBase())
+//            {
+//                boolean matchesRef = !base.IsSoftClip && refBase.hasCharBase() && refBase.charBase() == base.charBase();
+//
+//                Color bgColour = Color.WHITE;
+//                Color fgColour = Color.BLACK;
+//                if(matchesRef)
+//                {
+//                    bgColour = Color.LIGHT_GRAY;
+//                }
+//                else if(BASE_BG_COLOUR.containsKey(base.charBase()))
+//                {
+//                    bgColour = BASE_BG_COLOUR.get(base.charBase());
+//                    fgColour = BASE_FG_COLOUR.get(base.charBase());
+//                }
+//
+//                if(shadeQuals)
+//                {
+//                    int baseQ = base.baseQ();
+//                    double lightenFactor = 1.0 - 1.0 * baseQ / MAX_BASEQ_SHADING_CUTTOFF;
+//                    fgColour = lighten(fgColour, lightenFactor);
+//                    bgColour = lighten(bgColour, lightenFactor);
+//                }
+//
+//                svgCanvas.setColor(bgColour);
+//                Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, 1.0, 1.0);
+//                svgCanvas.fill(box);
+//
+//                if(!matchesRef)
+//                {
+//                    svgCanvas.setColor(fgColour);
+//                    // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
+//                    // scaling
+//                    AffineTransform currentTransform = svgCanvas.getTransform();
+//                    svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+//                    drawStringFromCenter(svgCanvas, String.valueOf(base.charBase()),
+//                            (boxIdx + 0.5) * BASE_BOX_SIZE, 0.5 * BASE_BOX_SIZE);
+//                    svgCanvas.setTransform(currentTransform);
+//                }
+//            }
+
+//            // overlapping bases
+//            if(base.IsOverlapped)
+//            {
+//                if(firstOverlappingBaseIdx == null)
+//                {
+//                    firstOverlappingBaseIdx = boxIdx;
+//                }
+//
+//                lastOverlappingBaseIdx = boxIdx;
+//
+//                svgCanvas.setColor(OVERLAPPING_FRAGMENT_BORDER_COLOR);
+//                drawTopBoxBorder(svgCanvas, boxIdx, BOUNDARY_BOX_PROPORTION);
+//                drawBottomBoxBorder(svgCanvas, boxIdx, BOUNDARY_BOX_PROPORTION);
+//            }
+
+//            // del connector
+//            if(!base.isDel() && delLen > 0)
+//            {
+//                drawDel(svgCanvas, boxIdx - delLen, boxIdx - 1);
+//                delLen = 0;
+//            }
+
+//            // borders
+//            List<BoxBorder> borders = posToBordersMap.get(i);
+//            if(borders != null)
+//            {
+//                for(BoxBorder border : borders)
+//                {
+//                    svgCanvas.setColor(border.Col);
+//                    switch(border.Location)
+//                    {
+//                        case TOP:
+//                            drawTopBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
+//                            break;
+//                        case RIGHT:
+//                            drawRightBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
+//                            break;
+//                        case BOTTOM:
+//                            drawBottomBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
+//                            break;
+//                        case LEFT:
+//                            drawLeftBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
+//                    }
+//                }
+//            }
+
+//            // display inserts
+//            svgCanvas.setColor(INSERT_COLOR);
+//            if(base.rightInsertCount() > 0)
+//            {
+//                drawRightInsertIndicator(svgCanvas, boxIdx);
+//            }
+
+//            if(prevBase.rightInsertCount() > 0)
+//            {
+//                drawLeftInsertIndicator(svgCanvas, boxIdx);
+//
+//                Font currentFont = svgCanvas.getFont();
+//                svgCanvas.setFont(INDEL_FONT);
+//                String insertSizeStr = String.valueOf(prevBase.rightInsertCount());
+//
+//                // font size is based of BASE_BOX_SIZE, we do not scale font size when we scaled by BASE_BOX_SIZE, so temporarily undo this
+//                // scaling
+//                AffineTransform currentTransform = svgCanvas.getTransform();
+//                svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+//
+//                double textCenterX = boxIdx * BASE_BOX_SIZE;
+//                double textCenterY = 0.5 * BASE_BOX_SIZE;
+//                Rectangle2D insertSizeStrRect = SvgUtil.getStringBoundsFromCenter(INDEL_FONT, insertSizeStr, textCenterX, textCenterY);
+//                svgCanvas.fill(insertSizeStrRect);
+//                svgCanvas.setColor(Color.WHITE);
+//                drawStringFromCenter(svgCanvas, insertSizeStr, textCenterX, textCenterY);
+//
+//                svgCanvas.setTransform(currentTransform);
+//                svgCanvas.setFont(currentFont);
+//            }
+//
+//            prevBase = base;
+        }
+
+//        // final del connector
+//        if(delLen > 0)
+//        {
+//            drawDel(svgCanvas, renderRegion.end() + 1 - delLen, renderRegion.end());
+//        }
+//
+//        // overlapping base side borders
+//        if(firstOverlappingBaseIdx != null && lastOverlappingBaseIdx != null)
+//        {
+//            svgCanvas.setColor(OVERLAPPING_FRAGMENT_BORDER_COLOR);
+//            drawLeftBoxBorder(svgCanvas, firstOverlappingBaseIdx, BOUNDARY_BOX_PROPORTION);
+//            drawRightBoxBorder(svgCanvas, lastOverlappingBaseIdx, BOUNDARY_BOX_PROPORTION);
+//        }
+//
+//        if(!bases.hasOrientation() || firstBaseIdx == null || lastBaseIdx == null)
+//        {
+//            return svgCanvas;
+//        }
+//
+//        // left orientation indicator
+//        if(bases.LeftIsForwardStrand)
+//        {
+//            svgCanvas.setColor(FORWARD_STRAND_COLOR);
+//            drawRightBoxBorder(svgCanvas, firstBaseIdx - 1, 0.5);
+//        }
+//        else
+//        {
+//            svgCanvas.setColor(REVERSE_STRAND_COLOR);
+//            drawReverseArrow(svgCanvas, firstBaseIdx - 0.5, 0.0, 0.5, 1.0);
+//        }
+//
+//        // right orientation colour
+//        if(bases.RightIsForwardStrand)
+//        {
+//            svgCanvas.setColor(FORWARD_STRAND_COLOR);
+//            drawForwardArrow(svgCanvas, lastBaseIdx + 1, 0.0, 0.5, 1.0);
+//        }
+//        else
+//        {
+//            svgCanvas.setColor(REVERSE_STRAND_COLOR);
+//            drawLeftBoxBorder(svgCanvas, lastBaseIdx + 1, 0.5);
+//        }
+
+        return svgCanvas_;
     }
 }

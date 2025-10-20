@@ -64,7 +64,7 @@ public class RegionTaskTester
     public RegionTask createRegionTask(final ChrBaseRegion region)
     {
         return new RegionTask(
-                0, region, Results, Config, RefGenome, Hotspots, PanelRegions, Transcripts, HighConfidenceRegions,
+                0, region, Results, Config, RefGenome, null, Hotspots, PanelRegions, Transcripts, HighConfidenceRegions,
                 QualityRecalibrationMap, JitterCalcs, PhaseSetCounter, SamSlicerFactory, new FragmentLengthWriter(Config.Common),
                 new CandidateWriter(Config));
     }

@@ -24,7 +24,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class VcfFileReader
+public class VcfFileReader implements AutoCloseable
 {
     private final String mFilename;
     private final boolean mFileValid;

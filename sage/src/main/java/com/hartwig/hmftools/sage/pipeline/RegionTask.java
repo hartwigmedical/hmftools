@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
@@ -50,6 +51,7 @@ public class RegionTask
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
+    private final ReferenceData mRefData;
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
@@ -69,16 +71,17 @@ public class RegionTask
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
-            final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
-            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths, final CandidateWriter candidateWriter)
+            final RefGenomeInterface refGenome, final ReferenceData refData, final List<SimpleVariant> hotspots,
+            final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
+            final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths, final CandidateWriter candidateWriter)
     {
         mTaskId = taskId;
         mRegion = region;
         mResults = results;
         mConfig = config;
         mRefGenome = refGenome;
+        mRefData = refData;
         mFragmentLengths = fragmentLengths;
         mCandidateWriter = candidateWriter;
 
@@ -263,7 +266,7 @@ public class RegionTask
         if(mConfig.Common.Visualiser.Enabled)
         {
             mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
-                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser));
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, mRefData));
         }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());

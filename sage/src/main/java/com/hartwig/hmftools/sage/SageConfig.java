@@ -349,7 +349,7 @@ public class SageConfig
         if(!makeOutputDir(outputDir))
             return false;
 
-        if(Visualiser.Enabled && !makeOutputDir(new File(Visualiser.OutputDir)))
+        if(Visualiser.Enabled && !makeOutputDir(Visualiser.OutputDir))
             return false;
 
         return true;

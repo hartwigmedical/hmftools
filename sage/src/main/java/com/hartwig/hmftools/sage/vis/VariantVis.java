@@ -41,6 +41,7 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_C
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
+import static com.hartwig.hmftools.sage.vis.SvgRender.renderAminoAcidSeq;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
 
@@ -59,10 +60,10 @@ import static j2html.TagCreator.tr;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,6 +86,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -95,6 +97,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -223,8 +226,8 @@ public class VariantVis
         return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
     }
 
-    public static void writeToHtmlFile(
-            final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds, final VisConfig config)
+    public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,
+            final VisConfig config, @Nullable final ReferenceData refData)
     {
         if(config.PassOnly && !sageVariant.isPassing())
             return;
@@ -260,8 +263,10 @@ public class VariantVis
         tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
         refVis.forEach(x -> x.downsampleReadEvidenceRecords());
 
-        Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true)).flatMap(x -> x.stream());
-        Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false)).flatMap(x -> x.stream());
+        DomContent aaAnnotations = renderAminoAcids(config, refData, firstVis.mViewRegion, sageVariant);
+
+        Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaAnnotations)).flatMap(x -> x.stream());
+        Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaAnnotations)).flatMap(x -> x.stream());
         List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, refReadTableRows).collect(Collectors.toList());
 
         CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
@@ -285,7 +290,7 @@ public class VariantVis
                         readTable,
                         getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
-        String filePath = Paths.get(firstVis.mConfig.OutputDir, filename).toString();
+        String filePath = (new File(firstVis.mConfig.OutputDir, filename)).toString();
 
         SG_LOGGER.debug("writing variant vis file: {}", filePath);
 
@@ -524,7 +529,37 @@ public class VariantVis
         return div(variantInfoTable);
     }
 
-    private List<DomContent> renderReads(boolean isTumor)
+    @Nullable
+    private static DomContent renderAminoAcids(
+            final VisConfig config, @Nullable final ReferenceData refData, final BaseRegion viewRegion, final SageVariant variant)
+    {
+        if(config.Vcf == null)
+        {
+            SG_LOGGER.info("skipping amino acid annotations in vis, since vcf not given");
+            return null;
+        }
+
+        if(refData == null || !refData.geneDataCacheLoaded())
+        {
+            SG_LOGGER.info("skipping amino acid annotations in vis, since ensembl data is not loaded");
+            return null;
+        }
+
+        // TODO: Don't load this each time, but wait until I have purple filtering of genes.
+        // TODO: Add mutates AA seq.
+        //        try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
+        //        {
+        //            // TODO:
+        //            if(true)
+        //            {
+        //                throw new NotImplementedException("TODO");
+        //            }
+        //        }
+
+        return renderRefAminoAcids(viewRegion);
+    }
+
+    private List<DomContent> renderReads(boolean isTumor, @Nullable final DomContent aminoAcids)
     {
         CssBuilder lightGrayBgStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY);
         CssBuilder verticalHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).writingMode("vertical-rl");
@@ -557,6 +592,13 @@ public class VariantVis
         headerCols.add(td(rawHtml(renderCoords(READ_HEIGHT_PX, mViewRegion, mVariant.position(), DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
         DomContent headerRow = tr().with(headerCols);
         tableRows.add(headerRow);
+
+        // amino acids
+        if(aminoAcids != null)
+        {
+            DomContent aaRow = tr(td("").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aminoAcids));
+            tableRows.add(aaRow);
+        }
 
         // ref row
         DomContent refRow = tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
@@ -750,6 +792,12 @@ public class VariantVis
         }
 
         return containerDiv;
+    }
+
+    private static DomContent renderRefAminoAcids(final BaseRegion viewRegion)
+    {
+        SVGGraphics2D svgCanvas = renderAminoAcidSeq(READ_HEIGHT_PX, viewRegion);
+        return rawHtml(svgCanvas.getSVGElement());
     }
 
     private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)

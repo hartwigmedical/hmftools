@@ -58,6 +58,9 @@ public final class EnsemblDataLoader
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
             final Map<String,List<GeneData>> chrGeneDataMap, final RefGenomeVersion version, boolean loadSynonyms)
     {
+        if(dataPath == null)
+            return false;
+
         String filename = dataPath;
 
         filename += ENSEMBL_GENE_DATA_FILE;
@@ -419,15 +422,15 @@ public final class EnsemblDataLoader
     }
 
     public static boolean loadTranscriptAminoAcidData(
-            final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
+            final String dataPath, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
         return loadTranscriptAminoAcidData(new File(dataPath), transAminoAcidMap, restrictedGeneIds, canonicalOnly);
     }
 
     public static boolean loadTranscriptAminoAcidData(
-            final File dataDir, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
-            final List<String> restrictedGeneIds, boolean canonicalOnly)
+            final File dataDir, final Map<String,TranscriptAminoAcids> transAminoAcidMap_,
+            final List<String> restrictedGeneIds_, boolean canonicalOnly)
     {
         File dataFile = new File(dataDir, ENSEMBL_TRANS_AMINO_ACIDS_FILE);
 
@@ -454,7 +457,7 @@ public final class EnsemblDataLoader
 
                 String geneId = values[geneIdIndex];
 
-                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
+                if(!restrictedGeneIds_.isEmpty() && !restrictedGeneIds_.contains(geneId))
                 {
                     line = fileReader.readLine();
                     continue;
@@ -466,11 +469,11 @@ public final class EnsemblDataLoader
                 if(canonicalOnly && !isCanonical)
                     continue;
 
-                transAminoAcidMap.put(transName, new TranscriptAminoAcids(
+                transAminoAcidMap_.put(transName, new TranscriptAminoAcids(
                         geneId, values[geneNameIndex], transName, isCanonical, values[aaIndex]));
             }
 
-            LOGGER.debug("loaded {} trans amino-acid records", transAminoAcidMap.size());
+            LOGGER.debug("loaded {} trans amino-acid records", transAminoAcidMap_.size());
         }
         catch(IOException e)
         {

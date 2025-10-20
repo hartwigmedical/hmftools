@@ -39,6 +39,7 @@ public class ChromosomePipeline implements AutoCloseable
 {
     private final String mChromosome;
     private final SageCallConfig mConfig;
+    private final ReferenceData mRefData;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
@@ -65,6 +66,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         mChromosome = chromosome;
         mConfig = config;
+        mRefData = refData;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
@@ -74,7 +76,7 @@ public class ChromosomePipeline implements AutoCloseable
         mFragmentLengths = fragmentLengths;
         mCandidateWriter = candidateWriter;
 
-        Chromosome chr = HumanChromosome.contains(chromosome)
+        final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
 
         mPanelRegions = refData.PanelWithHotspots.get(chr);
@@ -120,7 +122,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
+                    mChromosome, mConfig, mRefData, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults,
                     mFragmentLengths, mCandidateWriter));
         }
