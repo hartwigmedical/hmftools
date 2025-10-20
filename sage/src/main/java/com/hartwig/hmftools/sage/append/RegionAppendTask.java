@@ -132,7 +132,7 @@ public class RegionAppendTask implements Callable<Void>
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, Lists.newArrayList());
 
                 VariantVis.writeToHtmlFile(
-                        sageVariant, Lists.newArrayList(), mConfig.Common.ReferenceIds, mConfig.Common.Visualiser);
+                        sageVariant, Lists.newArrayList(), mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, null);
             }
         }
 

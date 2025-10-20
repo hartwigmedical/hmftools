@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.vis;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.util.List;
@@ -15,13 +14,15 @@ public class VisConfig
     public final boolean Enabled;
     public final boolean PassOnly;
     public final int MaxSupportReads;
-    public final String OutputDir;
+    public final File OutputDir;
     public final List<SimpleVariant> SpecificVariants;
+    public final File Vcf;
 
     private static final String VIS_OUTPUT_DIR = "vis_output_dir";
     private static final String SPECIFIC_VARIANTS = "vis_variants";
     private static final String PASS_ONLY = "vis_pass_only";
     private static final String MAX_SUPPORT_READS = "vis_max_support_reads";
+    private static final String VCF = "vis_vcf";
 
     private static final String DEFAULT_PLOT_DIR = "vis";
 
@@ -35,22 +36,25 @@ public class VisConfig
 
         boolean enabled = PassOnly || !SpecificVariants.isEmpty();
 
-        String visDir = null;
+        File visDir = null;
 
         if(configBuilder.hasValue(VIS_OUTPUT_DIR))
         {
             enabled = true;
-            visDir = checkAddDirSeparator(outputDir + configBuilder.getValue(VIS_OUTPUT_DIR));
+            visDir = new File(outputDir, configBuilder.getValue(VIS_OUTPUT_DIR));
         }
         else if(enabled)
         {
-            visDir = outputDir + DEFAULT_PLOT_DIR + File.separator;
+            visDir = new File(outputDir, DEFAULT_PLOT_DIR);
         }
 
         OutputDir = visDir;
         Enabled = enabled;
 
         MaxSupportReads = configBuilder.getInteger(MAX_SUPPORT_READS);
+
+        String VcfStr = configBuilder.hasValue(VCF) ? configBuilder.getValue(VCF) : null;
+        Vcf = VcfStr == null ? null : new File(VcfStr);
     }
 
     public boolean processVariant(final SimpleVariant variant)
@@ -73,6 +77,8 @@ public class VisConfig
         configBuilder.addConfigItem(
                 INTEGER, MAX_SUPPORT_READS, false,
                 "Visualiser: Max reads by support type, default is fixed by type. Use '-1' to show all.", "0");
+
+        configBuilder.addConfigItem(VCF, false, "VCF file containing pave annotations");
     }
 
     public VisConfig()
@@ -82,5 +88,6 @@ public class VisConfig
         PassOnly = false;
         MaxSupportReads = 0;
         Enabled = false;
+        Vcf = null;
     }
 }

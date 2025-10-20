@@ -14,8 +14,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
@@ -58,6 +58,9 @@ public final class EnsemblDataLoader
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
             final Map<String,List<GeneData>> chrGeneDataMap, final RefGenomeVersion version, boolean loadSynonyms)
     {
+        if(dataPath == null)
+            return false;
+
         String filename = dataPath;
 
         filename += ENSEMBL_GENE_DATA_FILE;
@@ -419,7 +422,7 @@ public final class EnsemblDataLoader
     }
 
     public static boolean loadTranscriptAminoAcidData(
-            final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
+            final String dataPath, final Map<String, TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
         return loadTranscriptAminoAcidData(new File(dataPath), transAminoAcidMap, restrictedGeneIds, canonicalOnly);

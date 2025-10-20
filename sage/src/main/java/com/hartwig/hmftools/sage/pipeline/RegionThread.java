@@ -15,11 +15,12 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
@@ -33,6 +34,7 @@ public class RegionThread extends Thread
     private final SageCallConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
+    private final ReferenceData mRefData;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
@@ -52,7 +54,7 @@ public class RegionThread extends Thread
     private final CandidateWriter mCandidateWriter;
 
     public RegionThread(
-            final String chromosome, final SageCallConfig config,
+            final String chromosome, final SageCallConfig config, final ReferenceData refData,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions, final Queue<PartitionTask> partitions,
@@ -60,6 +62,7 @@ public class RegionThread extends Thread
     {
         mChromosome = chromosome;
         mConfig = config;
+        mRefData = refData;
         mSamSlicerFactory = new SamSlicerFactory();
         mRefGenomeFile = loadRefGenome(config.Common.RefGenomeFile);
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
@@ -136,7 +139,7 @@ public class RegionThread extends Thread
                 : Lists.newArrayList();
 
         return new RegionTask(
-                partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
+                partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, mRefData, regionHotspots, regionPanel, regionsTranscripts,
                 regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mSamSlicerFactory,
                 mFragmentLengths, mCandidateWriter);
     }

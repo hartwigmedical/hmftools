@@ -4,7 +4,6 @@ import java.util.EnumMap;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
-import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 public class SageVisConstants
 {
@@ -35,4 +34,10 @@ public class SageVisConstants
         MAX_READS_PER_TYPE.put(ReadContextMatch.REALIGNED, 20);
         MAX_READS_PER_TYPE.put(ReadContextMatch.REF, 20);
     }
+
+    final static String IMPACT_KEY = "IMPACT";
+    final static int GENE_NAME_IDX = 0;
+    final static int TRANSCRIPT_NAME_IDX = 1;
+    final static int AA_VARIANT_TYPE_IDX = 2;
+    final static int HGVS_INDEX = 6;
 }

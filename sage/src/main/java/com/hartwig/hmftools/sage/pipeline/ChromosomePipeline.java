@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -22,11 +22,11 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.PartitionTask;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
@@ -39,6 +39,7 @@ public class ChromosomePipeline implements AutoCloseable
 {
     private final String mChromosome;
     private final SageCallConfig mConfig;
+    private final ReferenceData mRefData;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
@@ -65,6 +66,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         mChromosome = chromosome;
         mConfig = config;
+        mRefData = refData;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
@@ -120,7 +122,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
+                    mChromosome, mConfig, mRefData, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults,
                     mFragmentLengths, mCandidateWriter));
         }
