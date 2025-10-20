@@ -19,7 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import feature.FeatureType;
 import feature.FeatureValue;
 
-public class ReduxBqrPrep
+public class ReduxBqrPrep implements CategoryPrep<Double>
 {
     private final PrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
