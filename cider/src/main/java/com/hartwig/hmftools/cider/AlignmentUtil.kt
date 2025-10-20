@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.hartwig.hmftools.cider.CiderConstants.ALIGNMENT_BATCH_SIZE
 import com.hartwig.hmftools.cider.genes.GenomicLocation
@@ -13,6 +12,8 @@ import org.apache.logging.log4j.LogManager
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex
 import java.io.FileInputStream
+import java.io.InputStream
+import kotlin.io.path.createTempFile
 
 object AlignmentUtil
 {
@@ -90,7 +91,7 @@ object AlignmentUtil
             .run(sequences)
     }
 
-    data class BwaMemAlignment(
+    data class Alignment(
         val querySeq: String,
         val queryAlignStart: Int,
         val queryAlignEnd: Int,
@@ -99,6 +100,7 @@ object AlignmentUtil
         val refEnd: Int,
         val strand: Strand,
         val alignmentScore: Int,
+        val editDistance: Int,
         val percentageIdent: Double,
     ) {
         init {
@@ -114,26 +116,29 @@ object AlignmentUtil
         return contig.split("_")[0]
     }
 
-    fun runBwaMem(sequences: Map<Int, String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
-            Multimap<Int, BwaMemAlignment>
-    {
-        sLogger.debug("Aligning ${sequences.size} sequences")
+    fun runBwaMem(sequences: List<String>, refGenomeDictPath: String, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+            List<List<Alignment>> =
+        runBwaMem(sequences, FileInputStream(refGenomeDictPath), refGenomeIndexPath, alignScoreThreshold, numThreads)
 
-        val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(FileInputStream(refGenomeDictPath))
+    fun runBwaMem(sequences: List<String>, refGenomeDict: InputStream, refGenomeIndexPath: String, alignScoreThreshold: Int, numThreads: Int):
+            List<List<Alignment>>
+    {
+        sLogger.debug("Aligning ${sequences.size} sequences with BWA-MEM")
+
+        val refGenSeqDict = ReferenceSequenceFileFactory.loadDictionary(refGenomeDict)
         val aligner = createBwaMemAligner(refGenomeIndexPath, alignScoreThreshold, numThreads)
 
-        val keys = sequences.keys.toList()
-        val results = ArrayListMultimap.create<Int, BwaMemAlignment>()
+        val results = ArrayList<List<Alignment>>()
         // Alignments are batches because with our BWA-MEM settings, too much memory is allocated with large BAMs.
-        for (i in 0 until keys.size step ALIGNMENT_BATCH_SIZE) {
-            val batchKeys = keys.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, keys.size))
-            sLogger.debug("Running BWA-MEM on batch of ${batchKeys.size} sequences")
-            val batchByteSeqs = batchKeys.map { k -> sequences[k]!!.toByteArray() }
+        for (i in 0 until sequences.size step ALIGNMENT_BATCH_SIZE) {
+            val batchSequences = sequences.subList(i, minOf(i + ALIGNMENT_BATCH_SIZE, sequences.size))
+            sLogger.debug("Running BWA-MEM on batch of ${batchSequences.size} sequences")
+            val batchByteSeqs = batchSequences.map { it.toByteArray() }
             // Perform a JVM garbage collection before alignment to reduce memory pressure.
             System.gc()
             val batchAlignments = aligner.alignSeqs(batchByteSeqs)
-            val batchResults = parseBwaMemAlignments(sequences, batchKeys, batchAlignments, refGenSeqDict)
-            results.putAll(batchResults)
+            val batchResults = parseBwaMemAlignments(batchSequences, batchAlignments, refGenSeqDict)
+            results.addAll(batchResults)
         }
         sLogger.debug("Alignment complete")
         return results
@@ -165,47 +170,65 @@ object AlignmentUtil
         return aligner
     }
 
-    private fun parseBwaMemAlignments(sequences: Map<Int, String>, keys: List<Int>,
+    private fun parseBwaMemAlignments(sequences: List<String>,
                                       alignments: List<List<org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment>>,
-                                      refGenSeqDict: SAMSequenceDictionary): Multimap<Int, BwaMemAlignment>
+                                      refGenSeqDict: SAMSequenceDictionary): List<List<Alignment>>
     {
-        val results = ArrayListMultimap.create<Int, BwaMemAlignment>()
-        for (key in keys.withIndex()) {
-            for (alignment in alignments[key.index]) {
-                if (alignment.samFlag and 0x4 != 0)
-                {
-                    // Not a real alignment, means the query is unmapped.
-                    continue
-                }
+        require(sequences.size == alignments.size)
+        return sequences.zip(alignments)
+            .map { (querySeq, queryAlignments) ->
+                queryAlignments.mapNotNull { parseBwaMemAlignment(querySeq, it, refGenSeqDict) } }
+    }
 
-                val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
-                val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
-                val refEnd = alignment.refEnd
-                require(refStart <= refEnd)
-                val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
-                val querySeq = sequences[key.value]!!
-                // Apparently these need to be inverted if the alignment reports the reverse strand
-                // Do this to match Blastn behaviour
-                val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.length - alignment.seqEnd } + 1
-                val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.length - alignment.seqStart }
-                require(queryAlignStart <= queryAlignEnd)
-                // nMismatches is not the best name - it's actually the edit distance.
-                // Which means this calculation is correct for mismatches and gaps.
-                val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
-                val resAlignment = BwaMemAlignment(
-                    querySeq,
-                    queryAlignStart,
-                    queryAlignEnd,
-                    refContig,
-                    refStart,
-                    refEnd,
-                    strand,
-                    alignment.alignerScore,
-                    percentIdentity
-                )
-                results.put(key.value, resAlignment)
-            }
+    private fun parseBwaMemAlignment(querySeq: String, alignment: org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment,
+                                     refGenSeqDict: SAMSequenceDictionary)
+        : Alignment?
+    {
+        if (alignment.samFlag and 0x4 != 0)
+        {
+            // Not a real alignment, means the query is unmapped.
+            return null
         }
-        return results
+
+        val refContig = refGenSeqDict.getSequence(alignment.refId).sequenceName
+        val refStart = alignment.refStart + 1   // apparently BWA lib gives 0-based index
+        val refEnd = alignment.refEnd
+        require(refStart <= refEnd)
+        val strand = if ((alignment.samFlag and 0x10) == 0) { Strand.FORWARD } else { Strand.REVERSE }
+        // Apparently these need to be inverted if the alignment reports the reverse strand
+        // Do this to match Blastn behaviour
+        val queryAlignStart = if (strand == Strand.FORWARD) { alignment.seqStart } else { querySeq.length - alignment.seqEnd } + 1
+        val queryAlignEnd = if (strand == Strand.FORWARD) { alignment.seqEnd } else { querySeq.length - alignment.seqStart }
+        require(queryAlignStart <= queryAlignEnd)
+        // nMismatches is not the best name - it's actually the edit distance.
+        // Which means this calculation is correct for mismatches and gaps.
+        val percentIdentity = 100 * (1 - (alignment.nMismatches.toDouble() / (queryAlignEnd - queryAlignStart + 1)))
+        return Alignment(
+            querySeq,
+            queryAlignStart,
+            queryAlignEnd,
+            refContig,
+            refStart,
+            refEnd,
+            strand,
+            alignment.alignerScore,
+            alignment.nMismatches,
+            percentIdentity
+        )
+    }
+
+    // Run alignment against a patch of the GRCh37 genome which includes more genes, particularly TRBJ1.
+    fun runGRCh37PatchAlignment(sequences: List<String>, alignScoreThreshold: Int, threadCount: Int): List<List<Alignment>>
+    {
+        sLogger.debug("Aligning ${sequences.size} sequences to the GRCh37 patch")
+        val refFasta = "7_gl582971_fix.fasta"
+        val refDict = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.dict")!!
+        val refIndexImage = AlignmentUtil::class.java.classLoader.getResourceAsStream("$refFasta.img")!!
+        // Unfortunately, the BWA-MEM API requires a file for the index image, which I don't think we can get straight from the resource.
+        // So we have to write the contents to a temporary file first.
+        val refIndexImageFile = createTempFile().toFile()
+        refIndexImageFile.deleteOnExit()
+        refIndexImageFile.writeBytes(refIndexImage.readAllBytes())
+        return runBwaMem(sequences, refDict, refIndexImageFile.path, alignScoreThreshold, threadCount)
     }
 }

@@ -121,12 +121,6 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return layout.reads.map({ read: ReadLayout.Read -> toReadCandidate(read)})
     }
 
-    // get the anchor boundary position for this layout read
-    fun getAnchorBoundaryPosition(read: ReadLayout.Read) : Int
-    {
-        return read.alignedPosition
-    }
-
     // apply trim bases and polyG trimming
     private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean) : ReadSlice?
     {
@@ -244,6 +238,16 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             }
         }
 
+        // always build from left to right
+        layoutReads.sortWith(
+            Collections.reverseOrder(
+                Comparator.comparingInt { r: ReadLayout.Read -> r.alignedPosition }
+                    .thenComparingDouble { r: ReadLayout.Read -> r.baseQualities.average() } // handle the highest quality ones first
+                    .thenComparingInt { r: ReadLayout.Read -> r.alignedPosition + r.sequence.size }
+                    .thenComparing { r: ReadLayout.Read -> r.readKey.readName } // lastly we use read Id just in case
+                    .thenComparing { r: ReadLayout.Read -> !r.readKey.firstOfPair }
+            ))
+
         // here is the high qual reads
         numHighQualReads = layoutReads.size
 
@@ -255,7 +259,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             sLogger.printf(Level.INFO, "building %s layouts, read count(%d) > limit(%d), downsampling(frac to keep: %.3f)",
                 geneType, layoutReads.size, maxReadCountPerGene, fractionToKeep)
 
-            // we always use the same seed to make it predictable
+            // we always use the same seed to make it deterministic
             val random = Random(0)
 
             val downSampledReads = layoutReads.filter { (random.nextDouble() < fractionToKeep) }
@@ -270,15 +274,6 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         }
 
         sLogger.info("building {} layouts from {} reads", geneType, layoutReads.size)
-
-        // always build from left to right
-        layoutReads.sortWith(
-            Collections.reverseOrder(
-                Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
-                    .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
-                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.size })
-                    .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
-            ))
 
         val layoutForest = LayoutForest(minBaseQuality.toByte(), minMatchedBases, CiderConstants.LAYOUT_MIN_SUPPORT_TO_SEAL_NODE)
 

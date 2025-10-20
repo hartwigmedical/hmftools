@@ -122,7 +122,6 @@ java -Xmx32G -jar sage.jar \
     -ref_genome_version 37 \
     -ref_genome /ref_data/refGenome.fasta \
     -hotspots /ref_data/KnownHotspots.37.vcf.gz \
-    -panel_bed /ref_data/ActionableCodingPanel.37.bed.gz \
     -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
     -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
