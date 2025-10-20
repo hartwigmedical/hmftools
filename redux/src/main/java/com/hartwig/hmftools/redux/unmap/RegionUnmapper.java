@@ -264,7 +264,7 @@ public class RegionUnmapper extends Thread
                 SAMRecord record = iterator.next();
 
                 if(isUltima)
-                    UltimaRoutines.stripAttributes(record);
+                    UltimaRoutines.stripAttributes(record, null);
 
                 fullyUnmappedBamWriter.writeRecordSync(record);
                 ++totalUnmappedReads;

@@ -329,7 +329,7 @@ public class PartitionReader
                 if(!mConfig.SkipFullyUnmappedReads)
                 {
                     if(isUltima())
-                        UltimaRoutines.stripAttributes(read);
+                        UltimaRoutines.stripAttributes(read, mStats.Ultima);
 
                     // write to unmapped primary reads to full-unmapped BAM, since no mate to realign them to
                     mUnmappedBamWriter.writeRecordSync(read);
@@ -350,7 +350,7 @@ public class PartitionReader
         }
         else if(isUltima())
         {
-            UltimaRoutines.preProcessRead(read);
+            UltimaRoutines.preProcessRead(read, mStats.Ultima);
         }
     }
 

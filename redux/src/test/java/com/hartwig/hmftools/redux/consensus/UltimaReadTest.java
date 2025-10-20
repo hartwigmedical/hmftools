@@ -61,7 +61,7 @@ public class UltimaReadTest
         ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("1-3", ulqTag);
+        assertEquals("3=1-3", ulqTag);
 
         // test 2:
         // bases: A  T  T  T  C
@@ -80,7 +80,7 @@ public class UltimaReadTest
         ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("1-4", ulqTag);
+        assertEquals("4=1-4", ulqTag);
 
         // test 3:
         // bases: A  G  T  T  T  C
@@ -103,7 +103,7 @@ public class UltimaReadTest
         ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("0-1,5", ulqTag);
+        assertEquals("3=0-1,5", ulqTag);
     }
 
     private static void resetQualValues(final byte[] quals, final byte[] tpValues, final byte[] t0Values)

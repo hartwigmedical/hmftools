@@ -10,12 +10,16 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TA
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_INDEX_DELIM;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isHighBaseQual;
 
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+
+import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -31,15 +35,22 @@ public final class UltimaRoutines
 
     private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
 
-    public static void stripAttributes(final SAMRecord record)
+    public static void stripAttributes(final SAMRecord record, @Nullable final UltimaStats stats)
     {
         boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag();
-        boolean formConsensus = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment();
+        boolean formCustomTags = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment();
 
-        stripAttributes(record, formConsensus, keepUltimaRequired);
+        stripAttributes(record, formCustomTags, keepUltimaRequired);
+
+        if(formCustomTags && stats != null)
+        {
+            int lowQualBaseCount = extractLowQualCount(record);
+            stats.addLowQualCount(lowQualBaseCount);
+        }
     }
 
-    public static void stripAttributes(final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
+    public static void stripAttributes(
+            final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
     {
         ConsensusType consensusType = ConsensusType.NONE;
         String lowQualTag = null;
@@ -70,9 +81,9 @@ public final class UltimaRoutines
             record.setAttribute(ULT_QUAL_TAG, lowQualTag);
         }
     }
-    public static void preProcessRead(final SAMRecord record)
+    public static void preProcessRead(final SAMRecord record, final UltimaStats stats)
     {
-        stripAttributes(record);
+        stripAttributes(record, stats);
     }
 
     public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
@@ -86,6 +97,9 @@ public final class UltimaRoutines
 
     public static String formLowQualTag(final SAMRecord record)
     {
+        // tag has the form: 5=2,4-6,8 where
+        // 5 is the total number of low-qual bases, followed by the specific indices for these - single index values and index ranges
+        // these indices are determined from from homolpolymer complete deletions (t0 tag) and adjustments (tP tag)
         byte[] t0Values = extractT0Values(record);
 
         byte[] bases = record.getReadBases();
@@ -97,6 +111,7 @@ public final class UltimaRoutines
         int hpEndIndex = -1;
         boolean hpLowQual = false;
         int lowQualStartIndex = -1;
+        int totalLowQualCount = 0;
 
         for(int i = 0; i < baseQuals.length; ++i)
         {
@@ -161,9 +176,10 @@ public final class UltimaRoutines
                 if(i == baseQuals.length - 1)
                 {
                     if(sj == null)
-                        sj = new StringJoiner(ULT_QUAL_TAG_DELIM);
+                        sj = new StringJoiner(ULT_QUAL_TAG_INDEX_DELIM);
 
                     addLowQualTagEntry(sj, lowQualStartIndex, baseQuals.length - 1);
+                    totalLowQualCount += baseQuals.length - lowQualStartIndex;
                 }
             }
             else
@@ -173,15 +189,17 @@ public final class UltimaRoutines
                     int lowQualEndIndex = i - 1;
 
                     if(sj == null)
-                        sj = new StringJoiner(ULT_QUAL_TAG_DELIM);
+                        sj = new StringJoiner(ULT_QUAL_TAG_INDEX_DELIM);
 
                     addLowQualTagEntry(sj, lowQualStartIndex, lowQualEndIndex);
-                    lowQualStartIndex = -1;
+                    totalLowQualCount += lowQualEndIndex - lowQualStartIndex + 1;
+
+                    lowQualStartIndex = -1; // reset
                 }
             }
         }
 
-        return sj != null ? sj.toString() : null;
+        return sj != null ? format("%d=%s", totalLowQualCount, sj) : null;
     }
 
     private static void addLowQualTagEntry(final StringJoiner sj, int lowQualStartIndex, int lowQualEndIndex)

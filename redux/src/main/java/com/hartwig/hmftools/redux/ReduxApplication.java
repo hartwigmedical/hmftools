@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.APP_NAME;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
 import static com.hartwig.hmftools.redux.ReduxConfig.registerConfig;
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.unmap.RegionUnmapper.createThreadTasks;
@@ -193,7 +194,8 @@ public class ReduxApplication
             }
         }
 
-        combinedStats.writeDuplicateStats(mConfig);
+        if(!mConfig.SkipDuplicateMarking)
+            combinedStats.writeDuplicateStats(mConfig);
 
         if(mConfig.UMIs.Enabled)
         {
@@ -205,6 +207,9 @@ public class ReduxApplication
                 combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
             }
         }
+
+        if(isUltima())
+            combinedStats.Ultima.writeStats(mConfig);
 
         if(finalBamWriter != null)
             finalBamWriter.logTimes();
