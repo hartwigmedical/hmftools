@@ -8,6 +8,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class VisConfig
 {
@@ -16,13 +20,13 @@ public class VisConfig
     public final int MaxSupportReads;
     public final File OutputDir;
     public final List<SimpleVariant> SpecificVariants;
-    public final File Vcf;
+    public final File PurpleVcf;
 
     private static final String VIS_OUTPUT_DIR = "vis_output_dir";
     private static final String SPECIFIC_VARIANTS = "vis_variants";
     private static final String PASS_ONLY = "vis_pass_only";
     private static final String MAX_SUPPORT_READS = "vis_max_support_reads";
-    private static final String VCF = "vis_vcf";
+    private static final String PURPLE_VCF = "vis_purple_vcf";
 
     private static final String DEFAULT_PLOT_DIR = "vis";
 
@@ -31,8 +35,35 @@ public class VisConfig
         PassOnly = configBuilder.hasFlag(PASS_ONLY);
         SpecificVariants = Lists.newArrayList();
 
+        String VcfStr = configBuilder.hasValue(PURPLE_VCF) ? configBuilder.getValue(PURPLE_VCF) : null;
+        PurpleVcf = VcfStr == null ? null : new File(VcfStr);
+
         if(configBuilder.hasValue(SPECIFIC_VARIANTS))
+        {
             SpecificVariants.addAll(SimpleVariant.fromConfig(configBuilder.getValue(SPECIFIC_VARIANTS)));
+        }
+        else if(PurpleVcf != null)
+        {
+            try(VcfFileReader vcfFileReader = new VcfFileReader(PurpleVcf.toString(), true))
+            {
+                CloseableTribbleIterator<VariantContext> iter = vcfFileReader.iterator();
+                while(iter.hasNext())
+                {
+                    VariantContext variant = iter.next();
+                    Object reported = variant.getAttribute("REPORTED");
+                    if(reported != null && (boolean) reported)
+                    {
+                        String contig = variant.getContig();
+                        int pos = variant.getStart();
+                        String ref = variant.getReference().getBaseString();
+                        String alt = variant.getAltAlleleWithHighestAlleleCount().getBaseString();
+                        SpecificVariants.add(new SimpleVariant(contig, pos, ref, alt));
+                    }
+                }
+
+                iter.close();
+            }
+        }
 
         boolean enabled = PassOnly || !SpecificVariants.isEmpty();
 
@@ -52,9 +83,6 @@ public class VisConfig
         Enabled = enabled;
 
         MaxSupportReads = configBuilder.getInteger(MAX_SUPPORT_READS);
-
-        String VcfStr = configBuilder.hasValue(VCF) ? configBuilder.getValue(VCF) : null;
-        Vcf = VcfStr == null ? null : new File(VcfStr);
     }
 
     public boolean processVariant(final SimpleVariant variant)
@@ -78,7 +106,7 @@ public class VisConfig
                 INTEGER, MAX_SUPPORT_READS, false,
                 "Visualiser: Max reads by support type, default is fixed by type. Use '-1' to show all.", "0");
 
-        configBuilder.addConfigItem(VCF, false, "VCF file containing pave annotations");
+        configBuilder.addConfigItem(PURPLE_VCF, false, "VCF file containing pave and purple annotations");
     }
 
     public VisConfig()
@@ -88,6 +116,6 @@ public class VisConfig
         PassOnly = false;
         MaxSupportReads = 0;
         Enabled = false;
-        Vcf = null;
+        PurpleVcf = null;
     }
 }

@@ -712,9 +712,9 @@ public class VariantVis
     private static AminoAcidElements getAminoAcidsElements(final VisConfig config, @Nullable final ReferenceData refData,
             final BaseRegion viewRegion, final SageVariant sageVariant, final RefGenomeSource refGenome)
     {
-        if(config.Vcf == null)
+        if(config.PurpleVcf == null)
         {
-            SG_LOGGER.info("skipping amino acid annotations in vis, since vcf not given");
+            SG_LOGGER.info("skipping amino acid annotations in vis, since purple vcf not given");
             return null;
         }
 
@@ -726,13 +726,13 @@ public class VariantVis
 
         final SimpleVariant simpleVariant = sageVariant.variant();
         List<VariantContext> vcfVariants;
-        try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
+        try(VcfFileReader vcfFileReader = new VcfFileReader(config.PurpleVcf.toString(), true))
         {
             vcfVariants = vcfFileReader.findVariants(simpleVariant.Chromosome, viewRegion.start(), viewRegion.end());
         }
 
         if(vcfVariants == null)
-            throw new RuntimeException(format("Failed to read VCF: %s", config.Vcf));
+            throw new RuntimeException(format("Failed to read purple VCF: %s", config.PurpleVcf));
 
         if(vcfVariants.isEmpty())
             return null;
