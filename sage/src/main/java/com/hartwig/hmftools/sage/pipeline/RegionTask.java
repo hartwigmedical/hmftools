@@ -17,19 +17,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.perf.PerformanceCounter;
+import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
-import com.hartwig.hmftools.sage.candidate.CandidateWriter;
-import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
-import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -37,6 +37,7 @@ import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.CandidateVariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.PhasingUtils;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 
@@ -50,6 +51,7 @@ public class RegionTask
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
+    private final ReferenceData mRefData;
 
     private final CandidateStage mCandidateState;
     private final EvidenceStage mEvidenceStage;
@@ -69,16 +71,18 @@ public class RegionTask
 
     public RegionTask(
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
-            final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
-            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths, final CandidateWriter candidateWriter)
+            final RefGenomeInterface refGenome, final ReferenceData refData, final List<SimpleVariant> hotspots,
+            final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
+            final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths,
+            final CandidateWriter candidateWriter)
     {
         mTaskId = taskId;
         mRegion = region;
         mResults = results;
         mConfig = config;
         mRefGenome = refGenome;
+        mRefData = refData;
         mFragmentLengths = fragmentLengths;
         mCandidateWriter = candidateWriter;
 
@@ -263,7 +267,7 @@ public class RegionTask
         if(mConfig.Common.Visualiser.Enabled)
         {
             mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
-                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser));
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser, mRefData));
         }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());

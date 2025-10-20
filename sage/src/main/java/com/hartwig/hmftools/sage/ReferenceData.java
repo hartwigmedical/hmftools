@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
-import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,16 +22,17 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -39,9 +43,11 @@ public class ReferenceData
     public final Map<Chromosome,List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
+    private boolean mGeneDataCacheLoaded;
     public final List<DriverGene> DriverGenes;
 
     public final Map<String,List<TranscriptData>> ChromosomeTranscripts;
+    public final Map<String, TranscriptAminoAcids> TransAminoAcidMap;
 
     public final IndexedFastaSequenceFile RefGenome;
 
@@ -55,11 +61,19 @@ public class ReferenceData
         Hotspots = ArrayListMultimap.create();
         HighConfidence = Maps.newHashMap();
         ChromosomeTranscripts = Maps.newHashMap();
+        TransAminoAcidMap = Maps.newHashMap();
 
         RefGenome = loadRefGenome(config.Common.RefGenomeFile);
 
+        mGeneDataCacheLoaded = false;
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
+
+        if(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.Vcf != null && mGeneDataCacheLoaded)
+        {
+            File ensemblDataDir = new File(configBuilder.getValue(ENSEMBL_DATA_DIR));
+            loadTranscriptAminoAcidData(ensemblDataDir, TransAminoAcidMap, Collections.emptyList(), false);
+        }
 
         if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL))
         {
@@ -93,8 +107,8 @@ public class ReferenceData
 
     private void loadGeneData()
     {
-        GeneDataCache.setRequiredData(true, false, false, true);
-        GeneDataCache.load(false);
+        GeneDataCache.setRequiredData(true, false, false, !(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.Vcf != null));
+        mGeneDataCacheLoaded = GeneDataCache.load(false);
 
         for(Map.Entry<String,List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())
         {
@@ -257,4 +271,6 @@ public class ReferenceData
             }
         }
     }
+
+    public boolean geneDataCacheLoaded() { return mGeneDataCacheLoaded; }
 }
