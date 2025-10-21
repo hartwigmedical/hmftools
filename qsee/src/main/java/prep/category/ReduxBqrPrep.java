@@ -1,4 +1,4 @@
-package prep;
+package prep.category;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
@@ -18,6 +18,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import feature.FeatureType;
 import feature.FeatureValue;
+import prep.CategoryPrep;
+import prep.PrepConfig;
 
 public class ReduxBqrPrep implements CategoryPrep<Double>
 {

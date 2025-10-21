@@ -1,4 +1,4 @@
-package prep;
+package prep.category;
 
 import static common.QSeeConstants.QC_LOGGER;
 
@@ -13,6 +13,8 @@ import com.hartwig.hmftools.common.genome.gc.GCBucket;
 
 import feature.FeatureType;
 import feature.FeatureValue;
+import prep.CategoryPrep;
+import prep.PrepConfig;
 
 public class CobaltGcMediansPrep implements CategoryPrep<Double>
 {

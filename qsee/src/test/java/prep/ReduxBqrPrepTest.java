@@ -2,15 +2,15 @@ package prep;
 
 import static org.junit.Assert.assertEquals;
 
-import static prep.ReduxBqrPrep.calcChangeInQualPerOriginalQual;
-import static prep.ReduxBqrPrep.calcChangeInQualPerTrinucContext;
+import static prep.category.ReduxBqrPrep.calcChangeInQualPerOriginalQual;
+import static prep.category.ReduxBqrPrep.calcChangeInQualPerTrinucContext;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import feature.FeatureValue;
-import prep.ReduxBqrPrep.ExtendedBqrRecord;
+import prep.category.ReduxBqrPrep.ExtendedBqrRecord;
 
 import org.junit.Test;
 

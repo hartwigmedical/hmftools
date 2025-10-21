@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 import org.junit.Test;
 
 import feature.FeatureValue;
+import prep.category.CobaltGcMediansPrep;
 
 public class CobaltGcMediansPrepTest
 {
