@@ -29,6 +29,7 @@ public class ProbeFactory
         boolean regionsValid = definition.regions().stream().allMatch(this::isRegionValid);
         if(!regionsValid)
         {
+            // TODO: should probably throw here - why are we trying to create a probe from a bad region?
             return Optional.empty();
         }
 
@@ -36,6 +37,7 @@ public class ProbeFactory
         boolean sequenceValid = sequence.length() == definition.baseLength() && isDnaSequenceNormal(sequence);
         if(!sequenceValid)
         {
+            // TODO? maybe throw here. surely very rare to want to create a probe in an unsequenceable region
             return Optional.empty();
         }
 

@@ -438,6 +438,7 @@ public class ProbeGenerator
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
+                    // TODO: should formalise this coverage check in separate method. handle exact and combo regions
                     ChrBaseRegion probeRegion = probe.definition().exactRegion();
                     if(coverage != null && coverage.isCovered(probeRegion))
                     {
@@ -509,7 +510,7 @@ public class ProbeGenerator
                     return ProbeGenerationResult.rejectTargets(candidateTargetRegions, rejectionReason);
                 });
     }
-
+/*
     // Generates a single probe at the given region.
     public ProbeGenerationResult probe(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final PanelCoverage coverage)
@@ -555,9 +556,10 @@ public class ProbeGenerator
                     });
         }
     }
+*/
 
     // Evaluates candidate probes and select the one best probe.
-    public Optional<Probe> selectBestCandidate(Stream<Probe> candidates, final ProbeEvaluator.Criteria evalCriteria,
+    private Optional<Probe> selectBestCandidate(Stream<Probe> candidates, final ProbeEvaluator.Criteria evalCriteria,
             final ProbeSelector.Strategy selectStrategy)
     {
         Stream<Probe> evaluatedCandidates = evaluateProbes(candidates, evalCriteria);
