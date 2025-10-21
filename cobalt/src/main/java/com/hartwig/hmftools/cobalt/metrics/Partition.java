@@ -13,12 +13,6 @@ public class Partition extends ChrBaseRegion
     public final List<TargetRegionData> TargetRegions;
     private final int WindowSize;
 
-//    public Partition(final ChrBaseRegion region)
-//    {
-//        super(region.Chromosome, region.start(), region.end());
-//        TargetRegions = Lists.newArrayList();
-//    }
-
     public Partition(String chromosome, int start, int end, int windowSize)
     {
         super(chromosome, start, end);
@@ -40,9 +34,14 @@ public class Partition extends ChrBaseRegion
 
     public void recordFragment(int startPosition, int length)
     {
+        if (!containsPosition(startPosition))
+        {
+            // e.g. negative read with alignment start near partition start.
+            return;
+        }
         Preconditions.checkArgument(containsPosition(startPosition));
         int offset = startPosition - start();
-        int index = offset/ WindowSize;
+        int index = offset / WindowSize;
         TargetRegions.get(index).recordFragment(length);
     }
 

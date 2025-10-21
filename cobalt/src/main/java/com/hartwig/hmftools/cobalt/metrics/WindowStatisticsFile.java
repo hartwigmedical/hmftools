@@ -1,14 +1,5 @@
 package com.hartwig.hmftools.cobalt.metrics;
 
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.chromosome;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.position;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCContent;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCDiploidRatio;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCRatio;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceReadDepth;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorGCContent;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorGCRatio;
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorReadDepth;
 import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.FORMAT;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
@@ -16,11 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipB
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import com.hartwig.hmftools.cobalt.utils.RawCobaltRatio;
-import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
@@ -42,8 +30,6 @@ public class WindowStatisticsFile
     {
         return checkAddDirSeparator(outputDir) + sample + ".fragment_length.statistics.tsv.gz";
     }
-
-//    private final String fileName;
 
     public static void write(final String fileName, List<WindowStatistics> statistics) throws IOException
     {
