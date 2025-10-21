@@ -102,8 +102,9 @@ public class PrepConfig
 
     private static List<String> parseSampleConfig(ConfigBuilder configBuilder)
     {
+
         if(configBuilder.hasValue(SAMPLE))
-            return List.of(configBuilder.getValue(SAMPLE));
+            return List.of(configBuilder.getValue(SAMPLE).split(","));
 
         if(configBuilder.hasValue(SAMPLE_ID_FILE))
             return ConfigUtils.loadSampleIdsFile(configBuilder);
