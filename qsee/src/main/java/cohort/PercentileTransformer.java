@@ -1,4 +1,4 @@
-package feature;
+package cohort;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package feature;
+package cohort;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
+
+import feature.FeatureValue;
 
 public class SampleFeatureMatrixTest
 {
