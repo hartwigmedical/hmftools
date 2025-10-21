@@ -53,8 +53,8 @@ map_qual_threshold | Reads below this map quality count towards MAPQ counts, def
 base_qual_threshold | Bases below this base quality count towards BASEQ count, default 10
 max_coverage | Positions with coverage above this count towards CAPPED counts, default 250
 exclude_zero_coverage | Exclude regions of zero coverage from overall statistics
-driver_gene_panel | Path to driver gene panel
-ensembl_data_dir | Path to Ensembl data cache
+driver_gene_panel | Path to driver gene panel, required for gene coverage
+ensembl_data_dir | Path to Ensembl data cache, required for gene coverage
 
 ### Gene Panel Coverage
 To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample.  Note that only reads with MapQ > 10 are included in the coverage calculations.

@@ -40,7 +40,6 @@ ref_genome | Path to reference genome fasta file
 ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
 driver_gene_panel | Path to driver gene panel
-panel_bed | Path to panel bed (if driver_gene_panel not specified)
 high_confidence_bed | Path to high confidence bed
 ensembl_data_dir | Path to Ensembl data cache
 
@@ -55,6 +54,7 @@ germline | NA | Flag is required to run in germline mode, impacts variant filter
 run_tinc | False | Run tumor in normal detection and variant recovery (only valid if using exactly 1 reference sample)
 ref_sample_count | 1                 | Controls the set of ref samples used for tumor-normal soft-filtering. Zero means none will be used.)
 resource_dir | None              | Path to all resource files, in which case specify the file names only for ref_genome, hotspots, panel_bed and high_confidence_bed  
+panel_bed | Path to panel bed (if driver_gene_panel not specified)
 threads | 2                 | Number of threads to use
 max_read_depth | 1000              | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000           | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
@@ -113,35 +113,22 @@ log_evidence_reads | False   | For each variant, print a line with each read's m
 
 ## Example Usage
 
-Minimum set of arguments (running in tumor only mode):
+Typical arguments running in paired tumor-normal mode:
 
 ```
 java -Xmx32G -jar sage.jar \
     -tumor COLO829v003T \
     -tumor_bam /sample_data/COLO829v003T.bam \
-    -ref_genome_version 37 \
-    -ref_genome /ref_data/refGenome.fasta \
-    -hotspots /ref_data/KnownHotspots.37.vcf.gz \
-    -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
-    -ensembl_data_dir /path_to_ensembl_cache/ \
-    -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
-    -threads 16 \ 
-```
-
-Typical arguments running in paired tumor-normal mode:
-
-```
-java -Xmx32G -jar sage.jar \
     -reference COLO829v003R -reference_bam /sample_data/COLO829v003R.bam \
     -tumor COLO829v003T -tumor_bam /sample_data/COLO829v003T.bam \
-    -ref_genome_version 37 \
-    -ref_genome /ref_data/refGenome.fasta \
-    -hotspots /ref_data/KnownHotspots.37.vcf.gz \
-    -panel_bed /ref_data/ActionableCodingPanel.37.bed.gz \
+    -ref_genome_version 38 \
+    -ref_genome /ref_data/refGenome.38.fasta \
+    -hotspots /ref_data/KnownHotspots.38.vcf.gz \
     -high_confidence_bed /ref_data/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
+    -driver_gene_panel /ref_data/DriverGenePanel.38.tsv \
     -output_vcf /sample_data/COLO829v003.sage.vcf.gz \
-    -threads 16 \
+    -threads 16 \ 
 ```
 
 # SAGE append mode usage
