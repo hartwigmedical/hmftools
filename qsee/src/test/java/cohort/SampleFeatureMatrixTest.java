@@ -30,7 +30,7 @@ public class SampleFeatureMatrixTest
                 new FeatureValue("feature3", 3.3, null)
         );
 
-        SampleFeatureMatrix matrix = new SampleFeatureMatrix(new HashMap<>(), List.of("sample1", "sample2", "sample3"));
+        SampleFeatureMatrix matrix = new SampleFeatureMatrix(new HashMap<>(), 3);
         matrix.addSampleFeatures("sample1", sample1Features);
         matrix.addSampleFeatures("sample2", sample2Features);
         matrix.addSampleFeatures("sample3", sample3Features);
