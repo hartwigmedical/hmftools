@@ -119,27 +119,22 @@ public class PurpleConfig
     {
         return mIsValid;
     }
-
     public boolean tumorOnlyMode()
     {
         return ReferenceId == null;
     }
-
     public boolean germlineMode()
     {
         return TumorId.equals(ReferenceId);
     }
-
     public boolean runTumor()
     {
         return !germlineMode();
     }
-
     public boolean runGermline()
     {
         return !tumorOnlyMode();
     }
-
     public RunMode runMode()
     {
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
