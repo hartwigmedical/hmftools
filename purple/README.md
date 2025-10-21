@@ -747,6 +747,44 @@ minRegionEndSupport | End support of the copy number region overlapping the gene
 minRegionMethod | Method used to determine copy number of the copy number region overlapping the gene with the minimum copy number
 minMinorAlleleCopyNumber | Minimum allele copy number found over the gene exons - useful for identifying LOH events  
 
+#### Targeted Regions Copy Number File
+
+The targeted regions copy number file `TUMOR..purple.target_region_cn.tsv` summarises copy number alterations of each on target 1kb region.  It is produced in targeted mode only
+
+Column  | Description
+---|---
+chromosome | chromosome
+windowStart | start position of window
+windowEnd | end position of window
+bedRegions | name of targeted region (from bed file)
+masked | if true the region is ignored for copy number segmentation and fitting
+averageDepth | average read depth in 1kb window
+windowGCContent | average realised GC content in 1kb window
+windowTumorRatio | GC and targeted
+regionStart | start position of final copy number segment containing the 1kb region
+regionEnd |  end position of final copy number segment containing the 1kb region
+copyNumber | copy number of final copy number segment containing the 1kb region
+minorAlleleCopyNumber | minor allele copy number of final copy number segment containing the 1kb region
+depthWindowCount | number of depth windows in final copy number segment containing the 1kb region
+bafCount | number of BAF points of final copy number segment containing the 1kb region
+germlineStatus | germline copy number status (DIPLOID, HET_DELETION, HOM_DELETION, AMPLIFICATION, NOISE, EXCLUDED, UNKNOWN) of final copy number segment containing the 1kb region
+copyNumberMethod | copy number method (BAF_WEIGHTED,STRUCTURAL_VARIANT,LONG_ARM) for fitting final copy number segment containing the 1kb region
+
+#### Chromosome Arm Copy Number File
+
+The chromosome arm copy number file `TUMOR.purple.chromosome_arm.tsv` summarises copy number alterations at a chromosome level
+
+Column  | Description
+---|---
+chromosome | chromosome
+arm | P or Q
+meanCopyNumber | Mean copy number of chromosome arm
+medianCopyNumber |  Median copy number of chromosome arm
+minCopyNumber |  Minimum copy number of chromosome arm
+maxCopyNumber |  Maximum copy number of chromosome arm
+
+
+
 #### Driver Catalog File
 
 The driver catalog file `TUMOR.driver.catalog.somatic.tsv` contains significant amplifications (minimum exonic copy number > 3 * sample ploidy) and deletions (minimum exonic copy number < 0.5) that occur in the HMF gene panel.
