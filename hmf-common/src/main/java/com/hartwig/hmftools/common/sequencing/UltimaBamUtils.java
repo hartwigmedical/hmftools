@@ -27,7 +27,8 @@ public final class UltimaBamUtils
     private static final String PPM_STRAND_TE = "te";
 
     public static final String ULT_QUAL_TAG = "UQ";
-    public static final String ULT_QUAL_TAG_DELIM = ",";
+    public static final String ULT_QUAL_TAG_DELIM = "=";
+    public static final String ULT_QUAL_TAG_INDEX_DELIM = ",";
 
     private static final int PPM_STRAND_MIN_SUM = 4;
     private static final int PPM_STRAND_MAX_SUM = 8;
@@ -59,18 +60,31 @@ public final class UltimaBamUtils
         return t0Values;
     }
 
-    public static List<Integer> extractLowQualTag(final SAMRecord record)
+    public static int extractLowQualCount(final SAMRecord record)
+    {
+        String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
+
+        if(qualTag == null)
+            return 0;
+
+        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM, 2);
+        return Integer.parseInt(qualItems[0]);
+    }
+
+    public static List<Integer> extractLowQualIndices(final SAMRecord record)
     {
         String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
 
         if(qualTag == null)
             return Collections.emptyList();
 
-        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM);
+        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM, 2);
+
+        String[] qualIndexItems = qualItems[1].split(ULT_QUAL_TAG_INDEX_DELIM);
 
         List<Integer> lowQualValues = Lists.newArrayList();
 
-        for(String qualItem : qualItems)
+        for(String qualItem : qualIndexItems)
         {
             if(qualItem.contains("-"))
             {

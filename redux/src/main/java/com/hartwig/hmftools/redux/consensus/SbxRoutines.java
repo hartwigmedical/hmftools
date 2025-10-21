@@ -345,33 +345,72 @@ public final class SbxRoutines
         }
     }
 
+    @VisibleForTesting
     private static boolean hasInvalidCigar(final SAMRecord record)
     {
-        if(record.getCigar().getCigarElements().get(0).getOperator() == I)
+        return hasInvalidCigar(record.getCigar().getCigarElements());
+    }
+
+    @VisibleForTesting
+    public static boolean hasInvalidCigar(final List<CigarElement> cigarElements)
+    {
+        // looks for a specific SBX alignment issue where an insert comes before the first aligned section
+        if(cigarElements.get(0).getOperator() == I)
             return true;
 
-        if(record.getCigar().getCigarElements().size() > 1)
+        if(cigarElements.size() > 1)
         {
-            if(record.getCigar().getCigarElements().get(record.getCigar().getCigarElements().size() - 1).getOperator() == I)
+            int lastIndex = cigarElements.size() - 1;
+
+            if(cigarElements.get(lastIndex).getOperator() == I)
+                return true;
+
+            if(cigarElements.get(0).getOperator() == S && cigarElements.get(1).getOperator() == I)
+                return true;
+
+            if(cigarElements.get(lastIndex - 1).getOperator() == I && cigarElements.get(lastIndex).getOperator() == S)
                 return true;
         }
 
         return false;
     }
 
-    private static void correctInvalidCigar(final List<CigarElement> cigarElements)
+    @VisibleForTesting
+    public static void correctInvalidCigar(final List<CigarElement> cigarElements)
     {
         // no attempt is made at this stage to correct the alignment score or num of mutations
-        if(cigarElements.get(0).getOperator() == I)
-        {
-            cigarElements.set(0, new CigarElement(cigarElements.get(0).getLength(), S));
-        }
+        int lastIndex = cigarElements.size() - 1;
 
-        if(cigarElements.size() > 1)
+        int i = 0;
+        while(i < cigarElements.size())
         {
-            int lastIndex = cigarElements.size() - 1;
-            if(cigarElements.get(lastIndex).getOperator() == I)
-                cigarElements.set(lastIndex, new CigarElement(cigarElements.get(lastIndex).getLength(), S));
+            CigarElement element = cigarElements.get(i);
+
+            if(element.getOperator() == I)
+            {
+                if(i == 0 || i == lastIndex)
+                {
+                    cigarElements.set(i, new CigarElement(cigarElements.get(i).getLength(), S));
+                }
+                else if(i == 1 && cigarElements.get(0).getOperator() == S)
+                {
+                    // combine initial soft-clip and insert
+                    cigarElements.remove(i);
+                    --lastIndex;
+                    cigarElements.set(0, new CigarElement(cigarElements.get(0).getLength() + element.getLength(), S));
+                    continue;
+                }
+                else if(i == lastIndex - 1 && cigarElements.get(lastIndex).getOperator() == S)
+                {
+                    // combine initial soft-clip and insert
+                    cigarElements.remove(i);
+                    --lastIndex;
+                    cigarElements.set(lastIndex, new CigarElement(cigarElements.get(lastIndex).getLength() + element.getLength(), S));
+                    continue;
+                }
+            }
+
+            ++i;
         }
     }
 

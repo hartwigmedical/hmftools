@@ -33,7 +33,7 @@ public class LoggingOptions
 
     public void setLogLevel()
     {
-        if (LogDebug)
+        if(LogDebug)
         {
             Configurator.setRootLevel(org.apache.logging.log4j.Level.DEBUG);
         }
