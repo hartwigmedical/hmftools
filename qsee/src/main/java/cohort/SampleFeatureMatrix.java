@@ -87,48 +87,32 @@ public class SampleFeatureMatrix
             if(!mFeatureKeys.contains(key))
             {
                 mFeatureKeys.add(key);
-                mFeatureValuesMap.put(key, new Double[getNumSamples()]);
+                mFeatureValuesMap.put(key, new Double[numSamples()]);
             }
 
             mFeatureValuesMap.get(key)[sampleIndex] = feature.mValue;
         }
     }
 
-    public int getNumSamples() { return mNumSamples; }
+    public int numSamples() { return mNumSamples; }
 
-    public int getNumFeatures() { return mFeatureKeys.size(); }
+    public int numFeatures() { return mFeatureKeys.size(); }
 
-    public List<String> getSampleIds(){ return mSampleIds; }
+    public List<String> getSampleIds() { return mSampleIds; }
 
-    public List<String> getFeatureKeys(){ return mFeatureKeys; }
+    public List<String> getFeatureKeys() { return mFeatureKeys; }
 
-    public Double[][] getValues(boolean samplesAsRows)
+    public double[][] getValues(double nullFillValue)
     {
-        return samplesAsRows ? getSampleByFeature2DArray() : getFeatureBySample2DArray();
-    }
+        double[][] matrix = new double[numSamples()][numFeatures()];
 
-    private Double[][] getSampleByFeature2DArray()
-    {
-        Double[][] matrix = new Double[getNumSamples()][getNumFeatures()];
-
-        for(int i = 0; i < getNumSamples(); i++)
+        for(int sampleIndex = 0; sampleIndex < numSamples(); sampleIndex++)
         {
-            for(int j = 0; j < getNumSamples(); j++)
+            for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
             {
-                matrix[i][j] = mFeatureValuesMap.get(mFeatureKeys.get(j))[i];
+                Double sampleFeatureValue = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[sampleIndex];
+                matrix[sampleIndex][featureIndex] = sampleFeatureValue != null ? sampleFeatureValue : nullFillValue;
             }
-        }
-
-        return matrix;
-    }
-
-    private Double[][] getFeatureBySample2DArray()
-    {
-        Double[][] matrix = new Double[getNumFeatures()][getNumSamples()];
-
-        for(int i = 0; i < getNumFeatures(); i++)
-        {
-            matrix[i] = mFeatureValuesMap.get(mFeatureKeys.get(i));
         }
 
         return matrix;
