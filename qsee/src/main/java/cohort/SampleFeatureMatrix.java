@@ -95,7 +95,7 @@ public class SampleFeatureMatrix
         return matrix;
     }
 
-    public synchronized void addSampleFeatures(String sampleId, List<FeatureValue<Double>> features)
+    public synchronized void addSampleFeatures(String sampleId, List<FeatureValue> features)
     {
         if(!mSampleIds.contains(sampleId))
         {
@@ -104,7 +104,7 @@ public class SampleFeatureMatrix
 
         int sampleIndex = mSampleIds.indexOf(sampleId);
 
-        for(FeatureValue<Double> feature : features)
+        for(FeatureValue feature : features)
         {
             String key = feature.mKey;
 

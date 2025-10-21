@@ -14,20 +14,20 @@ public class SampleFeatureMatrixTest
     @Test
     public void canConstructMatrixIncrementally()
     {
-        List<FeatureValue<Double>> sample1Features = List.of(
-                new FeatureValue<>("feature1", 1.1, null),
-                new FeatureValue<>("feature2", 1.2, null)
+        List<FeatureValue> sample1Features = List.of(
+                new FeatureValue("feature1", 1.1, null),
+                new FeatureValue("feature2", 1.2, null)
         );
 
-        List<FeatureValue<Double>> sample2Features = List.of(
-                new FeatureValue<>("feature1", 2.1, null),
-                new FeatureValue<>("feature2", 2.2, null)
+        List<FeatureValue> sample2Features = List.of(
+                new FeatureValue("feature1", 2.1, null),
+                new FeatureValue("feature2", 2.2, null)
         );
 
-        List<FeatureValue<Double>> sample3Features = List.of(
-                new FeatureValue<>("feature1", 3.1, null),
-                new FeatureValue<>("feature2", 3.2, null),
-                new FeatureValue<>("feature3", 3.3, null)
+        List<FeatureValue> sample3Features = List.of(
+                new FeatureValue("feature1", 3.1, null),
+                new FeatureValue("feature2", 3.2, null),
+                new FeatureValue("feature3", 3.3, null)
         );
 
         SampleFeatureMatrix matrix = new SampleFeatureMatrix(new HashMap<>(), List.of("sample1", "sample2", "sample3"));

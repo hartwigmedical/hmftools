@@ -40,11 +40,11 @@ public class ReduxBqrPrepTest
     @Test
     public void canCalcChangeInQualPerTrinucContext()
     {
-        List<FeatureValue<Double>> featureValues = calcChangeInQualPerTrinucContext(BQR_RECORDS);
+        List<FeatureValue> featureValues = calcChangeInQualPerTrinucContext(BQR_RECORDS);
 
         assertEquals(2, featureValues.size());
 
-        FeatureValue<Double> actualFeature;
+        FeatureValue actualFeature;
 
         actualFeature = featureValues.get(0);
         assertEquals("readType=NONE;standardMutation=C>A;standardTrinucContext=CCC", actualFeature.mKey);
@@ -58,11 +58,11 @@ public class ReduxBqrPrepTest
     @Test
     public void canCalcChangeInQualPerOriginalQual()
     {
-        List<FeatureValue<Double>> featureValues = calcChangeInQualPerOriginalQual(BQR_RECORDS);
+        List<FeatureValue> featureValues = calcChangeInQualPerOriginalQual(BQR_RECORDS);
 
         assertEquals(2, featureValues.size());
 
-        FeatureValue<Double> actualFeature;
+        FeatureValue actualFeature;
 
         actualFeature = featureValues.get(0);
         assertEquals("readType=DUAL;standardMutation=C>G;originalQualBin=0-19", actualFeature.mKey);

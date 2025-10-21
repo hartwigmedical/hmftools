@@ -16,7 +16,7 @@ import feature.FeatureValue;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
-public class CobaltGcMediansPrep implements CategoryPrep<Double>
+public class CobaltGcMediansPrep implements CategoryPrep
 {
     PrepConfig mConfig;
 
@@ -42,13 +42,13 @@ public class CobaltGcMediansPrep implements CategoryPrep<Double>
         }
     }
 
-    public static List<FeatureValue<Double>> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
+    public static List<FeatureValue> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
     {
         Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
 
         double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
 
-        List<FeatureValue<Double>> featureValues = new ArrayList<>();
+        List<FeatureValue> featureValues = new ArrayList<>();
 
         for(GCBucket bucket : medianReadDepths.keySet())
         {
@@ -60,7 +60,7 @@ public class CobaltGcMediansPrep implements CategoryPrep<Double>
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            FeatureValue<Double> featureValue = new FeatureValue<>(
+            FeatureValue featureValue = new FeatureValue(
                     FeatureValue.keyFromPair(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket())),
                     normalisedDepth,
                     FeatureType.COBALT_GC_MEDIAN
@@ -72,10 +72,10 @@ public class CobaltGcMediansPrep implements CategoryPrep<Double>
         return featureValues;
     }
 
-    public List<FeatureValue<Double>> extractSampleData(String sampleId)
+    public List<FeatureValue> extractSampleData(String sampleId)
     {
         GcMedianReadDepth gcMedianReadDepth = loadCobaltGcMedianFile(sampleId);
-        List<FeatureValue<Double>> featureValues = normaliseMedianReadDepths(gcMedianReadDepth);
+        List<FeatureValue> featureValues = normaliseMedianReadDepths(gcMedianReadDepth);
 
         return featureValues;
     }

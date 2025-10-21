@@ -4,26 +4,21 @@ import java.util.StringJoiner;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-public class FeatureValue<T>
+public class FeatureValue
 {
     public String mKey;
-    public T mValue;
+    public double mValue;
     public FeatureType mType;
 
     // For multi-field keys
     private static final String KEY_VALUE_SEPARATOR = "=";
     private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
 
-
-    public FeatureValue(String key, T value, FeatureType type)
+    public FeatureValue(String key, double value, FeatureType type)
     {
         mKey = key;
         mValue = value;
         mType = type;
-    }
-
-    public Class<?> getDataType() {
-        return mValue.getClass();
     }
 
     public static String keyFromPair(String fieldName, String fieldValue)

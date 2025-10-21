@@ -21,7 +21,7 @@ import feature.FeatureValue;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
-public class ReduxBqrPrep implements CategoryPrep<Double>
+public class ReduxBqrPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
@@ -144,7 +144,7 @@ public class ReduxBqrPrep implements CategoryPrep<Double>
     }
 
     @VisibleForTesting
-    public static List<FeatureValue<Double>> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
+    public static List<FeatureValue> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
     {
         bqrRecords = bqrRecords.stream()
                 .filter(x -> x.OriginalQuality >= HI_QUAL_THRESHOLD)
@@ -166,12 +166,12 @@ public class ReduxBqrPrep implements CategoryPrep<Double>
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new FeatureValue<>(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_SNV96_CONTEXT))
+                .map(x -> new FeatureValue(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_SNV96_CONTEXT))
                 .toList();
     }
 
     @VisibleForTesting
-    public static List<FeatureValue<Double>> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
+    public static List<FeatureValue> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
     {
         Map<String, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
@@ -189,15 +189,15 @@ public class ReduxBqrPrep implements CategoryPrep<Double>
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new FeatureValue<>(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_ORIG_QUAL))
+                .map(x -> new FeatureValue(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_ORIG_QUAL))
                 .toList();
     }
 
-    public List<FeatureValue<Double>> extractSampleData(String sampleId)
+    public List<FeatureValue> extractSampleData(String sampleId)
     {
         loadSnvBqrRecords(sampleId);
 
-        List<FeatureValue<Double>> featureValues = new ArrayList<>();
+        List<FeatureValue> featureValues = new ArrayList<>();
 
         featureValues.addAll(calcChangeInQualPerOriginalQual(mExtendedBqrRecords));
         featureValues.addAll(calcChangeInQualPerTrinucContext(mExtendedBqrRecords));

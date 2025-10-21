@@ -4,7 +4,7 @@ import java.util.List;
 
 import feature.FeatureValue;
 
-public interface CategoryPrep<T>
+public interface CategoryPrep
 {
-    List<FeatureValue<T>> extractSampleData(String sampleId);
+    List<FeatureValue> extractSampleData(String sampleId);
 }

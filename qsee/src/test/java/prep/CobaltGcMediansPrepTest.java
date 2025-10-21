@@ -23,9 +23,9 @@ public class CobaltGcMediansPrepTest
                        new ImmutableGCBucket(26), 105.0)
         );
 
-        List<FeatureValue<Double>> featureValues = CobaltGcMediansPrep.normaliseMedianReadDepths(gcMedianReadDepth);
+        List<FeatureValue> featureValues = CobaltGcMediansPrep.normaliseMedianReadDepths(gcMedianReadDepth);
 
-        FeatureValue<Double> actualFeature;
+        FeatureValue actualFeature;
 
         actualFeature = featureValues.get(0);
         assertEquals("GCBucket=25", actualFeature.mKey);
