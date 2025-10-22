@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import feature.FeatureValue;
 
-public class SampleFeatureMatrixTest
+public class FeatureMatrixTest
 {
     @Test
     public void canConstructMatrixIncrementally()
@@ -36,13 +36,13 @@ public class SampleFeatureMatrixTest
                 new FeatureValue("feature3", 4.3, null)
         );
 
-        SampleFeatureMatrix matrix = new SampleFeatureMatrix(new HashMap<>(), 4);
-        matrix.addSampleFeatures("sample1", sample1Features);
-        matrix.addSampleFeatures("sample2", sample2Features);
-        matrix.addSampleFeatures("sample3", sample3Features);
-        matrix.addSampleFeatures("sample4", sample4Features);
+        FeatureMatrix matrix = new FeatureMatrix(new HashMap<>(), 4);
+        matrix.addFeaturesToRow("sample1", sample1Features);
+        matrix.addFeaturesToRow("sample2", sample2Features);
+        matrix.addFeaturesToRow("sample3", sample3Features);
+        matrix.addFeaturesToRow("sample4", sample4Features);
 
-        assertEquals(List.of("sample1", "sample2", "sample3", "sample4"), matrix.getSampleIds());
+        assertEquals(List.of("sample1", "sample2", "sample3", "sample4"), matrix.getRowIds());
         assertEquals(List.of("feature1", "feature2", "feature3"), matrix.getFeatureKeys());
 
         double[][] expectedFeatureValues = {
