@@ -27,8 +27,6 @@ public class SbxDuplicateCollapser
 
     private static final int MAX_CHAINED_MULTIPLE = 5;
 
-    public static boolean USE_NEW_METHOD = true;
-
     private final Map<Integer,Integer> mCollapsingDistanceFrequency;
 
     public SbxDuplicateCollapser(int maxDuplicateDistance)
@@ -243,10 +241,7 @@ public class SbxDuplicateCollapser
                     groups.get(i).setIndex(i);
                 }
 
-                if(USE_NEW_METHOD)
-                    collapseGroups(groups);
-                else
-                    collapseGroupsOld(groups);
+                collapseGroups(groups);
             }
 
             for(GroupInfo groupInfo : groups)
@@ -254,11 +249,13 @@ public class SbxDuplicateCollapser
                 if(groupInfo.collapsed())
                     continue;
 
+                /*
                 if(groupInfo.posLowerMax() - groupInfo.posLowerMin() > mMaxDuplicateDistance * 20
                 || groupInfo.posUpperMax() - groupInfo.posUpperMin() > mMaxDuplicateDistance * 20)
                 {
                     RD_LOGGER.debug("groupInfo({}) has wider position range", groupInfo);
                 }
+                */
 
                 DuplicateGroup duplicateGroup = null;
 
@@ -450,69 +447,6 @@ public class SbxDuplicateCollapser
     private void addStats(int collapseDistance)
     {
         mCollapsingDistanceFrequency.put(collapseDistance, mCollapsingDistanceFrequency.getOrDefault(collapseDistance, 0) + 1);
-    }
-
-    private void collapseGroupsOld(final List<GroupInfo> groups)
-    {
-        if(groups == null || groups.size() == 1)
-            return;
-
-        Collections.sort(groups);
-
-        while(true)
-        {
-            int groupIndex = findMaxGroupToCollapse(groups);
-
-            if(groupIndex < 0)
-                break;
-
-            GroupInfo mainGroup = groups.get(groupIndex);
-
-            /*
-            if(ReduxConfig.LogReadIds.stream().anyMatch(x -> x.equals(mainGroup.readId())))
-            {
-                RD_LOGGER.debug("SBX duplicate collapse: {}", mainGroup.readId());
-            }
-            */
-
-            List<GroupInfo> collapseGroups = findProximateGroups(groups, mainGroup);
-
-            for(GroupInfo otherGroup : collapseGroups)
-            {
-                mainGroup.addGroup(otherGroup);
-                otherGroup.markCollapsed();
-
-                /*
-                int collapseDistance = mainGroup.distance(otherGroup);
-                addStats(collapseDistance);
-                */
-            }
-        }
-    }
-
-    private int findMaxGroupToCollapse(final List<GroupInfo> groups)
-    {
-        int maxGroupSize = 0;
-        int maxGroupIndex = 0;
-
-        for(int i = 0; i < groups.size(); ++i)
-        {
-            List<GroupInfo> collapseGroups = findProximateGroups(groups, groups.get(i));
-
-            if(collapseGroups == null)
-                continue;
-
-            // prioritise which would become the new largest group, not the current size
-            int newSize = groups.get(i).size() + collapseGroups.stream().mapToInt(x -> x.size()).sum();
-
-            if(newSize > maxGroupSize)
-            {
-                maxGroupSize = newSize;
-                maxGroupIndex = i;
-            }
-        }
-
-        return maxGroupSize > 0 ? maxGroupIndex : -1;
     }
 
     private void checkSupplementaryConsistency(final DuplicateGroup duplicateGroup)
