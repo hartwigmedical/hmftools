@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.vis;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
@@ -8,19 +10,25 @@ import static com.hartwig.hmftools.sage.vis.ColorUtil.lighten;
 import static com.hartwig.hmftools.sage.vis.SvgUtil.drawStringFromCenter;
 import static com.hartwig.hmftools.sage.vis.SvgUtil.getStringBounds;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -458,16 +466,20 @@ public class SvgRender
         }
     }
 
-    public static SVGGraphics2D renderAminoAcidSeq(double baseBoxSizePx, final BaseRegion renderRegion)
+    @Nullable
+    public static SVGGraphics2D renderAminoAcidSeq(
+            double baseBoxSizePx, final BaseRegion renderRegion, final String geneName, final boolean posStrand, final List<Pair<BaseRegion, Character>> refAminoAcids)
     {
         // TODO: cleanup.
 
+        final char stopCodon = '*';
+
         SVGGraphics2D svgCanvas_ = new SVGGraphics2D(
-                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
+                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), 2.5 * baseBoxSizePx);
         // work in units of BASE_BOX_SIZE
         svgCanvas_.scale(baseBoxSizePx, baseBoxSizePx);
 
-//        svgCanvas.setFont(BASE_FONT);
+        svgCanvas_.setFont(BASE_FONT);
 
 //        Integer firstBaseIdx = null;
 //        Integer lastBaseIdx = null;
@@ -476,14 +488,42 @@ public class SvgRender
 //        BaseViewModel prevBase = bases.getBase(renderRegion.start() - 1);
 //        int delLen = 0;
 
-        Color bgColour = Color.PINK;
-        for(int i = renderRegion.start(); i <= renderRegion.end(); ++i)
+        final Color lightBlue = new Color(92, 92, 164);
+        final Color darkBlue = new Color(12, 12, 120);
+        List<Color> bgColours = Lists.newArrayList(lightBlue, darkBlue);
+        List<BaseRegion> exonRenderRegions = Lists.newArrayList();
+        for(int i = 0; i < refAminoAcids.size(); i++)
         {
-            int boxIdx = i - renderRegion.start() + BOX_PADDING;
+            Pair<BaseRegion, Character> refAa = refAminoAcids.get(i);
+            BaseRegion aaRegion = refAa.getLeft();
+            char aa = refAa.getRight();
+
+            if(aaRegion.start() > renderRegion.end())
+                break;
+
+            if(aaRegion.end() < renderRegion.start())
+                continue;
+
+            int startPos = max(aaRegion.start(), renderRegion.start());
+            int endPos = min(aaRegion.end(), renderRegion.end());
+            exonRenderRegions.add(new BaseRegion(startPos, endPos));
+            int boxWidth = endPos - startPos + 1;
+            int boxIdx = startPos - renderRegion.start() + BOX_PADDING;
+            Color bgColour = aa == stopCodon ? Color.RED : bgColours.get(i % bgColours.size());
 
             svgCanvas_.setColor(bgColour);
-            Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, 1.0, 1.0);
+            Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, boxWidth, 1.0);
             svgCanvas_.fill(box);
+
+            Color fgColour = Color.WHITE;
+            svgCanvas_.setColor(fgColour);
+
+            // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
+            // scaling
+            AffineTransform currentTransform = svgCanvas_.getTransform();
+            svgCanvas_.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+            drawStringFromCenter(svgCanvas_, String.valueOf(aa), (boxIdx + 0.5 * boxWidth) * BASE_BOX_SIZE, 0.5 * BASE_BOX_SIZE);
+            svgCanvas_.setTransform(currentTransform);
 
 //            BaseViewModel refBase = refBases == null ? BaseViewModel.createMissingBase() : refBases.getBase(i);
 //            BaseViewModel base = bases.getBase(i);
@@ -504,43 +544,7 @@ public class SvgRender
 //            }
 //            else if(base.hasCharBase())
 //            {
-//                boolean matchesRef = !base.IsSoftClip && refBase.hasCharBase() && refBase.charBase() == base.charBase();
-//
-//                Color bgColour = Color.WHITE;
-//                Color fgColour = Color.BLACK;
-//                if(matchesRef)
-//                {
-//                    bgColour = Color.LIGHT_GRAY;
-//                }
-//                else if(BASE_BG_COLOUR.containsKey(base.charBase()))
-//                {
-//                    bgColour = BASE_BG_COLOUR.get(base.charBase());
-//                    fgColour = BASE_FG_COLOUR.get(base.charBase());
-//                }
-//
-//                if(shadeQuals)
-//                {
-//                    int baseQ = base.baseQ();
-//                    double lightenFactor = 1.0 - 1.0 * baseQ / MAX_BASEQ_SHADING_CUTTOFF;
-//                    fgColour = lighten(fgColour, lightenFactor);
-//                    bgColour = lighten(bgColour, lightenFactor);
-//                }
-//
-//                svgCanvas.setColor(bgColour);
-//                Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, 1.0, 1.0);
-//                svgCanvas.fill(box);
-//
-//                if(!matchesRef)
-//                {
-//                    svgCanvas.setColor(fgColour);
-//                    // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
-//                    // scaling
-//                    AffineTransform currentTransform = svgCanvas.getTransform();
-//                    svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
-//                    drawStringFromCenter(svgCanvas, String.valueOf(base.charBase()),
-//                            (boxIdx + 0.5) * BASE_BOX_SIZE, 0.5 * BASE_BOX_SIZE);
-//                    svgCanvas.setTransform(currentTransform);
-//                }
+
 //            }
 
 //            // overlapping bases
@@ -665,6 +669,49 @@ public class SvgRender
 //            svgCanvas.setColor(REVERSE_STRAND_COLOR);
 //            drawLeftBoxBorder(svgCanvas, lastBaseIdx + 1, 0.5);
 //        }
+
+        if(exonRenderRegions.isEmpty())
+            return null;
+
+        svgCanvas_.setColor(Color.BLACK);
+
+        // render strand indication
+        Stroke currentStroke = svgCanvas_.getStroke();
+        Stroke stroke = new BasicStroke((float) (2.0 / BASE_BOX_SIZE));
+        svgCanvas_.setStroke(stroke);
+        for(BaseRegion exonRenderRegion : exonRenderRegions)
+        {
+            for(int pos = exonRenderRegion.start(); pos <= exonRenderRegion.end(); pos++)
+            {
+                for(int i = 0; i < 8; i += 2)
+                {
+                    int boxIdx = pos - renderRegion.start() + BOX_PADDING;
+                    double left = boxIdx + i * 0.125;
+                    double right = left + 0.125;
+                    if(posStrand)
+                    {
+                        double tmp = left;
+                        left = right;
+                        right = tmp;
+                    }
+
+                    Shape line = new Line2D.Double(left, 1.25, right, 1.0);
+                    svgCanvas_.draw(line);
+                    line = new Line2D.Double(left, 1.25, right, 1.5);
+                    svgCanvas_.draw(line);
+                }
+            }
+        }
+
+        svgCanvas_.setStroke(currentStroke);
+
+        // render gene name
+        // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
+        // scaling
+        AffineTransform currentTransform = svgCanvas_.getTransform();
+        svgCanvas_.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+        drawStringFromCenter(svgCanvas_, geneName, (0.5 * renderRegion.baseLength() + BOX_PADDING) * BASE_BOX_SIZE, 2.0 * BASE_BOX_SIZE);
+        svgCanvas_.setTransform(currentTransform);
 
         return svgCanvas_;
     }

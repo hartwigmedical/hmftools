@@ -70,6 +70,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
@@ -81,11 +82,15 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
@@ -98,10 +103,13 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.analysis.function.Add;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.variant.variantcontext.VariantContext;
 import j2html.tags.DomContent;
 import j2html.tags.specialized.TdTag;
 
@@ -531,7 +539,7 @@ public class VariantVis
 
     @Nullable
     private static DomContent renderAminoAcids(
-            final VisConfig config, @Nullable final ReferenceData refData, final BaseRegion viewRegion, final SageVariant variant)
+            final VisConfig config, @Nullable final ReferenceData refData, final BaseRegion viewRegion, final SageVariant sageVariant)
     {
         if(config.Vcf == null)
         {
@@ -545,18 +553,37 @@ public class VariantVis
             return null;
         }
 
-        // TODO: Don't load this each time, but wait until I have purple filtering of genes.
-        // TODO: Add mutates AA seq.
-        //        try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
-        //        {
-        //            // TODO:
-        //            if(true)
-        //            {
-        //                throw new NotImplementedException("TODO");
-        //            }
-        //        }
+        final SimpleVariant variant = sageVariant.variant();
+        List<VariantContext> vcfVariants = null;
 
-        return renderRefAminoAcids(viewRegion);
+        // TODO: Don't load this each time, but wait until I have purple filtering of genes.
+        try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
+        {
+            vcfVariants = vcfFileReader.findVariants(variant.Chromosome, variant.Position, variant.Position).stream()
+                    .filter(x -> x.getStart() == variant.Position && x.getReference().basesMatch(variant.Ref) && x.getAlternateAllele(0).basesMatch(variant.Alt))
+                    .toList();
+        }
+
+        if(vcfVariants == null)
+            throw new RuntimeException(format("Failed to read VCF: %s", config.Vcf));
+
+        if(vcfVariants.isEmpty())
+            throw new RuntimeException(format("Didn't find %s in VCF: %s", variant, config.Vcf));
+
+        if(vcfVariants.size() > 1)
+            throw new RuntimeException(format("Found multiple records matching %s in VCF: %s", variant, config.Vcf));
+
+        VariantContext variantContext = vcfVariants.get(0);
+
+        // TODO: make this universal?
+        final String impactKey = "IMPACT";
+        final int transcriptNameIdx = 1;
+
+        List<String> impact = (List<String>) variantContext.getAttribute(impactKey);
+        String transcriptName = impact.get(transcriptNameIdx);
+        TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
+        TranscriptData transcriptExons = refData.GeneDataCache.getTranscriptData(transcriptAminoAcids.GeneId, transcriptName);
+        return renderRefAminoAcids(viewRegion, transcriptExons, transcriptAminoAcids);
     }
 
     private List<DomContent> renderReads(boolean isTumor, @Nullable final DomContent aminoAcids)
@@ -794,10 +821,70 @@ public class VariantVis
         return containerDiv;
     }
 
-    private static DomContent renderRefAminoAcids(final BaseRegion viewRegion)
+    @Nullable
+    private static DomContent renderRefAminoAcids(
+            final BaseRegion viewRegion, final TranscriptData transcriptExons, final TranscriptAminoAcids transcriptAminoAcids)
     {
-        SVGGraphics2D svgCanvas = renderAminoAcidSeq(READ_HEIGHT_PX, viewRegion);
+        boolean posStrand = transcriptExons.Strand == (byte) 1;
+        List<Pair<BaseRegion, Character>> refAminoAcids = getRefAminoAcids(transcriptExons, transcriptAminoAcids);
+        SVGGraphics2D svgCanvas = renderAminoAcidSeq(READ_HEIGHT_PX, viewRegion, transcriptAminoAcids.GeneName, posStrand, refAminoAcids);
+        if(svgCanvas == null)
+            return null;
+
         return rawHtml(svgCanvas.getSVGElement());
+    }
+
+    // TODO: move into own util class.
+    public static List<BaseRegion> getCodingRegions(final TranscriptData transcriptExons)
+    {
+        List<BaseRegion> codingRegions = Lists.newArrayList();
+        BaseRegion transcriptCodingRegion = new BaseRegion(transcriptExons.CodingStart, transcriptExons.CodingEnd);
+        List<ExonData> exons = transcriptExons.exons();
+        for(ExonData exon : exons)
+        {
+            BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
+            if(!transcriptCodingRegion.overlaps(exonRegion))
+                continue;
+
+            int codingStart = max(transcriptCodingRegion.start(), exonRegion.start());
+            int codingEnd = min(transcriptCodingRegion.end(), exonRegion.end());
+            BaseRegion codingRegion = new BaseRegion(codingStart, codingEnd);
+            codingRegions.add(codingRegion);
+        }
+
+        return codingRegions;
+    }
+
+    // TODO: move into own util class.
+    public static List<Pair<BaseRegion, Character>> getRefAminoAcids(
+            final TranscriptData transcriptExons, final TranscriptAminoAcids transcriptAminoAcids)
+    {
+        List<Pair<BaseRegion, Character>> refAminoAcids = Lists.newArrayList();
+        boolean posStrand = transcriptExons.Strand == (byte) 1;
+        String aminoAcids = transcriptAminoAcids.AminoAcids;
+        List<BaseRegion> codingRegions = getCodingRegions(transcriptExons);
+        int nucIdx = 0;
+        int aaIdx = posStrand ? 0 : aminoAcids.length() - 1;
+        for(BaseRegion codingRegion : codingRegions)
+        {
+            int posStart = codingRegion.start();
+            while(posStart <= codingRegion.end())
+            {
+                int posEnd = min(posStart + 2 - nucIdx, codingRegion.end());
+                nucIdx = (posEnd - posStart + 1 + nucIdx) % 3;
+                char aa = aminoAcids.charAt(aaIdx);
+                refAminoAcids.add(Pair.of(new BaseRegion(posStart, posEnd), aa));
+                if(nucIdx == 0)
+                    aaIdx += posStrand ? 1 : -1;
+
+                posStart = posEnd + 1;
+            }
+        }
+
+        if(posStrand && aaIdx != aminoAcids.length() || !posStrand && aaIdx != -1)
+            throw new RuntimeException("Transcript amino acid count does not match coding length.");
+
+        return refAminoAcids;
     }
 
     private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)
