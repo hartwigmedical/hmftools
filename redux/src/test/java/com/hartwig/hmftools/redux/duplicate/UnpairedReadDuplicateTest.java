@@ -33,8 +33,10 @@ public class UnpairedReadDuplicateTest
     {
         int maxDupDistance = 2;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
+
         ReadCache readCache = new ReadCache(
-                100, 100, false, groupCollapseConfig, DEFAULT_POP_DISTANCE_CHECK, 0);
+                100, 100, false, groupCollapseConfig,
+                DEFAULT_POP_DISTANCE_CHECK, 0);
 
         int readStart = 100;
         int readEnd = 150;

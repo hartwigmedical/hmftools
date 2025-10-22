@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.redux.duplicate;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +25,10 @@ public class SbxDuplicateCollapser
 {
     private final int mMaxDuplicateDistance;
 
+    private static final int MAX_CHAINED_MULTIPLE = 5;
+
+    public static boolean USE_NEW_METHOD = true;
+
     private final Map<Integer,Integer> mCollapsingDistanceFrequency;
 
     public SbxDuplicateCollapser(int maxDuplicateDistance)
@@ -27,6 +36,16 @@ public class SbxDuplicateCollapser
         mMaxDuplicateDistance = maxDuplicateDistance;
         mCollapsingDistanceFrequency = Maps.newHashMap();
     }
+
+    /* collapsing routine and conditions
+        - form a group of single and duplicate groups read for coordinate comparison, ordered by lower then upper unclipped positions
+        - primary vs supplementary and forward vs reverse orientation reads are collapsed separately
+        - find all non-overlapping groups to collapse in proximate smaller groups
+        - process these, taking the largest first
+        - take the wider coordinates from collapsed groups, ie allow the lower and upper positions to expand to allow further collapsing
+        - continue until all collapsing is exhausted
+
+    */
 
     private static boolean withinRange(int firstPosLower, int firstPosUpper, int secondPosLower, int secondPosUpper, int maxDistance)
     {
@@ -36,20 +55,43 @@ public class SbxDuplicateCollapser
     private class GroupInfo implements Comparable<GroupInfo>
     {
         public final Object Group;
+
         public final int PositionLower;
         public final int PositionUpper;
 
+        public int mPositionLowerMin;
+        public int mPositionLowerMax;
+        private int mPositionUpperMin;
+        private int mPositionUpperMax;
+
+        private int mIndex; // in its group list, and is immutable
         private int mSize;
         private List<GroupInfo> mCollapsedGroups;
 
         public GroupInfo(final Object group, final int positionLower, final int positionUpper, final int initialSize)
         {
+            mIndex = -1;
             Group = group;
             PositionLower = positionLower;
             PositionUpper = positionUpper;
+
+            mPositionLowerMin = positionLower;
+            mPositionLowerMax = positionLower;
+
+            mPositionUpperMin = positionUpper;
+            mPositionUpperMax = positionUpper;
+
             mSize = initialSize;
             mCollapsedGroups = null;
         }
+
+        public void setIndex(int index) { mIndex = index; }
+        public int index() { return mIndex; }
+
+        public int posLowerMin() { return mPositionLowerMin; }
+        public int posLowerMax() { return mPositionLowerMax; }
+        public int posUpperMin() { return mPositionUpperMin; }
+        public int posUpperMax() { return mPositionUpperMax; }
 
         public int size() { return mSize; }
         public void markCollapsed() { mSize = 0; }
@@ -65,17 +107,41 @@ public class SbxDuplicateCollapser
 
             mCollapsedGroups.add(group);
             mSize += group.size();
+
+            mPositionLowerMin = min(mPositionLowerMin, group.posLowerMin());
+            mPositionLowerMax = max(mPositionLowerMax, group.posLowerMax());
+
+            mPositionUpperMin = min(mPositionUpperMin, group.posUpperMin());
+            mPositionUpperMax = max(mPositionUpperMax, group.posUpperMax());
+
+            // cap how far the chained collapsing can extend
+            int maxDistanceFromOriginal = MAX_CHAINED_MULTIPLE * mMaxDuplicateDistance;
+            mPositionLowerMin = max(mPositionLowerMin, PositionLower - maxDistanceFromOriginal);
+            mPositionLowerMax = min(mPositionLowerMax, PositionLower + maxDistanceFromOriginal);
+            mPositionUpperMin = max(mPositionUpperMin, PositionUpper - maxDistanceFromOriginal);
+            mPositionUpperMax = min(mPositionUpperMax, PositionUpper + maxDistanceFromOriginal);
+        }
+
+        private static int minDistance(int firstMin, int firstMax, int secondMin, int secondMax)
+        {
+            if(firstMax < secondMin)
+                return secondMin - firstMax;
+            else if(secondMax < firstMin)
+                return firstMin - secondMax;
+            else
+                return 0;
         }
 
         public boolean withinRange(final GroupInfo other)
         {
-            return SbxDuplicateCollapser.withinRange(
-                    PositionLower, PositionUpper, other.PositionLower, other.PositionUpper, mMaxDuplicateDistance);
+            return distance(other) <= mMaxDuplicateDistance;
         }
 
         public int distance(final GroupInfo other)
         {
-            return abs(PositionLower - other.PositionLower) + abs(PositionUpper - other.PositionUpper);
+            int lowerDistance = minDistance(mPositionLowerMin, mPositionLowerMax, other.posLowerMin(), other.posLowerMax());
+            int upperDistance = minDistance(mPositionUpperMin, mPositionUpperMax, other.posUpperMin(), other.posUpperMax());
+            return lowerDistance + upperDistance;
         }
 
         @Override
@@ -90,15 +156,25 @@ public class SbxDuplicateCollapser
             return PositionUpper - o.PositionUpper;
         }
 
-        public String readId()
+        public String toString()
         {
-            if(Group instanceof ReadInfo)
-                return ((ReadInfo)Group).id();
-            else
-                return ((DuplicateGroup)Group).reads().get(0).getReadName();
-        }
+            StringBuilder sb = new StringBuilder(format("%d: coords(%d-%d - %d-%d)",
+                    mIndex, mPositionLowerMin, mPositionLowerMax, mPositionUpperMin, mPositionUpperMax));
 
-        public String toString() { return format("coords(%d - %d) size(%d)", PositionLower, PositionUpper, mSize); }
+            if(mSize > 0)
+            {
+                sb.append(format(" size(%d)", mSize));
+
+                if(!mCollapsedGroups.isEmpty())
+                    sb.append(format(" collapsedGroups(%d)", mCollapsedGroups.size()));
+            }
+            else
+            {
+                sb.append("collapsed");
+            }
+
+            return sb.toString();
+        }
     }
 
     public FragmentCoordReads collapseGroups(
@@ -158,12 +234,31 @@ public class SbxDuplicateCollapser
 
         for(List<GroupInfo> groups : keyGroups.values())
         {
-            collapseGroups(groups);
+            if(groups.size() > 1)
+            {
+                Collections.sort(groups); // by start then end position
+
+                for(int i = 0; i < groups.size(); ++i)
+                {
+                    groups.get(i).setIndex(i);
+                }
+
+                if(USE_NEW_METHOD)
+                    collapseGroups(groups);
+                else
+                    collapseGroupsOld(groups);
+            }
 
             for(GroupInfo groupInfo : groups)
             {
                 if(groupInfo.collapsed())
                     continue;
+
+                if(groupInfo.posLowerMax() - groupInfo.posLowerMin() > mMaxDuplicateDistance * 20
+                || groupInfo.posUpperMax() - groupInfo.posUpperMin() > mMaxDuplicateDistance * 20)
+                {
+                    RD_LOGGER.debug("groupInfo({}) has wider position range", groupInfo);
+                }
 
                 DuplicateGroup duplicateGroup = null;
 
@@ -223,85 +318,99 @@ public class SbxDuplicateCollapser
 
     private void collapseGroups(final List<GroupInfo> groups)
     {
-        if(groups == null || groups.size() == 1)
-            return;
-
-        Collections.sort(groups);
-
         while(true)
         {
-            int groupIndex = findMaxGroupToCollapse(groups);
+            List<GroupInfo> groupsToCollapse = findGroupsToCollapse(groups);
 
-            if(groupIndex < 0)
+            if(groupsToCollapse == null || groupsToCollapse.isEmpty())
                 break;
 
-            GroupInfo mainGroup = groups.get(groupIndex);
+            // process in order of largest groups first
+            Collections.sort(groupsToCollapse, Comparator.comparingInt(x -> -x.size()));
 
-            /*
-            if(ReduxConfig.LogReadIds.stream().anyMatch(x -> x.equals(mainGroup.readId())))
+            for(GroupInfo groupInfo : groupsToCollapse)
             {
-                RD_LOGGER.debug("SBX duplicate collapse: {}", mainGroup.readId());
-            }
-            */
-
-            List<GroupInfo> collapseGroups = findGroupsToCollapse(groups, groupIndex);
-
-            for(GroupInfo otherGroup : collapseGroups)
-            {
-                mainGroup.addGroup(otherGroup);
-                otherGroup.markCollapsed();
+                if(groupInfo.collapsed()) // may have just been collapsed
+                    continue;
 
                 /*
-                int collapseDistance = mainGroup.distance(otherGroup);
-                addStats(collapseDistance);
+                if(ReduxConfig.LogReadIds.stream().anyMatch(x -> x.equals(mainGroup.readId())))
+                {
+                    RD_LOGGER.debug("SBX duplicate collapse: {}", mainGroup.readId());
+                }
                 */
+
+                List<GroupInfo> collapseGroups = findProximateGroups(groups, groupInfo);
+
+                if(collapseGroups == null || collapseGroups.isEmpty())
+                    continue;
+
+                for(GroupInfo otherGroup : collapseGroups)
+                {
+                    if(otherGroup.collapsed())
+                        continue;
+
+                    groupInfo.addGroup(otherGroup);
+                    otherGroup.markCollapsed();
+
+                    /*
+                    int collapseDistance = mainGroup.distance(otherGroup);
+                    addStats(collapseDistance);
+                    */
+                }
             }
         }
     }
 
-    private void addStats(int collapseDistance)
+    private List<GroupInfo> findGroupsToCollapse(final List<GroupInfo> groups)
     {
-        mCollapsingDistanceFrequency.put(collapseDistance, mCollapsingDistanceFrequency.getOrDefault(collapseDistance, 0) + 1);
-    }
+        GroupInfo lastCollapsingGroup = null;
 
-    private int findMaxGroupToCollapse(final List<GroupInfo> groups)
-    {
-        int maxGroupSize = 0;
-        int maxGroupIndex = 0;
+        List<GroupInfo> groupToCollapse = null;
 
         for(int i = 0; i < groups.size(); ++i)
         {
-            List<GroupInfo> collapseGroups = findGroupsToCollapse(groups, i);
+            GroupInfo groupInfo = groups.get(i);
+
+            if(groupInfo.collapsed())
+                continue;
+
+            if(lastCollapsingGroup != null)
+            {
+                // avoid checking a group which is close to the previous groups which collapsed in others unless it's larger
+                if(groupInfo.size() <= lastCollapsingGroup.size()
+                && withinRange(
+                        lastCollapsingGroup.PositionLower, lastCollapsingGroup.PositionUpper,
+                        groupInfo.PositionLower, groupInfo.PositionUpper, mMaxDuplicateDistance * 2))
+                {
+                    continue;
+                }
+            }
+
+            List<GroupInfo> collapseGroups = findProximateGroups(groups, groupInfo);
 
             if(collapseGroups == null)
                 continue;
 
-            // prioritise which would become the new largest group, not the current size
-            int newSize = groups.get(i).size() + collapseGroups.stream().mapToInt(x -> x.size()).sum();
+            // take this group's proximate collapsed groups if it isn't within range of another larger group
+            if(groupToCollapse == null)
+                groupToCollapse = Lists.newArrayList();
 
-            if(newSize > maxGroupSize)
-            {
-                maxGroupSize = newSize;
-                maxGroupIndex = i;
-            }
+            groupToCollapse.add(groupInfo);
+            lastCollapsingGroup = groupInfo;
         }
 
-        return maxGroupSize > 0 ? maxGroupIndex : -1;
+        return groupToCollapse;
     }
 
-    private List<GroupInfo> findGroupsToCollapse(final List<GroupInfo> groups, final int groupIndex)
+    private List<GroupInfo> findProximateGroups(final List<GroupInfo> groups, final GroupInfo groupInfo)
     {
-        GroupInfo groupInfo = groups.get(groupIndex);
-
-        if(groupInfo.collapsed())
-            return null;
-
         List<GroupInfo> collapseGroups = null;
 
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
-            int j = searchUp ? groupIndex + 1 : groupIndex - 1;
+            int j = searchUp ? groupInfo.index() + 1 : groupInfo.index() - 1;
 
             while(j >= 0 && j < groups.size())
             {
@@ -312,7 +421,7 @@ public class SbxDuplicateCollapser
                     if(nextGroup.PositionLower > groupInfo.PositionLower + mMaxDuplicateDistance)
                         break;
                 }
-                else if(!nextGroup.collapsed())
+                else if(!nextGroup.collapsed() && nextGroup.size() <= groupInfo.size())
                 {
                     if(collapseGroups == null)
                         collapseGroups = Lists.newArrayListWithCapacity(mMaxDuplicateDistance);
@@ -336,6 +445,74 @@ public class SbxDuplicateCollapser
         }
 
         return key;
+    }
+
+    private void addStats(int collapseDistance)
+    {
+        mCollapsingDistanceFrequency.put(collapseDistance, mCollapsingDistanceFrequency.getOrDefault(collapseDistance, 0) + 1);
+    }
+
+    private void collapseGroupsOld(final List<GroupInfo> groups)
+    {
+        if(groups == null || groups.size() == 1)
+            return;
+
+        Collections.sort(groups);
+
+        while(true)
+        {
+            int groupIndex = findMaxGroupToCollapse(groups);
+
+            if(groupIndex < 0)
+                break;
+
+            GroupInfo mainGroup = groups.get(groupIndex);
+
+            /*
+            if(ReduxConfig.LogReadIds.stream().anyMatch(x -> x.equals(mainGroup.readId())))
+            {
+                RD_LOGGER.debug("SBX duplicate collapse: {}", mainGroup.readId());
+            }
+            */
+
+            List<GroupInfo> collapseGroups = findProximateGroups(groups, mainGroup);
+
+            for(GroupInfo otherGroup : collapseGroups)
+            {
+                mainGroup.addGroup(otherGroup);
+                otherGroup.markCollapsed();
+
+                /*
+                int collapseDistance = mainGroup.distance(otherGroup);
+                addStats(collapseDistance);
+                */
+            }
+        }
+    }
+
+    private int findMaxGroupToCollapse(final List<GroupInfo> groups)
+    {
+        int maxGroupSize = 0;
+        int maxGroupIndex = 0;
+
+        for(int i = 0; i < groups.size(); ++i)
+        {
+            List<GroupInfo> collapseGroups = findProximateGroups(groups, groups.get(i));
+
+            if(collapseGroups == null)
+                continue;
+
+            // prioritise which would become the new largest group, not the current size
+            int newSize = groups.get(i).size() + collapseGroups.stream().mapToInt(x -> x.size()).sum();
+
+            if(newSize > maxGroupSize)
+            {
+                maxGroupSize = newSize;
+                maxGroupIndex = i;
+            }
+        }
+
+        return maxGroupSize > 0 ? maxGroupIndex : -1;
     }
 
     private void checkSupplementaryConsistency(final DuplicateGroup duplicateGroup)
