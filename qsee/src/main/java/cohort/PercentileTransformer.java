@@ -16,8 +16,19 @@ public class PercentileTransformer
 
     private boolean mFitted = false;
 
-    public PercentileTransformer(double percentileInterval)
+    private PercentileTransformer(double[] percentiles)
     {
+        mPercentiles = percentiles;
+        mRefValues = new double[percentiles.length];
+    }
+
+    public static PercentileTransformer withInterval(double percentileInterval)
+    {
+        if(percentileInterval <= 0 || percentileInterval >= 100)
+        {
+            throw new IllegalArgumentException("Percentile interval should be between 0 and 100");
+        }
+
         int numPercentiles = (int) Math.ceil(100.0 / percentileInterval) + 1;
         double[] percentiles = new double[numPercentiles];
 
@@ -28,8 +39,23 @@ public class PercentileTransformer
             currentPercentile += percentileInterval;
         }
 
-        mPercentiles = percentiles;
-        mRefValues = new double[percentiles.length];
+        return new PercentileTransformer(percentiles);
+    }
+
+    public static PercentileTransformer withNumPercentiles(int numPercentiles)
+    {
+        if(numPercentiles <= 0)
+        {
+            throw new IllegalArgumentException("Number of percentiles should be greater than 0");
+        }
+
+        double[] percentiles = new double[numPercentiles];
+        for(int i = 0; i < numPercentiles; i++)
+        {
+            percentiles[i] = 100 * (double)i / (double)(numPercentiles - 1);
+        }
+
+        return new PercentileTransformer(percentiles);
     }
 
     public static PercentileTransformer fromPrefitData(double[] percentiles, double[] refValues)
@@ -40,13 +66,17 @@ public class PercentileTransformer
     private PercentileTransformer(double[] percentiles, double[] refValues)
     {
         if(percentiles.length != refValues.length)
+        {
             throw new IllegalArgumentException("Percentiles and ref values should be the same length");
+        }
 
         checkSorted(percentiles, "Percentiles");
         checkSorted(refValues, "Ref values");
 
         if(percentiles.length < 2 || percentiles[0] != 0 || percentiles[percentiles.length - 1] != 100)
+        {
             throw new IllegalArgumentException("Data for at least percentiles 0 and 100 should be provided");
+        }
 
         mPercentiles = percentiles;
         mRefValues = refValues;
@@ -61,14 +91,18 @@ public class PercentileTransformer
         for(int i = 1; i < values.length; i++)
         {
             if(values[i] < values[i - 1])
+            {
                 throw new IllegalArgumentException(errorMessagePrefix + " should be sorted in ascending order");
+            }
         }
     }
 
     public void fit(double[] cohortValues)
     {
         if(mFitted)
+        {
             throw new IllegalStateException("PercentileTransformer already fitted");
+        }
 
         double[] cohortValuesSorted = Arrays.copyOf(cohortValues, cohortValues.length);
         Arrays.sort(cohortValuesSorted);
@@ -132,7 +166,9 @@ public class PercentileTransformer
     private void checkFitted()
     {
         if(!mFitted)
+        {
             throw new IllegalStateException("PercentileTransformer not fitted");
+        }
     }
 
     public double transform(double inputValue)
@@ -157,14 +193,20 @@ public class PercentileTransformer
     private double transformValueToPercentile(double inputValue, double[] refValues, double[] percentiles)
     {
         if(inputValue < refValues[0])
+        {
             return Double.NEGATIVE_INFINITY;
+        }
 
         if(inputValue > refValues[refValues.length - 1])
+        {
             return Double.POSITIVE_INFINITY;
+        }
 
         int matchIndex = java.util.Arrays.binarySearch(refValues, inputValue);
         if(matchIndex >= 0)
+        {
             return percentiles[matchIndex];
+        }
 
         int upperIndex = -matchIndex - 1; // When no exact match is found with binary search, a negative match index is returned encoding the insertion point
         int lowerIndex =  upperIndex - 1;
@@ -175,7 +217,9 @@ public class PercentileTransformer
         double upperPercentile = percentiles[upperIndex];
 
         if(lowerRefValue == inputValue)
+        {
             return percentiles[lowerIndex];
+        }
 
         double fraction = (inputValue - lowerRefValue) / (upperRefValue - lowerRefValue);
         return linearInterpolate(lowerPercentile, upperPercentile, fraction);

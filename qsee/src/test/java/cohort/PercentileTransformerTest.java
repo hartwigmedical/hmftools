@@ -6,8 +6,6 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
-import cohort.PercentileTransformer;
-
 public class PercentileTransformerTest
 {
 
@@ -17,7 +15,7 @@ public class PercentileTransformerTest
     @Before
     public void setUp()
     {
-        TRANSFORMER = new PercentileTransformer(10);
+        TRANSFORMER = PercentileTransformer.withInterval(10);
         TRANSFORMER.fit(COHORT_VALUES);
     }
 
