@@ -19,6 +19,11 @@ public class SampleFeatureMatrix
 
     public SampleFeatureMatrix(Map<String, Double[]> featureValuesMap, int numSamples)
     {
+        if(!featureValuesMap.isEmpty())
+        {
+            throw new IllegalArgumentException("SampleFeatureMatrix must be initialised with an empty map");
+        }
+
         mFeatureValuesMap = featureValuesMap;
 
         mSampleIds = new ArrayList<>();
@@ -26,50 +31,6 @@ public class SampleFeatureMatrix
 
         mFeatureKeys = new ArrayList<>();
     }
-
-//    public SampleFeatureMatrix(Map<String, Double[]> featureValuesMap, List<String> sampleIds)
-//    {
-//        mFeatureValuesMap = featureValuesMap;
-//
-//        mSampleIds = sampleIds;
-//        mNumSamples = sampleIds.size();
-//
-//        mFeatureKeys = new ArrayList<>(featureValuesMap.keySet());
-//
-//        validateInput();
-//    }
-//
-//    private void validateInput()
-//    {
-//        if(mSampleIds.isEmpty())
-//        {
-//            throw new IllegalArgumentException("Sample IDs must not be empty");
-//        }
-//
-//        Set<String> uniqueSampleIds = new HashSet<>(mSampleIds);
-//        int nonUniqueSampleIdCount = mSampleIds.size() - uniqueSampleIds.size();
-//
-//        if(nonUniqueSampleIdCount > 0)
-//        {
-//            throw new IllegalArgumentException(String.format("Sample IDs must be unique. Found %s non-unique sample IDs",
-//                    nonUniqueSampleIdCount));
-//        }
-//
-//        if(!mFeatureValuesMap.isEmpty())
-//        {
-//            String firstKey = mFeatureValuesMap.keySet().stream().findFirst().get();
-//            int expectedNumSamples = mFeatureValuesMap.get(firstKey).length;
-//
-//            for(String key : mFeatureValuesMap.keySet())
-//            {
-//                if(mFeatureValuesMap.get(key).length != expectedNumSamples)
-//                {
-//                    throw new IllegalArgumentException(String.format("All feature columns must have the same length. Expected %s but got %s for key '%s'",
-//                            expectedNumSamples, mFeatureValuesMap.get(key).length, key));
-//                }
-//            }
-//        }
-//    }
 
     public synchronized void addSampleFeatures(String sampleId, List<FeatureValue> features)
     {
