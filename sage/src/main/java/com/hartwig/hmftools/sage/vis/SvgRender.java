@@ -22,7 +22,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NavigableMap;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -467,36 +466,55 @@ public class SvgRender
     }
 
     @Nullable
-    public static SVGGraphics2D renderAminoAcidSeq(
-            double baseBoxSizePx, final BaseRegion renderRegion, final String geneName, final boolean posStrand, final List<Pair<BaseRegion, Character>> refAminoAcids)
+    public static SVGGraphics2D renderAminoAcidSeqs(double baseBoxSizePx, final BaseRegion renderRegion, final String geneName,
+            final boolean posStrand, final List<AminoAcidViewModel> aminoAcids)
     {
         // TODO: cleanup.
 
+        SVGGraphics2D svgCanvas_ = new SVGGraphics2D(
+                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), 3.5 * baseBoxSizePx);
+        AffineTransform origTransform = svgCanvas_.getTransform();
+
+        svgCanvas_.setTransform(origTransform);
+        renderAminoAcidSeq(svgCanvas_, 0.0, 0.0, baseBoxSizePx, renderRegion, aminoAcids, true);
+
+        svgCanvas_.setTransform(origTransform);
+        renderAminoAcidSeq(svgCanvas_, 0.0, baseBoxSizePx, baseBoxSizePx, renderRegion, aminoAcids, false);
+
+        svgCanvas_.setTransform(origTransform);
+        renderGeneStrand(svgCanvas_, 0.0, 2.0 * baseBoxSizePx, baseBoxSizePx, renderRegion, posStrand);
+
+        svgCanvas_.setTransform(origTransform);
+        renderGeneName(svgCanvas_, 0.0, 2.5 * baseBoxSizePx, baseBoxSizePx, renderRegion, geneName);
+
+        return svgCanvas_;
+    }
+
+    public static void renderAminoAcidSeq(final SVGGraphics2D svgCanvas__, final double xOffset, final double yOffset, double baseBoxSizePx,
+            final BaseRegion renderRegion, final List<AminoAcidViewModel> aminoAcids, final boolean renderRef)
+    {
+        // TODO: cleanup
+
         final char stopCodon = '*';
 
-        SVGGraphics2D svgCanvas_ = new SVGGraphics2D(
-                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), 2.5 * baseBoxSizePx);
         // work in units of BASE_BOX_SIZE
-        svgCanvas_.scale(baseBoxSizePx, baseBoxSizePx);
-
-        svgCanvas_.setFont(BASE_FONT);
-
-//        Integer firstBaseIdx = null;
-//        Integer lastBaseIdx = null;
-//        Integer firstOverlappingBaseIdx = null;
-//        Integer lastOverlappingBaseIdx = null;
-//        BaseViewModel prevBase = bases.getBase(renderRegion.start() - 1);
-//        int delLen = 0;
+        svgCanvas__.scale(baseBoxSizePx, baseBoxSizePx);
+        svgCanvas__.setFont(BASE_FONT);
+        double currentXOffset = xOffset / baseBoxSizePx;
+        double currentYOffset = yOffset / baseBoxSizePx;
 
         final Color lightBlue = new Color(92, 92, 164);
         final Color darkBlue = new Color(12, 12, 120);
-        List<Color> bgColours = Lists.newArrayList(lightBlue, darkBlue);
-        List<BaseRegion> exonRenderRegions = Lists.newArrayList();
-        for(int i = 0; i < refAminoAcids.size(); i++)
+        final Color lightPurple = new Color(144, 92, 163);
+        final Color darkPurple = new Color(92, 12, 121);
+        List<Color> matchBgColours = Lists.newArrayList(lightBlue, darkBlue);
+        List<Color> mismatchBgColours = Lists.newArrayList(lightPurple, darkPurple);
+        for(int i = 0; i < aminoAcids.size(); i++)
         {
-            Pair<BaseRegion, Character> refAa = refAminoAcids.get(i);
-            BaseRegion aaRegion = refAa.getLeft();
-            char aa = refAa.getRight();
+            AminoAcidViewModel aaModel = aminoAcids.get(i);
+            BaseRegion aaRegion = aaModel.baseRegion();
+            char aa = renderRef ? aaModel.ref() : aaModel.alt();
+            boolean matchesRef = renderRef || aaModel.matchesRef();
 
             if(aaRegion.start() > renderRegion.end())
                 break;
@@ -506,213 +524,103 @@ public class SvgRender
 
             int startPos = max(aaRegion.start(), renderRegion.start());
             int endPos = min(aaRegion.end(), renderRegion.end());
-            exonRenderRegions.add(new BaseRegion(startPos, endPos));
             int boxWidth = endPos - startPos + 1;
             int boxIdx = startPos - renderRegion.start() + BOX_PADDING;
-            Color bgColour = aa == stopCodon ? Color.RED : bgColours.get(i % bgColours.size());
 
-            svgCanvas_.setColor(bgColour);
-            Rectangle2D.Double box = new Rectangle2D.Double(boxIdx, 0.0, boxWidth, 1.0);
-            svgCanvas_.fill(box);
+            Color bgColour;
+            if(aa == stopCodon)
+            {
+                bgColour = Color.RED;
+            }
+            else if(matchesRef)
+            {
+                bgColour = matchBgColours.get(i % matchBgColours.size());
+            }
+            else
+            {
+                bgColour = mismatchBgColours.get(i % mismatchBgColours.size());
+            }
+
+            svgCanvas__.setColor(bgColour);
+            Rectangle2D.Double box = new Rectangle2D.Double(currentXOffset + boxIdx, currentYOffset, boxWidth, 1.0);
+            svgCanvas__.fill(box);
 
             Color fgColour = Color.WHITE;
-            svgCanvas_.setColor(fgColour);
+            svgCanvas__.setColor(fgColour);
 
             // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
             // scaling
-            AffineTransform currentTransform = svgCanvas_.getTransform();
-            svgCanvas_.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
-            drawStringFromCenter(svgCanvas_, String.valueOf(aa), (boxIdx + 0.5 * boxWidth) * BASE_BOX_SIZE, 0.5 * BASE_BOX_SIZE);
-            svgCanvas_.setTransform(currentTransform);
-
-//            BaseViewModel refBase = refBases == null ? BaseViewModel.createMissingBase() : refBases.getBase(i);
-//            BaseViewModel base = bases.getBase(i);
-
-//            if(!base.isMissing())
-//            {
-//                if(firstBaseIdx == null)
-//                {
-//                    firstBaseIdx = boxIdx;
-//                }
-//
-//                lastBaseIdx = boxIdx;
-//            }
-//
-//            if(base.isDel())
-//            {
-//                ++delLen;
-//            }
-//            else if(base.hasCharBase())
-//            {
-
-//            }
-
-//            // overlapping bases
-//            if(base.IsOverlapped)
-//            {
-//                if(firstOverlappingBaseIdx == null)
-//                {
-//                    firstOverlappingBaseIdx = boxIdx;
-//                }
-//
-//                lastOverlappingBaseIdx = boxIdx;
-//
-//                svgCanvas.setColor(OVERLAPPING_FRAGMENT_BORDER_COLOR);
-//                drawTopBoxBorder(svgCanvas, boxIdx, BOUNDARY_BOX_PROPORTION);
-//                drawBottomBoxBorder(svgCanvas, boxIdx, BOUNDARY_BOX_PROPORTION);
-//            }
-
-//            // del connector
-//            if(!base.isDel() && delLen > 0)
-//            {
-//                drawDel(svgCanvas, boxIdx - delLen, boxIdx - 1);
-//                delLen = 0;
-//            }
-
-//            // borders
-//            List<BoxBorder> borders = posToBordersMap.get(i);
-//            if(borders != null)
-//            {
-//                for(BoxBorder border : borders)
-//                {
-//                    svgCanvas.setColor(border.Col);
-//                    switch(border.Location)
-//                    {
-//                        case TOP:
-//                            drawTopBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
-//                            break;
-//                        case RIGHT:
-//                            drawRightBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
-//                            break;
-//                        case BOTTOM:
-//                            drawBottomBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
-//                            break;
-//                        case LEFT:
-//                            drawLeftBoxBorder(svgCanvas, boxIdx, 0.5 * BOUNDARY_BOX_PROPORTION);
-//                    }
-//                }
-//            }
-
-//            // display inserts
-//            svgCanvas.setColor(INSERT_COLOR);
-//            if(base.rightInsertCount() > 0)
-//            {
-//                drawRightInsertIndicator(svgCanvas, boxIdx);
-//            }
-
-//            if(prevBase.rightInsertCount() > 0)
-//            {
-//                drawLeftInsertIndicator(svgCanvas, boxIdx);
-//
-//                Font currentFont = svgCanvas.getFont();
-//                svgCanvas.setFont(INDEL_FONT);
-//                String insertSizeStr = String.valueOf(prevBase.rightInsertCount());
-//
-//                // font size is based of BASE_BOX_SIZE, we do not scale font size when we scaled by BASE_BOX_SIZE, so temporarily undo this
-//                // scaling
-//                AffineTransform currentTransform = svgCanvas.getTransform();
-//                svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
-//
-//                double textCenterX = boxIdx * BASE_BOX_SIZE;
-//                double textCenterY = 0.5 * BASE_BOX_SIZE;
-//                Rectangle2D insertSizeStrRect = SvgUtil.getStringBoundsFromCenter(INDEL_FONT, insertSizeStr, textCenterX, textCenterY);
-//                svgCanvas.fill(insertSizeStrRect);
-//                svgCanvas.setColor(Color.WHITE);
-//                drawStringFromCenter(svgCanvas, insertSizeStr, textCenterX, textCenterY);
-//
-//                svgCanvas.setTransform(currentTransform);
-//                svgCanvas.setFont(currentFont);
-//            }
-//
-//            prevBase = base;
+            AffineTransform currentTransform = svgCanvas__.getTransform();
+            svgCanvas__.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+            currentXOffset *= BASE_BOX_SIZE;
+            currentYOffset *= BASE_BOX_SIZE;
+            drawStringFromCenter(svgCanvas__, String.valueOf(aa), currentXOffset + (boxIdx + 0.5 * boxWidth) * BASE_BOX_SIZE, currentYOffset + 0.5 * BASE_BOX_SIZE);
+            svgCanvas__.setTransform(currentTransform);
+            currentXOffset = xOffset / baseBoxSizePx;
+            currentYOffset = yOffset / baseBoxSizePx;
         }
+    }
 
-//        // final del connector
-//        if(delLen > 0)
-//        {
-//            drawDel(svgCanvas, renderRegion.end() + 1 - delLen, renderRegion.end());
-//        }
-//
-//        // overlapping base side borders
-//        if(firstOverlappingBaseIdx != null && lastOverlappingBaseIdx != null)
-//        {
-//            svgCanvas.setColor(OVERLAPPING_FRAGMENT_BORDER_COLOR);
-//            drawLeftBoxBorder(svgCanvas, firstOverlappingBaseIdx, BOUNDARY_BOX_PROPORTION);
-//            drawRightBoxBorder(svgCanvas, lastOverlappingBaseIdx, BOUNDARY_BOX_PROPORTION);
-//        }
-//
-//        if(!bases.hasOrientation() || firstBaseIdx == null || lastBaseIdx == null)
-//        {
-//            return svgCanvas;
-//        }
-//
-//        // left orientation indicator
-//        if(bases.LeftIsForwardStrand)
-//        {
-//            svgCanvas.setColor(FORWARD_STRAND_COLOR);
-//            drawRightBoxBorder(svgCanvas, firstBaseIdx - 1, 0.5);
-//        }
-//        else
-//        {
-//            svgCanvas.setColor(REVERSE_STRAND_COLOR);
-//            drawReverseArrow(svgCanvas, firstBaseIdx - 0.5, 0.0, 0.5, 1.0);
-//        }
-//
-//        // right orientation colour
-//        if(bases.RightIsForwardStrand)
-//        {
-//            svgCanvas.setColor(FORWARD_STRAND_COLOR);
-//            drawForwardArrow(svgCanvas, lastBaseIdx + 1, 0.0, 0.5, 1.0);
-//        }
-//        else
-//        {
-//            svgCanvas.setColor(REVERSE_STRAND_COLOR);
-//            drawLeftBoxBorder(svgCanvas, lastBaseIdx + 1, 0.5);
-//        }
+    public static void renderGeneStrand(final SVGGraphics2D svgCanvas, final double xOffset, final double yOffset, double baseBoxSizePx,
+            final BaseRegion renderRegion, boolean posStrand)
+    {
+        // TODO: cleanup
 
-        if(exonRenderRegions.isEmpty())
-            return null;
+        // work in units of BASE_BOX_SIZE
+        svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
+        svgCanvas.setFont(BASE_FONT);
+        double currentXOffset = xOffset / baseBoxSizePx;
+        double currentYOffset = yOffset / baseBoxSizePx;
 
-        svgCanvas_.setColor(Color.BLACK);
+        svgCanvas.setColor(Color.BLACK);
 
         // render strand indication
-        Stroke currentStroke = svgCanvas_.getStroke();
+        Stroke currentStroke = svgCanvas.getStroke();
         Stroke stroke = new BasicStroke((float) (2.0 / BASE_BOX_SIZE));
-        svgCanvas_.setStroke(stroke);
-        for(BaseRegion exonRenderRegion : exonRenderRegions)
+        svgCanvas.setStroke(stroke);
+        for(int pos = renderRegion.start(); pos <= renderRegion.end(); pos++)
         {
-            for(int pos = exonRenderRegion.start(); pos <= exonRenderRegion.end(); pos++)
+            for(int i = 0; i < 8; i += 2)
             {
-                for(int i = 0; i < 8; i += 2)
+                int boxIdx = pos - renderRegion.start() + BOX_PADDING;
+                double left = boxIdx + i * 0.125;
+                double right = left + 0.125;
+                if(posStrand)
                 {
-                    int boxIdx = pos - renderRegion.start() + BOX_PADDING;
-                    double left = boxIdx + i * 0.125;
-                    double right = left + 0.125;
-                    if(posStrand)
-                    {
-                        double tmp = left;
-                        left = right;
-                        right = tmp;
-                    }
-
-                    Shape line = new Line2D.Double(left, 1.25, right, 1.0);
-                    svgCanvas_.draw(line);
-                    line = new Line2D.Double(left, 1.25, right, 1.5);
-                    svgCanvas_.draw(line);
+                    double tmp = left;
+                    left = right;
+                    right = tmp;
                 }
+
+                Shape line = new Line2D.Double(currentXOffset + left, currentYOffset + 0.25, currentXOffset + right, currentYOffset);
+                svgCanvas.draw(line);
+                line = new Line2D.Double(currentXOffset + left, currentYOffset + 0.25, currentXOffset + right, currentYOffset + 0.5);
+                svgCanvas.draw(line);
             }
         }
 
-        svgCanvas_.setStroke(currentStroke);
+        svgCanvas.setStroke(currentStroke);
+    }
 
-        // render gene name
+    public static void renderGeneName(final SVGGraphics2D svgCanvas, final double xOffset, final double yOffset, double baseBoxSizePx,
+            final BaseRegion renderRegion, final String geneName)
+    {
+        // TODO: cleanup
+
+        // work in units of BASE_BOX_SIZE
+        svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
+        svgCanvas.setFont(BASE_FONT);
+        double currentXOffset = xOffset / baseBoxSizePx;
+        double currentYOffset = yOffset / baseBoxSizePx;
+
         // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this
         // scaling
-        AffineTransform currentTransform = svgCanvas_.getTransform();
-        svgCanvas_.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
-        drawStringFromCenter(svgCanvas_, geneName, (0.5 * renderRegion.baseLength() + BOX_PADDING) * BASE_BOX_SIZE, 2.0 * BASE_BOX_SIZE);
-        svgCanvas_.setTransform(currentTransform);
-
-        return svgCanvas_;
+        AffineTransform currentTransform = svgCanvas.getTransform();
+        svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+        currentXOffset *= BASE_BOX_SIZE;
+        currentYOffset *= BASE_BOX_SIZE;
+        svgCanvas.setColor(Color.BLACK);
+        drawStringFromCenter(svgCanvas, geneName, currentXOffset + (0.5 * renderRegion.baseLength() + BOX_PADDING) * BASE_BOX_SIZE, currentYOffset + 0.5 * BASE_BOX_SIZE);
+        svgCanvas.setTransform(currentTransform);
     }
 }
