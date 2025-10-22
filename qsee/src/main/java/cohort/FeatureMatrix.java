@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import feature.FeatureValue;
+import feature.Feature;
 
 public class FeatureMatrix
 {
@@ -37,7 +37,7 @@ public class FeatureMatrix
         mNumRows = numRows;
     }
 
-    public synchronized void addRow(String rowId, List<FeatureValue> features)
+    public synchronized void addRow(String rowId, List<Feature> features)
     {
         if(!mRowIds.contains(rowId))
         {
@@ -46,7 +46,7 @@ public class FeatureMatrix
 
         int rowIndex = mRowIds.indexOf(rowId);
 
-        for(FeatureValue feature : features)
+        for(Feature feature : features)
         {
             String key = feature.mKey;
 

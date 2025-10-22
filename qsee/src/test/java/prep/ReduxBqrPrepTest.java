@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 
-import feature.FeatureValue;
+import feature.Feature;
 import prep.category.ReduxBqrPrep.ExtendedBqrRecord;
 
 import org.junit.Test;
@@ -40,17 +40,17 @@ public class ReduxBqrPrepTest
     @Test
     public void canCalcChangeInQualPerTrinucContext()
     {
-        List<FeatureValue> featureValues = calcChangeInQualPerTrinucContext(BQR_RECORDS);
+        List<Feature> features = calcChangeInQualPerTrinucContext(BQR_RECORDS);
 
-        assertEquals(2, featureValues.size());
+        assertEquals(2, features.size());
 
-        FeatureValue actualFeature;
+        Feature actualFeature;
 
-        actualFeature = featureValues.get(0);
+        actualFeature = features.get(0);
         assertEquals("readType=NONE;standardMutation=C>A;standardTrinucContext=CCC", actualFeature.mKey);
         assertEquals(1.25, actualFeature.mValue, 0.001);
 
-        actualFeature = featureValues.get(1);
+        actualFeature = features.get(1);
         assertEquals("readType=NONE;standardMutation=C>A;standardTrinucContext=ACA", actualFeature.mKey);
         assertEquals(3.55, actualFeature.mValue, 0.001);
     }
@@ -58,17 +58,17 @@ public class ReduxBqrPrepTest
     @Test
     public void canCalcChangeInQualPerOriginalQual()
     {
-        List<FeatureValue> featureValues = calcChangeInQualPerOriginalQual(BQR_RECORDS);
+        List<Feature> features = calcChangeInQualPerOriginalQual(BQR_RECORDS);
 
-        assertEquals(2, featureValues.size());
+        assertEquals(2, features.size());
 
-        FeatureValue actualFeature;
+        Feature actualFeature;
 
-        actualFeature = featureValues.get(0);
+        actualFeature = features.get(0);
         assertEquals("readType=DUAL;standardMutation=C>G;originalQualBin=0-19", actualFeature.mKey);
         assertEquals(1.75, actualFeature.mValue, 0.001);
 
-        actualFeature = featureValues.get(1);
+        actualFeature = features.get(1);
         assertEquals("readType=NONE;standardMutation=C>A;originalQualBin=30+", actualFeature.mKey);
         assertEquals(2.40, actualFeature.mValue, 0.001);
     }

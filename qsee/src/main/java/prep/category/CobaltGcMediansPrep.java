@@ -4,6 +4,8 @@ import static common.QSeeConstants.QC_LOGGER;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +14,7 @@ import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 
 import feature.FeatureType;
-import feature.FeatureValue;
+import feature.Feature;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -42,17 +44,23 @@ public class CobaltGcMediansPrep implements CategoryPrep
         }
     }
 
-    public static List<FeatureValue> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
+    public static List<Feature> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
     {
-        Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
-
         double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
 
-        List<FeatureValue> featureValues = new ArrayList<>();
+        Map<GCBucket, Double> medianReadDepths = gcMedianReadDepth.medianReadDepthPerGCBucket();
 
-        for(GCBucket bucket : medianReadDepths.keySet())
+        LinkedHashMap<GCBucket, Double> orderedMedianReadDepths = medianReadDepths.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> entry.getKey().bucket()))
+                .collect(LinkedHashMap::new,
+                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
+                        LinkedHashMap::putAll);
+
+        List<Feature> features = new ArrayList<>();
+
+        for(GCBucket bucket : orderedMedianReadDepths.keySet())
         {
-            double medianReadDepth = medianReadDepths.get(bucket);
+            double medianReadDepth = orderedMedianReadDepths.get(bucket);
             if(medianReadDepth == GcMedianReadDepth.NO_READ_DEPTH_VALUE)
             {
                 medianReadDepth = 0;
@@ -60,23 +68,23 @@ public class CobaltGcMediansPrep implements CategoryPrep
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            FeatureValue featureValue = new FeatureValue(
-                    FeatureValue.keyFromPair(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket())),
+            Feature feature = new Feature(
+                    Feature.keyFromPair(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket())),
                     normalisedDepth,
                     FeatureType.COBALT_GC_MEDIAN
             );
 
-            featureValues.add(featureValue);
+            features.add(feature);
         }
 
-        return featureValues;
+        return features;
     }
 
-    public List<FeatureValue> extractSampleData(String sampleId)
+    public List<Feature> extractSampleData(String sampleId)
     {
         GcMedianReadDepth gcMedianReadDepth = loadCobaltGcMedianFile(sampleId);
-        List<FeatureValue> featureValues = normaliseMedianReadDepths(gcMedianReadDepth);
+        List<Feature> features = normaliseMedianReadDepths(gcMedianReadDepth);
 
-        return featureValues;
+        return features;
     }
 }

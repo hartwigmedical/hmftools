@@ -11,33 +11,33 @@ import java.util.stream.IntStream;
 
 import org.junit.Test;
 
-import feature.FeatureValue;
+import feature.Feature;
 
 public class FeatureMatrixTest
 {
     @Test
     public void canAddRowsIncrementally()
     {
-        List<FeatureValue> sample1Features = List.of(
-                new FeatureValue("feature1", 1.1),
-                new FeatureValue("feature2", 1.2)
+        List<Feature> sample1Features = List.of(
+                new Feature("feature1", 1.1),
+                new Feature("feature2", 1.2)
         );
 
-        List<FeatureValue> sample2Features = List.of(
-                new FeatureValue("feature1", 2.1),
-                new FeatureValue("feature2", 2.2)
+        List<Feature> sample2Features = List.of(
+                new Feature("feature1", 2.1),
+                new Feature("feature2", 2.2)
         );
 
-        List<FeatureValue> sample3Features = List.of(
-                new FeatureValue("feature1", 3.1),
-                new FeatureValue("feature2", 3.2),
-                new FeatureValue("feature3", 3.3)
+        List<Feature> sample3Features = List.of(
+                new Feature("feature1", 3.1),
+                new Feature("feature2", 3.2),
+                new Feature("feature3", 3.3)
         );
 
-        List<FeatureValue> sample4Features = List.of(
-                new FeatureValue("feature1", 4.1),
-                new FeatureValue("feature2", 4.2),
-                new FeatureValue("feature3", 4.3)
+        List<Feature> sample4Features = List.of(
+                new Feature("feature1", 4.1),
+                new Feature("feature2", 4.2),
+                new Feature("feature3", 4.3)
         );
 
         FeatureMatrix matrix = new FeatureMatrix(new HashMap<>(), 4);
@@ -101,12 +101,12 @@ public class FeatureMatrixTest
     {
         String sampleId = formTestSampleId(sampleIndex);
 
-        List<FeatureValue> features = new ArrayList<>();
+        List<Feature> features = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < numFeatures; ++featureIndex)
         {
             String featureKey = formTestFeatureKey(featureIndex);
             double featureValue = formTestFeatureValue(sampleIndex, featureIndex);
-            features.add(new FeatureValue(featureKey, featureValue));
+            features.add(new Feature(featureKey, featureValue));
         }
 
         return new Thread(() -> matrix.addRow(sampleId, features));

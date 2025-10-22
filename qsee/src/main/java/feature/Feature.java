@@ -5,7 +5,7 @@ import java.util.StringJoiner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-public class FeatureValue
+public class Feature
 {
     public final String mKey;
     public final double mValue;
@@ -17,14 +17,14 @@ public class FeatureValue
     private static final String KEY_VALUE_SEPARATOR = "=";
     private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
 
-    public FeatureValue(String key, double value, @Nullable FeatureType type)
+    public Feature(String key, double value, @Nullable FeatureType type)
     {
         mKey = key;
         mValue = value;
         mType = type;
     }
 
-    public FeatureValue(String key, double value)
+    public Feature(String key, double value)
     {
         mKey = key;
         mValue = value;

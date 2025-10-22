@@ -2,9 +2,9 @@ package prep;
 
 import java.util.List;
 
-import feature.FeatureValue;
+import feature.Feature;
 
 public interface CategoryPrep
 {
-    List<FeatureValue> extractSampleData(String sampleId);
+    List<Feature> extractSampleData(String sampleId);
 }

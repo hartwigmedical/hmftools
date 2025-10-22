@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.redux.BqrRecord;
 import org.apache.commons.lang3.tuple.Pair;
 
 import feature.FeatureType;
-import feature.FeatureValue;
+import feature.Feature;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -144,7 +144,7 @@ public class ReduxBqrPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    public static List<FeatureValue> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
+    public static List<Feature> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
     {
         bqrRecords = bqrRecords.stream()
                 .filter(x -> x.OriginalQuality >= HI_QUAL_THRESHOLD)
@@ -153,7 +153,7 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<String, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            String key = FeatureValue.keyFromPairs(
+            String key = Feature.keyFromPairs(
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
                     Pair.of(KEY_FLD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext)
@@ -166,17 +166,17 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new FeatureValue(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_SNV96_CONTEXT))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_SNV96_CONTEXT))
                 .toList();
     }
 
     @VisibleForTesting
-    public static List<FeatureValue> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
+    public static List<Feature> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
     {
         Map<String, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            String key = FeatureValue.keyFromPairs(
+            String key = Feature.keyFromPairs(
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
                     Pair.of(KEY_FLD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin())
@@ -189,20 +189,20 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<String, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new FeatureValue(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_ORIG_QUAL))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), FeatureType.REDUX_BQR_PER_ORIG_QUAL))
                 .toList();
     }
 
-    public List<FeatureValue> extractSampleData(String sampleId)
+    public List<Feature> extractSampleData(String sampleId)
     {
         loadSnvBqrRecords(sampleId);
 
-        List<FeatureValue> featureValues = new ArrayList<>();
+        List<Feature> features = new ArrayList<>();
 
-        featureValues.addAll(calcChangeInQualPerOriginalQual(mExtendedBqrRecords));
-        featureValues.addAll(calcChangeInQualPerTrinucContext(mExtendedBqrRecords));
+        features.addAll(calcChangeInQualPerOriginalQual(mExtendedBqrRecords));
+        features.addAll(calcChangeInQualPerTrinucContext(mExtendedBqrRecords));
 
-        return featureValues;
+        return features;
     }
 
 }
