@@ -3,22 +3,32 @@ package feature;
 import java.util.StringJoiner;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
 public class FeatureValue
 {
-    public String mKey;
-    public double mValue;
-    public FeatureType mType;
+    public final String mKey;
+    public final double mValue;
+
+    @Nullable
+    public final FeatureType mType;
 
     // For multi-field keys
     private static final String KEY_VALUE_SEPARATOR = "=";
     private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
 
-    public FeatureValue(String key, double value, FeatureType type)
+    public FeatureValue(String key, double value, @Nullable FeatureType type)
     {
         mKey = key;
         mValue = value;
         mType = type;
+    }
+
+    public FeatureValue(String key, double value)
+    {
+        mKey = key;
+        mValue = value;
+        mType = null;
     }
 
     public static String keyFromPair(String fieldName, String fieldValue)
