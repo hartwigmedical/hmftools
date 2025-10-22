@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalDouble;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -19,16 +20,29 @@ import com.hartwig.hmftools.panelbuilder.probequality.ProbeQualityModel;
 // Also batches computations on the alignment model to make it faster.
 public class ProbeQualityScorer
 {
-    private final ProbeQualityProfile mQualityProfile;
-    private final ProbeQualityModel mQualityModel;
+    // Use function references rather than exact implementations to allow test mocks.
+    private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
+    private final Function<List<byte[]>, List<ProbeQualityModel.Result>> mComputeQualityModel;
+    // Higher batch size means higher performance efficiency for alignment but more memory usage.
+    private final int mBatchSize;
 
-    // Higher means higher performance efficiency for alignment but more memory usage.
-    private static final int BATCH_SIZE = 1000;
+    private static final int DEFAULT_BATCH_SIZE = 1000;
+
+    protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
+            final Function<List<byte[]>, List<ProbeQualityModel.Result>> computeQualityModel, int batchSize)
+    {
+        mComputeQualityProfile = computeQualityProfile;
+        mComputeQualityModel = computeQualityModel;
+        if(batchSize < 1)
+        {
+            throw new IllegalArgumentException("batchSize must be >= 1");
+        }
+        mBatchSize = batchSize;
+    }
 
     public ProbeQualityScorer(final ProbeQualityProfile qualityProfile, final ProbeQualityModel qualityModel)
     {
-        mQualityProfile = qualityProfile;
-        mQualityModel = qualityModel;
+        this(qualityProfile::computeQualityScore, qualityModel::compute, DEFAULT_BATCH_SIZE);
     }
 
     public Stream<Probe> getQualityScores(Stream<Probe> probes)
@@ -74,9 +88,9 @@ public class ProbeQualityScorer
 
             // If we got here, then the probe needs the probe quality model, in which case we consume probes until the batch is large enough
             // to process efficiently.
-            ArrayList<Probe> batch = new ArrayList<>(BATCH_SIZE);
+            ArrayList<Probe> batch = new ArrayList<>(mBatchSize);
             batch.add(probe);
-            while(mSourceIterator.hasNext() && batch.size() < BATCH_SIZE)
+            while(mSourceIterator.hasNext() && batch.size() < mBatchSize)
             {
                 probe = mSourceIterator.next();
                 OptionalDouble qualityScore = tryComputeQualityScoreFromProfile(probe);
@@ -102,15 +116,15 @@ public class ProbeQualityScorer
         }
         else
         {
-            return mQualityProfile.computeQualityScore(region);
+            return mComputeQualityProfile.apply(region);
         }
     }
 
     private List<Probe> computeQualityScoresFromModel(final List<Probe> probes)
     {
-        List<Probe> result = new ArrayList<>(probes.size());
-        List<byte[]> sequences = new ArrayList<>();
-        List<Integer> indices = new ArrayList<>();
+        ArrayList<Probe> result = new ArrayList<>(probes.size());
+        ArrayList<byte[]> sequences = new ArrayList<>();
+        ArrayList<Integer> indices = new ArrayList<>();
         for(int i = 0; i < probes.size(); ++i)
         {
             Probe probe = probes.get(i);
@@ -122,8 +136,8 @@ public class ProbeQualityScorer
             result.add(probe);
         }
 
-        List<ProbeQualityModel.Result> modelResults = mQualityModel.compute(sequences);
-        for(int i = 0; i < modelResults.size(); ++i)
+        List<ProbeQualityModel.Result> modelResults = mComputeQualityModel.apply(sequences);
+        for(int i = 0; i < indices.size(); ++i)
         {
             int index = indices.get(i);
             double qualityScore = modelResults.get(i).qualityScore();
