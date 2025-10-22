@@ -2,6 +2,7 @@ package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
+import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,7 +33,8 @@ public class UnpairedReadDuplicateTest
     {
         int maxDupDistance = 2;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
-        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+        ReadCache readCache = new ReadCache(
+                100, 100, false, groupCollapseConfig, DEFAULT_POP_DISTANCE_CHECK, 0);
 
         int readStart = 100;
         int readEnd = 150;
@@ -147,7 +149,8 @@ public class UnpairedReadDuplicateTest
     {
         int maxDupDistance = 1;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
-        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+        ReadCache readCache = new ReadCache(
+                100, 100, false, groupCollapseConfig, DEFAULT_POP_DISTANCE_CHECK, 0);
 
         int readStart = 100;
         int readEnd = 250;

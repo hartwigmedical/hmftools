@@ -70,6 +70,11 @@ public final class SbxRoutines
 
     public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true; // currently unused but keep for now
 
+    // for read cache
+    public static final int SBX_READ_CACHE_GROUP_SIZE = 1000; // does not have to exceed the maximum possible read length
+    public static final int SBX_READ_CACHE_MAX_SOFT_CLIP = SBX_READ_CACHE_GROUP_SIZE - 30;
+    public static final int SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD = 5000;
+
     public static void prepProcessRead(final SAMRecord record)
     {
         try

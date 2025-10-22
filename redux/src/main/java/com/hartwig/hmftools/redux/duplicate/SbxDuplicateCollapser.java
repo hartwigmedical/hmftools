@@ -20,9 +20,12 @@ public class SbxDuplicateCollapser
 {
     private final int mMaxDuplicateDistance;
 
+    private final Map<Integer,Integer> mCollapsingDistanceFrequency;
+
     public SbxDuplicateCollapser(int maxDuplicateDistance)
     {
         mMaxDuplicateDistance = maxDuplicateDistance;
+        mCollapsingDistanceFrequency = Maps.newHashMap();
     }
 
     private static boolean withinRange(int firstPosLower, int firstPosUpper, int secondPosLower, int secondPosUpper, int maxDistance)
@@ -68,6 +71,11 @@ public class SbxDuplicateCollapser
         {
             return SbxDuplicateCollapser.withinRange(
                     PositionLower, PositionUpper, other.PositionLower, other.PositionUpper, mMaxDuplicateDistance);
+        }
+
+        public int distance(final GroupInfo other)
+        {
+            return abs(PositionLower - other.PositionLower) + abs(PositionUpper - other.PositionUpper);
         }
 
         @Override
@@ -242,8 +250,18 @@ public class SbxDuplicateCollapser
             {
                 mainGroup.addGroup(otherGroup);
                 otherGroup.markCollapsed();
+
+                /*
+                int collapseDistance = mainGroup.distance(otherGroup);
+                addStats(collapseDistance);
+                */
             }
         }
+    }
+
+    private void addStats(int collapseDistance)
+    {
+        mCollapsingDistanceFrequency.put(collapseDistance, mCollapsingDistanceFrequency.getOrDefault(collapseDistance, 0) + 1);
     }
 
     private int findMaxGroupToCollapse(final List<GroupInfo> groups)

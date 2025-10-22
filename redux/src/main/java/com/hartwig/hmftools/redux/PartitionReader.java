@@ -16,7 +16,11 @@ import static com.hartwig.hmftools.redux.ReduxConstants.SUPP_ALIGNMENT_SCORE_MIN
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_GROUP_SIZE;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_READ_CACHE_MAX_SOFT_CLIP;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.prepProcessRead;
+import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.apache.logging.log4j.Level.DEBUG;
 import static org.apache.logging.log4j.Level.TRACE;
@@ -86,24 +90,23 @@ public class PartitionReader
 
         if(isIllumina())
         {
-            if(mConfig.UMIs.Enabled)
-            {
-                mReadCache = new JitterReadCache(new ReadCache(
-                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateConfig));
-            }
-            else
-            {
-                mReadCache = new ReadCache(
-                        ReadCache.DEFAULT_GROUP_SIZE, ReadCache.DEFAULT_MAX_SOFT_CLIP, mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
-            }
+            ReadCache readCache = new ReadCache(mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
+
+            mReadCache = mConfig.UMIs.Enabled ? new JitterReadCache(readCache) : readCache;
         }
         else
         {
             // the sampled max read length is doubled, because it has been observed in non-Illumina bams that the max read length is usually
             // larger than the sampled max read length extra room is required
+
+            // currently only used for SBX since Ultima does not mark duplicates
+            int groupSize = SBX_READ_CACHE_GROUP_SIZE; // was 3 * mConfig.readLength()
+            int maxSoftClipLength = SBX_READ_CACHE_MAX_SOFT_CLIP; // was 2 * mConfig.readLength() - 1
+            int logCacheReadCount = SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD;
+
             mReadCache = new ReadCache(
-                    3 * mConfig.readLength(),
-                    2 * mConfig.readLength() - 1, mConfig.UMIs.Enabled, mConfig.DuplicateConfig);
+                    groupSize, maxSoftClipLength, false, mConfig.DuplicateConfig,
+                    DEFAULT_POP_DISTANCE_CHECK, logCacheReadCount);
         }
 
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
