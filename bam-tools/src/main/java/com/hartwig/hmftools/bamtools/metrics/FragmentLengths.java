@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 
 import java.util.List;
@@ -68,7 +69,9 @@ public class FragmentLengths
 
     private void addFragmentLength(final SAMRecord read)
     {
-        int fragmentLength = getLengthBucket(abs(read.getInferredInsertSize()));
+        int fragmentSize = inferredInsertSizeAbs(read);
+
+        int fragmentLength = getLengthBucket(fragmentSize);
 
         if(fragmentLength <= 0)
             return;
