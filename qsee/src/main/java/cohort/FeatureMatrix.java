@@ -31,15 +31,29 @@ public class FeatureMatrix
 
     private static final double EMPTY_VALUE = Double.NaN;
 
+    public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, List<String> expectedRowIds)
+    {
+        mFeatureValuesMap = featureValuesMap;
+        checkMapEmpty();
+
+        mRowIds.addAll(expectedRowIds);
+        mNumRows = expectedRowIds.size();
+    }
+
     public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, int numRows)
     {
-        if(!featureValuesMap.isEmpty())
-        {
-            throw new IllegalArgumentException("FeatureMatrix must be initialised with an empty map");
-        }
-
         mFeatureValuesMap = featureValuesMap;
+        checkMapEmpty();
+
         mNumRows = numRows;
+    }
+
+    private void checkMapEmpty()
+    {
+        if(!mFeatureValuesMap.isEmpty())
+        {
+            throw new IllegalStateException("FeatureMatrix must be initialised with an empty map");
+        }
     }
 
     public synchronized void addRow(String rowId, List<Feature> features)
@@ -83,21 +97,6 @@ public class FeatureMatrix
         mFeatureValuesMap.put(key, features);
     }
 
-    public void setRowIds(List<String> rowIds)
-    {
-        if(!mRowIds.isEmpty())
-        {
-            throw new IllegalStateException("Cannot set row IDs if they have already been modified");
-        }
-
-        if(rowIds.size() != numRows())
-        {
-            throw new IllegalArgumentException("No. of row IDs does not match number of initialised rows");
-        }
-
-        mRowIds.addAll(rowIds);
-    }
-
     public FeatureMatrix reorderRows(List<String> rowIdsOrdered)
     {
         if(rowIdsOrdered.size() != numRows())
@@ -113,7 +112,7 @@ public class FeatureMatrix
         }
 
         FeatureMatrix newMatrix = new FeatureMatrix(new HashMap<>(), numRows());
-        newMatrix.setRowIds(rowIdsOrdered);
+        newMatrix.mRowIds.addAll(rowIdsOrdered);
 
         for(int newRowIndex = 0; newRowIndex < numRows(); newRowIndex++)
         {

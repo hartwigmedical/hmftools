@@ -81,7 +81,11 @@ public class FeatureMatrixTest
         int NUM_SAMPLE_THREADS = 1000;
         int NUM_FEATURES = 500;
 
-        FeatureMatrix matrix = new FeatureMatrix(new ConcurrentHashMap<>(), NUM_SAMPLE_THREADS);
+        List<String> expectedSampleIds = IntStream.range(0, NUM_SAMPLE_THREADS)
+                .mapToObj(x -> formTestSampleId(x))
+                .toList();
+
+        FeatureMatrix matrix = new FeatureMatrix(new ConcurrentHashMap<>(), expectedSampleIds);
 
         // Create workers
         List<Thread> threads = new ArrayList<>();
@@ -98,12 +102,6 @@ public class FeatureMatrixTest
         }
 
         // Check row names order
-        List<String> expectedSampleIds = IntStream.range(0, NUM_SAMPLE_THREADS)
-                .mapToObj(x -> formTestSampleId(x))
-                .toList();
-
-        matrix = matrix.reorderRows(expectedSampleIds);
-
         List<String> actualSampleIds = matrix.getRowIds();
 
         printDiffs(expectedSampleIds, actualSampleIds);
