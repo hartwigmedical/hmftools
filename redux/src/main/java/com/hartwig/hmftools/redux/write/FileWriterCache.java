@@ -86,7 +86,7 @@ public class FileWriterCache
 
         mFinalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
-        if(mConfig.UnmapRegions.enabled())
+        if(mConfig.UnmapRegions.unmapPairedReads())
         {
             String unmappingFilename = formBamFilename(null, UNMAPPING);
             mUnmappingWriter = (BamWriterSync)createBamWriter(unmappingFilename, true);

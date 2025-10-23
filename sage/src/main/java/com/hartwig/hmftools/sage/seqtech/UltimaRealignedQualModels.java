@@ -47,7 +47,7 @@ public class UltimaRealignedQualModels
             modelQual = mOriginalQualModel.calculateQual(record, readIndex);
         }
 
-        if(modelQual < 0)
+        if(modelQual != null && modelQual < 0)
             return INVALID_BASE_QUAL;
 
         // take the minimum qual across the models

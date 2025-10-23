@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.redux.DuplicateFrequency;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.consensus.ConsensusStatistics;
+import com.hartwig.hmftools.redux.consensus.UltimaStats;
 import com.hartwig.hmftools.redux.duplicate.UmiStatistics;
 
 public class Statistics
@@ -28,6 +29,7 @@ public class Statistics
     public final Map<Integer, DuplicateFrequency> DuplicateFrequencies;
 
     public final UmiStatistics UmiStats;
+    public final UltimaStats Ultima;
 
     public final ConsensusStatistics ConsensusStats;
 
@@ -39,6 +41,7 @@ public class Statistics
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
+        Ultima = new UltimaStats();
     }
 
     public void merge(final Statistics other)
@@ -54,6 +57,7 @@ public class Statistics
 
         UmiStats.merge(other.UmiStats);
         ConsensusStats.merge(other.ConsensusStats);
+        Ultima.merge((other.Ultima));
     }
 
     public void addFrequency(int frequency)

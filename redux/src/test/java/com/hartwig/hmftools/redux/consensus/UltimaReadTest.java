@@ -2,11 +2,10 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
-import static com.hartwig.hmftools.redux.consensus.UltimaRoutines.setLowQualTag;
+import static com.hartwig.hmftools.redux.consensus.UltimaRoutines.formLowQualTag;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,9 +39,7 @@ public class UltimaReadTest
 
         SAMRecord read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        String ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        String ulqTag = formLowQualTag(read);
 
         assertNull(ulqTag);
 
@@ -61,12 +58,10 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("1-3", ulqTag);
+        assertEquals("3=1-3", ulqTag);
 
         // test 2:
         // bases: A  T  T  T  C
@@ -82,12 +77,10 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("1-4", ulqTag);
+        assertEquals("4=1-4", ulqTag);
 
         // test 3:
         // bases: A  G  T  T  T  C
@@ -107,12 +100,34 @@ public class UltimaReadTest
 
         read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
 
-        setLowQualTag(read);
-
-        ulqTag = read.getStringAttribute(ULT_QUAL_TAG);
+        ulqTag = formLowQualTag(read);
 
         assertNotNull(ulqTag);
-        assertEquals("0-1,5", ulqTag);
+        assertEquals("3=0-1,5", ulqTag);
+
+        // test 4: successive HPs not affecting each other
+
+        // bases: A  T  T  T  C  G  G  G  C
+        // index: 0  1  2  3  4  5  6  7  8
+        // qual:  35 12 12 12 35 23 23 23 35
+        // t0:    all high
+        // tp:    0  -1  0 -1 0  0  0  0  0
+
+        readBases = "ATTTCGGGC";
+
+        baseQuals = buildBaseQuals(readBases.length(), ULTIMA_MAX_QUAL);
+        tpValues = new byte[readBases.length()];
+        t0Values = buildBaseQuals(readBases.length(), ULTIMA_MAX_QUAL);
+
+        setQualValues(baseQuals, List.of(1, 2, 3), lowQualBase);
+        setQualValues(baseQuals, List.of(5, 6, 7), (byte)23);
+
+        read = SeqTechTestUtils.buildUltimaRead(READ_ID_GEN.nextId(), CHR_1, readStart, readBases, baseQuals, tpValues, t0Values);
+
+        ulqTag = formLowQualTag(read);
+
+        assertNotNull(ulqTag);
+        assertEquals("3=1-3", ulqTag);
     }
 
     private static void resetQualValues(final byte[] quals, final byte[] tpValues, final byte[] t0Values)

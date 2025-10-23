@@ -70,7 +70,7 @@ public class BqrCache
 
             mMaxRawQual = (byte)bqrRecords.stream().mapToInt(x -> x.Key.Quality).max().orElse(0);
 
-            SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, bqrRecords.size(), filename);
+            SG_LOGGER.debug("loaded sample({}) {} base quality recalibration records from {}", sampleId, bqrRecords.size(), filename);
             mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(bqrRecords));
         }
     }

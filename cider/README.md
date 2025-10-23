@@ -105,9 +105,7 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0), OR alignment matches to reference contig, OR the sequences matches known list (see below).
 - **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read.
 
-CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  
-(This was introduced to reduce discrepancies in the output when switching from Blastn to BWA-MEM alignment.)  
-The list of amino acid sequences is:
+Note that CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  The list of amino acid sequences is:
 - CTXGPKXELRT
 
 Note that sequences with "no anchor" may represent partial rearrangements.

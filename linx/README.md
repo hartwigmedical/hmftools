@@ -681,7 +681,7 @@ For each breakend we search for genes that could be potentially disrupted or fus
 - Has its 5’ end downstream of and facing the breakend and less than 100k bases where no other splice acceptor exists closer to the breakend. 
 
 Each breakend is additionally annotated for the transcript with the following information:
-- disruptive: a breakend is disruptive for a particular transcript if the SV is an inversion, translocation or single breakend or a deletion/duplication that overlaps at least part of an exon in the transcript AND the variant is NOT part of a chain which does not disrupt the exon ordering in the transcript. A breakend which is resolved as type ‘LINE insertion’ is never marked as disruptive.
+- disruptive: a breakend is disruptive for a particular transcript if the SV is an inversion, translocation or single breakend or a deletion/duplication that overlaps at least part of an exon in the transcript AND the variant is NOT part of a chain which does not disrupt the exon ordering in the transcript. If the breakend overlaps the 3_UTR region only, then it is only marked as disruptive if the variant forms part of a deletion which deletes coding regions of the gene. A breakend which is resolved as type ‘LINE insertion’ is never marked as disruptive.
 - transcript coding context: UPSTREAM, 5_UTR, CODING, 3_UTR, DOWNSTREAM OR NON_CODING
 - gene orientation: relative orientation of gene compared to breakend (UPSTREAM or DOWNSTREAM)
 - exonic (TRUE/FALSE)
