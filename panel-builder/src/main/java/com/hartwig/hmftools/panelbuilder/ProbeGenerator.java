@@ -510,7 +510,7 @@ public class ProbeGenerator
                     return ProbeGenerationResult.rejectTargets(candidateTargetRegions, rejectionReason);
                 });
     }
-/*
+
     // Generates a single probe at the given region.
     public ProbeGenerationResult probe(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final PanelCoverage coverage)
@@ -538,7 +538,8 @@ public class ProbeGenerator
             return mProbeFactory.createProbe(definition, metadata)
                     .map(probe ->
                     {
-                        probe = evaluateProbes(Stream.of(probe), evalCriteria);
+                        // TODO: figure out batching properly
+                        probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
                         if(probe.accepted())
                         {
                             return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
@@ -556,7 +557,6 @@ public class ProbeGenerator
                     });
         }
     }
-*/
 
     // Evaluates candidate probes and select the one best probe.
     private Optional<Probe> selectBestCandidate(Stream<Probe> candidates, final ProbeEvaluator.Criteria evalCriteria,

@@ -17,7 +17,7 @@ public class ProbeEvaluator
         return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
-    private static Probe evaluateProbe(Probe probe, final Criteria criteria)
+    protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
     {
         probe = probe.withEvalCriteria(criteria);
         probe = evaluateQualityScore(probe);
