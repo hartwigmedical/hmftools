@@ -17,6 +17,9 @@ public class PercentileRefDataBuilder
 {
     private final PrepConfig mConfig;
 
+    private static final int NUM_PERCENTILES = 11;
+    private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
+
     public PercentileRefDataBuilder(final PrepConfig config)
     {
         mConfig = config;
@@ -26,21 +29,21 @@ public class PercentileRefDataBuilder
     {
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), mConfig.SampleIds.size());
 
-        List<Runnable> sampleTasks = new ArrayList<>();
+        List<Runnable> samplePrepTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
             List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
-            //List<CategoryPrep> categoryPreps = List.of(new CobaltGcMediansPrep(mConfig));
-            sampleTasks.add(new SamplePrepTask(mConfig, sampleIndex, categoryPreps, sampleFeatureMatrix));
+            SamplePrepTask task = new SamplePrepTask(mConfig, sampleIndex, categoryPreps, sampleFeatureMatrix);
+            samplePrepTasks.add(task);
         }
 
-        TaskExecutor.executeRunnables(sampleTasks, mConfig.Threads);
+        TaskExecutor.executeRunnables(samplePrepTasks, mConfig.Threads);
+        samplePrepTasks.clear();
+
+        sampleFeatureMatrix = sampleFeatureMatrix.reorderRows(mConfig.SampleIds);
 
         return sampleFeatureMatrix;
     }
-
-    private static final int NUM_PERCENTILES = 11;
-    private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
 
     public FeatureMatrix calcPercentiles(FeatureMatrix sampleFeatureMatrix)
     {
@@ -54,17 +57,22 @@ public class PercentileRefDataBuilder
 
         percentileFeatureMatrix.setRowIds(percentileNames);
 
-        double[][] featureSampleValues = sampleFeatureMatrix.getValuesTransposed();
-        for(int featureIndex = 0; featureIndex < featureSampleValues.length; ++featureIndex)
+        List<Runnable> featureTransformTasks = new ArrayList<>();
+        for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
         {
-            double[] featureValues = featureSampleValues[featureIndex];
-
             PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES);
-            transformer.fit(featureValues);
 
-            String featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
-            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues());
+            PercentileTransformTask task = new PercentileTransformTask(
+                    featureIndex, sampleFeatureMatrix, transformer, percentileFeatureMatrix);
+
+            featureTransformTasks.add(task);
         }
+
+        TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
+        featureTransformTasks.clear();
+
+        percentileFeatureMatrix.reorderRows(Arrays.asList(percentileNames));
+
         return percentileFeatureMatrix;
     }
 
@@ -78,10 +86,4 @@ public class PercentileRefDataBuilder
 
         boolean test = true;
     }
-
-//    public static void main(String[] args)
-//    {
-//        PercentileTransformer transformer = new PercentileTransformer(11);
-//        boolean test = true;
-//    }
 }
