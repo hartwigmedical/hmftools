@@ -78,5 +78,7 @@ public class SamplePrepTask implements Runnable
         {
             mSampleFeatureMatrix.addRow(sampleId, mFeatures);
         }
+
+        mFeatures.clear();
     }
 }
