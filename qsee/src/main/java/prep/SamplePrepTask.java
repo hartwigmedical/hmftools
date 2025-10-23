@@ -14,49 +14,44 @@ public class SamplePrepTask implements Runnable
 {
     private final PrepConfig mConfig;
     private final int mSampleIndex;
-    private final List<CategoryPrep> mCategoryPreps;
+    private final CategoryPrep mCategoryPrep;
 
     private final List<Feature> mFeatures = new ArrayList<>();
-
-    private static final int PROGRESS_INTERVAL = 100;
 
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
-    public SamplePrepTask(PrepConfig config, int sampleIndex, List<CategoryPrep> categoryPreps,
+    public SamplePrepTask(PrepConfig config, int sampleIndex, CategoryPrep categoryPrep,
             @Nullable FeatureMatrix sampleFeatureMatrix)
     {
         mConfig = config;
         mSampleIndex = sampleIndex;
-        mCategoryPreps = categoryPreps;
+        mCategoryPrep = categoryPrep;
 
         mSampleFeatureMatrix = sampleFeatureMatrix;
     }
 
-    private void logProgress(int sampleIndex, int categoryIndex)
+    private void logProgress(int sampleIndex)
     {
+        int PROGRESS_INTERVAL = 100;
+        int FEW_SAMPLES_THRESHOLD = 10;
+
         int sampleCount = mConfig.SampleIds.size();
         String sampleId = mConfig.SampleIds.get(sampleIndex);
 
-        int categoryCount = mCategoryPreps.size();
-        String categoryName = mCategoryPreps.get(categoryIndex).getClass().getSimpleName();
-
         if(sampleCount == 1)
         {
-            QC_LOGGER.debug("Extracting data for sample({}}) task({}/{}: {})",
-                    sampleId, categoryIndex, categoryCount, categoryName);
+            QC_LOGGER.debug("Extracting data for sample: {}}", sampleId);
         }
         else
         {
-            boolean hasFewSamples = sampleCount <= PROGRESS_INTERVAL;
+            boolean hasFewSamples = sampleCount <= FEW_SAMPLES_THRESHOLD;
             boolean isSampleAtInterval = sampleIndex == 0 || sampleIndex == sampleCount-1 ||
                     (sampleIndex+1) % PROGRESS_INTERVAL == 0;
 
             if(hasFewSamples || isSampleAtInterval)
             {
-                QC_LOGGER.debug("Extracting data for sample({}/{}: {}) task({}/{}: {})",
-                        sampleIndex+1, sampleCount, sampleId,
-                        categoryIndex+1, categoryCount, categoryName);
+                QC_LOGGER.debug("Extracting data for sample {}/{}: {}", sampleIndex+1, sampleCount, sampleId);
             }
         }
     }
@@ -66,20 +61,15 @@ public class SamplePrepTask implements Runnable
     {
         String sampleId = mConfig.SampleIds.get(mSampleIndex);
 
-        for(int categoryIndex = 0; categoryIndex < mCategoryPreps.size(); categoryIndex++)
-        {
-            logProgress(mSampleIndex, categoryIndex);
+        logProgress(mSampleIndex);
 
-            CategoryPrep categoryPrep = mCategoryPreps.get(categoryIndex);
-            List<Feature> categoryFeatures = categoryPrep.extractSampleData(sampleId);
-            mFeatures.addAll(categoryFeatures);
-        }
+        List<Feature> categoryFeatures = mCategoryPrep.extractSampleData(sampleId);
+        mFeatures.addAll(categoryFeatures);
 
         if(mSampleFeatureMatrix != null)
         {
             mSampleFeatureMatrix.addRow(sampleId, mFeatures);
+            mFeatures.clear();
         }
-
-        mFeatures.clear();
     }
 }

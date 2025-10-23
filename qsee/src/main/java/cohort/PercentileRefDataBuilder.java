@@ -37,41 +37,37 @@ public class PercentileRefDataBuilder
         mConfig = config;
     }
 
-    private FeatureMatrix extractSampleData()
+    private FeatureMatrix extractSampleData(CategoryPrep categoryPrep)
     {
-        QC_LOGGER.info("Extracting sample data");
-
-        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), mConfig.SampleIds.size());
+        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), mConfig.SampleIds);
 
         List<Runnable> samplePrepTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
-            List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
-            SamplePrepTask task = new SamplePrepTask(mConfig, sampleIndex, categoryPreps, sampleFeatureMatrix);
+            SamplePrepTask task = new SamplePrepTask(mConfig, sampleIndex, categoryPrep, sampleFeatureMatrix);
             samplePrepTasks.add(task);
         }
 
         TaskExecutor.executeRunnables(samplePrepTasks, mConfig.Threads);
         samplePrepTasks.clear();
 
-        sampleFeatureMatrix = sampleFeatureMatrix.reorderRows(mConfig.SampleIds);
-
         return sampleFeatureMatrix;
     }
 
-    private FeatureMatrix calcPercentiles(FeatureMatrix sampleFeatureMatrix)
+    private FeatureMatrix initialisePercentileFeatureMatrix()
     {
-        QC_LOGGER.info("Transforming feature values to percentiles");
-
-        FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), NUM_PERCENTILES);
-
         double[] percentiles = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES).getPercentiles();
 
         List<String> percentileNames = Arrays.stream(percentiles)
                 .mapToObj(x -> PERCENTILE_FORMAT.format(x))
                 .toList();
 
-        percentileFeatureMatrix.setRowIds(percentileNames);
+        return new FeatureMatrix(new ConcurrentHashMap<>(), percentileNames);
+    }
+
+    private void calcPercentiles(FeatureMatrix sampleFeatureMatrix, FeatureMatrix percentileFeatureMatrix)
+    {
+        QC_LOGGER.info("Transforming feature values to percentiles");
 
         List<Runnable> featureTransformTasks = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
@@ -86,19 +82,12 @@ public class PercentileRefDataBuilder
 
         TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
         featureTransformTasks.clear();
-
-        percentileFeatureMatrix.reorderRows(percentileNames);
-
-        return percentileFeatureMatrix;
     }
 
-    private void writeToFile(FeatureMatrix percentileFeatureMatrix)
+    private void writeToFile(String outputFile, FeatureMatrix percentileFeatureMatrix)
     {
         try
         {
-            String outputFile = mConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
-            QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
-
             BufferedWriter writer = createBufferedWriter(outputFile);
 
             // Write header
@@ -148,10 +137,22 @@ public class PercentileRefDataBuilder
 
     public void run()
     {
-        FeatureMatrix sampleFeatureMatrix = extractSampleData();
+        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
 
-        FeatureMatrix percentileFeatureMatrix = calcPercentiles(sampleFeatureMatrix);
+        FeatureMatrix percentileFeatureMatrix = initialisePercentileFeatureMatrix();
 
-        writeToFile(percentileFeatureMatrix);
+        for(CategoryPrep categoryPrep : categoryPreps)
+        {
+            QC_LOGGER.info("Running prep for category: {}", categoryPrep.getClass().getSimpleName());
+            FeatureMatrix sampleFeatureMatrix = extractSampleData(categoryPrep);
+
+            QC_LOGGER.info("Calculating percentiles for category: {}", categoryPrep.getClass().getSimpleName());
+            calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
+        }
+
+        String outputFile = mConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+
+        QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
+        writeToFile(outputFile, percentileFeatureMatrix);
     }
 }

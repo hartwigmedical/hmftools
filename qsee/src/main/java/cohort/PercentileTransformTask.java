@@ -12,8 +12,6 @@ public class PercentileTransformTask implements Runnable
     private PercentileTransformer mTransformer;
     private final FeatureMatrix mPercentileFeatureMatrix;
 
-    private static final int PROGRESS_INTERVAL = 100;
-
     public PercentileTransformTask(int featureIndex,
             FeatureMatrix sampleFeatureMatrix, PercentileTransformer transformer,
             FeatureMatrix percentileFeatureMatrix)
@@ -28,9 +26,12 @@ public class PercentileTransformTask implements Runnable
 
     private void logProgress()
     {
+        int PROGRESS_INTERVAL = 100;
+        int FEW_FEATURES_THRESHOLD = 10;
+
         int numFeatures = mSampleFeatureMatrix.numFeatures();
 
-        boolean hasFewFeatures = numFeatures <= PROGRESS_INTERVAL;
+        boolean hasFewFeatures = numFeatures <= FEW_FEATURES_THRESHOLD;
         boolean isFeatureAtInterval = mFeatureIndex == 0 || mFeatureIndex == numFeatures-1 ||
                 (mFeatureIndex+1) % PROGRESS_INTERVAL == 0;
 
