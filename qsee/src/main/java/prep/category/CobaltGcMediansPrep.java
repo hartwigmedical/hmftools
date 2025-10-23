@@ -1,6 +1,6 @@
 package prep.category;
 
-import static common.QSeeConstants.QC_LOGGER;
+import static common.QseeConstants.QC_LOGGER;
 
 import java.io.IOException;
 import java.util.ArrayList;

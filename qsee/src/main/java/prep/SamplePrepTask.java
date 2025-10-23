@@ -1,6 +1,6 @@
 package prep;
 
-import static common.QSeeConstants.QC_LOGGER;
+import static common.QseeConstants.QC_LOGGER;
 
 import java.util.ArrayList;
 import java.util.List;

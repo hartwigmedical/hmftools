@@ -28,7 +28,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildca
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import static common.QSeeConstants.QC_LOGGER;
+import static common.QseeConstants.QC_LOGGER;
 
 import java.util.List;
 
