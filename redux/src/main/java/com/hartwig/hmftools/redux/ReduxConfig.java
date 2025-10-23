@@ -61,6 +61,7 @@ import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
 import com.hartwig.hmftools.redux.duplicate.DuplicatesConfig;
 import com.hartwig.hmftools.redux.common.FilterReadsType;
 import com.hartwig.hmftools.redux.jitter.MsJitterConfig;
@@ -315,6 +316,9 @@ public class ReduxConfig
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
         LogDuplicateGroupSize = configBuilder.getInteger(LOG_DUPLICATE_GROUP_SIZE);
 
+        if(isUltima())
+            UltimaRoutines.setUltimaConfig(configBuilder);
+
         if(RunChecks)
         {
             RD_LOGGER.info("running debug options: read-checks({})", RunChecks);
@@ -429,11 +433,13 @@ public class ReduxConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, PERF_LOG_TIME_DESC, 0);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
-        configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR ");
+        configBuilder.addFlag(FAIL_SUPP_NO_MATE_CIGAR, "Fail if supplementary is missing mate CIGAR");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
         configBuilder.addInteger(LOG_DUPLICATE_GROUP_SIZE, "Log duplicate groups of size or larger", 0);
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
+
+        UltimaRoutines.registerUltimaConfig(configBuilder);
     }
 
     @VisibleForTesting

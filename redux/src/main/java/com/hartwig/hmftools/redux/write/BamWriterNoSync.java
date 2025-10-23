@@ -17,6 +17,8 @@ public class BamWriterNoSync extends BamWriter
     // writes reads in coordinate order using intelligent caching and without synchronised write calls
     private final SortedBamWriter mSortedBamWriter;
 
+    private final SAMFileWriter mBamWriter; // when buffering and sorting are not required
+
     private int mUnsortedWriteCount;
 
     public BamWriterNoSync(
@@ -25,10 +27,19 @@ public class BamWriterNoSync extends BamWriter
     {
         super(filename, config, readDataWriter, samFileWriter, msJitterAnalyser, bqr);
 
-        mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
+        if(config.SkipDuplicateMarking)
+        {
+            mBamWriter = samFileWriter;
+            mSortedBamWriter = null;
+        }
+        else
+        {
+            mBamWriter = null;
+            mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
 
-        if(config.perfDebug())
-            mSortedBamWriter.togglePerfDebug();
+            if(config.perfDebug())
+                mSortedBamWriter.togglePerfDebug();
+        }
 
         mUnsortedWriteCount = 0;
     }
@@ -66,13 +77,20 @@ public class BamWriterNoSync extends BamWriter
     {
         if(mSamFileWriter != null)
         {
-            if(mSortedBamWriter.canWriteRecord(read))
+            if(mSortedBamWriter != null)
             {
-                mSortedBamWriter.addRecord(read);
+                if(mSortedBamWriter.canWriteRecord(read))
+                {
+                    mSortedBamWriter.addRecord(read);
+                }
+                else
+                {
+                    ++mUnsortedWriteCount;
+                }
             }
             else
             {
-                ++mUnsortedWriteCount;
+                mBamWriter.addAlignment(read);
             }
         }
     }
@@ -90,6 +108,10 @@ public class BamWriterNoSync extends BamWriter
             RD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({}) to BAM({})",
                     mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.avgWriteCount(),
                     mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), filenamePart(mFilename));
+        }
+        else if(mBamWriter != null)
+        {
+            mBamWriter.close();
         }
 
         mSamFileWriter.close();

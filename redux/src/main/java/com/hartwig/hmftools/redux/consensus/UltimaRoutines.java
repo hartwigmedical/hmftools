@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
@@ -35,9 +36,27 @@ public final class UltimaRoutines
 
     private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
 
+    private static boolean UTLIMA_DROP_QUAL_TAGS = false;
+    private static final String CFG_ULTIMA_DROP_QUA_TAGS = "ultima_drop_qual_tags";
+
+    public static void registerUltimaConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addFlag(CFG_ULTIMA_DROP_QUA_TAGS, "Drop Ultima qual tags");
+    }
+
+    public static void setUltimaConfig(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasFlag(CFG_ULTIMA_DROP_QUA_TAGS))
+            UTLIMA_DROP_QUAL_TAGS = true;
+    }
+
     public static void stripAttributes(final SAMRecord record, @Nullable final UltimaStats stats)
     {
         boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag();
+
+        if(UTLIMA_DROP_QUAL_TAGS)
+            keepUltimaRequired = false;
+
         boolean formCustomTags = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment();
 
         stripAttributes(record, formCustomTags, keepUltimaRequired);
@@ -49,8 +68,7 @@ public final class UltimaRoutines
         }
     }
 
-    public static void stripAttributes(
-            final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
+    public static void stripAttributes(final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
     {
         ConsensusType consensusType = ConsensusType.NONE;
         String lowQualTag = null;

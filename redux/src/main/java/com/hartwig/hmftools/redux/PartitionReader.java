@@ -221,9 +221,11 @@ public class PartitionReader
         if(mProcessedReads >= mNextLogReadCount)
         {
             double processedReads = mProcessedReads / 1000000.0;
-            RD_LOGGER.debug("region({}) position({}) processed {}M reads, cache(coords={} reads={})",
+            boolean logCache = !mConfig.SkipDuplicateMarking;
+
+            RD_LOGGER.debug("region({}) position({}) processed {}M reads",
                     mCurrentRegion, readStart, format("%.0f", processedReads),
-                    mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount());
+                    logCache ? format(", cache(coords=%d reads=%d)" , mReadCache.cachedFragCoordGroups(), mReadCache.cachedReadCount()) : "");
 
             mNextLogReadCount += LOG_READ_COUNT;
         }
