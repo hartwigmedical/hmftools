@@ -106,25 +106,38 @@ public class PanelBuilderApplication
         }
         else
         {
-            EnsemblDataCache ensemblData = loadEnsemblData();
-            Genes.ExtraOutput extraOutput =
-                    Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
-            // Result is stored into mPanelData.
-            return extraOutput;
+            if(mConfig.ensemblDir() == null)
+            {
+                throw new UserInputError("Genes requested but Ensembl data directory not provided");
+            }
+            {
+                EnsemblDataCache ensemblData = loadEnsemblData();
+                Genes.ExtraOutput extraOutput =
+                        Genes.generateProbes(mConfig.genesFile(), ensemblData, mProbeGenerator, mPanelData);
+                // Result is stored into mPanelData.
+                return extraOutput;
+            }
         }
     }
 
     private void generateCopyNumberBackboneProbes()
     {
-        if(mConfig.amberSitesFile() == null)
+        if(mConfig.includeCnBackbone())
         {
-            LOGGER.info("Amber sites not provided; skipping copy number backbone probes");
+            if(mConfig.amberSitesFile() == null)
+            {
+                throw new UserInputError("Copy number backbone requested but Amber sites file not provided");
+            }
+            else
+            {
+                new CopyNumberBackbone(mConfig.amberSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
+                        .generateProbes();
+                // Result is stored into mPanelData.
+            }
         }
         else
         {
-            new CopyNumberBackbone(mConfig.amberSitesFile(), mConfig.cnBackboneResolution(), mRefGenomeVersion, mProbeGenerator, mPanelData)
-                    .generateProbes();
-            // Result is stored into mPanelData.
+            LOGGER.info("Copy number backbone not requested; skipping copy number backbone probes");
         }
     }
 

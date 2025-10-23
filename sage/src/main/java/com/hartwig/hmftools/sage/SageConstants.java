@@ -69,8 +69,6 @@ public class SageConstants
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
     public static final double MAX_GERMLINE_REL_RAW_QUAL_RATIO = 0.1;
 
-    public static final double MAX_GERMLINE_VAF_THRESHOLD_MAX = 0.1;
-
     public static final double MAX_GERMLINE_QUAL_HET_TUMOR_VAF = 0.5;
     public static final double MAX_GERMLINE_QUAL_PROB_HOTSPOT = 0.01;
     public static final double MAX_GERMLINE_QUAL_PROB_PANEL = 0.00025;
@@ -116,19 +114,13 @@ public class SageConstants
 
     public static final double REALIGNED_MAX_PERC = 0.7;
 
-    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
-
-    public static final double PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT = 0.1;
-    public static final double PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR = 3;
-    public static final double PANEL_MAX_GERMLINE_VAF_BOOST = 0.01;
-
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     public static final double JITTER_QUAL_BOOST_MAX_PERC = 1.3;
-    public static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
+    public static final byte DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
 
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;

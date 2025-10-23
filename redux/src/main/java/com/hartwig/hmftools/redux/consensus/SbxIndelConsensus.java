@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
@@ -17,6 +19,7 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -195,6 +198,12 @@ public class SbxIndelConsensus
         {
             CigarOperator nextOperator = inFinalSoftClip ?
                     S : determineConsensusCigarOperator(activeReadStates, inAlignedBases, elementOperator, refPosition, isForwardConsensus);
+
+            if(nextOperator == null)
+            {
+                RD_LOGGER.error("indel consensus, invalid next operator, sample read: {}", readToString(readStates.get(0).Read));
+                return Collections.emptyList();
+            }
 
             if(elementOperator == null || elementOperator != nextOperator)
             {

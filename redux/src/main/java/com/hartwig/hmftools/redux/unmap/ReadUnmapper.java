@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
@@ -72,6 +73,9 @@ public class ReadUnmapper
     public Map<String,List<UnmappingRegion>> getAllRegions() { return mChrLocationsMap; }
 
     public boolean enabled() { return mEnabled; }
+
+    // potentially change this to be set in config, or sample the BAM first to establish - cannot currently have a mix within one BAM
+    public boolean unmapPairedReads() { return mEnabled && isIllumina(); }
 
     public void setStats(final UnmapStats stats) { mStats = stats; }
     public UnmapStats stats() { return mStats; }
@@ -693,7 +697,7 @@ public class ReadUnmapper
         read.setInferredInsertSize(0);
 
         // clear reference index, reference name and alignment start
-        if(mateUnmapped || unmapMate)
+        if(mateUnmapped || unmapMate || !read.getReadPairedFlag())
         {
             // set both to unknown
             read.setAlignmentStart(0);

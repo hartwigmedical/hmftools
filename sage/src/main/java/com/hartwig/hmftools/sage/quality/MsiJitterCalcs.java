@@ -235,7 +235,7 @@ public class MsiJitterCalcs
         String altBases = indelAltBases(variant);
 
         RepeatInfo repeatToUse;
-        if(inferredRefRepeat == null || !altBases.startsWith(inferredRefRepeat.Bases))
+        if(inferredRefRepeat == null || !altBases.equals(inferredRefRepeat.Bases.repeat(altBases.length() / inferredRefRepeat.Bases.length())))
         {
             repeatToUse = refRepeat;
         }
@@ -245,6 +245,9 @@ public class MsiJitterCalcs
             int inferredRefRepeatCount = inferredRefRepeat.Count - getImpliedAltChange(variant.isDelete(), altBases, inferredRefRepeat);
             repeatToUse = new RepeatInfo(inferredRefRepeat.Index, inferredRefRepeat.Bases, Math.max(refRepeatCount, inferredRefRepeatCount));
         }
+
+        if(repeatToUse != null && !altBases.equals(repeatToUse.Bases.repeat(altBases.length() / repeatToUse.Bases.length())))
+            return null;
 
         return repeatToUse;
     }

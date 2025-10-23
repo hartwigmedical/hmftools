@@ -40,7 +40,7 @@ public class PartitionThread extends Thread
 
         mBamReader = new BamReader(inputBams, config.RefGenomeFile);
 
-        mPartitionReader = new PartitionReader(config, mBamReader);
+        mPartitionReader = new PartitionReader(config, mBamReader, fileWriterCache.getFullUnmappedBamWriter());
     }
 
     public PartitionReader partitionReader() { return mPartitionReader; }

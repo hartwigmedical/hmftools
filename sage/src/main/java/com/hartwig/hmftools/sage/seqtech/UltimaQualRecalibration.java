@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_Q
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getColumnIndex;
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
@@ -29,7 +31,7 @@ public class UltimaQualRecalibration
 
     private final static String T0_OUT_OF_CYCLE = "OUT_OF_CYCLE";
     private final static int RECALIBRATED_QUAL_MAX_HP_LENGTH = 5;
-    protected final static byte DEFAULT_T0_OUT_OF_CYCLE_QUAL = 55;
+    protected final static byte MAX_TP_T0_RECALIBRATION = 50;
 
     private final Map<String,Byte> mTpQualMap;
     private final Map<String,Byte> mT0QualMap;
@@ -41,25 +43,27 @@ public class UltimaQualRecalibration
         mTpQualMap = Maps.newHashMap();
         mT0QualMap = Maps.newHashMap();
         mMaxRawQual = ULTIMA_MAX_QUAL;
-        mOutOfCycleT0Qual = DEFAULT_T0_OUT_OF_CYCLE_QUAL;
+        mOutOfCycleT0Qual = MAX_TP_T0_RECALIBRATION;
     }
 
     public void setMaxRawQual(byte qual) { mMaxRawQual = qual; }
     public byte maxRawQual() { return mMaxRawQual; }
     public byte outOfCycleT0Qual() { return mOutOfCycleT0Qual; }
 
-    public byte calcTpRecalibratedQual(final byte readQual, final int homoploymerLength, final char base, final boolean tpIsZero)
+    public byte calcTpRecalibratedQual(
+            final byte readQual, final int homoploymerLength, final char base, final boolean tpIsZero, final boolean isReverse)
     {
         if(readQual < mMaxRawQual || homoploymerLength > RECALIBRATED_QUAL_MAX_HP_LENGTH)
             return readQual;
 
-        byte bqrQual = getTpRecalibratedQual(homoploymerLength, base, tpIsZero);
+        byte bqrQual = getTpRecalibratedQual(homoploymerLength, base, tpIsZero, isReverse);
         return bqrQual != INVALID_BASE_QUAL ? bqrQual : readQual;
     }
 
-    public byte getTpRecalibratedQual(final int homoploymerLength, final char base, final boolean tpIsZero)
+    public byte getTpRecalibratedQual(final int homoploymerLength, final char base, final boolean tpIsZero, final boolean isReverse)
     {
-        String key = TpData.formKey(homoploymerLength, base, tpIsZero);
+        char baseToLookup = isReverse ? swapDnaBase(base) : base;
+        String key = TpData.formKey(homoploymerLength, baseToLookup, tpIsZero);
         Byte recalibratedQual = mTpQualMap.get(key);
         return recalibratedQual != null ? recalibratedQual : INVALID_BASE_QUAL;
     }
@@ -79,8 +83,11 @@ public class UltimaQualRecalibration
             return ULTIMA_INVALID_QUAL;
 
         char variantBase = (char)record.getReadBases()[varReadIndex];
+        boolean isReverse = record.getReadNegativeStrandFlag();
+        char baseToLookup = isReverse ? swapDnaBase(variantBase) : variantBase;
         String tnc = (char)record.getReadBases()[varReadIndex - 1] + String.valueOf((char)record.getReadBases()[varReadIndex + 1]);
-        return getT0RecalibratedQual(tnc, variantBase);
+        String tncToLookup = isReverse ? reverseComplementBases(tnc) : tnc;
+        return getT0RecalibratedQual(tncToLookup, baseToLookup);
     }
 
     public byte getT0RecalibratedQual(final String triNucContext, final char base)
@@ -130,7 +137,7 @@ public class UltimaQualRecalibration
 
             QualType type = QualType.valueOf(values[typeIndex]);
             String key = values[keyIndex];
-            byte recalibratedQual = Byte.parseByte(values[rqIndex]);
+            byte recalibratedQual = (byte) Math.min(Byte.parseByte(values[rqIndex]), MAX_TP_T0_RECALIBRATION);
 
             if(type == QualType.TP_RECAL)
             {

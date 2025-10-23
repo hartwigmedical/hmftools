@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
 import java.util.HashMap;
@@ -20,7 +22,7 @@ public class ReadContextQualCache
     private final QualityCalculator mQualityCalculator;
 
     private final RepeatInfo mMsiIndelRepeat;
-    private final double mMsiIndelErrorQual;
+    private final byte mMsiIndelErrorQual;
     private final boolean mIsMsiSampleAndVariant;
 
     public ReadContextQualCache(final VariantReadContext readContext, final QualityCalculator qualityCalculator, final String sampleId)
@@ -36,7 +38,9 @@ public class ReadContextQualCache
         {
             double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext.variant(), sampleId, mMsiIndelRepeat);
 
-            mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
+            mMsiIndelErrorQual = errorRate > 0 ?
+                    (byte)round(BaseQualAdjustment.probabilityToPhredQual(errorRate)) : INVALID_BASE_QUAL;
+
             mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
         }
         else
@@ -55,7 +59,7 @@ public class ReadContextQualCache
         }
     }
 
-    public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
+    public byte msiIndelErrorQual() { return mMsiIndelErrorQual; }
     public RepeatInfo msiIndelRepeat() { return mMsiIndelRepeat; }
     public boolean usesMsiIndelErrorQual() { return mMsiIndelErrorQual != INVALID_BASE_QUAL; }
     public boolean isMsiSampleAndVariant() { return mIsMsiSampleAndVariant; }

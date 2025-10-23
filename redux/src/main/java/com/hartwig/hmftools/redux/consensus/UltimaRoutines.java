@@ -3,38 +3,103 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.minQual;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_T0_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_TP_TAG;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_DELIM;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULT_QUAL_TAG_INDEX_DELIM;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.isHighBaseQual;
-import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Lists;
+import javax.annotation.Nullable;
+
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public final class UltimaRoutines
 {
-    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
+    private static final Set<String> NON_ULTIMA_REQUIRED_ATTRIBUTES = Set.of(
+            SAMTag.AS.name(), SAMTag.RG.name(), SAMTag.NM.name(), XS_ATTRIBUTE, SUPPLEMENTARY_ATTRIBUTE);
+
+    private static final Set<String> ULTIMA_RAW_QUAL_ATTRIBUTES = Set.of(ULTIMA_T0_TAG, ULTIMA_TP_TAG);
+
+    public static void stripAttributes(final SAMRecord record, @Nullable final UltimaStats stats)
     {
-        ConsensusType consensusType = UltimaBamUtils.deriveConsensusType(record);
-        record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
+        boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag();
+        boolean formCustomTags = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment();
+
+        stripAttributes(record, formCustomTags, keepUltimaRequired);
+
+        if(formCustomTags && stats != null)
+        {
+            int lowQualBaseCount = extractLowQualCount(record);
+            stats.addLowQualCount(lowQualBaseCount);
+        }
     }
 
-    public static void setLowQualTag(final SAMRecord record)
+    public static void stripAttributes(
+            final SAMRecord record, boolean formCustomTags, boolean keepUltimaRawQuals)
     {
-        /*
-        byte[] tpValues = extractTpValues(record);
+        ConsensusType consensusType = ConsensusType.NONE;
+        String lowQualTag = null;
+
+        if(formCustomTags)
+        {
+            consensusType = UltimaBamUtils.deriveConsensusType(record);
+            lowQualTag = formLowQualTag(record);
+        }
+
+        // clean-up unrequired attributes
+        List<SAMRecord.SAMTagAndValue> existingAttributes = record.getAttributes();
+
+        record.clearAttributes();
+
+        for(SAMRecord.SAMTagAndValue attribute : existingAttributes)
+        {
+            if(NON_ULTIMA_REQUIRED_ATTRIBUTES.contains(attribute.tag))
+                record.setAttribute(attribute.tag, attribute.value);
+
+            if(keepUltimaRawQuals && ULTIMA_RAW_QUAL_ATTRIBUTES.contains(attribute.tag))
+                record.setAttribute(attribute.tag, attribute.value);
+        }
+
+        if(formCustomTags)
+        {
+            record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
+            record.setAttribute(ULT_QUAL_TAG, lowQualTag);
+        }
+    }
+    public static void preProcessRead(final SAMRecord record, final UltimaStats stats)
+    {
+        stripAttributes(record, stats);
+    }
+
+    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
+    {
+    /*
+        ConsensusType consensusType = UltimaBamUtils.deriveConsensusType(record);
+        record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
+        setLowQualTag(record);
+    */
+    }
+
+    public static String formLowQualTag(final SAMRecord record)
+    {
+        // tag has the form: 5=2,4-6,8 where
+        // 5 is the total number of low-qual bases, followed by the specific indices for these - single index values and index ranges
+        // these indices are determined from from homolpolymer complete deletions (t0 tag) and adjustments (tP tag)
         byte[] t0Values = extractT0Values(record);
 
         byte[] bases = record.getReadBases();
@@ -42,78 +107,112 @@ public final class UltimaRoutines
 
         StringJoiner sj = null;
 
-        byte hpBase = NO_BASE;
-        byte hpQual = -1;
         int hpStartIndex = -1;
+        int hpEndIndex = -1;
+        boolean hpLowQual = false;
+        int lowQualStartIndex = -1;
+        int totalLowQualCount = 0;
 
         for(int i = 0; i < baseQuals.length; ++i)
         {
-            byte base = bases[i];
             byte qual = baseQuals[i];
 
-            byte minHpQual = -1;
+            boolean isLowQual = false;
 
             // deletions
-            byte t0Qual = t0Values[i];
-
-            if(t0Qual > 0)
-                minHpQual = t0Qual;
+            if(t0Values[i] < ULTIMA_HP_DELETION_LOW_QUAL_THRESHOLD)
+                isLowQual = true;
 
             // homopolymer adjustments
-            byte tpQual = -1;
-
-            if(hpBase != NO_BASE)
+            if(hpStartIndex >= 0 && i <= hpEndIndex)
             {
-                if(hpBase == base)
-                {
-                    // HP continues
-                    tpQual = hpQual;
-                }
-                else
-                {
-                    // apply last HP qual then clear
-                    int hpLength = i - hpStartIndex + 1;
-
-                    if(belowLowQualThreshold(hpLength, hpQual))
-                    {
-                        if(sj == null)
-                            sj = new StringJoiner(ULT_QUAL_TAG_DELIM);
-
-                        if(hpLength > 1)
-                            sj.add(format("%d-%d", hpStartIndex, i));
-                        else
-                            sj.add(String.valueOf(i));
-                    }
-                }
+                // in an existing homopolymer with low qual
+                isLowQual |= hpLowQual;
             }
-
-            if(!isHighBaseQual(qual))
+            else
             {
-                hpQual = qual;
-                tpQual = qual;
+                // assess a new homopolymer
+                hpLowQual = false;
 
-                if(i < baseQuals.length - 1)
+                if(!isHighBaseQual(qual))
                 {
-                    if(bases[i + 1] == base)
+                    byte base = bases[i];
+
+                    // find the length of the HP
+                    int hpLength = 1;
+
+                    for(int j = i + 1; j < baseQuals.length; ++j)
                     {
-                        // HP length > 1
+                        if(bases[j] != base)
+                            break;
+
+                        ++hpLength;
+                    }
+
+                    byte tpQual = qual;
+
+                    if(hpLength > 1)
+                    {
                         if(tpQual - HALF_PHRED_SCORE_SCALING < 0)
                             tpQual = 0;
                         else
                             tpQual -= HALF_PHRED_SCORE_SCALING;
                     }
+
+                    hpStartIndex = i;
+                    hpEndIndex = i + hpLength - 1;
+
+                    if(belowLowQualThreshold(hpLength, tpQual))
+                    {
+                        isLowQual = true;
+                        hpLowQual = true;
+                    }
                 }
             }
 
-            if(tpQual >= 0 && t0Qual >= 0)
-                minHpQual = minQual(t0Qual, tpQual);
-            else if(tpQual >= 0)
-                minHpQual = tpQual;
-            if(t0Qual >= 0)
-                minHpQual = t0Qual;
+            if(isLowQual)
+            {
+                if(lowQualStartIndex < 0)
+                    lowQualStartIndex = i;
+
+                if(i == baseQuals.length - 1)
+                {
+                    if(sj == null)
+                        sj = new StringJoiner(ULT_QUAL_TAG_INDEX_DELIM);
+
+                    addLowQualTagEntry(sj, lowQualStartIndex, baseQuals.length - 1);
+                    totalLowQualCount += baseQuals.length - lowQualStartIndex;
+                }
+            }
+            else
+            {
+                if(lowQualStartIndex >= 0)
+                {
+                    int lowQualEndIndex = i - 1;
+
+                    if(sj == null)
+                        sj = new StringJoiner(ULT_QUAL_TAG_INDEX_DELIM);
+
+                    addLowQualTagEntry(sj, lowQualStartIndex, lowQualEndIndex);
+                    totalLowQualCount += lowQualEndIndex - lowQualStartIndex + 1;
+
+                    lowQualStartIndex = -1; // reset
+                }
+            }
         }
-        */
+
+        return sj != null ? format("%d=%s", totalLowQualCount, sj) : null;
     }
+
+    private static void addLowQualTagEntry(final StringJoiner sj, int lowQualStartIndex, int lowQualEndIndex)
+    {
+        if(lowQualEndIndex > lowQualStartIndex)
+            sj.add(format("%d-%d", lowQualStartIndex, lowQualEndIndex));
+        else
+            sj.add(String.valueOf(lowQualStartIndex));
+    }
+
+    private static final byte ULTIMA_HP_DELETION_LOW_QUAL_THRESHOLD = 20;
 
     private static boolean belowLowQualThreshold(int homopolymerLength, byte qual)
     {

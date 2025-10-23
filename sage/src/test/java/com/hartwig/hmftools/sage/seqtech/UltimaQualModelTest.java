@@ -492,7 +492,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 22);
-        assertEquals(57, calcQual);
+        assertEquals(50, calcQual);
 
         // test 2: 1xG ins on left, 4xT -> 3xT contraction on right
 

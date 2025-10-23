@@ -48,7 +48,7 @@ public class UltimaQualModelBuilder
         readContextCounter.ultimaData().setQualModels(qualModels);
     }
 
-    private static boolean canSkipRealignedModels(final VariantReadContext readContext)
+    public static boolean canSkipRealignedModels(final VariantReadContext readContext)
     {
         int indelLength = readContext.variant().indelLength();
         int coreLength = readContext.coreLength();

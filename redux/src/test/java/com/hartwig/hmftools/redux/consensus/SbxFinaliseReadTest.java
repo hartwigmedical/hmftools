@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.redux.consensus;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_DUPLEX_QUAL;
@@ -14,12 +15,17 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.extractDuplexBa
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
 import static com.hartwig.hmftools.redux.consensus.SbxConsensusTest.createSamRecord;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.correctInvalidCigar;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.ensureMirroredMismatchRepeatQuals;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.hasInvalidCigar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
@@ -28,6 +34,7 @@ import com.hartwig.hmftools.redux.ReduxConfig;
 import org.junit.After;
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class SbxFinaliseReadTest
@@ -206,6 +213,42 @@ public class SbxFinaliseReadTest
         ensureMirroredMismatchRepeatQuals(0, basesStr.length(), basesStr.getBytes(), baseQuals);
 
         checkBases(baseQuals, List.of(4, 7, 11, 12, 15, 16, 20, 21, 22, 23, 24, 25));
+    }
+
+    @Test
+    public void testFixCigars()
+    {
+        List<CigarElement> cigarElements = CigarUtils.cigarElementsFromStr("10I20M");
+
+        assertTrue(hasInvalidCigar(cigarElements));
+
+        correctInvalidCigar(cigarElements);
+
+        assertEquals("10S20M", cigarElementsToStr(cigarElements));
+
+        cigarElements = CigarUtils.cigarElementsFromStr("20M10I");
+
+        assertTrue(hasInvalidCigar(cigarElements));
+
+        correctInvalidCigar(cigarElements);
+
+        assertEquals("20M10S", cigarElementsToStr(cigarElements));
+
+        cigarElements = CigarUtils.cigarElementsFromStr("10I20M10I");
+
+        assertTrue(hasInvalidCigar(cigarElements));
+
+        correctInvalidCigar(cigarElements);
+
+        assertEquals("10S20M10S", cigarElementsToStr(cigarElements));
+
+        cigarElements = CigarUtils.cigarElementsFromStr("10S10I20M10I10S");
+
+        assertTrue(hasInvalidCigar(cigarElements));
+
+        correctInvalidCigar(cigarElements);
+
+        assertEquals("20S20M20S", cigarElementsToStr(cigarElements));
     }
 
     private static void markLowQualBases(final byte[] baseQuals, final List<Integer> lowQualBases)
