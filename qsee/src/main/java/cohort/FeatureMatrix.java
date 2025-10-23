@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import feature.Feature;
+import feature.FeatureKey;
 
 public class FeatureMatrix
 {
-    private final Map<String, double[]> mFeatureValuesMap;
+    private final Map<FeatureKey, double[]> mFeatureValuesMap;
     /*
     Visual representation:
 
@@ -26,11 +27,11 @@ public class FeatureMatrix
 
     // There is no concurrent implementation of LinkedHashMap.
     // Therefore, store feature keys (= Map keys) in a list to store the insertion order of features.
-    private final List<String> mFeatureKeys = new ArrayList<>();
+    private final List<FeatureKey> mFeatureKeys = new ArrayList<>();
 
     private static final double EMPTY_VALUE = Double.NaN;
 
-    public FeatureMatrix(Map<String, double[]> featureValuesMap, int numRows)
+    public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, int numRows)
     {
         if(!featureValuesMap.isEmpty())
         {
@@ -52,13 +53,13 @@ public class FeatureMatrix
 
         for(Feature feature : features)
         {
-            String key = feature.mKey;
+            FeatureKey key = feature.key();
             addColumnIfMissing(key);
-            mFeatureValuesMap.get(key)[rowIndex] = feature.mValue;
+            mFeatureValuesMap.get(key)[rowIndex] = feature.value();
         }
     }
 
-    private void addColumnIfMissing(String key)
+    private void addColumnIfMissing(FeatureKey key)
     {
         if(!mFeatureKeys.contains(key))
         {
@@ -71,7 +72,7 @@ public class FeatureMatrix
         }
     }
 
-    public synchronized void addColumn(String key, double[] features)
+    public synchronized void addColumn(FeatureKey key, double[] features)
     {
         if(mFeatureKeys.contains(key))
         {
@@ -121,7 +122,7 @@ public class FeatureMatrix
 
             for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
             {
-                String featureKey = mFeatureKeys.get(featureIndex);
+                FeatureKey featureKey = mFeatureKeys.get(featureIndex);
                 double value = mFeatureValuesMap.get(featureKey)[oldRowIndex];
 
                 newMatrix.addColumnIfMissing(featureKey);
@@ -138,7 +139,7 @@ public class FeatureMatrix
 
     public List<String> getRowIds() { return mRowIds; }
 
-    public List<String> getFeatureKeys() { return mFeatureKeys; }
+    public List<FeatureKey> getFeatureKeys() { return mFeatureKeys; }
 
     public double[][] getValues()
     {
@@ -193,7 +194,7 @@ public class FeatureMatrix
         return getColumnValues(mFeatureKeys.get(index));
     }
 
-    public double[] getColumnValues(String key)
+    public double[] getColumnValues(FeatureKey key)
     {
         return mFeatureValuesMap.get(key);
     }

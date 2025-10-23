@@ -12,6 +12,7 @@ import java.util.stream.IntStream;
 import org.junit.Test;
 
 import feature.Feature;
+import feature.FeatureKey;
 
 public class FeatureMatrixTest
 {
@@ -46,8 +47,13 @@ public class FeatureMatrixTest
         matrix.addRow("sample3", sample3Features);
         matrix.addRow("sample4", sample4Features);
 
-        assertEquals(List.of("sample1", "sample2", "sample3", "sample4"), matrix.getRowIds());
-        assertEquals(List.of("feature1", "feature2", "feature3"), matrix.getFeatureKeys());
+        List<String> expectedSampleIds = List.of("sample1", "sample2", "sample3", "sample4");
+        List<String> actualSampleIds = matrix.getRowIds();
+        assertEquals(expectedSampleIds, actualSampleIds);
+
+        List<FeatureKey> expectedFeatureKeys = FeatureKey.of("feature1", "feature2", "feature3");
+        List<FeatureKey> actualFeatureKeys = matrix.getFeatureKeys();
+        assertEquals(expectedFeatureKeys, actualFeatureKeys);
 
         double[][] expectedValues = {
                 { 1.1, 1.2, Double.NaN },
@@ -92,7 +98,9 @@ public class FeatureMatrixTest
         }
 
         // Check row names order
-        List<String> expectedSampleIds = IntStream.range(0, NUM_SAMPLE_THREADS).mapToObj(x -> formTestSampleId(x)).toList();
+        List<String> expectedSampleIds = IntStream.range(0, NUM_SAMPLE_THREADS)
+                .mapToObj(x -> formTestSampleId(x))
+                .toList();
 
         matrix = matrix.reorderRows(expectedSampleIds);
 
@@ -102,8 +110,11 @@ public class FeatureMatrixTest
         assertEquals(expectedSampleIds, actualSampleIds);
 
         // Check column names order
-        List<String> expectedFeatureKeys = IntStream.range(0, NUM_FEATURES).mapToObj(x -> formTestFeatureKey(x)).toList();
-        List<String> actualFeatureKeys = matrix.getFeatureKeys();
+        List<FeatureKey> expectedFeatureKeys = IntStream.range(0, NUM_FEATURES)
+                .mapToObj(x -> FeatureKey.of(formTestFeatureKey(x)))
+                .toList();
+
+        List<FeatureKey> actualFeatureKeys = matrix.getFeatureKeys();
 
         printDiffs(expectedFeatureKeys, actualFeatureKeys);
         assertEquals(expectedFeatureKeys, actualFeatureKeys);
@@ -125,7 +136,7 @@ public class FeatureMatrixTest
         List<Feature> features = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < numFeatures; ++featureIndex)
         {
-            String featureKey = formTestFeatureKey(featureIndex);
+            FeatureKey featureKey = FeatureKey.of(formTestFeatureKey(featureIndex));
             double featureValue = formTestFeatureValue(sampleIndex, featureIndex);
             features.add(new Feature(featureKey, featureValue));
         }
@@ -148,7 +159,7 @@ public class FeatureMatrixTest
         return expectedValues;
     }
 
-    private void printDiffs(List<String> expected, List<String> actual)
+    private <T> void printDiffs(List<T> expected, List<T> actual)
     {
          for(int i = 0; i < expected.size(); ++i)
          {

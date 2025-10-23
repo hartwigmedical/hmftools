@@ -28,11 +28,11 @@ public class CobaltGcMediansPrepTest
         Feature actualFeature;
 
         actualFeature = features.get(0);
-        assertEquals("GCBucket=25", actualFeature.mKey);
-        assertEquals(1.0, actualFeature.mValue, 0.001);
+        assertEquals("GCBucket=25", actualFeature.key().name());
+        assertEquals(1.0, actualFeature.value(), 0.001);
 
         actualFeature = features.get(1);
-        assertEquals("GCBucket=26", actualFeature.mKey);
-        assertEquals(1.05, actualFeature.mValue, 0.001);
+        assertEquals("GCBucket=26", actualFeature.key().name());
+        assertEquals(1.05, actualFeature.value(), 0.001);
     }
 }
