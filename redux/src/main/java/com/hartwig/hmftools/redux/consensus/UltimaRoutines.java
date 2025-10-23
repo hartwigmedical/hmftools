@@ -132,6 +132,8 @@ public final class UltimaRoutines
             else
             {
                 // assess a new homopolymer
+                hpLowQual = false;
+
                 if(!isHighBaseQual(qual))
                 {
                     byte base = bases[i];
