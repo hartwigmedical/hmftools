@@ -31,11 +31,12 @@ public class PercentileTransformTask implements Runnable
         int numFeatures = mSampleFeatureMatrix.numFeatures();
 
         boolean hasFewFeatures = numFeatures <= PROGRESS_INTERVAL;
-        boolean isFeatureAtInterval = mFeatureIndex % PROGRESS_INTERVAL == 0;
+        boolean isFeatureAtInterval = mFeatureIndex == 0 || mFeatureIndex == numFeatures-1 ||
+                (mFeatureIndex+1) % PROGRESS_INTERVAL == 0;
 
         if(hasFewFeatures || isFeatureAtInterval)
         {
-            QC_LOGGER.debug( "Transformed {}/{} features to percentiles", mFeatureIndex, numFeatures);
+            QC_LOGGER.debug( "Transformed {}/{} features to percentiles", mFeatureIndex+1, numFeatures);
         }
     }
 
