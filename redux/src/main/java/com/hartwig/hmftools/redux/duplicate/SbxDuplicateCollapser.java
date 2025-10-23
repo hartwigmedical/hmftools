@@ -25,7 +25,7 @@ public class SbxDuplicateCollapser
 {
     private final int mMaxDuplicateDistance;
 
-    private static final int MAX_CHAINED_MULTIPLE = 5;
+    private static final int MAX_CHAINED_MULTIPLE = 3;
 
     private final Map<Integer,Integer> mCollapsingDistanceFrequency;
 
@@ -64,6 +64,7 @@ public class SbxDuplicateCollapser
 
         private int mIndex; // in its group list, and is immutable
         private int mSize;
+        private boolean mCollapsed;
         private List<GroupInfo> mCollapsedGroups;
 
         public GroupInfo(final Object group, final int positionLower, final int positionUpper, final int initialSize)
@@ -81,6 +82,7 @@ public class SbxDuplicateCollapser
 
             mSize = initialSize;
             mCollapsedGroups = null;
+            mCollapsed = false;
         }
 
         public void setIndex(int index) { mIndex = index; }
@@ -92,8 +94,8 @@ public class SbxDuplicateCollapser
         public int posUpperMax() { return mPositionUpperMax; }
 
         public int size() { return mSize; }
-        public void markCollapsed() { mSize = 0; }
-        public boolean collapsed() { return mSize == 0; }
+        public void markCollapsed() { mCollapsed = true; }
+        public boolean collapsed() { return mCollapsed; }
 
         public boolean hasCollapsedGroups() { return mCollapsedGroups != null; }
         public List<GroupInfo> collapsedGroups() { return mCollapsedGroups; }
@@ -118,6 +120,33 @@ public class SbxDuplicateCollapser
             mPositionLowerMax = min(mPositionLowerMax, PositionLower + maxDistanceFromOriginal);
             mPositionUpperMin = max(mPositionUpperMin, PositionUpper - maxDistanceFromOriginal);
             mPositionUpperMax = min(mPositionUpperMax, PositionUpper + maxDistanceFromOriginal);
+        }
+
+        public List<SAMRecord> allReads()
+        {
+            // gathers reads including recursively from collapsed groups
+            List<SAMRecord> reads = Lists.newArrayListWithCapacity(mSize);
+
+            if(Group instanceof ReadInfo)
+            {
+                ReadInfo readInfo = (ReadInfo)Group;
+                reads.add(readInfo.read());
+            }
+            else
+            {
+                DuplicateGroup duplicateGroup = (DuplicateGroup)Group;
+                reads.addAll(duplicateGroup.reads());
+            }
+
+            if(mCollapsedGroups != null)
+            {
+                for(GroupInfo collapsedGroup : mCollapsedGroups)
+                {
+                    reads.addAll(collapsedGroup.allReads());
+                }
+            }
+
+            return reads;
         }
 
         private static int minDistance(int firstMin, int firstMax, int secondMin, int secondMax)
@@ -163,12 +192,12 @@ public class SbxDuplicateCollapser
             {
                 sb.append(format(" size(%d)", mSize));
 
-                if(!mCollapsedGroups.isEmpty())
+                if(mCollapsedGroups != null)
                     sb.append(format(" collapsedGroups(%d)", mCollapsedGroups.size()));
             }
             else
             {
-                sb.append("collapsed");
+                sb.append(" collapsed");
             }
 
             return sb.toString();
@@ -295,21 +324,12 @@ public class SbxDuplicateCollapser
         return new FragmentCoordReads(finalDuplicateGroups, finalSingleReads);
     }
 
-    private static void collapseToDuplicateGroup(final DuplicateGroup duplicateGroup, final List<GroupInfo> collapsedReads)
+    private static void collapseToDuplicateGroup(final DuplicateGroup duplicateGroup, final List<GroupInfo> collapsedGroups)
     {
         // for SBX, collapsed reads will count towards consensus
-        for(GroupInfo otherGroup : collapsedReads)
+        for(GroupInfo otherGroup : collapsedGroups)
         {
-            if(otherGroup.Group instanceof ReadInfo)
-            {
-                ReadInfo otherRead = (ReadInfo) otherGroup.Group;
-                duplicateGroup.addRead(otherRead.read());
-            }
-            else
-            {
-                DuplicateGroup otherDuplicateGroup = (DuplicateGroup)otherGroup.Group;
-                duplicateGroup.addReads(otherDuplicateGroup.reads());
-            }
+            duplicateGroup.addReads(otherGroup.allReads());
         }
     }
 

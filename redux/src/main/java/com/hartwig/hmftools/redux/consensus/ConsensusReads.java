@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPri
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.INVALID_BASE;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.getInvalidBases;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.isValidRead;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.duplicate.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -46,6 +47,7 @@ public class ConsensusReads
     private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
+    private final int mMaxConsensusReadCount;
 
     private final ConsensusStatistics mConsensusStats;
 
@@ -57,6 +59,7 @@ public class ConsensusReads
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
 
         mConsensusStats = consensusStats;
+        mMaxConsensusReadCount = isSbx() ? SBX_CONSENSUS_MAX_DEPTH : CONSENSUS_MAX_DEPTH;
     }
 
     @VisibleForTesting
@@ -87,13 +90,13 @@ public class ConsensusReads
 
         List<SAMRecord> readsView;
 
-        if(reads.size() < CONSENSUS_MAX_DEPTH)
+        if(reads.size() < mMaxConsensusReadCount)
         {
             readsView = reads;
         }
         else
         {
-            readsView = Lists.newArrayList(reads.subList(0, CONSENSUS_MAX_DEPTH));
+            readsView = Lists.newArrayList(reads.subList(0, mMaxConsensusReadCount));
 
             if(readsView.stream().noneMatch(x -> x == templateRead)) // ensure it is included since it drives cigar selection
                 readsView.add(templateRead);

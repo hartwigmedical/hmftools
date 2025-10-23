@@ -75,6 +75,8 @@ public final class SbxRoutines
     public static final int SBX_READ_CACHE_MAX_SOFT_CLIP = SBX_READ_CACHE_GROUP_SIZE - 30;
     public static final int SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD = 5000;
 
+    public static int SBX_CONSENSUS_MAX_DEPTH = 20;
+
     public static void prepProcessRead(final SAMRecord record)
     {
         try
