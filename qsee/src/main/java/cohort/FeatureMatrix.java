@@ -2,6 +2,8 @@ package cohort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +28,8 @@ public class FeatureMatrix
     // Therefore, store feature keys (= Map keys) in a list to store the insertion order of features.
     private final List<String> mFeatureKeys = new ArrayList<>();
 
+    private static final double EMPTY_VALUE = Double.NaN;
+
     public FeatureMatrix(Map<String, double[]> featureValuesMap, int numRows)
     {
         if(!featureValuesMap.isEmpty())
@@ -49,18 +53,21 @@ public class FeatureMatrix
         for(Feature feature : features)
         {
             String key = feature.mKey;
-
-            if(!mFeatureKeys.contains(key))
-            {
-                mFeatureKeys.add(key);
-
-                double[] emptyArray = new double[numRows()];
-                Arrays.fill(emptyArray, Double.NaN);
-
-                mFeatureValuesMap.put(key, emptyArray);
-            }
-
+            addColumnIfMissing(key);
             mFeatureValuesMap.get(key)[rowIndex] = feature.mValue;
+        }
+    }
+
+    private void addColumnIfMissing(String key)
+    {
+        if(!mFeatureKeys.contains(key))
+        {
+            mFeatureKeys.add(key);
+
+            double[] emptyArray = new double[numRows()];
+            Arrays.fill(emptyArray, EMPTY_VALUE);
+
+            mFeatureValuesMap.put(key, emptyArray);
         }
     }
 
@@ -84,10 +91,45 @@ public class FeatureMatrix
 
         if(rowIds.length != numRows())
         {
-            throw new IllegalArgumentException("Number of row IDs does not match number of initialised rows");
+            throw new IllegalArgumentException("No. of row IDs does not match number of initialised rows");
         }
 
         mRowIds.addAll(List.of(rowIds));
+    }
+
+    public FeatureMatrix reorderRows(List<String> rowIdsOrdered)
+    {
+        if(rowIdsOrdered.size() != numRows())
+        {
+            throw new IllegalArgumentException(String.format("Mismatched no. of rows (%d) provided and no. of rows in matrix (%d)",
+                    rowIdsOrdered.size(), numRows()
+            ));
+        }
+
+        if(!new HashSet<>(rowIdsOrdered).containsAll(mRowIds))
+        {
+            throw new IllegalArgumentException("Row IDs provided do not match the row IDs in the matrix");
+        }
+
+        FeatureMatrix newMatrix = new FeatureMatrix(new HashMap<>(), numRows());
+        newMatrix.setRowIds(rowIdsOrdered.toArray(String[]::new));
+
+        for(int newRowIndex = 0; newRowIndex < numRows(); newRowIndex++)
+        {
+            String newRowId = rowIdsOrdered.get(newRowIndex);
+            int oldRowIndex = mRowIds.indexOf(newRowId);
+
+            for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
+            {
+                String featureKey = mFeatureKeys.get(featureIndex);
+                double value = mFeatureValuesMap.get(featureKey)[oldRowIndex];
+
+                newMatrix.addColumnIfMissing(featureKey);
+                newMatrix.mFeatureValuesMap.get(featureKey)[newRowIndex] = value;
+            }
+        }
+
+        return newMatrix;
     }
 
     public int numRows() { return mNumRows; }
@@ -104,11 +146,7 @@ public class FeatureMatrix
 
         for(int rowIndex = 0; rowIndex < numRows(); rowIndex++)
         {
-            for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
-            {
-                double value = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[rowIndex];
-                matrix[rowIndex][featureIndex] = value;
-            }
+            matrix[rowIndex] = getRowValues(rowIndex);
         }
 
         return matrix;
@@ -118,15 +156,45 @@ public class FeatureMatrix
     {
         double[][] matrix = new double[numFeatures()][numRows()];
 
-        for(int rowIndex = 0; rowIndex < numRows(); rowIndex++)
+        for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
         {
-            for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
-            {
-                double value = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[rowIndex];
-                matrix[featureIndex][rowIndex] = value;
-            }
+            matrix[featureIndex] = getColumnValues(mFeatureKeys.get(featureIndex));
         }
 
         return matrix;
+    }
+
+    public double[] getRowValues(int index)
+    {
+        double[] rowValues = new double[numFeatures()];
+
+        for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
+        {
+            rowValues[featureIndex] = mFeatureValuesMap.get(mFeatureKeys.get(featureIndex))[index];
+        }
+
+        return rowValues;
+    }
+
+    public double[] getRowValues(String rowId)
+    {
+        int rowIndex = mRowIds.indexOf(rowId);
+
+        if(rowIndex < 0)
+        {
+            throw new IllegalArgumentException(String.format("RowId(%s) not found", rowId));
+        }
+
+        return getRowValues(rowIndex);
+    }
+
+    public double[] getColumnValues(int index)
+    {
+        return getColumnValues(mFeatureKeys.get(index));
+    }
+
+    public double[] getColumnValues(String key)
+    {
+        return mFeatureValuesMap.get(key);
     }
 }

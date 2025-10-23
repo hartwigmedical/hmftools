@@ -57,13 +57,23 @@ public class FeatureMatrixTest
         };
         double[][] actualValues = matrix.getValues();
         assertArrayEquals(expectedValues, actualValues);
+
+        double[][] expectedValuesTransposed = {
+                { 1.1, 2.1, 3.1, 4.1 },
+                { 1.2, 2.2, 3.2, 4.2 },
+                { Double.NaN, Double.NaN, 3.3, 4.3 },
+        };
+        double[][] actualValuesTransposed = matrix.getValuesTransposed();
+
+        assertArrayEquals(expectedValuesTransposed, actualValuesTransposed);
+
     }
 
     @Test
     public void canAddRowsConcurrently() throws InterruptedException
     {
-        int NUM_SAMPLE_THREADS = 100;
-        int NUM_FEATURES = 5;
+        int NUM_SAMPLE_THREADS = 1000;
+        int NUM_FEATURES = 500;
 
         FeatureMatrix matrix = new FeatureMatrix(new ConcurrentHashMap<>(), NUM_SAMPLE_THREADS);
 
@@ -81,13 +91,24 @@ public class FeatureMatrixTest
             thread.join();
         }
 
-        // Check result
+        // Check row names order
         List<String> expectedSampleIds = IntStream.range(0, NUM_SAMPLE_THREADS).mapToObj(x -> formTestSampleId(x)).toList();
-        assertEquals(expectedSampleIds, matrix.getRowIds());
 
+        matrix = matrix.reorderRows(expectedSampleIds);
+
+        List<String> actualSampleIds = matrix.getRowIds();
+
+        printDiffs(expectedSampleIds, actualSampleIds);
+        assertEquals(expectedSampleIds, actualSampleIds);
+
+        // Check column names order
         List<String> expectedFeatureKeys = IntStream.range(0, NUM_FEATURES).mapToObj(x -> formTestFeatureKey(x)).toList();
-        assertEquals(expectedFeatureKeys, matrix.getFeatureKeys());
+        List<String> actualFeatureKeys = matrix.getFeatureKeys();
 
+        printDiffs(expectedFeatureKeys, actualFeatureKeys);
+        assertEquals(expectedFeatureKeys, actualFeatureKeys);
+
+        // Check values
         double[][] expectedValues = createExpectedValues(NUM_SAMPLE_THREADS, NUM_FEATURES);
         double[][] actualValues = matrix.getValues();
         assertArrayEquals(expectedValues, actualValues);
@@ -125,5 +146,16 @@ public class FeatureMatrixTest
         }
 
         return expectedValues;
+    }
+
+    private void printDiffs(List<String> expected, List<String> actual)
+    {
+         for(int i = 0; i < expected.size(); ++i)
+         {
+             if(!expected.get(i).equals(actual.get(i)))
+             {
+                 System.out.printf("index(%d): actual(%s) != expected(%s)\n", i, actual.get(i), expected.get(i));
+             }
+         }
     }
 }
