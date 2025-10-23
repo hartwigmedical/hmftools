@@ -5,8 +5,8 @@ public record WindowStatistics(String chromosome,
                                long count,
                                double mean,
                                double median,
-                               double max,
                                double min,
+                               double max,
                                double sd)
 {
 }

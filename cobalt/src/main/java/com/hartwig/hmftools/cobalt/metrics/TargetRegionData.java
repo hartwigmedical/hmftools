@@ -26,5 +26,8 @@ public class TargetRegionData extends ChrBaseRegion
                 Statistics.getMax(), Statistics.getStandardDeviation());
     }
 
-    public String toString() { return super.toString(); }
+    public String toString()
+    {
+        return super.toString();
+    }
 }

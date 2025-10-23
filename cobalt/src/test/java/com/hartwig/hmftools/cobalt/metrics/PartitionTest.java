@@ -2,10 +2,6 @@ package com.hartwig.hmftools.cobalt.metrics;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-
-import com.hartwig.hmftools.cobalt.ChromosomeData;
-
 import org.junit.Test;
 
 public class PartitionTest

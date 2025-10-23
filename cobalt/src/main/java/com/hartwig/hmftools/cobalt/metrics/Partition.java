@@ -34,7 +34,7 @@ public class Partition extends ChrBaseRegion
 
     public void recordFragment(int startPosition, int length)
     {
-        if (!containsPosition(startPosition))
+        if(!containsPosition(startPosition))
         {
             // e.g. negative read with alignment start near partition start.
             return;

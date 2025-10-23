@@ -40,8 +40,9 @@ public class MetricsConfig
     public final SpecificRegions SpecificChrRegions;
 
     public static final String BAM_FILE = "bam_file";
+    public static final String WINDOW_SIZE = "window_size";
     private static final int DEFAULT_PARTITION_SIZE = 1_000_000;
-    private static final int DEFAULT_WINDOW_SIZE = 10_000;
+    private static final int DEFAULT_WINDOW_SIZE = 1000;
     public static final int MIN_MAPPING_QUALITY = 50;
 
     public MetricsConfig(final ConfigBuilder configBuilder)
@@ -51,7 +52,7 @@ public class MetricsConfig
         RefGenVersion = configBuilder.hasValue(REF_GENOME_VERSION) ? from(configBuilder) : deriveRefGenomeVersion(BamFile);
         OutputDir = parseOutputDir(configBuilder);
         PartitionSize = DEFAULT_PARTITION_SIZE;
-        WindowSize = DEFAULT_WINDOW_SIZE;
+        WindowSize = configBuilder.getInteger(WINDOW_SIZE);
 
         CB_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         CB_LOGGER.info("output({})", OutputDir);
@@ -68,6 +69,7 @@ public class MetricsConfig
         addOutputDir(configBuilder, true);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
+        configBuilder.addInteger(WINDOW_SIZE, "window size", DEFAULT_WINDOW_SIZE);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
@@ -77,7 +79,7 @@ public class MetricsConfig
         RefGenomeCoordinates coordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         List<Chromosome> chromosomes = new ArrayList<>();
-        if (SpecificChrRegions.Chromosomes.isEmpty())
+        if(SpecificChrRegions.Chromosomes.isEmpty())
         {
             chromosomes.addAll(coordinates.Lengths.keySet().stream().sorted().toList());
         }

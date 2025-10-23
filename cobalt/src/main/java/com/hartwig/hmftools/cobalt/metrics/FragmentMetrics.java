@@ -46,7 +46,7 @@ public class FragmentMetrics
         CB_LOGGER.debug("all partitions complete");
 
         List<WindowStatistics> results = new ArrayList<>(partitionsByChromosome.size());
-        partitionsByChromosome.keySet().forEach(chromosome ->
+        partitionsByChromosome.keySet().stream().sorted().forEach(chromosome ->
         {
             List<Partition> partitionsForChromosome = partitionsByChromosome.get(chromosome);
             partitionsForChromosome.forEach(partition -> partition.TargetRegions.forEach(region -> results.add(region.statistics())));

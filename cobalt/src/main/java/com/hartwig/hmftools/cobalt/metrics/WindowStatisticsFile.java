@@ -12,6 +12,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
+@SuppressWarnings("DataFlowIssue")
 public class WindowStatisticsFile
 {
     public enum Column
@@ -50,11 +51,6 @@ public class WindowStatisticsFile
         }
     }
 
-//    public WindowStatisticsFile(final String fileName)
-//    {
-//        this.fileName = fileName;
-//    }
-//
     public static List<WindowStatistics> read(String fileName)
     {
         List<WindowStatistics> ratios = new ArrayList<>();
