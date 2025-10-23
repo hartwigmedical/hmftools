@@ -82,19 +82,19 @@ public class FeatureMatrix
         mFeatureValuesMap.put(key, features);
     }
 
-    public void setRowIds(String[] rowIds)
+    public void setRowIds(List<String> rowIds)
     {
         if(!mRowIds.isEmpty())
         {
             throw new IllegalStateException("Cannot set row IDs if they have already been modified");
         }
 
-        if(rowIds.length != numRows())
+        if(rowIds.size() != numRows())
         {
             throw new IllegalArgumentException("No. of row IDs does not match number of initialised rows");
         }
 
-        mRowIds.addAll(List.of(rowIds));
+        mRowIds.addAll(rowIds);
     }
 
     public FeatureMatrix reorderRows(List<String> rowIdsOrdered)
@@ -112,7 +112,7 @@ public class FeatureMatrix
         }
 
         FeatureMatrix newMatrix = new FeatureMatrix(new HashMap<>(), numRows());
-        newMatrix.setRowIds(rowIdsOrdered.toArray(String[]::new));
+        newMatrix.setRowIds(rowIdsOrdered);
 
         for(int newRowIndex = 0; newRowIndex < numRows(); newRowIndex++)
         {

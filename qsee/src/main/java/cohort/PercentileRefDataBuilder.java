@@ -51,9 +51,9 @@ public class PercentileRefDataBuilder
 
         double[] percentiles = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES).getPercentiles();
 
-        String[] percentileNames = Arrays.stream(percentiles)
+        List<String> percentileNames = Arrays.stream(percentiles)
                 .mapToObj(x -> PERCENTILE_FORMAT.format(x))
-                .toArray(String[]::new);
+                .toList();
 
         percentileFeatureMatrix.setRowIds(percentileNames);
 
@@ -71,7 +71,7 @@ public class PercentileRefDataBuilder
         TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
         featureTransformTasks.clear();
 
-        percentileFeatureMatrix.reorderRows(Arrays.asList(percentileNames));
+        percentileFeatureMatrix.reorderRows(percentileNames);
 
         return percentileFeatureMatrix;
     }
