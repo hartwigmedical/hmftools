@@ -42,7 +42,7 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_C
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
-import static com.hartwig.hmftools.sage.vis.SvgRender.renderAminoAcidSeqs;
+import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
 
@@ -103,8 +103,9 @@ import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -859,8 +860,8 @@ public class VariantVis
             final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidVariant> variants)
     {
         boolean posStrand = transcriptExons.Strand == (byte) 1;
-        List<AminoAcidViewModel> aminoAcids = getAminoAcids(transcriptExons, transcriptAminoAcids, variants);
-        SVGGraphics2D svgCanvas = renderAminoAcidSeqs(READ_HEIGHT_PX, viewRegion, transcriptAminoAcids.GeneName, posStrand, aminoAcids);
+        List<GeneRegionViewModel> aminoAcids = getGeneRegions(transcriptExons, transcriptAminoAcids, variants);
+        SVGGraphics2D svgCanvas = renderGeneData(READ_HEIGHT_PX, viewRegion, transcriptAminoAcids.GeneName, posStrand, aminoAcids);
         if(svgCanvas == null)
             return null;
 
@@ -889,17 +890,24 @@ public class VariantVis
     }
 
     // TODO: move into own util class.
-    public static List<AminoAcidViewModel> getAminoAcids(
+    public static List<GeneRegionViewModel> getGeneRegions(
             final TranscriptData transcriptExons, final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidVariant> variants)
     {
-        List<AminoAcidViewModel> output = Lists.newArrayList();
+        List<GeneRegionViewModel> geneRegions = Lists.newArrayList();
         boolean posStrand = transcriptExons.Strand == (byte) 1;
         String aminoAcids = transcriptAminoAcids.AminoAcids;
         List<BaseRegion> codingRegions = getCodingRegions(transcriptExons);
         int nucIdx = 0;
         int aaIdx = posStrand ? 0 : aminoAcids.length() - 1;
-        for(BaseRegion codingRegion : codingRegions)
+        BaseRegion prevCodingRegion = null;
+        for(int i = 0; i < codingRegions.size(); i++)
         {
+            BaseRegion codingRegion = codingRegions.get(i);
+            if(prevCodingRegion != null)
+                geneRegions.add(new IntronicRegionViewModel(new BaseRegion(prevCodingRegion.end() + 1, codingRegion.start() - 1)));
+
+            prevCodingRegion = codingRegion;
+
             int posStart = codingRegion.start();
             while(posStart <= codingRegion.end())
             {
@@ -918,7 +926,7 @@ public class VariantVis
                     break;
                 }
 
-                output.add(new AminoAcidViewModel(aaRegion, aaPos, refAcid, altAcid));
+                geneRegions.add(new AminoAcidViewModel_(aaRegion, aaPos, refAcid, altAcid));
                 if(nucIdx == 0)
                     aaIdx += posStrand ? 1 : -1;
 
@@ -929,7 +937,7 @@ public class VariantVis
         if(posStrand && aaIdx != aminoAcids.length() || !posStrand && aaIdx != -1)
             throw new RuntimeException("Transcript amino acid count does not match coding length.");
 
-        return output;
+        return geneRegions;
     }
 
     private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)

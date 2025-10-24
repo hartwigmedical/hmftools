@@ -25,9 +25,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -466,8 +466,8 @@ public class SvgRender
     }
 
     @Nullable
-    public static SVGGraphics2D renderAminoAcidSeqs(double baseBoxSizePx, final BaseRegion renderRegion, final String geneName,
-            final boolean posStrand, final List<AminoAcidViewModel> aminoAcids)
+    public static SVGGraphics2D renderGeneData(double baseBoxSizePx, final BaseRegion renderRegion, final String geneName,
+            final boolean posStrand, final List<GeneRegionViewModel> aminoAcids)
     {
         // TODO: cleanup.
 
@@ -476,10 +476,10 @@ public class SvgRender
         AffineTransform origTransform = svgCanvas_.getTransform();
 
         svgCanvas_.setTransform(origTransform);
-        renderAminoAcidSeq(svgCanvas_, 0.0, 0.0, baseBoxSizePx, renderRegion, aminoAcids, true);
+        renderGeneRegions(svgCanvas_, 0.0, 0.0, baseBoxSizePx, renderRegion, aminoAcids, true);
 
         svgCanvas_.setTransform(origTransform);
-        renderAminoAcidSeq(svgCanvas_, 0.0, baseBoxSizePx, baseBoxSizePx, renderRegion, aminoAcids, false);
+        renderGeneRegions(svgCanvas_, 0.0, baseBoxSizePx, baseBoxSizePx, renderRegion, aminoAcids, false);
 
         svgCanvas_.setTransform(origTransform);
         renderGeneStrand(svgCanvas_, 0.0, 2.0 * baseBoxSizePx, baseBoxSizePx, renderRegion, posStrand);
@@ -490,8 +490,8 @@ public class SvgRender
         return svgCanvas_;
     }
 
-    public static void renderAminoAcidSeq(final SVGGraphics2D svgCanvas__, final double xOffset, final double yOffset, double baseBoxSizePx,
-            final BaseRegion renderRegion, final List<AminoAcidViewModel> aminoAcids, final boolean renderRef)
+    public static void renderGeneRegions(final SVGGraphics2D svgCanvas__, final double xOffset, final double yOffset, double baseBoxSizePx,
+            final BaseRegion renderRegion, final List<GeneRegionViewModel> geneRegions, final boolean renderRef)
     {
         // TODO: cleanup
 
@@ -509,9 +509,31 @@ public class SvgRender
         final Color darkPurple = new Color(92, 12, 121);
         List<Color> matchBgColours = Lists.newArrayList(lightBlue, darkBlue);
         List<Color> mismatchBgColours = Lists.newArrayList(lightPurple, darkPurple);
-        for(int i = 0; i < aminoAcids.size(); i++)
+        for(int i = 0; i < geneRegions.size(); i++)
         {
-            AminoAcidViewModel aaModel = aminoAcids.get(i);
+            GeneRegionViewModel geneRegion = geneRegions.get(i);
+            if(geneRegion instanceof IntronicRegionViewModel)
+            {
+                IntronicRegionViewModel intronModel = (IntronicRegionViewModel) geneRegion;
+                if(intronModel.baseRegion().start() > renderRegion.end())
+                    break;
+
+                if(intronModel.baseRegion().end() < renderRegion.start())
+                    continue;
+
+                svgCanvas__.setColor(Color.BLUE);
+                Stroke currentStroke = svgCanvas__.getStroke();
+                Stroke stroke = new BasicStroke((float) (2.0 / BASE_BOX_SIZE));
+                svgCanvas__.setStroke(stroke);
+                double left = max(intronModel.baseRegion().start(), renderRegion.start()) - renderRegion.start() + BOX_PADDING;
+                double right = min(intronModel.baseRegion().end(), renderRegion.end()) + 1 - renderRegion.start() + BOX_PADDING;
+                Shape line = new Line2D.Double(currentXOffset + left, currentYOffset + 0.5, currentXOffset + right, currentYOffset + 0.5);
+                svgCanvas__.draw(line);
+                svgCanvas__.setStroke(currentStroke);
+                continue;
+            }
+
+            AminoAcidViewModel_ aaModel = (AminoAcidViewModel_) geneRegion;
             BaseRegion aaRegion = aaModel.baseRegion();
             char aa = renderRef ? aaModel.ref() : aaModel.alt();
             boolean matchesRef = renderRef || aaModel.matchesRef();
