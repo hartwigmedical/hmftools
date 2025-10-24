@@ -7,7 +7,6 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.common.codon.AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -29,6 +28,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegions;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
@@ -43,8 +43,11 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_C
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.INTRON_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.MISSENSE_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.SYNONYMOUS_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
@@ -56,7 +59,6 @@ import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
-import static j2html.TagCreator.i;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.script;
 import static j2html.TagCreator.span;
@@ -83,14 +85,11 @@ import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -109,8 +108,7 @@ import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
-import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
-import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
+import com.hartwig.hmftools.sage.vis.AminoAcidVariant.MissenseVariant;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -612,12 +610,18 @@ public class VariantVis
                 throw new RuntimeException("Multiple transcripts encountered.");
             }
 
-            // TODO:
             String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
-            if(aaVariantType.equals("missense_variant"))
+            if(aaVariantType.equals(MISSENSE_VARIANT_TYPE))
             {
-                AminoAcidVariant aaVariant = AminoAcidVariant.parse(impact.get(HGVS_INDEX));
+                MissenseVariant aaVariant = MissenseVariant.parse(impact.get(HGVS_INDEX));
                 aaVariants.add(aaVariant);
+            }
+            else if(aaVariantType.equals(SYNONYMOUS_VARIANT_TYPE) || aaVariantType.equals(INTRON_VARIANT_TYPE))
+            {
+            }
+            else
+            {
+                throw new RuntimeException("Cannot interpret AA variant type: " + aaVariantType);
             }
 
             if(!variantContext.getContig().equals(simpleVariant.chromosome()))
@@ -645,29 +649,7 @@ public class VariantVis
         return Pair.of(aaElement, variant);
     }
 
-    // TODO: util class
-    // TODO: do we need to parse this?
-    public record AminoAcidVariant(int aminoAcidPos, char ref, char alt)
-    {
-        private static final Pattern PATTERN = Pattern.compile("^p\\.([^0-9]+)([0-9]+)([^0-9]+)$");
-
-        public static AminoAcidVariant parse(final String s)
-        {
-            Matcher matcher = PATTERN.matcher(s);
-            if(!matcher.find())
-                throw new RuntimeException(format("%s doesn't match the expected format for a HGVS", s));
-
-            String triRef = matcher.group(1);
-            int pos = Integer.parseInt(matcher.group(2));
-            String triAlt = matcher.group(3);
-
-            String ref = TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triRef);
-            String alt = TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triAlt);
-            return new AminoAcidVariant(pos, ref.charAt(0), alt.charAt(0));
-        }
-    }
-
-    private List<DomContent> renderReads(boolean isTumor, @Nullable final Pair<DomContent, VariantContext> aminoAcidElements_)
+    private List<DomContent> renderReads(boolean isTumor, @Nullable final Pair<DomContent, VariantContext> aminoAcidElements)
     {
         CssBuilder lightGrayBgStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY);
         CssBuilder verticalHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).writingMode("vertical-rl");
@@ -702,9 +684,9 @@ public class VariantVis
         tableRows.add(headerRow);
 
         // amino acids
-        if(aminoAcidElements_ != null)
+        if(aminoAcidElements != null)
         {
-            DomContent aaRow = tr(td("").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aminoAcidElements_.getLeft()));
+            DomContent aaRow = tr(td("").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aminoAcidElements.getLeft()));
             tableRows.add(aaRow);
         }
 
@@ -913,78 +895,6 @@ public class VariantVis
             return null;
 
         return rawHtml(svgCanvas.getSVGElement());
-    }
-
-    // TODO: move into own util class.
-    public static List<BaseRegion> getCodingRegions(final TranscriptData transcriptExons)
-    {
-        List<BaseRegion> codingRegions = Lists.newArrayList();
-        BaseRegion transcriptCodingRegion = new BaseRegion(transcriptExons.CodingStart, transcriptExons.CodingEnd);
-        List<ExonData> exons = transcriptExons.exons();
-        for(ExonData exon : exons)
-        {
-            BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
-            if(!transcriptCodingRegion.overlaps(exonRegion))
-                continue;
-
-            int codingStart = max(transcriptCodingRegion.start(), exonRegion.start());
-            int codingEnd = min(transcriptCodingRegion.end(), exonRegion.end());
-            BaseRegion codingRegion = new BaseRegion(codingStart, codingEnd);
-            codingRegions.add(codingRegion);
-        }
-
-        return codingRegions;
-    }
-
-    // TODO: move into own util class.
-    public static List<GeneRegionViewModel> getGeneRegions(
-            final TranscriptData transcriptExons, final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidVariant> variants)
-    {
-        List<GeneRegionViewModel> geneRegions = Lists.newArrayList();
-        boolean posStrand = transcriptExons.Strand == (byte) 1;
-        String aminoAcids = transcriptAminoAcids.AminoAcids;
-        List<BaseRegion> codingRegions = getCodingRegions(transcriptExons);
-        int nucIdx = 0;
-        int aaIdx = posStrand ? 0 : aminoAcids.length() - 1;
-        BaseRegion prevCodingRegion = null;
-        for(int i = 0; i < codingRegions.size(); i++)
-        {
-            BaseRegion codingRegion = codingRegions.get(i);
-            if(prevCodingRegion != null)
-                geneRegions.add(new IntronicRegionViewModel(new BaseRegion(prevCodingRegion.end() + 1, codingRegion.start() - 1)));
-
-            prevCodingRegion = codingRegion;
-
-            int posStart = codingRegion.start();
-            while(posStart <= codingRegion.end())
-            {
-                int posEnd = min(posStart + 2 - nucIdx, codingRegion.end());
-                nucIdx = (posEnd - posStart + 1 + nucIdx) % 3;
-                char refAcid = aminoAcids.charAt(aaIdx);
-                int aaPos = aaIdx + 1;
-                BaseRegion aaRegion = new BaseRegion(posStart, posEnd);
-                char altAcid = refAcid;
-                for(AminoAcidVariant variant : variants)
-                {
-                    if(variant.aminoAcidPos != aaPos)
-                        continue;
-
-                    altAcid = variant.alt;
-                    break;
-                }
-
-                geneRegions.add(new AminoAcidViewModel_(aaRegion, aaPos, refAcid, altAcid));
-                if(nucIdx == 0)
-                    aaIdx += posStrand ? 1 : -1;
-
-                posStart = posEnd + 1;
-            }
-        }
-
-        if(posStrand && aaIdx != aminoAcids.length() || !posStrand && aaIdx != -1)
-            throw new RuntimeException("Transcript amino acid count does not match coding length.");
-
-        return geneRegions;
     }
 
     private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)

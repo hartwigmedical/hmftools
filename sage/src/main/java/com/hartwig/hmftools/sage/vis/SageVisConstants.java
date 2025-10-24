@@ -41,4 +41,9 @@ public class SageVisConstants
     final static int TRANSCRIPT_NAME_IDX = 1;
     final static int AA_VARIANT_TYPE_IDX = 2;
     final static int HGVS_INDEX = 6;
+
+    // TODO: get this from pave?
+    final static String MISSENSE_VARIANT_TYPE = "missense_variant";
+    final static String INTRON_VARIANT_TYPE = "intron_variant";
+    final static String SYNONYMOUS_VARIANT_TYPE = "synonymous_variant";
 }
