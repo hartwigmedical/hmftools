@@ -125,6 +125,9 @@ public class HighDepthTask implements Callable<Void>
 
     private void processSamRecord(final SAMRecord record)
     {
+        if(record.getMappingQuality() < mConfig.MinMapQual)
+            return;
+
         ++mRecordCounter;
 
         int readStart = record.getAlignmentStart();

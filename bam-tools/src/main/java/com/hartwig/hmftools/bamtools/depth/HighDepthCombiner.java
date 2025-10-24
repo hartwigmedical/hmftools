@@ -3,24 +3,20 @@ package com.hartwig.hmftools.bamtools.depth;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.depth.GenicRegions.FIXED_GENE_REGIONS;
+import static com.hartwig.hmftools.bamtools.depth.GenicRegions.REMOVE_GENE_OVERLAPS;
 import static com.hartwig.hmftools.bamtools.depth.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.addGenePanelOption;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -28,7 +24,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildca
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -37,20 +32,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionData;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
@@ -65,29 +55,30 @@ public class HighDepthCombiner
 {
     private final List<String> mInputFiles;
 
+    private final int mThreads;
     private final int mMinSampleCount;
-    private final List<ChrBaseRegion> mSpecificRegions;
+    private final int mMinRegionSize;
     private final RefGenomeVersion mRefGenVersion;
-    private final List<DriverGene> mDriverGenes;
-    private final KnownFusionCache mKnownFusionCache;
-    private final EnsemblDataCache mEnsemblDataCache;
-    private final boolean mRemoveGeneOverlaps;
+
+    private final GenicRegions mGenicRegions;
+
+    private final List<ChrBaseRegion> mSpecificRegions;
 
     private final Map<String,List<List<HighDepthRegion>>> mChrSampleHighDepthRegions;
-    private final Map<String,List<CombinedRegion>> mChrCombinedRegions;
     private final Map<String,List<HighDepthRegion>> mFinalRegions;
+    private final String mOutputFile;
+    private final boolean mWriteWithLabel;
 
-    private final BufferedWriter mWriter;
-
+    // config
     private static final String HIGH_DEPTH_FILES = "high_depth_files";
     private static final String OUTPUT_FILE = "output_file";
-    private static final String REF_BLACKLIST_FILE = "ref_blacklist_file"; // the Gridss blacklist file
     private static final String MIN_SAMPLE_COUNT = "min_sample_count";
-    private static final String REMOVE_GENE_OVERLAPS = "remove_gene_overlaps";
+    private static final String MIN_REGION_SIZE = "min_region_size";
+    private static final String WRITE_LABEL = "write_label";
 
     private static final int DEFAULT_MIN_SAMPLE_COUNT = 4;
     private static final int MIN_REGION_LENGTH = 11;
-    private static final int PANEL_HIGH_DEPTH_THRESHOLD = 2000;
+    protected static final int PANEL_HIGH_DEPTH_THRESHOLD = 2000;
 
     public HighDepthCombiner(final ConfigBuilder configBuilder)
     {
@@ -101,30 +92,18 @@ public class HighDepthCombiner
             mInputFiles.add(convertWildcardSamplePath(highDepthFiles, sampleId));
         }
 
-        mWriter = initialiseWriter(configBuilder.getValue(OUTPUT_FILE));
-        mMinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
-        mRemoveGeneOverlaps = configBuilder.hasFlag(REMOVE_GENE_OVERLAPS);
+        mGenicRegions = new GenicRegions(configBuilder);
 
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
+        mMinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
+        mMinRegionSize = configBuilder.getInteger(MIN_REGION_SIZE);
+        mThreads = parseThreads(configBuilder);
         mChrSampleHighDepthRegions = Maps.newHashMap();
-        mChrCombinedRegions = Maps.newHashMap();
         mFinalRegions = Maps.newHashMap();
 
         mRefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        mKnownFusionCache = new KnownFusionCache();
-        mKnownFusionCache.loadFromFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
-
-        mDriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
-
-        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
-        {
-            mEnsemblDataCache = new EnsemblDataCache(configBuilder);
-            mEnsemblDataCache.load(true);
-        }
-        else
-        {
-            mEnsemblDataCache = null;
-        }
+        mWriteWithLabel = configBuilder.hasFlag(WRITE_LABEL);
 
         mSpecificRegions = Lists.newArrayList();
 
@@ -150,45 +129,73 @@ public class HighDepthCombiner
 
         loadSampleRegions();
 
-        mergeRegions();
+        List<MergeTask> mergeTasks = Lists.newArrayList();
 
-        for(Map.Entry<String,List<CombinedRegion>> entry : mChrCombinedRegions.entrySet())
+        for(Map.Entry<String,List<List<HighDepthRegion>>> entry : mChrSampleHighDepthRegions.entrySet())
         {
             String chromosome = entry.getKey();
-            List<CombinedRegion> combinedRegions = entry.getValue();
+            List<List<HighDepthRegion>> sampleRegions = entry.getValue();
 
-            if(combinedRegions == null)
-                continue;
+            mergeTasks.add(new MergeTask(chromosome, sampleRegions));
+        }
 
-            List<HighDepthRegion> highDepthRegions = mergeChromosomeRegions(chromosome, combinedRegions);
+        List<Callable<Void>> callableList = mergeTasks.stream().collect(Collectors.toList());
+
+        if(!TaskExecutor.executeTasks(callableList, mThreads))
+            System.exit(1);
+
+        for(MergeTask mergeTask : mergeTasks)
+        {
+            List<HighDepthRegion> highDepthRegions = mergeTask.highDepthRegions();
 
             if(!validateRegions(highDepthRegions))
                 System.exit(1);
 
-            mFinalRegions.put(chromosome, highDepthRegions);
+            mFinalRegions.put(mergeTask.mChromosome, highDepthRegions);
         }
 
-        checkKnownGeneOverlaps();
+        mGenicRegions.checkKnownGeneOverlaps(mFinalRegions);
+        mGenicRegions.checkFixedGenicRegionOverlaps(mFinalRegions);
 
         writeCombinedResults();
 
-        closeBufferedWriter(mWriter);
-
-        BT_LOGGER.info("high depth region combination complete");
+        BT_LOGGER.info("High depth region combination complete");
     }
 
-    private void mergeRegions()
+    private class MergeTask implements Callable<Void>
     {
-        for(Map.Entry<String,List<List<HighDepthRegion>>> entry : mChrSampleHighDepthRegions.entrySet())
-        {
-            String chromosome = entry.getKey();
-            List<CombinedRegion> combinedRegions = Lists.newArrayList();
-            mChrCombinedRegions.put(chromosome, combinedRegions);
+        private final String mChromosome;
+        private List<List<HighDepthRegion>> mSampleRegions;
+        private final List<CombinedRegion> mCombinedRegions;
+        private final List<HighDepthRegion> mHighDepthRegions;
 
-            BT_LOGGER.info("merging chromosome({})", chromosome);
+        public MergeTask(final String chromosome, final List<List<HighDepthRegion>> sampleRegions)
+        {
+            mChromosome = chromosome;
+            mSampleRegions = sampleRegions;
+            mCombinedRegions = Lists.newArrayList();
+            mHighDepthRegions = Lists.newArrayList();
+        }
+
+        public String chromosome() { return mChromosome; }
+        public List<HighDepthRegion> highDepthRegions() { return mHighDepthRegions; }
+
+        public Void call()
+        {
+            // first generate regions from across all samples
+            mergeSampleRegions();
+
+            // then merge regions from all samples
+            mHighDepthRegions.addAll(mergeChromosomeRegions(mCombinedRegions));
+            return null;
+        }
+
+        private void mergeSampleRegions()
+        {
+            BT_LOGGER.info("merging chromosome({})", mChromosome);
             int sampleIndex = 1;
 
-            for(List<HighDepthRegion> regions : entry.getValue())
+            for(List<HighDepthRegion> regions : mSampleRegions)
             {
                 BT_LOGGER.trace("merging sample({})", sampleIndex++);
 
@@ -197,9 +204,9 @@ public class HighDepthCombiner
                     int index = 0;
                     boolean matched = false;
 
-                    while(index < combinedRegions.size())
+                    while(index < mCombinedRegions.size())
                     {
-                        CombinedRegion combinedRegion = combinedRegions.get(index);
+                        CombinedRegion combinedRegion = mCombinedRegions.get(index);
                         if(positionsOverlap(region.start(), region.end(), combinedRegion.start(), combinedRegion.end()))
                         {
                             matched = true;
@@ -217,386 +224,191 @@ public class HighDepthCombiner
                     if(!matched)
                     {
                         CombinedRegion combinedRegion = new CombinedRegion(region);
-                        combinedRegions.add(index, combinedRegion);
+                        mCombinedRegions.add(index, combinedRegion);
                     }
                     else
                     {
                         // check of this matched region now overlaps with following ones
-                        CombinedRegion matchedRegion = combinedRegions.get(index);
+                        CombinedRegion matchedRegion = mCombinedRegions.get(index);
 
                         int nextIndex = index + 1;
-                        while(nextIndex < combinedRegions.size())
+                        while(nextIndex < mCombinedRegions.size())
                         {
-                            CombinedRegion combinedRegion = combinedRegions.get(nextIndex);
+                            CombinedRegion combinedRegion = mCombinedRegions.get(nextIndex);
 
                             if(!positionsOverlap(matchedRegion.start(), matchedRegion.end(), combinedRegion.start(), combinedRegion.end()))
                                 break;
 
                             matchedRegion.addRegion(combinedRegion);
-                            combinedRegions.remove(nextIndex);
+                            mCombinedRegions.remove(nextIndex);
                         }
                     }
                 }
             }
         }
-    }
 
-    private List<HighDepthRegion> mergeChromosomeRegions(final String chromosome, final List<CombinedRegion> combinedRegions)
-    {
-        List<HighDepthRegion> highDepthRegions = Lists.newArrayList();
-
-        for(CombinedRegion region : combinedRegions)
+        private List<HighDepthRegion> mergeChromosomeRegions(final List<CombinedRegion> combinedRegions)
         {
-            HighDepthRegion currentRegion = null;
+            List<HighDepthRegion> highDepthRegions = Lists.newArrayList();
 
-            for(int i = 0; i < region.Depth.size(); ++i)
+            for(CombinedRegion region : combinedRegions)
             {
-                PositionCount positionCount = region.Depth.get(i);
+                HighDepthRegion currentRegion = null;
 
-                if(positionCount.Count >= mMinSampleCount)
+                for(int i = 0; i < region.Depth.size(); ++i)
                 {
-                    if(currentRegion == null)
+                    PositionCount positionCount = region.Depth.get(i);
+
+                    if(positionCount.Count >= mMinSampleCount)
                     {
-                        currentRegion = new HighDepthRegion(new ChrBaseRegion(chromosome, positionCount.Position, positionCount.Position));
-                        currentRegion.DepthMin = positionCount.DepthMin;
-                        currentRegion.DepthMax = positionCount.DepthMax;
-                        currentRegion.SampleCount = positionCount.Count;
-                        highDepthRegions.add(currentRegion);
+                        if(currentRegion == null)
+                        {
+                            currentRegion = new HighDepthRegion(new ChrBaseRegion(mChromosome, positionCount.Position, positionCount.Position));
+                            currentRegion.DepthMin = positionCount.DepthMin;
+                            currentRegion.DepthMax = positionCount.DepthMax;
+                            currentRegion.SampleCount = positionCount.Count;
+                            highDepthRegions.add(currentRegion);
+                        }
+                        else
+                        {
+                            // extend the region
+                            currentRegion.setEnd(positionCount.Position);
+                            currentRegion.DepthMin = min(currentRegion.DepthMin, positionCount.DepthMin);
+                            currentRegion.DepthMax = max(currentRegion.DepthMax, positionCount.DepthMax);
+                            currentRegion.SampleCount = max(currentRegion.SampleCount, positionCount.Count);
+                        }
                     }
                     else
                     {
-                        // extend the region
-                        currentRegion.setEnd(positionCount.Position);
-                        currentRegion.DepthMin = min(currentRegion.DepthMin, positionCount.DepthMin);
-                        currentRegion.DepthMax = max(currentRegion.DepthMax, positionCount.DepthMax);
-                        currentRegion.SampleCount = max(currentRegion.SampleCount, positionCount.Count);
+                        if(currentRegion == null)
+                            continue;
+
+                        if(positionCount.Position - currentRegion.end() < HIGH_DEPTH_REGION_MAX_GAP)
+                            continue;
+
+                        // end this region
+                        currentRegion = null;
                     }
                 }
-                else
-                {
-                    if(currentRegion == null)
-                        continue;
-
-                    if(positionCount.Position - currentRegion.end() < HIGH_DEPTH_REGION_MAX_GAP)
-                        continue;
-
-                    // end this region
-                    currentRegion = null;
-                }
             }
-        }
 
-        // include the excluded region
-        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mRefGenVersion);
-        List<BaseRegion> referenceRegions = Lists.newArrayList();
+            // include the excluded region
+            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mRefGenVersion);
+            List<BaseRegion> referenceRegions = Lists.newArrayList();
 
-        if(excludedRegion.Chromosome.equals(chromosome))
-            referenceRegions.add(new BaseRegion(excludedRegion.start(), excludedRegion.end()));
+            if(excludedRegion.Chromosome.equals(mChromosome))
+                referenceRegions.add(new BaseRegion(excludedRegion.start(), excludedRegion.end()));
 
-        for(BaseRegion refRegion : referenceRegions)
-        {
-            // merge any adjacent regions
-            int index = 0;
-            boolean matched = false;
-            while(index < highDepthRegions.size())
+            for(BaseRegion refRegion : referenceRegions)
             {
-                HighDepthRegion region = highDepthRegions.get(index);
-
-                if(region.start() > refRegion.end())
-                    break;
-
-                if(positionsOverlap(region.start(), region.end(), refRegion.start(), refRegion.end()))
+                // merge any adjacent regions
+                int index = 0;
+                boolean matched = false;
+                while(index < highDepthRegions.size())
                 {
-                    matched = true;
+                    HighDepthRegion region = highDepthRegions.get(index);
 
-                    // check if subsequent regions can now be merged in - and average out their min and max depth
-                    long depthMinTotal = (long)region.baseLength() * region.DepthMin;
-                    long depthMaxTotal = (long)region.baseLength() * region.DepthMax;
-                    int regionBaseTotal = region.baseLength();
+                    if(region.start() > refRegion.end())
+                        break;
 
-                    int nextIndex = index + 1;
-                    while(nextIndex < highDepthRegions.size())
+                    if(positionsOverlap(region.start(), region.end(), refRegion.start(), refRegion.end()))
                     {
-                        HighDepthRegion nextRegion = highDepthRegions.get(nextIndex);
+                        matched = true;
 
-                        if(!positionsOverlap(nextRegion.start(), nextRegion.end(), refRegion.start(), refRegion.end()))
-                            break;
+                        // check if subsequent regions can now be merged in - and average out their min and max depth
+                        long depthMinTotal = (long)region.baseLength() * region.DepthMin;
+                        long depthMaxTotal = (long)region.baseLength() * region.DepthMax;
+                        int regionBaseTotal = region.baseLength();
 
-                        depthMinTotal += (long)nextRegion.baseLength() * nextRegion.DepthMin;
-                        depthMaxTotal += (long)nextRegion.baseLength() * nextRegion.DepthMax;
-                        regionBaseTotal += nextRegion.baseLength();
+                        int nextIndex = index + 1;
+                        while(nextIndex < highDepthRegions.size())
+                        {
+                            HighDepthRegion nextRegion = highDepthRegions.get(nextIndex);
+
+                            if(!positionsOverlap(nextRegion.start(), nextRegion.end(), refRegion.start(), refRegion.end()))
+                                break;
+
+                            depthMinTotal += (long)nextRegion.baseLength() * nextRegion.DepthMin;
+                            depthMaxTotal += (long)nextRegion.baseLength() * nextRegion.DepthMax;
+                            regionBaseTotal += nextRegion.baseLength();
 
 
-                        highDepthRegions.remove(nextIndex);
+                            highDepthRegions.remove(nextIndex);
+                        }
+
+                        region.setStart(min(region.start(), refRegion.start()));
+                        region.setEnd(max(region.end(), refRegion.end()));
+                        region.DepthMin = (int)round(depthMinTotal / (double)regionBaseTotal);
+                        region.DepthMax = (int)round(depthMaxTotal / (double)regionBaseTotal);
+                        break;
                     }
-
-                    region.setStart(min(region.start(), refRegion.start()));
-                    region.setEnd(max(region.end(), refRegion.end()));
-                    region.DepthMin = (int)round(depthMinTotal / (double)regionBaseTotal);
-                    region.DepthMax = (int)round(depthMaxTotal / (double)regionBaseTotal);
-                    break;
-                }
-                else
-                {
-                    ++index;
-                }
-            }
-
-            if(!matched)
-                highDepthRegions.add(index, new HighDepthRegion(new ChrBaseRegion(chromosome, refRegion.start(), refRegion.end())));
-        }
-
-        return highDepthRegions;
-    }
-
-    private class CombinedRegion
-    {
-        public List<PositionCount> Depth;
-
-        public CombinedRegion(final HighDepthRegion region)
-        {
-            Depth = Lists.newArrayList();
-
-            for(int pos = region.start(); pos <= region.end(); ++pos)
-            {
-                Depth.add(new PositionCount(pos, region.DepthMin, region.DepthMax));
-            }
-        }
-
-        public int start() { return Depth.get(0).Position; }
-        public int end() { return Depth.get(Depth.size() - 1).Position; }
-        public int length() { return Depth.size(); }
-
-        public void addBases(final HighDepthRegion region)
-        {
-            for(int pos = region.start(); pos <= region.end(); ++pos)
-            {
-                int existingIndex = 0;
-
-                boolean found = false;
-                while(existingIndex < Depth.size())
-                {
-                    PositionCount existing = Depth.get(existingIndex);
-
-                    if(pos == existing.Position)
+                    else
                     {
-                        found = true;
-                        ++existing.Count;
-                        existing.DepthMax = max(existing.DepthMax, region.DepthMax);
-                        break;
+                        ++index;
                     }
-
-                    if(pos < existing.Position)
-                        break;
-
-                    ++existingIndex;
                 }
 
-                if(!found)
-                {
-                    Depth.add(existingIndex, new PositionCount(pos, region.DepthMin, region.DepthMax));
-                }
+                if(!matched)
+                    highDepthRegions.add(index, new HighDepthRegion(new ChrBaseRegion(mChromosome, refRegion.start(), refRegion.end())));
             }
-        }
 
-        public void addRegion(final CombinedRegion other)
-        {
-            for(PositionCount otherCount : other.Depth)
+            // check min width for the region
+            if(mMinRegionSize > 0)
             {
-                int existingIndex = 0;
-
-                boolean found = false;
-                while(existingIndex < Depth.size())
+                for(HighDepthRegion highDepthRegion : highDepthRegions)
                 {
-                    PositionCount existing = Depth.get(existingIndex);
-
-                    if(otherCount.Position == existing.Position)
+                    if(highDepthRegion.baseLength() < mMinRegionSize)
                     {
-                        found = true;
-                        existing.Count += otherCount.Count;
-                        break;
+                        int diff = mMinRegionSize - highDepthRegion.baseLength();
+                        int halfExtension = diff / 2;
+
+                        highDepthRegion.setStart(highDepthRegion.start() - halfExtension);
+                        highDepthRegion.setEnd(highDepthRegion.end() + halfExtension);
                     }
-
-                    if(otherCount.Position < existing.Position)
-                        break;
-
-                    ++existingIndex;
                 }
 
-                if(!found)
-                {
-                    Depth.add(existingIndex, otherCount);
-                }
+                ChrBaseRegion.checkMergeOverlaps(highDepthRegions, true);
             }
-        }
 
-        public String toString() { return format("span(%d - %d) length(%d)", start(), end(), length()); }
-    }
-
-    private class PositionCount
-    {
-        public int Position;
-        public int Count;
-        public int DepthMin;
-        public int DepthMax;
-
-        public PositionCount(final int position, int depthMin, int depthMax)
-        {
-            Position = position;
-            Count = 1;
-            DepthMax = depthMax;
-            DepthMin = depthMin;
+            return highDepthRegions;
         }
     }
 
-    private void checkGeneRegion(final String geneName, final Set<String> addedGenes, boolean checkUpstream)
+    private void writeCombinedResults()
     {
-        if(addedGenes.contains(geneName))
-            return;
-
-        addedGenes.add(geneName);
-
-        GeneData geneData = mEnsemblDataCache.getGeneDataByName(geneName);
-        if(geneData == null)
-        {
-            ChrBaseRegion igRegion = getIgRegion(geneName, mRefGenVersion);
-
-            if(igRegion == null)
-                return;
-
-            geneData = new GeneData(geneName, geneName, igRegion.chromosome(), POS_STRAND, igRegion.start(), igRegion.end(), "");
-        }
-
-        List<HighDepthRegion> highDepthRegions = mFinalRegions.get(geneData.Chromosome);
-
-        if(highDepthRegions == null)
-            return;
-
-        int geneStartPos = checkUpstream && geneData.Strand == POS_STRAND ?
-                geneData.GeneStart - 10000 : geneData.GeneStart;
-
-        int geneEndPos = checkUpstream && geneData.Strand == NEG_STRAND ? geneData.GeneEnd + 10000 : geneData.GeneEnd;
-
-        int index = 0;
-        while(index < highDepthRegions.size())
-        {
-            HighDepthRegion highDepthRegion = highDepthRegions.get(index);
-
-            if(!positionsOverlap(geneStartPos, geneEndPos, highDepthRegion.start(), highDepthRegion.end()))
-            {
-                ++index;
-                continue;
-            }
-
-            int overlappingBases = max(min(geneData.GeneEnd, highDepthRegion.end()) - max(geneData.GeneStart, highDepthRegion.start()) + 1, 0);
-
-            String overlapType;
-
-            if(overlappingBases == 0)
-                overlapType = "UPSTREAM";
-            else if(positionsWithin(highDepthRegion.start(), highDepthRegion.end(), geneStartPos, geneEndPos))
-                overlapType = "WITHIN_GENE";
-            else if(positionsWithin(geneStartPos, geneEndPos, highDepthRegion.start(), highDepthRegion.end()))
-                overlapType = "CONTAINS_GENE";
-            else
-                overlapType = "OVERLAPS";
-
-            BT_LOGGER.debug("OVERLAP,{},{},{},{},{},{},{},{},{},{},{}",
-                    geneData.GeneName, geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
-                    highDepthRegion.start(), highDepthRegion.end(), overlappingBases, overlapType,
-                    highDepthRegion.SampleCount, highDepthRegion.DepthMin, highDepthRegion.DepthMax);
-
-            boolean removeGeneOverlaps = mRemoveGeneOverlaps && highDepthRegion.DepthMax < PANEL_HIGH_DEPTH_THRESHOLD;
-
-            if(!removeGeneOverlaps)
-            {
-                ++index;
-                continue;
-            }
-
-            // truncate or remove the region
-            if(positionsWithin(highDepthRegion.start(), highDepthRegion.end(), geneStartPos, geneEndPos)
-            || positionsWithin(geneStartPos, geneEndPos, highDepthRegion.start(), highDepthRegion.end()))
-            {
-                highDepthRegions.remove(index);
-                continue;
-            }
-
-            if(highDepthRegion.start() < geneStartPos)
-                highDepthRegion.setEnd(geneStartPos - 1);
-            else
-                highDepthRegion.setStart(geneEndPos + 1);
-
-            ++index;
-        }
-    }
-
-    private void checkKnownGeneOverlaps()
-    {
-        if(mEnsemblDataCache == null || (mDriverGenes.isEmpty() && !mKnownFusionCache.hasValidData()))
-            return;
-
-        BT_LOGGER.debug("OVERLAP,GeneName,Chromosome,GeneStart,GeneEnd,RegionStart,RegionEnd,OverlapBases,OverlapType,SampleCount,DepthMin,DepthMax");
-
-        // convert driver and fusion genes into regions to compare
-        Set<String> addedGenes = Sets.newHashSet();
-
-        mDriverGenes.forEach(x -> checkGeneRegion(x.gene(), addedGenes, false));
-
-        List<KnownFusionData> knownFusionData = mKnownFusionCache.getDataByType(KNOWN_PAIR);
-
-        if(knownFusionData != null)
-        {
-            knownFusionData.forEach(x -> checkGeneRegion(x.FiveGene, addedGenes, false));
-            knownFusionData.forEach(x -> checkGeneRegion(x.ThreeGene, addedGenes, true));
-        }
-
-        // check the IG regions
-        checkGeneRegion("IGH", addedGenes, false);
-        checkGeneRegion("IGK", addedGenes, false);
-        checkGeneRegion("IGL", addedGenes, false);
-    }
-
-    private BufferedWriter initialiseWriter(final String filename)
-    {
-        BT_LOGGER.info("writing output to {}", filename);
+        BT_LOGGER.info("writing output to {}", mOutputFile);
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(filename, false);
+            BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
             StringJoiner header = new StringJoiner(TSV_DELIM);
             header.add("Chromosome");
             header.add("PosStart");
             header.add("PosEnd");
-            header.add("SampleCount");
-            header.add("DepthMin");
-            header.add("DepthMax");
+
+            if(mWriteWithLabel)
+            {
+                header.add("Label");
+            }
+            else
+            {
+                header.add("SampleCount");
+                header.add("DepthMin");
+                header.add("DepthMax");
+            }
+
             writer.write(header.toString());
             writer.newLine();
 
-            return writer;
-        }
-        catch(IOException e)
-        {
-            BT_LOGGER.error(" failed to initialise writer: {}", e.toString());
-        }
-
-        return null;
-    }
-
-    private void writeCombinedResults()
-    {
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            String chrStr = mRefGenVersion.versionedChromosome(chromosome.toString());
-            List<HighDepthRegion> highDepthRegions = mFinalRegions.get(chrStr);
-
-            if(highDepthRegions == null || highDepthRegions.isEmpty())
-                continue;
-
-            try
+            for(HumanChromosome chromosome : HumanChromosome.values())
             {
+                String chrStr = mRefGenVersion.versionedChromosome(chromosome.toString());
+                List<HighDepthRegion> highDepthRegions = mFinalRegions.get(chrStr);
+
+                if(highDepthRegions == null || highDepthRegions.isEmpty())
+                    continue;
+
                 for(HighDepthRegion region : highDepthRegions)
                 {
                     if(region.baseLength() < MIN_REGION_LENGTH)
@@ -606,17 +418,28 @@ public class HighDepthCombiner
                     regionData.add(region.Chromosome);
                     regionData.add(String.valueOf(region.start() - 1));  // write as a BED file, so note the -1 on the start
                     regionData.add(String.valueOf(region.end()));
-                    regionData.add(String.valueOf(region.SampleCount));
-                    regionData.add(String.valueOf(region.DepthMin));
-                    regionData.add(String.valueOf(region.DepthMax));
-                    mWriter.write(regionData.toString());
-                    mWriter.newLine();
+
+                    if(mWriteWithLabel)
+                    {
+                        regionData.add(String.format("HIGH_DEPTH_%d-%d_SC=%d", region.DepthMin, region.DepthMax, region.SampleCount));
+                    }
+                    else
+                    {
+                        regionData.add(String.valueOf(region.SampleCount));
+                        regionData.add(String.valueOf(region.DepthMin));
+                        regionData.add(String.valueOf(region.DepthMax));
+                    }
+
+                    writer.write(regionData.toString());
+                    writer.newLine();
                 }
             }
-            catch(IOException e)
-            {
-                BT_LOGGER.error(" failed to write region: {}", e.toString());
-            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error(" failed to write final regions: {}", e.toString());
         }
     }
 
@@ -717,15 +540,19 @@ public class HighDepthCombiner
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
-        configBuilder.addPath(REF_BLACKLIST_FILE, false, "Reference blacklist file to include");
+        configBuilder.addPath(FIXED_GENE_REGIONS, false, "Reference blacklist file to include");
         configBuilder.addInteger(MIN_SAMPLE_COUNT, "Min sample count to produce region", DEFAULT_MIN_SAMPLE_COUNT);
+        configBuilder.addInteger(MIN_REGION_SIZE, "Min final region width", 0);
         configBuilder.addFlag(REMOVE_GENE_OVERLAPS, "Remove high depth regions that overlap driver or fusion genes");
+        configBuilder.addFlag(WRITE_LABEL, "Write depth info as 'Label' column for compatibility with panel definition");
         configBuilder.addConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
+
         addGenePanelOption(configBuilder, false);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

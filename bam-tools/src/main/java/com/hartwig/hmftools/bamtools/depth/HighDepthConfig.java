@@ -26,6 +26,7 @@ public class HighDepthConfig
     public final RefGenomeVersion RefGenVersion;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int PartitionSize;
+    public final int MinMapQual;
     public final int HighDepthThreshold;
     public final int Threads;
 
@@ -33,9 +34,11 @@ public class HighDepthConfig
     private static final String OUTPUT_FILE = "output_file";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String HIGH_DEPTH_THRESHOLD = "high_depth_threshold";
+    private static final String MIN_MAP_QUAL = "min_map_qual";
 
     public static final int DEFAULT_HIGH_DEPTH_THRESHOLD = 200;
     public static final int HIGH_DEPTH_REGION_MAX_GAP = 100;
+    public static final int DEFAULT_MIN_MAP_QUAL = 50;
 
     public HighDepthConfig(final ConfigBuilder configBuilder)
     {
@@ -46,6 +49,7 @@ public class HighDepthConfig
         Threads = parseThreads(configBuilder);
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         HighDepthThreshold = configBuilder.getInteger(HIGH_DEPTH_THRESHOLD);
+        MinMapQual = configBuilder.getInteger(MIN_MAP_QUAL);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -69,6 +73,7 @@ public class HighDepthConfig
                 HIGH_DEPTH_THRESHOLD, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(MIN_MAP_QUAL, "Min map qual", DEFAULT_MIN_MAP_QUAL);
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
