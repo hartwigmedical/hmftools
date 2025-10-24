@@ -23,7 +23,7 @@ import prep.PrepConfig;
 
 public class CobaltGcMediansPrep implements CategoryPrep
 {
-    PrepConfig mConfig;
+    private final PrepConfig mConfig;
 
     private static final String KEY_FLD_GC_BUCKET = "GCBucket";
 
