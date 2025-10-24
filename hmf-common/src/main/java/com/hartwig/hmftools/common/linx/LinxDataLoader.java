@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -113,7 +114,7 @@ public final class LinxDataLoader
         List<HomozygousDisruption> germlineHomozygousDisruptions = null;
         if(germlineDriverCatalogTsv != null)
         {
-            germlineHomozygousDisruptions = HomozygousDisruptionFactory.extractGermlineFromLinxDriverCatalogTsv(germlineDriverCatalogTsv);
+            germlineHomozygousDisruptions = Collections.emptyList();
         }
 
         return ImmutableLinxData.builder()

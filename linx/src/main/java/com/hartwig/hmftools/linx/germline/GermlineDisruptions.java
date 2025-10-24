@@ -23,7 +23,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
-import static com.hartwig.hmftools.linx.drivers.DeletionDrivers.isHomozygousDupDisruption;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 
@@ -382,14 +381,6 @@ public class GermlineDisruptions
             String geneName = "";
             DriverType driverType = GERMLINE_DISRUPTION; // default if meets the driver criteria
 
-            /*
-            // check for a homozygous DUP
-            if(var.type() == DUP && isHomozygousDup(var, standardDisruptions))
-            {
-                driverType = GERMLINE_HOM_DUP_DISRUPTION;
-            }
-            */
-
             for(SvDisruptionData disruptionData : entry.getValue())
             {
                 final GeneData gene = disruptionData.Gene;
@@ -502,23 +493,6 @@ public class GermlineDisruptions
                     geneName, cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount));
         }
-    }
-
-    private boolean isHomozygousDup(final SvVarData var, final List<SvDisruptionData> standardDisruptions)
-    {
-        if(var.type() != DUP)
-            return false;
-
-        SvDisruptionData startDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && x.IsStart).findFirst().orElse(null);
-
-        SvDisruptionData endDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && !x.IsStart).findFirst().orElse(null);
-
-        if(startDisruptionData == null || endDisruptionData == null || startDisruptionData.Gene != endDisruptionData.Gene)
-            return false;
-
-        return isHomozygousDupDisruption(var.getBreakend(true), var.getBreakend(false), var.getSvData().junctionCopyNumber());
     }
 
     private boolean isReportable(final SvDisruptionData disruptionData)

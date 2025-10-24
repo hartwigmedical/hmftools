@@ -1,2 +1,2 @@
 chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
-13	q13.1	BRCA2	ENST00000544455	true	GERMLINE_HOM_DUP_DISRUPTION	TSG	GERMLINE	1.0000	0	0	0	0	0	false	0.0000	0.0000
+13	q13.1	BRCA2	ENST00000544455	true	GERMLINE_DISRUPTION	TSG	GERMLINE	1.0000	0	0	0	0	0	false	0.0000	0.0000
