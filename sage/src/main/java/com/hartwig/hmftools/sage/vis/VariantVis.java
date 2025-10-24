@@ -112,7 +112,6 @@ import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -613,8 +612,13 @@ public class VariantVis
                 throw new RuntimeException("Multiple transcripts encountered.");
             }
 
-            AminoAcidVariant aaVariant = AminoAcidVariant.parse(impact.get(HGVS_INDEX));
-            aaVariants.add(aaVariant);
+            // TODO:
+            String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
+            if(aaVariantType.equals("missense_variant"))
+            {
+                AminoAcidVariant aaVariant = AminoAcidVariant.parse(impact.get(HGVS_INDEX));
+                aaVariants.add(aaVariant);
+            }
 
             if(!variantContext.getContig().equals(simpleVariant.chromosome()))
                 continue;
