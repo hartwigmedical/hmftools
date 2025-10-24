@@ -194,7 +194,7 @@ public final class BreakendGenePrep
             final BreakendTransData transcript, final List<ExonData> exonDataList, int position, byte orientation)
     {
         // collect exon phasings before the position on the upstream and after it on the downstream
-        boolean isUpstream = (transcript.gene().strand() * orientation) > 0;
+        boolean isUpstream = (transcript.breakendGeneData().strand() * orientation) > 0;
         boolean forwardStrand = transcript.TransData.posStrand();
 
         Map<Integer,Integer> alternativePhasing = transcript.getAlternativePhasing();
@@ -463,7 +463,7 @@ public final class BreakendGenePrep
         {
             // if the breakend is after (higher for +ve strand) the nearest preceding splice acceptor, then the distance will be positive
             // and mean that the transcript isn't interrupted when used in a downstream fusion
-            int preDistance = transcript.gene().strand() == POS_STRAND ? position - precedingGeneSAPos : precedingGeneSAPos - position;
+            int preDistance = transcript.breakendGeneData().strand() == POS_STRAND ? position - precedingGeneSAPos : precedingGeneSAPos - position;
             transcript.setSpliceAcceptorDistance(true, preDistance);
         }
     }

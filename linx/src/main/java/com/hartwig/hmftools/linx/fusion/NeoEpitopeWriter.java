@@ -138,8 +138,8 @@ public class NeoEpitopeWriter
                 validDownTrans.stream().map(x -> x.TransData.TransName).forEach(x -> sjDown.add(x));
 
                 NeoEpitopeFusion fusion = new NeoEpitopeFusion(
-                        upGene.geneId(), upGene.geneName(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.id(),
-                        downGene.geneId(), downGene.geneName(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.id(),
+                        upGene.geneId(), upGene.geneName(), upGene.chromosome(), upGene.position(), upGene.orientation(), upGene.varId(),
+                        downGene.geneId(), downGene.geneName(), downGene.chromosome(), downGene.position(), downGene.orientation(), downGene.varId(),
                         avgJcn, svCopyNumber, upGene.insertSequence(), chainLength, new String[] { sjUp.toString(), sjDown.toString()});
 
                 writeData(fusion);
@@ -278,7 +278,7 @@ public class NeoEpitopeWriter
         {
             for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
             {
-                if(fusion.SvIds[fs] == gene1.id() && fusion.SvIds[switchStream(fs)] == gene2.id()
+                if(fusion.SvIds[fs] == gene1.varId() && fusion.SvIds[switchStream(fs)] == gene2.varId()
                 && fusion.Chromosomes[fs].equals(gene1.chromosome()) && fusion.Chromosomes[switchStream(fs)].equals(gene2.chromosome())
                 && fusion.Positions[fs] == gene1.position() && fusion.Positions[switchStream(fs)] == gene2.position())
                 {

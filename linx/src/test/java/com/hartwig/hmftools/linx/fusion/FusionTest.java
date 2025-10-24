@@ -135,8 +135,8 @@ public class FusionTest
         assertNotNull(reportedFusion);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(450, reportedFusion.upstreamTrans().gene().position());
-        assertEquals(10850, reportedFusion.downstreamTrans().gene().position());
+        assertEquals(450, reportedFusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(10850, reportedFusion.downstreamTrans().breakendGeneData().position());
         assertEquals(0, reportedFusion.getExonsSkipped(true));
         assertEquals(0, reportedFusion.getExonsSkipped(false));
         assertTrue(reportedFusion.reportable());
@@ -361,8 +361,8 @@ public class FusionTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var3.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var3.id(), fusion.downstreamTrans().breakendGeneData().varId());
         assertTrue(validateFusionAnnotations(fusion, true, true));
 
         // test 2: this time a chain from the first to the last variant with the middle 2 going out to non-disruptive locations
@@ -400,8 +400,8 @@ public class FusionTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(var1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var4.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(var1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var4.id(), fusion.downstreamTrans().breakendGeneData().varId());
         assertTrue(validateFusionAnnotations(fusion, true, true));
 
         // test 4: invalid fusion, with a TI beyond the fusion ending in an exon upstream and skipping an exon downstream
@@ -441,8 +441,8 @@ public class FusionTest
 
         fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
         assertTrue(fusion != null);
-        assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var3.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var3.id(), fusion.downstreamTrans().breakendGeneData().varId());
 
         assertTrue(validateFusionAnnotations(fusion, false, true));
 
@@ -509,8 +509,8 @@ public class FusionTest
 
         fusion = tester.FusionAnalyser.getFusions().stream().filter(x -> x.validChainTraversal()).findFirst().orElse(null);
         assertTrue(fusion.phaseMatched());
-        assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var5.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var5.id(), fusion.downstreamTrans().breakendGeneData().varId());
 
         assertFalse(validateFusionAnnotations(fusion, false, false));
 
@@ -523,7 +523,7 @@ public class FusionTest
         final int varId7 = var7.id();
 
         fusion = tester.FusionAnalyser.getFusions().stream()
-                .filter(x -> x.upstreamTrans().gene().id() == varId3 && x.downstreamTrans().gene().id() == varId7).findFirst().orElse(null);
+                .filter(x -> x.upstreamTrans().breakendGeneData().varId() == varId3 && x.downstreamTrans().breakendGeneData().varId() == varId7).findFirst().orElse(null);
 
         assertNotNull(fusion);
         assertEquals(KNOWN_PAIR, fusion.knownType());
@@ -673,8 +673,8 @@ public class FusionTest
 
         GeneFusion fusion = tester.FusionAnalyser.getUniqueFusions().stream().filter(x -> x.reportable()).findFirst().orElse(null);
         assertTrue(fusion != null);
-        assertEquals(var3.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var3.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(var3.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var3.id(), fusion.downstreamTrans().breakendGeneData().varId());
 
         assertTrue(validateFusionAnnotations(fusion, true, true));
     }

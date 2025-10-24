@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -40,9 +38,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
-import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.CohortFileInterface;
@@ -290,7 +286,7 @@ public class DisruptionFinder implements CohortFileInterface
         {
             markNonDisruptive = true;
         }
-        else if(trans1.gene().id() == trans2.gene().id())
+        else if(trans1.breakendGeneData().varId() == trans2.breakendGeneData().varId())
         {
             // events wholly contained within the 3'UTR region are not disruptive
             if(trans1.codingType() == UTR_3P && trans2.codingType() == UTR_3P)
@@ -299,7 +295,7 @@ public class DisruptionFinder implements CohortFileInterface
             }
             else if(trans1.codingType() == UTR_3P || trans2.codingType() == UTR_3P)
             {
-                if(trans1.gene().type() == DUP)
+                if(trans1.breakendGeneData().svType() == DUP)
                     markNonDisruptive = true;
             }
         }
@@ -419,10 +415,10 @@ public class DisruptionFinder implements CohortFileInterface
         if(mRemovedDisruptions.containsKey(transcript))
             return;
 
-        if(!matchesDisruptionTranscript(transcript.gene().geneId(), transcript.TransData))
+        if(!matchesDisruptionTranscript(transcript.breakendGeneData().geneId(), transcript.TransData))
             return;
 
-        LNX_LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.gene().id(), context);
+        LNX_LOGGER.debug("excluding gene({}) svId({}) reason({})", transcript.geneName(), transcript.breakendGeneData().varId(), context);
 
         mRemovedDisruptions.put(transcript, context);
     }
@@ -912,7 +908,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         // check whether these breakends may belong to the same non-disrupted segment in any upstream transcript
         final BreakendGeneData downGene = downGenesList.stream()
-                .filter(x -> x.geneId().equals(upTrans.gene().geneId())).findFirst().orElse(null);
+                .filter(x -> x.geneId().equals(upTrans.breakendGeneData().geneId())).findFirst().orElse(null);
 
         if(downGene == null)
             return false;
@@ -987,8 +983,8 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
 
             final BreakendTransData transcript = entry.getKey();
-            final BreakendGeneData gene = transcript.gene();
-            final SvVarData var = svList.stream().filter(x -> x.id() == gene.id()).findFirst().orElse(null);
+            final BreakendGeneData gene = transcript.breakendGeneData();
+            final SvVarData var = svList.stream().filter(x -> x.id() == gene.varId()).findFirst().orElse(null);
 
             if(var == null)
                 continue;
@@ -998,7 +994,7 @@ public class DisruptionFinder implements CohortFileInterface
             StringBuilder sb = new StringBuilder();
 
             sb.append(String.format("%s\t%s\t%d\t%s\t%s\t%s\t%d\t%d",
-                    sampleId, transcript.reportableDisruption(), gene.id(), gene.isStart(),
+                    sampleId, transcript.reportableDisruption(), gene.varId(), gene.isStart(),
                     var.type(), gene.chromosome(), gene.position(), gene.orientation()));
 
             String exclusionReason = exclusionInfo;
