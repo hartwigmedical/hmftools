@@ -3,6 +3,7 @@ package cohort;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
+import static common.QseeConstants.APP_NAME;
 import static common.QseeConstants.QC_LOGGER;
 import static common.QseeConstants.QSEE_FILE_ID;
 
@@ -17,6 +18,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import feature.FeatureKey;
 import prep.CategoryPrep;
@@ -24,7 +26,7 @@ import prep.CategoryPrepFactory;
 import prep.PrepConfig;
 import prep.SamplePrepTask;
 
-public class PercentileRefDataBuilder
+public class CohortPercentilesTrainer
 {
     private final PrepConfig mConfig;
 
@@ -32,9 +34,14 @@ public class PercentileRefDataBuilder
     private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
     private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.####");
 
-    public PercentileRefDataBuilder(final PrepConfig config)
+    public CohortPercentilesTrainer(final PrepConfig config)
     {
         mConfig = config;
+    }
+
+    public static String generateFilename(final String basePath)
+    {
+        return basePath + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
     }
 
     private FeatureMatrix extractSampleData(CategoryPrep categoryPrep)
@@ -67,8 +74,6 @@ public class PercentileRefDataBuilder
 
     private void calcPercentiles(FeatureMatrix sampleFeatureMatrix, FeatureMatrix percentileFeatureMatrix)
     {
-        QC_LOGGER.info("Transforming feature values to percentiles");
-
         List<Runnable> featureTransformTasks = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
         {
@@ -150,9 +155,22 @@ public class PercentileRefDataBuilder
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
         }
 
-        String outputFile = mConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+        String outputFile = generateFilename(mConfig.OutputDir);
 
         QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
         writeToFile(outputFile, percentileFeatureMatrix);
+    }
+
+    public static void main(String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        PrepConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        PrepConfig prepConfig = new PrepConfig(configBuilder);
+
+        CohortPercentilesTrainer trainer = new CohortPercentilesTrainer(prepConfig);
+        trainer.run();
     }
 }
