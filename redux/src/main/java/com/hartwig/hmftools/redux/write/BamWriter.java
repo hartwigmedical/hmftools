@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
+import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.redux.common.FragmentStatus.PRIMARY;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-import com.hartwig.hmftools.redux.duplicate.DuplicateGroupCollapser;
 import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.common.FragmentStatus;
 import com.hartwig.hmftools.redux.common.ReadInfo;
@@ -38,6 +38,7 @@ public abstract class BamWriter
     private final MsJitterAnalyser mMsJitterAnalyser;
     private final BqrRegionReader mBqrProcessor;
 
+    // calculate per read frag coords where jitter allowances mean they may differ from their duplicate group's frag coords
     private final boolean mRecomputeFragCoords;
 
     protected final AtomicLong mNonConsensusReadCount;
@@ -55,7 +56,7 @@ public abstract class BamWriter
         mBqrProcessor = new BqrRegionReader(config.RefGenome, bqr.results(), bqr.regions());
 
         mRecomputeFragCoords = mReadDataWriter.enabled()
-                && (DuplicateGroupCollapser.isEnabled(mConfig.DuplicateConfig) || (isIllumina() && config.UMIs.Enabled));
+                && ((isSbx() && mConfig.DuplicateConfig.SbxMaxDuplicateDistance> 0) || (isIllumina() && config.UMIs.Enabled));
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -120,21 +121,21 @@ public abstract class BamWriter
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
             if(mReadDataWriter != null && mReadDataWriter.enabled())
-                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umiId());
+                mReadDataWriter.writeReadData(read, PRIMARY, fragCoords, group.umi());
         }
 
         // is poly-g umi collapsing the only reason this is a duplicate group?
         List<SAMRecord> remainingReads;
-        if(group.readCount() - group.polyGUmiReads().size() == 1)
+        if(group.totalReadCount() - group.polyGUmiReads().size() == 1)
         {
             SAMRecord read = group.reads().get(0);
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
+                read.setAttribute(UMI_ATTRIBUTE, group.umi());
 
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
-            writeRead(read, PRIMARY, fragCoords, group.umiId());
+            writeRead(read, PRIMARY, fragCoords, group.umi());
 
             remainingReads = group.polyGUmiReads();
         }
@@ -146,13 +147,13 @@ public abstract class BamWriter
         for(SAMRecord read : remainingReads)
         {
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
+                read.setAttribute(UMI_ATTRIBUTE, group.umi());
 
             FragmentStatus fragmentStatus = group.isPrimaryRead(read) ? PRIMARY : DUPLICATE;
             if(mRecomputeFragCoords)
                 fragCoords = FragmentCoords.fromRead(read, false).Key;
 
-            writeRead(read, fragmentStatus, fragCoords, group.umiId());
+            writeRead(read, fragmentStatus, fragCoords, group.umi());
         }
     }
 

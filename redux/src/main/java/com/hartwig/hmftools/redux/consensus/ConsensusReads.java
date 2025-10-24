@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
@@ -12,9 +15,12 @@ import static com.hartwig.hmftools.redux.ReduxConstants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
-import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SUPPLEMENTARY;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.SINGLE_READ;
 import static com.hartwig.hmftools.redux.consensus.IndelConsensusReads.selectPrimaryRead;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.INVALID_BASE;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.getInvalidBases;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.isValidRead;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SBX_CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.redux.duplicate.UmiConfig.READ_ID_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -41,6 +47,7 @@ public class ConsensusReads
     private final RefGenome mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
+    private final int mMaxConsensusReadCount;
 
     private final ConsensusStatistics mConsensusStats;
 
@@ -52,6 +59,7 @@ public class ConsensusReads
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
 
         mConsensusStats = consensusStats;
+        mMaxConsensusReadCount = isSbx() ? SBX_CONSENSUS_MAX_DEPTH : CONSENSUS_MAX_DEPTH;
     }
 
     @VisibleForTesting
@@ -76,20 +84,19 @@ public class ConsensusReads
 
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, templateRead.getFirstOfPairFlag());
-
-            return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
+            SAMRecord consensusRead = buildFromRead(templateRead, consensusReadId, firstInPair(templateRead));
+            return new ConsensusReadInfo(consensusRead, templateRead, SINGLE_READ);
         }
 
         List<SAMRecord> readsView;
 
-        if(reads.size() < CONSENSUS_MAX_DEPTH)
+        if(reads.size() < mMaxConsensusReadCount)
         {
             readsView = reads;
         }
         else
         {
-            readsView = Lists.newArrayList(reads.subList(0, CONSENSUS_MAX_DEPTH));
+            readsView = Lists.newArrayList(reads.subList(0, mMaxConsensusReadCount));
 
             if(readsView.stream().noneMatch(x -> x == templateRead)) // ensure it is included since it drives cigar selection
                 readsView.add(templateRead);
@@ -99,7 +106,7 @@ public class ConsensusReads
         boolean hasIndels = false;
 
         // work out the outermost boundaries - clipped and aligned - from amongst all reads
-        ConsensusState consensusState = new ConsensusState(isForward, templateRead.getContig(), mRefGenome);
+        ConsensusState consensusState = new ConsensusState(consensusReadId, isForward, templateRead.getContig(), mRefGenome);
 
         for(SAMRecord read : readsView)
         {
@@ -115,7 +122,7 @@ public class ConsensusReads
             {
                 mConsensusStats.registerOutcome(INDEL_FAIL);
 
-                logInvalidConsensusRead(readsView, null, consensusReadId, consensusState, INDEL_FAIL.toString());
+                logInvalidConsensusRead(readsView, null, consensusState, INDEL_FAIL.toString());
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
@@ -126,18 +133,15 @@ public class ConsensusReads
         }
         else
         {
-            consensusState.setBaseLength(templateRead.getBaseQualities().length);
-            consensusState.setBoundaries(templateRead);
+            consensusState.setFromRead(templateRead, false);
             mBaseBuilder.buildReadBases(readsView, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
-
-            consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
         }
 
         mConsensusStats.registerOutcome(consensusState.outcome());
 
         consensusState.setNumMutations();
-        SAMRecord consensusRead = createConsensusRead(consensusState, templateRead, consensusReadId);
+        SAMRecord consensusRead = createConsensusRead(consensusState, templateRead);
 
         if(isSbx())
         {
@@ -152,7 +156,14 @@ public class ConsensusReads
             ReadValidReason validReason = isValidRead(consensusRead);
             if(validReason != ReadValidReason.OK)
             {
-                logInvalidConsensusRead(readsView, consensusRead, consensusReadId, consensusState, validReason.toString());
+                logInvalidConsensusRead(readsView, consensusRead, consensusState, validReason.toString());
+
+                if(isSbx())
+                {
+                    // use a template read and continue on
+                    consensusRead = buildFromRead(templateRead, consensusReadId, firstInPair(templateRead));
+                    return new ConsensusReadInfo(consensusRead, templateRead, SINGLE_READ);
+                }
             }
         }
 
@@ -164,11 +175,11 @@ public class ConsensusReads
         mBaseBuilder.setChromosomLength(chromosomeLength);
     }
 
-    private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead, final String groupReadId)
+    private static SAMRecord createConsensusRead(final ConsensusState state, final SAMRecord templateRead)
     {
         SAMRecord record = new SAMRecord(templateRead.getHeader());
 
-        record.setReadName(groupReadId);
+        record.setReadName(state.ReadId);
         record.setReadBases(state.Bases);
         record.setBaseQualities(state.BaseQualities);
         record.setMappingQuality(state.MapQuality);
@@ -233,7 +244,7 @@ public class ConsensusReads
             return groupId + readId.substring(lastDelim + 1);
     }
 
-    public SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
+    public static SAMRecord buildFromRead(final SAMRecord read, final String groupReadId, boolean isFirstOfPair)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
@@ -248,12 +259,13 @@ public class ConsensusReads
         record.setAlignmentStart(read.getAlignmentStart());
         record.setCigar(read.getCigar());
         record.setFlags(read.getFlags());
-        record.setFirstOfPairFlag(isFirstOfPair);
-        record.setSecondOfPairFlag(!isFirstOfPair);
         record.setDuplicateReadFlag(false);
+
         if(!record.getReadPairedFlag())
             return record;
 
+        record.setFirstOfPairFlag(isFirstOfPair);
+        record.setSecondOfPairFlag(!isFirstOfPair);
         record.setMateReferenceName(read.getMateReferenceName());
         record.setMateAlignmentStart(read.getMateAlignmentStart());
         record.setMateReferenceIndex(read.getMateReferenceIndex());
@@ -264,20 +276,30 @@ public class ConsensusReads
     }
 
     private void logInvalidConsensusRead(
-            final List<SAMRecord> reads, final SAMRecord consensusRead, final String groupIdentifier, final ConsensusState consensusState,
-            final String reason)
+            final List<SAMRecord> reads, final SAMRecord consensusRead, final ConsensusState consensusState, final String reason)
     {
         if(!ReduxConfig.RunChecks)
             return;
 
-        RD_LOGGER.error("invalid consensus read({}): groupId({}) readCount({}) {} read: {}",
-                reason, groupIdentifier, reads.size(), consensusState.IsForward ? "forward" : "reverse",
-                consensusRead != null ? readToString(consensusRead) : "none");
+        String logReason = reason;
+
+        if(reason.equals(INVALID_BASE.toString()))
+        {
+            List<Integer> invalidBases = getInvalidBases(consensusRead);
+            logReason += format(" zero-bases%s", invalidBases);
+        }
+
+        RD_LOGGER.warn("invalid consensus read({}): readCount({}) {} read: {}",
+                logReason, reads.size(), consensusState.IsForward ? "forward" : "reverse",
+                consensusRead != null ? readToString(consensusRead) : format("%s:none", consensusState.ReadId));
 
         // reads
         for(int i = 0; i < reads.size(); ++i)
         {
-            RD_LOGGER.debug("read {}: {}", i, readToString(reads.get(i)));
+            SAMRecord read = reads.get(i);
+
+            RD_LOGGER.debug("read {}: unclippedPos({}-{}) {}",
+                    i, getUnclippedPosition(read, true), getUnclippedPosition(read, false), readToString(read));
         }
     }
 }

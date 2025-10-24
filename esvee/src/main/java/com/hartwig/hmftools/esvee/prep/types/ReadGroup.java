@@ -14,9 +14,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.beust.jcommander.internal.Nullable;
-import com.beust.jcommander.internal.Sets;
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;

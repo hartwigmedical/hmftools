@@ -19,9 +19,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
-import com.hartwig.hmftools.redux.duplicate.UmiConfig;
 
 import org.junit.Test;
 
@@ -124,17 +121,17 @@ public class UmiGroupsTest
 
         groups = buildUmiGroups(fragmentCoords, fragments, UMI_CONFIG);
         assertEquals(2, groups.size());
-        assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.readCount()).sum());
+        assertEquals(fragments.size(), groups.stream().mapToInt(x -> x.totalReadCount()).sum());
 
         group = groups.stream().filter(x -> x.reads().contains(frag11)).findFirst().orElse(null);
-        assertEquals(18, group.readCount());
+        assertEquals(18, group.totalReadCount());
         assertTrue(group.reads().contains(frag12));
         assertTrue(group.reads().contains(frag13));
         assertTrue(group.reads().contains(frag14));
         assertTrue(group.reads().contains(frag16));
 
         group = groups.stream().filter(x -> x.reads().contains(frag15)).findFirst().orElse(null);
-        assertEquals(5, group.readCount());
+        assertEquals(5, group.totalReadCount());
     }
 
     @Test

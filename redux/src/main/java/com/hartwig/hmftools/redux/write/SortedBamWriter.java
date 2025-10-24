@@ -44,6 +44,7 @@ public class SortedBamWriter
     private boolean mPerfDebug;
 
     private static SAMRecordCoordinateComparator READ_COMPARATOR = new SAMRecordCoordinateComparator();
+
     // wrap reads to allow for easy splitting SortedSet based on alignment start
     private class ReadOrAlignmentStart implements Comparable<ReadOrAlignmentStart>
     {

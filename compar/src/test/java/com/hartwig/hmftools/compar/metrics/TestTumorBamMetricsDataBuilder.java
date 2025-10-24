@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.metrics;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.metrics.ImmutableBamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.ImmutableBamMetricSummary;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestTumorBamMetricsDataBuilder
@@ -28,7 +28,7 @@ public class TestTumorBamMetricsDataBuilder
 
     private TumorBamMetricsData build()
     {
-        return new TumorBamMetricsData(ImmutableBamMetricsSummary.builder()
+        return new TumorBamMetricsData(ImmutableBamMetricSummary.builder()
                 .duplicatePercent(duplicatePercentage)
                 .coverageLevels(List.of(30, 60))
                 .coveragePercents(List.of(percentage30x, percentage60x))

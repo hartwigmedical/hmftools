@@ -44,11 +44,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.redux.PartitionReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.TestBamWriter;
-import com.hartwig.hmftools.redux.duplicate.DuplicateGroup;
-import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.TemplateReads;
-import com.hartwig.hmftools.redux.duplicate.PositionFragmentCounts;
-import com.hartwig.hmftools.redux.duplicate.UmiConfig;
 
 import org.junit.Test;
 
@@ -334,8 +330,8 @@ public class UmiDuplicatesTest
         assertEquals(1, positionFragmentCounts.Frequency);
 
         assertEquals(2, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.size());
-        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandFrequency);
-        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandFrequency);
+        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(2).DualStrandCount);
+        assertEquals(1, mPartitionReaderDuplexUMIs.statistics().DuplicateFrequencies.get(3).DualStrandCount);
     }
 
     @Test
@@ -489,10 +485,10 @@ public class UmiDuplicatesTest
         DuplicateGroup mateUmiGroup = mateUmiGroups.get(0);
 
         SAMRecord readTemplate = TemplateReads.selectTemplateRead(readUmiGroup.reads(), readUmiGroup.fragmentCoordinates());
-        String readConsensusReadName = formConsensusReadId(readTemplate, readUmiGroup.umiId());
+        String readConsensusReadName = formConsensusReadId(readTemplate, readUmiGroup.umi());
 
         SAMRecord mateTemplate = TemplateReads.selectTemplateRead(mateUmiGroup.reads(), mateUmiGroup.fragmentCoordinates());
-        String mateConsensusReadName = formConsensusReadId(mateTemplate, mateUmiGroup.umiId());
+        String mateConsensusReadName = formConsensusReadId(mateTemplate, mateUmiGroup.umi());
 
         assertEquals(readConsensusReadName, mateConsensusReadName);
     }

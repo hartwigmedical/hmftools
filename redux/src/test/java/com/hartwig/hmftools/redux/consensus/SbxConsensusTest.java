@@ -16,12 +16,14 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUA
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.extractDuplexBaseIndex;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildBaseQuals;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
 import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.createConsensusRead;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.DUPLEX_NO_CONSENSUS_QUAL;
 import static com.hartwig.hmftools.redux.consensus.SbxRoutines.SIMPLEX_NO_CONSENSUS_QUAL;
 
@@ -458,23 +460,77 @@ public class SbxConsensusTest
         String readCigarNet = "3S6M3S";
 
         ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
-        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(INDEL_SOFTCLIP, readInfo.Outcome);
         assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
-        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
-        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBases2, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigar2, readInfo.ConsensusRead.getCigarString());
 
-        // test 2: test in reverse direction
-        reads.clear();
-        read1.setReadNegativeStrandFlag(true);
-        read2.setReadNegativeStrandFlag(true);
-        reads.add(read1);
-        reads.add(read2);
+        // now with 3+ reads
+        SAMRecord read3 = cloneSamRecord(read1, READ_ID_GEN.nextId());
+        SAMRecord read4 = cloneSamRecord(read2, READ_ID_GEN.nextId());
+        reads.add(read3);
+        reads.add(read4);
 
         readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+
+        // test 2: test in reverse direction
+        //reads.clear();
+        reads.forEach(x -> x.setReadNegativeStrandFlag(true));
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+
+        reads.clear();
+
+        // soft-clips vs indels - indels are ignored from ref base advancement
+
+        // 1x2  : AAACC GGTT AAACC
+        //        MMIMM MMMM MMIMM
+
+        // 3:     TTTT GGTT GGGG
+        //        SSSS MMMM SSSS
+
+        // net: to match read 1
+
+        readBases1 = "AAACCGGTTAAACC";
+        readCigar1 = "2M1I8M1I2M";
+        readStart1 = 6;
+
+        readBases2 = "TTTTGGTTGGGG";
+        readCigar2 = "4S4M4S";
+        readStart2 = 10;
+
+        readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        reads.add(read1);
+        reads.add(cloneSamRecord(read1, READ_ID_GEN.nextId()));
+
+        readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart1, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readBases1, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigar1, readInfo.ConsensusRead.getCigarString());
+
+        // and in reverse
+        reads.forEach(x -> x.setReadNegativeStrandFlag(true));
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart1, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readBases1, readInfo.ConsensusRead.getReadString());
+        assertEquals(readCigar1, readInfo.ConsensusRead.getCigarString());
+
     }
 
     @Test
@@ -542,7 +598,7 @@ public class SbxConsensusTest
         //      SSM MMMM I MMMM S
 
         // net: AAC AACC C GGTT TAA
-        //      SSM MMMM I MMMM MSS
+        //      SSS MMMM I MMMM MSS
 
         readBases1 = "CAACCCGGTTAAA";
         readCigar1 = "1S4M1I4M3S";
@@ -556,8 +612,8 @@ public class SbxConsensusTest
         readCigar3 = "2S5M1I4M1S";
         readStart3 = 4; // unclipped start is 2
 
-        readBasesNet = "AAAAACCCGGTTTAA"; // takes Ms over Ss when disagrees
-        readCigarNet = "2S5M1I4M3S";
+        readBasesNet = "AACAACCCGGTTTAA";
+        readCigarNet = "3S4M1I4M3S";
 
         readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
         read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
@@ -575,139 +631,129 @@ public class SbxConsensusTest
 
         readInfo = createConsensusRead(mConsensusReads, reads, "");
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
-        assertEquals(readStart3, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
         assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
         assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
     }
 
     @Test
-    public void testSbxFinaliseReads()
+    public void testSbxIndelConsensusWithSoftClipsJitter2()
     {
-        int position = 1;
-        String refBases = REF_BASES.substring(position, 11);
+        List<SAMRecord> reads = Lists.newArrayList();
 
-        String readBases = "T" + refBases.substring(1);
+        // 1:  AACC   GGTT
+        //     SSSS   MMMM
 
-        byte[] baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
-        SAMRecord read = createSamRecord(readBases, position, baseQuals);
+        // 2:    CC T GGTT
+        //       MM I MMMM
 
-        SbxRoutines.finaliseRead(mRefGenome, read);
+        // 3:     C T GGTT
+        //        M I MMMM
 
-        for(int i = 0; i < read.getBaseQualities().length; ++i)
-        {
-            assertEquals(SBX_DUPLEX_QUAL, read.getBaseQualities()[i]);
-        }
+        // net: AACC T GGTT
+        //      SSMM I MMMM
+        // cigar: 2S 2M 1I 4M
 
-        ConsensusType consensusType = extractConsensusType(read);
-        int duplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(List.of(read));
-        assertEquals(ConsensusType.NONE, consensusType);
-        assertEquals(0, duplexBaseIndex);
+        String readBases1 = "AACCGGTT";
+        String readCigar1 = "4S4M";
+        int readStart1 = 5; // unclipped start is 1
 
-        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
-        read = createSamRecord(readBases, position, baseQuals);
-        read.setReadNegativeStrandFlag(true);
-        read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
-        setDupluxBaseIndex(read);
+        // pos:              34 5678
+        // index:            0123456
+        String readBases2 = "CCTGGTT";
+        String readCigar2 = "2M1I4M";
+        int readStart2 = 3; // unclipped start is 3
 
-        SbxRoutines.finaliseRead(mRefGenome, read);
+        String readBases3 = "CTGGTT";
+        String readCigar3 = "1M1I4M";
+        int readStart3 = 4; // unclipped start is 4
 
-        consensusType = extractConsensusType(read);
-        duplexBaseIndex = extractDuplexBaseIndex(read);
-        assertEquals(ConsensusType.DUAL, consensusType);
-        assertEquals(9, duplexBaseIndex);
+        String readBasesNet = "AACCTGGTT";
+        String readCigarNet = "2S2M1I4M";
 
-        // mark the transition point mid-way through the read
-        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
+        byte[] readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        read1.setReadNegativeStrandFlag(true);
+        reads.add(read1);
 
-        int lastIndex = readBases.length() - 1;
-        baseQuals[lastIndex] = RAW_SIMPLEX_QUAL;
-        baseQuals[lastIndex - 1] = RAW_SIMPLEX_QUAL;
-        baseQuals[lastIndex - 2] = RAW_SIMPLEX_QUAL;
+        byte[] readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        read2.setReadNegativeStrandFlag(true);
+        reads.add(read2);
 
-        read = createSamRecord(readBases, position, baseQuals);
-        read.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, ConsensusType.SINGLE.toString());
-        read.setReadNegativeStrandFlag(true);
-        setDupluxBaseIndex(read);
+        byte[] readBaseQuals3 = buildBaseQuals(readBases3.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read3 = createSamRecord(readBases3, readStart3, readBaseQuals3, readCigar3);
+        reads.add(read3);
+        reads.forEach(x -> x.setReadNegativeStrandFlag(true));
 
-        SbxRoutines.finaliseRead(mRefGenome, read);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart2, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
 
-        consensusType = extractConsensusType(read);
-        duplexBaseIndex = extractDuplexBaseIndex(read);
-        assertEquals(ConsensusType.DUAL, consensusType);
-        assertEquals(6, duplexBaseIndex);
+        // test a delete overlapping soft-clips and prior to aligned read starts
+        reads.clear();
 
-        // test duplex mismatch bases
-        baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
+        // 1:      T AACC
+        //         S MMMM
 
-        baseQuals[3] = SBX_DUPLEX_MISMATCH_QUAL;
-        baseQuals[7] = SBX_DUPLEX_MISMATCH_QUAL;
-        baseQuals[8] = SBX_DUPLEX_MISMATCH_QUAL;
+        // 2:     TT AACC
+        //        SS MMMM
 
-        //                x   xx
-        //             0123456789
-        // ref bases:  AAAAACCCCC
-        // read bases: AATAACCCCG
-        readBases = "AATAACCCCG";
-        read = createSamRecord(readBases, position, baseQuals);
-        SbxRoutines.finaliseRead(mRefGenome, read);
+        // 3:        AACC
+        //           MMMM
 
-        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[0]);
-        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[1]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[2]);
-        assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[3]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[4]);
-        assertEquals(SBX_DUPLEX_ADJACENT_2_3_QUAL, read.getBaseQualities()[5]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL_REF_MATCH, read.getBaseQualities()[6]);
-        assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[7]);
-        assertEquals(SBX_DUPLEX_MISMATCH_QUAL, read.getBaseQualities()[8]);
-        assertEquals(SBX_DUPLEX_ADJACENT_1_QUAL, read.getBaseQualities()[9]);
+        // 4:    GT  AACC
+        //       MMD MMMM
 
-        // test a conversion of an X to M - not sure if this will occur in actual BAMs
-        read = createSamRecord(readBases, position, baseQuals);
-        read.setCigarString("2X3I2X1D3X");
+        // new:  GT  AACC
+        //       MMD MMMM
+        // cigar: 2M 1D 4M
 
-        SbxRoutines.finaliseRead(mRefGenome, read);
-        assertEquals("2M3I2M1D3M", read.getCigarString());
+        readBases1 = "TAACC";
+        readCigar1 = "1S4M";
+        readStart1 = 10; // unclipped start is 9
+
+        readBases2 = "TTAACC";
+        readCigar2 = "2S4M";
+        readStart2 = 10; // unclipped start is 8
+
+        readBases3 = "AACC";
+        readCigar3 = "4M";
+        readStart3 = 10; // unclipped start is 10
+
+        String readBases4 = "GTAACC";
+        String readCigar4 = "2M1D4M";
+        int readStart4 = 7; // unclipped start is 7
+
+        readBasesNet = readBases4;
+        readCigarNet = readCigar4;
+
+        readBaseQuals1 = buildBaseQuals(readBases1.length(), RAW_SIMPLEX_QUAL);
+        read1 = createSamRecord(readBases1, readStart1, readBaseQuals1, readCigar1);
+        reads.add(read1);
+
+        readBaseQuals2 = buildBaseQuals(readBases2.length(), RAW_SIMPLEX_QUAL);
+        read2 = createSamRecord(readBases2, readStart2, readBaseQuals2, readCigar2);
+        reads.add(read2);
+
+        readBaseQuals3 = buildBaseQuals(readBases3.length(), RAW_SIMPLEX_QUAL);
+        read3 = createSamRecord(readBases3, readStart3, readBaseQuals3, readCigar3);
+        reads.add(read3);
+
+        byte[] readBaseQuals4 = buildBaseQuals(readBases4.length(), RAW_SIMPLEX_QUAL);
+        SAMRecord read4 = createSamRecord(readBases4, readStart4, readBaseQuals4, readCigar4);
+        reads.add(read4);
+
+        readInfo = createConsensusRead(mConsensusReads, reads, "");
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(readStart4, readInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(readCigarNet, readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBasesNet, readInfo.ConsensusRead.getReadString());
     }
 
-    @Test
-    public void testReplaceXWithMCigar()
-    {
-        // test a conversion of an X to M - not sure if this will occur in actual BAMs
-        int position = 1;
-        String readBases = REF_BASES.substring(position, 11);
-        byte[] baseQuals = buildBaseQuals(readBases.length(), RAW_DUPLEX_QUAL);
-
-        SAMRecord read = createSamRecord(readBases, position, baseQuals);
-        read.setCigarString("10X");
-
-        SbxRoutines.finaliseRead(mRefGenome, read);
-        assertEquals("10M", read.getCigarString());
-
-        // multiple
-        read = createSamRecord(readBases, position, baseQuals);
-        read.setCigarString("2X3I2X1D3X");
-
-        SbxRoutines.finaliseRead(mRefGenome, read);
-        assertEquals("2M3I2M1D3M", read.getCigarString());
-
-        // requires collapsing
-        read = createSamRecord(readBases, position, baseQuals);
-        read.setCigarString("2X2M2X2M2X");
-
-        SbxRoutines.finaliseRead(mRefGenome, read);
-        assertEquals("10M", read.getCigarString());
-    }
-
-    private static void setDupluxBaseIndex(final SAMRecord record)
-    {
-        int firstDuplexBaseIndex = SbxRoutines.findMaxDuplexBaseIndex(List.of(record));
-
-        if(firstDuplexBaseIndex >= 0)
-            record.setAttribute(SBX_DUPLEX_READ_INDEX_TAG, firstDuplexBaseIndex);
-    }
-
-    private static SAMRecord createSamRecord(final String readBases, final int position, final byte[] baseQualities)
+    protected static SAMRecord createSamRecord(final String readBases, final int position, final byte[] baseQualities)
     {
         String cigar = format("%dM", readBases.length());
         return createSamRecord(readBases, position, baseQualities, cigar);

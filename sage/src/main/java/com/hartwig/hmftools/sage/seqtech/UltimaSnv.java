@@ -87,8 +87,7 @@ class UltimaSnv extends UltimaQualModel
         else
         {
             // HP deletion
-            leftDeletion = UltimaHomopolymerDeletion.fromMnv(refBases[1], altBase, leftReadBase, rightReadBase);
-            // leftDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
+            leftDeletion = UltimaHomopolymerDeletion.fromMnv(0, refBases[1], altBase, leftReadBase, rightReadBase);
         }
 
         int upperHpLength = 0;
@@ -119,8 +118,7 @@ class UltimaSnv extends UltimaQualModel
         }
         else
         {
-            rightDeletion = UltimaHomopolymerDeletion.fromMnv(refBases[1], altBase, leftReadBase, rightReadBase);
-            // rightDeletion = new UltimaHomopolymerDeletion(variant, refBases[1], leftReadBase, rightReadBase);
+            rightDeletion = UltimaHomopolymerDeletion.fromMnv(0, refBases[1], altBase, leftReadBase, rightReadBase);
         }
 
         mLeftAdjust = leftAdjust;

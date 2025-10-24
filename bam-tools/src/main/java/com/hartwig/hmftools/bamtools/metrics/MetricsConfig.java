@@ -46,9 +46,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricsCommon;
 import com.hartwig.hmftools.common.region.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -202,7 +203,7 @@ public class MetricsConfig
 
     public String formFilename(final String fileType)
     {
-        String filename = OutputDir + SampleId + BamMetricsSummary.BAM_METRICS_FILE_ID;
+        String filename = OutputDir + SampleId + BamMetricsCommon.BAM_METRICS_FILE_ID;
 
         filename += "." + fileType;
 

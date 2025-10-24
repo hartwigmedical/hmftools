@@ -24,8 +24,8 @@ import com.hartwig.hmftools.common.region.TaggedRegion;
 
 public class TargetRegionsData
 {
-    private final Map<String, List<TaggedRegion>> mTargetRegions;
-    private final Map<String, List<Integer>> mTargetRegionsMsiIndels;
+    private final Map<String,List<TaggedRegion>> mTargetRegions;
+    private final Map<String,List<Integer>> mTargetRegionsMsiIndels;
 
     private int mTotalBases;
     private int mCodingBases;
@@ -67,6 +67,7 @@ public class TargetRegionsData
         loadTargetRegionsRatios(ratiosFile);
     }
 
+    public Map<String,List<TaggedRegion>> targetRegions() { return mTargetRegions; }
     public boolean hasTargetRegions()
     {
         return !mTargetRegions.isEmpty();
@@ -105,53 +106,39 @@ public class TargetRegionsData
     {
         return mCodingBases;
     }
-
     public int msiIndelSiteCount()
     {
         return mTargetRegionsMsiIndels.values().stream().mapToInt(List::size).sum();
     }
-
     public double tmlRatio()
     {
         return mTmlRatio;
     }
-
     public double tmbRatio()
     {
         return mTmbRatio;
     }
-
     public double msiIndelRatio()
     {
         return mMsiIndelRatio;
     }
-
     public double msi23BaseAF()
     {
         return mMsi23BaseAF;
     }
-
     public double msi4BaseAF()
     {
         return mMsi4BaseAF;
     }
-
     public int codingBaseFactor()
     {
         return mCodingBaseFactor;
     }
 
-    public List<TaggedRegion> targetRegions(String chromosome)
-    {
-        return mTargetRegions.get(chromosome);
-    }
-
     public void loadTargetRegionsBed(final String targetRegionsBed, final EnsemblDataCache ensemblDataCache)
     {
         if(targetRegionsBed == null)
-        {
             return;
-        }
 
         Map<Chromosome, List<TaggedRegion>> chrRegionsMap = TaggedRegion.loadRegionsFromBedFile(targetRegionsBed);
 

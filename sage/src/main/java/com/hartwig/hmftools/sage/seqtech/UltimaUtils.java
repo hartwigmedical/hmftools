@@ -4,10 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
+import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,8 +30,8 @@ public final class UltimaUtils
     protected static final byte INVALID_BASE = -1;
     private static final byte TP_ZERO_BASE_QUAL = 0;
 
-    // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
-    protected static final int HALF_PHRED_SCORE_SCALING = 3;
+    private static final byte T0_EXPECTED_QUAL_THRESHOLD_SIMPLE = 18;
+    private static final byte T0_EXPECTED_QUAL_THRESHOLD_COMPLEX = 28;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 
@@ -77,10 +79,11 @@ public final class UltimaUtils
 
         int homopolymerLength = indexEnd - indexStart + 1;
         char homopolymerBase = (char)record.getReadBases()[indexStart];
+        boolean isReverse = record.getReadNegativeStrandFlag();
 
         // check quals vs BQR
-        qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
-        qualValue2 = BQR_CACHE.calcTpRecalibratedQual(qualValue2, homopolymerLength, homopolymerBase, false);
+        qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false, isReverse);
+        qualValue2 = BQR_CACHE.calcTpRecalibratedQual(qualValue2, homopolymerLength, homopolymerBase, false, isReverse);
 
         if(qualValue1 < 0)
         {
@@ -96,10 +99,12 @@ public final class UltimaUtils
             byte tpValue = tpValues[middleIndex];
 
             if(tpValue == TP_ZERO_BASE_QUAL)
-                return BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, true);;
+                return BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, true, isReverse);
 
-            qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false);
-            byte bqrValue = BQR_CACHE.calcTpRecalibratedQual(BQR_CACHE.maxRawQual(), homopolymerLength, homopolymerBase, false);
+            qualValue1 = BQR_CACHE.calcTpRecalibratedQual(qualValue1, homopolymerLength, homopolymerBase, false, isReverse);
+
+            byte bqrValue = BQR_CACHE.calcTpRecalibratedQual(
+                    BQR_CACHE.maxRawQual(), homopolymerLength, homopolymerBase, false, isReverse);
 
             return (byte)min(bqrValue, qualValue1 + HALF_PHRED_SCORE_SCALING * 2 * abs(tpSearchValue - tpValue));
         }
@@ -247,7 +252,7 @@ public final class UltimaUtils
     // variant filters
     public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
     {
-        if(!primaryTumor.isIndel())
+        if(primaryTumor.isSnv() && !primaryTumor.readContext().hasIndelInCore())
             return false;
 
         UltimaVariantData ultimaData = primaryTumor.ultimaData();
@@ -267,7 +272,7 @@ public final class UltimaUtils
                 return true;
             else if(length == 2 && avgQual < 22)
                 return true;
-            else if(length == 3 && avgQual < 18)
+            else if(length == 3 && avgQual < 20)
                 return true;
             else if(length == 4 && avgQual < 18)
                 return true;
@@ -285,10 +290,11 @@ public final class UltimaUtils
         return false;
     }
 
-    public static boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor, final boolean nearbyVariant)
+    public static boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor)
     {
-        // TODO: make constants
-        int threshold = nearbyVariant ? 28 : 18;
+        int threshold = canSkipRealignedModels(primaryTumor.readContext()) & !primaryTumor.variant().isMNV() ?
+                T0_EXPECTED_QUAL_THRESHOLD_SIMPLE : T0_EXPECTED_QUAL_THRESHOLD_COMPLEX;
+
         return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
     }
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
@@ -20,12 +19,7 @@ public class BaseQualPair
         Qual = qual;
     }
 
-    public BaseQualPair(final byte base, final double qual)
-    {
-        this(base, (byte)round(qual));
-    }
-
-    public boolean isValid() { return Base == NO_BASE || Qual > 0; }
+    public boolean isValid() { return Base != NO_BASE && Qual > 0; }
 
     public String toString() { return format("%c:%d", (char)Base, Qual); }
 }

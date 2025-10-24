@@ -126,9 +126,9 @@ public class UmiStatistics
         ++posFragData.Frequency;
         posFragData.MaxCoordUmiCount = max(posFragData.MaxCoordUmiCount, maxCoordUmiCount);
 
-        if(duplicateGroup != null && duplicateGroup.readCount() > posFragData.MaxUmiReadsCount)
+        if(duplicateGroup != null && duplicateGroup.totalReadCount() > posFragData.MaxUmiReadsCount)
         {
-            posFragData.MaxUmiReadsCount = duplicateGroup.readCount();
+            posFragData.MaxUmiReadsCount = duplicateGroup.totalReadCount();
 
             posFragData.UmiGroupDetails = format("%s %s",
                     duplicateGroup.fragmentCoordinates().keyNonOriented(), duplicateGroup.reads().get(0).getReadName());
@@ -156,7 +156,7 @@ public class UmiStatistics
 
     public void recordUmiBaseStats(final UmiConfig umiConfig, final List<DuplicateGroup> umiGroups)
     {
-        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umiId()));
+        umiGroups.forEach(x -> recordUmiBaseFrequencies(x.umi()));
 
         // evaluate 1 or 2 UMI groups, including those with a single fragment which may have been under-clustered
         if(umiGroups.size() == 1)
@@ -199,12 +199,12 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup umiGroup)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.readCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(1, umiGroup.totalReadCount());
         ++umiGroupStats.GroupCount;
 
         for(SAMRecord read : umiGroup.allReads())
         {
-            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umiId());
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), umiGroup.umi());
 
             if(diff <= MAX_EDIT_DISTANCE)
                 ++umiGroupStats.EditDistanceFrequency[diff];
@@ -213,7 +213,7 @@ public class UmiStatistics
 
     private void recordUmiGroupStats(final UmiConfig umiConfig, final DuplicateGroup group1, final DuplicateGroup group2)
     {
-        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.readCount() + group2.readCount());
+        UmiGroupCounts umiGroupStats = getOrCreateUmiGroupCounts(2, group1.totalReadCount() + group2.totalReadCount());
         ++umiGroupStats.GroupCount;
 
         for(int groupIndex = 0; groupIndex <= 1; ++groupIndex)
@@ -223,7 +223,7 @@ public class UmiStatistics
 
             for(SAMRecord read : readsGroup.allReads())
             {
-                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umiId());
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(read.getReadName()), testGroup.umi());
 
                 if(diff <= MAX_EDIT_DISTANCE)
                     ++umiGroupStats.EditDistanceFrequency[diff];

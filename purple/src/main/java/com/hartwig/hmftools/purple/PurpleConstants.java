@@ -59,7 +59,8 @@ public class PurpleConstants
     public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
     public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
     
-    public static final double AMBIGUOUS_BAF_THRESHOLD = 0.535;
+    public static final double DEFAULT_AMBIGUOUS_BAF_THRESHOLD = 0.535;
+    public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;

@@ -403,7 +403,7 @@ public class PartitionReaderTest
     @Test
     public void testIlluminaPCRClusterCount()
     {
-        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()), ILLUMINA);
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()));
 
         Function<String, SAMRecord> getSamRecord =
                 readName -> createSamRecord(readName, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000, false, false, null, false, TEST_READ_CIGAR);

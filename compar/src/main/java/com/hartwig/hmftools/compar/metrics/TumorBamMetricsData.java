@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PE
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -19,12 +19,12 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class TumorBamMetricsData implements ComparableItem
 {
-    public final BamMetricsSummary Metrics;
+    public final BamMetricSummary Metrics;
 
     protected static final String FLD_PERCENTAGE_30X = "Percentage30X";
     protected static final String FLD_PERCENTAGE_60X = "Percentage60X";
 
-    public TumorBamMetricsData(final BamMetricsSummary metrics)
+    public TumorBamMetricsData(final BamMetricSummary metrics)
     {
         Metrics = metrics;
     }

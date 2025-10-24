@@ -66,7 +66,7 @@ public class CobaltOutputsComparison
             CB_LOGGER.warn("Cobalt ratios files have different lengths. Original size: {}. Comparison size: {}", originalRatios.size(), comparisonRatios.size());
             return;
         }
-        double epsilon = 0.0001;
+        double epsilon = 0.01;
         List<RawCobaltRatio> differences = new ArrayList<>();
         for(int i = 0; i < length; i++)
         {
@@ -78,6 +78,8 @@ public class CobaltOutputsComparison
                 if(difference != null)
                 {
                     differences.add(difference);
+                    differences.add(originalRatio);
+                    differences.add(comparisonRatio);
                 }
             }
             else
@@ -85,7 +87,7 @@ public class CobaltOutputsComparison
                 CB_LOGGER.warn("Original and comparison ratio files have mis-matched entries at index {}.", i);
             }
         }
-        CB_LOGGER.info("Number of differences in ratios: {}", differences.size());
+        CB_LOGGER.info("Number of differences in ratios: {}", differences.size()/3);
         String differencesFileName = checkAddDirSeparator(mOutputDirectory.getAbsolutePath()) + mSampleId + ".diff.tsv.gz";
         RawCobaltRatioFile.write(differencesFileName, differences);
     }

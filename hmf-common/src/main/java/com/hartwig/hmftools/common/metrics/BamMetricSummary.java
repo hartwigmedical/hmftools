@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.metrics;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.metrics.BamMetricsCommon.BAM_METRICS_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -21,10 +22,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BamMetricsSummary
+public abstract class BamMetricSummary
 {
-    public static final String BAM_METRICS_FILE_ID = ".bam_metric";
-
     public abstract long totalRegionBases();
     public abstract long totalReads();
     public abstract long duplicateReads();
@@ -152,7 +151,7 @@ public abstract class BamMetricsSummary
         Files.write(new File(filename).toPath(), lines);
     }
 
-    public static BamMetricsSummary read(final String filename) throws IOException
+    public static BamMetricSummary read(final String filename) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
 
@@ -183,7 +182,7 @@ public abstract class BamMetricsSummary
         int unmappedIndex = fieldsIndexMap.containsKey(UNMAPPED_COLUMN) ?
                 fieldsIndexMap.get(UNMAPPED_COLUMN) : fieldsIndexMap.get(UNPAIRED_COLUMN);
 
-        return ImmutableBamMetricsSummary.builder()
+        return ImmutableBamMetricSummary.builder()
                 .totalRegionBases(Long.parseLong(values[fieldsIndexMap.get(TOTAL_REGION_COLUMN)]))
                 .totalReads(Long.parseLong(values[fieldsIndexMap.get(TOTAL_READS_COLUMN)]))
                 .duplicateReads(Long.parseLong(values[fieldsIndexMap.get(DUPLICATES_COLUMN)]))

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -150,7 +151,7 @@ public class CircosData
         AmberBAFs = amberBAFsScaled;
 
         List<CobaltRatio> cobaltRatiosDownsampled = Downsampler.downsampleWithMinimumPerRegion(unadjustedCobaltRatios, positionsToScale, fileId);
-        List<CobaltRatio> cobaltRatiosBreakpointAligned = alignCobaltPositionsToBreakpoints(cobaltRatiosDownsampled, positionsToScale);
+        List<CobaltRatio> cobaltRatiosBreakpointAligned = centerCobaltPositions(cobaltRatiosDownsampled, positionsToScale);
         List<CobaltRatio> cobaltRatiosScaled = positionScaler.interpolateCobaltRatios(cobaltRatiosBreakpointAligned);
         CobaltRatios = cobaltRatiosScaled;
 
@@ -173,20 +174,23 @@ public class CircosData
         MaxFrame = Segments.stream().mapToInt(x -> x.Frame).max().orElse(0);
     }
 
-    private static final int COBALT_WINDOW_SIZE = 1000; // Importing CobaltConstants would lead to a dependency on Cobalt
-    private static List<CobaltRatio> alignCobaltPositionsToBreakpoints(List<CobaltRatio> cobaltRatios, List<GenomePosition> positionsToScale)
+    private static List<CobaltRatio> centerCobaltPositions(List<CobaltRatio> cobaltRatios, List<GenomePosition> positionsToScale)
     {
         /*
-        Cobalt positions refer to the start position of the window. Change the Cobalt positions such that:
+        Cobalt positions refer to the start position of a window. Shift the Cobalt positions such that:
 
-        If a window overlaps 2 segments, use the middle breakpoint as the Cobalt position
-        ----|----|----|----
-                 ^
+        If a Cobalt window overlaps:
 
-        If a window overlaps an odd number of segments: place the Cobalt position at the midpoint of the middle segment
-        ----|----|----
-               ^ (midpoint is right aligned)
-         */
+        - No plot segments, use the middle of the Cobalt window
+
+        - An even number of plot segments, use the middle breakpoint as the Cobalt position:
+          ----|----|----|----
+                   ^
+
+        - An odd number of plot segments, place the Cobalt position at the midpoint of the middle segment
+          ----|----|----
+                 ^ (note: midpoint is right aligned)
+        */
 
         List<CobaltRatio> realignedCobaltRatios = Lists.newArrayList();
         for(CobaltRatio cobaltRatio : cobaltRatios)
@@ -194,7 +198,7 @@ public class CircosData
             GenomeRegion cobaltRegion = GenomeRegions.create(
                     cobaltRatio.chromosome(),
                     cobaltRatio.position(),
-                    cobaltRatio.position() + COBALT_WINDOW_SIZE
+                    cobaltRatio.position() + GCProfileFactory.WINDOW_SIZE
             );
 
             List<GenomePosition> overlappingPositions = Lists.newArrayList();
@@ -204,24 +208,26 @@ public class CircosData
                     overlappingPositions.add(position);
             }
 
+            int midPosition;
             if(overlappingPositions.isEmpty())
             {
-                realignedCobaltRatios.add(cobaltRatio);
-                continue;
-            }
-
-            int midIndex = overlappingPositions.size() / 2;
-            int midPosition;
-            if(overlappingPositions.size() % 2 != 0)
-            {
-                // Odd no. of breakpoints = even no. of segments --> Take the breakpoint
-                midPosition = overlappingPositions.get(midIndex).position();
+                midPosition = cobaltRatio.position() + GCProfileFactory.WINDOW_SIZE / 2;
+                boolean test = true;
             }
             else
             {
-                // Even no. of breakpoints = odd no. of segments --> Take midpoint of the middle segment
-                int midIndexLeft = midIndex - 1;
-                midPosition = (overlappingPositions.get(midIndexLeft).position() + overlappingPositions.get(midIndex).position()) / 2;
+                int midIndex = overlappingPositions.size() / 2;
+                if(overlappingPositions.size() % 2 != 0)
+                {
+                    // Odd no. of breakpoints = even no. of segments --> Take the breakpoint
+                    midPosition = overlappingPositions.get(midIndex).position();
+                }
+                else
+                {
+                    // Even no. of breakpoints = odd no. of segments --> Take midpoint of the middle segment
+                    int midIndexLeft = midIndex - 1;
+                    midPosition = (overlappingPositions.get(midIndexLeft).position() + overlappingPositions.get(midIndex).position()) / 2;
+                }
             }
 
             realignedCobaltRatios.add(cobaltRatio.realign(midPosition));

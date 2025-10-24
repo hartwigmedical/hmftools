@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar.metrics;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.metrics.ImmutableBamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.ImmutableBamMetricSummary;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestGermlineBamMetricsDataBuilder
@@ -28,7 +28,7 @@ public class TestGermlineBamMetricsDataBuilder
 
     private GermlineBamMetricsData build()
     {
-        return new GermlineBamMetricsData(ImmutableBamMetricsSummary.builder()
+        return new GermlineBamMetricsData(ImmutableBamMetricSummary.builder()
                 .duplicatePercent(duplicatePercentage)
                 .coverageLevels(List.of(10, 20))
                 .coveragePercents(List.of(percentage10x, percentage20x))

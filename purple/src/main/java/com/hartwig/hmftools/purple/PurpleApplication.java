@@ -77,10 +77,9 @@ import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
+import com.hartwig.hmftools.purple.targeted.TargetRegionDataBuilder;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
-import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumbers;
-import com.hartwig.hmftools.purple.targeted.TargetRegionsDataSource;
 
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
@@ -380,13 +379,12 @@ public class PurpleApplication
 
         if(mConfig.TargetRegionsMode)
         {
-            TargetRegionsDataSource dataSource =
-                    new TargetRegionsDataSource(mReferenceData.TargetRegions, mReferenceData.RefGenVersion, segments);
-            TargetRegionsCopyNumbers targetRegionsCopyNumbers =
-                    new TargetRegionsCopyNumbers(dataSource, sampleData.Cobalt.Ratios, copyNumbers);
-            List<TargetRegionsCopyNumber> copyNumberData = targetRegionsCopyNumbers.copyNumbersData();
+            TargetRegionDataBuilder targetRegionDataBuilder = new TargetRegionDataBuilder(
+                    mReferenceData.RefGenVersion, mReferenceData.TargetRegions.targetRegions(), segments, cobaltData.Ratios, copyNumbers);
+            targetRegionDataBuilder.buildTargetRegionData();
+
             String fileName = TargetRegionsCopyNumberFile.generateFilename(mConfig.OutputDir, tumorId);
-            TargetRegionsCopyNumberFile.write(fileName, copyNumberData);
+            TargetRegionsCopyNumberFile.write(fileName, targetRegionDataBuilder.targetRegionData());
         }
 
         ChromosomeCopyNumbers ccm = new ChromosomeCopyNumbers(copyNumbers);

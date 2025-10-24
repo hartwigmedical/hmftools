@@ -26,9 +26,6 @@ import htsjdk.samtools.cram.ref.ReferenceSource
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -42,18 +39,6 @@ class CiderApplication(configBuilder: ConfigBuilder)
     @Throws(IOException::class, InterruptedException::class)
     fun run(args: Array<String>): Int
     {
-        val runDate = LocalDate.now()
-
-        /* logged by OA now
-        val versionInfo = VersionInfo("cider.version")
-        sLogger.info("Cider version: {}, build timestamp: {}",
-            versionInfo.version(),
-            versionInfo.buildTime().format(ISO_ZONED_DATE_TIME))
-
-        sLogger.info("run date: {}", runDate)
-        sLogger.info("run args: {}", args.joinToString(" "))
-        */
-
         FileWriterUtils.checkCreateOutputDir(mParams.outputDir)
         val startTimeMs = System.currentTimeMillis()
 
@@ -87,7 +72,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
             CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES
         )
 
-        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(layoutBuildResults.mapValues { (_, v) -> v.layouts })
+        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(
+            layoutBuildResults.mapValues { (_, v) -> v.layouts }, mParams.threadCount)
         var primerMatchList: List<VdjPrimerMatch> = emptyList()
 
         if (mParams.primerCsv != null)
@@ -176,8 +162,6 @@ class CiderApplication(configBuilder: ConfigBuilder)
         vjReadLayoutAdaptor: VJReadLayoutBuilder, readCandidates: Collection<VJReadCandidate>, threadCount: Int)
         : Map<VJGeneType, VJReadLayoutBuilder.LayoutBuildResult>
     {
-        val geneTypes = VJGeneType.values()
-
         // use a EnumMap such that the keys are ordered by the declaration
         val layoutResults: MutableMap<VJGeneType, VJReadLayoutBuilder.LayoutBuildResult> = EnumMap(VJGeneType::class.java)
 
@@ -188,7 +172,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             val futures: MutableMap<VJGeneType, Future<VJReadLayoutBuilder.LayoutBuildResult>> = EnumMap(VJGeneType::class.java)
 
-            for (geneType in geneTypes)
+            for (geneType in VJGeneType.entries)
             {
                 val readsOfGeneType = readCandidates
                     .filter { o: VJReadCandidate -> o.vjGeneType === geneType }
@@ -215,7 +199,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         // give each an ID
         var nextId = 1
-        for ((_, layoutResult) in layoutResults)
+        // Sort to give deterministic IDs
+        for ((_, layoutResult) in layoutResults.entries.sortedBy { it.key })
         {
             for (layout in layoutResult.layouts)
             {

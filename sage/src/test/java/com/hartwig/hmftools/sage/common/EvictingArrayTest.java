@@ -83,7 +83,7 @@ public class EvictingArrayTest
         int readLength = 200;
 
         EvictionHandler handler = new EvictionHandler();
-        EvictingArray evictingArray = new EvictingArray(readLength, handler);
+        EvictingArray evictingArray = new EvictingArray(400, 280, handler);
 
         int capacity = evictingArray.capacity();
         assertEquals(readLength * 2, capacity);

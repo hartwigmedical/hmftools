@@ -51,7 +51,14 @@ public class UnmapStats
     public String toString()
     {
         return format("reads(%d) mates(%d) both(%d existing=%d) supps(read=%d align=%d) seconds(%d) reasons(depth=%d softClip=%d chimeric=%d)",
-            ReadCount.get(), MateCount.get(), FullyUnmappedCount.get(), ExistingUnmapped.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
+                ReadCount.get(), MateCount.get(), FullyUnmappedCount.get(), ExistingUnmapped.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
                 SecondaryCount.get(), HighDepthCount.get(), LongSoftClipCount.get(), ChimericCount.get());
+    }
+
+    public String unpairedStats()
+    {
+        return format("reads(%d) existingUnmapped(%d) supps(read=%d align=%d) seconds(%d) reasons(depth=%d softClip=%d)",
+                FullyUnmappedCount.get(), ExistingUnmapped.get(), SupplementaryCount.get(), SuppAlignmentCount.get(),
+                SecondaryCount.get(), HighDepthCount.get(), LongSoftClipCount.get());
     }
 }

@@ -24,5 +24,6 @@ public final class CommonFields
     // variants
     public static final String FLD_REF = "Ref";
     public static final String FLD_ALT = "Alt";
+    public static final String FLD_TIER = "Tier";
 
 }

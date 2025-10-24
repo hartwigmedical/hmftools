@@ -116,7 +116,7 @@ public class ReadCacheTest
 
         assertEquals(1, fragCoordReads.SingleReads.size());
         assertEquals(1, fragCoordReads.DuplicateGroups.size());
-        assertEquals(3, fragCoordReads.DuplicateGroups.get(0).readCount());
+        assertEquals(3, fragCoordReads.DuplicateGroups.get(0).totalReadCount());
 
         assertEquals(0, readCache.cachedReadGroups());
         assertEquals(0, readCache.cachedReadCount());

@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -55,7 +55,7 @@ public class VirusInterpreterApplication
         PurityContext purityContext = PurityContextFile.read(config.PurpleDir, config.SampleId);
 
         VI_LOGGER.info("Running coverage analysis based on tumor WGS metrics file {}", config.TumorMetricsDir);
-        BamMetricsSummary tumorMetrics = BamMetricsSummary.read(BamMetricsSummary.generateFilename(config.TumorMetricsDir, config.SampleId));
+        BamMetricSummary tumorMetrics = BamMetricSummary.read(BamMetricSummary.generateFilename(config.TumorMetricsDir, config.SampleId));
         CoveragesAnalysis coveragesAnalysis = CoveragesAnalyzer.run(purityContext, tumorMetrics);
         VI_LOGGER.info("Determined the expected clonal coverage to be {}", coveragesAnalysis.ExpectedClonalCoverage);
 

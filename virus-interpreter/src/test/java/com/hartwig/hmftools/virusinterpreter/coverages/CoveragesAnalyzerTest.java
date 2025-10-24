@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 
@@ -28,7 +28,7 @@ public class CoveragesAnalyzerTest
     {
         PurityContext purityContext = PurityContextFile.readWithQC(PURPLE_QC_FILE, PURPLE_PURITY_TSV);
 
-        BamMetricsSummary tumorMetrics = BamMetricsSummary.read(TUMOR_SAMPLE_WGS_METRICS);
+        BamMetricSummary tumorMetrics = BamMetricSummary.read(TUMOR_SAMPLE_WGS_METRICS);
 
         double expectedClonalCoverage = CoveragesAnalyzer.calculateExpectedClonalCoverage(purityContext, tumorMetrics);
         assertEquals(31.94, expectedClonalCoverage, 0.1);

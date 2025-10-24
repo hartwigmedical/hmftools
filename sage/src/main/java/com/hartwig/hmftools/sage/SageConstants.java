@@ -13,6 +13,8 @@ public class SageConstants
 
     public static final int DEFAULT_READ_LENGTH = 151;
 
+    public static final int NON_ILLUMINA_MAX_READ_LENGTH = 800;
+
     // read context building
     public static final int DEFAULT_FLANK_LENGTH = 10;
     public static final int MIN_CORE_DISTANCE = 2;
@@ -56,6 +58,8 @@ public class SageConstants
     public static final double MSI_JITTER_MIN_RATIO_HOTSPOT = 1.5;
     public static final double MSI_JITTER_RATIO_HOTSPOT_VAF = 0.025;
 
+    public static final int INDEL_UNCERTAIN_BASE_REPEAT_MIN = 3;
+
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_QUAL = 50;
     public static final double DEFAULT_HARD_MIN_TUMOR_VAF = 0.002;
@@ -64,8 +68,6 @@ public class SageConstants
     public static final int DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC = 10;
     public static final double MAX_INDEL_GERMLINE_ALT_SUPPORT = 0.01;
     public static final double MAX_GERMLINE_REL_RAW_QUAL_RATIO = 0.1;
-
-    public static final double MAX_GERMLINE_VAF_THRESHOLD_MAX = 0.1;
 
     public static final double MAX_GERMLINE_QUAL_HET_TUMOR_VAF = 0.5;
     public static final double MAX_GERMLINE_QUAL_PROB_HOTSPOT = 0.01;
@@ -112,19 +114,13 @@ public class SageConstants
 
     public static final double REALIGNED_MAX_PERC = 0.7;
 
-    public static final double ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD = 1e-4;
-
-    public static final double PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT = 0.1;
-    public static final double PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR = 3;
-    public static final double PANEL_MAX_GERMLINE_VAF_BOOST = 0.01;
-
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     // quality calcs
     public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     public static final double JITTER_QUAL_BOOST_MAX_PERC = 1.3;
-    public static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
+    public static final byte DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
 
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;

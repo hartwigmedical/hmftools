@@ -33,33 +33,6 @@ public class ChrBaseRegionTest
     }
 
     @Test
-    public void splitBySingleOverlapTest()
-    {
-        ChrBaseRegion gr0 = cbr(900, 2100, theRegion.chromosome());
-
-        List<Pair<ChrBaseRegion, ChrBaseRegion>> found = theRegion.splitByOverlappingRegions(of(gr0));
-        assertEquals(1, found.size());
-        assertEquals(theRegion, found.get(0).getKey());
-        assertEquals(gr0, found.get(0).getValue());
-    }
-
-    @Test
-    public void splitByOverlapsTest()
-    {
-        ChrBaseRegion gr1 = cbr(951, 1050, theRegion.chromosome());
-        ChrBaseRegion gr2 = cbr(1051, 1250, theRegion.chromosome());
-        ChrBaseRegion gr3 = cbr(1251, 1550, theRegion.chromosome());
-        ChrBaseRegion gr4 = cbr(1551, 2500, theRegion.chromosome());
-
-        List<Pair<ChrBaseRegion, ChrBaseRegion>> found = theRegion.splitByOverlappingRegions(of(gr1, gr2, gr3, gr4));
-        assertEquals(4, found.size());
-        assertEquals(Pair.of(cbr(theRegion.start(), gr1.end(), theRegion.Chromosome), gr1), found.get(0));
-        assertEquals(Pair.of(gr2, gr2), found.get(1));
-        assertEquals(Pair.of(gr3, gr3), found.get(2));
-        assertEquals(Pair.of(cbr(gr4.start(), theRegion.end(), theRegion.Chromosome), gr4), found.get(3));
-    }
-
-    @Test
     public void findIntersectingRegionsWithEmpty()
     {
         Assert.assertTrue(theRegion.findOverlaps(of()).isEmpty());

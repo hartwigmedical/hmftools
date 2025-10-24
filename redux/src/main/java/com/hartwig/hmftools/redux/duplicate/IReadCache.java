@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux.duplicate;
 
-import com.hartwig.hmftools.redux.duplicate.FragmentCoordReads;
-
 import htsjdk.samtools.SAMRecord;
 
 public interface IReadCache

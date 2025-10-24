@@ -21,7 +21,7 @@ public final class BamUtils
     public static final String BAM_VALIDATION_STRINGENCY_DESC = "BAM validation: STRICT (default), LENIENT or SILENT";
 
     // by default, log BAM read errors but do not fail
-    public static final String DEFAULT_STRINGENCY_STR = ValidationStringency.LENIENT.toString();
+    public static final String DEFAULT_STRINGENCY_STR = ValidationStringency.SILENT.toString();
 
     public static void addValidationStringencyOption(final ConfigBuilder configBuilder)
     {

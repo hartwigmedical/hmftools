@@ -8,13 +8,17 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_CONSENSUS_TYPES;
+import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_POSITIONS;
+import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_QUAL;
+import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_TNCS;
 
 import java.util.Collection;
 import java.util.List;
@@ -336,13 +340,6 @@ public class BqrRegionReader implements CigarHandler
         bqData.setHasIndel();
     }
 
-    // debug only
-    private static final boolean LOG_READ_INFO = false;
-    private static final List<String> LOG_TNCS = List.of(); // "AAA"
-    private static final List<Byte> LOG_QUAL = List.of((byte)10,(byte)40); // (byte)10, (byte)15
-    private static final List<Byte> LOG_POSITIONS = List.of();
-    private static final List<ConsensusType> LOG_CONSENSUS_TYPES = List.of(SINGLE);
-
     @Override
     public void handleAlignment(final SAMRecord record, final CigarElement cigarElement, final int startReadIndex, final int refPos)
     {
@@ -355,6 +352,8 @@ public class BqrRegionReader implements CigarHandler
         {
             duplexBaseIndex = SbxBamUtils.extractDuplexBaseIndex(record);
         }
+
+        byte[] t0Values = isUltima() ? extractT0Values(record) : null;
 
         for(int i = 0; i < cigarElement.getLength(); i++)
         {
@@ -394,7 +393,7 @@ public class BqrRegionReader implements CigarHandler
             if(BaseQualAdjustment.isUncertainBaseQual(quality))
                 continue;
 
-            if(isUltima() && quality < ULTIMA_MAX_QUAL)
+            if(isUltima() && belowMaxUltimaQual(record, readIndex, t0Values))
                 continue;
 
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
@@ -405,7 +404,7 @@ public class BqrRegionReader implements CigarHandler
             if(duplexBaseIndex >= 0 && consensusType == DUAL && !SbxBamUtils.inDuplexRegion(readPosStrand, duplexBaseIndex, readIndex))
                 consensusType = SINGLE;
 
-            if(LOG_READ_INFO)
+            if(BqrConfig.LogDebug)
             {
                 String tncStr = new String(trinucleotideContext);
 
@@ -425,6 +424,17 @@ public class BqrRegionReader implements CigarHandler
 
         if(readUsed)
             ++mTotalReadsUsed;
+    }
+
+    private static boolean belowMaxUltimaQual(SAMRecord record, int readIndex, byte[] t0Values)
+    {
+        for(int i = readIndex - 1; i <= readIndex + 1; ++i)
+        {
+            if(i >= 0 && i < record.getReadLength() && record.getBaseQualities()[i] < ULTIMA_MAX_QUAL)
+                return true;
+        }
+
+        return t0Values[readIndex] < ULTIMA_MAX_QUAL;
     }
 
     private void purgeBaseDataList(int currentReadStartPos)

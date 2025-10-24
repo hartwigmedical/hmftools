@@ -2,7 +2,7 @@ package com.hartwig.hmftools.teal
 
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary
+import com.hartwig.hmftools.common.metrics.BamMetricSummary
 import com.hartwig.hmftools.common.purple.PurityContextFile
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import org.apache.logging.log4j.LogManager
@@ -56,7 +56,7 @@ class TealPipelineApp(configBuilder: ConfigBuilder)
         if (pipelineParams.tumorWgsMetrics != null)
         {
             // we need to try to guess the file name
-            val metrics = BamMetricsSummary.read(pipelineParams.tumorWgsMetrics!!)
+            val metrics = BamMetricSummary.read(pipelineParams.tumorWgsMetrics!!)
             logger.info("Loaded tumor WGS metrics from {}", pipelineParams.tumorWgsMetrics)
             tealParams.tumorDuplicateProportion = metrics.duplicatePercent()
         }
@@ -64,7 +64,7 @@ class TealPipelineApp(configBuilder: ConfigBuilder)
         if (pipelineParams.referenceWgsMetrics != null)
         {
             // we need to try to guess the file name
-            val metrics = BamMetricsSummary.read(pipelineParams.referenceWgsMetrics!!)
+            val metrics = BamMetricSummary.read(pipelineParams.referenceWgsMetrics!!)
             logger.info("Loaded reference WGS metrics from {}", pipelineParams.referenceWgsMetrics)
             tealParams.germlineDuplicateProportion = metrics.duplicatePercent()
         }

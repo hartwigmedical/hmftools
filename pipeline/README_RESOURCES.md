@@ -93,10 +93,8 @@ SageGermlinePon.1000x.<genome_version>.tsv.
 # Region definitions
 KnownHotspots.somatic.<genome_version>.vcf.gz
 KnownHotspots.germline.<genome_version>.vcf.gz
-ActionableCodingPanel.<genome_version>.bed.gz
 NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed.gz # For GRCh37
 HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_nosomaticdel_noCENorHET7.bed.gz # For GRCh38
-CoverageCodingPanel.<genome_version>.bed.gz
 ```
 
 ### SV (structural variant) annotations

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.common.metrics.WGSMetricQC.hasSufficientCoverage;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.METRIC;
 
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 
 import org.jooq.DSLContext;
 
@@ -16,7 +16,7 @@ public class MetricDAO
         this.context = context;
     }
 
-    void writeMetrics(final String sample, final BamMetricsSummary tumorMetrics, final BamMetricsSummary refMetrics)
+    void writeMetrics(final String sample, final BamMetricSummary tumorMetrics, final BamMetricSummary refMetrics)
     {
         deleteMetricForSample(sample);
 

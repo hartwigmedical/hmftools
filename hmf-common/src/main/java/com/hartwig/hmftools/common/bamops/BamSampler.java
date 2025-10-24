@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class BamSampler
@@ -73,6 +74,7 @@ public class BamSampler
             return false;
 
         SamReader samReader = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT)
                 .referenceSource(new ReferenceSource(mRefGenome.refGenomeFile()))
                 .open(new File(bamFile));
 

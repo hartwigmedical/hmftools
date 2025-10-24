@@ -2,7 +2,9 @@ package com.hartwig.hmftools.redux.consensus;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
+import static com.hartwig.hmftools.redux.consensus.SbxIndelConsensus.determineIndelConsensus;
 import static com.hartwig.hmftools.redux.duplicate.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
@@ -12,7 +14,6 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusState.alignedOrClipp
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
-import static com.hartwig.hmftools.redux.consensus.SbxRoutines.determineIndelConsensus;
 
 import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
@@ -21,6 +22,8 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -40,13 +43,9 @@ public class IndelConsensusReads
 
         if(!hasCigarMismatch)
         {
-            int baseLength = templateRead.getReadBases().length;
-            consensusState.setBaseLength(baseLength);
-            consensusState.setBoundaries(templateRead);
-
+            consensusState.setFromRead(templateRead, false);
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
-            consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
             return;
         }
 
@@ -152,8 +151,15 @@ public class IndelConsensusReads
                     if(read.elementType() == I)
                         read.skipInsertElement();
 
-                    if(deleteOrSplit(read.elementType()) || alignedOrClipped(read.elementType()))
+                    if(deleteOrSplit(read.elementType()))
                     {
+                        read.moveNextBase();
+                    }
+                    else if(alignedOrClipped(read.elementType()))
+                    {
+                        if(read.refPosition() == newRefPosition)
+                            break;
+
                         read.moveNextBase();
                     }
                 }
@@ -169,12 +175,16 @@ public class IndelConsensusReads
         for(int i = 0; i < selectedElement.getLength(); ++i)
         {
             boolean hasMismatch = false;
-            int maxQual = -1;
+            byte maxQual = BaseQualAdjustment.BASE_QUAL_MINIMUM;
             byte firstBase = NO_BASE;
 
-            for(int r = 0; r < readCount; ++r)
+            if(i > 0) // reset consensus arrays
             {
-                locationBases[r] = NO_BASE;
+                for(int r = 0; r < readCount; ++r)
+                {
+                    locationBases[r] = NO_BASE;
+                    locationQuals[r] = 0;
+                }
             }
 
             for(int r = 0; r < readCount; ++r)
@@ -219,12 +229,17 @@ public class IndelConsensusReads
                     }
                     else if(selectedElement.getOperator() == I)
                     {
-                        if(read.elementType() == M || deleteOrSplit(read.elementType()))
+                        if(read.elementType() == M || deleteOrSplit(read.elementType()) || read.elementType() == S)
                         {
                             moveNext = false;
                             useBase = false;
                         }
                     }
+                }
+                else if(selectedElement.getOperator() == I && read.elementLength() != selectedElement.getLength() && isSbx())
+                {
+                    // only apply this additional check to SBX to force it to use quals of reads matching the selected insert exactly
+                    useBase = false;
                 }
 
                 if(useBase)
@@ -237,17 +252,17 @@ public class IndelConsensusReads
                     else
                         hasMismatch |= locationBases[r] != firstBase;
 
-                    maxQual = max(locationQuals[r], maxQual);
+                    maxQual = maxQual(locationQuals[r], maxQual);
                 }
 
                 if(moveNext)
                     read.moveNextBase();
             }
 
-            if(!hasMismatch)
+            if(!hasMismatch && firstBase != NO_BASE)
             {
                 consensusState.Bases[baseIndex] = firstBase;
-                consensusState.BaseQualities[baseIndex] = (byte)maxQual;
+                consensusState.BaseQualities[baseIndex] = maxQual;
             }
             else
             {

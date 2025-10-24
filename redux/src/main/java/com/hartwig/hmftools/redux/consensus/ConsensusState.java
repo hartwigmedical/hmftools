@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.UNSET;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -18,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.common.utils.Arrays;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -25,6 +27,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusState
 {
+    public final String ReadId;
     public final boolean IsForward;
     public final String Chromosome;
     public final Map<String, Object> Attributes;
@@ -45,8 +48,9 @@ public class ConsensusState
     private int mCurrentCigarElementLength;
     private CigarOperator mCurrentCigarElementOperator;
 
-    public ConsensusState(final boolean isForward, final String chromosome, final RefGenome refGenome)
+    public ConsensusState(final String readId, final boolean isForward, final String chromosome, final RefGenome refGenome)
     {
+        ReadId = readId;
         IsForward = isForward;
         Chromosome = chromosome;
         Attributes = Maps.newHashMap();
@@ -70,6 +74,21 @@ public class ConsensusState
 
     public ConsensusOutcome outcome() { return mOutcome; }
     public void setOutcome(final ConsensusOutcome outcome) { mOutcome = outcome; }
+
+    public void setFromRead(final SAMRecord read, boolean setBaseAndQuals)
+    {
+        int baseLength = read.getBaseQualities().length;
+        setBaseLength(baseLength);
+        setBoundaries(read);
+
+        CigarElements.addAll(read.getCigar().getCigarElements());
+
+        if(setBaseAndQuals)
+        {
+            Arrays.copyArray(read.getReadBases(), Bases, 0, baseLength, 0);
+            Arrays.copyArray(read.getBaseQualities(), BaseQualities, 0, baseLength, 0);
+        }
+    }
 
     public void setBaseLength(int baseLength)
     {

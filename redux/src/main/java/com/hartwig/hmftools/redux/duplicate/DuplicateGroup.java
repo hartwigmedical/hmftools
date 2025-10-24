@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.calculatePCRClusterCount;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -23,15 +24,15 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroup
 {
-    private final String mUmiId; // the UMI if enabled
+    private final String mUmi; // the UMI if enabled
 
     // with duplicate group collapsing some reads in mReads may not have mFragmentCoords FragmentCoords
     private final FragmentCoords mFragmentCoords;
 
-    // contains reads that have potentially been merged due to UMI merging, all of these will be used for consensus read building
+    // contains raw duplicate reads and those merged due to UMI matching and these will be used for consensus
     private final List<SAMRecord> mReads;
 
-    // contains reads that have been merged into this group due to jitter, these will not be used for consensus building
+    // contains reads that have been merged due to jitter (poly-G, UMI) but will not be used for consensus
     private final List<SAMRecord> mNonConsensusReads;
 
     // contains reads that have been merged into this group due to poly-g UMI tail, these will not be used for consensus building
@@ -40,6 +41,8 @@ public class DuplicateGroup
     private SAMRecord mConsensusRead;
     private SAMRecord mPrimaryRead; // if no consensus is formed, the selected primary read
     private boolean mDualStrand;
+
+    public static final Comparator<DuplicateGroup> DUPLICATE_GROUP_COMPARATOR = Comparator.comparingInt(DuplicateGroup::totalReadCount).reversed();
 
     public DuplicateGroup(final String id, final SAMRecord read, final FragmentCoords fragmentCoords)
     {
@@ -51,9 +54,9 @@ public class DuplicateGroup
         this(null, reads, fragmentCoords);
     }
 
-    public DuplicateGroup(final String id, final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
+    public DuplicateGroup(final String umi, final List<SAMRecord> reads, final FragmentCoords fragmentCoords)
     {
-        mUmiId = id;
+        mUmi = umi;
         mFragmentCoords = fragmentCoords;
         mReads = reads;
         mNonConsensusReads = Lists.newArrayList();
@@ -78,7 +81,7 @@ public class DuplicateGroup
         return Stream.concat(Stream.concat(mReads.stream(), mNonConsensusReads.stream()), mPolyGUmiReads.stream()).toList();
     }
 
-    public int readCount() { return mReads.size() + mNonConsensusReads.size() + mPolyGUmiReads.size(); }
+    public int totalReadCount() { return mReads.size() + mNonConsensusReads.size() + mPolyGUmiReads.size(); }
 
     public FragmentCoords fragmentCoordinates() { return mFragmentCoords; }
 
@@ -89,7 +92,7 @@ public class DuplicateGroup
     public void setPrimaryRead(final SAMRecord read) { mPrimaryRead = read; }
     public boolean isPrimaryRead(final SAMRecord read) { return mPrimaryRead == read; }
 
-    public String umiId() { return mUmiId; }
+    public String umi() { return mUmi; }
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
@@ -98,23 +101,15 @@ public class DuplicateGroup
     {
         try
         {
-            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmiId);
+            ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(mReads, mFragmentCoords, mUmi);
 
             // set consensus read attributes
-            int nonPolyGFirstInPairCount = (int) Stream.concat(mReads.stream(), mNonConsensusReads.stream())
-                    .filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag())
-                    .count();
-            int nonPolyGReadCount = mReads.size() + mNonConsensusReads.size();
-            boolean isPrimaryGroup = nonPolyGFirstInPairCount >= 0.5f * nonPolyGReadCount;
-
-            if(!isPrimaryGroup)
-                nonPolyGFirstInPairCount = nonPolyGReadCount - nonPolyGFirstInPairCount; // adjusted so both reads report the same ratio
-
             ConsensusType consensusType = mDualStrand ? DUAL : SINGLE;
 
             int pcrClusterCount = isIllumina() ? calculatePCRClusterCount(this) : UNSET_COUNT;
+            int firstInPairCount = calculateFirstInPairCount();
 
-            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount(), nonPolyGFirstInPairCount, consensusType, pcrClusterCount);
+            addConsensusReadAttribute(consensusReadInfo.ConsensusRead, totalReadCount(), firstInPairCount, consensusType, pcrClusterCount);
 
             mConsensusRead = consensusReadInfo.ConsensusRead;
         }
@@ -131,8 +126,23 @@ public class DuplicateGroup
         }
     }
 
+    private int calculateFirstInPairCount()
+    {
+        // poly-G reads do not count towards the first in pair count, but collapsed UMI group reads do
+        int firstInPairCount = (int)mReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
+        firstInPairCount += (int)mNonConsensusReads.stream().filter(x -> !x.getReadPairedFlag() || x.getFirstOfPairFlag()).count();
+
+        int totalReadCount = mReads.size() + mNonConsensusReads.size();
+        boolean isPrimaryGroup = firstInPairCount >= 0.5f * totalReadCount;
+
+        if(!isPrimaryGroup)
+            firstInPairCount = totalReadCount - firstInPairCount; // adjusted so both reads report the same ratio
+
+        return firstInPairCount;
+    }
+
     public String toString()
     {
-        return format("id(%s) reads(%d) coords(%s)", mUmiId, readCount(), mFragmentCoords.Key);
+        return format("id(%s) reads(%d) coords(%s)", mUmi, totalReadCount(), mFragmentCoords.Key);
     }
 }

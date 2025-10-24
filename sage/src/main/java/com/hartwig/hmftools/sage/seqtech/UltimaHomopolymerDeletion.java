@@ -53,7 +53,7 @@ class UltimaHomopolymerDeletion extends UltimaQualModel
     }
 
     public static UltimaHomopolymerDeletion fromMnv(
-            final byte deletedRefBase, final byte newAltBase, final byte readBaseBefore, final byte readBaseAfter)
+            final int straddleIndex, final byte deletedRefBase, final byte newAltBase, final byte readBaseBefore, final byte readBaseAfter)
     {
         // for an SNV, the deleted ref will be the ref of the SNV, and similarly the new alt will be the alt
         // otherwise it will be the same for a specific position within an MNV
@@ -66,7 +66,7 @@ class UltimaHomopolymerDeletion extends UltimaQualModel
         boolean inCycleNegStrand = negCycleCountRef == negCycleCountAlt;
 
         return new UltimaHomopolymerDeletion(
-                0, 0, readBaseBefore, readBaseAfter, inCyclePosStrand, inCycleNegStrand);
+                straddleIndex, straddleIndex, readBaseBefore, readBaseAfter, inCyclePosStrand, inCycleNegStrand);
     }
 
     @Deprecated

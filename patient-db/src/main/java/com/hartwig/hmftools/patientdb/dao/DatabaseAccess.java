@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.cider.Cdr3Sequence;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
@@ -538,7 +538,7 @@ public class DatabaseAccess implements AutoCloseable
         driverCatalogDAO.writePurpleDrivers(sample, somaticCatalog, germlineCatalog);
     }
 
-    public void writeMetrics(final String sample, final BamMetricsSummary tumorMetrics, final BamMetricsSummary referenceMetrics)
+    public void writeMetrics(final String sample, final BamMetricSummary tumorMetrics, final BamMetricSummary referenceMetrics)
     {
         metricDAO.writeMetrics(sample, tumorMetrics, referenceMetrics);
     }
