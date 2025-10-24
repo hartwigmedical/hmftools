@@ -81,7 +81,10 @@ public final class SvFileLoader
         VcfFileReader vcfReader = new VcfFileReader(vcfFile);
 
         if(!vcfReader.fileValid())
+        {
+            System.exit(1);
             return Collections.emptyList();
+        }
 
         // NOTE: if linx (and Purple) are run in germline-only mode, then consider setting the reference ordinal only here,
         // but depends on the downstream interpretation of the Linx output

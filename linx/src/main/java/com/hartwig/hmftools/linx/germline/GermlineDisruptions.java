@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_DISRUPTION;
-import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
@@ -383,11 +382,13 @@ public class GermlineDisruptions
             String geneName = "";
             DriverType driverType = GERMLINE_DISRUPTION; // default if meets the driver criteria
 
+            /*
             // check for a homozygous DUP
             if(var.type() == DUP && isHomozygousDup(var, standardDisruptions))
             {
                 driverType = GERMLINE_HOM_DUP_DISRUPTION;
             }
+            */
 
             for(SvDisruptionData disruptionData : entry.getValue())
             {
