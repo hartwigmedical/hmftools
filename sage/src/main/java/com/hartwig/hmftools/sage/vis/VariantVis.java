@@ -37,10 +37,15 @@ import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.AA_VARIANT_TYPE_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
@@ -51,6 +56,7 @@ import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
+import static j2html.TagCreator.i;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.script;
 import static j2html.TagCreator.span;
@@ -106,6 +112,8 @@ import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -272,7 +280,7 @@ public class VariantVis
         tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
         refVis.forEach(x -> x.downsampleReadEvidenceRecords());
 
-        DomContent aaAnnotations = renderAminoAcids(config, refData, firstVis.mViewRegion, sageVariant);
+        Pair<DomContent, VariantContext> aaAnnotations = getAminoAcidsElements(config, refData, firstVis.mViewRegion, sageVariant);
 
         Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaAnnotations)).flatMap(x -> x.stream());
         Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaAnnotations)).flatMap(x -> x.stream());
@@ -293,7 +301,8 @@ public class VariantVis
                                 firstCounter.readEdgeDistance().maxAltDistanceFromEdge(),
                                 firstCounter.readEdgeDistance().avgDistanceFromEdge(),
                                 firstCounter.readEdgeDistance().avgAltDistanceFromEdge(),
-                                sageVariant.filtersStringSet()),
+                                sageVariant.filtersStringSet(),
+                                aaAnnotations),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, refReadCounters, tumorIds, referenceIds),
                         readTable,
@@ -488,7 +497,7 @@ public class VariantVis
     }
 
     private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, double maxDistanceFromEdge,
-                                         double nonAvgEdgeDist, double altAvgEdgeDist, final Set<String> filters)
+            double nonAvgEdgeDist, double altAvgEdgeDist, final Set<String> filters, final Pair<DomContent, VariantContext> aaAnnotations)
     {
         CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
@@ -535,11 +544,31 @@ public class VariantVis
                 td().with(contextElems));
 
         DomContent variantInfoTable = styledTable(Lists.newArrayList(variantInfoRow), CssBuilder.EMPTY);
-        return div(variantInfoTable);
+        if(aaAnnotations == null || aaAnnotations.getRight() == null)
+            return div(variantInfoTable);
+
+        VariantContext variantContext = aaAnnotations.getRight();
+        List<String> impact = (List<String>) variantContext.getAttribute(IMPACT_KEY);
+        String geneName = impact.get(GENE_NAME_IDX);
+        String transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
+        String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
+        String hgvs = impact.get(HGVS_INDEX);
+
+        DomContent geneImpactRow = tr(
+                td(aaVariantType),
+                td(horizontalSpacer),
+                td("GENE: " + geneName),
+                td(horizontalSpacer),
+                td("TRANSCRIPT NAME: " + transcriptName),
+                td(horizontalSpacer),
+                td("HGVS: " + hgvs));
+
+        DomContent geneImpactTable = styledTable(Lists.newArrayList(geneImpactRow), CssBuilder.EMPTY);
+        return div(div(variantInfoTable), div(geneImpactTable));
     }
 
     @Nullable
-    private static DomContent renderAminoAcids(
+    private static Pair<DomContent, VariantContext> getAminoAcidsElements(
             final VisConfig config, @Nullable final ReferenceData refData, final BaseRegion viewRegion, final SageVariant sageVariant)
     {
         if(config.Vcf == null)
@@ -554,13 +583,13 @@ public class VariantVis
             return null;
         }
 
-        final SimpleVariant variant = sageVariant.variant();
+        final SimpleVariant simpleVariant = sageVariant.variant();
         List<VariantContext> vcfVariants = null;
 
         // TODO: Don't load this each time, but wait until I have purple filtering of genes.
         try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
         {
-            vcfVariants = vcfFileReader.findVariants(variant.Chromosome, viewRegion.start(), viewRegion.end());
+            vcfVariants = vcfFileReader.findVariants(simpleVariant.Chromosome, viewRegion.start(), viewRegion.end());
         }
 
         if(vcfVariants == null)
@@ -569,33 +598,47 @@ public class VariantVis
         if(vcfVariants.isEmpty())
             return null;
 
-        // TODO: make this universal?
-        final String impactKey = "IMPACT";
-        final int transcriptNameIdx = 1;
-        final int hgvsIdx = 6;
-
         String transcriptName = null;
         List<AminoAcidVariant> aaVariants = Lists.newArrayList();
+        VariantContext variant = null;
         for(VariantContext variantContext : vcfVariants)
         {
-            List<String> impact = (List<String>) variantContext.getAttribute(impactKey);
+            List<String> impact = (List<String>) variantContext.getAttribute(IMPACT_KEY);
             if(transcriptName == null)
             {
-                transcriptName = impact.get(transcriptNameIdx);
+                transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
             }
-            else if(!transcriptName.equals(impact.get(transcriptNameIdx)))
+            else if(!transcriptName.equals(impact.get(TRANSCRIPT_NAME_IDX)))
             {
                 throw new RuntimeException("Multiple transcripts encountered.");
             }
 
-            AminoAcidVariant aaVariant = AminoAcidVariant.parse(impact.get(hgvsIdx));
+            AminoAcidVariant aaVariant = AminoAcidVariant.parse(impact.get(HGVS_INDEX));
             aaVariants.add(aaVariant);
+
+            if(!variantContext.getContig().equals(simpleVariant.chromosome()))
+                continue;
+
+            if(variantContext.getStart() != simpleVariant.Position)
+                continue;
+
+            if(!variantContext.getReference().basesMatch(simpleVariant.Ref))
+                continue;
+
+            if(!variantContext.getAltAlleleWithHighestAlleleCount().basesMatch(simpleVariant.Alt))
+                continue;
+
+            variant = variantContext;
         }
 
         TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
         TranscriptData transcriptExons = refData.GeneDataCache.getTranscriptData(transcriptAminoAcids.GeneId, transcriptName);
 
-        return renderAminoAcids(viewRegion, transcriptExons, transcriptAminoAcids, aaVariants);
+        DomContent aaElement = renderAminoAcids(viewRegion, transcriptExons, transcriptAminoAcids, aaVariants);
+        if(aaElement == null)
+            return null;
+
+        return Pair.of(aaElement, variant);
     }
 
     // TODO: util class
@@ -620,7 +663,7 @@ public class VariantVis
         }
     }
 
-    private List<DomContent> renderReads(boolean isTumor, @Nullable final DomContent aminoAcids)
+    private List<DomContent> renderReads(boolean isTumor, @Nullable final Pair<DomContent, VariantContext> aminoAcidElements_)
     {
         CssBuilder lightGrayBgStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY);
         CssBuilder verticalHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).writingMode("vertical-rl");
@@ -655,9 +698,9 @@ public class VariantVis
         tableRows.add(headerRow);
 
         // amino acids
-        if(aminoAcids != null)
+        if(aminoAcidElements_ != null)
         {
-            DomContent aaRow = tr(td("").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aminoAcids));
+            DomContent aaRow = tr(td("").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aminoAcidElements_.getLeft()));
             tableRows.add(aaRow);
         }
 
