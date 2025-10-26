@@ -10,7 +10,6 @@ import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class ReferenceCalculationTest
 {
@@ -30,6 +29,6 @@ public class ReferenceCalculationTest
     public void createMegaBaseScaleNormaliser()
     {
         Calculation = new ReferenceCalculation(mock(GenomeFilter.class), mock(CobaltScope.class), V38, new NoOpConsolidator());
-        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(Mockito.any()) instanceof DiploidNormaliser);
+        Assert.assertTrue(Calculation.createMegaBaseScaleNormaliser(V38) instanceof DiploidNormaliser);
     }
 }

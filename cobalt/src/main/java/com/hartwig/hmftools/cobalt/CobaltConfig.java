@@ -54,7 +54,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -70,13 +69,6 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class CobaltConfig
 {
-    public enum Mode
-    {
-        TUMOR_GERMLINE,
-        TUMOR_ONLY,
-        GERMLIHE_ONLY
-    }
-
     public static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     public static final String PCF_GAMMA = "pcf_gamma";
@@ -226,21 +218,6 @@ public class CobaltConfig
         }
     }
 
-    public Mode mode()
-    {
-        if(ReferenceId != null && TumorId == null)
-        {
-            return Mode.GERMLIHE_ONLY;
-        }
-
-        if(ReferenceId == null && TumorId != null)
-        {
-            return Mode.TUMOR_ONLY;
-        }
-
-        return Mode.TUMOR_GERMLINE;
-    }
-
     public SamReaderFactory readerFactory()
     {
         final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(BamStringency);
@@ -288,7 +265,7 @@ public class CobaltConfig
             return ArrayListMultimap.create();
         }
         try {
-            return new DiploidRegionLoader(new ChromosomePositionCodec(), TumorOnlyDiploidBed).regions();
+            return new DiploidRegionLoader(TumorOnlyDiploidBed).regions();
         }
         catch (IOException e)
         {

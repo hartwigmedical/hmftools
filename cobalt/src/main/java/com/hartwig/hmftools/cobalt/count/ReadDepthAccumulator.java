@@ -149,41 +149,6 @@ public class ReadDepthAccumulator
         }
     }
 
-    // get the raw base count of the window, useful for testing
-    int getWindowRawBaseCount(String chromosome, int genomePosition)
-    {
-        int windowIndex = getWindowIndex(genomePosition);
-        ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
-        if(windowCounts == null)
-        {
-            // not a chromosome we keep track of
-            return 0;
-        }
-        if(windowIndex >= windowCounts.windowReadBaseCounts.length())
-        {
-            // over the end
-            return 0;
-        }
-        return windowCounts.getCount(windowIndex);
-    }
-
-    int getWindowRawGcCount(String chromosome, int genomePosition)
-    {
-        int windowIndex = getWindowIndex(genomePosition);
-        ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
-        if(windowCounts == null)
-        {
-            // not a chromosome we keep track of
-            return 0;
-        }
-        if(windowIndex >= windowCounts.windowReadBaseCounts.length())
-        {
-            // over the end
-            return 0;
-        }
-        return windowCounts.getGcCount(windowIndex);
-    }
-
     private int getWindowIndex(int position)
     {
         return (position - 1) / mWindowSize;

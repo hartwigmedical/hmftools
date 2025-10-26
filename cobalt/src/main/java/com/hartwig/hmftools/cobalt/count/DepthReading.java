@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class DepthReading
 {
-    public final String Chromosome; // todo make this a Chromosome
+    public final String Chromosome;
     public final int StartPosition;
     public final double ReadDepth;
     public final double ReadGcContent;
