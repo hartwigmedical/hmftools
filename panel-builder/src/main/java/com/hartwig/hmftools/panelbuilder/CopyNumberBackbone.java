@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENG
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -210,7 +211,7 @@ public class CopyNumberBackbone
     {
         return partitions.entrySet().stream()
                 // Sort to ensure deterministic ordering.
-                .sorted()
+                .sorted(Map.Entry.comparingByKey())
                 .flatMap(entry ->
                         entry.getValue().stream().map(this::generateProbe))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
