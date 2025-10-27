@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.OptionalDouble;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -65,10 +66,16 @@ public class ProbeQualityScorerTest
     }
 
     // Create a probe which will get its quality score from the probe quality model.
-    //    private static Probe probeForModel(final String sequence)
-    //    {
-    //        // TODO
-    //    }
+    private static Probe probeForModel(final String sequence)
+    {
+        String insertSequence = sequence.substring(1, sequence.length() - 1);
+        // Region doesn't really matter as long as the insert sequence is large, to ensure we need to use the probe quality model.
+        ChrBaseRegion startRegion = new ChrBaseRegion("1", 1000, 1000);
+        ChrBaseRegion endRegion = new ChrBaseRegion("2", 2000, 2000);
+        SequenceDefinition definition =
+                SequenceDefinition.structuralVariant(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
+        return new Probe(definition, sequence, METADATA, null, null, null, 0.0);
+    }
 
     @Test
     public void testEmptyStream()
@@ -79,8 +86,9 @@ public class ProbeQualityScorerTest
     }
 
     @Test
-    public void testSingleFromProfile()
+    public void testProfileHasResult()
     {
+        // Attempts to get the quality score from the probe quality profile and succeeds.
         ChrBaseRegion region = new ChrBaseRegion("1", 1000, 1120);
         double quality = 0.8;
         Probe probe = probeForProfile(region);
@@ -92,14 +100,29 @@ public class ProbeQualityScorerTest
     }
 
     @Test
-    public void testSingleFromModel()
+    public void testProfileNoResult()
     {
+        // Attempts to get the quality score from the probe quality profile and fails, so falls back to the probe quality model.
         ChrBaseRegion region = new ChrBaseRegion("1", 1000, 1120);
         double quality = 0.8;
         Probe probe = probeForProfile(region);
         Stream<Probe> probes = Stream.of(probe);
         mProfileResults = new ArrayList<>(List.of(Pair.of(region, OptionalDouble.empty())));
         mModelResults = new ArrayList<>(List.of(Pair.of(probe.sequence(), quality)));
+        List<Probe> actual = mScorer.computeQualityScores(probes).toList();
+        List<Probe> expected = List.of(probe.withQualityScore(quality));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testNeedsModel()
+    {
+        // Novel sequence requires using the probe quality model.
+        String sequence = "ACGTACGT";
+        double quality = 0.8;
+        Probe probe = probeForModel(sequence);
+        Stream<Probe> probes = Stream.of(probe);
+        mModelResults = new ArrayList<>(List.of(Pair.of(sequence, quality)));
         List<Probe> actual = mScorer.computeQualityScores(probes).toList();
         List<Probe> expected = List.of(probe.withQualityScore(quality));
         assertEquals(expected, actual);
@@ -146,5 +169,46 @@ public class ProbeQualityScorerTest
         assertEquals(expected, actual);
     }
 
-    // TODO: test model
+    @Test
+    public void testMultipleFromModel1()
+    {
+        // Less than 1 batch of probes.
+
+        String sequence1 = "ACGTACGT";
+        double quality1 = 0.8;
+        Probe probe1 = probeForModel(sequence1);
+
+        String sequence2 = "GTGTGT";
+        double quality2 = 0.9;
+        Probe probe2 = probeForModel(sequence2);
+
+        Stream<Probe> probes = Stream.of(probe1, probe2);
+        mModelResults = new ArrayList<>(List.of(
+                Pair.of(sequence1, quality1),
+                Pair.of(sequence2, quality2)));
+        List<Probe> actual = mScorer.computeQualityScores(probes).toList();
+        List<Probe> expected = List.of(probe1.withQualityScore(quality1), probe2.withQualityScore(quality2));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testMultipleFromModel2()
+    {
+        // More than 1 batch of probes.
+
+        ArrayList<Probe> probes = new ArrayList<>();
+        ArrayList<Probe> expected = new ArrayList<>();
+        for(int i = 0; i < BATCH_SIZE * 10; ++i)
+        {
+            String sequence = "ACG".repeat(i + 1);
+            probes.add(probeForModel(sequence));
+            double quality = 0.1 + i / 1e6;
+            mModelResults.add(Pair.of(sequence, quality));
+            expected.add(probes.get(i).withQualityScore(quality));
+        }
+        List<Probe> actual = mScorer.computeQualityScores(probes.stream()).toList();
+        assertEquals(expected, actual);
+    }
+
+    // TODO: test mixed data
 }
