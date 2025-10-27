@@ -35,7 +35,7 @@ public interface PanelCoverage
     // Gets all regions covered by probes in the panel.
     Stream<ChrBaseRegion> coveredRegions();
 
-    static boolean needsCoverageCheck(final SequenceDefinition sequenceDefinition)
+    private static boolean needsCoverageCheck(final SequenceDefinition sequenceDefinition)
     {
         return sequenceDefinition.isExactRegion() || variantProbeNeedsCoverageCheck(sequenceDefinition);
     }
@@ -53,7 +53,7 @@ public interface PanelCoverage
         if(start == null && end == null)
         {
             // Unknown region, assume novel sequence.
-            return true;
+            return false;
         }
         else if(start != null && end != null)
         {
@@ -69,18 +69,18 @@ public interface PanelCoverage
                 // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
                 int deleteLength = max(end.start() - start.end() - 1, 0);
                 int difference = abs(insertLength - deleteLength);
-                return difference >= VARIANT_NOVEL_SEQUENCE_BASES_MIN;
+                return difference < VARIANT_NOVEL_SEQUENCE_BASES_MIN;
             }
             else
             {
                 // SV across different chromosomes.
-                return true;
+                return false;
             }
         }
         else
         {
             // Single ended SV.
-            return true;
+            return false;
         }
     }
 }
