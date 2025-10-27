@@ -55,7 +55,7 @@ public class CandidateStage
 
             SamSlicerInterface samSlicer = mSamSlicerFactory.getSamSlicer(sample, sliceRegions, true);
 
-            List<AltContext> altContexts = mCandidateEvidence.readBam(sample, samSlicer, refSequence, region);
+            List<AltContext> altContexts = mCandidateEvidence.readBam(samSlicer, refSequence, region);
 
             if(mConfig.TumorIds.size() == 1)
                 initialCandidates.addSingleSample(altContexts);

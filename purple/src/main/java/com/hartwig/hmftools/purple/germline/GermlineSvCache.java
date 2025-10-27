@@ -115,7 +115,7 @@ public class GermlineSvCache
         // switch germline variants with tumor evidence across to the somatic cache
 
         // convert to SVs so paired breakends can be accessed together
-        List<StructuralVariant> variants = mVariantCollection.variants();
+        List<StructuralVariant> variants = Lists.newArrayList(mVariantCollection.variants());
 
         boolean hasTransfers = false;
 
@@ -175,7 +175,7 @@ public class GermlineSvCache
 
             PPL_LOGGER.info("tincLevel({}) recovered {} germline SVs", tincLevel, transferredVariants.size());
 
-            for(StructuralVariant variant : mVariantCollection.variants())
+            for(StructuralVariant variant : variants)
             {
                 if(transferredVariants.contains(variant))
                     continue;
@@ -195,8 +195,8 @@ public class GermlineSvCache
         mFittedRegions = fittedRegions;
         mCopyNumbers = copyNumbers;
 
-        // note this clears and rebuilds the variant context collection
-        List<StructuralVariant> variants = mVariantCollection.variants();
+        // note this routine clears and rebuilds the variant context collection, so a copy must be taken of the initial variants
+        List<StructuralVariant> variants = Lists.newArrayList(mVariantCollection.variants());
 
         mVariantCollection.clear();
 

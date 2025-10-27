@@ -3,6 +3,7 @@ package com.hartwig.hmftools.redux.duplicate;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.floorDiv;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
@@ -19,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import htsjdk.samtools.SAMRecord;
@@ -40,20 +40,26 @@ public class ReadCache implements IReadCache
     private int mCheckSizeReadCount;
     private int mLastCacheReadCount;
 
+    private int mPopDistanceCheck;
+    private int mLogCacheReadCount;
+    private int mCheckLogCacheReadCount;
+
     public static final int DEFAULT_GROUP_SIZE = 200; // larger than the maximum soft-clip length for 151-base reads
-    public static final int DEFAULT_MAX_SOFT_CLIP = 150;
-
-    private static final int POP_DISTANCE_CHECK = 100;
-
-    private static final int CHECK_CACHE_READ_COUNT = 10000;
-    private static final int LOG_READ_COUNT_THRESHOLD = 100000;
+    public static final int DEFAULT_MAX_SOFT_CLIP = 130; // based in Illumina and a conservative min alignment of 30 bases plus a buffer
+    public static final int DEFAULT_POP_DISTANCE_CHECK = 100; // how often in base terms to check for popping read groups
+    public static final int DEFAULT_LOG_READ_COUNT_THRESHOLD = 100000; // based on observed cache sizes for deep panels
 
     public ReadCache(
-            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig)
+            int groupSize, int maxSoftClipLength, boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig,
+            int popDistanceCheck, int logCacheReadCount)
     {
         mGroupSize = groupSize;
         mMaxSoftClipLength = maxSoftClipLength;
         mUseFragmentOrientation = useFragmentOrientation;
+
+        mPopDistanceCheck = popDistanceCheck;
+        mLogCacheReadCount = logCacheReadCount;
+        mCheckLogCacheReadCount = (int)round(mLogCacheReadCount * 0.1);
 
         mSbxDuplicateCollapser = isSbx() && duplicatesConfig.SbxMaxDuplicateDistance > 0 ?
                 new SbxDuplicateCollapser(duplicatesConfig.SbxMaxDuplicateDistance) : null;
@@ -66,10 +72,19 @@ public class ReadCache implements IReadCache
         mCheckSizeReadCount = 0;
     }
 
+    public ReadCache(boolean useFragmentOrientation, final DuplicatesConfig duplicatesConfig)
+    {
+        this(
+                DEFAULT_GROUP_SIZE, DEFAULT_MAX_SOFT_CLIP, useFragmentOrientation, duplicatesConfig,
+                DEFAULT_POP_DISTANCE_CHECK, DEFAULT_LOG_READ_COUNT_THRESHOLD);
+    }
+
     @VisibleForTesting
     public ReadCache(int groupSize, int maxSoftClipLength, boolean useFragmentOrientation)
     {
-        this(groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicatesConfig(0));
+        this(
+                groupSize, maxSoftClipLength, useFragmentOrientation, new DuplicatesConfig(0),
+                DEFAULT_POP_DISTANCE_CHECK, DEFAULT_LOG_READ_COUNT_THRESHOLD);
     }
 
     @Override
@@ -133,12 +148,12 @@ public class ReadCache implements IReadCache
             // process if has an earlier chromosome or if the current position has moved past the last check position
             if(!mPositionGroups.isEmpty() && mPositionGroups.get(0).Chromosome.equals(mCurrentChromosome))
             {
-                if(mCurrentReadMinPosition < mLastPopPositionCheck + POP_DISTANCE_CHECK)
+                if(mCurrentReadMinPosition < mLastPopPositionCheck + mPopDistanceCheck)
                     return null;
             }
         }
 
-        mLastPopPositionCheck = (int)(floor(mCurrentReadMinPosition/POP_DISTANCE_CHECK) * POP_DISTANCE_CHECK);
+        mLastPopPositionCheck = (int)(floor(mCurrentReadMinPosition / mPopDistanceCheck) * mPopDistanceCheck);
 
         List<DuplicateGroup> duplicateGroups = null;
         List<ReadInfo> singleReads = null;
@@ -168,9 +183,8 @@ public class ReadCache implements IReadCache
                 if(checkCurrentPosition && !takeAllFragments && group.Chromosome.equals(mCurrentChromosome))
                 {
                     int readPosition = fragCoords.readPosition();
-                    Orientation readOrientation = fragCoords.readOrientation();
 
-                    if(readOrientation.isForward())
+                    if(fragCoords.readOrientation().isForward())
                     {
                         if(readPosition > popFragCoordLowerPosition)
                             continue;
@@ -335,20 +349,23 @@ public class ReadCache implements IReadCache
 
     private void checkCacheSize()
     {
+        if(mLogCacheReadCount == 0)
+            return;
+
         // only check and log cache size every X reads
         ++mCheckSizeReadCount;
 
-        if(mCheckSizeReadCount < CHECK_CACHE_READ_COUNT)
+        if(mCheckSizeReadCount < mCheckLogCacheReadCount)
             return;
 
         mCheckSizeReadCount = 0;
 
         int newReadCount = cachedReadCount();
 
-        if(newReadCount < LOG_READ_COUNT_THRESHOLD)
+        if(newReadCount < mLogCacheReadCount)
             return;
 
-        if(abs(newReadCount - mLastCacheReadCount) < LOG_READ_COUNT_THRESHOLD)
+        if(abs(newReadCount - mLastCacheReadCount) < mLogCacheReadCount)
             return;
 
         RD_LOGGER.debug("read cache({}) above threshold", toString());

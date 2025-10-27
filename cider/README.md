@@ -39,7 +39,7 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 | report_match_ref_seq       | Off              | When specified, reports VDJ sequences that match reference genome                                       |
 | num_trim_bases             | 0                | Number of bases to trim on each side of reads. Defaults to 0                                            |
 | max_low_qual_base_fraction | 0.1              | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
-| max_reads_per_gene         | 600,000          | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
+| max_reads_per_gene         | 100,000          | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.           |
 | ref_genome                 |                  | Path to the reference genome FASTA                                                                      |
 | bwa_index_image            | {ref_genome}.img | Path to the reference genome BWA-MEM index GATK image                                                   |
 | primer_csv                 |                  | Path to csv file containing primers                                                                     |
@@ -105,9 +105,7 @@ Each collapsed sequence is either marked as PASS or one or more of the following
 - **MATCHES_REF** - (NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0), OR alignment matches to reference contig, OR the sequences matches known list (see below).
 - **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read.
 
-CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  
-(This was introduced to reduce discrepancies in the output when switching from Blastn to BWA-MEM alignment.)  
-The list of amino acid sequences is:
+Note that CIDER has a small list of CDR3 sequences known to match the reference genome, which are not found by alignment. These will always be marked as `MATCHES_REF`.  The list of amino acid sequences is:
 - CTXGPKXELRT
 
 Note that sequences with "no anchor" may represent partial rearrangements.
@@ -229,6 +227,11 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Using the GRCh37/hg19 reference genome for gene annotation, many TRB genes will not be annotated. This is a known issue with the reference genome and gene data, and will be fixed soon.
 
 # Version History and Download Links
+- 1.1
+  - Replace Blastn with BWA-MEM (large performance increase).
+  - Output additional gene annotation in the `*GeneSupplementary` fields.
+  - Make the output more consistent between identical runs.
+  - Improve the performance of VDJ merging.
 - [1.0.4](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.4)
   - Fix blastn performance issue when an assembly maps to a problematic region.   
 - [1.0.3](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.3)

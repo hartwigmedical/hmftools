@@ -35,33 +35,42 @@ public enum ReadValidReason
         if(cigarBaseLength(record.getCigar()) != baseLength)
             return ReadValidReason.CIGAR_LENGTH;
 
-        int cigarCount = record.getCigar().getCigarElements().size();
-        if(cigarCount > 1)
-        {
-            for(int i = 0; i < record.getCigar().getCigarElements().size(); ++i)
-            {
-                CigarElement element = record.getCigar().getCigarElements().get(i);
-
-                if(i == 0 || i == cigarCount - 1)
-                {
-                    if(!alignedOrClipped(element.getOperator()) && element.getOperator() != I)
-                        return ReadValidReason.CIGAR_ELEMENTS;
-                }
-                else if(element.getOperator().isClipping())
-                {
-                    return ReadValidReason.CIGAR_ELEMENTS;
-                }
-            }
-        }
-        else if(record.getCigar().getCigarElements().get(0).getOperator() != M)
-        {
+        if(!hasValidCigar(record.getCigar().getCigarElements()))
             return ReadValidReason.CIGAR_ELEMENTS;
-        }
 
         if(!hasValidBases(record))
             return ReadValidReason.INVALID_BASE;
 
         return ReadValidReason.OK;
+    }
+
+    public static boolean hasValidCigar(final List<CigarElement> cigarElements)
+    {
+        int cigarCount = cigarElements.size();
+
+        if(cigarCount > 1)
+        {
+            for(int i = 0; i < cigarCount; ++i)
+            {
+                CigarElement element = cigarElements.get(i);
+
+                if(i == 0 || i == cigarCount - 1)
+                {
+                    if(!alignedOrClipped(element.getOperator()) && element.getOperator() != I)
+                        return false;
+                }
+                else if(element.getOperator().isClipping())
+                {
+                    return false;
+                }
+            }
+        }
+        else if(cigarElements.get(0).getOperator() != M)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean hasValidBases(final SAMRecord record)

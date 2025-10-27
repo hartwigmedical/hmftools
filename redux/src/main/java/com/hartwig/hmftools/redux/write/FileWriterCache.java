@@ -86,7 +86,7 @@ public class FileWriterCache
 
         mFinalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
-        if(mConfig.UnmapRegions.enabled())
+        if(mConfig.UnmapRegions.unmapPairedReads())
         {
             String unmappingFilename = formBamFilename(null, UNMAPPING);
             mUnmappingWriter = (BamWriterSync)createBamWriter(unmappingFilename, true);
@@ -98,15 +98,8 @@ public class FileWriterCache
             mUnmappingSortedBamFilename = null;
         }
 
-        if(mConfig.SkipFullyUnmappedReads)
-        {
-            mFullUnmappedWriter = null;
-        }
-        else
-        {
-            String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
-            mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
-        }
+        String fullyUnmappedFilename = formBamFilename(null, FULL_UNMAPPED);
+        mFullUnmappedWriter = (BamWriterSync)createBamWriter(fullyUnmappedFilename, true);
     }
 
     public List<PartitionInfo> partitions() { return mPartitions; }

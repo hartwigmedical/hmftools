@@ -3,6 +3,10 @@ package com.hartwig.hmftools.common.sequencing;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.PHRED_OFFSET;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import htsjdk.samtools.SAMRecord;
@@ -22,10 +26,17 @@ public final class UltimaBamUtils
     private static final String PPM_STRAND_AE = "ae";
     private static final String PPM_STRAND_TE = "te";
 
+    public static final String ULT_QUAL_TAG = "UQ";
+    public static final String ULT_QUAL_TAG_DELIM = "=";
+    public static final String ULT_QUAL_TAG_INDEX_DELIM = ",";
+
     private static final int PPM_STRAND_MIN_SUM = 4;
     private static final int PPM_STRAND_MAX_SUM = 8;
     private static final double PPM_STRAND_BALANCED_LOW = 0.27;
     private static final double PPM_STRAND_BALANCED_HIGH = 1 - PPM_STRAND_BALANCED_LOW;
+
+    // equivalent to adding their logs, ie P(combined) = 10^(-qual/10) + 10^(-qual/10), combined qual = -10 * log10(P(combined))
+    public static final byte HALF_PHRED_SCORE_SCALING = 3;
 
     public static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
 
@@ -47,6 +58,52 @@ public final class UltimaBamUtils
             t0Values[i] -= PHRED_OFFSET;
         }
         return t0Values;
+    }
+
+    public static int extractLowQualCount(final SAMRecord record)
+    {
+        String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
+
+        if(qualTag == null)
+            return 0;
+
+        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM, 2);
+        return Integer.parseInt(qualItems[0]);
+    }
+
+    public static List<Integer> extractLowQualIndices(final SAMRecord record)
+    {
+        String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
+
+        if(qualTag == null)
+            return Collections.emptyList();
+
+        String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM, 2);
+
+        String[] qualIndexItems = qualItems[1].split(ULT_QUAL_TAG_INDEX_DELIM);
+
+        List<Integer> lowQualValues = Lists.newArrayList();
+
+        for(String qualItem : qualIndexItems)
+        {
+            if(qualItem.contains("-"))
+            {
+                String[] startEnd = qualItem.split("-", 2);
+                int indexStart = Integer.parseInt(startEnd[0]);
+                int indexEnd = Integer.parseInt(startEnd[1]);
+
+                for(int i = indexStart; i <= indexEnd; ++i)
+                {
+                    lowQualValues.add(i);
+                }
+            }
+            else
+            {
+                lowQualValues.add(Integer.parseInt(qualItem));
+            }
+        }
+
+        return lowQualValues;
     }
 
     public static ConsensusType deriveConsensusType(final SAMRecord record)

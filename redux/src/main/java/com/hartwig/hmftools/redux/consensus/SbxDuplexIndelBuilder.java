@@ -230,24 +230,10 @@ public class SbxDuplexIndelBuilder
         int duplexMismatchLength = duplexIndelIndexEnd - duplexIndelIndexStart + 1;
         byte[] repeatBases = new byte[duplexMismatchLength];
 
-        boolean isHomopolymer = true;
-
         for(int i = 0; i < duplexMismatchLength; ++i)
         {
             repeatBases[i] = readBases[duplexIndelIndexStart + i];
-
-            if(i > 0 && repeatBases[i] != repeatBases[0])
-                isHomopolymer = false;
         }
-
-        /*
-
-        // convert to 1-base homopolymer if all bases match
-        if(repeatBases.length > 1 && isHomopolymer)
-        {
-            repeatBases = new byte[] { repeatBases[0] };
-        }
-        */
 
         return repeatBases;
     }

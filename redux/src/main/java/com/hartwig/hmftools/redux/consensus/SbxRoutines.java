@@ -37,6 +37,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.getDuplexIndelI
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConstants.SBX_CONSENSUS_BASE_THRESHOLD;
 import static com.hartwig.hmftools.redux.consensus.BaseBuilder.INVALID_POSITION;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.checkIsValidRead;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -47,12 +48,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.common.ReadInfo;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -66,6 +69,47 @@ public final class SbxRoutines
     protected static final byte SIMPLEX_NO_CONSENSUS_QUAL = 2;
 
     public static boolean SBX_HOMOPOLYMER_5_PRIME_LOW_BASE_QUAL = true; // currently unused but keep for now
+
+    // for read cache
+    public static final int SBX_READ_CACHE_GROUP_SIZE = 1000; // does not have to exceed the maximum possible read length
+    public static final int SBX_READ_CACHE_MAX_SOFT_CLIP = SBX_READ_CACHE_GROUP_SIZE - 30;
+    public static final int SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD = 5000;
+
+    public static int SBX_CONSENSUS_MAX_DEPTH = 20;
+
+    public static void prepProcessRead(final SAMRecord record)
+    {
+        try
+        {
+            stripDuplexIndels(record);
+
+            // ensure both sides of repeats are marked with duplex mismatch low-qual bases
+            int readIndex = 0;
+            byte[] readBases = record.getReadBases();
+            byte[] baseQuals = record.getBaseQualities();
+
+            for(int i = 0; i < record.getCigar().getCigarElements().size(); ++i)
+            {
+                CigarElement element = record.getCigar().getCigarElements().get(i);
+
+                if(element.getOperator() == M)
+                {
+                    ensureMirroredMismatchRepeatQuals(readIndex, element.getLength(), readBases, baseQuals);
+                }
+
+                if(element.getOperator().consumesReadBases())
+                    readIndex += element.getLength();
+            }
+
+            if(ReduxConfig.RunChecks)
+                checkIsValidRead(record);
+        }
+        catch(Exception e)
+        {
+            RD_LOGGER.error("pre-process read({}) error: {}", ReadInfo.readToString(record), e.toString());
+            e.printStackTrace();
+        }
+    }
 
     public static void stripDuplexIndels(final SAMRecord record)
     {
@@ -308,33 +352,72 @@ public final class SbxRoutines
         }
     }
 
+    @VisibleForTesting
     private static boolean hasInvalidCigar(final SAMRecord record)
     {
-        if(record.getCigar().getCigarElements().get(0).getOperator() == I)
+        return hasInvalidCigar(record.getCigar().getCigarElements());
+    }
+
+    @VisibleForTesting
+    public static boolean hasInvalidCigar(final List<CigarElement> cigarElements)
+    {
+        // looks for a specific SBX alignment issue where an insert comes before the first aligned section
+        if(cigarElements.get(0).getOperator() == I)
             return true;
 
-        if(record.getCigar().getCigarElements().size() > 1)
+        if(cigarElements.size() > 1)
         {
-            if(record.getCigar().getCigarElements().get(record.getCigar().getCigarElements().size() - 1).getOperator() == I)
+            int lastIndex = cigarElements.size() - 1;
+
+            if(cigarElements.get(lastIndex).getOperator() == I)
+                return true;
+
+            if(cigarElements.get(0).getOperator() == S && cigarElements.get(1).getOperator() == I)
+                return true;
+
+            if(cigarElements.get(lastIndex - 1).getOperator() == I && cigarElements.get(lastIndex).getOperator() == S)
                 return true;
         }
 
         return false;
     }
 
-    private static void correctInvalidCigar(final List<CigarElement> cigarElements)
+    @VisibleForTesting
+    public static void correctInvalidCigar(final List<CigarElement> cigarElements)
     {
         // no attempt is made at this stage to correct the alignment score or num of mutations
-        if(cigarElements.get(0).getOperator() == I)
-        {
-            cigarElements.set(0, new CigarElement(cigarElements.get(0).getLength(), S));
-        }
+        int lastIndex = cigarElements.size() - 1;
 
-        if(cigarElements.size() > 1)
+        int i = 0;
+        while(i < cigarElements.size())
         {
-            int lastIndex = cigarElements.size() - 1;
-            if(cigarElements.get(lastIndex).getOperator() == I)
-                cigarElements.set(lastIndex, new CigarElement(cigarElements.get(lastIndex).getLength(), S));
+            CigarElement element = cigarElements.get(i);
+
+            if(element.getOperator() == I)
+            {
+                if(i == 0 || i == lastIndex)
+                {
+                    cigarElements.set(i, new CigarElement(cigarElements.get(i).getLength(), S));
+                }
+                else if(i == 1 && cigarElements.get(0).getOperator() == S)
+                {
+                    // combine initial soft-clip and insert
+                    cigarElements.remove(i);
+                    --lastIndex;
+                    cigarElements.set(0, new CigarElement(cigarElements.get(0).getLength() + element.getLength(), S));
+                    continue;
+                }
+                else if(i == lastIndex - 1 && cigarElements.get(lastIndex).getOperator() == S)
+                {
+                    // combine initial soft-clip and insert
+                    cigarElements.remove(i);
+                    --lastIndex;
+                    cigarElements.set(lastIndex, new CigarElement(cigarElements.get(lastIndex).getLength() + element.getLength(), S));
+                    continue;
+                }
+            }
+
+            ++i;
         }
     }
 
@@ -697,6 +780,100 @@ public final class SbxRoutines
         record.setBaseQualities(newBaseQuals);
     }
 
+    @VisibleForTesting
+    public static void ensureMirroredMismatchRepeatQuals(int readIndexStart, int elementLength, final byte[] bases, final byte[] baseQuals)
+    {
+        int readIndexEnd = readIndexStart + elementLength - 1;
+        for(int readIndex = readIndexStart; readIndex <= readIndexEnd; readIndex++)
+        {
+            if(readIndex >= bases.length)
+                break;
+
+            if(baseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
+                continue;
+
+            int repeatLength = 1;
+            boolean isHomopolymer = true;
+            byte repeatBase = bases[readIndex];
+
+            for(int i = readIndex + 1; i <= readIndexEnd; ++i)
+            {
+                if(baseQuals[i] > SBX_DUPLEX_MISMATCH_QUAL)
+                    break;
+
+                if(bases[i] != repeatBase)
+                    isHomopolymer = false;
+
+                ++repeatLength;
+            }
+
+            if(isHomopolymer)
+                repeatLength = 1;
+
+            byte[] repeatBases = new byte[repeatLength];
+
+            for(int i = 0; i < repeatLength; ++i)
+            {
+                repeatBases[i] = bases[readIndex + i];
+            }
+
+            // search for the repeat as far as possible in both directions
+            int mirroredIndexStart = -1;
+            int maxRepeatShift = 0;
+
+            for(int j = 0; j <= 1; ++j)
+            {
+                boolean searchUp = (j == 0);
+
+                int repeatStart = readIndex + (searchUp ? repeatLength : -repeatLength);
+                int lastRepeatStartIndex = readIndex;
+
+                while(repeatStart >= 0 && repeatStart + repeatLength - 1 <= readIndexEnd)
+                {
+                    boolean matched = true;
+
+                    for(int i = 0; i < repeatLength; ++i)
+                    {
+                        if(repeatBases[i] != bases[repeatStart + i])
+                        {
+                            matched = false;
+                            break;
+                        }
+                    }
+
+                    if(!matched)
+                        break;
+
+                    lastRepeatStartIndex = repeatStart;
+                    repeatStart += searchUp ? repeatLength : -repeatLength;
+                }
+
+                if(lastRepeatStartIndex != readIndex)
+                {
+                    int repeatShift = abs(lastRepeatStartIndex - readIndex);
+
+                    if(repeatShift > maxRepeatShift)
+                    {
+                        maxRepeatShift = repeatShift;
+                        mirroredIndexStart = lastRepeatStartIndex;
+                    }
+                }
+            }
+
+            // mark the last repeat length bases as mismatch
+            if(mirroredIndexStart >= 0)
+            {
+                for(int i = 0; i < repeatLength; ++i)
+                {
+                    baseQuals[mirroredIndexStart + i] = SBX_DUPLEX_MISMATCH_QUAL;
+                }
+            }
+
+            if(mirroredIndexStart > readIndex)
+                readIndex = mirroredIndexStart + repeatLength - 1; // move to end of the repeat if shifted right
+        }
+    }
+
     private static int findMostCommonBaseCount(final int[] baseCounts)
     {
         int maxCount = 0;
@@ -723,35 +900,5 @@ public final class SbxRoutines
         }
 
         return maxBase;
-    }
-
-
-    // unused methods for now
-    public static int determineBaseMatchQual(int existingQual, byte newQual)
-    {
-        if(existingQual < 0)
-            return newQual;
-
-        if(existingQual == newQual)
-            return existingQual;
-
-        if(newQual == RAW_DUPLEX_QUAL || existingQual == RAW_DUPLEX_QUAL)
-            return RAW_DUPLEX_QUAL;
-
-        // ensure a mismatch duplex qual takes precedence over simple quals
-        if(newQual <= SBX_DUPLEX_MISMATCH_QUAL || existingQual <= SBX_DUPLEX_MISMATCH_QUAL)
-            return SBX_DUPLEX_MISMATCH_QUAL;
-
-        return max(existingQual, newQual);
-    }
-
-    private static boolean isDuplexQual(final byte qual)
-    {
-        return qual == RAW_DUPLEX_QUAL || qual == DUPLEX_NO_CONSENSUS_QUAL || qual == SBX_DUPLEX_MISMATCH_QUAL;
-    }
-
-    private static boolean isSimplexQual(final byte qual)
-    {
-        return qual == RAW_SIMPLEX_QUAL || qual == SIMPLEX_NO_CONSENSUS_QUAL;
     }
 }

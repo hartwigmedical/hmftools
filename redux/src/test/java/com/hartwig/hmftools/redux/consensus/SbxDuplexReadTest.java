@@ -609,14 +609,6 @@ public class SbxDuplexReadTest
         assertEquals(40, read.getReadBases().length);
     }
 
-    private static RefGenomeInterface getRefGenome(final String refBases)
-    {
-        MockRefGenome mockRefGenome = new MockRefGenome(true);
-        mockRefGenome.RefGenomeMap.put(CHR_1, refBases);
-        mockRefGenome.ChromosomeLengths.put(CHR_1, refBases.length());
-        return new CachedRefGenome(mockRefGenome);
-    }
-
     // UNCLEAR of the value of these tests
     private static final String DUPLEX_QUAL_STR = String.valueOf(phredToFastq(RAW_DUPLEX_QUAL));
 

@@ -34,7 +34,7 @@ data class CiderParams(
     companion object
     {
         const val DEFAULT_MAX_FRAGMENT_LENGTH = 1000
-        const val DEFAULT_MAX_READ_COUNT_PER_GENE = 600_000
+        const val DEFAULT_MAX_READ_COUNT_PER_GENE = 100_000
 
         // maximum proportion of read bases that are low quality
         const val DEFAULT_MAX_LOW_QUAL_BASES_FRACTION: Double = 0.1

@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.redux.duplicate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.redux.TestUtils.READ_ID_GEN;
+import static com.hartwig.hmftools.redux.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.redux.duplicate.ReadCache.DEFAULT_POP_DISTANCE_CHECK;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,7 +35,10 @@ public class UnpairedReadDuplicateTest
     {
         int maxDupDistance = 2;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
-        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+
+        ReadCache readCache = new ReadCache(
+                100, 100, false, groupCollapseConfig,
+                DEFAULT_POP_DISTANCE_CHECK, 0);
 
         int readStart = 100;
         int readEnd = 150;
@@ -147,7 +153,8 @@ public class UnpairedReadDuplicateTest
     {
         int maxDupDistance = 1;
         DuplicatesConfig groupCollapseConfig = new DuplicatesConfig(maxDupDistance);
-        ReadCache readCache = new ReadCache(100, 100, false, groupCollapseConfig);
+        ReadCache readCache = new ReadCache(
+                100, 100, false, groupCollapseConfig, DEFAULT_POP_DISTANCE_CHECK, 0);
 
         int readStart = 100;
         int readEnd = 250;
@@ -175,6 +182,38 @@ public class UnpairedReadDuplicateTest
         assertEquals(6, fragmentCoordsReads.DuplicateGroups.get(0).totalReadCount());
         assertEquals(0, fragmentCoordsReads.SingleReads.size());
         assertEquals(6, fragmentCoordsReads.totalReadCount());
+
+        // confirm that collapsing cannot chain past 3x jitter distance
+        read1 = createUnpairedRecord(CHR_1, readStart, readEnd, false);
+        SAMRecord read1b = cloneSamRecord(read1, READ_ID_GEN.nextId());
+        SAMRecord read1c = cloneSamRecord(read1, READ_ID_GEN.nextId());
+        SAMRecord read1d = cloneSamRecord(read1, READ_ID_GEN.nextId());
+        read2 = createUnpairedRecord(CHR_1, readStart + 1, readEnd, false);
+        read3 = createUnpairedRecord(CHR_1, readStart + 2, readEnd, false);
+        read4 = createUnpairedRecord(CHR_1, readStart + 3, readEnd, false);
+        SAMRecord read4b = cloneSamRecord(read4, READ_ID_GEN.nextId());
+        read5 = createUnpairedRecord(CHR_1, readStart + 4, readEnd, false);
+
+        read6 = createUnpairedRecord(CHR_1, readStart + 5, readEnd, false);
+
+        readCache.processRead(read1);
+        readCache.processRead(read1b);
+        readCache.processRead(read1c);
+        readCache.processRead(read1d);
+        readCache.processRead(read2);
+        readCache.processRead(read3);
+        readCache.processRead(read4);
+        readCache.processRead(read4b);
+        readCache.processRead(read5);
+        readCache.processRead(read6);
+
+        fragmentCoordsReads = readCache.evictAll();
+
+        assertEquals(1, fragmentCoordsReads.DuplicateGroups.size());
+        assertEquals(9, fragmentCoordsReads.DuplicateGroups.get(0).totalReadCount());
+        assertEquals(1, fragmentCoordsReads.SingleReads.size());
+        assertEquals(read6, fragmentCoordsReads.SingleReads.get(0).read());
+        assertEquals(10, fragmentCoordsReads.totalReadCount());
     }
 
     private static SAMRecord createUnpairedRecord(final String chromosome, final int readStart, int readEnd, boolean isReversed)

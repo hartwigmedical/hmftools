@@ -7,11 +7,13 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMATCH;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
-import static com.hartwig.hmftools.redux.consensus.ConsensusState.deleteOrSplit;
+import static com.hartwig.hmftools.redux.consensus.ReadValidReason.hasValidCigar;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -26,7 +28,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.Arrays;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -34,64 +35,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class SbxIndelConsensus
 {
-    public static SAMRecord checkSoftClipIndelPair(final List<SAMRecord> reads)
-    {
-        if(reads.size() != 2)
-            return null;
-
-        // check for a soft-clip overlapping indels and if found use the read with the soft-clips
-        for(int i = 0; i <= 1; ++i)
-        {
-            SAMRecord softClipRead = reads.get(i);
-            SAMRecord indelRead = reads.get(1 - i);
-
-            for(int j = 0; j <= 1; ++j)
-            {
-                boolean checkLeft = (j == 0);
-
-                int softClipLength = checkLeft ? leftSoftClipLength(softClipRead) : rightSoftClipLength(softClipRead);
-
-                if(softClipLength == 0)
-                    continue;
-
-                if(softClipOverlapsIndels(softClipLength, indelRead, checkLeft))
-                    return softClipRead;
-            }
-        }
-
-        return null;
-    }
-
-    private static boolean softClipOverlapsIndels(int softClipLength, final SAMRecord otherRead, boolean checkLeft)
-    {
-        int readBases = 0;
-        List<CigarElement> cigarElements = otherRead.getCigar().getCigarElements();
-        int cigarCount = cigarElements.size();
-        int cigarIndex = checkLeft ? 0 : cigarCount - 1;
-        while(cigarIndex >= 0 && cigarIndex < cigarCount)
-        {
-            CigarElement element = cigarElements.get(cigarIndex);
-
-            if(element.getOperator().consumesReadBases())
-            {
-                if(element.getOperator() == I && readBases <= softClipLength)
-                    return true;
-
-                readBases += element.getLength();
-
-                if(readBases > softClipLength)
-                    return false;
-            }
-
-            if(checkLeft)
-                ++cigarIndex;
-            else
-                --cigarIndex;
-        }
-
-        return false;
-    }
-
     public static void determineIndelConsensus(
             final IndelConsensusReads indelConsensusReads, final ConsensusState consensusState, final List<SAMRecord> reads)
     {
@@ -131,6 +74,12 @@ public class SbxIndelConsensus
         readStates.forEach(x -> x.moveToRefPosition(initialRefPosition));
 
         List<CigarElement> cigarElements = determineConsensusCigar(readStates, consensusState.IsForward, initialRefPosition);
+
+        if(!hasValidCigar(cigarElements))
+        {
+            consensusState.setOutcome(INDEL_FAIL);
+            return;
+        }
 
         int baseLength = cigarElements.stream().filter(x -> x.getOperator().consumesReadBases()).mapToInt(x -> x.getLength()).sum();
         consensusState.setBaseLength(baseLength);
@@ -250,6 +199,12 @@ public class SbxIndelConsensus
             CigarOperator nextOperator = inFinalSoftClip ?
                     S : determineConsensusCigarOperator(activeReadStates, inAlignedBases, elementOperator, refPosition, isForwardConsensus);
 
+            if(nextOperator == null)
+            {
+                RD_LOGGER.error("indel consensus, invalid next operator, sample read: {}", readToString(readStates.get(0).Read));
+                return Collections.emptyList();
+            }
+
             if(elementOperator == null || elementOperator != nextOperator)
             {
                 if(elementOperator != null)
@@ -335,6 +290,64 @@ public class SbxIndelConsensus
             cigarElements.add(0, new CigarElement(elementLength, elementOperator));
 
         return cigarElements;
+    }
+
+    public static SAMRecord checkSoftClipIndelPair(final List<SAMRecord> reads)
+    {
+        if(reads.size() != 2)
+            return null;
+
+        // check for a soft-clip overlapping indels and if found use the read with the soft-clips
+        for(int i = 0; i <= 1; ++i)
+        {
+            SAMRecord softClipRead = reads.get(i);
+            SAMRecord indelRead = reads.get(1 - i);
+
+            for(int j = 0; j <= 1; ++j)
+            {
+                boolean checkLeft = (j == 0);
+
+                int softClipLength = checkLeft ? leftSoftClipLength(softClipRead) : rightSoftClipLength(softClipRead);
+
+                if(softClipLength == 0)
+                    continue;
+
+                if(softClipOverlapsIndels(softClipLength, indelRead, checkLeft))
+                    return softClipRead;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean softClipOverlapsIndels(int softClipLength, final SAMRecord otherRead, boolean checkLeft)
+    {
+        int readBases = 0;
+        List<CigarElement> cigarElements = otherRead.getCigar().getCigarElements();
+        int cigarCount = cigarElements.size();
+        int cigarIndex = checkLeft ? 0 : cigarCount - 1;
+        while(cigarIndex >= 0 && cigarIndex < cigarCount)
+        {
+            CigarElement element = cigarElements.get(cigarIndex);
+
+            if(element.getOperator().consumesReadBases())
+            {
+                if(element.getOperator() == I && readBases <= softClipLength)
+                    return true;
+
+                readBases += element.getLength();
+
+                if(readBases > softClipLength)
+                    return false;
+            }
+
+            if(checkLeft)
+                ++cigarIndex;
+            else
+                --cigarIndex;
+        }
+
+        return false;
     }
 
     private static CigarOperator determineConsensusCigarOperator(

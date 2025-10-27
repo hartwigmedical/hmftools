@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.sage.SageCallConfig;
+import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -45,6 +46,7 @@ public class RegionTask
     private final int mTaskId;
     private final RegionResults mResults;
     private final FragmentLengthWriter mFragmentLengths;
+    private final CandidateWriter mCandidateWriter;
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
@@ -70,7 +72,7 @@ public class RegionTask
             final RefGenomeInterface refGenome, final List<SimpleVariant> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs, final PhaseSetCounter phaseSetCounter,
-            final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths)
+            final SamSlicerFactory samSlicerFactory, final FragmentLengthWriter fragmentLengths, final CandidateWriter candidateWriter)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -78,6 +80,7 @@ public class RegionTask
         mConfig = config;
         mRefGenome = refGenome;
         mFragmentLengths = fragmentLengths;
+        mCandidateWriter = candidateWriter;
 
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, samSlicerFactory);
 
@@ -113,7 +116,7 @@ public class RegionTask
 
         if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.Common.PerfWarnTime)
         {
-            SG_LOGGER.warn("region({}) candidate({}) reads({}) processing time({})",
+            SG_LOGGER.warn("region({}) initial candidate({}) reads({}) processing time({})",
                     mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
                     String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
         }
@@ -125,6 +128,8 @@ public class RegionTask
         }
 
         mResults.addCandidates(initialCandidates.size());
+
+        mCandidateWriter.writeCandidates(initialCandidates);
 
         SG_LOGGER.trace("{}: region({}) building evidence for {} candidates", mTaskId, mRegion, initialCandidates.size());
 

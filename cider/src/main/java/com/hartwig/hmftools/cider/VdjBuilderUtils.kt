@@ -362,7 +362,7 @@ object VdjBuilderUtils
 
         val combinedVDJ = VDJSequence(mergedLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)
 
-        sLogger.debug("merge: {}(v:{}, j:{}, read count: {}) and {}(v:{}, j:{}, read count: {}) together, merged: {}(v:{}, j:{}), 2ndary aligned pos shift: {}",
+        sLogger.trace("merge: {}(v:{}, j:{}, read count: {}) and {}(v:{}, j:{}, read count: {}) together, merged: {}(v:{}, j:{}), 2ndary aligned pos shift: {}",
             vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor?.matchMethod, vdj1.jAnchor?.matchMethod, vdj1.numReads,
             vdj2.aminoAcidSequenceFormatted, vdj2.vAnchor?.matchMethod, vdj2.jAnchor?.matchMethod, vdj2.numReads,
             combinedVDJ.aminoAcidSequenceFormatted, combinedVDJ.vAnchor?.matchMethod, combinedVDJ.jAnchor?.matchMethod,
