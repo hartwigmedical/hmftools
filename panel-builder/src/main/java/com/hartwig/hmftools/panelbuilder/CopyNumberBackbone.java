@@ -208,9 +208,11 @@ public class CopyNumberBackbone
 
     private ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions)
     {
-        return partitions.values().stream()
-                .flatMap(chrPartitions ->
-                        chrPartitions.stream().map(this::generateProbe))
+        return partitions.entrySet().stream()
+                // Sort to ensure deterministic ordering.
+                .sorted()
+                .flatMap(entry ->
+                        entry.getValue().stream().map(this::generateProbe))
                 .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
     }
 
