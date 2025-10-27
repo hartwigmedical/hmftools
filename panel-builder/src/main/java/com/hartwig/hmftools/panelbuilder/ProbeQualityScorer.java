@@ -23,21 +23,25 @@ public class ProbeQualityScorer
     // Use function references rather than exact implementations to allow test mocks.
     private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
     private final Function<List<String>, List<Double>> mComputeQualityModel;
-    // Higher batch size means higher performance efficiency for alignment but more memory usage.
-    private final int mBatchSize;
+    // Aim to batch this many probes together when invoking the probe quality model.
+    private final int mModelBatchSize;
+    // Buffer at most this many probes total.
+    private final int mMaxBufferSize;
 
-    private static final int DEFAULT_BATCH_SIZE = 1000;
+    private static final int DEFAULT_MIN_MODEL_BATCH_SIZE = 1000;
+    private static final int DEFAULT_MAX_BUFFER_SIZE = 10000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
-            final Function<List<String>, List<Double>> computeQualityModel, int batchSize)
+            final Function<List<String>, List<Double>> computeQualityModel, int modelBatchSize, int maxBufferSize)
     {
         mComputeQualityProfile = computeQualityProfile;
         mComputeQualityModel = computeQualityModel;
-        if(batchSize < 1)
+        if(modelBatchSize < 1 || maxBufferSize < 1 || modelBatchSize > maxBufferSize)
         {
-            throw new IllegalArgumentException("batchSize must be >= 1");
+            throw new IllegalArgumentException("Invalid batching configuration");
         }
-        mBatchSize = batchSize;
+        mModelBatchSize = modelBatchSize;
+        mMaxBufferSize = maxBufferSize;
     }
 
     public ProbeQualityScorer(final ProbeQualityProfile qualityProfile, final ProbeQualityModel qualityModel)
@@ -45,7 +49,7 @@ public class ProbeQualityScorer
         this(
                 qualityProfile::computeQualityScore,
                 probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
-                DEFAULT_BATCH_SIZE);
+                DEFAULT_MIN_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 
     public Stream<Probe> computeQualityScores(Stream<Probe> probes)
@@ -91,9 +95,10 @@ public class ProbeQualityScorer
 
             // If we got here, then the probe needs the probe quality model, in which case we consume probes until the batch is large enough
             // to process efficiently.
-            ArrayList<Probe> batch = new ArrayList<>(mBatchSize);
-            batch.add(probe);
-            while(mSourceIterator.hasNext() && batch.size() < mBatchSize)
+            ArrayList<Probe> buffer = new ArrayList<>(mModelBatchSize);
+            buffer.add(probe);
+            int modelBatchSize = 1;
+            while(mSourceIterator.hasNext() && modelBatchSize < mModelBatchSize && buffer.size() < mMaxBufferSize)
             {
                 probe = mSourceIterator.next();
                 OptionalDouble qualityScore = tryComputeQualityScoreFromProfile(probe);
@@ -101,10 +106,14 @@ public class ProbeQualityScorer
                 {
                     probe = probe.withQualityScore(qualityScore.getAsDouble());
                 }
-                batch.add(probe);
+                else
+                {
+                    modelBatchSize++;
+                }
+                buffer.add(probe);
             }
             // Compute the quality scores using the probe quality model and save them for subsequent invocations of the stream.
-            List<Probe> resultBatch = computeQualityScoresFromModel(batch);
+            List<Probe> resultBatch = computeQualityScoresFromModel(buffer);
             mBatchIterator = resultBatch.iterator();
             return mBatchIterator.next();
         }
