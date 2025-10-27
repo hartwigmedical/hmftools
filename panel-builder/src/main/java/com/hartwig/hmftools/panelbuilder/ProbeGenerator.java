@@ -569,7 +569,7 @@ public class ProbeGenerator
     private Stream<Probe> evaluateProbes(Stream<Probe> probes, final ProbeEvaluator.Criteria criteria)
     {
         // TODO? maybe can avoid computing quality score if probe is rejected for other reasons first
-        return ProbeEvaluator.evaluateProbes(mProbeQualityScorer.getQualityScores(probes), criteria).map(this::logCandidateProbe);
+        return ProbeEvaluator.evaluateProbes(mProbeQualityScorer.computeQualityScores(probes), criteria).map(this::logCandidateProbe);
     }
 
     private Probe logCandidateProbe(final Probe probe)

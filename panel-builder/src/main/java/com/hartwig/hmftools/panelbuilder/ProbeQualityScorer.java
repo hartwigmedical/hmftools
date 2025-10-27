@@ -22,14 +22,14 @@ public class ProbeQualityScorer
 {
     // Use function references rather than exact implementations to allow test mocks.
     private final Function<ChrBaseRegion, OptionalDouble> mComputeQualityProfile;
-    private final Function<List<byte[]>, List<ProbeQualityModel.Result>> mComputeQualityModel;
+    private final Function<List<String>, List<Double>> mComputeQualityModel;
     // Higher batch size means higher performance efficiency for alignment but more memory usage.
     private final int mBatchSize;
 
     private static final int DEFAULT_BATCH_SIZE = 1000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
-            final Function<List<byte[]>, List<ProbeQualityModel.Result>> computeQualityModel, int batchSize)
+            final Function<List<String>, List<Double>> computeQualityModel, int batchSize)
     {
         mComputeQualityProfile = computeQualityProfile;
         mComputeQualityModel = computeQualityModel;
@@ -42,10 +42,13 @@ public class ProbeQualityScorer
 
     public ProbeQualityScorer(final ProbeQualityProfile qualityProfile, final ProbeQualityModel qualityModel)
     {
-        this(qualityProfile::computeQualityScore, qualityModel::compute, DEFAULT_BATCH_SIZE);
+        this(
+                qualityProfile::computeQualityScore,
+                probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
+                DEFAULT_BATCH_SIZE);
     }
 
-    public Stream<Probe> getQualityScores(Stream<Probe> probes)
+    public Stream<Probe> computeQualityScores(Stream<Probe> probes)
     {
         return Stream.generate(new QualityScoreGenerator(probes)).takeWhile(Objects::nonNull);
     }
@@ -123,24 +126,24 @@ public class ProbeQualityScorer
     private List<Probe> computeQualityScoresFromModel(final List<Probe> probes)
     {
         ArrayList<Probe> result = new ArrayList<>(probes.size());
-        ArrayList<byte[]> sequences = new ArrayList<>();
+        ArrayList<String> sequences = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         for(int i = 0; i < probes.size(); ++i)
         {
             Probe probe = probes.get(i);
             if(probe.qualityScore() == null)
             {
-                sequences.add(probe.sequence().getBytes());
+                sequences.add(probe.sequence());
                 indices.add(i);
             }
             result.add(probe);
         }
 
-        List<ProbeQualityModel.Result> modelResults = mComputeQualityModel.apply(sequences);
+        List<Double> modelResults = mComputeQualityModel.apply(sequences);
         for(int i = 0; i < indices.size(); ++i)
         {
             int index = indices.get(i);
-            double qualityScore = modelResults.get(i).qualityScore();
+            double qualityScore = modelResults.get(i);
             result.set(index, result.get(index).withQualityScore(qualityScore));
         }
 
