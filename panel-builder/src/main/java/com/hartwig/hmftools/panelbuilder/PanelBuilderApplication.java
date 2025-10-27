@@ -195,7 +195,7 @@ public class PanelBuilderApplication
 
     private void printPanelStats()
     {
-        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.sequence().length()).sum();
+        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.definition().baseLength()).sum();
         LOGGER.info("Panel stats:");
         LOGGER.info("  Probe bases: {}", probeBases);
     }

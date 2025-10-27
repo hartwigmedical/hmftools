@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyIterator;
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -142,7 +143,7 @@ public class ProbeQualityScorer
             Probe probe = probes.get(i);
             if(probe.qualityScore() == null)
             {
-                sequences.add(probe.sequence());
+                sequences.add(requireNonNull(probe.sequence()));
                 indices.add(i);
             }
             result.add(probe);

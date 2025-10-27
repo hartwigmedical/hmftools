@@ -24,6 +24,7 @@ public class ProbeFactory
     // Returns empty optional if it's not valid to create a probe at that location.
     public Optional<Probe> createProbe(final SequenceDefinition definition, final TargetMetadata metadata)
     {
+        // TODO: move optional attribute computation into evaluation
         String sequence = buildSequence(definition);
         if(!isDnaSequenceNormal(sequence))
         {

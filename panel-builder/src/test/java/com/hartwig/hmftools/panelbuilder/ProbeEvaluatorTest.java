@@ -51,7 +51,7 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = new Probe(DEFINITION, "AAAAAAAAAA", METADATA, null, null, 1.0, 0);
+        Probe probe = new Probe(DEFINITION, "AAAAAAAAAA", METADATA, null, null, 1.0, 0.0);
         Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());

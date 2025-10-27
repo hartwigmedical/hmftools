@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
+
 import java.text.DecimalFormat;
 import java.util.stream.Stream;
 
@@ -20,11 +22,20 @@ public class ProbeEvaluator
     protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
     {
         probe = probe.withEvalCriteria(criteria);
-        probe = evaluateQualityScore(probe);
-        if(!probe.rejected())
+
+        probe = evaluateSequence(probe);
+        if(probe.rejected())
         {
-            probe = evaluateGcContent(probe);
+            return probe;
         }
+
+        probe = evaluateGcContent(probe);
+        if(probe.rejected())
+        {
+            return probe;
+        }
+
+        probe = evaluateQualityScore(probe);
         return probe;
     }
 
@@ -39,10 +50,20 @@ public class ProbeEvaluator
         return probe;
     }
 
+    private static Probe evaluateSequence(Probe probe)
+    {
+        String sequence = requireNonNull(probe.sequence());
+        if(!isDnaSequenceNormal(sequence))
+        {
+            probe = probe.withRejectionReason("sequence");
+        }
+        return probe;
+    }
+
     private static Probe evaluateGcContent(Probe probe)
     {
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double gcContent = probe.gcContent();
+        double gcContent = requireNonNull(probe.gcContent());
         if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
         {
             probe = probe.withRejectionReason("GC");
