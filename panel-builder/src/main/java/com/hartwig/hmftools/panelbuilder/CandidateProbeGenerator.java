@@ -68,6 +68,7 @@ public class CandidateProbeGenerator
         }
 
         minProbeStart = max(minProbeStart, 1);
+        // TODO: shouldn't silently adjust bounds here, should be checked by the caller
         maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
 
         // Must be consistent with probeRegionCenteredAt().
@@ -86,6 +87,7 @@ public class CandidateProbeGenerator
                             probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
                     return mProbeFactory.createProbe(definition, metadata);
                 })
+                // TODO: probably don't want to silently drop probes
                 .flatMap(Optional::stream);
     }
 
@@ -102,6 +104,7 @@ public class CandidateProbeGenerator
                     SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegionStartingAt(region.chromosome(), start));
                     return mProbeFactory.createProbe(definition, metadata);
                 })
+                // TODO: probably don't want to silently drop probes
                 .flatMap(Optional::stream);
     }
 }

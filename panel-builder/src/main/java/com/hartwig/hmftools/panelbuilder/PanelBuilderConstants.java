@@ -6,9 +6,6 @@ public class PanelBuilderConstants
 
     // Common constants.
     public static final int PROBE_LENGTH = 120;
-    // By default, have wide GC content tolerance since it matters less for general probes.
-    // If we can't calculate the quality score of a probe, what quality score do we assign?
-    public static final double DEFAULT_PROBE_QUALITY = 0;
 
     // Parameters when covering an arbitrary region with probes.
     // How many bases a probe may be shifted left or right from its "ideal" tiled position.

@@ -239,6 +239,7 @@ public class CopyNumberBackbone
                     // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
                     // Filter these out to avoid probe overlap, since there are many probes to choose from.
                     .filter(position -> positionBounds.containsPosition(position.Position));
+            // TODO: should only centre a probe on the site. simply code and more accurate coverage
             return mProbeGenerator.coverOnePosition(candidatePositions, metadata, PROBE_CRITERIA, PROBE_SELECT, mPanelData);
         }
     }

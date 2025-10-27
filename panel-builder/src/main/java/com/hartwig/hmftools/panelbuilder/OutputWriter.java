@@ -177,7 +177,7 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
         row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
         row.set(FLD_GC_CONTENT, probe.gcContent());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
@@ -302,7 +302,7 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
         row.set(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, requireNonNull(probe.evalCriteria()).toString());
         row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());

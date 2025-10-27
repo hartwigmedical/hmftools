@@ -257,7 +257,7 @@ public class ProbeQualityProfiler
         LOGGER.debug("Skipped {} windows with denormal bases", denormalWindows);
 
         List<byte[]> sequences = filteredWindows.stream().map(BaseWindowGenerator.BaseWindow::sequence).toList();
-        List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.compute(sequences);
+        List<ProbeQualityModel.Result> modelResults = mProbeQualityModel.computeFromSeqBytes(sequences);
 
         LOGGER.debug("Writing results");
         try

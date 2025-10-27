@@ -5,49 +5,33 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.text.DecimalFormat;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 // Common candidate probe filtering.
 public class ProbeEvaluator
 {
-    // Hook to catch all candidate probes for output.
-    @Nullable
-    private final Consumer<Probe> mCandidateCallback;
-
-    public ProbeEvaluator(final @Nullable Consumer<Probe> candidateCallback)
+    public static Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
     {
-        mCandidateCallback = candidateCallback;
+        return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
-    public Probe evaluateProbe(final Probe probe, final Criteria criteria)
+    protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
     {
-        return evaluateProbe(probe.withEvalCriteria(criteria));
-    }
-
-    private Probe evaluateProbe(Probe probe)
-    {
+        probe = probe.withEvalCriteria(criteria);
         probe = evaluateQualityScore(probe);
         if(!probe.rejected())
         {
             probe = evaluateGcContent(probe);
         }
-        logCandidateProbe(probe);
         return probe;
-    }
-
-    public Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
-    {
-        return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
     private static Probe evaluateQualityScore(Probe probe)
     {
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double qualityScore = probe.qualityScore();
+        double qualityScore = requireNonNull(probe.qualityScore());
         if(!(qualityScore >= criteria.qualityScoreMin()))
         {
             probe = probe.withRejectionReason("QS");
@@ -64,14 +48,6 @@ public class ProbeEvaluator
             probe = probe.withRejectionReason("GC");
         }
         return probe;
-    }
-
-    private void logCandidateProbe(final Probe probe)
-    {
-        if(mCandidateCallback != null)
-        {
-            mCandidateCallback.accept(probe);
-        }
     }
 
     public record Criteria(
