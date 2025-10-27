@@ -67,10 +67,6 @@ public class CandidateProbeGenerator
             throw new IllegalArgumentException("minProbeStart and maxProbeEnd forbid all possible probes");
         }
 
-        minProbeStart = max(minProbeStart, 1);
-        // TODO: shouldn't silently adjust bounds here, should be checked by the caller
-        maxProbeEnd = min(maxProbeEnd, mChromosomeLengths.get(initialPosition.Chromosome));
-
         // Must be consistent with probeRegionCenteredAt().
         int centreStartOffset = regionCentreStartOffset(PROBE_LENGTH);
 
