@@ -88,8 +88,8 @@ public class SpecialFusionsTest
         assertEquals(1, fusions.size());
         final GeneFusion fusion = fusions.get(0);
 
-        assertEquals(upPos, fusion.upstreamTrans().gene().position());
-        assertEquals(downPos, fusion.downstreamTrans().gene().position());
+        assertEquals(upPos, fusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(downPos, fusion.downstreamTrans().breakendGeneData().position());
         assertEquals(0, fusion.getExonsSkipped(false));
         assertEquals(0, fusion.getExonsSkipped(false));
         assertTrue(!fusion.reportable());
@@ -151,8 +151,8 @@ public class SpecialFusionsTest
         assertEquals(EXON_DEL_DUP, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(upPos, fusion.upstreamTrans().gene().position());
-        assertEquals(downPos, fusion.downstreamTrans().gene().position());
+        assertEquals(upPos, fusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(downPos, fusion.downstreamTrans().breakendGeneData().position());
         assertEquals(0, fusion.getExonsSkipped(true));
         assertEquals(0, fusion.getExonsSkipped(false));
         assertTrue(fusion.reportable());
@@ -198,8 +198,8 @@ public class SpecialFusionsTest
         assertEquals(EXON_DEL_DUP, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(upPos, fusion.upstreamTrans().gene().position());
-        assertEquals(downPos, fusion.downstreamTrans().gene().position());
+        assertEquals(upPos, fusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(downPos, fusion.downstreamTrans().breakendGeneData().position());
         assertEquals(0, fusion.getExonsSkipped(true));
         assertEquals(1, fusion.getExonsSkipped(false));
         assertEquals(2, fusion.getFusedExon(true));
@@ -302,16 +302,16 @@ public class SpecialFusionsTest
         assertEquals(IG_KNOWN_PAIR, fusion.knownType());
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(200, fusion.upstreamTrans().gene().position());
-        assertEquals(9500, fusion.downstreamTrans().gene().position());
+        assertEquals(200, fusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(9500, fusion.downstreamTrans().breakendGeneData().position());
         assertTrue(fusion.reportable());
 
         fusion = fusions.stream().filter(x -> x.knownType() == IG_PROMISCUOUS).findFirst().orElse(null);
         assertTrue(fusion != null);
 
         // the selected fusion is the longest for coding bases and without any exon skipping
-        assertEquals(500, fusion.upstreamTrans().gene().position());
-        assertEquals(20100, fusion.downstreamTrans().gene().position());
+        assertEquals(500, fusion.upstreamTrans().breakendGeneData().position());
+        assertEquals(20100, fusion.downstreamTrans().breakendGeneData().position());
         assertTrue(!fusion.reportable());
     }
 
@@ -355,9 +355,9 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
-        assertEquals(10150, fusion.downstreamTrans().gene().position());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().breakendGeneData().varId());
+        assertEquals(10150, fusion.downstreamTrans().breakendGeneData().position());
 
         tester.clearClustersAndSVs();
 
@@ -387,8 +387,8 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().breakendGeneData().varId());
 
         // test 3: a chain with the SGL breaking going outside the gene into a shard
         tester.clearClustersAndSVs();
@@ -420,8 +420,8 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(var1.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(var1.id(), fusion.downstreamTrans().breakendGeneData().varId());
 
         // test 4: 2 SGLs at the start and end of a fusion
         tester.clearClustersAndSVs();
@@ -455,8 +455,8 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(sgl2.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(sgl2.id(), fusion.downstreamTrans().breakendGeneData().varId());
     }
 
     @Test
@@ -503,8 +503,8 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sglInf.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(bnd.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sglInf.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(bnd.id(), fusion.downstreamTrans().breakendGeneData().varId());
     }
 
     @Test
@@ -581,8 +581,8 @@ public class SpecialFusionsTest
 
         GeneFusion fusion = tester.FusionAnalyser.getFusions().get(0);
         assertNotNull(fusion);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().breakendGeneData().varId());
         assertTrue(fusion.reportable());
 
         assertEquals(KNOWN_PAIR, fusion.knownType());
@@ -605,8 +605,8 @@ public class SpecialFusionsTest
         assertEquals(1, tester.FusionAnalyser.getFusions().size());
 
         fusion = tester.FusionAnalyser.getFusions().get(0);
-        assertEquals(sgl1.id(), fusion.upstreamTrans().gene().id());
-        assertEquals(sgl1.id(), fusion.downstreamTrans().gene().id());
+        assertEquals(sgl1.id(), fusion.upstreamTrans().breakendGeneData().varId());
+        assertEquals(sgl1.id(), fusion.downstreamTrans().breakendGeneData().varId());
         assertTrue(fusion.reportable());
 
         assertEquals(KNOWN_PAIR, fusion.knownType());

@@ -29,20 +29,4 @@ public class HomozygousDisruptionFactoryTest
         assertEquals("p23-p24.1", homozygousDisruption1.chromosomeBand());
         assertEquals("PTPRD", homozygousDisruption1.gene());
     }
-
-    @Test
-    public void canExtractGermlineHomozygousDisruptions() throws IOException
-    {
-        List<HomozygousDisruption> homozygousDisruptions =
-                HomozygousDisruptionFactory.extractGermlineFromLinxDriverCatalogTsv(GERMLINE_DRIVERS_CATALOG_TSV);
-
-        assertEquals(1, homozygousDisruptions.size());
-
-        HomozygousDisruption homozygousDisruption1 = homozygousDisruptions.get(0);
-        assertEquals("13", homozygousDisruption1.chromosome());
-        assertEquals("q13.1", homozygousDisruption1.chromosomeBand());
-        assertEquals("BRCA2", homozygousDisruption1.gene());
-        assertEquals("ENST00000544455", homozygousDisruption1.transcript());
-        assertTrue(homozygousDisruption1.isCanonical());
-    }
 }

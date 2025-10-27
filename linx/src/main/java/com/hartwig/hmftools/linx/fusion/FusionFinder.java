@@ -254,7 +254,7 @@ public class FusionFinder
                         upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "pre-coding to coding");
                 return null;
             }
-            else if(downstreamTrans.preCoding() && upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()))
+            else if(downstreamTrans.preCoding() && upstreamTrans.breakendGeneData().geneId().equals(downstreamTrans.breakendGeneData().geneId()))
             {
                 // skip pre-coding to pre-coding within the same gene
                 logInvalidReasonInfo(
@@ -284,7 +284,7 @@ public class FusionFinder
                     return null;
                 }
 
-                if(upstreamTrans.gene().id() != downstreamTrans.gene().id())
+                if(upstreamTrans.breakendGeneData().varId() != downstreamTrans.breakendGeneData().varId())
                 {
                     logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "up coding exonic diff SVs");
                     return null;
@@ -358,7 +358,7 @@ public class FusionFinder
             }
 
             if(!phaseMatched && config.AllowExonSkipping
-            && (!upstreamTrans.gene().geneId().equals(downstreamTrans.gene().geneId()) || exonDelDupCandidate))
+            && (!upstreamTrans.breakendGeneData().geneId().equals(downstreamTrans.breakendGeneData().geneId()) || exonDelDupCandidate))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for(Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
@@ -517,7 +517,7 @@ public class FusionFinder
             if(fusion.knownType() != knownType)
                 continue;
 
-            if(fusion.svId(true) != upTrans.gene().id() || fusion.svId(false) != downTrans.gene().id())
+            if(fusion.svId(true) != upTrans.breakendGeneData().varId() || fusion.svId(false) != downTrans.breakendGeneData().varId())
                 continue;
 
             if(!fusion.upstreamTrans().TransData.TransName.equals(upTrans.TransData.TransName))
@@ -655,7 +655,7 @@ public class FusionFinder
 
             boolean pfPreserved = proteinFeaturePreserved(downTrans, true, featureStart, featureEnd);
 
-            if(!pfPreserved && downTrans.gene().geneId().equals(fusion.upstreamTrans().gene().geneId()))
+            if(!pfPreserved && downTrans.breakendGeneData().geneId().equals(fusion.upstreamTrans().breakendGeneData().geneId()))
             {
                 // for same gene fusions, check whether the upstream transcript section preserves this feature
                 pfPreserved = proteinFeaturePreserved(fusion.upstreamTrans(), false, featureStart, featureEnd);

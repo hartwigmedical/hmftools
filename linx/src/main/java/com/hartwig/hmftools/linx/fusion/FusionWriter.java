@@ -56,8 +56,8 @@ public class FusionWriter implements CohortFileInterface
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
-                    .svId(transcript.gene().id())
-                    .isStart(transcript.gene().isStart())
+                    .svId(transcript.breakendGeneData().varId())
+                    .isStart(transcript.breakendGeneData().isStart())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
@@ -111,7 +111,7 @@ public class FusionWriter implements CohortFileInterface
                     .geneTranscriptEnd(geneFusion.downstreamTrans().transName())
                     .geneContextEnd(context(geneFusion.downstreamTrans()
                             .regionType(), geneFusion.knownType(), geneFusion.getFusedExon(false)))
-                    .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().gene().jcn(), geneFusion.downstreamTrans().gene().jcn()))
+                    .junctionCopyNumber(fusionJcn(geneFusion.upstreamTrans().breakendGeneData().jcn(), geneFusion.downstreamTrans().breakendGeneData().jcn()))
                     .build());
         }
     }
@@ -233,13 +233,13 @@ public class FusionWriter implements CohortFileInterface
         {
             boolean isUpstream = (fs == FS_UP);
             final BreakendTransData trans = fusion.transcripts()[fs];
-            final BreakendGeneData gene = trans.gene();
+            final BreakendGeneData gene = trans.breakendGeneData();
 
-            sj.add(valueOf(gene.id()));
+            sj.add(valueOf(gene.varId()));
             sj.add(gene.chromosome());
             sj.add(valueOf(gene.position()));
             sj.add(valueOf(gene.orientation()));
-            sj.add(valueOf(gene.type()));
+            sj.add(valueOf(gene.svType()));
             sj.add(valueOf(gene.jcn()));
 
             sj.add(gene.geneId());

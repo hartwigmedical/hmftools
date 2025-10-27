@@ -303,7 +303,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>, ChrB
         return loadChrBaseRegions(filename, isBedFile);
     }
 
-    public static Map<String, List<BaseRegion>> loadChrBaseRegions(final String filename, boolean isBedFile)
+    public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename, boolean isBedFile)
     {
         Map<String, List<BaseRegion>> chrRegionsMap = Maps.newHashMap();
 
