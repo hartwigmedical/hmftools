@@ -172,11 +172,10 @@ public class ProbeGenerator
         // Compute rejected regions based on what has been covered by the probes. Also, don't mark regions rejected where the tiling
         // algorithm found it was optimal to not cover with probes (this occurs on the edges; we allow some edge bases to be uncovered, but
         // they will likely still be captured during sequencing).
-        String rejectionReason = "No probe covering region, producing valid tiling, and meeting criteria " + evalCriteria;
         Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().exactRegion().baseRegion());
         Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
-                .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata, rejectionReason))
+                .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
                 .toList();
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
@@ -451,11 +450,7 @@ public class ProbeGenerator
                                 List.of(probe), List.of(candidateTargetRegion), List.of(coveredTargetRegion), emptyList());
                     }
                 })
-                .orElseGet(() ->
-                {
-                    String rejectionReason = "No valid probe in region meeting criteria " + evalCriteria;
-                    return ProbeGenerationResult.rejectTargets(List.of(candidateTargetRegion), rejectionReason);
-                });
+                .orElseGet(() -> ProbeGenerationResult.rejectTargets(List.of(candidateTargetRegion)));
     }
 
     // Generates the one best acceptable probe that is centered on one of the given positions.
@@ -503,11 +498,7 @@ public class ProbeGenerator
                         return new ProbeGenerationResult(List.of(probe), candidateTargetRegions, List.of(coveredTargetRegion), emptyList());
                     }
                 })
-                .orElseGet(() ->
-                {
-                    String rejectionReason = "Probe position is invalid or does not meet criteria " + evalCriteria;
-                    return ProbeGenerationResult.rejectTargets(candidateTargetRegions, rejectionReason);
-                });
+                .orElseGet(() -> ProbeGenerationResult.rejectTargets(candidateTargetRegions));
     }
 
     // Generates a single probe at the given region.
@@ -545,15 +536,10 @@ public class ProbeGenerator
                         }
                         else
                         {
-                            String rejectionReason = "Probe does not meet criteria " + evalCriteria;
-                            return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
+                            return ProbeGenerationResult.rejectTargets(targetRegions);
                         }
                     })
-                    .orElseGet(() ->
-                    {
-                        String rejectionReason = "Invalid probe location";
-                        return ProbeGenerationResult.rejectTargets(targetRegions, rejectionReason);
-                    });
+                    .orElseGet(() -> ProbeGenerationResult.rejectTargets(targetRegions));
         }
     }
 

@@ -8,10 +8,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public record RejectedRegion(
         // The exact region that could not be covered.
         ChrBaseRegion region,
-        TargetMetadata metadata,
-        // TODO: the reason is not very useful. should just have the eval criteria
-        // The reason the region could not be covered.
-        String reason
+        TargetMetadata metadata
 )
 {
     public RejectedRegion
