@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
@@ -47,7 +48,8 @@ public class CobaltGcMediansPrep implements CategoryPrep
         }
     }
 
-    public static List<Feature> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
+    @VisibleForTesting
+    static List<Feature> normaliseMedianReadDepths(GcMedianReadDepth gcMedianReadDepth)
     {
         double overallMedianReadDepth = gcMedianReadDepth.medianReadDepth();
 

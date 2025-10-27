@@ -1,4 +1,4 @@
-package prep;
+package prep.category;
 
 import static org.junit.Assert.assertEquals;
 

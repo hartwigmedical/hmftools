@@ -40,7 +40,7 @@ public class ReduxBqrPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    public static class ExtendedBqrRecord
+    static class ExtendedBqrRecord
     {
         private final ConsensusType ReadType;
         private final String StandardMutation;
@@ -145,7 +145,7 @@ public class ReduxBqrPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    public static List<Feature> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
+    static List<Feature> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
     {
         bqrRecords = bqrRecords.stream()
                 .filter(x -> x.OriginalQuality >= HI_QUAL_THRESHOLD)
@@ -173,7 +173,7 @@ public class ReduxBqrPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    public static List<Feature> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
+    static List<Feature> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
     {
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)

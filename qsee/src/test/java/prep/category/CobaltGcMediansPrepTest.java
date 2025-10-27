@@ -1,4 +1,4 @@
-package prep;
+package prep.category;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 import org.junit.Test;
 
 import feature.Feature;
-import prep.category.CobaltGcMediansPrep;
 
 public class CobaltGcMediansPrepTest
 {
