@@ -16,7 +16,7 @@ public class SamplePrepTask implements Runnable
     private final int mSampleIndex;
     private final CategoryPrep mCategoryPrep;
 
-    private final List<Feature> mFeatures = new ArrayList<>();
+    private List<Feature> mFeatures;
 
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
@@ -61,15 +61,22 @@ public class SamplePrepTask implements Runnable
     {
         String sampleId = mSampleIds.get(mSampleIndex);
 
-        logProgress(mSampleIndex);
-
-        List<Feature> categoryFeatures = mCategoryPrep.extractSampleData(sampleId);
-        mFeatures.addAll(categoryFeatures);
-
-        if(mSampleFeatureMatrix != null)
+        try
         {
-            mSampleFeatureMatrix.addRow(sampleId, mFeatures);
-            mFeatures.clear();
+            logProgress(mSampleIndex);
+
+            mFeatures = mCategoryPrep.extractSampleData(sampleId);
+
+            if(mSampleFeatureMatrix != null)
+            {
+                mSampleFeatureMatrix.addRow(sampleId, mFeatures);
+                mFeatures = null;
+            }
+        }
+        catch(Exception e)
+        {
+            QC_LOGGER.error("Failed to run {} for sample: {}", mCategoryPrep.getClass().toString(), sampleId, e);
+            System.exit(1);
         }
     }
 }

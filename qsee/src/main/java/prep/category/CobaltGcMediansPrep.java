@@ -33,7 +33,7 @@ public class CobaltGcMediansPrep implements CategoryPrep
         mConfig = config;
     }
 
-    private GcMedianReadDepth loadCobaltGcMedianFile(String sampleId)
+    private GcMedianReadDepth loadCobaltGcMedianFile(String sampleId) throws IOException
     {
         try
         {
@@ -42,9 +42,8 @@ public class CobaltGcMediansPrep implements CategoryPrep
         }
         catch(IOException e)
         {
-            QC_LOGGER.error("Failed to load Cobalt GC median read depth file: {}", e.toString());
-            e.printStackTrace();
-            return null;
+            QC_LOGGER.error("Failed to load Cobalt GC median read depth file for sample: {}", sampleId, e);
+            throw e;
         }
     }
 
@@ -86,11 +85,9 @@ public class CobaltGcMediansPrep implements CategoryPrep
         return features;
     }
 
-    public List<Feature> extractSampleData(String sampleId)
+    public List<Feature> extractSampleData(String sampleId) throws IOException
     {
         GcMedianReadDepth gcMedianReadDepth = loadCobaltGcMedianFile(sampleId);
-        List<Feature> features = normaliseMedianReadDepths(gcMedianReadDepth);
-
-        return features;
+        return normaliseMedianReadDepths(gcMedianReadDepth);
     }
 }
