@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,27 +28,26 @@ public record SequenceDefinition(
 {
     public SequenceDefinition
     {
-        boolean valid1 = startRegion != null && startOrientation == null && insertSequence == null && endRegion == null;
-        boolean valid2 = insertSequence != null && (startRegion != null || endRegion != null);
+        boolean valid1 =
+                startRegion != null && startOrientation == null && insertSequence == null && endRegion == null && endOrientation == null;
+        boolean valid2 = insertSequence != null && (startRegion != null || endRegion != null)
+                && ((startRegion == null) == (startOrientation == null))
+                && ((endRegion == null) == (endOrientation == null));
         if(!(valid1 || valid2))
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid sequence definition");
         }
         if(startRegion != null && !startRegion.hasValidPositions())
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid startRegion");
         }
         if(endRegion != null && !endRegion.hasValidPositions())
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid endRegion");
         }
-        if(startRegion == null && startOrientation != null)
+        if(insertSequence != null && !isDnaSequenceNormal(insertSequence))
         {
-            throw new IllegalArgumentException();
-        }
-        if(endRegion == null && endOrientation != null)
-        {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid insertSequence: " + insertSequence);
         }
     }
 

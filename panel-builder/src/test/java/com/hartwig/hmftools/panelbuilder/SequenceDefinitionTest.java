@@ -23,9 +23,9 @@ public class SequenceDefinitionTest
     public void testConstructor()
     {
         new SequenceDefinition(REGION1, null, null, null, null);
-        new SequenceDefinition(REGION1, null, INSERT, null, null);
-        new SequenceDefinition(null, null, INSERT, REGION2, null);
-        new SequenceDefinition(REGION1, null, INSERT, REGION2, null);
+        new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, null, null);
+        new SequenceDefinition(null, null, INSERT, REGION2, Orientation.FORWARD);
+        new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
 
         assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, null, null, null));
         assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, null, null, REGION2, null));

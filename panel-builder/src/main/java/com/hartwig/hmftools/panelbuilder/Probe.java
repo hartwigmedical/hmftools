@@ -27,7 +27,7 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence must only contain normal DNA bases");
         }
-        if(rejectionReason != null && (rejectionReason.isBlank()))
+        if(rejectionReason != null && rejectionReason.isBlank())
         {
             throw new IllegalArgumentException("rejectionReason should not be blank");
         }

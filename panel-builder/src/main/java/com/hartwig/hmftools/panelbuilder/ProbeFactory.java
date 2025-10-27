@@ -24,20 +24,10 @@ public class ProbeFactory
     // Returns empty optional if it's not valid to create a probe at that location.
     public Optional<Probe> createProbe(final SequenceDefinition definition, final TargetMetadata metadata)
     {
-        // Only check properties which are inconvenient for the caller to check in advance.
-        // Everything else is expected to be checked by the caller and will generate an exception.
-        boolean regionsValid = definition.regions().stream().allMatch(this::isRegionValid);
-        if(!regionsValid)
-        {
-            // TODO: should probably throw here - why are we trying to create a probe from a bad region?
-            return Optional.empty();
-        }
-
         String sequence = buildSequence(definition);
-        boolean sequenceValid = sequence.length() == definition.baseLength() && isDnaSequenceNormal(sequence);
-        if(!sequenceValid)
+        if(!isDnaSequenceNormal(sequence))
         {
-            // TODO? maybe throw here. surely very rare to want to create a probe in an unsequenceable region
+            // TODO: best way to handle this?
             return Optional.empty();
         }
 
@@ -46,11 +36,6 @@ public class ProbeFactory
         // Quality score is calculated later, in batches, because alignment is much faster when batched.
 
         return Optional.of(new Probe(definition, sequence, metadata, null, null, null, gcContent));
-    }
-
-    private boolean isRegionValid(final ChrBaseRegion region)
-    {
-        return region.hasValidPositions() && region.end() <= mRefGenome.getChromosomeLength(region.chromosome());
     }
 
     private String buildSequence(final SequenceDefinition definition)
@@ -71,6 +56,11 @@ public class ProbeFactory
 
     private String getSequence(final ChrBaseRegion region)
     {
-        return mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+        String sequence = mRefGenome.getBaseString(region.chromosome(), region.start(), region.end());
+        if(sequence == null || sequence.length() != region.baseLength())
+        {
+            throw new IllegalArgumentException("Attempt to create probe in unmapped region: " + region);
+        }
+        return sequence;
     }
 }

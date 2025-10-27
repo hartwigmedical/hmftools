@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +61,6 @@ public class ProbeFactoryTest
     public void testCreateProbeOutOfBounds()
     {
         SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 100));
-        Optional<Probe> actual = mFactory.createProbe(def, METADATA);
-        assertEquals(actual, Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> mFactory.createProbe(def, METADATA));
     }
 }
