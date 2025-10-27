@@ -28,7 +28,7 @@ public class ProbeQualityScorer
     // Buffer at most this many probes total.
     private final int mMaxBufferSize;
 
-    private static final int DEFAULT_MIN_MODEL_BATCH_SIZE = 1000;
+    private static final int DEFAULT_MODEL_BATCH_SIZE = 1000;
     private static final int DEFAULT_MAX_BUFFER_SIZE = 10000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
@@ -49,7 +49,7 @@ public class ProbeQualityScorer
         this(
                 qualityProfile::computeQualityScore,
                 probes -> qualityModel.computeFromSeqString(probes).stream().map(ProbeQualityModel.Result::qualityScore).toList(),
-                DEFAULT_MIN_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
+                DEFAULT_MODEL_BATCH_SIZE, DEFAULT_MAX_BUFFER_SIZE);
     }
 
     public Stream<Probe> computeQualityScores(Stream<Probe> probes)
