@@ -12,7 +12,7 @@ import feature.Feature;
 
 public class SamplePrepTask implements Runnable
 {
-    private final PrepConfig mConfig;
+    private final List<String> mSampleIds;
     private final int mSampleIndex;
     private final CategoryPrep mCategoryPrep;
 
@@ -21,10 +21,10 @@ public class SamplePrepTask implements Runnable
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
-    public SamplePrepTask(PrepConfig config, int sampleIndex, CategoryPrep categoryPrep,
+    public SamplePrepTask(List<String> sampleIds, int sampleIndex, CategoryPrep categoryPrep,
             @Nullable FeatureMatrix sampleFeatureMatrix)
     {
-        mConfig = config;
+        mSampleIds = sampleIds;
         mSampleIndex = sampleIndex;
         mCategoryPrep = categoryPrep;
 
@@ -36,8 +36,8 @@ public class SamplePrepTask implements Runnable
         int PROGRESS_INTERVAL = 100;
         int FEW_SAMPLES_THRESHOLD = 10;
 
-        int sampleCount = mConfig.SampleIds.size();
-        String sampleId = mConfig.SampleIds.get(sampleIndex);
+        int sampleCount = mSampleIds.size();
+        String sampleId = mSampleIds.get(sampleIndex);
 
         if(sampleCount == 1)
         {
@@ -59,7 +59,7 @@ public class SamplePrepTask implements Runnable
     @Override
     public void run()
     {
-        String sampleId = mConfig.SampleIds.get(mSampleIndex);
+        String sampleId = mSampleIds.get(mSampleIndex);
 
         logProgress(mSampleIndex);
 
