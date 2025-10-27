@@ -6,6 +6,9 @@ public class PanelBuilderConstants
 
     // Common constants.
     public static final int PROBE_LENGTH = 120;
+    // If a variant probe differs from the ref genome by more than this many bases, consider it a novel sequence, and keep the probe even if
+    // it overlaps with existing probes.
+    public static final int VARIANT_NOVEL_SEQUENCE_BASES_MIN = 5;
 
     // Parameters when covering an arbitrary region with probes.
     // How many bases a probe may be shifted left or right from its "ideal" tiled position.
@@ -83,9 +86,6 @@ public class PanelBuilderConstants
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
-    // If a variant probe differs from the ref genome by more than this many bases, consider it a novel sequence, and keep the probe even if
-    // it overlaps with existing probes.
-    public static final int SAMPLE_NOVEL_SEQUENCE_BASES_MIN = 5;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

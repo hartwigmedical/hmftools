@@ -438,14 +438,13 @@ public class ProbeGenerator
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
-                    // TODO: should formalise this coverage check in separate method. handle exact and combo regions
-                    ChrBaseRegion probeRegion = probe.definition().exactRegion();
-                    if(coverage != null && coverage.isCovered(probeRegion))
+                    if(coverage != null && coverage.isCovered(probe.definition()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(List.of(candidateTargetRegion));
                     }
                     else
                     {
+                        ChrBaseRegion probeRegion = probe.definition().exactRegion();
                         TargetRegion coveredTargetRegion =
                                 new TargetRegion(regionIntersection(candidateTargetRegion.region(), probeRegion).orElseThrow(), metadata);
                         return new ProbeGenerationResult(
@@ -492,14 +491,14 @@ public class ProbeGenerator
         return bestCandidate
                 .map(probe ->
                 {
-                    BasePosition position = probeToPosition.get(probe.definition().exactRegion());
-                    ChrBaseRegion region = ChrBaseRegion.from(position);
-                    if(coverage.isCovered(region))
+                    if(coverage.isCovered(probe.definition()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(candidateTargetRegions);
                     }
                     else
                     {
+                        BasePosition position = probeToPosition.get(probe.definition().exactRegion());
+                        ChrBaseRegion region = ChrBaseRegion.from(position);
                         TargetRegion coveredTargetRegion = new TargetRegion(region, probe.metadata());
                         return new ProbeGenerationResult(List.of(probe), candidateTargetRegions, List.of(coveredTargetRegion), emptyList());
                     }
@@ -529,7 +528,7 @@ public class ProbeGenerator
     {
         List<TargetRegion> targetRegions = definition.regions().stream().map(region -> new TargetRegion(region, metadata)).toList();
 
-        if(coverage != null && definition.regions().stream().allMatch(coverage::isCovered))
+        if(coverage != null && coverage.isCovered(definition))
         {
             return ProbeGenerationResult.alreadyCoveredTargets(targetRegions);
         }
