@@ -71,7 +71,7 @@ public class CobaltGcMediansPrep implements CategoryPrep
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            FeatureKey key = FeatureKey.of(
+            FeatureKey key = FeatureKey.ofPair(
                     FeatureType.COBALT_GC_MEDIAN,
                     Pair.of(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket()))
             );

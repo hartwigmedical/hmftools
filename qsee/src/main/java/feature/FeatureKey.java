@@ -5,46 +5,51 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 public class FeatureKey
 {
-    private final String mName;
     @Nullable private final FeatureType mType;
+    private final String mName;
 
     // For multi-field keys
     private static final String KEY_VALUE_SEPARATOR = "=";
     private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
 
-    public FeatureKey(String name, @Nullable FeatureType type)
+    public FeatureKey(@Nullable FeatureType type, String name)
     {
-        mName = name;
         mType = type;
+        mName = name;
     }
 
     public FeatureKey(String name)
     {
-        mName = name;
         mType = null;
+        mName = name;
     }
 
     public String name() { return mName; }
     public FeatureType type() { return mType; }
 
+    public static FeatureKey of(FeatureType type, String name) { return new FeatureKey(type, name); }
+
     public static FeatureKey of(String name) { return new FeatureKey(name); }
 
-    public static List<FeatureKey> of(String... names) { return Stream.of(names).map(FeatureKey::new).toList(); }
+    @VisibleForTesting
+    public static List<FeatureKey> ofNames(String... names) { return Stream.of(names).map(FeatureKey::new).toList(); }
 
-    public static FeatureKey of(FeatureType type, Pair<String, String> pair)
+    public static FeatureKey ofPair(FeatureType type, Pair<String, String> pair)
     {
-        return new FeatureKey(nameFromPair(pair.getKey(), pair.getValue()), type);
+        return new FeatureKey(type, nameFromPair(pair.getKey(), pair.getValue()));
     }
 
     @SafeVarargs
-    public static FeatureKey of(FeatureType type, Pair<String, String>... pairs)
+    public static FeatureKey ofPairs(FeatureType type, Pair<String, String>... pairs)
     {
-        return new FeatureKey(nameFromPairs(pairs), type);
+        return new FeatureKey(type, nameFromPairs(pairs));
     }
 
     private static String nameFromPair(String fieldName, String fieldValue)

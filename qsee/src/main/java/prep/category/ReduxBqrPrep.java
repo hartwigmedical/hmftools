@@ -154,7 +154,7 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            FeatureKey key = FeatureKey.of(
+            FeatureKey key = FeatureKey.ofPairs(
                     FeatureType.REDUX_BQR_PER_SNV96_CONTEXT,
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
@@ -178,7 +178,7 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            FeatureKey key = FeatureKey.of(
+            FeatureKey key = FeatureKey.ofPairs(
                     FeatureType.REDUX_BQR_PER_ORIG_QUAL,
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),

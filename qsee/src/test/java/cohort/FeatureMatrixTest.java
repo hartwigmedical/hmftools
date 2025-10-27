@@ -51,7 +51,7 @@ public class FeatureMatrixTest
         List<String> actualSampleIds = matrix.getRowIds();
         assertEquals(expectedSampleIds, actualSampleIds);
 
-        List<FeatureKey> expectedFeatureKeys = FeatureKey.of("feature1", "feature2", "feature3");
+        List<FeatureKey> expectedFeatureKeys = FeatureKey.ofNames("feature1", "feature2", "feature3");
         List<FeatureKey> actualFeatureKeys = matrix.getFeatureKeys();
         assertEquals(expectedFeatureKeys, actualFeatureKeys);
 

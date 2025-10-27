@@ -13,15 +13,15 @@ public class Feature
         mValue = value;
     }
 
-    public Feature(String name, double value, @Nullable FeatureType type)
+    public Feature(@Nullable FeatureType type, String name, double value)
     {
-        mKey = new FeatureKey(name, type);
+        mKey = new FeatureKey(type, name);
         mValue = value;
     }
 
     public Feature(String name, double value)
     {
-        this(name, value, null);
+        this(null, name, value);
     }
 
     public FeatureKey key() { return mKey; }
