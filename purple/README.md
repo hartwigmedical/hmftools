@@ -544,6 +544,7 @@ If a somatic VCF is supplied to PURPLE each variant is enriched with the followi
 - SUBCL: Subclonal likelihood between 0 and 1
 - KT: Forward/reverse kataegis id
 - BIALLELIC: Flag to indicate variant is biallelic
+- BIALLELIC_PROB: Probability that variant is biallelic
 
 More detailed descriptions of the kataegis, clonality and biallelic status are found below.
 
