@@ -20,8 +20,6 @@ public class ProbeEvaluatorTest
 
     private static final double EPSILON = 1e-6;
 
-    private final ProbeEvaluator mProbeEvaluator = new ProbeEvaluator(null);
-
     @Test
     public void testCriteriaGcContentMin()
     {
@@ -37,8 +35,8 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesAcceptable()
     {
-        Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 1, 0.5);
-        Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
+        Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 1.0, 0.5);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
@@ -53,8 +51,8 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = new Probe(DEFINITION, "AAAAAAAAAA", METADATA, null, null, 1, 0);
-        Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
+        Probe probe = new Probe(DEFINITION, "AAAAAAAAAA", METADATA, null, null, 1.0, 0.0);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
@@ -70,7 +68,7 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectQuality()
     {
         Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 0.1, 0.5);
-        Probe evalProbe = mProbeEvaluator.evaluateProbe(probe, CRITERIA);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());

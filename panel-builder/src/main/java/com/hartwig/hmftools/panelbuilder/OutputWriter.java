@@ -60,7 +60,6 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_GC_CONTENT = "GCContent";
     private static final String FLD_TARGET_TYPE = "TargetType";
     private static final String FLD_TARGET_EXTRA_INFO = "TargetExtra";
-    private static final String FLD_REJECT_REASON = "RejectReason";
     private static final String FLD_EVAL_CRITERIA = "EvalCriteria";
     private static final String FLD_PROBE_COUNT = "ProbeCount";
 
@@ -71,14 +70,13 @@ public class OutputWriter implements AutoCloseable
 
     private static final List<String> REJECTED_REGIONS_COLUMNS = List.of(
             FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END,
-            FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
-            FLD_REJECT_REASON);
+            FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO);
 
     private static final List<String> CANDIDATE_PROBES_COLUMNS = List.of(
             FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
-            FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
+            FLD_EVAL_CRITERIA);
 
     private static final List<String> GENE_STATS_COLUMNS = List.of(
             FLD_GENE_NAME,
@@ -176,9 +174,9 @@ public class OutputWriter implements AutoCloseable
         row.setOrNull(FLD_START_REGION, start == null ? null : start.toString());
         row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
         row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
-        row.set(FLD_SEQUENCE, probe.sequence());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
-        row.set(FLD_GC_CONTENT, probe.gcContent());
+        row.setOrNull(FLD_SEQUENCE, probe.sequence());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
     }
@@ -239,7 +237,6 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_POSITION_END, region.region().end());
         row.set(FLD_TARGET_TYPE, region.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, region.metadata().extraInfo());
-        row.set(FLD_REJECT_REASON, region.reason());
     }
 
     private void writeRejectedRegionsBedRow(final RejectedRegion region) throws IOException
@@ -302,10 +299,9 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
-        row.set(FLD_GC_CONTENT, probe.gcContent());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, requireNonNull(probe.evalCriteria()).toString());
-        row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
     }
 
     private static void writeTargetRegionBedRow(final TargetRegion region, BufferedWriter writer) throws IOException

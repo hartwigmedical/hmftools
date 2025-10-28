@@ -18,9 +18,18 @@ public class ProbeTest
     @Test
     public void testWith()
     {
+        Probe probe = new Probe(DEFINITION, null, METADATA, null, null, null, null);
+
+        probe = probe.withSequence(SEQUENCE);
+        assertEquals(SEQUENCE, probe.sequence());
+
         double qualityScore = 0.1;
+        probe = probe.withQualityScore(qualityScore);
+        assertEquals(qualityScore, probe.qualityScore(), 0);
+
         double gcContent = 0.2;
-        Probe probe = new Probe(DEFINITION, SEQUENCE, METADATA, null, null, qualityScore, gcContent);
+        probe = probe.withGcContent(gcContent);
+        assertEquals(gcContent, probe.gcContent(), 0);
 
         probe = probe.withEvalCriteria(EVAL_CRITERIA);
         assertEquals(EVAL_CRITERIA, probe.evalCriteria());

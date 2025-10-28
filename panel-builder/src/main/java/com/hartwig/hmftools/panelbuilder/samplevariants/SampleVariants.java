@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
@@ -11,7 +10,6 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_IND
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NOVEL_SEQUENCE_BASES_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_REPEAT_COUNT_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SV_BREAKENDS_PER_GENE_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VAF_MIN;
@@ -26,8 +24,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
@@ -273,55 +269,9 @@ public class SampleVariants
 
         SequenceDefinition definition = variant.generateProbe();
 
-        // Only do the coverage check for variant where the probe is similar to the ref genome.
-        // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
-        // so the variant probe is not needed.
-        // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
-        boolean isNovel = isVariantProbeNovel(definition);
-        PanelCoverage coverage = isNovel ? null : mPanelData;
-
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probe(definition, metadata, evalCriteria, coverage);
-    }
-
-    private static boolean isVariantProbeNovel(final SequenceDefinition definition)
-    {
-        ChrBaseRegion start = definition.startRegion();
-        ChrBaseRegion end = definition.endRegion();
-        int insertLength = definition.insertSequence() == null ? 0 : definition.insertSequence().length();
-        if(start == null && end == null)
-        {
-            // Unknown region, assume novel sequence.
-            return true;
-        }
-        else if(start != null && end != null)
-        {
-            if(start.chromosome().equals(end.chromosome()))
-            {
-                // SNV, INDEL, or SV on same chromosome.
-                if(start.start() > end.start())
-                {
-                    // Ensure start and end are ordered correctly to calculate the delete length.
-                    start = definition.endRegion();
-                    end = definition.startRegion();
-                }
-                // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
-                int deleteLength = max(end.start() - start.end() - 1, 0);
-                int difference = abs(insertLength - deleteLength);
-                return difference >= SAMPLE_NOVEL_SEQUENCE_BASES_MIN;
-            }
-            else
-            {
-                // SV across different chromosomes.
-                return true;
-            }
-        }
-        else
-        {
-            // Single ended SV.
-            return true;
-        }
+        return mProbeGenerator.probe(definition, metadata, evalCriteria, mPanelData);
     }
 
     private static TargetMetadata createTargetMetadata(final Variant variant)
