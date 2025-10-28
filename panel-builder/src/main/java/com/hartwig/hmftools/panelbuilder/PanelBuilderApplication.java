@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
@@ -32,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 public class PanelBuilderApplication
 {
     private final PanelBuilderConfig mConfig;
-    private final RefGenomeSource mRefGenome;
+    private final RefGenomeInterface mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
     private PanelData mPanelData;
@@ -45,8 +47,9 @@ public class PanelBuilderApplication
     {
         mConfig = config;
 
-        mRefGenome = loadRefGenome(mConfig.refGenomeFile());
-        mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
+        RefGenomeSource refGenomeSource = loadRefGenome(mConfig.refGenomeFile());
+        mRefGenome = new CachedRefGenome(refGenomeSource, 2000, 10);
+        mRefGenomeVersion = deriveRefGenomeVersion(refGenomeSource);
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());

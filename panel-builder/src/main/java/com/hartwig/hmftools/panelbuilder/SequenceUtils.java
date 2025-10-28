@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import java.util.OptionalInt;
+import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -37,9 +38,11 @@ public class SequenceUtils
         return sequence.toUpperCase();
     }
 
+    private static final Pattern NORMAL_DNA_REGEX = Pattern.compile("^[acgtACGT]*$");
+
     public static boolean isDnaSequenceNormal(final String sequence)
     {
-        return sequence.matches("^[acgtACGT]*$");
+        return NORMAL_DNA_REGEX.matcher(sequence).matches();
     }
 
     // Calculates the approximate size in bases of the insertion or deletion represented by the sequence.

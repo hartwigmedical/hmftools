@@ -311,8 +311,8 @@ public class OutputWriter implements AutoCloseable
 
     private static String probeBedName(final Probe probe)
     {
-        double qualityScore = probe.qualityScore();
-        double gcContent = probe.gcContent();
+        double qualityScore = requireNonNull(probe.qualityScore());
+        double gcContent = requireNonNull(probe.gcContent());
         String baseName = targetMetadataToBedName(probe.metadata());
         return format("%s:QS=%.2f:GC=%.2f", baseName, qualityScore, gcContent);
     }
