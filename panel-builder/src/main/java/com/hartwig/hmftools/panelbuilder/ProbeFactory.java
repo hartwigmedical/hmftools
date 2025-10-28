@@ -62,6 +62,6 @@ public class ProbeFactory
         {
             throw new IllegalArgumentException("Attempt to create probe in unmapped region: " + region);
         }
-        return sequence;
+        return sequence.toUpperCase();
     }
 }
