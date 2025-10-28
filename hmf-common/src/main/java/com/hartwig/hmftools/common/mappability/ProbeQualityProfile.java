@@ -37,7 +37,7 @@ public class ProbeQualityProfile
     private final int mMatchScoreThreshold;
     private final int mMatchScoreOffset;
     // Keyed by chromosome.
-    protected final Map<String, ProbeQualityWindows> mWindows;
+    protected final Map<String, WindowArray> mWindows;
 
     public static final String CFG_PROBE_QUALITY_FILE = "probe_quality_profile";
     private static final String DESC_PROBE_QUALITY_FILE = "Genome regions to probe quality";
@@ -52,7 +52,7 @@ public class ProbeQualityProfile
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeQualityProfile.class);
 
-    private ProbeQualityProfile(final Map<String, ProbeQualityWindows> windows, int baseWindowLength, int baseWindowSpacing,
+    private ProbeQualityProfile(final Map<String, WindowArray> windows, int baseWindowLength, int baseWindowSpacing,
             int matchScoreThreshold, int matchScoreOffset)
     {
         if(baseWindowLength < 1)
@@ -83,21 +83,21 @@ public class ProbeQualityProfile
                 RESOURCE_MATCH_SCORE_THRESHOLD, RESOURCE_MATCH_SCORE_OFFSET);
     }
 
-    protected static class ProbeQualityWindows
+    protected static class WindowArray
     {
         // To save memory, only store the end position and the length, since every window is the same size.
         // Store the end rather than the start because later we need to search on the end.
-        private final int mBaseWindowLength;
+        protected final int mBaseWindowLength;
         // Also store the data in raw arrays to avoid the memory overhead of boxing with ArrayList.
-        private int[] mEndPositions;
-        private float[] mQualityScores;
+        protected int[] mEndPositions;
+        protected float[] mQualityScores;
         private int mSize;
         private int mCapacity;
 
         // Overall, the memory optimisations here approximately halve the memory usage.
         // For the full genome profile, the reduction is from 8GB to 4GB.
 
-        public ProbeQualityWindows(int baseWindowLength)
+        public WindowArray(int baseWindowLength)
         {
             if(baseWindowLength < 1)
             {
@@ -173,13 +173,13 @@ public class ProbeQualityProfile
         }
     }
 
-    private static Map<String, ProbeQualityWindows> loadProbeQualityWindows(final String filePath, int baseWindowLength,
+    private static Map<String, WindowArray> loadProbeQualityWindows(final String filePath, int baseWindowLength,
             int baseWindowSpacing)
     {
         LOGGER.debug("Loading probe quality profile file: {}", filePath);
 
         long startTimeMs = System.currentTimeMillis();
-        Map<String, ProbeQualityWindows> result = new HashMap<>();
+        HashMap<String, WindowArray> result = new HashMap<>();
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
@@ -188,7 +188,7 @@ public class ProbeQualityProfile
             int qualityScoreField = requireNonNull(reader.getColumnIndex(FLD_QUALITY_SCORE));
 
             String curChromosome = null;
-            ProbeQualityWindows curWindows = null;
+            WindowArray curWindows = null;
 
             for(DelimFileReader.Row row : reader)
             {
@@ -212,7 +212,7 @@ public class ProbeQualityProfile
                     // Not using computeIfAbsent() because that is much slower.
                     if(curWindows == null)
                     {
-                        curWindows = new ProbeQualityWindows(baseWindowLength);
+                        curWindows = new WindowArray(baseWindowLength);
                         result.put(curChromosome, curWindows);
                     }
                 }
@@ -253,7 +253,7 @@ public class ProbeQualityProfile
         // If the profile doesn't completely cover the probe then we say we can't assess its quality
         // (since the uncovered region could affect the quality significantly).
 
-        ProbeQualityWindows windows = mWindows.get(probe.chromosome());
+        WindowArray windows = mWindows.get(probe.chromosome());
         if(windows == null)
         {
             // Probe chromosome not covered at all.
@@ -276,7 +276,7 @@ public class ProbeQualityProfile
     }
 
     // Efficiently finds the index of the first window that contains a position.
-    private static OptionalInt findFirstWindowContaining(final ProbeQualityWindows windows, int position)
+    private static OptionalInt findFirstWindowContaining(final WindowArray windows, int position)
     {
         // We are able to find the first window that overlaps using Collections.binarySearch() because, since the windows are of equal size,
         // sorting by start (done previously) implies sorting by end.
@@ -296,7 +296,7 @@ public class ProbeQualityProfile
     }
 
     // Compute the final quality score from windows which overlap the probe.
-    private double aggregateQualityScore(final ProbeQualityWindows windows, int overlapStart, int overlapEnd, final BaseRegion probe)
+    private double aggregateQualityScore(final WindowArray windows, int overlapStart, int overlapEnd, final BaseRegion probe)
     {
         // Pick the minimum quality score, however need to take into account partial overlap of the windows on the edge of the probe.
         // Windows fully overlapping the probe are used as-is.
@@ -361,7 +361,7 @@ public class ProbeQualityProfile
     }
 
     // Gets the last index >= `index` in `windows` which overlaps `region`.
-    private static int scanWhileOverlap(final ProbeQualityWindows windows, int index, final BaseRegion region)
+    private static int scanWhileOverlap(final WindowArray windows, int index, final BaseRegion region)
     {
         while(index + 1 < windows.size() && windows.getRegion(index + 1).overlaps(region))
         {
