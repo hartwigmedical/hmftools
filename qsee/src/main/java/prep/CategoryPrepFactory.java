@@ -2,6 +2,7 @@ package prep;
 
 import java.util.List;
 
+import prep.category.BamMetricsPrep;
 import prep.category.CobaltGcMediansPrep;
 import prep.category.ReduxBqrPrep;
 
@@ -17,6 +18,7 @@ public class CategoryPrepFactory
     public List<CategoryPrep> createCategoryPreps()
     {
         return List.of(
+                new BamMetricsPrep(mConfig),
                 new CobaltGcMediansPrep(mConfig),
                 new ReduxBqrPrep(mConfig)
         );

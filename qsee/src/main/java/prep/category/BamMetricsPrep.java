@@ -1,0 +1,146 @@
+package prep.category;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
+import com.hartwig.hmftools.common.metrics.BamMetricFragmentLength;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
+import com.hartwig.hmftools.common.metrics.GeneDepth;
+import com.hartwig.hmftools.common.metrics.ValueFrequency;
+
+import org.jetbrains.annotations.NotNull;
+
+import common.SampleType;
+import feature.Feature;
+import feature.FeatureType;
+import prep.CategoryPrep;
+import prep.PrepConfig;
+
+public class BamMetricsPrep implements CategoryPrep
+{
+    private final PrepConfig mConfig;
+
+    private BamMetricSummary mBamMetricSummary;
+    private BamMetricCoverage mBamMetricCoverage;
+    private BamMetricFragmentLength mBamMetricFragmentLength;
+
+    public BamMetricsPrep(PrepConfig config)
+    {
+        mConfig = config;
+    }
+
+    private void loadBamMetricsFiles(String bamMetricsDir, String sampleId) throws IOException
+    {
+        String filePath;
+
+        filePath = BamMetricSummary.generateFilename(bamMetricsDir, sampleId);
+        mBamMetricSummary = BamMetricSummary.read(filePath);
+
+        filePath = BamMetricCoverage.generateFilename(bamMetricsDir, sampleId);
+        mBamMetricCoverage = BamMetricCoverage.read(filePath);
+
+        filePath = BamMetricFragmentLength.generateFilename(bamMetricsDir, sampleId);
+        mBamMetricFragmentLength = BamMetricFragmentLength.read(filePath);
+
+        // TODO
+        // loadBamMetricGeneCoverage(bamMetricsDir, sampleId);
+    }
+
+    private static List<Feature> getSummaryStats(BamMetricSummary summary)
+    {
+        List<Feature> features = new ArrayList<>();
+
+        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "MeanCoverage", summary.meanCoverage()));
+        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "LowMapQualPercent", summary.lowMapQualPercent()));
+        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "LowBaseQualPercent", summary.lowBaseQualPercent()));
+        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "DuplicateReadsRate", (double) summary.duplicateReads() / summary.totalReads()));
+        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "DualStrandReadsRate", (double) summary.dualStrandReads() / summary.totalReads()));
+
+        return features;
+    }
+
+    private static final int[] MIN_COVERAGE_THRESHOLDS = { 10, 30, 100, 250 };
+
+    private static List<Feature> calcPropBasesWithMinCoverage(List<ValueFrequency> coverageBaseCounts)
+    {
+        List<Feature> features = new ArrayList<>();
+
+        long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
+        for(int coverageThreshold : MIN_COVERAGE_THRESHOLDS)
+        {
+            long basesAboveCoverageThres = coverageBaseCounts.stream()
+                    .filter(x -> x.Value >= coverageThreshold)
+                    .mapToLong(x -> x.Count)
+                    .sum();
+
+            double propAboveCoverageThres = (double) basesAboveCoverageThres / totalBases;
+
+            Feature feature = new Feature(
+                    FeatureType.BAM_METRICS_COVERAGE_BINNED,
+                    String.valueOf(coverageThreshold),
+                    propAboveCoverageThres
+            );
+
+            features.add(feature);
+        }
+
+        return features;
+    }
+
+    private static List<Feature> calcPropBasesWithCoverage(List<ValueFrequency> coverageBaseCounts)
+    {
+        long totalCount = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
+
+        return coverageBaseCounts.stream().map(x -> {
+            double propBases = (double) x.Count / totalCount;
+            return new Feature(FeatureType.BAM_METRICS_COVERAGE_BINNED, String.valueOf(x.Value), propBases);
+        }).toList();
+    }
+
+    private static List<Feature> calcPropFragmentsWithLength(List<ValueFrequency> fragmentLengthCounts)
+    {
+        long totalFragments = fragmentLengthCounts.stream().mapToLong(x -> x.Count).sum();
+
+        return fragmentLengthCounts.stream().map(x -> {
+            double propBases = (double) x.Count / totalFragments;
+            return new Feature(FeatureType.BAM_METRICS_FRAG_LENGTH, String.valueOf(x.Value), propBases);
+        }).toList();
+    }
+
+    private static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<DriverGene> driverGenes)
+    {
+        List<DriverGene> selectedGenes = driverGenes.stream().filter(DriverGene::reportSomatic).toList();
+        List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
+
+        return selectedGeneDepths.stream()
+                .map(x -> new Feature(FeatureType.BAM_METRICS_GENE_COVERAGE_SUMMARY, x.Gene, x.MissedVariantLikelihood))
+                .toList();
+    }
+
+    @Override
+    public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
+    {
+        String bamMetricsDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        loadBamMetricsFiles(bamMetricsDir, sampleId);
+
+        List<Feature> summaryStats = getSummaryStats(mBamMetricSummary);
+        List<Feature> propBasesWithCoverage = calcPropBasesWithCoverage(mBamMetricCoverage.Coverage);
+        List<Feature> propBasesWithMinCoverage  = calcPropBasesWithMinCoverage(mBamMetricCoverage.Coverage);
+        List<Feature> fragmentLengthDistribution = calcPropFragmentsWithLength(mBamMetricFragmentLength.FragmentLengths);
+
+        // TODO
+        // List<GeneDepth> geneDepths = new ArrayList<>();
+        // List<Feature> missedVariantLikelihoods = getMissedVariantLikelihoods(geneDepths, mConfig.DriverGenes);
+
+        List<Feature> features = new ArrayList<>();
+        features.addAll(summaryStats);
+        features.addAll(propBasesWithCoverage);
+        features.addAll(propBasesWithMinCoverage);
+        features.addAll(fragmentLengthDistribution);
+
+        return features;
+    }
+}
