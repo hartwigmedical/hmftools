@@ -2,7 +2,10 @@ package prep.category;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
+import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
 
+import java.io.File;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -97,9 +100,26 @@ public class ReduxBqrPrep implements CategoryPrep
         }
     }
 
-    private void loadSnvBqrRecords(String sampleId)
+    private String findBackwardsCompatibleBqrFile(String sampleId) throws NoSuchFileException
     {
-        String filePath = BqrFile.generateFilename(mConfig.getReduxDir(sampleId), sampleId);
+        // TODO: Remove this temporary method. In WiGiTS 3.0, the (new) REDUX BQR file path will be used.
+
+        File reduxBqrFile = new File(BqrFile.generateFilename(mConfig.getReduxDir(sampleId), sampleId));
+        File sageBqrFile = new File(mConfig.getSageDir(sampleId) + File.separator + sampleId + SAGE_FILE_ID + ".bqr.tsv");
+
+        if(reduxBqrFile.isFile())
+            return reduxBqrFile.getAbsolutePath();
+
+        if(sageBqrFile.isFile())
+            return sageBqrFile.getAbsolutePath();
+
+        throw new NoSuchFileException(String.format("sample(%s) - could not determine the REDUX(%s) or SAGE(%s) BQR file",
+                sampleId, reduxBqrFile.getName(), sageBqrFile.getName()));
+    }
+
+    private void loadSnvBqrRecords(String sampleId) throws NoSuchFileException
+    {
+        String filePath = findBackwardsCompatibleBqrFile(sampleId);
 
         List<BqrRecord> bqrRecords = BqrFile.read(filePath);
 
@@ -108,12 +128,11 @@ public class ReduxBqrPrep implements CategoryPrep
         List<ExtendedBqrRecord> extendedBqrRecords = bqrRecordsFiltered.stream().map(ExtendedBqrRecord::new).toList();
 
         // Sort here to control the eventual order in which features are plotted in R
-        List<ExtendedBqrRecord> extendedBqrRecordsSorted = extendedBqrRecords.stream()
-                .sorted(Comparator.comparing((ExtendedBqrRecord x) -> x.ReadType)
-                        .thenComparing(x -> x.StandardMutation)
-                        .thenComparing(x -> x.StandardTrinucContext)
-                )
-                .toList();
+        Comparator<ExtendedBqrRecord> comparator = Comparator.comparing((ExtendedBqrRecord x) -> x.ReadType)
+                .thenComparing(x -> x.StandardMutation)
+                .thenComparing(x -> x.StandardTrinucContext);
+
+        List<ExtendedBqrRecord> extendedBqrRecordsSorted = extendedBqrRecords.stream().sorted(comparator).toList();
 
         mExtendedBqrRecords.addAll(extendedBqrRecordsSorted);
     }
@@ -128,17 +147,17 @@ public class ReduxBqrPrep implements CategoryPrep
 
             double totalCountInGroup = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count).sum();
 
-            double weightMeanChangeInQual = 0;
+            double weightedMeanedChangeInQual = 0;
             for(ExtendedBqrRecord bqrRecordInGroup : bqrRecordsInGroup)
             {
                 double changeInQual = bqrRecordInGroup.RecalibratedQuality - bqrRecordInGroup.OriginalQuality;
                 double weight = bqrRecordInGroup.Count / totalCountInGroup;
                 double weightedChangeInQual = changeInQual * weight;
 
-                weightMeanChangeInQual += weightedChangeInQual;
+                weightedMeanedChangeInQual += weightedChangeInQual;
             }
 
-            keyResultsMap.put(key, weightMeanChangeInQual);
+            keyResultsMap.put(key, weightedMeanedChangeInQual);
         }
 
         return keyResultsMap;
@@ -196,7 +215,8 @@ public class ReduxBqrPrep implements CategoryPrep
                 .toList();
     }
 
-    public List<Feature> extractSampleData(String sampleId)
+    @Override
+    public List<Feature> extractSampleData(String sampleId) throws NoSuchFileException
     {
         loadSnvBqrRecords(sampleId);
 
