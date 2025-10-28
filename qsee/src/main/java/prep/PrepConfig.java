@@ -20,10 +20,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REF_METRICS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRICS_DIR_CFG;
@@ -31,12 +27,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRIC
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import static common.QseeConstants.QC_LOGGER;
@@ -53,7 +47,6 @@ import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 import common.SampleType;
 
@@ -82,6 +75,7 @@ public class PrepConfig
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
+        checkSampleIdsProvided(configBuilder);
         TumorIds = new ArrayList<>();
         ReferenceIds = new ArrayList<>();
 
@@ -91,10 +85,8 @@ public class PrepConfig
         }
         else
         {
-            TumorIds.addAll(loadSampleIdsString(configBuilder.getValue(TUMOR)));
-
-            if(configBuilder.getValue(REFERENCE) != null)
-                ReferenceIds.addAll(loadSampleIdsString(configBuilder.getValue(REFERENCE)));
+            loadSampleIdsString(configBuilder, TUMOR, TumorIds);
+            loadSampleIdsString(configBuilder, REFERENCE, ReferenceIds);
         }
 
         AmberDir = configBuilder.getValue(AMBER_DIR_CFG);
@@ -115,7 +107,9 @@ public class PrepConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        // TODO: Set required to true for some args
+
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
@@ -136,12 +130,28 @@ public class PrepConfig
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
-    private static List<String> loadSampleIdsString(final String sampleIdsString)
+    private static void checkSampleIdsProvided(final ConfigBuilder configBuilder)
     {
-        return List.of(sampleIdsString.split(","));
+        if(!configBuilder.hasValue(SAMPLE_ID_FILE) && !configBuilder.hasValue(TUMOR) && !configBuilder.hasValue(REFERENCE))
+        {
+            QC_LOGGER.error("Sample IDs must be provided to 1) -{} or to 2) -{} and/or -{}", SAMPLE_ID_FILE, TUMOR, REFERENCE);
+            System.exit(1);
+        }
     }
 
-    private static void loadSampleIdsFile(final ConfigBuilder configBuilder, final List<String> tumorIds, List<String> referenceIds)
+    private static void loadSampleIdsString(final ConfigBuilder configBuilder, final String configValue, final List<String> sampleIds)
+    {
+        String sampleIdsString = configBuilder.getValue(configValue);
+
+        if(sampleIdsString == null)
+            return;
+
+        List<String> sampleIdsList = List.of(sampleIdsString.split(","));
+
+        sampleIds.addAll(sampleIdsList);
+    }
+
+    private static void loadSampleIdsFile(final ConfigBuilder configBuilder, final List<String> tumorIds, final List<String> referenceIds)
     {
         try
         {
@@ -154,10 +164,18 @@ public class PrepConfig
 
             lines.remove(0);
 
+            if(lines.isEmpty())
+            {
+                QC_LOGGER.error("No sample IDs found in sample IDs file");
+                System.exit(1);
+            }
+
             for(String line : lines)
             {
                 String[] values = line.split(TSV_DELIM, -1);
-                tumorIds.add(values[tumorIdIndex]);
+
+                if(tumorIdIndex != null)
+                    tumorIds.add(values[tumorIdIndex]);
 
                 if(referenceIdIndex != null)
                     referenceIds.add(values[referenceIdIndex]);
