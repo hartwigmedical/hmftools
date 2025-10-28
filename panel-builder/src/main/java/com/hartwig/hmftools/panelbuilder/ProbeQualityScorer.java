@@ -3,6 +3,9 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.util.Collections.emptyIterator;
 import static java.util.Objects.requireNonNull;
 
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -122,15 +125,35 @@ public class ProbeQualityScorer
 
     private OptionalDouble tryComputeQualityScoreFromProfile(final Probe probe)
     {
-        ChrBaseRegion region = probe.definition().exactRegionOrNull();
-        if(region == null)
+        if(canUseProfile(probe.definition()))
         {
-            return OptionalDouble.empty();
+            // Use the worst quality score from the constituent regions. This is most conservative.
+            return probe.definition().regions().stream()
+                    .map(mComputeQualityProfile)
+                    .reduce((q1, q2) ->
+                    {
+                        if(q1.isPresent() && q2.isPresent())
+                        {
+                            return OptionalDouble.of(Math.min(q1.getAsDouble(), q2.getAsDouble()));
+                        }
+                        else
+                        {
+                            return OptionalDouble.empty();
+                        }
+                    })
+                    .orElseThrow();
         }
         else
         {
-            return mComputeQualityProfile.apply(region);
+            return OptionalDouble.empty();
         }
+    }
+
+    private static boolean canUseProfile(final SequenceDefinition sequenceDefinition)
+    {
+        // If the sequence is very close to the ref genome then there's no need to use the probe quality model.
+        // We assume a small perturbation of the ref sequence will not produce a large change in quality score.
+        return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) <= PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
     }
 
     private List<Probe> computeQualityScoresFromModel(final List<Probe> probes)

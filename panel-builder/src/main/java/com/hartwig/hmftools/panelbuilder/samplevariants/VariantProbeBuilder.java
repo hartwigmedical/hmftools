@@ -27,7 +27,7 @@ public class VariantProbeBuilder
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
 
-        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, alt, endRegion);
+        SequenceDefinition definition = SequenceDefinition.simpleVariant(startRegion, alt, endRegion);
 
         if(definition.baseLength() != probeLength)
         {
@@ -116,22 +116,34 @@ public class VariantProbeBuilder
         int insSeqLength = min(insertSequence.length(), halfProbeLength);
         int refBaseLength = probeLength - insSeqLength;
 
-        ChrBaseRegion startRegion = null;
-        ChrBaseRegion endRegion = null;
-        String insert;
+        SequenceDefinition definition;
 
         if(orientation == ORIENT_FWD)
         {
-            startRegion = regionEndingAt(chromosome, position, refBaseLength);
-            insert = insertSequence.substring(0, insSeqLength);
+            ChrBaseRegion startRegion = regionEndingAt(chromosome, position, refBaseLength);
+            String insert = insertSequence.substring(0, insSeqLength);
+            if(insert.isEmpty())
+            {
+                definition = SequenceDefinition.singleRegion(startRegion);
+            }
+            else
+            {
+                definition = SequenceDefinition.forwardSgl(startRegion, insert);
+            }
         }
         else
         {
-            insert = insertSequence.substring(insertSequence.length() - insSeqLength);
-            endRegion = regionStartingAt(chromosome, position, refBaseLength);
+            String insert = insertSequence.substring(insertSequence.length() - insSeqLength);
+            ChrBaseRegion endRegion = regionStartingAt(chromosome, position, refBaseLength);
+            if(insert.isEmpty())
+            {
+                definition = SequenceDefinition.singleRegion(endRegion);
+            }
+            else
+            {
+                definition = SequenceDefinition.reverseSgl(insert, endRegion);
+            }
         }
-
-        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, insert, endRegion);
 
         if(definition.baseLength() != probeLength)
         {

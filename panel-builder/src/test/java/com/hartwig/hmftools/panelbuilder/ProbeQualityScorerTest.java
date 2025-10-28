@@ -76,7 +76,7 @@ public class ProbeQualityScorerTest
         ChrBaseRegion region = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + 120 - 1);
         String sequence = "A".repeat(region.baseLength());
         // Probe data other than the region and sequence doesn't really matter.
-        Probe probe = new Probe(SequenceDefinition.exactRegion(region), sequence, METADATA, null, null, null, 0.0);
+        Probe probe = new Probe(SequenceDefinition.singleRegion(region), sequence, METADATA, null, null, null, 0.0);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
         mProfileResults.add(Pair.of(region, OptionalDouble.of(quality)));
@@ -90,7 +90,7 @@ public class ProbeQualityScorerTest
         ChrBaseRegion region = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + 120 - 1);
         String sequence = "A".repeat(region.baseLength());
         // Probe data other than the region and sequence doesn't really matter.
-        Probe probe = new Probe(SequenceDefinition.exactRegion(region), sequence, METADATA, null, null, null, 0.0);
+        Probe probe = new Probe(SequenceDefinition.singleRegion(region), sequence, METADATA, null, null, null, 0.0);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
         mProfileResults.add(Pair.of(region, OptionalDouble.empty()));

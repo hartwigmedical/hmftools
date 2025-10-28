@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreStartOff
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -24,12 +23,10 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // Functionality for creating candidate probes covering target regions.
 public class CandidateProbeGenerator
 {
-    private final ProbeFactory mProbeFactory;
     private final Map<String, Integer> mChromosomeLengths;
 
-    public CandidateProbeGenerator(final ProbeFactory probeFactory, final Map<String, Integer> chromosomeLengths)
+    public CandidateProbeGenerator(final Map<String, Integer> chromosomeLengths)
     {
-        mProbeFactory = probeFactory;
         mChromosomeLengths = chromosomeLengths;
     }
 
@@ -79,12 +76,10 @@ public class CandidateProbeGenerator
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset ->
                 {
-                    SequenceDefinition definition = SequenceDefinition.exactRegion(
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(
                             probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
-                    return mProbeFactory.createProbe(definition, metadata);
-                })
-                // TODO: probably don't want to silently drop probes
-                .flatMap(Optional::stream);
+                    return new Probe(definition, metadata);
+                });
     }
 
     // Generates all probes overlapping a region, in order from left to right.
@@ -97,10 +92,8 @@ public class CandidateProbeGenerator
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
                 .mapToObj(start ->
                 {
-                    SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegionStartingAt(region.chromosome(), start));
-                    return mProbeFactory.createProbe(definition, metadata);
-                })
-                // TODO: probably don't want to silently drop probes
-                .flatMap(Optional::stream);
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegionStartingAt(region.chromosome(), start));
+                    return new Probe(definition, metadata);
+                });
     }
 }

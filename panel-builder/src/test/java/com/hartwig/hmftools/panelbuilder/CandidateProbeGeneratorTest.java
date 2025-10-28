@@ -39,8 +39,7 @@ public class CandidateProbeGeneratorTest
         {
             refGenome.RefGenomeMap.put(entry.getKey(), MockRefGenome.generateRandomBases(entry.getValue()));
         }
-        ProbeFactory probeFactory = new ProbeFactory(refGenome);
-        mGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
+        mGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
     }
 
     @Test
@@ -53,7 +52,7 @@ public class CandidateProbeGeneratorTest
         Set<ChrBaseRegion> expectedRegions = IntStream.rangeClosed(region.start(), region.end() - PROBE_LENGTH + 1)
                 .mapToObj(start -> new ChrBaseRegion(region.chromosome(), start, start + PROBE_LENGTH - 1))
                 .collect(Collectors.toSet());
-        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.definition().exactRegion()).toList();
+        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.definition().singleRegion()).toList();
 
         // Check the full set of probes is as expected.
         assertEquals(expectedRegions, new HashSet<>(actualRegions));
@@ -77,7 +76,7 @@ public class CandidateProbeGeneratorTest
     public void testCoverOneSubregionChromosomeBounds()
     {
         List<Probe> actual = mGenerator.coverOneSubregion(new ChrBaseRegion("1", 1, 1000), METADATA).toList();
-        int minStart = actual.stream().mapToInt(probe -> probe.definition().exactRegion().start()).min().orElseThrow();
+        int minStart = actual.stream().mapToInt(probe -> probe.definition().singleRegion().start()).min().orElseThrow();
         assertEquals(1, minStart);
     }
 
@@ -91,7 +90,7 @@ public class CandidateProbeGeneratorTest
                 .toList();
 
         List<Probe> actual = mGenerator.allOverlapping(region, METADATA).toList();
-        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.definition().exactRegion()).toList();
+        List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.definition().singleRegion()).toList();
 
         assertEquals(expectedRegions, actualRegions);
 

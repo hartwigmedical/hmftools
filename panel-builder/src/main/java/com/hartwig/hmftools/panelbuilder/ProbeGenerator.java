@@ -48,31 +48,29 @@ import org.jetbrains.annotations.Nullable;
 // Encapsulates all functionality for creating probes.
 public class ProbeGenerator
 {
-    private final ProbeFactory mProbeFactory;
     private final CandidateProbeGenerator mCandidateGenerator;
-    private final ProbeQualityScorer mProbeQualityScorer;
+    private final ProbeEvaluator mProbeEvaluator;
     // Hook to catch all candidate probes for output.
     @Nullable
     private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
-    public ProbeGenerator(final ProbeFactory probeFactory, final CandidateProbeGenerator candidateGenerator,
-            final ProbeQualityScorer probeQualityScorer, final @Nullable Consumer<Probe> candidateCallback)
+    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeEvaluator probeEvaluator,
+            final @Nullable Consumer<Probe> candidateCallback)
     {
-        mProbeFactory = probeFactory;
         mCandidateGenerator = candidateGenerator;
-        mProbeQualityScorer = probeQualityScorer;
+        mProbeEvaluator = probeEvaluator;
         mCandidateCallback = candidateCallback;
     }
 
     public static ProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
             final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        ProbeFactory probeFactory = new ProbeFactory(refGenome);
-        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
+        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
         ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
-        return new ProbeGenerator(probeFactory, candidateProbeGenerator, probeQualityScorer, candidateCallback);
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(refGenome, probeQualityScorer);
+        return new ProbeGenerator(candidateProbeGenerator, probeEvaluator, candidateCallback);
     }
 
     // General purpose method for generating the best acceptable probes to cover an entire region.
@@ -137,7 +135,7 @@ public class ProbeGenerator
         // This requires sorted by position, but it's already in that order.
         allPlausibleProbes.forEach(probe ->
         {
-            BaseRegion probeRegion = probe.definition().exactRegion().baseRegion();
+            BaseRegion probeRegion = probe.definition().singleRegion().baseRegion();
             BaseRegion prev = acceptableSubregions.isEmpty() ? null : acceptableSubregions.get(acceptableSubregions.size() - 1);
             if(prev != null && probeRegion.start() <= prev.end() + 1)
             {
@@ -172,7 +170,7 @@ public class ProbeGenerator
         // Compute rejected regions based on what has been covered by the probes. Also, don't mark regions rejected where the tiling
         // algorithm found it was optimal to not cover with probes (this occurs on the edges; we allow some edge bases to be uncovered, but
         // they will likely still be captured during sequencing).
-        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().exactRegion().baseRegion());
+        Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().singleRegion().baseRegion());
         Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
         List<RejectedRegion> rejectedRegions = computeUncoveredRegions(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
                 .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
@@ -180,7 +178,7 @@ public class ProbeGenerator
 
         // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
         List<TargetRegion> coveredTargetRegions =
-                mergeOverlapAndAdjacentRegions(probes.stream().map(probe -> probe.definition().exactRegion()))
+                mergeOverlapAndAdjacentRegions(probes.stream().map(probe -> probe.definition().singleRegion()))
                         .stream()
                         .map(covered -> new TargetRegion(regionIntersection(covered, uncoveredRegion).orElseThrow(), metadata))
                         .toList();
@@ -223,7 +221,7 @@ public class ProbeGenerator
             BaseRegion originalProbe = tiling.get(i);
             BaseRegion prevProbe = finalProbes.isEmpty()
                     ? null
-                    : finalProbes.get(finalProbes.size() - 1).definition().exactRegion().baseRegion();
+                    : finalProbes.get(finalProbes.size() - 1).definition().singleRegion().baseRegion();
             // We don't know exactly what the next probe will be but allow at least its original tiled position to be valid.
             BaseRegion nextProbe = i + 1 < tiling.size() ? tiling.get(i + 1) : null;
 
@@ -314,7 +312,7 @@ public class ProbeGenerator
         List<BaseRegion> permittedUncoveredRegions = new ArrayList<>();
         if(!tiling.isEmpty() && couldPlaceProbe[0])
         {
-            int tilingStart = finalProbes.get(0).definition().exactRegion().start();
+            int tilingStart = finalProbes.get(0).definition().singleRegion().start();
             if(tilingStart > acceptableSubregion.start())
             {
                 permittedUncoveredRegions.add(new BaseRegion(acceptableSubregion.start(), tilingStart));
@@ -322,7 +320,7 @@ public class ProbeGenerator
         }
         if(!tiling.isEmpty() && couldPlaceProbe[tiling.size() - 1])
         {
-            int tilingEnd = finalProbes.get(finalProbes.size() - 1).definition().exactRegion().end();
+            int tilingEnd = finalProbes.get(finalProbes.size() - 1).definition().singleRegion().end();
             if(tilingEnd < acceptableSubregion.end())
             {
                 permittedUncoveredRegions.add(new BaseRegion(tilingEnd, acceptableSubregion.end()));
@@ -443,7 +441,7 @@ public class ProbeGenerator
                     }
                     else
                     {
-                        ChrBaseRegion probeRegion = probe.definition().exactRegion();
+                        ChrBaseRegion probeRegion = probe.definition().singleRegion();
                         TargetRegion coveredTargetRegion =
                                 new TargetRegion(regionIntersection(candidateTargetRegion.region(), probeRegion).orElseThrow(), metadata);
                         return new ProbeGenerationResult(
@@ -459,18 +457,15 @@ public class ProbeGenerator
     {
         Map<ChrBaseRegion, BasePosition> probeToPosition = new HashMap<>();
         Stream<Probe> candidateProbes = positions
-                .flatMap(position ->
+                .map(position ->
                 {
                     ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
-                    SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegion);
-                    Optional<Probe> probe = mProbeFactory.createProbe(definition, metadata);
-                    if(probe.isPresent())
-                    {
-                        // Store the target position so it can be retrieved later once the final probe is selected.
-                        // Also needed to compute the rejected regions.
-                        probeToPosition.put(probeRegion, position);
-                    }
-                    return probe.stream();
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegion);
+                    Probe probe = new Probe(definition, metadata);
+                    // Store the target position so it can be retrieved later once the final probe is selected.
+                    // Also needed to compute the rejected regions.
+                    probeToPosition.put(probeRegion, position);
+                    return probe;
                 });
 
         // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
@@ -492,7 +487,7 @@ public class ProbeGenerator
                     }
                     else
                     {
-                        BasePosition position = probeToPosition.get(probe.definition().exactRegion());
+                        BasePosition position = probeToPosition.get(probe.definition().singleRegion());
                         ChrBaseRegion region = ChrBaseRegion.from(position);
                         TargetRegion coveredTargetRegion = new TargetRegion(region, probe.metadata());
                         return new ProbeGenerationResult(List.of(probe), candidateTargetRegions, List.of(coveredTargetRegion), emptyList());
@@ -510,7 +505,7 @@ public class ProbeGenerator
             throw new IllegalArgumentException("region length must be equal to probe length");
         }
 
-        SequenceDefinition definition = SequenceDefinition.exactRegion(region);
+        SequenceDefinition definition = SequenceDefinition.singleRegion(region);
         return probe(definition, metadata, evalCriteria, coverage);
     }
 
@@ -525,21 +520,17 @@ public class ProbeGenerator
         }
         else
         {
-            return mProbeFactory.createProbe(definition, metadata)
-                    .map(probe ->
-                    {
-                        // TODO: figure out batching properly
-                        probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
-                        if(probe.accepted())
-                        {
-                            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-                        }
-                        else
-                        {
-                            return ProbeGenerationResult.rejectTargets(targetRegions);
-                        }
-                    })
-                    .orElseGet(() -> ProbeGenerationResult.rejectTargets(targetRegions));
+            Probe probe = new Probe(definition, metadata);
+            // TODO: figure out batching properly
+            probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
+            if(probe.accepted())
+            {
+                return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+            }
+            else
+            {
+                return ProbeGenerationResult.rejectTargets(targetRegions);
+            }
         }
     }
 
@@ -553,8 +544,7 @@ public class ProbeGenerator
 
     private Stream<Probe> evaluateProbes(Stream<Probe> probes, final ProbeEvaluator.Criteria criteria)
     {
-        // TODO? maybe can avoid computing quality score if probe is rejected for other reasons first
-        return ProbeEvaluator.evaluateProbes(mProbeQualityScorer.computeQualityScores(probes), criteria).map(this::logCandidateProbe);
+        return mProbeEvaluator.evaluateProbes(probes, criteria).map(this::logCandidateProbe);
     }
 
     private Probe logCandidateProbe(final Probe probe)
