@@ -155,7 +155,7 @@ public class ReduxBqrPrep implements CategoryPrep
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
             FeatureKey key = FeatureKey.ofPairs(
-                    FeatureType.REDUX_BQR_PER_SNV96_CONTEXT,
+                    FeatureType.BQR_PER_SNV96_CONTEXT,
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
                     Pair.of(KEY_FLD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext)
@@ -179,7 +179,7 @@ public class ReduxBqrPrep implements CategoryPrep
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
             FeatureKey key = FeatureKey.ofPairs(
-                    FeatureType.REDUX_BQR_PER_ORIG_QUAL,
+                    FeatureType.BQR_PER_ORIG_QUAL,
                     Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
                     Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
                     Pair.of(KEY_FLD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin())

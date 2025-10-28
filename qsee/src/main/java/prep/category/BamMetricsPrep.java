@@ -53,11 +53,12 @@ public class BamMetricsPrep implements CategoryPrep
     {
         List<Feature> features = new ArrayList<>();
 
-        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "MeanCoverage", summary.meanCoverage()));
-        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "LowMapQualPercent", summary.lowMapQualPercent()));
-        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "LowBaseQualPercent", summary.lowBaseQualPercent()));
-        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "DuplicateReadsRate", (double) summary.duplicateReads() / summary.totalReads()));
-        features.add(new Feature(FeatureType.BAM_METRICS_SUMMARY, "DualStrandReadsRate", (double) summary.dualStrandReads() / summary.totalReads()));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "MeanCoverage", summary.meanCoverage()));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "LowMapQualPercent", summary.lowMapQualPercent()));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "LowBaseQualPercent", summary.lowBaseQualPercent()));
+
+        features.add(new Feature(FeatureType.READ_STATS, "DuplicateReadsRate", (double) summary.duplicateReads() / summary.totalReads()));
+        features.add(new Feature(FeatureType.READ_STATS, "DualStrandReadsRate", (double) summary.dualStrandReads() / summary.totalReads()));
 
         return features;
     }
@@ -79,8 +80,8 @@ public class BamMetricsPrep implements CategoryPrep
             double propAboveCoverageThres = (double) basesAboveCoverageThres / totalBases;
 
             Feature feature = new Feature(
-                    FeatureType.BAM_METRICS_COVERAGE_BINNED,
-                    String.valueOf(coverageThreshold),
+                    FeatureType.COVERAGE_STATS,
+                    String.format("Coverage ≥ %s", coverageThreshold),
                     propAboveCoverageThres
             );
 
@@ -96,7 +97,7 @@ public class BamMetricsPrep implements CategoryPrep
 
         return coverageBaseCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalCount;
-            return new Feature(FeatureType.BAM_METRICS_COVERAGE_BINNED, String.valueOf(x.Value), propBases);
+            return new Feature(FeatureType.COVERAGE_DISTRIBUTION, String.valueOf(x.Value), propBases);
         }).toList();
     }
 
@@ -106,7 +107,7 @@ public class BamMetricsPrep implements CategoryPrep
 
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
-            return new Feature(FeatureType.BAM_METRICS_FRAG_LENGTH, String.valueOf(x.Value), propBases);
+            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases);
         }).toList();
     }
 
@@ -116,7 +117,7 @@ public class BamMetricsPrep implements CategoryPrep
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
 
         return selectedGeneDepths.stream()
-                .map(x -> new Feature(FeatureType.BAM_METRICS_GENE_COVERAGE_SUMMARY, x.Gene, x.MissedVariantLikelihood))
+                .map(x -> new Feature(FeatureType.MISSED_VARIANT_LIKELIHOOD, x.Gene, x.MissedVariantLikelihood))
                 .toList();
     }
 

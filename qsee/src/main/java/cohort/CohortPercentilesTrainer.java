@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import common.SampleType;
 import feature.FeatureKey;
+import feature.FeatureType;
 import prep.CategoryPrep;
 import prep.CategoryPrepFactory;
 import prep.PrepConfig;
@@ -98,7 +99,10 @@ public class CohortPercentilesTrainer
 
             // Write header
             StringJoiner header = new StringJoiner(TSV_DELIM);
-            header.add("FeatureType").add("FeatureName");
+            header.add("VisType");
+            header.add("SourceTool");
+            header.add("FeatureType");
+            header.add("FeatureName");
 
             List<String> percentileNames = percentileFeatureMatrix.getRowIds();
             for(String percentileName : percentileNames)
@@ -114,10 +118,13 @@ public class CohortPercentilesTrainer
             for(int featureIndex = 0; featureIndex < percentileFeatureMatrix.numFeatures(); featureIndex++)
             {
                 FeatureKey featureKey = percentileFeatureMatrix.getFeatureKeys().get(featureIndex);
+                FeatureType featureType = featureKey.type();
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
 
-                line.add(featureKey.type().toString());
+                line.add(featureType.visType().name());
+                line.add(featureType.sourceTool().name());
+                line.add(featureType.name());
                 line.add(featureKey.name());
 
                 double[] percentileValues = percentileFeatureMatrix.getColumnValues(featureIndex);
@@ -174,13 +181,16 @@ public class CohortPercentilesTrainer
 
         PrepConfig prepConfig = new PrepConfig(configBuilder);
 
-        CohortPercentilesTrainer tumorPercentilesTrainer = new CohortPercentilesTrainer(prepConfig);
-        tumorPercentilesTrainer.run(SampleType.TUMOR);
+        if(!prepConfig.TumorIds.isEmpty())
+        {
+            CohortPercentilesTrainer trainer = new CohortPercentilesTrainer(prepConfig);
+            trainer.run(SampleType.TUMOR);
+        }
 
         if(!prepConfig.ReferenceIds.isEmpty())
         {
-            CohortPercentilesTrainer referencePercentilesTrainer = new CohortPercentilesTrainer(prepConfig);
-            referencePercentilesTrainer.run(SampleType.REFERENCE);
+            CohortPercentilesTrainer trainer = new CohortPercentilesTrainer(prepConfig);
+            trainer.run(SampleType.REFERENCE);
         }
     }
 }
