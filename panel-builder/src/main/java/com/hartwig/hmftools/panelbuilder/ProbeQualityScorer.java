@@ -3,6 +3,8 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.util.Collections.emptyIterator;
 import static java.util.Objects.requireNonNull;
 
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -122,15 +124,34 @@ public class ProbeQualityScorer
 
     private OptionalDouble tryComputeQualityScoreFromProfile(final Probe probe)
     {
-        ChrBaseRegion region = probe.definition().exactRegionOrNull();
-        if(region == null)
+        if(canUseProfile(probe.definition()))
         {
-            return OptionalDouble.empty();
+            // Use the worst quality score from the constituent regions. This is most conservative.
+            return probe.definition().regions().stream()
+                    .map(mComputeQualityProfile)
+                    .reduce((left, right) ->
+                    {
+                        if(left.isPresent() && right.isPresent())
+                        {
+                            return OptionalDouble.of(Math.min(left.getAsDouble(), right.getAsDouble()));
+                        }
+                        else
+                        {
+                            return OptionalDouble.empty();
+                        }
+                    })
+                    .orElseThrow();
         }
         else
         {
-            return mComputeQualityProfile.apply(region);
+            return OptionalDouble.empty();
         }
+    }
+
+    private static boolean canUseProfile(final SequenceDefinition sequenceDefinition)
+    {
+        return sequenceDefinition.insertSequence() == null
+                || sequenceDefinition.insertSequence().length() <= PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
     }
 
     private List<Probe> computeQualityScoresFromModel(final List<Probe> probes)
