@@ -1,5 +1,7 @@
 package prep;
 
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
@@ -32,6 +34,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildca
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
@@ -44,6 +48,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -65,8 +71,9 @@ public class PrepConfig
     public final String TumorMetricsDir;
     public final String RefMetricsDir;
 
+    public final List<DriverGene> DriverGenes;
+
     public final String OutputDir;
-    public final String OutputId;
 
     public final int Threads;
 
@@ -96,12 +103,12 @@ public class PrepConfig
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         ReduxDir = configBuilder.getValue(REDUX_DIR_CFG);
         SageDir = configBuilder.getValue(SAGE_DIR_CFG);
-
         TumorMetricsDir = configBuilder.getValue(TUMOR_METRICS_DIR_CFG);
         RefMetricsDir = configBuilder.getValue(REF_METRICS_DIR_CFG);
 
+        DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
+
         OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         Threads = TaskExecutor.parseThreads(configBuilder);
     }
@@ -121,10 +128,11 @@ public class PrepConfig
         configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
         configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
 
-        FileWriterUtils.addOutputOptions(configBuilder);
+        configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
+
+        configBuilder.addPath(OUTPUT_DIR, false, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
-
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 
@@ -159,8 +167,7 @@ public class PrepConfig
         }
         catch(IOException e)
         {
-            QC_LOGGER.error("Failed to load sample ids file: {}", e.toString());
-            e.printStackTrace();
+            QC_LOGGER.error("Failed to load sample ids file:", e);
             System.exit(1);
         }
     }
