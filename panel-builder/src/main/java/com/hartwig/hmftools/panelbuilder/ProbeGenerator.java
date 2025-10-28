@@ -48,31 +48,29 @@ import org.jetbrains.annotations.Nullable;
 // Encapsulates all functionality for creating probes.
 public class ProbeGenerator
 {
-    private final ProbeFactory mProbeFactory;
     private final CandidateProbeGenerator mCandidateGenerator;
-    private final ProbeQualityScorer mProbeQualityScorer;
+    private final ProbeEvaluator mProbeEvaluator;
     // Hook to catch all candidate probes for output.
     @Nullable
     private final Consumer<Probe> mCandidateCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
-    public ProbeGenerator(final ProbeFactory probeFactory, final CandidateProbeGenerator candidateGenerator,
-            final ProbeQualityScorer probeQualityScorer, final @Nullable Consumer<Probe> candidateCallback)
+    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeEvaluator probeEvaluator,
+            final @Nullable Consumer<Probe> candidateCallback)
     {
-        mProbeFactory = probeFactory;
         mCandidateGenerator = candidateGenerator;
-        mProbeQualityScorer = probeQualityScorer;
+        mProbeEvaluator = probeEvaluator;
         mCandidateCallback = candidateCallback;
     }
 
     public static ProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
             final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        ProbeFactory probeFactory = new ProbeFactory(refGenome);
-        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
+        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
         ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
-        return new ProbeGenerator(probeFactory, candidateProbeGenerator, probeQualityScorer, candidateCallback);
+        ProbeEvaluator probeEvaluator = new ProbeEvaluator(refGenome, probeQualityScorer);
+        return new ProbeGenerator(candidateProbeGenerator, probeEvaluator, candidateCallback);
     }
 
     // General purpose method for generating the best acceptable probes to cover an entire region.
@@ -459,18 +457,15 @@ public class ProbeGenerator
     {
         Map<ChrBaseRegion, BasePosition> probeToPosition = new HashMap<>();
         Stream<Probe> candidateProbes = positions
-                .flatMap(position ->
+                .map(position ->
                 {
                     ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
                     SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegion);
-                    Optional<Probe> probe = mProbeFactory.createProbe(definition, metadata);
-                    if(probe.isPresent())
-                    {
-                        // Store the target position so it can be retrieved later once the final probe is selected.
-                        // Also needed to compute the rejected regions.
-                        probeToPosition.put(probeRegion, position);
-                    }
-                    return probe.stream();
+                    Probe probe = new Probe(definition, metadata);
+                    // Store the target position so it can be retrieved later once the final probe is selected.
+                    // Also needed to compute the rejected regions.
+                    probeToPosition.put(probeRegion, position);
+                    return probe;
                 });
 
         // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
@@ -525,21 +520,17 @@ public class ProbeGenerator
         }
         else
         {
-            return mProbeFactory.createProbe(definition, metadata)
-                    .map(probe ->
-                    {
-                        // TODO: figure out batching properly
-                        probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
-                        if(probe.accepted())
-                        {
-                            return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
-                        }
-                        else
-                        {
-                            return ProbeGenerationResult.rejectTargets(targetRegions);
-                        }
-                    })
-                    .orElseGet(() -> ProbeGenerationResult.rejectTargets(targetRegions));
+            Probe probe = new Probe(definition, metadata);
+            // TODO: figure out batching properly
+            probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
+            if(probe.accepted())
+            {
+                return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+            }
+            else
+            {
+                return ProbeGenerationResult.rejectTargets(targetRegions);
+            }
         }
     }
 
@@ -553,8 +544,7 @@ public class ProbeGenerator
 
     private Stream<Probe> evaluateProbes(Stream<Probe> probes, final ProbeEvaluator.Criteria criteria)
     {
-        // TODO? maybe can avoid computing quality score if probe is rejected for other reasons first
-        return ProbeEvaluator.evaluateProbes(mProbeQualityScorer.computeQualityScores(probes), criteria).map(this::logCandidateProbe);
+        return mProbeEvaluator.evaluateProbes(probes, criteria).map(this::logCandidateProbe);
     }
 
     private Probe logCandidateProbe(final Probe probe)

@@ -27,7 +27,7 @@ public class VariantProbeBuilder
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
 
-        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, alt, endRegion);
+        SequenceDefinition definition = SequenceDefinition.simpleVariant(startRegion, alt, endRegion);
 
         if(definition.baseLength() != probeLength)
         {
@@ -131,7 +131,7 @@ public class VariantProbeBuilder
             endRegion = regionStartingAt(chromosome, position, refBaseLength);
         }
 
-        SequenceDefinition definition = SequenceDefinition.simpleMutation(startRegion, insert, endRegion);
+        SequenceDefinition definition = SequenceDefinition.simpleVariant(startRegion, insert, endRegion);
 
         if(definition.baseLength() != probeLength)
         {

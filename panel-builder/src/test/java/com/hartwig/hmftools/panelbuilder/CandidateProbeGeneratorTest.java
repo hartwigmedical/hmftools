@@ -39,8 +39,7 @@ public class CandidateProbeGeneratorTest
         {
             refGenome.RefGenomeMap.put(entry.getKey(), MockRefGenome.generateRandomBases(entry.getValue()));
         }
-        ProbeFactory probeFactory = new ProbeFactory(refGenome);
-        mGenerator = new CandidateProbeGenerator(probeFactory, refGenome.chromosomeLengths());
+        mGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
     }
 
     @Test

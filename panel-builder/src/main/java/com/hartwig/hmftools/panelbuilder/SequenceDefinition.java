@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,7 @@ public record SequenceDefinition(
         return new SequenceDefinition(region, null, null, null, null);
     }
 
-    public static SequenceDefinition simpleMutation(final ChrBaseRegion startRegion, final String insertSequence,
+    public static SequenceDefinition simpleVariant(final ChrBaseRegion startRegion, final String insertSequence,
             final ChrBaseRegion endRegion)
     {
         Orientation startOrientation = startRegion == null ? null : Orientation.FORWARD;

@@ -35,17 +35,36 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesAcceptable()
     {
-        Probe probe = new Probe(DEFINITION, "ACGTACGTAC", METADATA, null, null, 1.0, 0.5);
+        String sequence = "ACGTACGTAC";
+        double qualityScore = 1.0;
+        double gcContent = 0.5;
+        Probe probe = new Probe(DEFINITION, sequence, METADATA, null, null, qualityScore, gcContent);
         Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
-        assertEquals(1, evalProbe.qualityScore(), EPSILON);
-        assertEquals("ACGTACGTAC", evalProbe.sequence());
-        assertEquals(0.5, evalProbe.gcContent(), EPSILON);
+        assertEquals(qualityScore, evalProbe.qualityScore(), EPSILON);
+        assertEquals(sequence, evalProbe.sequence());
+        assertEquals(gcContent, evalProbe.gcContent(), EPSILON);
         assertNull(evalProbe.rejectionReason());
         assertTrue(evalProbe.accepted());
         assertFalse(evalProbe.rejected());
+    }
+
+    @Test
+    public void testEvaluateProbesRejectSequence()
+    {
+        String sequence = "AAANNNAAAA";
+        Probe probe = new Probe(DEFINITION, sequence, METADATA, null, null, 1.0, 0.5);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
+        assertNotSame(probe, evalProbe);
+        assertEquals(probe.metadata(), evalProbe.metadata());
+        assertEquals(CRITERIA, evalProbe.evalCriteria());
+        assertEquals(sequence, evalProbe.sequence());
+        assertNotNull(evalProbe.rejectionReason());
+        assertTrue(evalProbe.rejected());
+        assertFalse(evalProbe.accepted());
+        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("seq"));
     }
 
     @Test
@@ -56,7 +75,6 @@ public class ProbeEvaluatorTest
         assertNotSame(probe, evalProbe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
-        assertEquals("AAAAAAAAAA", evalProbe.sequence());
         assertEquals(0, evalProbe.gcContent(), EPSILON);
         assertNotNull(evalProbe.rejectionReason());
         assertTrue(evalProbe.rejected());
@@ -78,4 +96,6 @@ public class ProbeEvaluatorTest
         assertFalse(evalProbe.accepted());
         assertTrue(evalProbe.rejectionReason().toLowerCase().contains("qs"));
     }
+
+    // TODO: test annotating attributes
 }

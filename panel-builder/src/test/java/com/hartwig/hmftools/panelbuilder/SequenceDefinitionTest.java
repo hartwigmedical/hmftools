@@ -47,9 +47,9 @@ public class SequenceDefinitionTest
     }
 
     @Test
-    public void testSimpleMutation()
+    public void testSimpleVariant()
     {
-        SequenceDefinition actual = SequenceDefinition.simpleMutation(REGION1, INSERT, REGION2);
+        SequenceDefinition actual = SequenceDefinition.simpleVariant(REGION1, INSERT, REGION2);
         SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, REGION2, Orientation.FORWARD);
         assertEquals(expected, actual);
         assertFalse(actual.isExactRegion());

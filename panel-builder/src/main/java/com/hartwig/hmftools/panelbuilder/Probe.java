@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.Utils.isDnaSequenceNormal;
-
 import org.jetbrains.annotations.Nullable;
 
 public record Probe(
@@ -25,10 +23,6 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match definition length");
         }
-        if(sequence != null && !isDnaSequenceNormal(sequence))
-        {
-            throw new IllegalArgumentException("sequence must only contain normal DNA bases");
-        }
         if(rejectionReason != null && rejectionReason.isBlank())
         {
             throw new IllegalArgumentException("rejectionReason should not be blank");
@@ -41,6 +35,11 @@ public record Probe(
         {
             throw new IllegalArgumentException("qualityScore should be between 0 and 1");
         }
+    }
+
+    public Probe(final SequenceDefinition definition, final TargetMetadata metadata)
+    {
+        this(definition, null, metadata, null, null, null, null);
     }
 
     public boolean evaluated()
