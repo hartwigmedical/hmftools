@@ -45,14 +45,14 @@ public class CohortPercentilesTrainer
         return basePath + File.separator + sampleId + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
     }
 
-    private FeatureMatrix extractSampleData(CategoryPrep categoryPrep, List<String> sampleIds)
+    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
     {
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
 
         List<Runnable> samplePrepTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
-            SamplePrepTask task = new SamplePrepTask(sampleIds, sampleIndex, categoryPrep, sampleFeatureMatrix);
+            SamplePrepTask task = new SamplePrepTask(categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix);
             samplePrepTasks.add(task);
         }
 
@@ -153,7 +153,7 @@ public class CohortPercentilesTrainer
         for(CategoryPrep categoryPrep : categoryPreps)
         {
             QC_LOGGER.info("Running prep for category: {}", categoryPrep.getClass().getSimpleName());
-            FeatureMatrix sampleFeatureMatrix = extractSampleData(categoryPrep, sampleIds);
+            FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType);
 
             QC_LOGGER.info("Calculating percentiles for category: {}", categoryPrep.getClass().getSimpleName());
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);

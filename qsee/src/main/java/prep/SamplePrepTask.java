@@ -2,31 +2,37 @@ package prep;
 
 import static common.QseeConstants.QC_LOGGER;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
 import cohort.FeatureMatrix;
+import common.SampleType;
 import feature.Feature;
 
 public class SamplePrepTask implements Runnable
 {
+    private final CategoryPrep mCategoryPrep;
+
     private final List<String> mSampleIds;
     private final int mSampleIndex;
-    private final CategoryPrep mCategoryPrep;
+
+    private final SampleType mSampleType;
 
     private List<Feature> mFeatures;
 
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
-    public SamplePrepTask(List<String> sampleIds, int sampleIndex, CategoryPrep categoryPrep,
+    public SamplePrepTask(CategoryPrep categoryPrep,
+            List<String> sampleIds, int sampleIndex, SampleType sampleType,
             @Nullable FeatureMatrix sampleFeatureMatrix)
     {
+        mCategoryPrep = categoryPrep;
+
         mSampleIds = sampleIds;
         mSampleIndex = sampleIndex;
-        mCategoryPrep = categoryPrep;
+        mSampleType = sampleType;
 
         mSampleFeatureMatrix = sampleFeatureMatrix;
     }
@@ -65,7 +71,7 @@ public class SamplePrepTask implements Runnable
         {
             logProgress(mSampleIndex);
 
-            mFeatures = mCategoryPrep.extractSampleData(sampleId);
+            mFeatures = mCategoryPrep.extractSampleData(sampleId, mSampleType);
 
             if(mSampleFeatureMatrix != null)
             {
