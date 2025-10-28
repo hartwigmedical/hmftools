@@ -16,7 +16,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.region.BasePosition;
 
 public class SimpleVariant extends BasePosition
@@ -88,6 +91,31 @@ public class SimpleVariant extends BasePosition
     {
         return somaticVariant.chromosome().equals(Chromosome) && somaticVariant.position() == Position
                 && somaticVariant.ref().equals(Ref) && somaticVariant.alt().equals(Alt);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object another)
+    {
+        if(this == another)
+            return true;
+
+        return another instanceof SimpleVariant && equalTo((SimpleVariant) another);
+    }
+
+    private boolean equalTo(final SimpleVariant other)
+    {
+        return matches(other);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int h = 5381;
+        h += (h << 5) + Ref.hashCode();
+        h += (h << 5) + Alt.hashCode();
+        h += (h << 5) + chromosome().hashCode();
+        h += (h << 5) + Ints.hashCode(position());
+        return h;
     }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }

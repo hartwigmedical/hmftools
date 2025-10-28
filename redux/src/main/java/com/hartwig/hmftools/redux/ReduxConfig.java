@@ -254,7 +254,7 @@ public class ReduxConfig
         FormConsensus = UMIs.Enabled || configBuilder.hasFlag(FORM_CONSENSUS);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
-        if(configBuilder.hasValue(UNMAP_REGIONS_FILE))
+        if(configBuilder.hasValue(UNMAP_REGIONS_FILE) && !SkipUnmapping)
         {
             UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS_FILE));
 
@@ -263,20 +263,7 @@ public class ReduxConfig
         }
         else
         {
-            Map<String,List<UnmappingRegion>> unmapRegionsMap;
-
-            if(BqrAndJitterMsiOnly || SkipUnmapping)
-            {
-                unmapRegionsMap = Collections.emptyMap();
-            }
-            else
-            {
-                unmapRegionsMap = Maps.newHashMap();
-                ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-                unmapRegionsMap.put(excludedRegion.Chromosome, Lists.newArrayList(UnmappingRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
-            }
-
-            UnmapRegions = new ReadUnmapper(unmapRegionsMap);
+            UnmapRegions = new ReadUnmapper(Collections.emptyMap());
         }
 
         UnmapAltDecoys = configBuilder.hasFlag(UNMAP_NON_ALT_DECOY);

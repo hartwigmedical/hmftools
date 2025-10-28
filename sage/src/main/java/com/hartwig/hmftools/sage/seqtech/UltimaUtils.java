@@ -2,15 +2,22 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
+import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +44,26 @@ public final class UltimaUtils
 
     public static void loadBqrCache(final String filename)
     {
-        BQR_CACHE.loadRecalibrationFile(filename);
+        List<String> lines = null;
+
+        if(filename != null)
+        {
+            try
+            {
+                lines = Files.readAllLines(new File(filename).toPath());
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("failed to read Ultima base-qual recalibration file({}): {}", filename, e.toString());
+            }
+        }
+        else
+        {
+            InputStream inputStream = UltimaUtils.class.getResourceAsStream("/seqtech/ultima_qual_recalibration.tsv");
+            lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(toList());
+        }
+
+        BQR_CACHE.loadRecalibrationData(lines);
     }
 
     public static void setMaxRawQual(final byte qual) { BQR_CACHE.setMaxRawQual(qual); }

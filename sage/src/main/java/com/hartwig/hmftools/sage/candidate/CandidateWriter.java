@@ -37,7 +37,7 @@ public class CandidateWriter
 
     private BufferedWriter initialiseWriter()
     {
-        if(!mConfig.LogCandidates)
+        if(!SageCallConfig.LogCandidates)
             return null;
 
         String outputVcf = mConfig.Common.OutputFile;

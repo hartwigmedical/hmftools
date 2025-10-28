@@ -48,10 +48,10 @@ public record ProbeGenerationResult(
     }
 
     // Convenience method for creating a result from rejecting multiple entire target regions.
-    public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets, final String rejectionReason)
+    public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets)
     {
         List<RejectedRegion> rejectedRegions = targets.stream()
-                .map(target -> new RejectedRegion(target.region(), target.metadata(), rejectionReason))
+                .map(target -> new RejectedRegion(target.region(), target.metadata()))
                 .toList();
         return new ProbeGenerationResult(
                 emptyList(),

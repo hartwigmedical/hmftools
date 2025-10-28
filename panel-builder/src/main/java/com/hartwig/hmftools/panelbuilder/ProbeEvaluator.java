@@ -4,27 +4,69 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
+import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSequence;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
+
 import java.text.DecimalFormat;
+import java.util.function.Function;
 import java.util.stream.Stream;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import org.jetbrains.annotations.NotNull;
 
 // Common candidate probe filtering.
 public class ProbeEvaluator
 {
-    public static Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
+    private final Function<Stream<Probe>, Stream<Probe>> mAnnotateSequence;
+    private final Function<Stream<Probe>, Stream<Probe>> mAnnotateGcContent;
+    private final Function<Stream<Probe>, Stream<Probe>> mAnnotateQualityScore;
+
+    private ProbeEvaluator(final Function<Stream<Probe>, Stream<Probe>> annotateSequence,
+            final Function<Stream<Probe>, Stream<Probe>> annotateGcContent,
+            final Function<Stream<Probe>, Stream<Probe>> annotateQualityScore)
     {
+        mAnnotateSequence = annotateSequence;
+        mAnnotateGcContent = annotateGcContent;
+        mAnnotateQualityScore = annotateQualityScore;
+    }
+
+    public ProbeEvaluator(final RefGenomeInterface refGenome, final ProbeQualityScorer probeQualityScorer)
+    {
+        this(
+                probes -> probes.map(probe -> probe.withSequence(buildSequence(refGenome, probe.definition()))),
+                probes -> probes.map(probe -> probe.withGcContent(calcGcPercent(requireNonNull(probe.sequence())))),
+                probeQualityScorer::computeQualityScores
+        );
+    }
+
+    public Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
+    {
+        // TODO? maybe can avoid computing attributes if rejected by another criteria
+        probes = mAnnotateSequence.apply(probes);
+        probes = mAnnotateGcContent.apply(probes);
+        probes = mAnnotateQualityScore.apply(probes);
         return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
     protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
     {
         probe = probe.withEvalCriteria(criteria);
-        probe = evaluateQualityScore(probe);
-        if(!probe.rejected())
+
+        probe = evaluateSequence(probe);
+        if(probe.rejected())
         {
-            probe = evaluateGcContent(probe);
+            return probe;
         }
+
+        probe = evaluateGcContent(probe);
+        if(probe.rejected())
+        {
+            return probe;
+        }
+
+        probe = evaluateQualityScore(probe);
         return probe;
     }
 
@@ -39,10 +81,20 @@ public class ProbeEvaluator
         return probe;
     }
 
+    private static Probe evaluateSequence(Probe probe)
+    {
+        String sequence = requireNonNull(probe.sequence());
+        if(!isDnaSequenceNormal(sequence))
+        {
+            probe = probe.withRejectionReason("sequence");
+        }
+        return probe;
+    }
+
     private static Probe evaluateGcContent(Probe probe)
     {
         Criteria criteria = requireNonNull(probe.evalCriteria());
-        double gcContent = probe.gcContent();
+        double gcContent = requireNonNull(probe.gcContent());
         if(!(abs(gcContent - criteria.gcContentTarget()) <= criteria.gcContentTolerance()))
         {
             probe = probe.withRejectionReason("GC");

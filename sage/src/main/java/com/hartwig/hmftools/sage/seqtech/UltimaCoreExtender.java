@@ -113,7 +113,7 @@ public class UltimaCoreExtender
             final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
             final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize, final boolean inAppendMode)
     {
-        final List<AlignedBase> alignedBases = alignReadBases(readBases, refSequence, readAlignmentStart, cigarElements);
+        List<AlignedBase> alignedBases = alignReadBases(readBases, refSequence, readAlignmentStart, cigarElements);
         if(alignedBases == null)
             return null;
 
@@ -177,18 +177,13 @@ public class UltimaCoreExtender
         int newReadCoreEnd = alignedBases.get(coreEnd).ReadIndex;
         int corePosStart = alignedBases.get(coreStart).RefPos;
         int corePosEnd = alignedBases.get(coreEnd).RefPos;
-        return new UltimaCoreInfo(
-                newReadCoreStart,
-                newReadCoreEnd,
-                new ReadCigarInfo(
-                        readAlignmentStart,
-                        readCigarElements,
-                        max(alignedBases.get(flankStart).RefPos, readAlignmentStart),
-                        alignedBases.get(flankEnd).RefPos,
-                        corePosStart,
-                        corePosEnd,
-                        alignedBases.get(flankStart).ReadIndex,
-                        alignedBases.get(flankEnd).ReadIndex));
+
+        ReadCigarInfo newReadCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, readCigarElements, max(alignedBases.get(flankStart).RefPos, readAlignmentStart),
+                alignedBases.get(flankEnd).RefPos, corePosStart, corePosEnd,
+                alignedBases.get(flankStart).ReadIndex, alignedBases.get(flankEnd).ReadIndex);
+
+        return new UltimaCoreInfo(newReadCoreStart, newReadCoreEnd, newReadCigarInfo);
     }
 
     @VisibleForTesting

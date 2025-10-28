@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.ReadContextCandidate;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
@@ -38,7 +38,7 @@ public class CandidateEvidence
 
     public int totalReadsProcessed() { return mTotalReadsProcessed; }
 
-    public List<AltContext> readBam(final SamSlicerInterface samSlicer, final RefSequence refSequence, final ChrBaseRegion bounds)
+    public List<ReadContextCandidate> readBam(final SamSlicerInterface samSlicer, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
         final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
@@ -58,22 +58,22 @@ public class CandidateEvidence
             }
         };
 
-        List<AltContext> altContexts = readBam(samSlicer, consumer, refContextCache);
+        List<ReadContextCandidate> altContexts = readBam(samSlicer, consumer, refContextCache);
 
         mTotalReadsProcessed += refContextConsumer.getReadCount();
 
         return altContexts;
     }
 
-    private List<AltContext> readBam(
+    private List<ReadContextCandidate> readBam(
             final SamSlicerInterface samSlicer, final Consumer<SAMRecord> recordConsumer, final RefContextCache refContextCache)
     {
-        final List<AltContext> altContexts = Lists.newArrayList();
+        List<ReadContextCandidate> altContexts = Lists.newArrayList();
 
         samSlicer.slice(recordConsumer);
 
         // add all valid alt contexts
-        altContexts.addAll(refContextCache.altContexts());
+        altContexts.addAll(refContextCache.altCandidates());
 
         return altContexts;
     }

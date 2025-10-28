@@ -21,10 +21,10 @@ public final class UltimaBamUtils
     public static final String ULTIMA_TP_TAG = "tp";
     public static final String ULTIMA_T0_TAG = "t0";
 
-    private static final String PPM_STRAND_AS = "as";
-    private static final String PPM_STRAND_TS = "ts";
-    private static final String PPM_STRAND_AE = "ae";
-    private static final String PPM_STRAND_TE = "te";
+    // PPM-SEQ tags
+    private static final String PPM_STRAND_ST = "st";
+    private static final String PPM_STRAND_ET = "et";
+    private static final String PPM_TYPE_MIXED = "MIXED";
 
     public static final String ULT_QUAL_TAG = "UQ";
     public static final String ULT_QUAL_TAG_DELIM = "=";
@@ -107,6 +107,27 @@ public final class UltimaBamUtils
     }
 
     public static ConsensusType deriveConsensusType(final SAMRecord record)
+    {
+        // st / et values: : MIXED, PLUS and MINUS
+        String st = record.getStringAttribute(PPM_STRAND_ST);
+        String et = record.getStringAttribute(PPM_STRAND_ET);
+
+        if(st == null && et == null) // TEMP support for old tags
+            return deriveConsensusTypeOld(record);
+
+        if(st != null && et != null && st.equals(PPM_TYPE_MIXED) && et.equals(PPM_TYPE_MIXED))
+            return ConsensusType.DUAL;
+
+        return ConsensusType.NONE;
+    }
+
+    // old PPM-SEQ tags
+    private static final String PPM_STRAND_AS = "as";
+    private static final String PPM_STRAND_TS = "ts";
+    private static final String PPM_STRAND_AE = "ae";
+    private static final String PPM_STRAND_TE = "te";
+
+    public static ConsensusType deriveConsensusTypeOld(final SAMRecord record)
     {
         //  example: as:i:3  ts:i:4  ae:i:3  te:i:3
         int as = getIntegerAttribute(record, PPM_STRAND_AS, 0);

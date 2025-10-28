@@ -108,19 +108,6 @@ public class UltimaQualRecalibration
     private static final String COL_KEY = "Key";
     private static final String COL_RECAL_QUAL = "RecalibratedQual";
 
-    public void loadRecalibrationFile(final String filename)
-    {
-        try
-        {
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-            loadRecalibrationData(lines);
-        }
-        catch(Exception e)
-        {
-            SG_LOGGER.error("failed to read Ultima base-qual recalibration file({}): {}", filename, e.toString());
-        }
-    }
-
     protected void loadRecalibrationData(final List<String> lines)
     {
         String header = lines.get(0);

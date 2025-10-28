@@ -19,6 +19,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.ReadContextCandidate;
 import com.hartwig.hmftools.sage.candidate.RefContextCache;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
@@ -137,11 +138,11 @@ public class HomologyTest
         refContextConsumer.processRead(read);
         refContextConsumer.processRead(readClone);
 
-        List<AltContext> altContexts = refContextCache.altContexts();
-        TestCase.assertEquals(1, altContexts.size());
+        List<ReadContextCandidate> altCandidates = refContextCache.altCandidates();
+        TestCase.assertEquals(1, altCandidates.size());
 
-        AltContext altContext = altContexts.get(0);
-        VariantReadContext readContext = altContext.readContext();
+        ReadContextCandidate altCandidate = altCandidates.get(0);
+        VariantReadContext readContext = altCandidate.readContext();
         assertEquals(20, readContext.variant().Position);
 
         // again but this time with an indel in the read bases to confuse where the implied ref position is
@@ -157,12 +158,12 @@ public class HomologyTest
         refContextConsumer.processRead(read);
         refContextConsumer.processRead(readClone);
 
-        altContexts = refContextCache.altContexts();
-        TestCase.assertEquals(2, altContexts.size());
+        altCandidates = refContextCache.altCandidates();
+        TestCase.assertEquals(2, altCandidates.size());
 
-        altContext = altContexts.stream().filter(x -> x.position() == 18).findFirst().orElse(null);
-        assertNotNull(altContext);
-        readContext = altContext.readContext();
+        altCandidate = altCandidates.stream().filter(x -> x.position() == 18).findFirst().orElse(null);
+        assertNotNull(altCandidate);
+        readContext = altCandidate.readContext();
         assertEquals(17, readContext.CorePositionStart);
         assertEquals(39, readContext.CorePositionEnd);
     }

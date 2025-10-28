@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
 import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender;
 
@@ -168,14 +169,14 @@ public class VariantReadContextBuilder
         // for ultima we expand core so that homopolymers are not cut off in the read or the ref
         if(isUltima())
         {
-            // TODO: handle this better by passing in append mode status explicitly
-            boolean inAppendMode = read.getReadName().equals("CANDIDATE"); // hacky, we should do this properly
             // long inserts with S elements won't work properly in append mode with core extension
-            boolean skippableLongInsert = inAppendMode && isLongInsert(variant);
-            UltimaCoreExtender.UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(read.getReadBases(), refSequence,
+            boolean skippableLongInsert = SageConfig.AppendMode && isLongInsert(variant);
+
+            UltimaCoreExtender.UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(
+                    read.getReadBases(), refSequence,
                     softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
-                    readCigarInfo, mFlankSize, inAppendMode);
+                    readCigarInfo, mFlankSize, SageConfig.AppendMode);
 
             if(!skippableLongInsert && (ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid()))
                 return null;

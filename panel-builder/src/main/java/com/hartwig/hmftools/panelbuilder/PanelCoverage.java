@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.VARIANT_NOVEL_SEQUENCE_BASES_MIN;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
 
 import java.util.stream.Stream;
 
@@ -37,50 +35,10 @@ public interface PanelCoverage
 
     private static boolean needsCoverageCheck(final SequenceDefinition sequenceDefinition)
     {
-        return sequenceDefinition.isExactRegion() || variantProbeNeedsCoverageCheck(sequenceDefinition);
-    }
-
-    private static boolean variantProbeNeedsCoverageCheck(final SequenceDefinition definition)
-    {
         // Only do the coverage check for variants where the probe is similar to the ref genome.
         // If the probe is similar (e.g. SNV) then that region could be captured by probing the ref genome sequence,
         // so the variant probe is not needed.
         // If the probe is dissimilar (e.g. large INDEL or SV) then we need the variant probe to capture the variant.
-
-        ChrBaseRegion start = definition.startRegion();
-        ChrBaseRegion end = definition.endRegion();
-        int insertLength = definition.insertSequence() == null ? 0 : definition.insertSequence().length();
-        if(start == null && end == null)
-        {
-            // Unknown region, assume novel sequence.
-            return false;
-        }
-        else if(start != null && end != null)
-        {
-            if(start.chromosome().equals(end.chromosome()))
-            {
-                // SNV, INDEL, or SV on same chromosome.
-                if(start.start() > end.start())
-                {
-                    // Ensure start and end are ordered correctly to calculate the delete length.
-                    start = definition.endRegion();
-                    end = definition.startRegion();
-                }
-                // Clamp to >=0 because theoretically the regions could overlap in the case of an SV.
-                int deleteLength = max(end.start() - start.end() - 1, 0);
-                int difference = abs(insertLength - deleteLength);
-                return difference < VARIANT_NOVEL_SEQUENCE_BASES_MIN;
-            }
-            else
-            {
-                // SV across different chromosomes.
-                return false;
-            }
-        }
-        else
-        {
-            // Single ended SV.
-            return false;
-        }
+        return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) < VARIANT_NOVEL_SEQUENCE_BASES_MIN;
     }
 }

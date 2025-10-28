@@ -294,7 +294,7 @@ public class SyntheticVcfWriter
         if(readContext == null)
             return;
 
-        Candidate candidate = new Candidate(VariantTier.PANEL, readContext, 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, readContext);
 
         VariantContextBuilder builder = CandidateSerialisation.toContext(candidate)
                 .log10PError(0)
