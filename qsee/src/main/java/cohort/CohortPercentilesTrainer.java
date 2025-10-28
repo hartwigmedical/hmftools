@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -166,8 +167,10 @@ public class CohortPercentilesTrainer
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
         }
 
-        String outputFile = generateFilename(mConfig.OutputDir, "cohort." + sampleType.toString().toLowerCase());
+        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
+        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
 
+        String outputFile = generateFilename(mConfig.OutputDir, "cohort." + sampleType.toString().toLowerCase());
         QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
         writeToFile(outputFile, percentileFeatureMatrix);
     }
