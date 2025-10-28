@@ -88,6 +88,8 @@ public class SageConfig
     public final ValidationStringency BamStringency;
 
     // global for convenience
+    public static boolean AppendMode = false;
+
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
@@ -124,17 +126,13 @@ public class SageConfig
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
+    // debug options
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
     public SageConfig(final String version, final ConfigBuilder configBuilder)
-    {
-        this(version, configBuilder, false);
-    }
-
-    public SageConfig(final String version, final ConfigBuilder configBuilder, boolean isAppendMode)
     {
         mIsValid = true;
         Version = version;
@@ -167,7 +165,7 @@ public class SageConfig
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
         // ensure that when append is run in panel mode, that max depth is applied to all variants regardless of their tier
-        if(isAppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
+        if(AppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
         {
             MaxReadDepth = MaxReadDepthPanel;
         }
@@ -234,7 +232,7 @@ public class SageConfig
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
-        if(isUltima() && configBuilder.hasValue(UltimaQualRecalibration.CFG_FILENAME))
+        if(isUltima())
         {
             UltimaUtils.loadBqrCache(configBuilder.getValue(UltimaQualRecalibration.CFG_FILENAME));
         }

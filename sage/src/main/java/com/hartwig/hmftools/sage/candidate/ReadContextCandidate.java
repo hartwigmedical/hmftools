@@ -40,6 +40,11 @@ public class ReadContextCandidate implements Comparable<ReadContextCandidate>
         return mMatcher;
     }
 
+    public String chromosome() { return mReadContext.variant().Chromosome; }
+    public int position() { return mReadContext.variant().Position; }
+    public String ref() { return mReadContext.ref(); }
+    public String alt() { return mReadContext.alt(); }
+
     @Override
     public int compareTo(@NotNull final ReadContextCandidate other)
     {

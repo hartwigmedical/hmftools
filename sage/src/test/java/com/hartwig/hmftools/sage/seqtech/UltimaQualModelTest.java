@@ -51,11 +51,11 @@ public class UltimaQualModelTest
     protected static void populateUltimaBqrCache()
     {
         // ultima_bqr_recalibration.tsv
-        InputStream inputStream = UltimaQualModelTest.class.getResourceAsStream("/seqtech/ultima_bqr_recalibration.tsv");
+        // InputStream inputStream = UltimaQualModelTest.class.getResourceAsStream("/seqtech/ultima_bqr_recalibration.tsv");
+        // List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(toList());
+        // BQR_CACHE.loadRecalibrationData(lines);
 
-        List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(toList());
-
-        BQR_CACHE.loadRecalibrationData(lines);
+        UltimaUtils.loadBqrCache(null);
     }
 
     @After

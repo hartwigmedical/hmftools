@@ -46,6 +46,11 @@ public class FilterConfig
     private static final String MIN_AVG_BASE_QUAL_HOTSPOT = "min_avg_base_qual_hotspot";
     private static final String REF_SAMPLE_COUNT = "ref_sample_count";
 
+    private static final String ULTIMA_CANDIDATE_MIN_HIGH_BQ = "ultima_cand_min_high_bq";
+
+    // sequencing specific filters
+    public static int ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = 0;
+
     public FilterConfig(final ConfigBuilder configBuilder)
     {
         DisableSoftFilter = configBuilder.hasFlag(DISABLE_SOFT_FILTER);
@@ -70,6 +75,9 @@ public class FilterConfig
         SoftHighConfidenceFilter = new SoftFilterConfig(configBuilder, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
         SoftLowConfidenceFilter = new SoftFilterConfig(configBuilder, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
         ReferenceSampleCount = configBuilder.getInteger(REF_SAMPLE_COUNT);
+
+        if(configBuilder.hasValue(ULTIMA_CANDIDATE_MIN_HIGH_BQ))
+            ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = configBuilder.getInteger(ULTIMA_CANDIDATE_MIN_HIGH_BQ);
     }
 
     public FilterConfig()
@@ -116,5 +124,9 @@ public class FilterConfig
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_PANEL_FILTER);
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_HIGH_CONFIDENCE_FILTER);
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_LOW_CONFIDENCE_FILTER);
+
+        configBuilder.addInteger(
+                ULTIMA_CANDIDATE_MIN_HIGH_BQ, "Ultima min required non-low-qual in core reads",
+                ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD);
     }
 }

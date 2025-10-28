@@ -4,14 +4,13 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
 public class Candidates
@@ -32,25 +31,27 @@ public class Candidates
         mCandidateList = Lists.newArrayList();
     }
 
-    public void addOfMultipleSamples(final Collection<AltContext> altContexts)
+    public void addOfMultipleSamples(final Collection<ReadContextCandidate> altCandidates)
     {
         if(mCandidateMap == null)
             mCandidateMap = Maps.newHashMap();
 
-        final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
-        final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
+        TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+        SimpleVariantComparator variantComparator = new SimpleVariantComparator();
 
-        for(final AltContext altContext : altContexts)
+        for(ReadContextCandidate altCandidate : altCandidates)
         {
-            List<Candidate> candidates = mCandidateMap.get(altContext);
+            SimpleVariant variant = altCandidate.readContext().variant();
+            List<Candidate> candidates = mCandidateMap.get(variant);
 
             if(candidates == null)
             {
                 candidates = Lists.newArrayList();
-                mCandidateMap.put(altContext, candidates);
+                mCandidateMap.put(variant, candidates);
             }
 
-            Candidate newCandidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
+            VariantTier tier = tierSelector.tier(variant);
+            Candidate newCandidate = Candidate.fromAltCandidate(tier, altCandidate);
 
             Candidate matchingCandidate = candidates.stream()
                     .filter(x -> variantComparator.compare(x.variant(), newCandidate.variant()) == 0)
@@ -59,7 +60,7 @@ public class Candidates
 
             if(matchingCandidate != null)
             {
-                matchingCandidate.update(altContext);
+                matchingCandidate.updateAltCandidate(altCandidate);
             }
             else
             {
@@ -68,15 +69,17 @@ public class Candidates
         }
     }
 
-    public void addSingleSample(final Collection<AltContext> altContexts)
+    public void addSingleSample(final Collection<ReadContextCandidate> altCandidates)
     {
-        final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
+        TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
 
-        final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
+        SimpleVariantComparator variantComparator = new SimpleVariantComparator();
 
-        for(AltContext altContext : altContexts)
+        for(ReadContextCandidate altCandidate : altCandidates)
         {
-            Candidate candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
+            SimpleVariant variant = altCandidate.readContext().variant();
+            VariantTier tier = tierSelector.tier(variant);
+            Candidate candidate = Candidate.fromAltCandidate(tier, altCandidate);
 
             int index = 0;
 
@@ -97,7 +100,7 @@ public class Candidates
     {
         if(mCandidateMap != null)
         {
-            final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
+            SimpleVariantComparator variantComparator = new SimpleVariantComparator();
             mCandidateMap.values().stream().forEach(x -> mCandidateList.addAll(x));
             mCandidateList.sort((o1, o2) -> variantComparator.compare(o1.variant(), o2.variant()));
         }
