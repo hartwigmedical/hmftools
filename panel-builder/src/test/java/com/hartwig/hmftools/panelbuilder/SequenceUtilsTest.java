@@ -35,9 +35,9 @@ public class SequenceUtilsTest
     }
 
     @Test
-    public void testBuildSequenceExactRegion()
+    public void testBuildSequenceSingleRegion()
     {
-        SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 10));
+        SequenceDefinition def = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 10));
         String actual = buildSequence(mRefGenome, def);
         String expected = "AAAAAAAAAA";
         assertEquals(expected, actual);
@@ -60,7 +60,7 @@ public class SequenceUtilsTest
     @Test
     public void testBuildSequenceOutOfBounds()
     {
-        SequenceDefinition def = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 100));
+        SequenceDefinition def = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 100));
         assertThrows(IllegalArgumentException.class, () -> buildSequence(mRefGenome, def));
     }
 

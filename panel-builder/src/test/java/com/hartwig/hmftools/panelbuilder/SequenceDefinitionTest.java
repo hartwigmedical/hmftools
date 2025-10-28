@@ -20,28 +20,49 @@ public class SequenceDefinitionTest
     public static final String INSERT = "ACGT";
 
     @Test
-    public void testConstructor()
+    public void testConstructorValid()
     {
-        new SequenceDefinition(REGION1, null, null, null, null);
+        // Single region.
+        new SequenceDefinition(REGION1, null, "", null, null);
+        // SGL.
         new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, null, null);
         new SequenceDefinition(null, null, INSERT, REGION2, Orientation.FORWARD);
+        // Generic variant.
+        new SequenceDefinition(REGION1, Orientation.REVERSE, "", REGION2, Orientation.FORWARD);
         new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
-
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, null, null, null));
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, null, null, REGION2, null));
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, null, REGION2, null));
-        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, INSERT, null, null));
     }
 
     @Test
-    public void testExactRegion()
+    public void testConstructorInvalid()
     {
-        SequenceDefinition actual = SequenceDefinition.exactRegion(REGION1);
-        SequenceDefinition expected = new SequenceDefinition(REGION1, null, null, null, null);
+        // Single region but wrong format.
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, Orientation.FORWARD, "", null, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, "", REGION2, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, "", REGION2, Orientation.FORWARD));
+
+        // Orientation missing.
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(REGION1, null, INSERT, null, null));
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, INSERT, REGION2, null));
+
+        // Adjacent regions with no insert.
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(new ChrBaseRegion("1", 1, 10), Orientation.FORWARD, "", new ChrBaseRegion("1", 11, 20), Orientation.FORWARD));
+
+        // Insert only.
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, INSERT, null, null));
+
+        // Everything empty.
+        assertThrows(IllegalArgumentException.class, () -> new SequenceDefinition(null, null, "", null, null));
+    }
+
+    @Test
+    public void testSingleRegion()
+    {
+        SequenceDefinition actual = SequenceDefinition.singleRegion(REGION1);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, null, "", null, null);
         assertEquals(expected, actual);
-        assertTrue(actual.isExactRegion());
-        assertEquals(REGION1, actual.exactRegion());
-        assertEquals(REGION1, actual.exactRegionOrNull());
+        assertTrue(actual.isSingleRegion());
+        assertEquals(REGION1, actual.singleRegion());
+        assertEquals(REGION1, actual.singleRegionOrNull());
         assertEquals(List.of(REGION1), actual.regions());
         assertEquals(10, actual.baseLength());
     }
@@ -52,9 +73,9 @@ public class SequenceDefinitionTest
         SequenceDefinition actual = SequenceDefinition.simpleVariant(REGION1, INSERT, REGION2);
         SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, REGION2, Orientation.FORWARD);
         assertEquals(expected, actual);
-        assertFalse(actual.isExactRegion());
-        assertThrows(IllegalArgumentException.class, actual::exactRegion);
-        assertNull(actual.exactRegionOrNull());
+        assertFalse(actual.isSingleRegion());
+        assertThrows(IllegalArgumentException.class, actual::singleRegion);
+        assertNull(actual.singleRegionOrNull());
         assertEquals(List.of(REGION1, REGION2), actual.regions());
         assertEquals(24, actual.baseLength());
     }
@@ -66,10 +87,38 @@ public class SequenceDefinitionTest
                 SequenceDefinition.structuralVariant(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
         SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
         assertEquals(expected, actual);
-        assertFalse(actual.isExactRegion());
-        assertThrows(IllegalArgumentException.class, actual::exactRegion);
-        assertNull(actual.exactRegionOrNull());
+        assertFalse(actual.isSingleRegion());
+        assertThrows(IllegalArgumentException.class, actual::singleRegion);
+        assertNull(actual.singleRegionOrNull());
         assertEquals(List.of(REGION1, REGION2), actual.regions());
         assertEquals(24, actual.baseLength());
+    }
+
+    @Test
+    public void testForwardSgl()
+    {
+        SequenceDefinition actual =
+                SequenceDefinition.forwardSgl(REGION1, INSERT);
+        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, null, null);
+        assertEquals(expected, actual);
+        assertFalse(actual.isSingleRegion());
+        assertThrows(IllegalArgumentException.class, actual::singleRegion);
+        assertNull(actual.singleRegionOrNull());
+        assertEquals(List.of(REGION1), actual.regions());
+        assertEquals(14, actual.baseLength());
+    }
+
+    @Test
+    public void testReverseSgl()
+    {
+        SequenceDefinition actual =
+                SequenceDefinition.reverseSgl(INSERT, REGION2);
+        SequenceDefinition expected = new SequenceDefinition(null, null, INSERT, REGION2, Orientation.FORWARD);
+        assertEquals(expected, actual);
+        assertFalse(actual.isSingleRegion());
+        assertThrows(IllegalArgumentException.class, actual::singleRegion);
+        assertNull(actual.singleRegionOrNull());
+        assertEquals(List.of(REGION2), actual.regions());
+        assertEquals(14, actual.baseLength());
     }
 }

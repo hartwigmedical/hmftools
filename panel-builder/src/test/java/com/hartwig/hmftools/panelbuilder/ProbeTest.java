@@ -11,7 +11,7 @@ import org.junit.Test;
 public class ProbeTest
 {
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
-    private static final SequenceDefinition DEFINITION = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 100, 129));
+    private static final SequenceDefinition DEFINITION = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 100, 129));
     private static final String SEQUENCE = "ACGTACGTACACGTACGTACACGTACGTAC";
     private static final ProbeEvaluator.Criteria EVAL_CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 

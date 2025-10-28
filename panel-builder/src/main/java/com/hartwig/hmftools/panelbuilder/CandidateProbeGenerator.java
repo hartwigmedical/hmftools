@@ -76,7 +76,7 @@ public class CandidateProbeGenerator
         return outwardMovingOffsets(minOffset, maxOffset)
                 .mapToObj(offset ->
                 {
-                    SequenceDefinition definition = SequenceDefinition.exactRegion(
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(
                             probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
                     return new Probe(definition, metadata);
                 });
@@ -92,7 +92,7 @@ public class CandidateProbeGenerator
         return IntStream.rangeClosed(minProbeStart, maxProbeStart)
                 .mapToObj(start ->
                 {
-                    SequenceDefinition definition = SequenceDefinition.exactRegion(probeRegionStartingAt(region.chromosome(), start));
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegionStartingAt(region.chromosome(), start));
                     return new Probe(definition, metadata);
                 });
     }

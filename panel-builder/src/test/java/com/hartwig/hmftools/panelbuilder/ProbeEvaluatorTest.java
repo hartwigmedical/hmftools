@@ -15,7 +15,7 @@ public class ProbeEvaluatorTest
 {
     private static final ProbeEvaluator.Criteria CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.5, 0.1);
 
-    private static final SequenceDefinition DEFINITION = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 1, 10));
+    private static final SequenceDefinition DEFINITION = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 1, 10));
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
 
     private static final double EPSILON = 1e-6;

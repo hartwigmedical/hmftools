@@ -6,12 +6,12 @@ public class PanelBuilderConstants
 
     // Common constants.
     public static final int PROBE_LENGTH = 120;
-    // If a variant probe differs from the ref genome by more than this many bases, consider it a novel sequence, and keep the probe even if
+    // If a variant probe differs from the ref genome by at least this many bases, consider it a novel sequence, and keep the probe even if
     // it overlaps with existing probes.
     public static final int VARIANT_NOVEL_SEQUENCE_BASES_MIN = 5;
     // When computing quality score, allow up to this many bases mismatch with the reference genome before switching from the probe quality
     // profile to the probe quality model. Higher means better performance but less accurate quality scores for variant probes.
-    public static final int PROBE_QUALITY_PROFILE_MAX_REF_DIFF = 10;
+    public static final int PROBE_QUALITY_PROFILE_MAX_REF_DIFF = 5;
 
     // Parameters when covering an arbitrary region with probes.
     // How many bases a probe may be shifted left or right from its "ideal" tiled position.
