@@ -35,7 +35,7 @@ public class CohortPercentilesTrainer
 
     private static final int NUM_PERCENTILES = 11;
     private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
-    private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.####");
+    private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.########");
 
     public CohortPercentilesTrainer(final PrepConfig config)
     {
