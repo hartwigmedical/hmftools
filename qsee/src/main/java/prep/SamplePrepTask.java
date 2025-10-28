@@ -52,8 +52,7 @@ public class SamplePrepTask implements Runnable
         else
         {
             boolean hasFewSamples = sampleCount <= FEW_SAMPLES_THRESHOLD;
-            boolean isSampleAtInterval = sampleIndex == 0 || sampleIndex == sampleCount-1 ||
-                    (sampleIndex+1) % PROGRESS_INTERVAL == 0;
+            boolean isSampleAtInterval = sampleIndex == sampleCount-1 || (sampleIndex+1) % PROGRESS_INTERVAL == 0;
 
             if(hasFewSamples || isSampleAtInterval)
             {

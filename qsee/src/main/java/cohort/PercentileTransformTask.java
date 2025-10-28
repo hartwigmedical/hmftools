@@ -26,14 +26,13 @@ public class PercentileTransformTask implements Runnable
 
     private void logProgress()
     {
-        int PROGRESS_INTERVAL = 100;
+        int PROGRESS_INTERVAL = 500;
         int FEW_FEATURES_THRESHOLD = 10;
 
         int numFeatures = mSampleFeatureMatrix.numFeatures();
 
         boolean hasFewFeatures = numFeatures <= FEW_FEATURES_THRESHOLD;
-        boolean isFeatureAtInterval = mFeatureIndex == 0 || mFeatureIndex == numFeatures-1 ||
-                (mFeatureIndex+1) % PROGRESS_INTERVAL == 0;
+        boolean isFeatureAtInterval = mFeatureIndex == numFeatures-1 || (mFeatureIndex+1) % PROGRESS_INTERVAL == 0;
 
         if(hasFewFeatures || isFeatureAtInterval)
         {
