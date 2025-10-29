@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.metrics;
 
 import static com.hartwig.hmftools.common.metrics.BamMetricsCommon.BAM_METRICS_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -43,6 +45,77 @@ public final class GeneDepthFile
         {
             return first.Gene.compareTo(second.Gene);
         }
+    }
+
+    public static List<int[]> readDepthRanges(final String filename) throws IOException
+    {
+        List<int[]> ranges = Lists.newArrayList();
+
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+        String header = lines.get(0);
+        String[] values = header.split(TSV_DELIM, -1);
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        int mvlIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD);
+        int depthStartIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD) + 1;
+        int depthColumns = values.length - depthStartIndex;
+
+        for(int i = 0; i < depthColumns; ++i)
+        {
+            int colIndex = depthStartIndex + i;
+            String colStr = values[colIndex];
+
+            // depth columns are like: DR_0 or DR_4000_4999
+            String[] depthParts = colStr.split("_");
+            int rangeStart = Integer.parseInt(depthParts[1]);
+            int rangeEnd = depthParts.length == 3 ? Integer.parseInt(depthParts[2]) : rangeStart;
+            ranges.add(new int[] {rangeStart, rangeEnd});
+        }
+
+        return ranges;
+    }
+
+    public static List<GeneDepth> read(final String filename) throws IOException
+    {
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
+
+        String header = lines.get(0);
+        lines.remove(0);
+
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+
+        int chrIndex = fieldsIndexMap.get(COL_CHROMOSOME);
+        int geneIndex = fieldsIndexMap.get(COL_GENE);
+        int posStartIndex = fieldsIndexMap.get(COL_POS_START);
+        int posEndIndex = fieldsIndexMap.get(COL_POS_END);
+        int mvlIndex = fieldsIndexMap.get(COL_MV_LIKELIHOOD);
+        int depthStartIndex = mvlIndex + 1;
+
+        List<GeneDepth> geneDepths = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM, -1);
+
+            int depthColumns = values.length - depthStartIndex;
+
+            int[] depthCounts = new int[depthColumns];
+
+            for(int i = 0; i < depthColumns; ++i)
+            {
+                int colIndex = depthStartIndex + i;
+                depthCounts[i] = Integer.parseInt(values[colIndex]);
+            }
+
+            GeneDepth geneDepth = new GeneDepth(
+                    values[geneIndex], values[chrIndex], Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]),
+                    Double.parseDouble(values[mvlIndex]), depthCounts);
+
+            geneDepths.add(geneDepth);
+        }
+
+        return geneDepths;
     }
 
     private static List<String> toLines(final List<GeneDepth> depths, final List<Integer> depthBuckets)
