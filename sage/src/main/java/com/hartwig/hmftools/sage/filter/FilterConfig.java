@@ -50,6 +50,7 @@ public class FilterConfig
 
     // sequencing specific filters
     public static int ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = 0;
+    public static int ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN = 8;
 
     public FilterConfig(final ConfigBuilder configBuilder)
     {

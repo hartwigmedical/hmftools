@@ -142,9 +142,9 @@ public class SageAppendApplication
                     continue;
             }
 
-            if(!mConfig.Common.SpecificPositions.isEmpty())
+            if(!mConfig.Common.SpecificVariants.isEmpty())
             {
-                if(mConfig.Common.SpecificPositions.stream().noneMatch(x -> x.matches(variant.getContig(), variant.getStart())))
+                if(mConfig.Common.SpecificVariants.stream().noneMatch(x -> x.matches(variant.getContig(), variant.getStart())))
                 {
                     continue;
                 }

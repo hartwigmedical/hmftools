@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVAL
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
@@ -255,6 +256,12 @@ public final class UltimaUtils
         }
 
         return true;
+    }
+
+    public static boolean checkLowQualInCore(final VariantReadContext readContext)
+    {
+        return readContext.MaxRepeat == null || readContext.MaxRepeat.repeatLength() > 1
+                || readContext.MaxRepeat.Count < ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
     }
 
     private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
