@@ -52,6 +52,12 @@ public class FeatureKey
         return new FeatureKey(type, nameFromPairs(pairs));
     }
 
+    @SafeVarargs
+    public static FeatureKey ofPairs(Pair<String, String>... pairs)
+    {
+        return new FeatureKey(null, nameFromPairs(pairs));
+    }
+
     private static String nameFromPair(String fieldName, String fieldValue)
     {
         return fieldName + KEY_VALUE_SEPARATOR + fieldValue;
@@ -74,10 +80,9 @@ public class FeatureKey
     @Override
     public String toString()
     {
-        return String.format("name(%s) type(%s)",
-                mName,
-                (mType == null) ? "UNKNOWN" : mType.toString()
-        );
+        return (mType == null)
+                ? mName
+                : String.format("name(%s) type(%s)", mName, mType.name());
     }
 
     @Override
