@@ -172,7 +172,6 @@ public class SpecialFusions
 
             transcript.setCodingType(ENHANCER);
             transcript.setRegionType(TranscriptRegionType.UNKNOWN);
-            // transcript.setIsDisruptive(true);
 
             upTrans = transcript;
         }
@@ -216,7 +215,6 @@ public class SpecialFusions
 
             transcript.setCodingType(UTR_5P);
             transcript.setRegionType(TranscriptRegionType.UPSTREAM);
-            // transcript.setIsDisruptive(true);
 
             downTrans = transcript;
         }
