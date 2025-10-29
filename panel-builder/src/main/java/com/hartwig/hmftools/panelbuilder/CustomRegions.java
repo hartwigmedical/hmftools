@@ -3,12 +3,10 @@ package com.hartwig.hmftools.panelbuilder;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.isRegionValid;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
-    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CUSTOM;
+    private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CUSTOM_REGION;
 
     private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             CUSTOM_REGION_QUALITY_MIN, CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE);
@@ -48,22 +46,8 @@ public class CustomRegions
 
     private static void checkRegionBounds(final List<CustomRegion> customRegions, final Map<String, Integer> chromosomeLengths)
     {
-        Predicate<ChrBaseRegion> isRegionValid = region ->
-        {
-            if(!region.hasValidPositions())
-            {
-                return false;
-            }
-            Integer chromosomeLength = chromosomeLengths.get(region.chromosome());
-            if(chromosomeLength == null)
-            {
-                return false;
-            }
-            return region.end() <= chromosomeLength;
-        };
-
         List<CustomRegion> invalid = customRegions.stream()
-                .filter(region -> !isRegionValid.test(region.region()))
+                .filter(region -> !isRegionValid(region.region(), chromosomeLengths))
                 .toList();
         if(!invalid.isEmpty())
         {

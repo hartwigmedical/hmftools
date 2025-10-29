@@ -12,6 +12,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 - CDR3
 - Sample variants
 - Custom regions
+- Custom structural variants
 
 ## Configuration
 
@@ -26,24 +27,25 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type    | Default                     | Description                                                                                                   |
-|--------------------|---------|-----------------------------|---------------------------------------------------------------------------------------------------------------|
-| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                      |
-| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                        |
-| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.            |
-| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                               |
-| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                               |
-| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                  |
-| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                              |
-| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.             |
-| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                        |
-| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                       |
-| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                              |
-| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                           |
-| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.  |
-| output_id          | String  | (none)                      | Prefix for output files.                                                                                      |
-| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time. |
-| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                     |
+| Argument           | Type    | Default                     | Description                                                                                                                        |
+|--------------------|---------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                                           |
+| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
+| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
+| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
+| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
+| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
+| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
+| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
+| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
+| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
+| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
+| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
+| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
+| custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
+| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
+| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
 
 ## Example Usage
 
@@ -58,6 +60,7 @@ java -jar panel-builder.jar \
   -cn_backbone \
   -genes genes_features.tsv \
   -custom_regions custom_regions.tsv \
+  -custom_svs custom_svs.tsv \
   -sample COLO829T \
   -linx_dir COLO829T/linx \
   -linx_germline_dir COLO829T/linx_germline \
@@ -143,7 +146,7 @@ TSV file with these columns:
 
 Example:
 
-```
+```text
 GeneName	IncludeCoding	IncludeUTR	IncludeExonFlank	IncludeUpstream	IncludeDownstream	IncludePromoter	ExtraTransNames
 ABCB1	TRUE	FALSE	FALSE	FALSE	FALSE	FALSE	
 CDKN2A	TRUE	FALSE	TRUE	TRUE	TRUE	FALSE	ENST00000579755
@@ -246,10 +249,43 @@ TSV file with these columns:
 | ExtraInfo     | String  | Arbitrary label which will be included in the output. |
 
 Example:
-```
+```text
 Chromosome	PositionStart	PositionEnd	ExtraInfo
 17	7433101	7469631	custom1
 1	30429900	30429950	custom2
+```
+
+### Custom Structural Variants
+
+Arbitrary structural variants, for which probes are generated in the same manner as described in "Sample Variants".
+
+Probe evaluation criteria:
+
+- `QS>=0.1`
+
+### Custom Structural Variants Input File
+
+TSV file with these columns:
+
+| Column           | Type        | Description                                                      |
+|------------------|-------------|------------------------------------------------------------------|
+| ChromosomeStart  | String      | Chromosome name of breakend 1, as matching the reference genome. |
+| PositionStart    | Integer     | 1-indexed position of breakend 1.                                |
+| OrientationStart | `1` or `-1` | Orientation of breakend 1.                                       |
+| ChromosomeEnd    | String      | Chromosome name of breakend 2, as matching the reference genome. |
+| PositionEnd      | Integer     | 1-indexed position of breakend 2.                                |
+| OrientationEnd   | `1` or `-1` | Orientation of breakend 2.                                       |
+| ExtraInfo        | String      | Arbitrary label which will be included in the output.            |
+
+Example:
+
+```text
+ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	OrientationEnd	InsertSequence	ExtraInfo
+1	30510000	1	1	30510020	-1		DEL
+1	30600000	-1	1	30600020	1		DUP
+1	30700000	1	1	30700020	1		INV
+1	30800000	1	2	30800000	-1		TRANS
+1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL
 ```
 
 ### Whole Region Tiling
@@ -278,28 +314,37 @@ Probes are generated in this order, with probes generated first having priority 
 
 1. Genes
 2. Custom regions
-3. Copy number backbone
-4. CDR3
-5. Sample variants
+3. Custom structural variants
+4. Copy number backbone
+5. CDR3
+6. Sample variants
 
 In general, if a probe's target region is already covered by an existing probe, the new probe is not included in the panel.
 
 Exceptions:
 
 - Whole region tiling: The algorithm attempts to avoid overlapping existing probes, although it is not guaranteed.
-- Sample variants: If the variant introduces at least 5b of difference to the reference genome, the probe is always included, no matter the amount of overlap with existing probes.
+- Variant probes: If the variant introduces at least 5b of difference to the reference genome, the probe is always included, no matter the amount of overlap with existing probes.
 
 ## Output
+
+Main outputs:
 
 | File                    | Description                                                                                                                                            |
 |-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | panel_probes.tsv        | Full information for each probe in the panel.                                                                                                          |
 | panel_probes.fasta      | Base sequences of probes in the panel.                                                                                                                 |
-| panel_probes.bed        | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
-| target_regions.bed      | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
 | rejected_regions.tsv    | Full information for each rejected region not covered by probes. Includes variant probes but only the parts which correspond to the reference genome.  |
-| rejected_regions.bed    | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
-| gene_stats.tsv          | Statistics on probes on a per-gene basis. Only relevant if gene features were requested.                                                               |
-| candidate_probes.tsv.gz | All probes evaluated for suitability. May be useful for debugging. Only produced if `verbose_output` is specified.                                     |
 
-Output files will be prefixed by `output_id` if specified.
+Informational/visualisation/debugging outputs:
+
+| File                    | Description                                                                                                                                            |
+|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| panel_probes.bed        | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
+| targeted_regions.bed    | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
+| rejected_regions.bed    | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
+| gene_stats.tsv          | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
+| candidate_regions.bed   | All regions evaluated for suitability.                                                                                                                 |
+| candidate_probes.tsv.gz | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                                                  |
+
+All output files will be prefixed by `output_id` if specified.

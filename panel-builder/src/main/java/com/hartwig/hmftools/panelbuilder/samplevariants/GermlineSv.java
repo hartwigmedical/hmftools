@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
@@ -49,8 +50,8 @@ public class GermlineSv implements Variant
     public SequenceDefinition generateProbe()
     {
         return buildSvProbe(
-                mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart,
-                mVariant.ChromosomeEnd, mVariant.PositionEnd, mVariant.OrientEnd, mVariant.InsertSequence,
+                mVariant.ChromosomeStart, mVariant.PositionStart, Orientation.fromByte(mVariant.OrientStart),
+                mVariant.ChromosomeEnd, mVariant.PositionEnd, Orientation.fromByte(mVariant.OrientEnd), mVariant.InsertSequence,
                 PROBE_LENGTH);
     }
 

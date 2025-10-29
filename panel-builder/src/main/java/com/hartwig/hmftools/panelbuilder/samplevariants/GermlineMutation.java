@@ -3,7 +3,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildIndelProbe;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class GermlineMutation implements Variant
     @Override
     public SequenceDefinition generateProbe()
     {
-        return buildMutationProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), PROBE_LENGTH);
+        return buildIndelProbe(mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt(), PROBE_LENGTH);
     }
 
     @Override
