@@ -77,6 +77,8 @@ public class FeatureKey
         return joiner.toString();
     }
 
+    public FeatureKey withType(FeatureType type) { return new FeatureKey(type, mName); }
+
     @Override
     public String toString()
     {

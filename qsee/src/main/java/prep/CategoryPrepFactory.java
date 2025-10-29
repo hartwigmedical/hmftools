@@ -5,6 +5,7 @@ import java.util.List;
 import prep.category.BamMetricsPrep;
 import prep.category.CobaltGcMediansPrep;
 import prep.category.ReduxBqrPrep;
+import prep.category.ReduxMsIndelErrorPrep;
 
 public class CategoryPrepFactory
 {
@@ -20,7 +21,8 @@ public class CategoryPrepFactory
         return List.of(
                 new BamMetricsPrep(mConfig),
                 new CobaltGcMediansPrep(mConfig),
-                new ReduxBqrPrep(mConfig)
+                new ReduxBqrPrep(mConfig),
+                new ReduxMsIndelErrorPrep(mConfig)
         );
     }
 }

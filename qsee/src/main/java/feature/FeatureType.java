@@ -16,8 +16,8 @@ public enum FeatureType
     MISSED_VARIANT_LIKELIHOOD    (VisType.PLOT, SourceTool.BAM_METRICS),
     BQR_PER_SNV96_CONTEXT        (VisType.PLOT, SourceTool.REDUX),
     BQR_PER_ORIG_QUAL            (VisType.PLOT, SourceTool.REDUX),
-    MSI_ERROR_RATES              (VisType.PLOT, SourceTool.REDUX),
-    MSI_INDEL_ERROR_BIAS         (VisType.PLOT, SourceTool.REDUX),
+    MS_INDEL_ERROR_RATES(VisType.PLOT, SourceTool.REDUX),
+    MS_INDEL_ERROR_BIAS(VisType.PLOT, SourceTool.REDUX),
     ;
 
     private final VisType mVisType;
