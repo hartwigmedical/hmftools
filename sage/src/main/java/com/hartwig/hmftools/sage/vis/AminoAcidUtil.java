@@ -4,22 +4,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.codon.AminoAcids.TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER;
-
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.sage.vis.AminoAcidVariant.MissenseVariant;
+import com.hartwig.hmftools.sage.vis.AminoAcidVariant.AminoAcidSubstitution;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
-
-import org.apache.commons.lang3.NotImplementedException;
 
 public final class AminoAcidUtil
 {
@@ -74,9 +68,9 @@ public final class AminoAcidUtil
                 char altAcid = refAcid;
                 for(AminoAcidVariant variant : variants)
                 {
-                    if(variant instanceof MissenseVariant)
+                    if(variant instanceof AminoAcidSubstitution)
                     {
-                        MissenseVariant missenseVariant = (MissenseVariant) variant;
+                        AminoAcidSubstitution missenseVariant = (AminoAcidSubstitution) variant;
                         if(missenseVariant.aminoAcidPos() != aaPos)
                             continue;
 

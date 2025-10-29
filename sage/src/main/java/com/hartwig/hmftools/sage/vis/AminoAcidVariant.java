@@ -9,12 +9,14 @@ import java.util.regex.Pattern;
 
 public interface AminoAcidVariant
 {
+    char INDEL = '.';
+
     // TODO: do we need to parse this?
-    record MissenseVariant(int aminoAcidPos, char ref, char alt) implements AminoAcidVariant
+    record AminoAcidSubstitution(int aminoAcidPos, char ref, char alt) implements AminoAcidVariant
     {
         private static final Pattern PATTERN = Pattern.compile("^p\\.([^0-9]+)([0-9]+)([^0-9]+)$");
 
-        public static MissenseVariant parse(final String s)
+        public static AminoAcidSubstitution parse(final String s)
         {
             Matcher matcher = PATTERN.matcher(s);
             if(!matcher.find())
@@ -25,8 +27,11 @@ public interface AminoAcidVariant
             String triAlt = matcher.group(3);
 
             String ref = TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triRef);
+            if(triAlt.equals("del"))
+                return new AminoAcidSubstitution(pos, ref.charAt(0), INDEL);
+
             String alt = TRI_LETTER_AMINO_ACID_TO_SINGLE_LETTER.get(triAlt);
-            return new MissenseVariant(pos, ref.charAt(0), alt.charAt(0));
+            return new AminoAcidSubstitution(pos, ref.charAt(0), alt.charAt(0));
         }
     }
 }

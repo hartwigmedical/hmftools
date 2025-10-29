@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
+import static com.hartwig.hmftools.sage.vis.AminoAcidVariant.INDEL;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.lighten;
 import static com.hartwig.hmftools.sage.vis.SvgUtil.drawStringFromCenter;
@@ -120,34 +121,40 @@ public class SvgRender
 
     private static void drawDel(SVGGraphics2D svgCanvas, int boxIdxStart, int boxIdxEnd)
     {
-        // canvas is scaled to be in units of BASE_BOX_SIZE
         int delLen = boxIdxEnd - boxIdxStart + 1;
+        drawDel(svgCanvas, 0.0, 0.0, delLen, boxIdxStart, boxIdxEnd);
+    }
 
-        svgCanvas.setColor(Color.BLACK);
-        Rectangle2D.Double delConnector =
-                new Rectangle2D.Double(boxIdxStart, 0.5 - 0.5 * DEL_CONNECTOR_BOX_PROPORTION, delLen, DEL_CONNECTOR_BOX_PROPORTION);
-        svgCanvas.fill(delConnector);
+    private static void drawDel(SVGGraphics2D svgCanvas_, double xBoxOffset, double yBoxOffset, int labelDelLen, int boxIdxStart, int boxIdxEnd)
+    {
+        // canvas is scaled to be in units of BASE_BOX_SIZE
+        int delLen_ = boxIdxEnd - boxIdxStart + 1;
 
-        Font currentFont = svgCanvas.getFont();
-        svgCanvas.setFont(INDEL_FONT);
-        String delSizeStr = String.valueOf(delLen);
+        svgCanvas_.setColor(Color.BLACK);
+        Rectangle2D.Double delConnector_ =
+                new Rectangle2D.Double(xBoxOffset + boxIdxStart, yBoxOffset + 0.5 - 0.5 * DEL_CONNECTOR_BOX_PROPORTION, delLen_, DEL_CONNECTOR_BOX_PROPORTION);
+        svgCanvas_.fill(delConnector_);
+
+        Font currentFont = svgCanvas_.getFont();
+        svgCanvas_.setFont(INDEL_FONT);
+        String delSizeStr = String.valueOf(labelDelLen);
 
         // font size is based of BASE_BOX_SIZE, we do not scale font size when scaling by boxSize, so temporarily undo this scaling
-        AffineTransform currentTransform = svgCanvas.getTransform();
-        svgCanvas.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
+        AffineTransform currentTransform = svgCanvas_.getTransform();
+        svgCanvas_.scale(1.0 / BASE_BOX_SIZE, 1.0 / BASE_BOX_SIZE);
 
-        double textCenterX = (boxIdxEnd + 1 - 0.5 * delLen) * BASE_BOX_SIZE;
-        double textCenterY = 0.5 * BASE_BOX_SIZE;
+        double textCenterX = (xBoxOffset + boxIdxEnd + 1 - 0.5 * delLen_) * BASE_BOX_SIZE;
+        double textCenterY = (yBoxOffset + 0.5) * BASE_BOX_SIZE;
         Rectangle2D textBackgroundRect =
                 SvgUtil.scaleRectangleFromCenter(SvgUtil.getStringBoundsFromCenter(INDEL_FONT, delSizeStr, textCenterX, textCenterY), 1.5);
-        svgCanvas.setColor(Color.WHITE);
-        svgCanvas.fill(textBackgroundRect);
+        svgCanvas_.setColor(Color.WHITE);
+        svgCanvas_.fill(textBackgroundRect);
 
-        svgCanvas.setColor(Color.BLACK);
-        drawStringFromCenter(svgCanvas, delSizeStr, textCenterX, textCenterY);
+        svgCanvas_.setColor(Color.BLACK);
+        drawStringFromCenter(svgCanvas_, delSizeStr, textCenterX, textCenterY);
 
-        svgCanvas.setTransform(currentTransform);
-        svgCanvas.setFont(currentFont);
+        svgCanvas_.setTransform(currentTransform);
+        svgCanvas_.setFont(currentFont);
     }
 
     public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
@@ -550,6 +557,13 @@ public class SvgRender
             int boxIdx = startPos - renderRegion.start() + BOX_PADDING;
 
             Color bgColour;
+            // TODO: join dels together
+            if(!renderRef && aa == INDEL)
+            {
+                drawDel(svgCanvas__, currentXOffset, currentYOffset, 1, boxIdx, boxIdx + boxWidth - 1);
+                continue;
+            }
+
             if(aa == stopCodon)
             {
                 bgColour = Color.RED;

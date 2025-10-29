@@ -43,6 +43,7 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_C
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.INFRAME_DELETION_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.INTRON_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MISSENSE_VARIANT_TYPE;
@@ -108,8 +109,9 @@ import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
-import com.hartwig.hmftools.sage.vis.AminoAcidVariant.MissenseVariant;
+import com.hartwig.hmftools.sage.vis.AminoAcidVariant.AminoAcidSubstitution;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -611,9 +613,9 @@ public class VariantVis
             }
 
             String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
-            if(aaVariantType.equals(MISSENSE_VARIANT_TYPE))
+            if(aaVariantType.equals(MISSENSE_VARIANT_TYPE) || aaVariantType.equals(INFRAME_DELETION_TYPE))
             {
-                MissenseVariant aaVariant = MissenseVariant.parse(impact.get(HGVS_INDEX));
+                AminoAcidSubstitution aaVariant = AminoAcidSubstitution.parse(impact.get(HGVS_INDEX));
                 aaVariants.add(aaVariant);
             }
             else if(aaVariantType.equals(SYNONYMOUS_VARIANT_TYPE) || aaVariantType.equals(INTRON_VARIANT_TYPE))

@@ -46,4 +46,5 @@ public class SageVisConstants
     final static String MISSENSE_VARIANT_TYPE = "missense_variant";
     final static String INTRON_VARIANT_TYPE = "intron_variant";
     final static String SYNONYMOUS_VARIANT_TYPE = "synonymous_variant";
+    final static String INFRAME_DELETION_TYPE = "inframe_deletion";
 }
