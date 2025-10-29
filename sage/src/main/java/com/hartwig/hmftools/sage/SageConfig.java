@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_ID
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
@@ -101,7 +100,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final List<BasePosition> SpecificPositions;
+    public final List<SimpleVariant> SpecificVariants;;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -127,7 +126,7 @@ public class SageConfig
     private static final String GERMLINE = "germline";
 
     // debug options
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
+    private static final String SPECIFIC_VARIANTS_FILE = "specific_var_file";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
@@ -186,7 +185,6 @@ public class SageConfig
         {
             mReadLength = 0; // will be set from sampling the BAM
         }
-
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
@@ -258,22 +256,24 @@ public class SageConfig
             }
         }
 
-        SpecificPositions = Lists.newArrayList();
+        SpecificVariants = Lists.newArrayList();
 
-        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
+        if(!SpecificChrRegions.hasFilters() && !Visualiser.Enabled && configBuilder.hasValue(SPECIFIC_VARIANTS_FILE))
         {
-            String[] specPositionsStr = configBuilder.getValue(SPECIFIC_POSITIONS).split(ITEM_DELIM);
-
-            for(String specPosStr : specPositionsStr)
+            try
             {
-                String[] items = specPosStr.split(":", 2);
-                SpecificPositions.add(new BasePosition(items[0], Integer.parseInt(items[1])));
+                SpecificVariants.addAll(SimpleVariant.loadSimpleVariants(configBuilder.getValue(SPECIFIC_VARIANTS_FILE)));
+
+                for(SimpleVariant variant : SpecificVariants)
+                {
+                    SpecificChrRegions.addRegion(new ChrBaseRegion(
+                            variant.Chromosome, variant.Position - VIS_VARIANT_BUFFER,
+                            variant.Position + VIS_VARIANT_BUFFER));
+                }
             }
-
-            if(SpecificChrRegions.Regions.isEmpty())
+            catch(Exception e)
             {
-                SpecificPositions.forEach(x -> SpecificChrRegions.addRegion(
-                        new ChrBaseRegion(x.Chromosome, x.Position - 300, x.Position + 300)));
+                mIsValid = false;
             }
         }
 
@@ -424,8 +424,8 @@ public class SageConfig
 
         // debug
         configBuilder.addConfigItem(
-                SPECIFIC_POSITIONS,
-                "Restrict to specific positions(s) of form chromosome:position, separated by ';'");
+                SPECIFIC_VARIANTS_FILE,
+                "Restrict to specific variants of form chromosome:position:ref:alt, separated by ';'");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -462,7 +462,7 @@ public class SageConfig
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
-        SpecificPositions = Collections.emptyList();
+        SpecificVariants = Collections.emptyList();
         LogEvidenceReads = false;
     }
 }

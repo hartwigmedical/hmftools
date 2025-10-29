@@ -96,7 +96,7 @@ public class Candidates
         }
     }
 
-    public List<Candidate> candidates(final List<BasePosition> restrictedPositions)
+    public List<Candidate> candidates(final List<SimpleVariant> restrictedVariants)
     {
         if(mCandidateMap != null)
         {
@@ -105,13 +105,13 @@ public class Candidates
             mCandidateList.sort((o1, o2) -> variantComparator.compare(o1.variant(), o2.variant()));
         }
 
-        if(!restrictedPositions.isEmpty())
+        if(!restrictedVariants.isEmpty())
         {
             List<Candidate> restrictedList = Lists.newArrayList();
 
             for(Candidate candidate : mCandidateList)
             {
-                if(restrictedPositions.stream().anyMatch(x -> x.matches(candidate.chromosome(), candidate.position())))
+                if(restrictedVariants.stream().anyMatch(x -> x.matches(candidate.variant())))
                 {
                     restrictedList.add(candidate);
                 }
