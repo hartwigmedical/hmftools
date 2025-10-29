@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
@@ -173,7 +172,7 @@ class CiderReadScreener(// collect the reads and sort by types
             }
 
             // want to make sure same gene is not included twice
-            val genes: ImmutableCollection<VJAnchorTemplate> = mCiderGeneDatastore.getByGeneLocation(anchorLocation.genomeLocation)
+            val genes = mCiderGeneDatastore.getByGeneLocation(anchorLocation.genomeLocation)
 
             if (!genes.isEmpty())
             {
@@ -400,7 +399,7 @@ class CiderReadScreener(// collect the reads and sort by types
 
     private fun addVjReadCandidate(
         samRecord: SAMRecord,
-        vjAnchorTemplates: ImmutableCollection<VJAnchorTemplate>,
+        vjAnchorTemplates: List<VJAnchorTemplate>,
         templateMatchMethod: MatchMethod,
         useRevComp: Boolean,
         readAnchorStart: Int,

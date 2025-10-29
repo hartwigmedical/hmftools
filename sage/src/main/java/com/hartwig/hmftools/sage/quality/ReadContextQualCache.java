@@ -1,21 +1,28 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.round;
+
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
-import com.hartwig.hmftools.common.qual.BqrReadType;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 public class ReadContextQualCache
 {
     private final int mVariantPosition;
     private final String mVariantAlt;
-    private final Map<String,Double>[] mQualMapByIndex;
+    private final Map<String,Double>[] mQualMapByRefIndexPosOrient;
+    private final Map<String,Double>[] mQualMapByRefIndexNegOrient;
     private final QualityCalculator mQualityCalculator;
-    private final double mMsiIndelErrorQual;
+
+    private final RepeatInfo mMsiIndelRepeat;
+    private final byte mMsiIndelErrorQual;
     private final boolean mIsMsiSampleAndVariant;
 
     public ReadContextQualCache(final VariantReadContext readContext, final QualityCalculator qualityCalculator, final String sampleId)
@@ -25,36 +32,60 @@ public class ReadContextQualCache
 
         mQualityCalculator = qualityCalculator;
 
-        double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext, sampleId);
-        mMsiIndelErrorQual = errorRate > 0 ? BaseQualAdjustment.probabilityToPhredQual(errorRate) : INVALID_BASE_QUAL;
-        mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
+        mMsiIndelRepeat = qualityCalculator.msiJitterCalcs().findRepeat(readContext);
 
-        mQualMapByIndex = new HashMap[mVariantAlt.length()];
+        if(mMsiIndelRepeat != null)
+        {
+            double errorRate = qualityCalculator.msiJitterCalcs().calcErrorRate(readContext.variant(), sampleId, mMsiIndelRepeat);
+
+            mMsiIndelErrorQual = errorRate > 0 ?
+                    (byte)round(BaseQualAdjustment.probabilityToPhredQual(errorRate)) : INVALID_BASE_QUAL;
+
+            mIsMsiSampleAndVariant = usesMsiIndelErrorQual() && qualityCalculator.msiJitterCalcs().getProbableMsiStatus(sampleId);
+        }
+        else
+        {
+            mMsiIndelErrorQual = INVALID_BASE_QUAL;
+            mIsMsiSampleAndVariant = false;
+        }
+
+        mQualMapByRefIndexPosOrient = new HashMap[mVariantAlt.length()];
+        mQualMapByRefIndexNegOrient = new HashMap[mVariantAlt.length()];
 
         for(int i = 0; i < mVariantAlt.length(); ++i)
         {
-            mQualMapByIndex[i] = new HashMap<>();
+            mQualMapByRefIndexPosOrient[i] = new HashMap<>();
+            mQualMapByRefIndexNegOrient[i] = new HashMap<>();
         }
     }
 
-    public double msiIndelErrorQual() { return mMsiIndelErrorQual; }
+    public byte msiIndelErrorQual() { return mMsiIndelErrorQual; }
+    public RepeatInfo msiIndelRepeat() { return mMsiIndelRepeat; }
     public boolean usesMsiIndelErrorQual() { return mMsiIndelErrorQual != INVALID_BASE_QUAL; }
     public boolean isMsiSampleAndVariant() { return mIsMsiSampleAndVariant; }
 
-    public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex)
+    public double getQual(final byte baseQual, final ConsensusType readType, final int refIndex, final boolean posOrientation)
     {
         String key = String.valueOf(baseQual) + "_" + readType.ordinal();
-        Double bqrQual = mQualMapByIndex[refIndex].get(key);
+
+        Map<String,Double>[] qualMapByRefIndex = posOrientation ? mQualMapByRefIndexPosOrient : mQualMapByRefIndexNegOrient;
+        Double bqrQual = qualMapByRefIndex[refIndex].get(key);
 
         if(bqrQual != null)
             return bqrQual;
 
         byte[] trinucleotideContext = mQualityCalculator.getTrinucleotideContext(mVariantPosition + refIndex);
+        byte altBase = (byte)mVariantAlt.charAt(refIndex);
 
-        double bqrValue = mQualityCalculator.lookupRecalibrateQuality(
-                trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual, readType);
+        if(!posOrientation)
+        {
+            trinucleotideContext = Nucleotides.reverseComplementBases(trinucleotideContext);
+            altBase = Nucleotides.swapDnaBase(altBase);
+        }
 
-        mQualMapByIndex[refIndex].put(key, bqrValue);
+        double bqrValue = mQualityCalculator.lookupRecalibrateQuality(trinucleotideContext, altBase, baseQual, readType);
+
+        qualMapByRefIndex[refIndex].put(key, bqrValue);
 
         return bqrValue;
     }

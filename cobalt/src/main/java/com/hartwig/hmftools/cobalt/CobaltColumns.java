@@ -16,7 +16,7 @@ public class CobaltColumns
 
     public static final String ENCODED_CHROMOSOME_POS = "encodedChrPos";
 
-    public static final String GC_CONTENT = "gcContent";
+    public static final String PROFILE_GC_CONTENT = "gcContent";
     public static final String TUMOR_GC_RATIO = "tumorGCRatio";
     public static final String GC_BUCKET = "gcBucket";
     public static final String IS_AUTOSOME = "isAutosome";

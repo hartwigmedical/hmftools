@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 
@@ -13,12 +14,14 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
@@ -47,7 +50,7 @@ public class TestUtils
     public static final RefSequence REF_SEQUENCE_200 = new RefSequence(0, REF_BASES_200.getBytes()); // note zero-based to line up with indices
 
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE_200, MOCK_REF_GENOME, MSI_JITTER_CALCS);
+            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE_200, MSI_JITTER_CALCS);
 
     public static SageConfig createSageConfig()
     {
@@ -60,6 +63,10 @@ public class TestUtils
         variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
         variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
+
+    public static void setIlluminaSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.ILLUMINA; }
+    public static void setSbxSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.SBX; }
+    public static void setUltimaSequencing() { SageConfig.SEQUENCING_TYPE = SequencingType.ULTIMA; }
 
     public static String buildCigarString(int alignedLength) { return format("%dM", alignedLength); }
 
@@ -103,16 +110,13 @@ public class TestUtils
 
         SAMRecord record = recordBuilder.addFrag(
                 readId, chromosome.ordinal(), readStart, false, false,
-                cigar, readBases, 37, false);
+                cigar, readBases, DEFAULT_BASE_QUAL, false);
 
         record.setReadBases(readBases.getBytes());
 
-        final byte[] qualities = new byte[readBases.length()];
+        byte[] baseQuals = SamRecordTestUtils.buildBaseQuals(readBases.length(), DEFAULT_BASE_QUAL);
+        record.setBaseQualities(baseQuals);
 
-        for(int i = 0; i < readBases.length(); ++i)
-            qualities[i] = 37;
-
-        record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
 

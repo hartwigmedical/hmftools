@@ -5,11 +5,13 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public final class ComplexCoverage implements Comparable<ComplexCoverage>
 {
@@ -21,8 +23,11 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
     private final List<AlleleCoverage> mAlleleCoverage;
 
     // computed values
+    private double mCohortFrequencyPenalty;
     private double mCohortFrequencyTotal;
     private double mScore;
+    private double mComplexityPenalty;
+    private int mComplexity;
     private final int mHomozygousCount;
     private int mRecoveredCount;
     private int mWildcardCount;
@@ -41,6 +46,9 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         mWildcardCount = 0;
         mCohortFrequencyTotal = 0;
         mScore = 0;
+        mComplexityPenalty = 0;
+        mComplexity = 0;
+        mCohortFrequencyPenalty = 0;
     }
 
     public List<AlleleCoverage> getAlleleCoverage() { return mAlleleCoverage; }
@@ -49,6 +57,8 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
     {
         return mAlleleCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
     }
+
+    public HlaComplex toComplex() { return new HlaComplex(getAlleles()); }
 
     public double cohortFrequencyTotal() { return mCohortFrequencyTotal; }
     public void setCohortFrequencyTotal(double total) { mCohortFrequencyTotal = total; }
@@ -63,16 +73,26 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     private int calcHomozygousCount()
     {
+        // for unit tests
+        if(GENE_CACHE == null)
+            return 0;
+
         return GENE_CACHE.ExpectAlleleCount - getAlleles().size();
     }
 
     public boolean isHomozygous(final HlaAllele allele)
     {
-        return getAlleles().stream().filter(x -> x.Gene.equals(allele.Gene)).count() == 1;
+        return getAlleles().stream().filter(x -> x.Gene == allele.Gene).count() == 1;
     }
 
     public void setScore(double score) { mScore = score; }
     public double getScore() { return mScore; }
+    public void setComplexityPenalty(double complexityPenalty) { mComplexityPenalty = complexityPenalty; }
+    public double getComplexityPenalty() { return mComplexityPenalty; }
+    public void setComplexity(int complexity) { mComplexity = complexity; }
+    public int getComplexity() { return mComplexity; }
+    public void setCohortFrequencyPenalty(double cohortFrequencyPenalty) { mCohortFrequencyPenalty = cohortFrequencyPenalty; }
+    public double getCohortFrequencyPenalty() { return mCohortFrequencyPenalty; }
 
     public void expandToSixAlleles()
     {
@@ -81,12 +101,14 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
         // split homozygous allele coverage, and fill any missing allele if there was zero support
 
-        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
-        for(String gene : GENE_CACHE.GeneIds)
+        for(HlaGene gene : GENE_CACHE.GeneNames)
         {
-            List<AlleleCoverage> geneCoverage = existingCoverage.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+            List<AlleleCoverage> geneCoverage = existingCoverage.stream()
+                    .filter(x -> x.Allele.Gene == gene)
+                    .collect(Collectors.toList());
 
             if(geneCoverage.size() == 2)
             {
@@ -101,7 +123,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
 
     private static List<AlleleCoverage> splitHomozygousCoverage(final List<AlleleCoverage> coverage)
     {
-        if (coverage.size() != 1)
+        if(coverage.size() != 1)
             return coverage;
 
         AlleleCoverage single = coverage.get(0);
@@ -114,19 +136,19 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         AlleleCoverage remainder = new AlleleCoverage(single.Allele,
                 single.UniqueCoverage - first.UniqueCoverage,
                 single.SharedCoverage - first.SharedCoverage,
-                single.WildCoverage - single.WildCoverage);
+                0.0);
 
         List<AlleleCoverage> newCoverage = Lists.newArrayList(first, remainder);
         return newCoverage;
     }
 
-    public void populateMissingCoverage(final List<HlaAllele> alleles)
+    public void populateMissingCoverage(final LinkedHashSet<HlaAllele> alleles)
     {
         if(mAlleleCoverage.size() == GENE_CACHE.ExpectAlleleCount)
             return;
 
         // fill any missing allele if there was zero support
-        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().collect(Collectors.toList());
+        List<AlleleCoverage> existingCoverage = mAlleleCoverage.stream().toList();
         mAlleleCoverage.clear();
 
         for(HlaAllele allele : alleles)
@@ -162,7 +184,7 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
         return 0;
     }
 
-    public static ComplexCoverage create(final List<AlleleCoverage> alleles)
+    public static ComplexCoverage create(final Iterable<AlleleCoverage> alleles)
     {
         int unique = 0;
         double shared = 0.0;
@@ -174,14 +196,15 @@ public final class ComplexCoverage implements Comparable<ComplexCoverage>
             wild += coverage.WildCoverage;
         }
 
-        final List<AlleleCoverage> sortedAlleles = alleles.stream().collect(Collectors.toList());
+        final List<AlleleCoverage> sortedAlleles = Lists.newArrayList(alleles);
         Collections.sort(sortedAlleles, new AlleleCoverage.AlleleSorter());
 
-        return new ComplexCoverage(unique, (int)round(shared), (int)round(wild), sortedAlleles);
+        return new ComplexCoverage(unique, (int) round(shared), (int) round(wild), sortedAlleles);
     }
 
+    @Override
     public String toString()
     {
-        return String.format("alleles(%s) coverage(%d) score(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore);
+        return String.format("alleles(%s) coverage(%d) score(%.2f) complexityPenalty(%.2f)", HlaAllele.toString(getAlleles()), TotalCoverage, mScore, mComplexityPenalty);
     }
 }

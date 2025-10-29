@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.ensemblcache;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -421,26 +422,26 @@ public final class EnsemblDataLoader
             final String dataPath, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
             final List<String> restrictedGeneIds, boolean canonicalOnly)
     {
-        String filename = dataPath + ENSEMBL_TRANS_AMINO_ACIDS_FILE;
+        return loadTranscriptAminoAcidData(new File(dataPath), transAminoAcidMap, restrictedGeneIds, canonicalOnly);
+    }
 
-        if(!Files.exists(Paths.get(filename)))
+    public static boolean loadTranscriptAminoAcidData(
+            final File dataDir, final Map<String,TranscriptAminoAcids> transAminoAcidMap,
+            final List<String> restrictedGeneIds, boolean canonicalOnly)
+    {
+        File dataFile = new File(dataDir, ENSEMBL_TRANS_AMINO_ACIDS_FILE);
+
+        if(!dataFile.exists())
             return false;
 
         try
         {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
+            BufferedReader fileReader = new BufferedReader(new FileReader(dataFile));
 
             String line = fileReader.readLine();
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if(line == null)
-            {
-                LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
-                return false;
-            }
-
-            // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
             int geneIdIndex = fieldsIndexMap.get(ENS_FLD_GENE_ID);
             int geneNameIndex = fieldsIndexMap.get(ENS_FLD_GENE_NAME);
             int transIndex = fieldsIndexMap.get(ENS_FLD_TRANS_NAME);
@@ -460,7 +461,7 @@ public final class EnsemblDataLoader
                 }
 
                 String transName = values[transIndex];
-                boolean isCanonical = isCanonicalIndex != null ? Boolean.parseBoolean(values[isCanonicalIndex]) : true;
+                boolean isCanonical = isCanonicalIndex == null || Boolean.parseBoolean(values[isCanonicalIndex]);
 
                 if(canonicalOnly && !isCanonical)
                     continue;
@@ -473,7 +474,7 @@ public final class EnsemblDataLoader
         }
         catch(IOException e)
         {
-            LOGGER.warn("failed to load transcript amino-acid data({}): {}", filename, e.toString());
+            LOGGER.warn("failed to load transcript amino-acid data({}): {}", dataFile.getAbsolutePath(), e.toString());
             return false;
         }
 

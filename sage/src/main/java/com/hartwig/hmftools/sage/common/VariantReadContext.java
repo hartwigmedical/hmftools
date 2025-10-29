@@ -10,8 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.sage.quality.ArtefactContext;
-import com.hartwig.hmftools.sage.quality.UltimaQualModel;
+import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
 
 import htsjdk.samtools.CigarElement;
 
@@ -38,9 +37,9 @@ public class VariantReadContext
     private final SimpleVariant mVariant;
 
     private final String mReadCigarStr;
+    private final boolean mHasIndelInCore;
 
-    private ArtefactContext mArtefactContext;
-    private UltimaQualModel mUltimaQualModel;
+    private IlluminaArtefactContext mIlluminaArtefactContext;
 
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
     private byte[] mExtendedRefBases;
@@ -64,14 +63,15 @@ public class VariantReadContext
         AllRepeats = allRepeats;
 
         mReadCigarStr = CigarUtils.cigarElementsToStr(readCigar);
+        mHasIndelInCore = ReadCigarInfo.hasIndelInCore(readCigar, CoreIndexStart, CoreIndexEnd);
 
         CorePositionStart = corePositionStart;
         CorePositionEnd = corePositionEnd;
 
-        mArtefactContext = null;
-        mUltimaQualModel = null;
         mMaxRefRepeat = null;
         mExtendedRefBases = null;
+
+        mIlluminaArtefactContext = null;
     }
 
     // read context methods
@@ -114,7 +114,9 @@ public class VariantReadContext
     public String rightFlankStr() { return new String(ReadBases, CoreIndexEnd + 1, rightFlankLength()); }
 
     public String readBases() { return new String(ReadBases); }
+    public byte[] readBasesBytes() { return ReadBases; }
     public String refBases() { return new String(RefBases); }
+    public byte[] refBasesBytes() { return RefBases; }
 
     public String homologyBases() { return Homology != null ? Homology.Bases : ""; }
     public int maxRepeatCount() { return MaxRepeat != null ? MaxRepeat.Count : 0; }
@@ -127,12 +129,10 @@ public class VariantReadContext
 
     public final String trinucleotideStr() { return new String(trinucleotide()); }
     public final String readCigar() { return mReadCigarStr; }
+    public final boolean hasIndelInCore() { return mHasIndelInCore; }
 
-    public ArtefactContext artefactContext() { return mArtefactContext; }
-    public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
-
-    public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
-    public void setUltimaQualModel(final UltimaQualModel model) { mUltimaQualModel = model; }
+    public IlluminaArtefactContext artefactContext() { return mIlluminaArtefactContext; }
+    public void setArtefactContext(final IlluminaArtefactContext context) { mIlluminaArtefactContext = context; }
 
     public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
     public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }

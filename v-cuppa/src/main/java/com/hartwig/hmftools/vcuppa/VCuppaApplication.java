@@ -7,12 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.utils.config.VersionInfo;
 import com.hartwig.hmftools.common.vcuppa.ImmutableVCuppaPrediction;
 import com.hartwig.hmftools.common.vcuppa.VCuppaPrediction;
 import com.hartwig.hmftools.common.vcuppa.VCuppaPredictionFile;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

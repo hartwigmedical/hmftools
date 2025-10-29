@@ -6,6 +6,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
@@ -27,7 +29,6 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class ExtensionSeqBuilder
 {
@@ -224,7 +226,7 @@ public class ExtensionSeqBuilder
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
         {
             byte consensusBase = 0;
-            int consensusMaxQual = 0;
+            byte consensusMaxQual = 0;
             int consensusQualTotal = 0;
 
             // per-base arrays are only used for high-qual mismatches
@@ -261,7 +263,7 @@ public class ExtensionSeqBuilder
                 hasActiveReads = true;
 
                 byte base = read.currentBase();
-                int qual = read.currentQual();
+                byte qual = read.currentQual();
 
                 if(aboveMinQual(qual))
                     currentReadBases[readIndex] = base; // cached here since the read state then moves onto the next base
@@ -310,7 +312,7 @@ public class ExtensionSeqBuilder
                     }
                     else if(base == consensusBase)
                     {
-                        consensusMaxQual = max(qual, consensusMaxQual);
+                        consensusMaxQual = maxQual(qual, consensusMaxQual);
                         consensusQualTotal += qual;
                     }
                     else if(base != consensusBase && belowMinQual(qual))
@@ -346,7 +348,7 @@ public class ExtensionSeqBuilder
 
             if(totalQuals != null)
             {
-                // take the bases with the highest qual totals
+                // take the bases with high vs medium if different, otherwise the highest qual total
                 int maxQual = 0;
                 int maxBaseIndex = 0;
                 for(int b = 0; b < totalQuals.length; ++b)
@@ -377,7 +379,7 @@ public class ExtensionSeqBuilder
             }
 
             mBases[extensionIndex] = consensusBase;
-            mBaseQuals[extensionIndex] = (byte)consensusMaxQual;
+            mBaseQuals[extensionIndex] = consensusMaxQual;
 
             if(mIsForward)
                 ++extensionIndex;
@@ -410,7 +412,7 @@ public class ExtensionSeqBuilder
         while(extensionIndex >= 0 && extensionIndex < mBases.length && remainingLineBases > 0)
         {
             mBases[extensionIndex] = lineBase;
-            mBaseQuals[extensionIndex] = (byte)LOW_BASE_QUAL_THRESHOLD;
+            mBaseQuals[extensionIndex] = LOW_BASE_QUAL_THRESHOLD;
 
             extensionIndex += mIsForward ? 1 : -1;
 
@@ -664,6 +666,9 @@ public class ExtensionSeqBuilder
         {
             int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
 
+            int firstRepeatEndIndex = mIsForward ?
+                    mMaxRepeat.Index + mMaxRepeat.baseLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.baseLength();
+
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
                 ExtReadParseState read = mReads.get(readIndex);
@@ -687,9 +692,6 @@ public class ExtensionSeqBuilder
 
                 // if a read has repeats and its mismatch occurs within the range of the first repeat, consider it mismatched from jittter
                 int mismatchExceededIndex = readMismatchExceededIndex[readIndex];
-
-                int firstRepeatEndIndex = mIsForward ?
-                        mMaxRepeat.Index + mMaxRepeat.baseLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.baseLength();
 
                 if(mIsForward && mismatchExceededIndex >= firstRepeatEndIndex)
                     read.resetMatches();

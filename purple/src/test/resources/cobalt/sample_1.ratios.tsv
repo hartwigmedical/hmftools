@@ -1,0 +1,9 @@
+chromosome	position	referenceReadDepth	tumorReadDepth	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio	referenceGCContent	tumorGCContent
+chr1	1	-1	0	-1	-1	-1	-1	-1
+chr1	1001	-1	0	-1	-1	-1	-1	-1
+chr1	26693001	-1	100.818	-1	0.9465	-1	-1	0.6111
+chr1	26694001	-1	80.652	-1	1.010	-1	-1	0.6111
+chr1	26705001	-1	1.414	-1	-1	-1	-1	0.4632
+chr7	4776001	-1	120.0	-1	0.99	-1	-1	0.5
+chr7	55020001	-1	110.1	-1	1.01	-1	-1	0.51
+chr7	55021001	-1	120.0	-1	0.99	-1	-1	0.49

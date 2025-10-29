@@ -1,15 +1,13 @@
 package com.hartwig.hmftools.common.region;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class BaseRegion implements Cloneable, Comparable<BaseRegion>
 {
@@ -22,11 +20,25 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         mEnd = posEnd;
     }
 
-    public static BaseRegion from(final GenomeRegion region) { return new BaseRegion(region.start(), region.end()); }
-    public static BaseRegion from(final ChrBaseRegion region) { return new BaseRegion(region.start(), region.end()); }
+    public static BaseRegion from(final GenomeRegion region)
+    {
+        return new BaseRegion(region.start(), region.end());
+    }
 
-    public int start() { return mStart; }
-    public int end() { return mEnd; }
+    public static BaseRegion from(final ChrBaseRegion region)
+    {
+        return new BaseRegion(region.start(), region.end());
+    }
+
+    public int start()
+    {
+        return mStart;
+    }
+
+    public int end()
+    {
+        return mEnd;
+    }
 
     public int position(int which)
     {
@@ -41,13 +53,30 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         throw new NoSuchElementException();
     }
 
-    public void setStart(int pos) { mStart = pos; }
-    public void setEnd(int pos) { mEnd = pos; }
+    public void setStart(int pos)
+    {
+        mStart = pos;
+    }
 
-    public int baseLength() { return length() + 1; }
-    public int length() { return mEnd - mStart; }
+    public void setEnd(int pos)
+    {
+        mEnd = pos;
+    }
 
-    public boolean hasValidPositions() { return mStart > 0 & mEnd >= mStart; }
+    public int baseLength()
+    {
+        return length() + 1;
+    }
+
+    public int length()
+    {
+        return mEnd - mStart;
+    }
+
+    public boolean hasValidPositions()
+    {
+        return mStart > 0 & mEnd >= mStart;
+    }
 
     public boolean overlaps(final BaseRegion other)
     {
@@ -65,20 +94,20 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return positionsWithin(region.start(), region.end(), mStart, mEnd);
     }
 
-    public boolean containsRegion(final ChrBaseRegion region)
+    public boolean containsPosition(int position)
     {
-        // assumes chromosome check is not relevant
-        return positionsWithin(region.start(), region.end(), mStart, mEnd);
+        return positionWithin(position, start(), end());
     }
-
-    public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
 
     public boolean matches(final BaseRegion other)
     {
         return start() == other.start() && end() == other.end();
     }
 
-    public String toString() { return String.format("%d-%d", mStart, mEnd); }
+    public String toString()
+    {
+        return String.format("%d-%d", mStart, mEnd);
+    }
 
     @Override
     public BaseRegion clone()
@@ -90,7 +119,7 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
             br.mEnd = mEnd;
             return br;
         }
-        catch (CloneNotSupportedException e)
+        catch(CloneNotSupportedException e)
         {
             // Will not happen in this case
             return null;
@@ -101,13 +130,19 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     public boolean equals(Object obj)
     {
         if(obj == this)
+        {
             return true;
+        }
 
         if(obj == null)
+        {
             return false;
+        }
 
         if(!getClass().equals(obj.getClass()))
+        {
             return false;
+        }
 
         BaseRegion other = (BaseRegion) obj;
         return matches(other);
@@ -151,22 +186,24 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return (innerStart <= innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
-    public static void checkMergeOverlaps(final List<BaseRegion> regions)
+    public static <R extends BaseRegion> void checkMergeOverlaps(final List<R> regions)
     {
         checkMergeOverlaps(regions, true);
     }
 
-    public static void checkMergeOverlaps(final List<BaseRegion> regions, boolean checkSorted)
+    public static <R extends BaseRegion> void checkMergeOverlaps(final List<R> regions, boolean checkSorted)
     {
         if(checkSorted)
+        {
             Collections.sort(regions);
+        }
 
         // merge any adjacent regions
         int index = 0;
         while(index < regions.size() - 1)
         {
-            BaseRegion region = regions.get(index);
-            BaseRegion nextRegion = regions.get(index + 1);
+            R region = regions.get(index);
+            R nextRegion = regions.get(index + 1);
 
             if(region.end() >= nextRegion.start() - 2)
             {
@@ -187,13 +224,17 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         int binarySearchIndex = Collections.binarySearch(regions, new BaseRegion(readStart, readStart));
 
         if(binarySearchIndex >= 0)
+        {
             return binarySearchIndex; // found with exact match for start pos
+        }
 
         // get insertion point
         int insertionIndex = -(binarySearchIndex + 1);
 
         if(insertionIndex == 0)
+        {
             return 0;
+        }
 
         return insertionIndex - 1;
     }

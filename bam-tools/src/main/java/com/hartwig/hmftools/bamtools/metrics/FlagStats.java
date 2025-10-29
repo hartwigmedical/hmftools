@@ -28,7 +28,7 @@ public class FlagStats
         }
     }
 
-    private void increment(final FlagStatType type, boolean passes)
+    public void increment(final FlagStatType type, boolean passes)
     {
         mTypeStats.get(type.ordinal()).record(passes);
     }
@@ -38,13 +38,13 @@ public class FlagStats
         mTypeStats.get(type.ordinal()).decrement(passes);
     }
 
-    public void processRead(final SAMRecord read, boolean isConsensusRead)
+    public void processRead(final SAMRecord read, boolean isConsensusRead, boolean expectDuplicates)
     {
         boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
         boolean isSupplementary = read.getSupplementaryAlignmentFlag();
         boolean isSecondary = read.getSupplementaryAlignmentFlag();
 
-        if(isConsensusRead)
+        if(isConsensusRead && expectDuplicates)
         {
             // consensus reads decrement the extra duplicate read as previously explained in BamReader, but
             // being extra reads they do not contribute to supplementary, mapped or other counts

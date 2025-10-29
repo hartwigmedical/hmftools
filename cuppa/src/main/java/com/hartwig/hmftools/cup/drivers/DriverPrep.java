@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.cup.drivers;
 
+import static com.hartwig.hmftools.common.cuppa.CuppaCommon.INDEL_ALB;
+import static com.hartwig.hmftools.common.cuppa.CuppaCommon.INDEL_MAX_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.cuppa.CuppaCommon.INDEL_SFTPB;
+import static com.hartwig.hmftools.common.cuppa.CuppaCommon.INDEL_SLC34A2;
 import static com.hartwig.hmftools.cup.prep.CategoryType.DRIVER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
-import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
+import static com.hartwig.hmftools.common.purple.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
@@ -15,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.hartwig.hmftools.common.cuppa.CuppaCommon;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
@@ -48,11 +53,6 @@ public class DriverPrep implements CategoryPrep
 
     private static final String PROMISCUOUS_5_SUFFIX = "_PROM5";
     private static final String PROMISCUOUS_3_SUFFIX = "_PROM3";
-
-    private static final int INDEL_MAX_REPEAT_COUNT = 6;
-    private static final String INDEL_ALB = "ALB";
-    private static final String INDEL_SFTPB = "SFTPB";
-    private static final String INDEL_SLC34A2 = "SLC34A2";
 
     public DriverPrep(final PrepConfig config)
     {

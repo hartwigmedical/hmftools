@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
@@ -18,11 +19,16 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
+import com.hartwig.hmftools.esvee.common.SvConstants;
 
 import htsjdk.samtools.SAMFlag;
 
 public class AssemblyTestUtils
 {
+    public static void setIlluminaSequencing() { SvConstants.SEQUENCING_TYPE = SequencingType.ILLUMINA; }
+    public static void setSbxSequencing() { SvConstants.SEQUENCING_TYPE = SequencingType.SBX; }
+    public static void setUltimaSequencing() { SvConstants.SEQUENCING_TYPE = SequencingType.ULTIMA; }
+
     public static JunctionAssembly createAssembly(
             final String chromosome, final int junctionPosition, final Orientation junctionOrientation,
             final String assemblyBases, final int junctionIndex)

@@ -1,21 +1,33 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
+
 public class QualityScores
 {
-    public final double CalcBaseQuality;
+    public final double SeqTechBaseQuality;
     public final double RecalibratedBaseQuality;
-    public final int ModifiedMapQuality;
-    public final double ModifiedBaseQuality;
-    public final double ModifiedQuality;
+    public final double FinalBaseQuality;
+
+    public final int FinalMapQuality;
+
+    public final double CombinedQuality;
+
+    public final boolean IsMediumQual;
+
+    public static final QualityScores INVALID_QUAL_SCORES = new QualityScores(
+            INVALID_BASE_QUAL, INVALID_BASE_QUAL, 0, INVALID_BASE_QUAL, 0, false);
 
     public QualityScores(
-            double calcBaseQuality, double recalibratedBaseQuality, int modifiedMapQuality,
-            double modifiedBaseQuality, double modifiedQuality)
+            double seqTechBaseQuality, double recalibratedBaseQuality, int finalMapQuality,
+            double finalBaseQuality, double combinedQuality, boolean isMediumQual)
     {
-        CalcBaseQuality = calcBaseQuality;
+        SeqTechBaseQuality = seqTechBaseQuality;
         RecalibratedBaseQuality = recalibratedBaseQuality;
-        ModifiedMapQuality = modifiedMapQuality;
-        ModifiedBaseQuality = modifiedBaseQuality;
-        ModifiedQuality = modifiedQuality;
+        FinalMapQuality = finalMapQuality;
+        FinalBaseQuality = finalBaseQuality;
+        CombinedQuality = combinedQuality;
+        IsMediumQual = isMediumQual;
     }
+
+    public boolean valid() { return SeqTechBaseQuality != INVALID_BASE_QUAL; }
 }

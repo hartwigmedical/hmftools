@@ -1,22 +1,22 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_EDGE_DISTANCE_PERC_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_FLAG_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RAW_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
@@ -33,21 +33,19 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_DE
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_BASE_QUAL_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MODIFIED_ALT_MAP_QUAL_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_EDGE_DISTANCE_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_BASE_QUAL_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_FINAL_ALT_MAP_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
@@ -195,8 +193,7 @@ public class VariantVCF implements AutoCloseable
                 MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(AVG_READ_EDGE_DISTANCE, 2, VCFHeaderLineType.Integer, AVG_READ_EDGE_DISTANCE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Float, MAX_READ_EDGE_DISTANCE_DESC));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(NEARBY_INDEL_FLAG, 0, VCFHeaderLineType.Flag, NEARBY_INDEL_FLAG_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(TUMOR_QUALITY_PROB, 1, VCFHeaderLineType.Float, TUMOR_QUALITY_PROB_DESC));
@@ -225,37 +222,45 @@ public class VariantVCF implements AutoCloseable
     public static void addGenotypeHeader(final VCFHeader header)
     {
         // call from Sage append as well for new samples, and this handles the additional in later versions of new genotype fields
+
+        // add in alphabetical order
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RECALIBRATED_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_RECALIBRATED_BASE_QUAL_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_EDGE_DISTANCE_PERC, 2, VCFHeaderLineType.Float, AVG_EDGE_DISTANCE_PERC_DESC));
+
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_RAW_BASE_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                AVG_FINAL_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_FINAL_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                AVG_MODIFIED_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_BASE_QUAL_DESC));
+                AVG_FINAL_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_FINAL_ALT_MAP_QUAL_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                AVG_MODIFIED_ALT_MAP_QUAL, 1, VCFHeaderLineType.Integer, AVG_MODIFIED_ALT_MAP_QUAL_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_READ_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_READ_MAP_QUALITY_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_COUNT, 1, VCFHeaderLineType.Integer, MIN_COORDS_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_SEQ_TECH_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_SEQ_TECH_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(MIN_COORDS_FLAG, 1, VCFHeaderLineType.Integer, MIN_COORDS_FLAG_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(SIMPLE_ALT_COUNT, 1, VCFHeaderLineType.Integer, SIMPLE_ALT_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(UMI_TYPE_COUNTS, CONSENSUS_TAG_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
     }
 
     @Override

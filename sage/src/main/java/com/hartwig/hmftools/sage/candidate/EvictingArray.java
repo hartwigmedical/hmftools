@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,16 +25,21 @@ public class EvictingArray
     private final int mReadLengthBuffer;
     private final int mCapacity;
 
-    public static final int MAX_EXPECTED_DEL = 80;
+    public static final double MAX_EXPECTED_DEL_PERC = 80 / (double)DEFAULT_READ_LENGTH;
 
-    public EvictingArray(int maxReadLength, final Consumer<RefContext> evictionHandler)
+    public EvictingArray(int capacity, int readLengthBuffer, final Consumer<RefContext> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
-        mReadLengthBuffer = maxReadLength + MAX_EXPECTED_DEL;
-        mCapacity = maxReadLength * 2;
+        mReadLengthBuffer = readLengthBuffer;
+        mCapacity = capacity;
         mElements = new RefContext[mCapacity];
         mMinPosition = 0;
         mMinPositionIndex = 0;
+    }
+
+    public EvictingArray(int maxReadLength, final Consumer<RefContext> evictionHandler)
+    {
+        this(maxReadLength * 2, (int)round(maxReadLength * (1 + MAX_EXPECTED_DEL_PERC)), evictionHandler);
     }
 
     public RefContext getOrCreateRefContext(int position, final Function<Integer,RefContext> supplier)
@@ -136,6 +142,8 @@ public class EvictingArray
             else
                 ++mMinPositionIndex;
         }
+
+        // SG_LOGGER.debug("position({}) minPosition({}) flushCount({})", position, mMinPosition, flushCount);
 
         if(flushCount >= mCapacity)
             resetMinPosition(position);

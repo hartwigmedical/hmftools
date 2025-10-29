@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPosition;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -277,14 +278,29 @@ public class BreakendBuilder
             breakendPosition = alignment.positionStart();
             orientation = REVERSE;
             softClipLength = alignment.leftSoftClipLength();
-            insertedBases = fullSequence.substring(0, softClipLength);
         }
         else
         {
             breakendPosition = alignment.positionEnd();
             orientation = FORWARD;
             softClipLength = alignment.rightSoftClipLength();
-            insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
+        }
+
+        if(alignment.orientation().isForward())
+        {
+            if(orientation.isReverse())
+                insertedBases = fullSequence.substring(0, softClipLength);
+            else
+                insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
+        }
+        else
+        {
+            if(orientation.isReverse())
+                insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
+            else
+                insertedBases = fullSequence.substring(0, softClipLength);
+
+            insertedBases = reverseComplementBases(insertedBases);
         }
 
         int requiredSoftClipLength = isLineInsertion(insertedBases, orientation) ? LINE_MIN_EXTENSION_LENGTH : ALIGNMENT_MIN_SOFT_CLIP;
@@ -466,7 +482,7 @@ public class BreakendBuilder
                 nextPosition += nextHomology.positionAdjustment(nextOrientation);
             }
 
-            String assemblyInsertedBases = breakendOrientation.isForward() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
+            String assemblyInsertedBases = breakendOrientation.isForward() ? insertedBases : reverseComplementBases(insertedBases);
 
             Breakend breakend = new Breakend(
                     mAssemblyAlignment, breakendChr, breakendPosition, breakendOrientation, assemblyInsertedBases, firstHomology);
@@ -477,7 +493,7 @@ public class BreakendBuilder
 
             breakend.addSegment(segment);
 
-            String nextInsertedBases = nextOrientation.isReverse() ? insertedBases : Nucleotides.reverseComplementBases(insertedBases);
+            String nextInsertedBases = nextOrientation.isReverse() ? insertedBases : reverseComplementBases(insertedBases);
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextChr, nextPosition, nextOrientation, nextInsertedBases, nextHomology);

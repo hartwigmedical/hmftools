@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
@@ -118,7 +119,7 @@ public class SupportRead
         mIsDiscordant = isDiscordantFragment(read);
         mSupplementaryData = read.supplementaryData();
         mBaseLength = read.basesLength();
-        mInsertSize = abs(inferredInsertSize(read.bamRecord()));
+        mInsertSize = inferredInsertSizeAbs(read.bamRecord());
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
         mHasIndel = read.indelCoords() != null;

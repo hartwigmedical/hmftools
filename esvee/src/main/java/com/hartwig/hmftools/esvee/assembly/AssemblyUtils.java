@@ -6,6 +6,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
@@ -14,7 +15,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONL
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 
@@ -80,6 +80,20 @@ public final class AssemblyUtils
         return first == second || first == DNA_N_BYTE || second == DNA_N_BYTE || belowMinQual(firstQual) || belowMinQual(secondQual);
     }
 
+    public static boolean basesMatch(final byte[] bases1, final byte[] bases2)
+    {
+        if(bases1.length != bases2.length)
+            return false;
+
+        for(int i = 0; i < bases1.length; ++i)
+        {
+            if(bases1[i] != bases2[i])
+                return false;
+        }
+
+        return true;
+    }
+
     public static boolean isLocalAssemblyCandidate(
             final JunctionAssembly first, final JunctionAssembly second, boolean checkConcordantReads, boolean checkLineInsertion)
     {
@@ -137,8 +151,7 @@ public final class AssemblyUtils
         return assembly.support().stream().allMatch(x -> x.isSupplementary());
     }
 
-    public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
-    public static byte[] createLowBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD - 1)); }
+    public static byte[] createBaseQualsAboveMinThreshold(final int length) { return createByteArray(length, LOW_BASE_QUAL_THRESHOLD); }
 
     public static String extractInsertSequence(
             final JunctionAssembly first, boolean firstReversed, final JunctionAssembly second, boolean secondReversed, int insertLength)

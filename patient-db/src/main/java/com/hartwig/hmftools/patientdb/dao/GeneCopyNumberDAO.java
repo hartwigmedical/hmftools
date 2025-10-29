@@ -17,10 +17,8 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
-import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
-import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
 import org.jooq.InsertValuesStep19;
@@ -51,26 +49,27 @@ public class GeneCopyNumberDAO
 
         for(Record record : result)
         {
-            geneCopyNumbers.add(ImmutableGeneCopyNumber.builder()
-                    .chromosome(String.valueOf(record.getValue(GENECOPYNUMBER.CHROMOSOME)))
-                    .start(record.getValue(GENECOPYNUMBER.START))
-                    .end(record.getValue(GENECOPYNUMBER.END))
-                    .geneName(record.getValue(GENECOPYNUMBER.GENE))
-                    .minCopyNumber(record.getValue(GENECOPYNUMBER.MINCOPYNUMBER))
-                    .maxCopyNumber(record.getValue(GENECOPYNUMBER.MAXCOPYNUMBER))
-                    .somaticRegions(record.getValue(GENECOPYNUMBER.SOMATICREGIONS))
-                    .transName(record.getValue(GENECOPYNUMBER.TRANSCRIPTID))
-                    .isCanonical(record.getValue(GENECOPYNUMBER.CANONICALTRANSCRIPT) == 1)
-                    .chromosomeBand(record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND))
-                    .minRegions(record.getValue(GENECOPYNUMBER.MINREGIONS))
-                    .minRegionStart(record.getValue(GENECOPYNUMBER.MINREGIONSTART))
-                    .minRegionEnd(record.getValue(GENECOPYNUMBER.MINREGIONEND))
-                    .minRegionStartSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)))
-                    .minRegionEndSupport(SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)))
-                    .minRegionMethod(CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)))
-                    .minMinorAlleleCopyNumber(record.getValue(GENECOPYNUMBER.MINMINORALLELECOPYNUMBER))
-                    .depthWindowCount(0)
-                    .build());
+            GeneCopyNumber geneCopyNumber = new GeneCopyNumber(
+                    String.valueOf(record.getValue(GENECOPYNUMBER.CHROMOSOME)),
+                    record.getValue(GENECOPYNUMBER.START),
+                    record.getValue(GENECOPYNUMBER.END),
+                    record.getValue(GENECOPYNUMBER.GENE),
+                    record.getValue(GENECOPYNUMBER.TRANSCRIPTID),
+                    record.getValue(GENECOPYNUMBER.CANONICALTRANSCRIPT) == 1,
+                    record.getValue(GENECOPYNUMBER.CHROMOSOMEBAND),
+                    record.getValue(GENECOPYNUMBER.MAXCOPYNUMBER),
+                    record.getValue(GENECOPYNUMBER.MINCOPYNUMBER),
+                    record.getValue(GENECOPYNUMBER.MINMINORALLELECOPYNUMBER),
+                    record.getValue(GENECOPYNUMBER.SOMATICREGIONS),
+                    record.getValue(GENECOPYNUMBER.MINREGIONS),
+                    record.getValue(GENECOPYNUMBER.MINREGIONSTART),
+                    record.getValue(GENECOPYNUMBER.MINREGIONEND),
+                    0, 0,
+                    SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)),
+                    SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)),
+                    CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)));
+
+            geneCopyNumbers.add(geneCopyNumber);
         }
         return geneCopyNumbers;
     }
@@ -152,17 +151,17 @@ public class GeneCopyNumberDAO
                 gene.geneName(),
                 DatabaseUtil.decimal(gene.minCopyNumber()),
                 DatabaseUtil.decimal(gene.maxCopyNumber()),
-                gene.somaticRegions(),
-                gene.transName(),
-                gene.isCanonical(),
-                gene.chromosomeBand(),
-                gene.minRegions(),
-                gene.minRegionStart(),
-                gene.minRegionEnd(),
-                gene.minRegionStartSupport(),
-                gene.minRegionEndSupport(),
-                gene.minRegionMethod(),
-                DatabaseUtil.decimal(gene.minMinorAlleleCopyNumber()),
+                gene.SomaticRegions,
+                gene.TransName,
+                gene.IsCanonical,
+                gene.ChromosomeBand,
+                gene.MinRegions,
+                gene.MinRegionStart,
+                gene.MinRegionEnd,
+                gene.MinRegionStartSupport,
+                gene.MinRegionEndSupport,
+                gene.MinRegionMethod,
+                DatabaseUtil.decimal(gene.MinMinorAlleleCopyNumber),
                 timestamp);
     }
 

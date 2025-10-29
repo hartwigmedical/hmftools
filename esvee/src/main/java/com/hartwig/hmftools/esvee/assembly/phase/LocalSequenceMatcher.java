@@ -7,9 +7,8 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createBaseQualsAboveMinThreshold;
 import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.findBestSequenceMatch;
-import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 
 import java.util.List;
 
@@ -45,7 +44,7 @@ public class LocalSequenceMatcher
 
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRegionStart, localRegionEnd);
 
-        byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
+        byte[] refBaseQuals = createBaseQualsAboveMinThreshold(refGenomeBases.length);
 
         JunctionSequence assemblySeq = JunctionSequence.formStraddlingMatchSequence(assembly);
 
@@ -174,7 +173,7 @@ public class LocalSequenceMatcher
             localAssemblySequence = assemblyRefBases + assemblyExtBases;
 
         byte[] localAssemblyBases = localAssemblySequence.getBytes();
-        byte[] localAssemblyQuals = createMinBaseQuals(localAssemblyBases.length);
+        byte[] localAssemblyQuals = createBaseQualsAboveMinThreshold(localAssemblyBases.length);
 
         JunctionAssembly localRefAssembly = new JunctionAssembly(
                 localRefJunction, localAssemblyBases, localAssemblyQuals, Lists.newArrayList(), Lists.newArrayList());

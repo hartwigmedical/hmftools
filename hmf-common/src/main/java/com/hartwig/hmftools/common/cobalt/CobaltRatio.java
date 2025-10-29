@@ -1,26 +1,53 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltRatio extends GenomePosition
+public record CobaltRatio(
+        @NotNull String chromosome,
+        int position,
+        double referenceReadDepth,
+        double referenceGCRatio,
+        double referenceGcContent,
+        double referenceGCDiploidRatio,
+        double tumorReadDepth,
+        double tumorGCRatio,
+        double tumorGcContent
+) implements GenomePosition
 {
-    double referenceReadDepth();
+    public static final double COBALT_MASKED_VALUE = -1.0;
 
-    double tumorReadDepth();
+    public CobaltRatio realign(int newPosition)
+    {
+        return new CobaltRatio(chromosome, newPosition, referenceReadDepth, referenceGCRatio, referenceGcContent,
+                referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
+    }
 
-    double referenceGCRatio();
+    public CobaltRatio mask()
+    {
+        return new CobaltRatio(
+                chromosome, position, referenceReadDepth, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE,
+                tumorReadDepth, COBALT_MASKED_VALUE, COBALT_MASKED_VALUE);
+    }
 
-    double referenceGCDiploidRatio();
+    public ChrBaseRegion window()
+    {
+        return new ChrBaseRegion(chromosome, position, position + 1000 - 1);
+    }
 
-    double tumorGCRatio();
+    public <T extends ChrBaseRegion> List<T> findWindowOverlaps(@NotNull List<T> intervals)
+    {
+        return intervals.stream().filter(t -> this.window().overlaps(t)).collect(Collectors.toList());
+    }
 
-    double referenceGcContent();
-
-    double tumorGcContent();
+    @Override
+    public String toString()
+    {
+        return "CobaltRatio(" + chromosome + ", " + position + ")";
+    }
 }

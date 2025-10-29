@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.Window;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,22 @@ public final class PCFFile
     public static String generateBAFFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
+    }
+
+    public static void write(String filename, GenomeIntervals data)
+    {
+        List<ChrBaseRegion> ratios = data.regionsList();
+        List<String> columns = List.of("sampleID", "chrom", "arm", "start.pos", "end.pos", "n.probes", "mean");
+        DelimFileWriter.write(filename, columns, ratios,
+                           (ratio, row) -> {
+                row.set(columns.get(0), "unused");
+                row.set(columns.get(1), ratio.chromosome());
+                row.set(columns.get(2), "unused");
+                row.set(columns.get(3), ratio.start());
+                row.set(columns.get(4), ratio.end());
+                row.set(columns.get(5), -1);
+                row.set(columns.get(6), -1);
+        });
     }
 
     @NotNull

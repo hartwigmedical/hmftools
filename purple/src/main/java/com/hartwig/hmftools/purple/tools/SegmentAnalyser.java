@@ -93,7 +93,7 @@ public class SegmentAnalyser
             ++taskIndex;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mThreads);
 
         closeBufferedWriter(mWriter);
@@ -101,7 +101,7 @@ public class SegmentAnalyser
         PPL_LOGGER.info("Purple segment analysis complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -115,7 +115,7 @@ public class SegmentAnalyser
         public List<String> getSampleIds() { return mSampleIds; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -147,7 +147,7 @@ public class SegmentAnalyser
 
             PPL_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
 
-            return (long)0;
+            return null;
         }
 
         private void findGermlineAmpDels(final String sampleId, final List<ObservedRegion> fittedRegions)

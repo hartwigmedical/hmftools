@@ -1,26 +1,22 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TINC_LEVEL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.parseTincLevel;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
-import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.purple.PurpleConfig;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SomaticVariantCache
 {
@@ -61,14 +57,6 @@ public class SomaticVariantCache
         if(somaticVcf.isEmpty())
             return;
 
-        if(!mConfig.TierQualFilters.isEmpty())
-        {
-            for(Map.Entry<VariantTier,Integer> entry : mConfig.TierQualFilters.entrySet())
-            {
-                PPL_LOGGER.info("applying tier({}) qual({}) filter", entry.getKey(), entry.getValue());
-            }
-        }
-
         final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(somaticHotspots, true);
 
         VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
@@ -87,13 +75,6 @@ public class SomaticVariantCache
 
             if(tumorOnly && HlaCommon.containsPosition(variant)) // ignore these completely
                 continue;
-
-            if(!mConfig.TierQualFilters.isEmpty())
-            {
-                Integer qualThreshold = mConfig.TierQualFilters.get(variant.decorator().tier());
-                if(qualThreshold != null && variant.decorator().qual() < qualThreshold)
-                    continue;
-            }
 
             if(mConfig.FilterSomaticsOnGene)
             {

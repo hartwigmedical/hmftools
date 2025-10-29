@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
@@ -121,6 +122,15 @@ public final class CandidateSerialisation
         record.setReadBases(readContextVcfInfo.readBases().getBytes());
         record.setReadName("CANDIDATE");
 
+        byte[] minBaseQuals = new byte[record.getReadBases().length];
+
+        for(int i = 0; i < minBaseQuals.length; ++i)
+        {
+            minBaseQuals[i] = BASE_QUAL_MINIMUM + 1;
+        }
+
+        record.setBaseQualities(minBaseQuals);
+
         VariantReadContext readContext = builder.createContext(variant, record, readContextVcfInfo.VarIndex, refSequence);
 
         if(readContext == null)
@@ -134,7 +144,9 @@ public final class CandidateSerialisation
                     Collections.emptyList(), 0, 0);
         }
 
-        return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
+        return new Candidate(
+                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0),
+                0, 0, 0);
     }
 
     @VisibleForTesting

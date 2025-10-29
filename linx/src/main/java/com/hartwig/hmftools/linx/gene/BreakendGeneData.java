@@ -70,10 +70,10 @@ public class BreakendGeneData
 
     public void setType(StructuralVariantType type) { mSvType = type; }
 
-    public int id() { return mVarId; }
+    public int varId() { return mVarId; }
     public byte orientation() { return mOrientation; }
     public int position() { return mPosition; }
-    public StructuralVariantType type() { return mSvType; }
+    public StructuralVariantType svType() { return mSvType; }
     public String chromosome() { return mChromosome; }
     public double jcn() { return mJunctionCopyNumber; }
     public String insertSequence() { return mInsertSequence; }

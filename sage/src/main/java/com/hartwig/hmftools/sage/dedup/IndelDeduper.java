@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static java.lang.Math.max;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
@@ -266,7 +268,7 @@ public class IndelDeduper
                 return true;
         }
 
-        int readEdgeDistanceThreshold = mFilters.readEdgeDistanceThreshold(variant.Variant.tier());
+        double readEdgeDistanceThreshold = mFilters.readEdgeDistanceThreshold(variant.Variant.tier());
 
         if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() < readEdgeDistanceThreshold)
             return true;
@@ -480,9 +482,9 @@ public class IndelDeduper
 
         public int indelScore()
         {
+            int normalisedEdgeDistance = (int)round(ReadCounter.readEdgeDistance().maxAltDistanceFromEdge() * DEFAULT_READ_LENGTH);
             return (Variant.isIndel() ? ReadCounter.variant().indelLengthAbs() * INDEL_LENGTH_FACTOR : 0)
-                        + ReadCounter.readEdgeDistance().maxAltDistanceFromEdge()
-                        - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
+                        + normalisedEdgeDistance - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
         }
 
         @Override
@@ -509,7 +511,7 @@ public class IndelDeduper
 
         public String toString()
         {
-            return format("var(%s:%d %s>%s) corePos(%d - %d) flankPos(%d - %d) distFromEdge(%d) score(%d) filters(%s)",
+            return format("var(%s:%d %s>%s) corePos(%d - %d) flankPos(%d - %d) distFromEdge(%.2f) score(%d) filters(%s)",
                 Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), CorePosStart, CorePosEnd, FlankPosStart,
                     FlankPosEnd, ReadCounter.readEdgeDistance().maxAltDistanceFromEdge(), IndelScore, Variant.filtersStr());
         }

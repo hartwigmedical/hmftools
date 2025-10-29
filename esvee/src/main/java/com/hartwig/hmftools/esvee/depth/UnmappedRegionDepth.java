@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.esvee.depth;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.depth.DepthConfig.UNMAPPED_VAF_THRESHOLD;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -55,7 +57,7 @@ public class UnmappedRegionDepth
                     int tumorFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
                     double af = tumorFrags / (double)(refDepth + refPairDepth + tumorFrags);
 
-                    if(af < 0.9)
+                    if(af < UNMAPPED_VAF_THRESHOLD)
                     {
                         sampleVariantDepths.get(sampleIndex).add(refDepth);
                         continue;
@@ -109,6 +111,15 @@ public class UnmappedRegionDepth
                 {
                     totalRefDepth += medianDepth;
                     genotype.getExtendedAttributes().put(REF_DEPTH, medianDepth);
+
+                    // recompute AF
+                    int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
+                    int refPairDepth = getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0);
+
+                    double total = variantFrags + medianDepth + refPairDepth;
+                    double af = total > 0 ? variantFrags / total : 0;
+
+                    genotype.getExtendedAttributes().put(ALLELE_FRACTION, af);
                 }
                 else
                 {
@@ -129,6 +140,5 @@ public class UnmappedRegionDepth
             return false;
 
         return regions.stream().filter(x -> x.maxDepth() > 0).anyMatch(x -> x.containsPosition(position));
-
     }
 }

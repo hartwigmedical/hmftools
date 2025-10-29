@@ -11,12 +11,14 @@ import java.util.SortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
-import com.hartwig.hmftools.lilac.utils.AminoAcid;
-import com.hartwig.hmftools.lilac.utils.Nucleotide;
+import com.hartwig.hmftools.lilac.evidence.AminoAcid;
+import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 
-public class FragmentUtils
+public final class FragmentUtils
 {
-    public static List<Fragment> mergeFragmentsById(final List<Fragment> fragments)
+    private FragmentUtils() {}
+
+    public static List<Fragment> mergeFragmentsById(final Iterable<Fragment> fragments)
     {
         // merge paired reads but keep any single reads as well
         final List<Fragment> mergedFragments = Lists.newArrayList(); // by readId
@@ -25,14 +27,7 @@ public class FragmentUtils
 
         for(Fragment fragment : fragments)
         {
-            List<Fragment> idFrags = readGroupFrags.get(fragment.id());
-
-            if(idFrags == null)
-            {
-                idFrags = Lists.newArrayList();
-                readGroupFrags.put(fragment.id(), idFrags);
-            }
-
+            List<Fragment> idFrags = readGroupFrags.computeIfAbsent(fragment.id(), k -> Lists.newArrayList());
             idFrags.add(fragment);
         }
 
@@ -64,10 +59,10 @@ public class FragmentUtils
         return mergedFragments;
     }
 
-    public static List<Integer> expandIndices(final List<Integer> aminoAcidLoci)
+    public static List<Integer> expandIndices(final Iterable<Integer> aminoAcidLoci)
     {
         List<Integer> nucleotideLoci = Lists.newArrayList();
-        aminoAcidLoci.stream().forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
+        aminoAcidLoci.forEach(x -> nucleotideLoci.addAll(Lists.newArrayList(3 * x, 3 * x + 1, 3 * x + 2)));
         return nucleotideLoci;
     }
 
@@ -81,9 +76,7 @@ public class FragmentUtils
             int locus2 = entry2.getKey();
             Nucleotide nuc2 = entry2.getValue();
             if(frag1.containsNucleotideLocus(locus2))
-            {
                 continue;
-            }
 
             frag1.addNucleotide(nuc2);
             frag1.addReads(frag2);
@@ -95,8 +88,8 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        Fragment newFragment =
-                new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
+        Fragment newFragment = new Fragment(
+		fragment.reads().get(0), fragment.readGene(), fragment.genes(), fragment.rawNucleotidesByLoci().values());
 
         for(int i = 1; i < fragment.reads().size(); ++i)
         {
@@ -106,7 +99,7 @@ public class FragmentUtils
         return newFragment;
     }
 
-    public static String formCodonAminoAcid(final int locus, final SortedMap<Integer, Nucleotide> nucleotides)
+    public static String formCodonAminoAcid(int locus, final SortedMap<Integer, Nucleotide> nucleotides)
     {
         SortedMap<Integer, Nucleotide> head = nucleotides.tailMap(locus * 3);
         List<String> bases = head.values().stream().limit(3).map(Nucleotide::bases).toList();
@@ -115,14 +108,12 @@ public class FragmentUtils
         String third = bases.get(2);
 
         if(first.equals(DEL_STR) && second.equals(DEL_STR) && third.equals(DEL_STR))
-        {
             return DEL_STR;
-        }
 
         return Codons.aminoAcidFromBases(first + second + third);
     }
 
-    public static List<Integer> calcAminoAcidIndices(final int nucStartIndex, final int nucEndIndex)
+    public static List<Integer> calcAminoAcidIndices(int nucStartIndex, int nucEndIndex)
     {
         int start = nucStartIndex / 3 + (nucStartIndex % 3 == 0 ? 0 : 1);
         int end = (nucEndIndex + 1) / 3 - 1;

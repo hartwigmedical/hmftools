@@ -8,25 +8,34 @@ import com.hartwig.hmftools.sage.quality.QualityScores;
 
 public class QualCounters
 {
+    private int mAltSeqTechBaseQualityTotal;
+
     private int mRecalibratedBaseQualityTotal;
     private int mAltRecalibratedBaseQualityTotal;
-    private int mAltBaseQualityTotal;
-    private double mModifiedAltBaseQualityTotal;
+    private double mStrongAltRecalibratedBaseQualityTotal;
+    private double mStrongAltMediumRecalibratedBaseQualityTotal;
 
-    private int mMapQualityTotal;
+    private double mAltFinalBaseQualityTotal;
+    private double mAltMediumFinalBaseQualityTotal;
+
+    private int mMapQualityTotal; // raw read map qual
     private int mAltMapQualityTotal;
-    private double mModifiedAltMapQualityTotal;
+    private double mAltFinalMapQualityTotal;
+
     private int mLowQualAltSupportCount;
 
     public QualCounters()
     {
         mRecalibratedBaseQualityTotal = 0;
         mAltRecalibratedBaseQualityTotal = 0;
-        mAltBaseQualityTotal = 0;
-        mModifiedAltBaseQualityTotal = 0;
+        mAltSeqTechBaseQualityTotal = 0;
+        mAltFinalBaseQualityTotal = 0;
+        mAltMediumFinalBaseQualityTotal = 0;
+        mStrongAltRecalibratedBaseQualityTotal = 0;
+        mStrongAltMediumRecalibratedBaseQualityTotal = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
-        mModifiedAltMapQualityTotal = 0;
+        mAltFinalMapQualityTotal = 0;
         mLowQualAltSupportCount = 0;
     }
 
@@ -37,31 +46,48 @@ public class QualCounters
 
         if(matchType.FullAltSupport)
         {
-            mModifiedAltBaseQualityTotal += qualityScores.ModifiedBaseQuality;
-            mModifiedAltMapQualityTotal += qualityScores.ModifiedMapQuality;
+            mAltFinalBaseQualityTotal += qualityScores.FinalBaseQuality;
+
+            mStrongAltRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+
+            if(qualityScores.IsMediumQual)
+            {
+                mStrongAltMediumRecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+                mAltMediumFinalBaseQualityTotal += qualityScores.FinalBaseQuality;
+            }
+
+            mAltFinalMapQualityTotal += qualityScores.FinalMapQuality;
         }
 
         if(matchType.SupportsAlt)
         {
             mAltRecalibratedBaseQualityTotal += (int)round(qualityScores.RecalibratedBaseQuality);
-            mAltBaseQualityTotal += (int)round(qualityScores.CalcBaseQuality);
+            mAltSeqTechBaseQualityTotal += (int)round(qualityScores.SeqTechBaseQuality);
             mAltMapQualityTotal += mapQuality;
         }
     }
 
     public void update(final QualityScores qualityScores)
     {
-        mAltBaseQualityTotal += (int)round(qualityScores.CalcBaseQuality);
+        mAltSeqTechBaseQualityTotal += (int)round(qualityScores.SeqTechBaseQuality);
         mLowQualAltSupportCount += 1;
     }
 
-    public int baseQualityTotal() { return mRecalibratedBaseQualityTotal; }
+    public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
+    public int altSeqTechBaseQualityTotal() { return mAltSeqTechBaseQualityTotal; }
+
     public int altRecalibratedBaseQualityTotal() { return mAltRecalibratedBaseQualityTotal; }
-    public int altBaseQualityTotal() { return mAltBaseQualityTotal; }
-    public double modifiedAltBaseQualityTotal() { return mModifiedAltBaseQualityTotal; }
+    public double strongAltMediumRecalibratedBaseQualityTotal() { return mStrongAltMediumRecalibratedBaseQualityTotal; }
+    public double strongAltRecalibratedBaseQualityTotal() { return mStrongAltRecalibratedBaseQualityTotal; }
+
+    public double altFinalBaseQualityTotal() { return mAltFinalBaseQualityTotal; }
+    public double altMediumFinalBaseQualityTotal() { return mAltMediumFinalBaseQualityTotal; }
+
+
     public int mapQualityTotal() { return mMapQualityTotal; }
     public int altMapQualityTotal() { return mAltMapQualityTotal; }
-    public double altModifiedMapQualityTotal() { return mModifiedAltMapQualityTotal; }
+    public double altFinalMapQualityTotal() { return mAltFinalMapQualityTotal; }
+
     public int lowQualAltSupportCount() { return mLowQualAltSupportCount; }
 
     public String toString()

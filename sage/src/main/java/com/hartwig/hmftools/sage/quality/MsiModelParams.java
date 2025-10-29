@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MAX_REPEAT_CHAN
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
 
 public class MsiModelParams
 {

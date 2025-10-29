@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
+import com.hartwig.hmftools.common.utils.KernelEstimator;
 import com.hartwig.hmftools.purple.AmberData;
 import com.hartwig.hmftools.purple.CobaltData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;

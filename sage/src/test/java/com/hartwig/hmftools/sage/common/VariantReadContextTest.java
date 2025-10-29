@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
+import static com.hartwig.hmftools.sage.common.ReadCigarInfo.hasIndelInCore;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -12,17 +17,27 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContextMat
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.candidate.AltRead;
 import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.TextCigarCodec;
 
 public class VariantReadContextTest
 {
@@ -124,6 +139,41 @@ public class VariantReadContextTest
         assertEquals(17, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
+    }
+
+    @Test
+    public void testLowBaseQualVariants()
+    {
+        // test 1: most simple case with no repeats or homology
+        SimpleVariant var = createSimpleVariant(50, "C", "A");
+
+        String readBases = REF_BASES_200.substring(30, 50) + "A" + REF_BASES_200.substring(51, 70);
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+
+        // low qual bases in core
+        baseQuals[18] = BASE_QUAL_MINIMUM;
+        String readCigar = "40M";
+        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
+        assertNull(readContext);
+
+        // an indel with low bases in the flank
+
+        var = createSimpleVariant(50, "C", "CTTT");
+        readBases = REF_BASES_200.substring(30, 51) + "TTT" + REF_BASES_200.substring(51, 70);
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+
+        // low qual bases in core
+        baseQuals[6] = BASE_QUAL_MINIMUM;
+        baseQuals[31] = BASE_QUAL_MINIMUM;
+        readCigar = "20M3I20M";
+        read = buildSamRecord(30, readCigar, readBases, baseQuals);
+
+        readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
+        assertNull(readContext);
     }
 
     @Test
@@ -412,5 +462,139 @@ public class VariantReadContextTest
         assertEquals(80, readContext.CorePositionStart);
         assertEquals(14, readContext.VarIndex);
         assertEquals(116, readContext.CorePositionEnd);
+    }
+
+    @Test
+    public void testIndelInCoreCigarElements()
+    {
+        List<CigarElement> cigarElements = List.of(
+                new CigarElement(10, M));
+
+        assertFalse(hasIndelInCore(cigarElements, 0, 9));
+
+        cigarElements = List.of(
+                new CigarElement(5, M),
+                new CigarElement(1, I),
+                new CigarElement(5, M));
+
+        assertFalse(hasIndelInCore(cigarElements, 0, 4));
+        assertFalse(hasIndelInCore(cigarElements, 6, 10));
+        assertTrue(hasIndelInCore(cigarElements, 0, 5));
+        assertTrue(hasIndelInCore(cigarElements, 5, 10));
+
+        cigarElements = List.of(
+                new CigarElement(5, M),
+                new CigarElement(1, D),
+                new CigarElement(5, M));
+
+        assertTrue(hasIndelInCore(cigarElements, 0, 9));
+
+        cigarElements = List.of(
+                new CigarElement(20, M),
+                new CigarElement(1, D),
+                new CigarElement(20, M));
+
+        assertFalse(hasIndelInCore(cigarElements, 5, 15));
+        assertFalse(hasIndelInCore(cigarElements, 25, 30));
+        assertTrue(hasIndelInCore(cigarElements, 19, 20));
+    }
+
+    @Test
+    public void testCoreCigarElements()
+    {
+        int coreLength = 10;
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(new CigarElement(2 * TEST_FLANK_LENGTH + coreLength, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength, M),
+                        new CigarElement(1, D),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH, M),
+                        new CigarElement(1, I),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, I), new CigarElement(coreLength - 1, M)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + coreLength - 1, M),
+                        new CigarElement(1, I),
+                        new CigarElement(TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(coreLength - 1, M), new CigarElement(1, I)));
+
+        checkCoreCigarElements(
+                coreLength,
+                Lists.newArrayList(
+                        new CigarElement(TEST_FLANK_LENGTH + 1, M),
+                        new CigarElement(1, D),
+                        new CigarElement(coreLength - 1 + TEST_FLANK_LENGTH, M)),
+                Lists.newArrayList(new CigarElement(1, M), new CigarElement(1, D), new CigarElement(coreLength - 1, M)));
+    }
+
+    private static void checkCoreCigarElements(
+            int coreLength, final List<CigarElement> readCigar, final List<CigarElement> expectedCoreCigar)
+    {
+        int coreIndexStart = TEST_FLANK_LENGTH;
+        int coreIndexEnd = coreIndexStart + coreLength - 1;
+
+        VariantReadContext readContext = new VariantReadContext(null, -1, -1, null,
+                        null, readCigar, coreIndexStart, -1, coreIndexEnd, null,
+                        null, null, -1, -1);
+
+        List<CigarElement> actualCoreCigar = readContextCoreCigar(readContext);
+        assertEquals(expectedCoreCigar, actualCoreCigar);
+    }
+
+    private static List<CigarElement> readContextCoreCigar(final VariantReadContext readContext)
+    {
+        List<CigarElement> coreCigar = Lists.newArrayList();
+        List<CigarElement> cigar = TextCigarCodec.decode(readContext.readCigar()).getCigarElements();
+        int readIndex = 0;
+        for(CigarElement el : cigar)
+        {
+            if(readIndex > readContext.CoreIndexEnd)
+                break;
+
+            if(!el.getOperator().consumesReadBases())
+            {
+                if(readIndex > readContext.CoreIndexStart)
+                    coreCigar.add(el);
+
+                continue;
+            }
+
+            int readIndexEnd = readIndex + el.getLength() - 1;
+            if(readIndexEnd < readContext.CoreIndexStart)
+            {
+                readIndex += el.getLength();
+                continue;
+            }
+
+            int readIndexStart = max(readIndex, readContext.CoreIndexStart);
+            readIndexEnd = min(readIndexEnd, readContext.CoreIndexEnd);
+            coreCigar.add(new CigarElement(readIndexEnd - readIndexStart + 1, el.getOperator()));
+
+            readIndex += el.getLength();
+        }
+
+        return coreCigar;
     }
 }

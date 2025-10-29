@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.common.metrics.WGSMetricQC.hasSufficientCoverage;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.METRIC;
 
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 
 import org.jooq.DSLContext;
 
@@ -16,7 +16,7 @@ public class MetricDAO
         this.context = context;
     }
 
-    void writeMetrics(final String sample, final BamMetricsSummary tumorMetrics, final BamMetricsSummary refMetrics)
+    void writeMetrics(final String sample, final BamMetricSummary tumorMetrics, final BamMetricSummary refMetrics)
     {
         deleteMetricForSample(sample);
 
@@ -67,7 +67,7 @@ public class MetricDAO
                         DatabaseUtil.decimal(0),
                         DatabaseUtil.decimal(refMetrics.lowMapQualPercent()),
                         DatabaseUtil.decimal(refMetrics.duplicatePercent()),
-                        DatabaseUtil.decimal(refMetrics.unpairedPercent()),
+                        DatabaseUtil.decimal(refMetrics.unmappedPercent()),
                         DatabaseUtil.decimal(refMetrics.lowBaseQualPercent()),
                         DatabaseUtil.decimal(refMetrics.overlappingReadPercent()),
                         DatabaseUtil.decimal(refMetrics.cappedCoveragePercent()),
@@ -84,7 +84,7 @@ public class MetricDAO
                         DatabaseUtil.decimal(0),
                         DatabaseUtil.decimal(tumorMetrics.lowMapQualPercent()),
                         DatabaseUtil.decimal(tumorMetrics.duplicatePercent()),
-                        DatabaseUtil.decimal(tumorMetrics.unpairedPercent()),
+                        DatabaseUtil.decimal(tumorMetrics.unmappedPercent()),
                         DatabaseUtil.decimal(tumorMetrics.lowBaseQualPercent()),
                         DatabaseUtil.decimal(tumorMetrics.overlappingReadPercent()),
                         DatabaseUtil.decimal(tumorMetrics.cappedCoveragePercent()),

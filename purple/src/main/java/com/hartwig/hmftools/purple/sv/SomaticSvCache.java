@@ -3,8 +3,12 @@ package com.hartwig.hmftools.purple.sv;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
@@ -28,13 +32,14 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.Multimaps;
 import com.hartwig.hmftools.purple.copynumber.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -90,12 +95,12 @@ public class SomaticSvCache
 
         for(VariantContext context : vcfReader)
         {
-            mVariantCollection.add(context);
+            mVariantCollection.addVariant(context);
         }
 
         vcfReader.close();
 
-        PPL_LOGGER.info("loaded {} somatic SVs from {}", variants().size(), inputVcf);
+        PPL_LOGGER.info("loaded {} somatic SVs from {}", somaticVariants().size(), inputVcf);
     }
 
     public void inferMissingVariant(final List<PurpleCopyNumber> copyNumbers)
@@ -108,9 +113,30 @@ public class SomaticSvCache
                 if(copyNumber.segmentStartSupport() == SegmentSupport.NONE)
                 {
                     final PurpleCopyNumber prev = copyNumbers.get(i - 1);
-                    mVariantCollection.add(infer(copyNumber, prev));
+                    mVariantCollection.addVariant(infer(copyNumber, prev));
                 }
             }
+        }
+    }
+
+    public void addTincVariant(final StructuralVariant variant)
+    {
+        mVariantCollection.addVariant(variant.startContext());
+        variant.startContext().getCommonInfo().putAttribute(TINC_RECOVERED_FLAG, true);
+
+        // check if should be PON filtered
+        int ponCount = variant.startContext().getAttributeAsInt(PON_COUNT, 0);
+
+        if(ponCount > 0)
+            variant.startContext().getCommonInfo().addFilter(PON_FILTER_PON);
+
+        if(variant.endContext() != null)
+        {
+            mVariantCollection.addVariant(variant.endContext());
+            variant.endContext().getCommonInfo().putAttribute(TINC_RECOVERED_FLAG, true);
+
+            if(ponCount > 0)
+                variant.endContext().getCommonInfo().addFilter(PON_FILTER_PON);
         }
     }
 
@@ -161,6 +187,7 @@ public class SomaticSvCache
 
             writer.writeHeader(mVcfHeader);
 
+            // builds a new collection with annotated variant contexts - leaves the original one as-is
             VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers, gender);
 
             Iterator<VariantContext> variantIter = enrichedCollection.iterator();
@@ -218,12 +245,12 @@ public class SomaticSvCache
             addEnrichedVariantContexts(enrichedCollection, enrichedSV);
         }
 
-        svFactory.unmatched().forEach(enrichedCollection::add);
+        svFactory.unmatched().forEach(enrichedCollection::addVariant);
 
         return enrichedCollection;
     }
 
-    public static void addEnrichedVariantContexts(final VariantContextCollection enrichedCollection, final EnrichedStructuralVariant variant)
+    public static void addEnrichedVariantContexts(final VariantContextCollection variantCollection, final EnrichedStructuralVariant variant)
     {
         final VariantContext startContext = variant.startContext();
         final VariantContext endContext = variant.endContext();
@@ -255,7 +282,7 @@ public class SomaticSvCache
 
         if(startContext != null)
         {
-            enrichedCollection.add(buildVariantContext(startContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
+            variantCollection.addVariant(buildVariantContext(startContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
         }
 
         if(endContext != null)
@@ -268,7 +295,7 @@ public class SomaticSvCache
             Collections.reverse(purpleCN);
             Collections.reverse(purpleCNChange);
 
-            enrichedCollection.add(buildVariantContext(endContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
+            variantCollection.addVariant(buildVariantContext(endContext, purpleAF, purpleCN, purpleCNChange, variant.junctionCopyNumber()));
         }
     }
 
@@ -293,7 +320,7 @@ public class SomaticSvCache
         return builder.make();
     }
 
-    public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
+    public List<StructuralVariant> somaticVariants() { return mVariantCollection.variants(); }
 
     public int passingBnd()
     {
@@ -312,6 +339,7 @@ public class SomaticSvCache
 
         outputVCFHeader.addMetaDataLine(VCFStandardHeaderLines.getFormatLine("GT"));
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(INFERRED, 0, VCFHeaderLineType.Flag, INFERRED_DESC));
+        outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(TINC_RECOVERED_FLAG, 0, VCFHeaderLineType.Flag, TINC_RECOVERED_DESC));
         outputVCFHeader.addMetaDataLine(new VCFFilterHeaderLine(INFERRED, INFERRED_DESC));
 
         outputVCFHeader.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, UNBOUNDED, VCFHeaderLineType.Float, PURPLE_AF_DESC));

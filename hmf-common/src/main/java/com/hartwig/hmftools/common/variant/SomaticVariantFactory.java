@@ -38,7 +38,6 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory implements VariantContextFilter
 {
-    @NotNull
     public static SomaticVariantFactory passOnlyInstance()
     {
         return new SomaticVariantFactory(new PassingVariantFilter());
@@ -49,10 +48,12 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     public static final String PASS_FILTER = "PASS";
 
-    @NotNull
     private final CompoundFilter mFilter;
     private int mCreatedCount;
     private int mFilteredCount;
+
+    private boolean mDropDuplicates;
+    private SomaticVariant mLastNonFilteredVariant;
 
     public SomaticVariantFactory(final VariantContextFilter... filters)
     {
@@ -62,6 +63,8 @@ public class SomaticVariantFactory implements VariantContextFilter
         mFilter.add(new NTFilter());
         mCreatedCount = 0;
         mFilteredCount = 0;
+        mLastNonFilteredVariant = null;
+        mDropDuplicates = false;
     }
 
     public int getCreatedCount()
@@ -73,6 +76,8 @@ public class SomaticVariantFactory implements VariantContextFilter
     {
         return mFilteredCount;
     }
+
+    public void setDropDuplicates() { mDropDuplicates = true; }
 
     public List<SomaticVariant> fromVCFFile(final String tumor, final String vcfFile) throws IOException
     {
@@ -98,7 +103,7 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     public void fromVCFFile(
             final String tumor, @Nullable final String reference, @Nullable final String rna,
-            final String vcfFile, boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException
+            final String vcfFile, boolean useCheckReference, final Consumer<SomaticVariant> consumer) throws IOException
     {
         VcfFileReader reader = new VcfFileReader(vcfFile);
 
@@ -124,27 +129,45 @@ public class SomaticVariantFactory implements VariantContextFilter
             throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
         }
 
-        for(VariantContext variant : reader.iterator())
+        for(VariantContext variantContext : reader.iterator())
         {
-            if(mFilter.test(variant))
-            {
-                Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
-
-                if(varOptional.isPresent())
-                {
-                    varOptional.ifPresent(consumer);
-                    ++mCreatedCount;
-                }
-                else
-                {
-                    ++mFilteredCount;
-                }
-            }
-            else
+            if(!mFilter.test(variantContext))
             {
                 ++mFilteredCount;
+                continue;
             }
+
+            Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variantContext);
+
+            if(!varOptional.isPresent())
+            {
+                ++mFilteredCount;
+                continue;
+            }
+
+            SomaticVariant variant = varOptional.get();
+
+            if(mDropDuplicates)
+            {
+                if(mLastNonFilteredVariant != null && variantsMatch(mLastNonFilteredVariant, variant))
+                {
+                    ++mFilteredCount;
+                    continue;
+                }
+
+                mLastNonFilteredVariant = variant;
+            }
+
+            consumer.accept(variant);
+            ++mCreatedCount;
         }
+    }
+
+    private static boolean variantsMatch(final SomaticVariant first, final SomaticVariant second)
+    {
+        return first.chromosome().equals(second.chromosome())
+                && first.position() == second.position()
+                && first.ref().equals(second.ref()) && first.alt().equals(second.alt());
     }
 
     public Optional<SomaticVariant> createVariant(final String sample, final VariantContext context)

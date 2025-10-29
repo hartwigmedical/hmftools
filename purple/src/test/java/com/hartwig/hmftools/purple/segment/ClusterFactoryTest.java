@@ -181,7 +181,7 @@ public class ClusterFactoryTest
     @NotNull
     private static CobaltRatio ratio(int position, double ratio)
     {
-        return PurpleTestUtils.cobalt(CHROM, position, ratio).build();
+        return PurpleTestUtils.cobalt(CHROM, position, ratio);
     }
 
     @NotNull

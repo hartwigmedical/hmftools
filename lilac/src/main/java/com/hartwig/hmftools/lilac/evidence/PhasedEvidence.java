@@ -14,15 +14,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 public final class PhasedEvidence implements Comparable<PhasedEvidence>
 {
     private final List<Integer> mAminoAcidLoci;
-    private final Map<String,Integer> mEvidenceMap;
+    private final Map<String, Integer> mEvidenceMap;
     private final int mHashCode;
 
-    public PhasedEvidence(final int[] aminoAcidIndices, final Map<String,Integer> evidence)
+    public PhasedEvidence(final int[] aminoAcidIndices, final Map<String, Integer> evidence)
     {
         mAminoAcidLoci = Lists.newArrayList();
         Arrays.stream(aminoAcidIndices).forEach(x -> mAminoAcidLoci.add(x));
@@ -30,16 +31,16 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         mHashCode = mAminoAcidLoci.hashCode();
     }
 
-    public PhasedEvidence(final List<Integer> aminoAcidLoci, final Map<String,Integer> evidence)
+    public PhasedEvidence(final List<Integer> aminoAcidLoci, final Map<String, Integer> evidence)
     {
         mAminoAcidLoci = aminoAcidLoci;
         mEvidenceMap = evidence;
         mHashCode = mAminoAcidLoci.hashCode();
     }
 
-    public final List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
+    public List<Integer> getAminoAcidLoci() { return mAminoAcidLoci; }
 
-    public final Map<String,Integer> getEvidence()
+    public Map<String, Integer> getEvidence()
     {
         return mEvidenceMap;
     }
@@ -51,7 +52,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
 
     public PhasedEvidence inconsistentEvidence(final List<HlaSequenceLoci> candidates)
     {
-        Map<String,Integer> filteredEvidence = mEvidenceMap.entrySet().stream()
+        Map<String, Integer> filteredEvidence = mEvidenceMap.entrySet().stream()
                 .filter(x -> !consistentWithAny(candidates, x.getKey()))
                 .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 
@@ -86,7 +87,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return indices;
     }
 
-    private final int unambiguousTailLength()
+    private int unambiguousTailLength()
     {
         int endIndex = mAminoAcidLoci.size();
 
@@ -94,7 +95,9 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         {
             int startIndex = endIndex - i - 1;
 
-            Set<String> evidenceTails = mEvidenceMap.keySet().stream().map(x -> x.substring(startIndex, endIndex)).collect(Collectors.toSet());
+            Set<String> evidenceTails = mEvidenceMap.keySet().stream()
+                    .map(x -> x.substring(startIndex, endIndex))
+                    .collect(Collectors.toSet());
 
             if(evidenceTails.size() == mEvidenceMap.size())
                 return i + 1;
@@ -103,7 +106,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return mAminoAcidLoci.size();
     }
 
-    private final int unambiguousHeadLength()
+    private int unambiguousHeadLength()
     {
         for(int i = 0; i < mAminoAcidLoci.size(); ++i)
         {
@@ -117,27 +120,27 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return mAminoAcidLoci.size();
     }
 
-    public final boolean contains(final PhasedEvidence other)
+    public boolean contains(final PhasedEvidence other)
     {
         Set<Integer> overlapIndices = Sets.newHashSet();
         mAminoAcidLoci.forEach(x -> overlapIndices.add(x));
-        other.getAminoAcidLoci().forEach(x -> overlapIndices.add(x));
+        other.mAminoAcidLoci.forEach(x -> overlapIndices.add(x));
 
         int overlapCount = overlapIndices.size();
-        return overlapCount == other.getAminoAcidLoci().size();
+        return overlapCount == other.mAminoAcidLoci.size();
     }
 
-    public final int minEvidence()
+    public int minEvidence()
     {
         return mEvidenceMap.values().stream().mapToInt(x -> x).min().orElse(0);
     }
 
-    public final int totalEvidence()
+    public int totalEvidence()
     {
         return mEvidenceMap.values().stream().mapToInt(x -> x).sum();
     }
 
-    public final PhasedEvidence removeSingles(int minTotalEvidence)
+    public PhasedEvidence removeSingles(int minTotalEvidence)
     {
         if(totalEvidence() >= minTotalEvidence)
         {
@@ -150,6 +153,7 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         return this;
     }
 
+    @Override
     public String toString()
     {
         int uniqueTail = unambiguousTailLength();
@@ -197,14 +201,14 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
         if(!(other instanceof PhasedEvidence))
             return false;
 
-        final List<Integer> otherIndices = ((PhasedEvidence)other).getAminoAcidLoci();
+        final List<Integer> otherIndices = ((PhasedEvidence) other).mAminoAcidLoci;
 
         if(mAminoAcidLoci.size() != otherIndices.size())
             return false;
 
         for(int i = 0; i < mAminoAcidLoci.size(); ++i)
         {
-            if(mAminoAcidLoci.get(i) != otherIndices.get(i))
+            if(mAminoAcidLoci.get(i).equals(otherIndices.get(i)))
                 return false;
         }
 
@@ -219,27 +223,27 @@ public final class PhasedEvidence implements Comparable<PhasedEvidence>
     public static PhasedEvidence evidence(final List<Fragment> fragments, final List<Integer> indices)
     {
         List<Fragment> filteredFragments = fragments.stream().filter(x -> x.containsAminoAcidLoci(indices)).collect(Collectors.toList());
-        final Map<String,Integer> evidence = Maps.newHashMap();
+        final Map<String, Integer> evidence = Maps.newHashMap();
 
         for(Fragment fragment : filteredFragments)
         {
             String sequence = fragment.aminoAcids(indices);
-            Integer count = evidence.get(sequence);
-            evidence.put(sequence, count != null ? count + 1 : 1);
+            evidence.merge(sequence, 1, Integer::sum);
         }
 
         return new PhasedEvidence(indices, evidence);
     }
 
-    public static void logInconsistentEvidence(final String gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
+    public static void logInconsistentEvidence(
+	    final HlaGene gene, final List<PhasedEvidence> evidence, final List<HlaSequenceLoci> candidates)
     {
-        List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.Allele.Gene.equals(gene)).collect(Collectors.toList());
+        List<HlaSequenceLoci> expectedSequences = candidates.stream().filter(x -> x.Allele.Gene == gene).collect(Collectors.toList());
 
-        for (HlaSequenceLoci sequence : expectedSequences)
+        for(HlaSequenceLoci sequence : expectedSequences)
         {
-            for (PhasedEvidence phasedEvidence : evidence)
+            for(PhasedEvidence phasedEvidence : evidence)
             {
-                if (!sequence.consistentWith(phasedEvidence))
+                if(!sequence.consistentWith(phasedEvidence))
                 {
                     LL_LOGGER.debug("actual allele {} filtered by {}", sequence.Allele, phasedEvidence);
                 }

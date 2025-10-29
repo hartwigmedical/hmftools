@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.HLA_CONTEXT_FACTORY;
@@ -27,6 +25,7 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +37,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.perf.StackSampler;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -57,6 +57,8 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaContext;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
 import com.hartwig.hmftools.lilac.qc.CoverageQC;
@@ -73,6 +75,8 @@ import com.hartwig.hmftools.lilac.variant.CopyNumberAssignment;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 import com.hartwig.hmftools.lilac.variant.SomaticVariantAnnotation;
+
+import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication
 {
@@ -144,25 +148,11 @@ public class LilacApplication
         mTumorBamReader = tumorBamReader;
     }
 
-    public ReferenceData getReferenceData()
-    {
-        return mRefData;
-    }
+    public ReferenceData getReferenceData() { return mRefData; }
 
-    public LilacQC getSummaryMetrics()
-    {
-        return mSummaryMetrics;
-    }
-
-    public SolutionSummary getSolutionSummary()
-    {
-        return mSolutionSummary;
-    }
-
-    public List<ComplexCoverage> getRankedComplexes()
-    {
-        return mRankedComplexes;
-    }
+    public LilacQC getSummaryMetrics() { return mSummaryMetrics; }
+    public SolutionSummary getSolutionSummary() { return mSolutionSummary; }
+    public List<ComplexCoverage> getRankedComplexes() { return mRankedComplexes; }
 
     public void run()
     {
@@ -178,10 +168,9 @@ public class LilacApplication
 
         boolean allValid = true;
 
-        String referenceBam = mConfig.tumorOnly() ? mConfig.TumorBam : mConfig.ReferenceBam;
+        String referenceBam = mConfig.alleleCallingBam();
 
-        LL_LOGGER.info("finding read support in {} bam {}", mConfig.tumorOnly() ? "tumor" : "reference",
-                referenceBam);
+        LL_LOGGER.info("finding read support in {} bam {}", mConfig.tumorOnly() ? "tumor" : "reference", referenceBam);
 
         mNucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
@@ -191,18 +180,15 @@ public class LilacApplication
         if(mTumorBamReader == null)
         {
             if(mConfig.tumorOnly())
-            {
                 mTumorBamReader = mRefBamReader;
-            }
             else if(!mConfig.TumorBam.isEmpty())
-            {
                 mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, GENE_CACHE.GeneTranscriptMap, mNucleotideFragFactory);
-            }
         }
 
         List<Fragment> refFragments = mRefBamReader.findGeneFragments();
 
-        NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(refFragments);
+        if(NUC_GENE_FRAG_ENRICHMENT != null)
+            NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(refFragments);
 
         mRefNucleotideFrags.addAll(refFragments);
 
@@ -216,7 +202,7 @@ public class LilacApplication
             LOW_BASE_QUAL_THRESHOLD = medianBaseQuality;
         }
 
-        final Map<String, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
+        final Map<HlaGene, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
         if(!hasSufficientGeneDepth(geneBaseDepth))
         {
             mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth);
@@ -225,33 +211,23 @@ public class LilacApplication
 
         allValid &= validateFragments(mRefNucleotideFrags);
 
-        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, mRefNucleotideFrags);
+        mAminoAcidPipeline = new AminoAcidFragmentPipeline(mRefNucleotideFrags);
 
         List<Fragment> refAminoAcidFrags = mAminoAcidPipeline.highQualRefFragments();
         int totalFragmentCount = refAminoAcidFrags.size();
 
-        LL_LOGGER.info(format(
-                "totalFrags(%d) minVafFilterDepth(%d) minEvidenceFactor(%.4f) minHighQualEvidenceFactor(%.4f)",
-                totalFragmentCount, mConfig.MinVafFilterDepth, mConfig.MinEvidenceFactor,
-                mConfig.MinHighQualEvidenceFactor));
+        LL_LOGGER.info("totalFrags({})", totalFragmentCount);
 
-        Candidates candidateFactory = new Candidates(mConfig, mRefData.NucleotideSequences,
-                mRefData.AminoAcidSequences);
+        Candidates candidateFactory = new Candidates(mRefData.NucleotideSequences, mRefData.AminoAcidSequences);
 
         List<GeneTask> geneTasks = Lists.newArrayList();
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaA()));
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaB()));
-        geneTasks.add(
-                new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, HLA_CONTEXT_FACTORY.hlaC()));
+        for(HlaContext context : HLA_CONTEXT_FACTORY.contexts())
+            geneTasks.add(new GeneTask(mConfig, mRefData, mAminoAcidPipeline, candidateFactory, context));
 
-        List<Callable> callableList = Lists.newArrayList(geneTasks);
+        List<Callable<Void>> callableList = Lists.newArrayList(geneTasks);
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
-        {
             System.exit(1);
-        }
 
         List<HlaAllele> candidateAlleles = Lists.newArrayList();
 
@@ -277,9 +253,7 @@ public class LilacApplication
                 knownStopLossFragments.put(allele, entry.getValue());
 
                 if(!candidateAlleles.contains(allele))
-                {
                     recoveredAlleles.add(allele);
-                }
             }
         }
 
@@ -294,7 +268,7 @@ public class LilacApplication
             if(!missedCommonAlleles.isEmpty())
             {
                 Collections.sort(missedCommonAlleles);
-                LL_LOGGER.info("recovering common alleles: {}", HlaAllele.toString(missedCommonAlleles));
+                LL_LOGGER.info("recovering {} common alleles: {}", missedCommonAlleles.size(), HlaAllele.toString(missedCommonAlleles));
                 recoveredAlleles.addAll(missedCommonAlleles);
             }
         }
@@ -317,13 +291,11 @@ public class LilacApplication
                 .filter(x -> candidateAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         // calculate allele coverage
-        mRefAminoAcidCounts = SequenceCount.aminoAcids(mConfig.MinVafFilterDepth, mConfig.MinEvidenceFactor,
-                refAminoAcidFrags);
-        mRefNucleotideCounts = SequenceCount.nucleotides(mConfig.MinVafFilterDepth, mConfig.MinEvidenceFactor,
-                refAminoAcidFrags);
+        mRefAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, refAminoAcidFrags);
+        mRefNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, refAminoAcidFrags);
 
-        Map<String, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
-                mRefNucleotideCounts.heterozygousLoci());
+        Map<HlaGene, List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(
+                Lists.newArrayList(mRefNucleotideCounts.heterozygousLoci()));
 
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
@@ -331,8 +303,8 @@ public class LilacApplication
         List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
                 .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        Map<String, Map<Integer, Set<String>>> geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
-                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+        Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap =
+                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides());
@@ -348,11 +320,14 @@ public class LilacApplication
             System.exit(1);
         }
 
-        mHlaYCoverage = new HlaYCoverage(mRefData.HlaYNucleotideSequences, geneAminoAcidHetLociMap, mConfig);
-        mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
+        mHlaYCoverage = mRefData.HlaYNucleotideSequences == null
+                ? null
+                : new HlaYCoverage(mRefData.HlaYNucleotideSequences, geneAminoAcidHetLociMap, mConfig);
+        if(mHlaYCoverage != null)
+            mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
-        ComplexBuilder complexBuilder = new ComplexBuilder(mConfig, mRefData);
+        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData);
 
         complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
         allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
@@ -362,11 +337,12 @@ public class LilacApplication
         recoveredSequences = recoveredSequences.stream()
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
-        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(),
-                recoveredSequences);
+        geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
+                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
-        mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
+        if(mHlaYCoverage != null)
+            mHlaYCoverage.updateAminoAcidLoci(geneAminoAcidHetLociMap);
 
         List<HlaAllele> confirmedAlleles = complexBuilder.getUniqueProteinAlleles();
 
@@ -388,7 +364,7 @@ public class LilacApplication
         // down-sample if ref depth is higher than configured cap
         List<FragmentAlleles> calcRefFragAlleles = checkDownsampleRefFragmentAlleles();
 
-        List<HlaComplex> complexes = complexBuilder.buildComplexes(calcRefFragAlleles, confirmedRecoveredAlleles);
+        List<HlaComplex> complexes = complexBuilder.buildComplexes(calcRefFragAlleles, Sets.newHashSet(confirmedRecoveredAlleles));
         // allValid &= validateComplexes(complexes); // too expensive in current form even for validation, address in unit tests instead
 
         ComplexCoverageCalculator complexCalculator = new ComplexCoverageCalculator(mConfig);
@@ -399,12 +375,10 @@ public class LilacApplication
                         ? format("%d capped=%d", mRefFragAlleles.size(), calcRefFragAlleles.size())
                         : mRefFragAlleles.size());
 
-        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles,
-                complexes);
+        List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
-        mRankedComplexes
-                .addAll(complexRanker.rankCandidates(calculatedComplexes, recoveredAlleles, candidateSequences));
+        mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
 
         if(mRankedComplexes.isEmpty())
         {
@@ -414,18 +388,15 @@ public class LilacApplication
 
         if(calcRefFragAlleles.size() < mRefFragAlleles.size())
         {
-            // For top solutions, recalculate from all evidence but keep the scoring values unchanged
-            for(int i = 0; i < mRankedComplexes.size(); i++)
-            {
-                ComplexCoverage origComplexCoverage = mRankedComplexes.get(i);
+            List<HlaComplex> filteredComplexes = mRankedComplexes.stream().map(ComplexCoverage::toComplex).toList();
 
-                ComplexCoverage recalcComplexCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles,
-                        origComplexCoverage.getAlleles());
-                recalcComplexCoverage.setScore(origComplexCoverage.getScore());
-                recalcComplexCoverage.setCohortFrequencyTotal(origComplexCoverage.cohortFrequencyTotal());
+            LL_LOGGER.debug("recalculating coverage for complexes({}) and ref alleles({})",
+                    filteredComplexes.size(), mRefFragAlleles.size());
 
-                mRankedComplexes.set(i, recalcComplexCoverage);
-            }
+            calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
+            complexRanker = new ComplexCoverageRanking(0, mRefData);
+            mRankedComplexes.clear();
+            mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
         }
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);
@@ -438,9 +409,7 @@ public class LilacApplication
             for(ComplexCoverage rankedCoverage : mRankedComplexes)
             {
                 if(rankedCoverage.getAlleles().size() != mConfig.ActualAlleles.size())
-                {
                     continue;
-                }
 
                 if(mConfig.ActualAlleles.containsAll(rankedCoverage.getAlleles()))
                 {
@@ -462,7 +431,8 @@ public class LilacApplication
 
         List<HlaAllele> winningAlleles = winningRefCoverage.getAlleles();
 
-        mHlaYCoverage.assignReferenceFragments(winningAlleles, mRefFragAlleles, refAminoAcidFrags);
+        if(mHlaYCoverage != null)
+            mHlaYCoverage.assignReferenceFragments(winningAlleles, mRefFragAlleles, refAminoAcidFrags);
 
         List<HlaSequenceLoci> winningSequences = candidateSequences.stream()
                 .filter(x -> winningAlleles.contains(x.Allele)).collect(Collectors.toList());
@@ -471,7 +441,7 @@ public class LilacApplication
                 .filter(x -> winningAlleles.contains(x.Allele.asFourDigit()))
                 .collect(Collectors.toList());
 
-        LL_LOGGER.info("{}", HlaComplexFile.header());
+        LL_LOGGER.info("{}", HlaComplexFile.header(mConfig.Genes));
 
         for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
@@ -501,18 +471,12 @@ public class LilacApplication
         for(FragmentAlleles fragAllele : mRefFragAlleles)
         {
             if(fragAllele.getFragment().isScopeSet())
-            {
                 continue;
-            }
 
             if(winningAlleles.stream().anyMatch(fragAllele::contains))
-            {
                 fragAllele.getFragment().setScope(SOLUTION);
-            }
             else
-            {
                 fragAllele.getFragment().setScope(CANDIDATE);
-            }
         }
 
         mSomaticCodingCounts.addAll(SomaticCodingCount.create(winningAlleles));
@@ -540,19 +504,20 @@ public class LilacApplication
 
         AminoAcidQC aminoAcidQC = AminoAcidQC.create(
                 winningSequences, mRefData.HlaYAminoAcidSequences, mRefAminoAcidCounts,
-                haplotypeQC.UnmatchedHaplotypes, totalFragmentCount);
+                haplotypeQC.UnmatchedHaplotypes);
 
         BamQC bamQC = BamQC.create(mRefBamReader, geneBaseDepth);
         CoverageQC coverageQC = CoverageQC.create(refAminoAcidFrags, winningRefCoverage);
 
         mSummaryMetrics = new LilacQC(
-                scoreMargin, nextSolutionInfo.toString(), medianBaseQuality, mHlaYCoverage.getSelectedAllele(),
+                mConfig.Genes, scoreMargin, nextSolutionInfo.toString(), medianBaseQuality,
+                mHlaYCoverage == null ? null : mHlaYCoverage.getSelectedAllele(),
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, somaticVariantQC);
 
         ComplexCoverage refCoverage = !mConfig.tumorOnly() ? winningRefCoverage
                 : ComplexCoverage.create(Lists.newArrayList());
 
-        mSolutionSummary = SolutionSummary.create(refCoverage, mTumorCoverage, mTumorCopyNumber,
+        mSolutionSummary = SolutionSummary.create(mConfig.Genes, refCoverage, mTumorCoverage, mTumorCopyNumber,
                 mSomaticCodingCounts, mRnaCoverage);
 
         writeFileOutputs();
@@ -565,9 +530,7 @@ public class LilacApplication
     private List<FragmentAlleles> checkDownsampleRefFragmentAlleles()
     {
         if(mConfig.MaxRefFragments == 0 || mRefFragAlleles.size() <= mConfig.MaxRefFragments)
-        {
             return mRefFragAlleles;
-        }
 
         if(mRefFragAlleles.size() <= mConfig.MaxRefFragments * 2)
         {
@@ -589,9 +552,7 @@ public class LilacApplication
                 calcRefFragAlleles.add(fragmentAllele);
 
                 if(calcRefFragAlleles.size() >= mConfig.MaxRefFragments)
-                {
                     break;
-                }
 
                 counter = 0;
             }
@@ -600,7 +561,8 @@ public class LilacApplication
         return calcRefFragAlleles;
     }
 
-    public void extractTumorResults(final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
+    private void extractTumorResults(
+            final List<HlaAllele> winningAlleles, final ComplexCoverage winningRefCoverage,
             final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
         if(mConfig.TumorBam.isEmpty())
@@ -616,7 +578,8 @@ public class LilacApplication
         else
         {
             List<Fragment> tumorNucleotideFrags = mTumorBamReader.findGeneFragments();
-            NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(tumorNucleotideFrags);
+            if(NUC_GENE_FRAG_ENRICHMENT != null)
+                NUC_GENE_FRAG_ENRICHMENT.checkAddAdditionalGenes(tumorNucleotideFrags);
 
             List<Fragment> tumorFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(tumorNucleotideFrags);
 
@@ -627,14 +590,13 @@ public class LilacApplication
             List<FragmentAlleles> tumorFragAlleles =
                     mFragAlleleMapper.createFragmentAlleles(tumorFragments, winningSequences, winningNucSequences);
 
-            if(mHlaYCoverage.exceedsThreshold())
-            {
+            if(mHlaYCoverage != null && mHlaYCoverage.exceedsThreshold())
                 mHlaYCoverage.assignFragments(winningAlleles, tumorFragAlleles, tumorFragments, TUMOR);
-            }
 
             mTumorCoverage = ComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles);
 
-            mTumorCoverage.populateMissingCoverage(winningAlleles);
+            mTumorCoverage.populateMissingCoverage(Sets.newLinkedHashSet(winningAlleles));
+            mTumorCoverage.expandToSixAlleles();
         }
 
         if(!mConfig.CopyNumberFile.isEmpty())
@@ -642,16 +604,14 @@ public class LilacApplication
             CopyNumberAssignment copyNumberAssignment = new CopyNumberAssignment();
             copyNumberAssignment.loadCopyNumberData(mConfig);
 
-            copyNumberAssignment.assign(mConfig.Sample, winningAlleles, winningRefCoverage, mTumorCoverage, mTumorCopyNumber);
+            copyNumberAssignment.assign(mConfig.Sample, winningRefCoverage, mTumorCoverage, mTumorCopyNumber);
         }
 
         // SOMATIC VARIANTS
         SomaticVariantAnnotation variantAnnotation = new SomaticVariantAnnotation(mConfig, GENE_CACHE.GeneTranscriptMap);
 
         if(variantAnnotation.getSomaticVariants().isEmpty())
-        {
             return;
-        }
 
         mSomaticVariants.addAll(variantAnnotation.getSomaticVariants());
 
@@ -672,14 +632,16 @@ public class LilacApplication
         }
     }
 
-    public void extractRnaCoverage(final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+    private void extractRnaCoverage(
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
             final List<HlaSequenceLoci> winningNucSequences)
     {
-        mRnaCoverage = LilacAppendRna.extractRnaCoverage(mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory,
-                NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper, winningAlleles, winningSequences, winningNucSequences);
+        mRnaCoverage = LilacAppendRna.extractRnaCoverage(
+                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, NUC_GENE_FRAG_ENRICHMENT, mAminoAcidPipeline, mFragAlleleMapper,
+                winningAlleles, winningSequences, winningNucSequences);
     }
 
-    public void writeFileOutputs()
+    private void writeFileOutputs()
     {
         mSummaryMetrics.log(mConfig.Sample);
 
@@ -692,18 +654,14 @@ public class LilacApplication
         mResultsWriter.writeReferenceFragments(mRankedComplexes, mRefNucleotideFrags, mRefFragAlleles);
     }
 
-    private boolean validateFragments(final List<Fragment> fragments)
+    private boolean validateFragments(final Collection<Fragment> fragments)
     {
         if(!mConfig.RunValidation)
-        {
             return true;
-        }
 
         List<Fragment> invalidFragments = fragments.stream().filter(x -> !x.validate()).toList();
         if(invalidFragments.isEmpty())
-        {
             return true;
-        }
 
         LL_LOGGER.warn("has {} invalid fragments", invalidFragments.size());
         return false;
@@ -713,15 +671,11 @@ public class LilacApplication
     {
         // check uniqueness amongst valid candidate alleles
         if(!mConfig.RunValidation)
-        {
             return true;
-        }
 
         Set<HlaAllele> duplicateAlleles = HlaAllele.findDuplicates(alleles);
         if(duplicateAlleles.isEmpty())
-        {
             return true;
-        }
 
         LL_LOGGER.warn("has {} duplicate alleles from complex building", duplicateAlleles.size());
         return false;
@@ -730,32 +684,37 @@ public class LilacApplication
     private boolean validateComplexes(final List<HlaComplex> complexes)
     {
         if(!mConfig.RunValidation)
-        {
             return true;
-        }
 
         Set<HlaComplex> duplicates = findDuplicates(complexes);
         if(duplicates.isEmpty())
-        {
             return true;
-        }
 
         LL_LOGGER.warn("has {} duplicate complexes", duplicates.size());
         return false;
     }
 
-    private boolean hasSufficientGeneDepth(final Map<String, int[]> geneBaseDepth)
+    private boolean hasSufficientGeneDepth(final Map<HlaGene, int[]> geneBaseDepth)
     {
-        int aLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_A)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int bLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_B)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-        int cLowCoveragePositions = (int) Arrays.stream(geneBaseDepth.get(HLA_C)).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
-
-        int totalLowCoveragePositions = aLowCoveragePositions + bLowCoveragePositions + cLowCoveragePositions;
-
-        if(!mConfig.ReferenceBam.isEmpty() && totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
+        Map<HlaGene, Integer> geneLowCoveragePositionCounts = Maps.newHashMap();
+        int totalLowCoveragePositions = 0;
+        for(Map.Entry<HlaGene, int[]> entry : geneBaseDepth.entrySet())
         {
-            LL_LOGGER.warn("Exiting due to too low coverage. Number of bases with <{} coverage per gene: A={}, B={}, C={}. Total={} exceeds threshold={}",
-                    WARN_LOW_COVERAGE_DEPTH, aLowCoveragePositions, bLowCoveragePositions, cLowCoveragePositions,
+            HlaGene gene = entry.getKey();
+
+            // we expect no raw coverage for HLA-DRB3 and HLA-DRB4, they get their reads from HLA-DRB1 and HLA-DRB5
+            if(gene == HlaGene.HLA_DRB3 || gene == HlaGene.HLA_DRB4)
+                continue;
+
+            int count = (int) Arrays.stream(entry.getValue()).filter(x -> x < WARN_LOW_COVERAGE_DEPTH).count();
+            geneLowCoveragePositionCounts.put(entry.getKey(), count);
+            totalLowCoveragePositions += count;
+        }
+
+        if(totalLowCoveragePositions >= mConfig.FatalTotalLowCoveragePositions)
+        {
+            LL_LOGGER.warn("exiting due to too low coverage: bases with <{} coverage per gene({}) total({}) exceeds threshold({})",
+                    WARN_LOW_COVERAGE_DEPTH, geneLowCoveragePositionCounts.toString(),
                     totalLowCoveragePositions, mConfig.FatalTotalLowCoveragePositions);
             return false;
         }
@@ -763,7 +722,7 @@ public class LilacApplication
         return true;
     }
 
-    public static void main(final String[] args)
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
@@ -777,6 +736,7 @@ public class LilacApplication
         File stackSampleFile = lilacConfig.OutputDir.isEmpty()
                 ? null
                 : new File(new File(lilacConfig.OutputDir), format("%s.lilac.stacks", lilacConfig.Sample));
+
         try(StackSampler stackSampler = stackSampleFile == null || lilacConfig.StackSampleRate <= 0
                 ? null
                 : new StackSampler(lilacConfig.StackSampleRate, stackSampleFile))

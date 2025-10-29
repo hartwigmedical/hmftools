@@ -6,7 +6,7 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
-import com.hartwig.hmftools.common.utils.version.VersionInfo
+import com.hartwig.hmftools.common.utils.config.VersionInfo
 import com.hartwig.hmftools.teal.telbam.TelbamReader
 import org.apache.logging.log4j.LogManager
 import java.io.File

@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -77,7 +78,7 @@ public class FragmentSizeDistribution
 
         List<ChromosomeTask> chrTasks = sampledChromosomes.stream().map(x -> new ChromosomeTask(x)).collect(Collectors.toList());
 
-        final List<Callable> callableList = chrTasks.stream().collect(Collectors.toList());
+        final List<Callable<Long>> callableList = chrTasks.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         if(!validExecution)
@@ -199,7 +200,7 @@ public class FragmentSizeDistribution
         }
     }
 
-    private class ChromosomeTask implements Callable
+    private class ChromosomeTask implements Callable<Long>
     {
         private final String mChromosome;
         private int mProcessedReads;
@@ -278,7 +279,7 @@ public class FragmentSizeDistribution
             if(record.getDuplicateReadFlag())
                 return false;
 
-            int fragmentLength = abs(inferredInsertSize(record));
+            int fragmentLength = inferredInsertSizeAbs(record);
             if(fragmentLength > FRAG_LENGTH_DIST_MAX_LENGTH)
                 return false;
 
@@ -327,7 +328,7 @@ public class FragmentSizeDistribution
 
         private void addFragmentLength(final SAMRecord record)
         {
-            int fragmentLength = getLengthBucket(abs(inferredInsertSize(record)));
+            int fragmentLength = getLengthBucket(inferredInsertSizeAbs(record));
 
             if(fragmentLength <= 0)
                 return;

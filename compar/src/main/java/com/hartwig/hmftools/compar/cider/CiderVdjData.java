@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.compar.common.Category.CDR3_SEQUENCE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
@@ -22,7 +21,10 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class CiderVdjData implements ComparableItem
 {
-    private final Cdr3Sequence mCdr3Sequence;
+    public final Cdr3Sequence mCdr3Sequence;
+
+    public static final String FILTER_FIELD = capitalize(Cdr3SequenceFile.Column.filter.name());
+    public static final String LOCUS_FIELD = capitalize(Cdr3SequenceFile.Column.locus.name());
 
     public CiderVdjData(final Cdr3Sequence mCdr3Sequence)
     {
@@ -40,8 +42,7 @@ public class CiderVdjData implements ComparableItem
 
     public static List<String> comparedFieldNames()
     {
-        return List.of(capitalize(Cdr3SequenceFile.Column.filter.name()),
-                       capitalize(Cdr3SequenceFile.Column.locus.name()));
+        return List.of(FILTER_FIELD, LOCUS_FIELD);
     }
 
     @Override
@@ -75,8 +76,8 @@ public class CiderVdjData implements ComparableItem
 
         final List<String> diffs = new ArrayList<>();
 
-        checkDiff(diffs, Cdr3SequenceFile.Column.filter.name(), mCdr3Sequence.filter(), other.filter());
-        checkDiff(diffs, Cdr3SequenceFile.Column.locus.name(), mCdr3Sequence.locus(), other.locus());
+        checkDiff(diffs, FILTER_FIELD, mCdr3Sequence.filter(), other.filter());
+        checkDiff(diffs, LOCUS_FIELD, mCdr3Sequence.locus(), other.locus());
 
         return createMismatchFromDiffs(this, o, diffs, matchLevel, includeMatches);
     }

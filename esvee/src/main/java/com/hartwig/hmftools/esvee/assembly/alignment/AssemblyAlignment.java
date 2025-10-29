@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
@@ -297,7 +298,16 @@ public class AssemblyAlignment
             if(insertedBaseLength > 0)
             {
                 // keep inserted bases in the same direction as the assembly is added
-                String insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+                String insertedBases;
+
+                if(link.isInsertSite())
+                {
+                    insertedBases = link.insertedBases();
+                }
+                else
+                {
+                    insertedBases = extractInsertSequence(assembly, assemblyReversed, nextAssembly, nextReversed, insertedBaseLength);
+                }
 
                 fullSequence.append(insertedBases);
 
@@ -325,12 +335,12 @@ public class AssemblyAlignment
 
             if(overlapLength > 0)
             {
-                buildSequenceCigar(sequenceCigar, I, overlapLength);
+                buildSequenceCigar(sequenceCigar, D, overlapLength); // an overlap can be considered deleting the homologous bases
             }
 
             currentSeqLength += nextAssemblyRefBases.length(); // this will have been reduced by any overlapping bases already
 
-            buildSequenceCigar(sequenceCigar, M, nextAssembly.refBaseLength());
+            buildSequenceCigar(sequenceCigar, M, nextAssemblyRefBases.length());
 
             if(hasFacingAtEnd && i == assemblyCount - 2)
             {

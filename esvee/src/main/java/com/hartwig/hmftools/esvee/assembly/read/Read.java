@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.LOW_QUAL_SCORE;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.findLowBaseQualTrimCount;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
@@ -502,42 +503,15 @@ public class Read
         if(lowQualTrimmed())
             return;
 
-        boolean fromStart = negativeStrand();
+        int readIndexStart = 0;
+        int readIndexEnd = basesLength() - 1;
 
-        int baseLength = basesLength();
-        int baseIndex = fromStart ? 0 : baseLength - 1;
+        int trimCount = findLowBaseQualTrimCount(this, readIndexStart, readIndexEnd);
 
-        int checkedBases = 0;
-
-        double lowestScore = 0;
-        double currentScore = 0;
-        int lastLowestScoreIndex = 0;
-
-        while(baseIndex >= 0 && baseIndex < baseLength)
+        if(trimCount > 0)
         {
-            ++checkedBases;
-
-            if(belowMinQual(getBaseQuality()[baseIndex]))
-            {
-                currentScore -= LOW_QUAL_SCORE;
-
-                if(currentScore < lowestScore)
-                    lastLowestScoreIndex = checkedBases;
-            }
-            else
-            {
-                ++currentScore;
-            }
-
-            if(fromStart)
-                ++baseIndex;
-            else
-                --baseIndex;
-        }
-
-        if(lastLowestScoreIndex > 0)
-        {
-            trimBases(lastLowestScoreIndex, fromStart);
+            boolean fromStart = negativeStrand();
+            trimBases(trimCount, fromStart);
             markLowQualTrimmed();
         }
     }

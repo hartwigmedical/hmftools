@@ -48,7 +48,10 @@ public class ConsensusStatistics
                 sj.add(format("%s=%d", outcome, mOutcomeCounts[outcome.ordinal()]));
         }
 
-        return format("dualStrandMismatches(groups=%d reads=%s) outcomes(%s)",
-                mDualStrandMismatchReadGroupCount, mDualStrandMismatchReadCount, sj);
+        if(mDualStrandMismatchReadGroupCount == 0 && mDualStrandMismatchReadCount == 0)
+            return sj.toString();
+
+        return format("outcomes(%s) dualStrandMismatches(groups=%d reads=%s)",
+                sj, mDualStrandMismatchReadGroupCount, mDualStrandMismatchReadCount);
     }
 }

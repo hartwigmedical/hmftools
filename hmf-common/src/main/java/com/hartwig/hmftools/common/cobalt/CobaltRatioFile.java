@@ -22,7 +22,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
@@ -32,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class CobaltRatioFile
 {
-    enum Column
+    public enum Column
     {
         chromosome,
         position,
@@ -45,13 +44,10 @@ public final class CobaltRatioFile
         tumorGCContent
     }
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
+    public static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
-
-    // old column names for backwards compatibility
-    private static final String COL_REF_READ_COUNT  = "referenceReadCount";
-    private static final String COL_TUMOR_READ_COUNT  = "tumorReadCount";
+    private static final String EXTENSION_UNZIPPED = ".cobalt.ratio.tsv";
 
     @Deprecated
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
@@ -60,6 +56,12 @@ public final class CobaltRatioFile
     public static String generateFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + EXTENSION;
+    }
+
+    @NotNull
+    public static String generateFilenameUnzipped(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + EXTENSION_UNZIPPED;
     }
 
     @NotNull
@@ -100,16 +102,7 @@ public final class CobaltRatioFile
         return read(filename, gender, hasTumor);
     }
 
-    private static final int DEFAULT_READ_LENGTH = 151;
-    private static final double READ_DEPTH_INVALID = -1;
-
-    private static double convertReadCount(final double readCount)
-    {
-        if(readCount <= 0)
-            return readCount;
-
-        return readCount * DEFAULT_READ_LENGTH /GCProfileFactory.WINDOW_SIZE;
-    }
+    public static final double READ_DEPTH_INVALID = -1;
 
     private static Map<Chromosome,List<CobaltRatio>> read(final String filename, final Gender gender, boolean hasTumor)
     {
@@ -126,23 +119,10 @@ public final class CobaltRatioFile
             int refGcRatioIndex = reader.getColumnIndex(Column.referenceGCRatio);
             int tumorGcRatioIndex = reader.getColumnIndex(Column.tumorGCRatio);
             int refGcDiplodRatioIndex = reader.getColumnIndex(Column.referenceGCDiploidRatio);
-
-            // 1.15 field updates
-            // changes: referenceReadCount -> referenceReadDepth, tumorReadCount -> tumorReadDepth
-            // added: referenceGCContent, tumorGCContent
-
-            // v1.16 onwards
-            Integer refReadDepthIndex = reader.getColumnIndex(Column.referenceReadDepth);
-            Integer tumorReadDepthIndex = reader.getColumnIndex(Column.tumorReadDepth);
-            Integer refGcContentIndex = reader.getColumnIndex(Column.referenceGCContent);
-            Integer tumorGcContentIndex = reader.getColumnIndex(Column.tumorGCContent);
-
-            // v1.15 backwards compatibility with conversion below
-            Integer refReadCountIndex = reader.getColumnIndex(COL_REF_READ_COUNT);
-            Integer tumorReadCountIndex = reader.getColumnIndex(COL_TUMOR_READ_COUNT);
-
-            boolean useReadCount = refReadCountIndex != null && tumorReadCountIndex != null;
-            boolean hasGcContent = refGcContentIndex != null && tumorGcContentIndex != null;
+            int refReadDepthIndex = reader.getColumnIndex(Column.referenceReadDepth);
+            int tumorReadDepthIndex = reader.getColumnIndex(Column.tumorReadDepth);
+            int refGcContentIndex = reader.getColumnIndex(Column.referenceGCContent);
+            int tumorGcContentIndex = reader.getColumnIndex(Column.tumorGCContent);
 
             for(DelimFileReader.Row row : reader)
             {
@@ -160,7 +140,7 @@ public final class CobaltRatioFile
                     chromosome = currentChromosome;
                 }
 
-                double refReadDepth = useReadCount ? convertReadCount(row.getDouble(refReadCountIndex)) : row.getDouble(refReadDepthIndex);
+                double refReadDepth = row.getDouble(refReadDepthIndex);
 
                 double initialRefGCRatio = row.getDouble(refGcRatioIndex);
                 double initialRefGCDiploidRatio = row.getDouble(refGcDiplodRatioIndex);
@@ -175,23 +155,20 @@ public final class CobaltRatioFile
                 double refGcRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio);
                 double refGcDiploadRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio);
                 double tumorGCRatio = hasTumor ? row.getDouble(tumorGcRatioIndex) : refGcDiploadRatio;
+                double tumorReadDepth = row.getDouble(tumorReadDepthIndex);
+                double refGcContent = row.getDouble(refGcContentIndex);
+                double tumorGcContent = row.getDouble(tumorGcContentIndex);
 
-                double tumorReadDepth = useReadCount ? convertReadCount(row.getDouble(tumorReadCountIndex)) : row.getDouble(tumorReadDepthIndex);
-
-                double refGcContent = hasGcContent ? row.getDouble(refGcContentIndex) : 0;
-                double tumorGcContent = hasGcContent ? row.getDouble(tumorGcContentIndex) : 0;
-
-                CobaltRatio ratio = ImmutableCobaltRatio.builder()
-                        .chromosome(chromosome)
-                        .position(row.getInt(posIndex))
-                        .referenceReadDepth(refReadDepth)
-                        .tumorReadDepth(tumorReadDepth)
-                        .tumorGCRatio(tumorGCRatio)
-                        .referenceGCRatio(refGcRatio)
-                        .referenceGCDiploidRatio(refGcDiploadRatio)
-                        .referenceGcContent(refGcContent)
-                        .tumorGcContent(tumorGcContent)
-                        .build();
+                CobaltRatio ratio = new CobaltRatio(
+                        chromosome,
+                        row.getInt(posIndex),
+                        refReadDepth,
+                        refGcRatio,
+                        refGcContent,
+                        refGcDiploadRatio,
+                        tumorReadDepth,
+                        tumorGCRatio,
+                        tumorGcContent);
 
                 ratios.add(ratio);
             }

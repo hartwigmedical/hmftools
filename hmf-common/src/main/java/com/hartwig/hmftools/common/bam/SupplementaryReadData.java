@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.common.bam;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 
 import java.util.List;
 import java.util.Objects;
@@ -10,6 +13,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +36,8 @@ public class SupplementaryReadData
     public static final char SUPP_POS_STRAND = '+';
     public static final char SUPP_NEG_STRAND = '-';
 
-    public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality,
-            final int nm)
+    public SupplementaryReadData(
+            final String chromosome, final int position, final char strand, final String cigar, final int mapQuality, final int nm)
     {
         Chromosome = chromosome;
         Position = position;
@@ -49,6 +53,8 @@ public class SupplementaryReadData
     }
 
     public byte orientation() { return Strand == SUPP_POS_STRAND ? ORIENT_FWD : ORIENT_REV; }
+    public Orientation orient() { return Strand == SUPP_POS_STRAND ? FORWARD : REVERSE; }
+    public boolean isForwardOrient() { return Strand == SUPP_POS_STRAND; }
 
     @Nullable
     @VisibleForTesting
@@ -81,7 +87,9 @@ public class SupplementaryReadData
     public static List<SupplementaryReadData> extractAlignments(@Nullable final String suppData)
     {
         if(suppData == null || suppData.isEmpty())
+        {
             return null;
+        }
 
         // example data: 2,33141317,+,94S57M,5,0;
         // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
@@ -102,7 +110,9 @@ public class SupplementaryReadData
                 final SupplementaryReadData suppReadData = fromAlignment(alignment);
 
                 if(suppReadData == null)
+                {
                     return null;
+                }
 
                 output.add(suppReadData);
             }
@@ -127,7 +137,9 @@ public class SupplementaryReadData
     public static SupplementaryReadData extractAlignment(@Nullable final String suppData)
     {
         if(suppData == null || suppData.isEmpty())
+        {
             return null;
+        }
 
         // example data: 2,33141317,+,94S57M,5,0;
         // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
@@ -145,10 +157,18 @@ public class SupplementaryReadData
         }
     }
 
+    public static SupplementaryReadData createSupplementaryReadDataForRecord(SAMRecord record)
+    {
+        char strand = record.getReadNegativeStrandFlag() ? SUPP_NEG_STRAND : SUPP_POS_STRAND;
+        return new SupplementaryReadData(record.getContig(), record.getAlignmentStart(), strand, record.getCigarString(), record.getMappingQuality(), record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+    }
+
     public static int alignmentCount(final SAMRecord record)
     {
         if(!record.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
+        {
             return 0;
+        }
 
         return alignmentCount(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }

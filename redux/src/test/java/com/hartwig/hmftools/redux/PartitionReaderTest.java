@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRI
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.alignmentsToSamTag;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
-import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -22,11 +21,10 @@ import static com.hartwig.hmftools.redux.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 import static com.hartwig.hmftools.redux.TestUtils.createPartitionRead;
 import static com.hartwig.hmftools.redux.TestUtils.setSecondInPair;
-import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +38,7 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -403,47 +401,9 @@ public class PartitionReaderTest
     }
 
     @Test
-    public void testUltima()
-    {
-        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()), ULTIMA);
-        TestBamWriter writer = new TestBamWriter(config);
-        PartitionReader partitionReader = createPartitionRead(config, writer);
-
-        partitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
-
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 2 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150 + 3 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 150, true));
-
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 175 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 4 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 5 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-        partitionReader.processRead(createUnpairedRecord(CHR_1, 100, 200 + 6 * SINGLE_END_JITTER_COLLAPSE_DISTANCE, false));
-
-        partitionReader.postProcessRegion();
-
-        assertEquals(19, writer.nonConsensusWriteCount());
-        assertEquals(6, writer.consensusWriteCount());
-    }
-
-    @Test
     public void testIlluminaPCRClusterCount()
     {
-        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()), ILLUMINA);
+        ReduxConfig config = new ReduxConfig(mRefGenome, false, false, true, new ReadUnmapper(Collections.emptyMap()));
 
         Function<String, SAMRecord> getSamRecord =
                 readName -> createSamRecord(readName, CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, 1000, false, false, null, false, TEST_READ_CIGAR);

@@ -1,15 +1,13 @@
 package com.hartwig.hmftools.common.genome.region;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosomal;
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegionProvider;
 
-import org.jetbrains.annotations.NotNull;
-
-public interface GenomeRegion extends Comparable<GenomeRegion>
+public interface GenomeRegion extends Chromosomal, Comparable<GenomeRegion>, ChrBaseRegionProvider
 {
-    @NotNull
-    String chromosome();
-
     int start();
 
     int end();
@@ -46,5 +44,11 @@ public interface GenomeRegion extends Comparable<GenomeRegion>
     default boolean overlaps(final GenomeRegion other)
     {
         return other.chromosome().equals(chromosome()) && other.end() > start() && other.start() < end();
+    }
+
+    @Override
+    default ChrBaseRegion chrBaseRegion()
+    {
+        return new ChrBaseRegion(chromosome(), start(), end());
     }
 }

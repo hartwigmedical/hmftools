@@ -3,6 +3,9 @@ package com.hartwig.hmftools.sage.utils;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
@@ -14,9 +17,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.Integers.median;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -131,7 +131,7 @@ public class RnaHealthChecker
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mThreads);
         }
         else
@@ -147,7 +147,7 @@ public class RnaHealthChecker
         SG_LOGGER.info("RNA Health-Checker complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Void>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;
@@ -161,7 +161,7 @@ public class RnaHealthChecker
         public List<String> getSampleIds() { return mSampleIds; }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < mSampleIds.size(); ++i)
             {
@@ -179,7 +179,7 @@ public class RnaHealthChecker
                 SG_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
             }
 
-            return (long)0;
+            return null;
         }
 
         private void processSample(final String sampleId)
@@ -206,7 +206,7 @@ public class RnaHealthChecker
                 VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
                 if(vcfHeader.getGenotypeSamples().stream().noneMatch(x -> x.equals(sampleId))
-                || vcfHeader.getGenotypeSamples().stream().noneMatch(x -> x.equals(rnaSampleId)))
+                        || vcfHeader.getGenotypeSamples().stream().noneMatch(x -> x.equals(rnaSampleId)))
                 {
                     SG_LOGGER.warn("sample({}) VCF({}) missing genotype sample name", sampleId, vcfFile);
                     return;
@@ -256,7 +256,7 @@ public class RnaHealthChecker
             AlleleFragments = alleleFragments;
         }
 
-        public String toString() { return format("depth(%d) alleleFrags(%d)", Depth, AlleleFragments); }
+        @Override public String toString() { return format("depth(%d) alleleFrags(%d)", Depth, AlleleFragments); }
     }
 
     private class SampleVariantSummary

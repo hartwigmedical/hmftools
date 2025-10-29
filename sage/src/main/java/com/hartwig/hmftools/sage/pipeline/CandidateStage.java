@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
-import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate.ReadContextCandidate;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -55,15 +55,15 @@ public class CandidateStage
 
             SamSlicerInterface samSlicer = mSamSlicerFactory.getSamSlicer(sample, sliceRegions, true);
 
-            List<AltContext> altContexts = mCandidateEvidence.readBam(sample, samSlicer, refSequence, region);
+            List<ReadContextCandidate> altCandidates = mCandidateEvidence.readBam(samSlicer, refSequence, region);
 
             if(mConfig.TumorIds.size() == 1)
-                initialCandidates.addSingleSample(altContexts);
+                initialCandidates.addSingleSample(altCandidates);
             else
-                initialCandidates.addOfMultipleSamples(altContexts);
+                initialCandidates.addOfMultipleSamples(altCandidates);
         }
 
-        List<Candidate> candidates = initialCandidates.candidates(mConfig.Common.SpecificPositions);
+        List<Candidate> candidates = initialCandidates.candidates(mConfig.Common.SpecificVariants);
 
         SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
 

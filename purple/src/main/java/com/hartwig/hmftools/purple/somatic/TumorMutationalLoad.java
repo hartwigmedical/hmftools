@@ -12,23 +12,26 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LI
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.purple.PurpleConstants.CODING_BASES_PER_GENOME;
 import static com.hartwig.hmftools.purple.PurpleConstants.TUMOR_MSI_LOAD_MIN_VAF;
-import static com.hartwig.hmftools.purple.TargetRegionsData.TMB_GENE_EXCLUSIONS;
+import static com.hartwig.hmftools.purple.targeted.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.TargetRegionsData;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 public class TumorMutationalLoad
 {
     private final TargetRegionsData mTargetRegions;
+    private final boolean mTumorOnly;
     private double mLoad;
     private double mBurden;
     private int mUnclearVariants;
 
-    public TumorMutationalLoad(final TargetRegionsData targetRegions)
+    public TumorMutationalLoad(final TargetRegionsData targetRegions, boolean tumorOnly)
     {
         mTargetRegions = targetRegions;
+        mTumorOnly = tumorOnly;
+
         mLoad = 0;
         mBurden = 0;
         mUnclearVariants = 0;
@@ -99,16 +102,23 @@ public class TumorMutationalLoad
         if(gnomadFreq > 0)
             return;
 
-        SomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
-                SomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
+        if(mTumorOnly)
+        {
+            SomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
+                    SomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
 
-        if(somaticLikelihood == HIGH)
+            if(somaticLikelihood == HIGH)
+            {
+                ++mBurden;
+            }
+            else if(somaticLikelihood == MEDIUM)
+            {
+                ++mUnclearVariants;
+            }
+        }
+        else
         {
             ++mBurden;
-        }
-        else if(somaticLikelihood == MEDIUM)
-        {
-            ++mUnclearVariants;
         }
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))

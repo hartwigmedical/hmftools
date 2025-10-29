@@ -75,7 +75,7 @@ public class DiscordantGroupsTest
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 500, CHR_1, DISCORDANT_GROUP_MAX_LOCAL_LENGTH * 2,
                 true, false, null));
-        read.record().setInferredInsertSize(read.record().getMateAlignmentStart() - read.start());
+        read.record().setInferredInsertSize(read.record().getMateAlignmentStart() - read.AlignmentStart);
 
         readGroup = new ReadGroup(read);
         assertTrue(discordantGroups.isDiscordantGroup(readGroup));

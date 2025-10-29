@@ -13,7 +13,7 @@ public class GenomeRegions
     @NotNull
     public static GenomeRegion create(@NotNull final String chromosome, final int start, final int end)
     {
-        return ImmutableGenomeRegionImpl.builder().chromosome(chromosome).start(start).end(end).build();
+        return new GenomeRegionImpl(chromosome, start, end);
     }
 
     private final String chromosome;

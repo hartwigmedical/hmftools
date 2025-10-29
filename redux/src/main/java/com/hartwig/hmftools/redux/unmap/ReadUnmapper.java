@@ -18,10 +18,11 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_SOFT_CLIP;
 
 import java.util.List;
 import java.util.Map;
@@ -31,9 +32,13 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
-import com.hartwig.hmftools.common.region.UnmappedRegions;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappedRegions;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -68,6 +73,9 @@ public class ReadUnmapper
     public Map<String,List<UnmappingRegion>> getAllRegions() { return mChrLocationsMap; }
 
     public boolean enabled() { return mEnabled; }
+
+    // potentially change this to be set in config, or sample the BAM first to establish - cannot currently have a mix within one BAM
+    public boolean unmapPairedReads() { return mEnabled && isIllumina(); }
 
     public void setStats(final UnmapStats stats) { mStats = stats; }
     public UnmapStats stats() { return mStats; }
@@ -689,7 +697,7 @@ public class ReadUnmapper
         read.setInferredInsertSize(0);
 
         // clear reference index, reference name and alignment start
-        if(mateUnmapped || unmapMate)
+        if(mateUnmapped || unmapMate || !read.getReadPairedFlag())
         {
             // set both to unknown
             read.setAlignmentStart(0);
@@ -853,6 +861,19 @@ public class ReadUnmapper
             return;
 
         addRegion(chromosome, new UnmappingRegion(1, 20000, UNMAP_MIN_HIGH_DEPTH));
+    }
+
+    public void addNonStandardContigs(final RefGenomeInterface refGenome)
+    {
+        for(Map.Entry<String, Integer> contigEntry : refGenome.chromosomeLengths().entrySet())
+        {
+            String contig = contigEntry.getKey();
+
+            if(!HumanChromosome.contains(contig) && !MitochondrialChromosome.contains(contig))
+            {
+                addRegion(contig, new UnmappingRegion(1, contigEntry.getValue(), UNMAP_MIN_HIGH_DEPTH));
+            }
+        }
     }
 
     @VisibleForTesting

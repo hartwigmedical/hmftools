@@ -14,25 +14,28 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELI
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_BASE_QUAL_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
-import static com.hartwig.hmftools.sage.vis.ReadTableColumn.RAW_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
@@ -270,9 +273,13 @@ public class VariantVis
                 header(JQUERY_SCRIPT),
                 body(
                         firstVis.renderVariantInfo(
-                                sageVariant.totalQuality(),
+                                (int)(-10*firstCounter.logTqp()),
                                 Math.round((double)round(firstCounter.mapQualFactor() * 10d) / 10d),
-                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(), sageVariant.filtersStringSet()),
+                                sageVariant.nearIndel(),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromEdge(),
+                                firstCounter.readEdgeDistance().avgDistanceFromEdge(),
+                                firstCounter.readEdgeDistance().avgAltDistanceFromEdge(),
+                                sageVariant.filtersStringSet()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, refReadCounters, tumorIds, referenceIds),
                         readTable,
@@ -308,9 +315,11 @@ public class VariantVis
 
         List<DomContent> rows = Lists.newArrayList();
 
-        List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
+        List<String> headers = Lists.newArrayList("SAMPLE", "RAW_QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
         headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextMatch::name).collect(Collectors.toList()));
-        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
+        headers.addAll(Lists.newArrayList(
+                AVG_RECALIBRATED_BASE_QUAL, AVG_SEQ_TECH_BASE_QUAL, AVG_READ_MAP_QUALITY, FRAG_STRAND_BIAS,
+                READ_STRAND_BIAS, "JIT", MIN_COORDS_COUNT, UMI_TYPE_COUNTS));
 
         List<DomContent> headerColumns = Lists.newArrayList();
         for(int i = 0; i < headers.size(); i++)
@@ -368,10 +377,14 @@ public class VariantVis
 
             columnElems.addAll(Lists.newArrayList(
                     td(String.valueOf((int) counter.averageAltRecalibratedBaseQuality())),
+                    td(String.valueOf((int) counter.averageAltSeqTechBaseQuality())),
                     td(format("%d", avgAltMapQuality)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
-                    td(format("%d-%d", counter.jitter().shortened(), counter.jitter().lengthened()))));
+                    td(format("%d-%d", counter.jitter().shortened(), counter.jitter().lengthened())),
+                    td(format("%d", counter.fragmentCoords().minCount())),
+                    td(Arrays.toString(counter.consensusTypeCounts()).replace("[", "").replace("]", ""))
+                    ));
 
             for(int j = 0; j < columnElems.size(); ++j)
             {
@@ -460,7 +473,8 @@ public class VariantVis
         records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mVariant.Position));
     }
 
-    private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, int maxDistanceFromEdge, final Set<String> filters)
+    private DomContent renderVariantInfo(int totalTumorQuality, double mapQualFactor, boolean nearbyIndel, double maxDistanceFromEdge,
+                                         double nonAvgEdgeDist, double altAvgEdgeDist, final Set<String> filters)
     {
         CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
@@ -496,7 +510,11 @@ public class VariantVis
                 td(horizontalSpacer),
                 td(repeatStr),
                 td(horizontalSpacer),
-                td("MED = " + maxDistanceFromEdge),
+                td("NEARBY_INDEL = " + nearbyIndel),
+                td(horizontalSpacer),
+                td("MED = " + format("%.2f", maxDistanceFromEdge)),
+                td(horizontalSpacer),
+                td("AED = " + format("%.2f", nonAvgEdgeDist) + "," + format("%.2f", altAvgEdgeDist)),
                 td(horizontalSpacer),
                 td(filterStr),
                 td(horizontalSpacer),
@@ -517,7 +535,7 @@ public class VariantVis
         CssBuilder verticalSpacerDivStyle = CssBuilder.EMPTY.height(CssSize.em(1)).padding(CssSize.ZERO).margin(CssSize.ZERO);
 
         List<ReadTableColumn> columns = Lists.newArrayList(
-                MATE_TYPE_COL, MAP_QUAL_COL, FINAL_QUAL_COL, MOD_BASE_QUAL_COL, MOD_MAP_QUAL_COL, RAW_BASE_QUAL_COL, ORIENTATION_COL);
+                MATE_TYPE_COL, MAP_QUAL_COL, FINAL_QUAL_COL, FINAL_BASE_QUAL_COL, FINAL_MAP_QUAL_COL, SEQ_TECH_BASE_QUAL_COL, ORIENTATION_COL);
 
         List<DomContent> tableRows = Lists.newArrayList();
 
@@ -630,7 +648,7 @@ public class VariantVis
 
         String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
         String mateAlignmentStr = "unmapped";
-        if(!firstRead.getMateUnmappedFlag())
+        if(firstRead.getReadPairedFlag() && !firstRead.getMateUnmappedFlag())
         {
             String mateChromosome = firstRead.getMateReferenceName();
             int mateAlignmentStart = firstRead.getMateAlignmentStart();
@@ -647,8 +665,12 @@ public class VariantVis
         }
 
         readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
-
-        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(abs(firstRead.getInferredInsertSize())))));
+        int insertSize;
+        if(firstRead.getReadPairedFlag())
+            insertSize = abs(firstRead.getInferredInsertSize());
+        else
+            insertSize = firstRead.getAlignmentEnd() - firstRead.getAlignmentStart() + 1;
+        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(insertSize))));
         readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
 
         String firstMapQStr = String.valueOf(firstRead.getMappingQuality());
@@ -661,7 +683,7 @@ public class VariantVis
         String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
         readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
 
-        String umiTypeStr = firstRead.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        String umiTypeStr = firstRead.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
         if(umiTypeStr != null)
         {
             readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));

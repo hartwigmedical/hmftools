@@ -1,22 +1,23 @@
 package com.hartwig.hmftools.redux.common;
 
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.DuplicateFrequency.roundFrequency;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.redux.DuplicateFrequency;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.consensus.ConsensusStatistics;
-import com.hartwig.hmftools.redux.umi.UmiStatistics;
+import com.hartwig.hmftools.redux.consensus.UltimaStats;
+import com.hartwig.hmftools.redux.duplicate.UmiStatistics;
 
 public class Statistics
 {
@@ -25,9 +26,10 @@ public class Statistics
     public long DuplicateReads;
     public long DuplicateGroups;
 
-    public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
+    public final Map<Integer, DuplicateFrequency> DuplicateFrequencies;
 
     public final UmiStatistics UmiStats;
+    public final UltimaStats Ultima;
 
     public final ConsensusStatistics ConsensusStats;
 
@@ -39,6 +41,7 @@ public class Statistics
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
+        Ultima = new UltimaStats();
     }
 
     public void merge(final Statistics other)
@@ -49,11 +52,12 @@ public class Statistics
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
-            addFrequency(dupFreq.DuplicateCount, dupFreq.Frequency, dupFreq.DualStrandFrequency);
+            addFrequency(dupFreq.ReadCount, dupFreq.Count, dupFreq.DualStrandCount);
         }
 
         UmiStats.merge(other.UmiStats);
         ConsensusStats.merge(other.ConsensusStats);
+        Ultima.merge((other.Ultima));
     }
 
     public void addFrequency(int frequency)
@@ -67,19 +71,19 @@ public class Statistics
             addFrequency(1, fragmentCount, 0);
     }
 
-    private void addFrequency(int duplicateCount, long count, int dualStrandCount)
+    private void addFrequency(int duplicateCount, long count, long dualStrandCount)
     {
         int rounded = roundFrequency(duplicateCount);
         DuplicateFrequency dupFreq = DuplicateFrequencies.get(rounded);
 
         if(dupFreq == null)
         {
-            dupFreq = new DuplicateFrequency(duplicateCount);
+            dupFreq = new DuplicateFrequency(duplicateCount, 0, 0);
             DuplicateFrequencies.put(rounded, dupFreq);
         }
 
-        dupFreq.Frequency += count;
-        dupFreq.DualStrandFrequency += dualStrandCount;
+        dupFreq.Count += count;
+        dupFreq.DualStrandCount += dualStrandCount;
     }
 
     public void addUmiGroup(final int fragmentCount, boolean hasDualStrand)
@@ -109,26 +113,32 @@ public class Statistics
             Collections.sort(frequencies);
 
             String dupFreqStr = frequencies.stream()
-                    .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Frequency))
+                    .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Count))
                     .collect(Collectors.joining(", "));
 
             RD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
         }
     }
 
+    public static int roundFrequency(int frequency)
+    {
+        if(frequency <= 10)
+            return frequency;
+        else if(frequency <= 100)
+            return round(1.0f * frequency / 10) * 10;
+        else if(frequency <= 1000)
+            return round(1.0f * frequency / 100) * 100;
+        else
+            return round(1.0f * frequency / 1000) * 1000;
+    }
+
     public void writeDuplicateStats(final ReduxConfig config)
     {
         try
         {
-            String filename = config.formFilename("duplicate_freq");
-            BufferedWriter writer = createBufferedWriter(filename, false);
+            String filename = DuplicateFrequency.generateFilename(config.OutputDir, config.SampleId);
 
-            writer.write("DuplicateReadCount\tFrequency");
-
-            if(config.UMIs.Enabled)
-                writer.write("\tDualStrandFrequency");
-
-            writer.newLine();
+            List<DuplicateFrequency> dupReadfrequencies = Lists.newArrayList();
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
@@ -137,15 +147,10 @@ public class Statistics
             {
                 DuplicateFrequency dupFreq = DuplicateFrequencies.get(frequency);
 
-                writer.write(format("%d\t%d", frequency, dupFreq.Frequency));
-
-                if(config.UMIs.Enabled)
-                    writer.write(format("\t%d", dupFreq.DualStrandFrequency));
-
-                writer.newLine();
+                dupReadfrequencies.add(dupFreq);
             }
 
-            writer.close();
+            DuplicateFrequency.write(filename, dupReadfrequencies, config.UMIs.Enabled);
         }
         catch(IOException e)
         {

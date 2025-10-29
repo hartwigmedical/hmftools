@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
@@ -14,9 +15,10 @@ import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-public class GeneTask implements Callable
+public class GeneTask implements Callable<Void>
 {
     private final LilacConfig mConfig;
     private final ReferenceData mRefData;
@@ -47,20 +49,16 @@ public class GeneTask implements Callable
         mPhasedEvidence = Lists.newArrayList();
     }
 
-    public List<PhasedEvidence> phasedEvidence()
-    {
-        return mPhasedEvidence;
-    }
+    public List<PhasedEvidence> phasedEvidence() { return mPhasedEvidence; }
 
     @Override
-    public Long call()
+    public Void call()
     {
         // determine un-phased Candidates
         List<HlaAllele> unphasedCandidates = mCandidateFactory.unphasedCandidates(mHlaContext, mCandidateFrags, mRefData.CommonAlleles);
 
         // determine phasing of amino acids
-        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(
-                mConfig, mConfig.MinEvidenceFactor, mConfig.MinVafFilterDepth);
+        PhasedEvidenceFactory phasedEvidenceFactory = new PhasedEvidenceFactory(mConfig);
         mPhasedEvidence.addAll(phasedEvidenceFactory.evidence(mHlaContext, mCandidateFrags));
 
         // validate phasing against expected sequences
@@ -73,17 +71,15 @@ public class GeneTask implements Callable
         }
 
         // gather all phased candidates
-        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, unphasedCandidates, mPhasedEvidence));
+        mCandidatesAlleles.addAll(mCandidateFactory.phasedCandidates(mHlaContext, Sets.newHashSet(unphasedCandidates), mPhasedEvidence));
 
-        return 0L;
+        return null;
     }
 
     public void addPhasedCandidates(final List<HlaAllele> allAlleles)
     {
         if(mCandidatesAlleles.isEmpty())
-        {
             return;
-        }
 
         if(mConfig.MaxEliminationCandidates == 0 || mCandidatesAlleles.size() <= mConfig.MaxEliminationCandidates)
         {
@@ -91,9 +87,9 @@ public class GeneTask implements Callable
             return;
         }
 
-        final String gene = mCandidatesAlleles.get(0).Gene;
+        final HlaGene gene = mCandidatesAlleles.get(0).Gene;
 
         mRefData.getAlleleFrequencies().getAlleleFrequencies().keySet().stream()
-                .filter(x -> x.Gene.equals(gene)).forEach(x -> allAlleles.add(x));
+                .filter(x -> x.Gene == gene).forEach(allAlleles::add);
     }
 }

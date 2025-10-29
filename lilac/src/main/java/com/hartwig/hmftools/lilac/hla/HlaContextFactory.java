@@ -1,51 +1,41 @@
 package com.hartwig.hmftools.lilac.hla;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
-import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
-
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.ExpectedAlleles;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 
 public class HlaContextFactory
 {
-    private final NucleotideGeneEnrichment NucleotideGeneEnrichment;
-    private final List<Integer> ABoundaries;
-    private final List<Integer> BBoundaries;
-    private final List<Integer> CBoundaries;
+    private final LilacConfig mConfig;
+    private final NucleotideGeneEnrichment mNucleotideGeneEnrichment;
+    private final Map<HlaGene, List<Integer>> GeneBoundaries;
 
-    public HlaContextFactory(
-            final List<Integer> aBoundaries, final List<Integer> bBoundaries, final List<Integer> cBoundaries)
+    public HlaContextFactory(final LilacConfig config, final Map<HlaGene, List<Integer>> geneBoundaries)
     {
-        NucleotideGeneEnrichment = new NucleotideGeneEnrichment(aBoundaries, bBoundaries, cBoundaries);
-        ABoundaries = aBoundaries;
-        BBoundaries = bBoundaries;
-        CBoundaries = cBoundaries;
+        mConfig = config;
+        mNucleotideGeneEnrichment = NucleotideGeneEnrichment.create(geneBoundaries);
+        GeneBoundaries = geneBoundaries;
     }
 
-    public final HlaContext hlaA()
+    public List<HlaContext> contexts()
     {
-        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getAFilterB(), NucleotideGeneEnrichment.getAFilterC());
+        List<HlaContext> output = Lists.newArrayList();
+        int geneCount = mConfig.Genes.genes().size();
+        for(HlaGene gene : mConfig.Genes.genes())
+        {
+            NavigableMap<Integer, Integer> filters =
+                    mNucleotideGeneEnrichment == null ? Maps.newTreeMap() : mNucleotideGeneEnrichment.getFilters(gene);
+            ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(geneCount, filters);
+            HlaContext context = new HlaContext(gene, GeneBoundaries.get(gene), expectedAlleles);
+            output.add(context);
+        }
 
-        return new HlaContext(GENE_A, ABoundaries, expectedAlleles);
-    }
-
-    public final HlaContext hlaB()
-    {
-        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getBFilterA(), NucleotideGeneEnrichment.getBFilterC());
-
-        return new HlaContext(GENE_B, BBoundaries, expectedAlleles);
-    }
-
-    public final HlaContext hlaC()
-    {
-        ExpectedAlleles expectedAlleles = ExpectedAlleles.expectedAlleles(
-                NucleotideGeneEnrichment.getCFilterA(), NucleotideGeneEnrichment.getCFilterB());
-
-        return new HlaContext(GENE_C, CBoundaries, expectedAlleles);
+        return output;
     }
 }

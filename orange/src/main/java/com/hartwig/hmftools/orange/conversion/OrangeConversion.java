@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.conversion;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
-import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
@@ -41,7 +41,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(final BamMetricsSummary metricsSummary)
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(final BamMetricSummary metricsSummary)
     {
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(metricsSummary.meanCoverage())
@@ -51,7 +51,7 @@ public final class OrangeConversion
                 .pctExcAdapter(0.0)
                 .pctExcMapQ(metricsSummary.lowMapQualPercent())
                 .pctExcDupe(metricsSummary.duplicatePercent())
-                .pctExcUnpaired(metricsSummary.unpairedPercent())
+                .pctExcUnpaired(metricsSummary.unmappedPercent())
                 .pctExcBaseQ(metricsSummary.lowBaseQualPercent())
                 .pctExcOverlap(metricsSummary.overlappingReadPercent())
                 .pctExcCapped(metricsSummary.cappedCoveragePercent())

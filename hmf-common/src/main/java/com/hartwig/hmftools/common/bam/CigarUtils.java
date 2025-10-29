@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.common.bam;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_CLIPPING_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_EXTEND_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PENALTY;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
-import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.INVALID_READ_INDEX;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.CigarOperator.X;
@@ -344,58 +342,6 @@ public final class CigarUtils
         return NO_POSITION_INFO;
     }
 
-    @Nullable
-    public static List<CigarElement> replaceXwithM(final List<CigarElement> cigarElements)
-    {
-        boolean includesMismatchCigarOp = cigarElements.stream().anyMatch(el -> el.getOperator() == X);
-        if(!includesMismatchCigarOp)
-        {
-            return null;
-        }
-
-        List<CigarElement> newCigarElements = Lists.newArrayList();
-        CigarElement lastEl = null;
-        for(CigarElement el : cigarElements)
-        {
-            if(el.getOperator() == M && lastEl != null && lastEl.getOperator() == M)
-            {
-                lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
-                newCigarElements.set(newCigarElements.size() - 1, lastEl);
-                continue;
-            }
-
-            if(el.getOperator() != X)
-            {
-                lastEl = el;
-                newCigarElements.add(el);
-                continue;
-            }
-
-            if(lastEl == null || lastEl.getOperator() != M)
-            {
-                lastEl = new CigarElement(el.getLength(), M);
-                newCigarElements.add(lastEl);
-                continue;
-            }
-
-            lastEl = new CigarElement(lastEl.getLength() + el.getLength(), M);
-            newCigarElements.set(newCigarElements.size() - 1, lastEl);
-        }
-
-        return newCigarElements;
-    }
-
-    public static void replaceXwithM(final SAMRecord record)
-    {
-        List<CigarElement> newCigarElements = replaceXwithM(record.getCigar().getCigarElements());
-        if(newCigarElements == null)
-        {
-            return;
-        }
-
-        record.setCigar(new Cigar(newCigarElements));
-    }
-
     public static List<CigarElement> collapseCigarOps(final List<CigarOperator> ops)
     {
         List<CigarElement> elems = Lists.newArrayList();
@@ -427,31 +373,125 @@ public final class CigarUtils
         return elems;
     }
 
-    public static int alignmentScore(final List<CigarElement> cigarElements, final int numMutations)
+    public static boolean checkLeftAlignment(final List<CigarElement> cigarElements, final byte[] readBases)
     {
-        int mismatchCount = numMutations;
-        int alignmentScore = 0;
-        for(CigarElement el : cigarElements)
+        // shift any right-aligned inserts back to the left
+        boolean modified = false;
+        boolean convertFirstInsert = false;
+
+        int readIndex = 0;
+
+        for(int i = 0; i < cigarElements.size() - 1; ++i)
         {
-            if(el.getOperator().isClipping())
+            CigarElement element = cigarElements.get(i);
+            CigarElement nextElement = cigarElements.get(i + 1);
+            CigarElement prevElement = i > 0 ? cigarElements.get(i - 1) : null;
+
+            boolean checkLeftShift = prevElement != null && element.getOperator() == I
+                    && prevElement.getOperator() == M && nextElement.getOperator() == M;
+
+            if(checkLeftShift)
             {
-                alignmentScore -= BWA_CLIPPING_PENALTY;
-                continue;
+                // cannot shift back through the previous element, but can convert it exactly to a soft-clip - see below
+                if(element.getLength() > prevElement.getLength())
+                    checkLeftShift = false;
+                else if(element.getLength() == prevElement.getLength() && i != 1)
+                    checkLeftShift = false;
             }
 
-            boolean isRef = el.getOperator().consumesReferenceBases();
-            boolean isRead = el.getOperator().consumesReadBases();
-            if(isRead ^ isRef)
+            if(checkLeftShift)
             {
-                alignmentScore -= BWA_GAP_OPEN_PENALTY + el.getLength() * BWA_GAP_EXTEND_PENALTY;
-                mismatchCount -= el.getLength();
-                continue;
+                byte[] repeatBases = new byte[element.getLength()];
+                boolean isHomopolymer = true;
+
+                for(int j = 0; j < repeatBases.length; ++j)
+                {
+                    if(readIndex + j >= readBases.length) // invalid read bases if insert cannot extract corresponding bases
+                        return false;
+
+                    repeatBases[j] = readBases[readIndex + j];
+
+                    if(j >= 1 && repeatBases[j] != repeatBases[0])
+                        isHomopolymer = false;
+                }
+
+                if(isHomopolymer && repeatBases.length > 1)
+                {
+                    repeatBases = new byte[] { repeatBases[0] };
+                }
+
+                // search backwards through the previous aligned section
+                int priorIndex = readIndex;
+                int matchedRepeatCount = 0;
+
+                while(true)
+                {
+                    priorIndex -= repeatBases.length;
+
+                    if(priorIndex < 0)
+                        break;
+
+                    boolean matches = true;
+
+                    for(int j = 0; j < repeatBases.length; ++j)
+                    {
+                        if(repeatBases[j] != readBases[priorIndex + j])
+                        {
+                            matches = false;
+                            break;
+                        }
+                    }
+
+                    if(!matches)
+                        break;
+
+                    ++matchedRepeatCount;
+
+                    // cannot search back through the previous element
+                    if((matchedRepeatCount + 1) * repeatBases.length > prevElement.getLength())
+                        break;
+                }
+
+                if(matchedRepeatCount > 0)
+                {
+                    int alignmentShift = matchedRepeatCount * repeatBases.length;
+
+                    if(alignmentShift == prevElement.getLength())
+                    {
+                        if(i == 1)
+                        {
+                            // the first element will be removed and the insert converted to a soft-clip
+                            convertFirstInsert = true;
+                        }
+                        else
+                        {
+                            alignmentShift = (matchedRepeatCount - 1) * repeatBases.length;
+                        }
+                    }
+
+                    prevElement = new CigarElement(max(prevElement.getLength() - alignmentShift, 1), prevElement.getOperator());
+                    cigarElements.set(i - 1, prevElement);
+
+                    nextElement = new CigarElement(nextElement.getLength() + alignmentShift, nextElement.getOperator());
+                    cigarElements.set(i + 1, nextElement);
+
+                    readIndex -= alignmentShift; // to move back to start of next aligned section
+
+                    modified = true;
+                }
             }
 
-            alignmentScore += el.getLength() * BWA_MATCH_SCORE;
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
         }
 
-        alignmentScore -= mismatchCount * (BWA_MATCH_SCORE + BWA_MISMATCH_PENALTY);
-        return alignmentScore;
+        if(convertFirstInsert)
+        {
+            cigarElements.remove(0);
+            CigarElement firstElement = cigarElements.get(0);
+            cigarElements.set(0, new CigarElement(firstElement.getLength(), S));
+        }
+
+        return modified;
     }
 }

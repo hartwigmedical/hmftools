@@ -50,7 +50,6 @@ public class GermlineGeneAnalyser
 
     public GermlineGeneAnalyser(final ConfigBuilder configBuilder)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
         mGeneDataCache = new EnsemblDataCache(configBuilder);
 
         mGeneDataCache.setRequiredData(true, false, false, true);
@@ -94,7 +93,7 @@ public class GermlineGeneAnalyser
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, mThreads);
         }
         else

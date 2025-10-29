@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.coverage.ComplexBuilder;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.read.BamRecordReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -95,7 +97,7 @@ public class LilacAppendRna
 
         NucleotideFragmentFactory nucleotideFragFactory = new NucleotideFragmentFactory(mRefData);
 
-        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(mConfig, Collections.emptyList());
+        AminoAcidFragmentPipeline aminoAcidPipeline = new AminoAcidFragmentPipeline(Collections.emptyList());
 
         int totalFragmentCount = solutionAlleles.stream().mapToInt(x -> x.refFragments()).sum();
 
@@ -103,10 +105,10 @@ public class LilacAppendRna
         // Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap =
                 // extractHeterozygousLociSequences(aminoAcidPipeline.getReferenceAminoAcidCounts(), minEvidence, Collections.emptyList());
 
-        Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap = Maps.newHashMap();
+        Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap = Maps.newHashMap();
 
         // Map<String,List<Integer>> refNucleotideHetLociMap = calcNucleotideHeterogygousLoci(mRefNucleotideCounts.heterozygousLoci());
-        Map<String,List<Integer>> refNucleotideHetLociMap = Maps.newHashMap();
+        Map<HlaGene, List<Integer>> refNucleotideHetLociMap = Maps.newHashMap();
 
         FragmentAlleleMapper fragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, aminoAcidPipeline.getReferenceNucleotides());
@@ -131,7 +133,8 @@ public class LilacAppendRna
             final String rnaBam, final LilacConfig config, final ReferenceData referenceData,
             final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
             final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
-            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
+            final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences,
+            final List<HlaSequenceLoci> winningNucSequences)
     {
         if(rnaBam.isEmpty())
         {
@@ -142,7 +145,8 @@ public class LilacAppendRna
 
         List<Fragment> rnaNucleotideFrags = rnaBamReader.findGeneFragments();
 
-        nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
+        if(nucleotideGeneEnrichment != null)
+            nucleotideGeneEnrichment.checkAddAdditionalGenes(rnaNucleotideFrags);
 
         List<Fragment> rnaFragments = aminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
 
@@ -157,7 +161,8 @@ public class LilacAppendRna
 
         ComplexCoverage rnaCoverage = ComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
 
-        rnaCoverage.populateMissingCoverage(winningAlleles);
+        rnaCoverage.populateMissingCoverage(Sets.newLinkedHashSet(winningAlleles));
+        rnaCoverage.expandToSixAlleles();
 
         return rnaCoverage;
     }

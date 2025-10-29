@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.dnds;
 
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

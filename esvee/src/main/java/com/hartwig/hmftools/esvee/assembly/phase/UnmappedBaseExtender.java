@@ -427,7 +427,7 @@ public class UnmappedBaseExtender
         else
         {
             readIndexStart = 0;
-            readIndexEnd = readSequenceMatch.Overlap - 1;
+            readIndexEnd = readSequenceMatch.ReadSeqStart - 1;
             extBaseIndexStart = baseOffset + readSequenceMatch.ExtensionBaseSeqStart - readSequenceMatch.ReadSeqStart;
 
             if(extBaseIndexStart < 0)
@@ -505,7 +505,7 @@ public class UnmappedBaseExtender
             {
                 if(mBases[extBaseIndex] == base || belowMinQual(qual))
                 {
-                    if((int)qual > (int)mBaseQuals[extBaseIndex])
+                    if(qual > mBaseQuals[extBaseIndex])
                         mBaseQuals[extBaseIndex] = qual;
                 }
                 else if(belowMinQual(mBaseQuals[extBaseIndex]))

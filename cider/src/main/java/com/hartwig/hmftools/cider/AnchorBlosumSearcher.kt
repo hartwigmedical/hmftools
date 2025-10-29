@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.google.common.collect.ImmutableCollection
 import org.apache.logging.log4j.LogManager
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -19,7 +18,7 @@ data class AnchorBlosumMatch(
     val anchorStart: Int,
     val anchorEnd: Int,
     val templateAnchorSeq: String,
-    val templateGenes: ImmutableCollection<VJAnchorTemplate>,
+    val templateGenes: List<VJAnchorTemplate>,
     val similarityScore: Int)
 
 // create a very simple interface so we can mock the data
@@ -73,7 +72,7 @@ class AnchorBlosumSearcher(
 
         for (targetAnchorGeneType in targetAnchorGeneTypes)
         {
-            val templateAnchorSequences : Set<String> = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
+            val templateAnchorSequences = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
 
             // We match each template anchor against the input DNA
             for (i in startOffset  until endOffset)
@@ -184,7 +183,7 @@ class AnchorBlosumSearcher(
 
             if (score >= 0 || mode == IAnchorBlosumSearcher.Mode.ALLOW_NEG_SIMILARITY)
             {
-                val templateGenes: ImmutableCollection<VJAnchorTemplate> = ciderGeneDatastore.getByAnchorSequence(geneType, templateAnchorSeq)
+                val templateGenes = ciderGeneDatastore.getByAnchorSequence(geneType, templateAnchorSeq)
                 val anchorBlosumMatch = AnchorBlosumMatch(anchorStart = anchorStart, anchorEnd = anchorEnd,
                     templateAnchorSeq = templateAnchorSeq,
                     templateGenes = templateGenes, similarityScore = score)

@@ -31,14 +31,15 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.bamops.BamOperations;
 import com.hartwig.hmftools.common.bamops.BamToolName;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.perf.TaskQueue;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class BamChecker
 {
@@ -169,7 +170,10 @@ public class BamChecker
             sortTasks.add(new BamSortTask(unsortedBamFilename, sortedBamFilename));
         }
 
-        List<Callable> threadTasks = sortTasks.stream().collect(Collectors.toList());
+        partitionThreads.clear();
+        System.gc();
+
+        List<Callable<Void>> threadTasks = sortTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(threadTasks, mConfig.Threads))
         {
@@ -178,7 +182,8 @@ public class BamChecker
         }
 
         // merge sorted BAMs
-        String finalBam = mConfig.formFilename("final", BAM_EXTENSION);
+        String finalBam = mConfig.OutputBam != null ? mConfig.OutputBam : mConfig.formFilename("final", BAM_EXTENSION);
+
         if(!BamOperations.mergeBams(toolName, mConfig.BamToolPath, finalBam, sortedBams, mConfig.Threads))
         {
             BT_LOGGER.error("error merging sorted BAMs");
@@ -211,7 +216,7 @@ public class BamChecker
         }
     }
 
-    private class BamSortTask implements Callable
+    private class BamSortTask implements Callable<Void>
     {
         private final String mInputBam;
         private final String mOutputBam;
@@ -223,11 +228,11 @@ public class BamChecker
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             BamToolName toolName = fromPath(mConfig.BamToolPath);
             BamOperations.sortBam(toolName, mConfig.BamToolPath, mInputBam, mOutputBam, 1);
-            return (long)0;
+            return null;
         }
     }
 

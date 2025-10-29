@@ -13,34 +13,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.utils.RExecutor;
 
 import org.jetbrains.annotations.NotNull;
 
 public class ChordModel
 {
     private final String mModelPath;
+    private final boolean mIsTemporary;
 
     private static final String SCRIPT_RESOURCE_PATH = "chord_predict.R";
     private static final String MODEL_RESOURCE_PATH = "CHORD.rds";
-    private static final String MODEL_TMP_PATH = System.getProperty("java.io.tmpdir") + "/CHORD.rds";
 
-    private ChordModel(String modelPath)
+    public ChordModel(String modelPath, boolean isTemporary)
     {
         mModelPath = modelPath;
-    }
-
-    public static ChordModel fromResources()
-    {
-        return new ChordModel(MODEL_TMP_PATH);
-    }
-
-    public static void copyModelToTmpPath() throws IOException
-    {
-        InputStream source = ChordModel.class.getClassLoader().getResourceAsStream(MODEL_RESOURCE_PATH);
-        Path target = new File(MODEL_TMP_PATH).toPath();
-
-        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        mIsTemporary = isTemporary;
     }
 
     public void predict(String mutContextsFile, String outputFile)
@@ -49,7 +37,13 @@ public class ChordModel
 
         try
         {
-            copyModelToTmpPath();
+            if(mIsTemporary)
+            {
+                CHORD_LOGGER.debug("Writing temporary CHORD model: {}", mModelPath);
+                InputStream source = ChordModel.class.getClassLoader().getResourceAsStream(MODEL_RESOURCE_PATH);
+                Path target = new File(mModelPath).toPath();
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            }
 
             List<String> scriptArgs = new ArrayList<>(List.of(
                     mModelPath,
@@ -77,9 +71,13 @@ public class ChordModel
         }
         finally
         {
-            File modelTmpPath = new File(MODEL_TMP_PATH);
-            if(modelTmpPath.isFile())
-                modelTmpPath.delete();
+            if(mIsTemporary)
+            {
+                CHORD_LOGGER.debug("Removing temporary CHORD model: {}", mModelPath);
+                File modelTmpPath = new File(mModelPath);
+                if(modelTmpPath.isFile())
+                    modelTmpPath.delete();
+            }
         }
 
         CHORD_LOGGER.info("Completed CHORD predict");
@@ -89,12 +87,18 @@ public class ChordModel
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         PredictConfig.registerConfig(configBuilder);
-
         configBuilder.checkAndParseCommandLine(args);
 
-        ChordModel model = ChordModel.fromResources();
-
         PredictConfig config = new PredictConfig(configBuilder);
+
+        ChordModel model;
+        if(config.ChordModelFile == null)
+        {
+            model = new ChordModel(new File(config.OutputFile).getParent() + "/CHORD.tmp.rds", true);
+        } else {
+            model = new ChordModel(config.ChordModelFile, false);
+        }
+
         model.predict(config.MutContextsFile, config.OutputFile);
     }
 }

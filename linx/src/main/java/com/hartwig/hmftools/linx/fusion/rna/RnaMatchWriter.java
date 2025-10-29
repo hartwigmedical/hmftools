@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionData.NO_CLUSTER_INFO;
 
@@ -113,11 +113,11 @@ public class RnaMatchWriter
 
                 if(trans != null)
                 {
-                    final BreakendGeneData gene = trans.gene();
+                    final BreakendGeneData gene = trans.breakendGeneData();
 
                     // SV breakend info
                     mWriter.write(String.format(",%d,%d,%s,%s",
-                            gene.id(), gene.position(), gene.type(), rnaFusion.getClusterInfo(isUpstream)));
+                            gene.varId(), gene.position(), gene.svType(), rnaFusion.getClusterInfo(isUpstream)));
 
                     // transcript info and viability
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",

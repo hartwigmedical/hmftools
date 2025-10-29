@@ -11,8 +11,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.PATH;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.STRING;
-import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
+import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -22,9 +23,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -171,6 +172,13 @@ public class ConfigBuilder
 
     public String getValue(final String name) { return getItem(name).value(); }
     public boolean hasValue(final String name) { return getItem(name).hasValue(); }
+    public File getFile(final String name)
+    {
+        File result = new File( getItem(name).value());
+        Preconditions.checkArgument(result.exists(), "file %s does not exist", name);
+        Preconditions.checkArgument(result.isDirectory(), "file %s is not a directory", name);
+        return result;
+    }
 
     public boolean isRegistered(final String name) { return getItem(name, false) != null; }
 

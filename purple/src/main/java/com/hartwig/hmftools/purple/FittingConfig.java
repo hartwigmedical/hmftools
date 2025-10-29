@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDe
 import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigInteger;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
+import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_PLOIDY_DEFAULT;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.PURITY_INCREMENT_DEFAU
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_GC_RATIO_EXPONENT_DEFAULT;
 import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
+import static com.hartwig.hmftools.purple.PurpleConstants.TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -45,9 +47,6 @@ public class FittingConfig
     public final double PloidyPenaltyMajorAlleleSubOneAdditional;
     public final double PloidyPenaltyMinDeviation;
 
-    public final int RecoveryMinMateQualScore;
-    public final int RecoveryMinSglQualScore;
-
     public final double DeviationPenaltyGcMinAdjust;
     public final double GcRatioExponent;
 
@@ -62,6 +61,8 @@ public class FittingConfig
     private static final String DEVIATION_PENALTY_GC_MIN_ADJUST = "deviation_penalty_gc_min_adjust";
     private static final String GC_RATIO_EXPONENT = "gc_ratio_exponent";
 
+    private static final String AMBIGUOUS_BAF_LIMIT = "ambiguous_baf_limit";
+
     // fitting scores
     private static final String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
     private static final String PLOIDY_PENALTY_SUB_MIN_ADDITIONAL = "ploidy_penalty_sub_min_additional";
@@ -69,10 +70,6 @@ public class FittingConfig
     private static final String PLOIDY_PENALTY_STANDARD_DEVIATION = "ploidy_penalty_standard_deviation";
     private static final String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
     private static final String PLOIDY_PENALTY_MIN = "ploidy_penalty_min";
-
-    // SV recovery
-    public static final String CFG_MIN_MATE_QUAL_SCORE = "recovery_mate_min_qual";
-    public static final String CFG_MIN_SGL_QUAL_SCORE = "recovery_sgl_min_qual";
 
     public FittingConfig(final ConfigBuilder configBuilder, boolean targetedMode)
     {
@@ -93,7 +90,8 @@ public class FittingConfig
         PloidyPenaltyFactor = configBuilder.getDecimal(PLOIDY_PENALTY_FACTOR);
 
         PloidyPenaltyStandardDeviation = getConfigDecimal(
-                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION, PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
+                configBuilder, PLOIDY_PENALTY_STANDARD_DEVIATION,
+                targetedMode ? TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT : PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
         PloidyPenaltyMinStandardDeviationPerPloidy = configBuilder.getDecimal(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION);
 
@@ -104,13 +102,15 @@ public class FittingConfig
 
         PloidyPenaltyMinDeviation = getConfigDecimal(configBuilder, PLOIDY_PENALTY_MIN, PLOIDY_PENALTY_MIN_DEFAULT);
 
-        RecoveryMinMateQualScore = configBuilder.getInteger(CFG_MIN_MATE_QUAL_SCORE);
-        RecoveryMinSglQualScore = configBuilder.getInteger(CFG_MIN_SGL_QUAL_SCORE);
-
         DeviationPenaltyGcMinAdjust = getConfigDecimal(
                 configBuilder, DEVIATION_PENALTY_GC_MIN_ADJUST, targetedMode ? TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT : 0);
 
         GcRatioExponent = getConfigDecimal(configBuilder, GC_RATIO_EXPONENT, targetedMode ? TARGETED_GC_RATIO_EXPONENT_DEFAULT : 0);
+
+        if(configBuilder.hasValue(AMBIGUOUS_BAF_LIMIT))
+        {
+            PurpleConstants.AMBIGUOUS_BAF_THRESHOLD = configBuilder.getDecimal(AMBIGUOUS_BAF_LIMIT);
+        }
     }
 
     public boolean hasValidValues()
@@ -157,14 +157,9 @@ public class FittingConfig
                 PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, "Penalty multiplier applied to major allele < 1",
                 PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
 
-        configBuilder.addDecimal(
-                PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
+        configBuilder.addDecimal(PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
 
-        configBuilder.addInteger(
-                CFG_MIN_MATE_QUAL_SCORE, "SV recovery non-SGL min qual score", DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);
-
-        configBuilder.addInteger(
-                CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
+        configBuilder.addDecimal(AMBIGUOUS_BAF_LIMIT, "Amber ambiguous BAF limit", DEFAULT_AMBIGUOUS_BAF_THRESHOLD);
 
         addTargetedDecimal(
                 configBuilder, DEVIATION_PENALTY_GC_MIN_ADJUST, "Adjust deviation penalty by tumor GC Ratio",

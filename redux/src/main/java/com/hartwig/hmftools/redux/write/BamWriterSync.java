@@ -3,7 +3,8 @@ package com.hartwig.hmftools.redux.write;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 
-import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
+import com.hartwig.hmftools.redux.bqr.BaseQualRecalibration;
+import com.hartwig.hmftools.redux.jitter.MsJitterAnalyser;
 import com.hartwig.hmftools.redux.ReduxConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -18,15 +19,15 @@ public class BamWriterSync extends BamWriter
 
     public BamWriterSync(
             final String filename, final ReduxConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            @Nullable final JitterAnalyser jitterAnalyser)
+            @Nullable final MsJitterAnalyser msJitterAnalyser, final BaseQualRecalibration bqr)
     {
-        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
+        super(filename, config, readDataWriter, samFileWriter, msJitterAnalyser, bqr);
         mWriteCount = 0;
     }
 
     public boolean isSorted() { return false; }
 
-    public void initialiseRegion(final String chromosome, int startPosition) {}
+    public void onRegionInitialised(final String chromosome, int startPosition) {}
     public void setBoundaryPosition(int position, boolean isLower) {}
     public void onRegionComplete() {}
 

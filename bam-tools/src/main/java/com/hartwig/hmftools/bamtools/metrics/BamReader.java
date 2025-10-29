@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
-import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
+import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
 
 import java.util.Collections;
 import java.util.List;
@@ -156,11 +156,14 @@ public class BamReader
 
         if(isConsensusRead)
         {
-            isDualStrand = extractUmiType(read) == DUAL;
+            isDualStrand = extractConsensusType(read) == DUAL;
 
             // lower the duplicate count to reflect the use of consensus reads - since 2 duplicates would usually result in one being
             // marked as primary and the other as duplicate, whereas now both are duplicates plus a new consensus read are expected
-            --mReadCounts.Duplicates;
+            if(mConfig.expectDuplicates())
+                --mReadCounts.Duplicates;
+            else
+                ++mReadCounts.Total;
 
             if(isDualStrand)
                 ++mReadCounts.DualStrand;
@@ -175,9 +178,9 @@ public class BamReader
                 ++mReadCounts.Duplicates;
         }
 
-        mFlagStats.processRead(read, isConsensusRead);
+        mFlagStats.processRead(read, isConsensusRead, mConfig.expectDuplicates());
         mFragmentLengths.processRead(read);
-        mPartitionStats.processRead(read, mRegion, isConsensusRead);
+        mPartitionStats.processRead(read, mRegion, isConsensusRead, mConfig.expectDuplicates());
 
         checkTargetRegions(read, isConsensusRead, isDualStrand, readMateEnd);
 
@@ -216,6 +219,8 @@ public class BamReader
 
         // note that local concordant fragments are counted once, so totals are fragment totals but for discordant fragments
         // in which case the read is counted twice, ie remotely too as on or off target
+        int alignedPosStart, alignedPosEnd;
+
         if(read.getReadPairedFlag())
         {
             isLocalConcordantFragment = !SvUtils.isDiscordant(read);
@@ -228,14 +233,16 @@ public class BamReader
                 else if(read.getAlignmentStart() == read.getMateAlignmentStart() && read.getSecondOfPairFlag())
                     return;
             }
+
+            alignedPosStart = isLocalConcordantFragment ? min(read.getAlignmentStart(), read.getMateAlignmentStart()) : read.getAlignmentStart();
+            alignedPosEnd = isLocalConcordantFragment ? max(read.getAlignmentEnd(), readMateEnd) : read.getAlignmentEnd();
         }
         else
         {
-            isLocalConcordantFragment = false;
+            isLocalConcordantFragment = true;
+            alignedPosStart = read.getAlignmentStart();
+            alignedPosEnd = read.getAlignmentEnd();
         }
-
-        int alignedPosStart = isLocalConcordantFragment ? min(read.getAlignmentStart(), read.getMateAlignmentStart()) : read.getAlignmentStart();
-        int alignedPosEnd = isLocalConcordantFragment ? max(read.getAlignmentEnd(), readMateEnd) : read.getAlignmentEnd();
 
         boolean overlapsTargetRegion = false;
 
@@ -315,7 +322,7 @@ public class BamReader
             if(maxGroupReadStart <= 0)
                 return;
 
-            ReadGroup newReadGroup = new ReadGroup(read, maxGroupReadStart, isConsensus);
+            ReadGroup newReadGroup = new ReadGroup(maxGroupReadStart, isConsensus);
             mReadGroupMap.put(read.getReadName(), newReadGroup);
             alignedBaseCoords = newReadGroup.CombinedAlignedBaseCoords;
         }

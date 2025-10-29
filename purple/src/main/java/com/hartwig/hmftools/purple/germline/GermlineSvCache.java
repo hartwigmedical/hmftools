@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
@@ -11,17 +13,22 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.sv.SvUtils.SV_GERMLINE_AD_THRESHOLD;
+import static com.hartwig.hmftools.common.sv.SvUtils.SV_GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_FACTOR;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_SV_TINC_MARGIN;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantContexts;
@@ -29,6 +36,7 @@ import static com.hartwig.hmftools.purple.sv.SomaticSvCache.addEnrichedVariantCo
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
@@ -57,45 +65,150 @@ public class GermlineSvCache
     private final VariantContextCollection mVariantCollection;
     private final GenotypeIds mGenotypeIds;
 
-    private final PurityContext mPurityContext;
-    private final List<ObservedRegion> mFittedRegions;
-    private final List<PurpleCopyNumber> mCopyNumbers;
+    private PurityContext mPurityContext;
+    private List<ObservedRegion> mFittedRegions;
+    private List<PurpleCopyNumber> mCopyNumbers;
 
-    public GermlineSvCache()
+    public GermlineSvCache(final String version, final String inputVcf, final PurpleConfig config)
     {
-        mVcfHeader = null;
-        mVariantCollection = new VariantContextCollection(null);
+        if(!inputVcf.isEmpty())
+        {
+            VcfFileReader vcfReader = new VcfFileReader(inputVcf);
+            mVcfHeader = SomaticSvCache.generateOutputHeader(version, vcfReader.vcfHeader());
+
+            mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, config.ReferenceId, config.TumorId);
+            mVariantCollection = new VariantContextCollection(mVcfHeader);
+
+            for(VariantContext context : vcfReader.iterator())
+            {
+                mVariantCollection.addVariant(context);
+            }
+
+            PPL_LOGGER.info("loaded {} germline SVs from {}", mVariantCollection.variants().size(), inputVcf);
+
+            vcfReader.close();
+        }
+        else
+        {
+            mVcfHeader = null;
+            mVariantCollection = new VariantContextCollection(null);
+            mGenotypeIds = null;
+        }
+
         mPurityContext = null;
         mFittedRegions = null;
         mCopyNumbers = null;
-        mGenotypeIds = null;
     }
 
-    public GermlineSvCache(
-            final String version, final String inputVcf, final PurpleConfig config,
+    public GermlineSvCache()
+    {
+        this(null, "", null);
+    }
+
+    public List<StructuralVariant> germlineVariants() { return mVariantCollection.variants(); }
+
+    public void checkTincVariants(final SomaticSvCache svCache, double tincLevel)
+    {
+        if(tincLevel == 0)
+            return;
+
+        // switch germline variants with tumor evidence across to the somatic cache
+
+        // convert to SVs so paired breakends can be accessed together
+        List<StructuralVariant> variants = Lists.newArrayList(mVariantCollection.variants());
+
+        boolean hasTransfers = false;
+
+        double tincAdjustment = GERMLINE_SV_TINC_FACTOR * tincLevel + GERMLINE_SV_TINC_MARGIN;
+
+        List<StructuralVariant> transferredVariants = Lists.newArrayList();
+
+        for(StructuralVariant variant : variants)
+        {
+            VariantContext variantContext = variant.startContext();
+
+            if(variantContext.isFiltered())
+                continue;
+
+            Genotype refGenotype = variantContext.getGenotype(mGenotypeIds.ReferenceOrdinal);
+
+            int refNonAltFrags = getGenotypeAttributeAsInt(refGenotype, REF_DEPTH, 0)
+                    + getGenotypeAttributeAsInt(refGenotype, REF_DEPTH_PAIR, 0);
+
+            int refAltFrags = getGenotypeAttributeAsInt(refGenotype, TOTAL_FRAGS, 0);
+
+            double refDepth = refAltFrags + refNonAltFrags;
+            double refAF = refAltFrags / refDepth;
+
+            Genotype tumorGenotype = variantContext.getGenotype(mGenotypeIds.TumorOrdinal);
+            int tumorAltFrags = getGenotypeAttributeAsInt(tumorGenotype, TOTAL_FRAGS, 0);
+            double tumorAF = getOrCalculateAlleleFrequency(tumorGenotype);
+
+            double tincRecovery = tumorAF * tincAdjustment;
+
+            if(variant.hotspot())
+                tincRecovery *= GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER;
+
+            double adjustedRefAF = refAF - tincRecovery;
+            double adjustedRefAltFrags = (int)round(refAltFrags - refDepth * tincRecovery);
+
+            // re-test the reduced ref values
+
+            // a breakend is germline filtered if germlineAF/tumorAF >= 0.1 and germlineAD / tumorAD >= 0.01
+
+            double adRatio = adjustedRefAltFrags / (double)max(tumorAltFrags, 1);
+
+            boolean germlineFiltered = adjustedRefAF >= SV_GERMLINE_AF_THRESHOLD * tumorAF && adRatio >= SV_GERMLINE_AD_THRESHOLD;
+
+            if(germlineFiltered)
+                continue;
+
+            hasTransfers = true;
+
+            svCache.addTincVariant(variant);
+            transferredVariants.add(variant);
+        }
+
+        if(hasTransfers)
+        {
+            mVariantCollection.clear();
+
+            PPL_LOGGER.info("tincLevel({}) recovered {} germline SVs", tincLevel, transferredVariants.size());
+
+            for(StructuralVariant variant : variants)
+            {
+                if(transferredVariants.contains(variant))
+                    continue;
+
+                mVariantCollection.addVariant(variant.startContext());
+
+                if(variant.endContext() != null)
+                    mVariantCollection.addVariant(variant.endContext());
+            }
+        }
+    }
+
+    public void annotateCopyNumberInfo(
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
         mFittedRegions = fittedRegions;
         mCopyNumbers = copyNumbers;
 
-        VcfFileReader vcfReader = new VcfFileReader(inputVcf);
-        mVcfHeader = SomaticSvCache.generateOutputHeader(version, vcfReader.vcfHeader());
+        // note this routine clears and rebuilds the variant context collection, so a copy must be taken of the initial variants
+        List<StructuralVariant> variants = Lists.newArrayList(mVariantCollection.variants());
 
-        mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, config.ReferenceId, config.TumorId);
-        mVariantCollection = new VariantContextCollection(mVcfHeader);
+        mVariantCollection.clear();
 
-        for(VariantContext context : vcfReader.iterator())
+        for(StructuralVariant variant : variants)
         {
-            mVariantCollection.add(context);
+            RegionMatchInfo[] matchedFittedRegions = matchFittedRegions(variant);
+
+            PurpleCopyNumber[] matchedCopyNumbers = matchCopyNumbers(variant);
+
+            annotateVariant(variant, matchedFittedRegions, matchedCopyNumbers);
         }
-
-        PPL_LOGGER.info("loaded {} germline SVs from {}", mVariantCollection.variants().size(), inputVcf);
-
-        vcfReader.close();
     }
-
-    public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
 
     public void write(final String outputVcf)
     {
@@ -113,12 +226,6 @@ public class GermlineSvCache
                     .build();
 
             writer.writeHeader(mVcfHeader);
-
-            // may be no reason to use the enriched collection, unsure if it adds any value
-            for(StructuralVariant variant : mVariantCollection.variants())
-            {
-                annotateVariant(variant);
-            }
 
             // now write the variants
             Iterator<VariantContext> variantIter = mVariantCollection.iterator();
@@ -141,15 +248,6 @@ public class GermlineSvCache
             e.printStackTrace();
             System.exit(1);
         }
-    }
-
-    private void annotateVariant(final StructuralVariant variant)
-    {
-        RegionMatchInfo[] fittedRegions = matchFittedRegions(variant);
-
-        PurpleCopyNumber[] copyNumbers = matchCopyNumbers(variant);
-
-        annotateVariant(variant, fittedRegions, copyNumbers);
     }
 
     private void annotateVariant(

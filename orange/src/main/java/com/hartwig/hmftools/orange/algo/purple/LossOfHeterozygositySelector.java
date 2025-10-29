@@ -10,8 +10,7 @@ import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,8 +36,8 @@ final class LossOfHeterozygositySelector
     }
 
     @NotNull
-    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
-            @Nullable List<GermlineDeletion> allGermlineDeletions, @NotNull MicrosatelliteStatus microsatelliteStatus,
+    public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(final List<GeneCopyNumber> allSomaticGeneCopyNumbers,
+            @Nullable List<GermlineDeletion> allGermlineDeletions, final MicrosatelliteStatus microsatelliteStatus,
             @Nullable ChordStatus chordStatus)
     {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = Lists.newArrayList();
@@ -51,7 +50,7 @@ final class LossOfHeterozygositySelector
             boolean fullyDeletedInTumor = geneCopyNumber.minCopyNumber() < 0.5;
             if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineDel && !fullyDeletedInTumor)
             {
-                if(geneCopyNumber.minMinorAlleleCopyNumber() < 0.5)
+                if(geneCopyNumber.MinMinorAlleleCopyNumber < 0.5)
                 {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
                 }
@@ -65,7 +64,7 @@ final class LossOfHeterozygositySelector
         return suspectGeneCopyNumbersWithLOH;
     }
 
-    private static boolean hasReportedGermlineDeletionWithTumorStatus(@NotNull String geneName, @NotNull GermlineStatus tumorStatus,
+    private static boolean hasReportedGermlineDeletionWithTumorStatus(final String geneName, final GermlineStatus tumorStatus,
             @Nullable List<GermlineDeletion> allGermlineDeletions)
     {
         if(allGermlineDeletions == null)
@@ -76,20 +75,23 @@ final class LossOfHeterozygositySelector
         return allGermlineDeletions.stream().anyMatch(d -> isMatchingReportedGermlineDeletion(d, geneName, tumorStatus));
     }
 
-    @NotNull
-    private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
-            @NotNull List<GermlineDeletion> allGermlineDeletions)
+    private static GeneCopyNumber correctForGermlineImpact(
+            final GeneCopyNumber geneCopyNumber, final List<GermlineDeletion> allGermlineDeletions)
     {
-        return ImmutableGeneCopyNumber.builder()
-                .from(geneCopyNumber)
-                .minCopyNumber(adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions))
-                .minMinorAlleleCopyNumber(0D)
-                .maxCopyNumber(adjustMaxCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions))
-                .build();
+        double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions);
+        double adjustedMaxCopyNumber = adjustMaxCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions);
+
+        return new GeneCopyNumber(
+                geneCopyNumber.Chromosome, geneCopyNumber.PositionStart, geneCopyNumber.PositionEnd,
+                geneCopyNumber.GeneName, geneCopyNumber.TransName, geneCopyNumber.IsCanonical, geneCopyNumber.ChromosomeBand,
+                adjustedMaxCopyNumber, adjustedMinCopyNumber, 0,
+                geneCopyNumber.SomaticRegions, geneCopyNumber.MinRegions, geneCopyNumber.MinRegionStart,
+                geneCopyNumber.MinRegionEnd, geneCopyNumber.DepthWindowCount, geneCopyNumber.GcContent,
+                geneCopyNumber.MinRegionStartSupport, geneCopyNumber.MinRegionEndSupport, geneCopyNumber.MinRegionMethod);
     }
 
-    private static double adjustMinCopyNumberForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
-            @NotNull List<GermlineDeletion> allGermlineDeletions)
+    private static double adjustMinCopyNumberForGermlineImpact(final GeneCopyNumber geneCopyNumber,
+            final List<GermlineDeletion> allGermlineDeletions)
     {
         OptionalDouble minimumTumorCopyNumber = allGermlineDeletions.stream()
                 .filter(d1 -> isMatchingReportedGermlineDeletion(d1, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION))
@@ -105,8 +107,8 @@ final class LossOfHeterozygositySelector
         }
     }
 
-    private static double adjustMaxCopyNumberForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
-            @NotNull List<GermlineDeletion> allGermlineDeletions)
+    private static double adjustMaxCopyNumberForGermlineImpact(final GeneCopyNumber geneCopyNumber,
+            final List<GermlineDeletion> allGermlineDeletions)
     {
         OptionalDouble maximumTumorCopyNumber = allGermlineDeletions.stream()
                 .filter(d1 -> isMatchingReportedGermlineDeletion(d1, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION))

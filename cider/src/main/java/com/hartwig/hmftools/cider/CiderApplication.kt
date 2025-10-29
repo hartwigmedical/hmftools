@@ -3,20 +3,21 @@ package com.hartwig.hmftools.cider
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
-import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
-import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
-import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotation
+import com.hartwig.hmftools.cider.annotation.AlignmentAnnotator
+import com.hartwig.hmftools.cider.annotation.AlignmentStatus
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.cider.primer.PrimerTsvFile
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatchTsv
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatcher
+import com.hartwig.hmftools.common.bwa.BwaUtils.loadAlignerLibrary
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
+import com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder
 import com.hartwig.hmftools.common.utils.config.ConfigUtils
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
-import com.hartwig.hmftools.common.utils.version.VersionInfo
 import htsjdk.samtools.SAMFileHeader
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
@@ -25,10 +26,6 @@ import htsjdk.samtools.cram.ref.ReferenceSource
 import org.apache.logging.log4j.LogManager
 import java.io.File
 import java.io.IOException
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -37,23 +34,13 @@ import kotlin.system.exitProcess
 
 class CiderApplication(configBuilder: ConfigBuilder)
 {
-    private val mParams = CiderParams(configBuilder)
+    private val mParams = CiderParams.fromConfigBuilder(configBuilder)
 
     @Throws(IOException::class, InterruptedException::class)
     fun run(args: Array<String>): Int
     {
-        val runDate = LocalDate.now()
-
-        val versionInfo = VersionInfo("cider.version")
-        sLogger.info("Cider version: {}, build timestamp: {}",
-            versionInfo.version(),
-            versionInfo.buildTime().format(ISO_ZONED_DATE_TIME))
-
-        sLogger.info("run date: {}", runDate)
-        sLogger.info("run args: {}", args.joinToString(" "))
-
         FileWriterUtils.checkCreateOutputDir(mParams.outputDir)
-        val start = Instant.now()
+        val startTimeMs = System.currentTimeMillis()
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
             CiderGeneDataLoader.loadAnchorTemplates(mParams.refGenomeVersion),
@@ -85,7 +72,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
             CiderConstants.MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES
         )
 
-        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(layoutBuildResults.mapValues { (_, v) -> v.layouts })
+        val vdjSequences: List<VDJSequence> = vdjSeqBuilder.buildVDJSequences(
+            layoutBuildResults.mapValues { (_, v) -> v.layouts }, mParams.threadCount)
         var primerMatchList: List<VdjPrimerMatch> = emptyList()
 
         if (mParams.primerCsv != null)
@@ -100,25 +88,28 @@ class CiderApplication(configBuilder: ConfigBuilder)
         }
 
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
-        val blastnAnnotations: Collection<BlastnAnnotation>
+        val alignmentAnnotations: Collection<AlignmentAnnotation>
 
-        if (mParams.blast != null)
+        if (mParams.refGenomePath != null && mParams.bwaIndexImagePath != null)
         {
-            // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
+            // we need to filter out VDJ sequences that already match reference. In this version we avoid running alignment on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
 
-            // perform a GC collection before running blastn. This is to reduce memory used by JVM
-            System.gc()
+            loadAlignerLibrary(mParams.bwaLibPath)
 
-            val blastnAnnotator = BlastnAnnotator()
-            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, mParams.blast!!, mParams.blastDb!!, filteredVdjs, mParams.outputDir, mParams.threadCount)
+            val refGenomeDictPath = "${mParams.refGenomePath}.dict"
+            val alignmentAnnotator = AlignmentAnnotator(
+                mParams.refGenomeVersion, refGenomeDictPath, mParams.bwaIndexImagePath)
+            alignmentAnnotations = alignmentAnnotator.runAnnotate(
+                mParams.sampleId, filteredVdjs,
+                mParams.outputDir, mParams.threadCount)
         }
         else
         {
-            blastnAnnotations = emptyList()
+            alignmentAnnotations = emptyList()
         }
 
-        var vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, blastnAnnotations, primerMatchList)
+        var vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, alignmentAnnotations, primerMatchList)
 
         // apply hard filters
         vdjAnnotations = vdjAnnotations.filter { vdjAnnotation -> passesHardFilters(vdjAnnotation) }
@@ -128,9 +119,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         // write the stats per locus
         CiderLocusStatsWriter.writeLocusStats(mParams.outputDir, mParams.sampleId, layoutBuildResults, vdjAnnotations)
 
-        val finish: Instant = Instant.now()
-        val seconds: Long = Duration.between(start, finish).seconds
-        sLogger.info("CIDER run complete. Time taken: {}m {}s", seconds / 60, seconds % 60)
+        sLogger.info("Cider complete, mins({})", runTimeMinsStr(startTimeMs));
         return 0
     }
 
@@ -173,8 +162,6 @@ class CiderApplication(configBuilder: ConfigBuilder)
         vjReadLayoutAdaptor: VJReadLayoutBuilder, readCandidates: Collection<VJReadCandidate>, threadCount: Int)
         : Map<VJGeneType, VJReadLayoutBuilder.LayoutBuildResult>
     {
-        val geneTypes = VJGeneType.values()
-
         // use a EnumMap such that the keys are ordered by the declaration
         val layoutResults: MutableMap<VJGeneType, VJReadLayoutBuilder.LayoutBuildResult> = EnumMap(VJGeneType::class.java)
 
@@ -185,7 +172,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         {
             val futures: MutableMap<VJGeneType, Future<VJReadLayoutBuilder.LayoutBuildResult>> = EnumMap(VJGeneType::class.java)
 
-            for (geneType in geneTypes)
+            for (geneType in VJGeneType.entries)
             {
                 val readsOfGeneType = readCandidates
                     .filter { o: VJReadCandidate -> o.vjGeneType === geneType }
@@ -212,7 +199,8 @@ class CiderApplication(configBuilder: ConfigBuilder)
 
         // give each an ID
         var nextId = 1
-        for ((_, layoutResult) in layoutResults)
+        // Sort to give deterministic IDs
+        for ((_, layoutResult) in layoutResults.entries.sortedBy { it.key })
         {
             for (layout in layoutResult.layouts)
             {
@@ -253,17 +241,17 @@ class CiderApplication(configBuilder: ConfigBuilder)
         // filter out sequences that are too short and only has V or J
         if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.MIN_LENGTH))
         {
-            if (vdjAnnotation.blastnAnnotation == null)
+            if (vdjAnnotation.alignmentAnnotation == null)
             {
-                // if blastn is not run, we use NO_V_ANCHOR / NO_J_ANCHOR
+                // if alignment is not run, we use NO_V_ANCHOR / NO_J_ANCHOR
                 if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_V_ANCHOR) ||
                     vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_J_ANCHOR))
                 {
                     return false
                 }
             }
-            else if (vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.V_ONLY ||
-                    vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.J_ONLY)
+            else if (vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.V_ONLY ||
+                    vdjAnnotation.alignmentAnnotation!!.alignmentStatus == AlignmentStatus.J_ONLY)
             {
                 return false
             }

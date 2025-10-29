@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_DISRUPTION;
-import static com.hartwig.hmftools.common.driver.DriverType.GERMLINE_HOM_DUP_DISRUPTION;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.NONE;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
@@ -24,7 +23,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
-import static com.hartwig.hmftools.linx.drivers.DeletionDrivers.isHomozygousDupDisruption;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 
@@ -372,7 +370,7 @@ public class GermlineDisruptions
 
         for(Map.Entry<SvVarData,List<SvDisruptionData>> entry : svDisruptionsMap.entrySet())
         {
-            final SvVarData var = entry.getKey();
+            SvVarData var = entry.getKey();
 
             StructuralVariantData svData = var.getSvData();
             SvCluster cluster = var.getCluster();
@@ -382,12 +380,6 @@ public class GermlineDisruptions
             Set<String> allFilters = Sets.newHashSet(svData.filter());
             String geneName = "";
             DriverType driverType = GERMLINE_DISRUPTION; // default if meets the driver criteria
-
-            // check for a homozygous DUP
-            if(var.type() == DUP && isHomozygousDup(var, standardDisruptions))
-            {
-                driverType = GERMLINE_HOM_DUP_DISRUPTION;
-            }
 
             for(SvDisruptionData disruptionData : entry.getValue())
             {
@@ -503,23 +495,6 @@ public class GermlineDisruptions
         }
     }
 
-    private boolean isHomozygousDup(final SvVarData var, final List<SvDisruptionData> standardDisruptions)
-    {
-        if(var.type() != DUP)
-            return false;
-
-        SvDisruptionData startDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && x.IsStart).findFirst().orElse(null);
-
-        SvDisruptionData endDisruptionData = standardDisruptions.stream()
-                .filter(x -> x.Var == var && !x.IsStart).findFirst().orElse(null);
-
-        if(startDisruptionData == null || endDisruptionData == null || startDisruptionData.Gene != endDisruptionData.Gene)
-            return false;
-
-        return isHomozygousDupDisruption(var.getBreakend(true), var.getBreakend(false), var.getSvData().junctionCopyNumber());
-    }
-
     private boolean isReportable(final SvDisruptionData disruptionData)
     {
         SvVarData var = disruptionData.Var;
@@ -530,7 +505,9 @@ public class GermlineDisruptions
         if(var.getSvData().ponCount() > MAX_PON_COUNT)
             return false;
 
-        if(disruptionData.CodingType == UTR_3P)
+        boolean isDelOrDup = var.type() == DEL || var.type() == DUP;
+
+        if(disruptionData.CodingType == UTR_3P && !isDelOrDup)
             return false;
 
         DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
@@ -564,6 +541,6 @@ public class GermlineDisruptions
             return true;
 
         // a clustered DEL or DUP is also reportable
-        return var.type() == DEL || var.type() == DUP;
+        return isDelOrDup;
     }
 }

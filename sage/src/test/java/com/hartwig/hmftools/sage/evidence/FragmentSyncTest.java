@@ -202,8 +202,7 @@ public class FragmentSyncTest
 
         final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
 
-        QualityCalculator qualityCalculator = new QualityCalculator(
-                TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME, MSI_JITTER_CALCS);
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MSI_JITTER_CALCS);
 
         ReadContextCounter readContextCounter = createReadCounter(readContext);
 

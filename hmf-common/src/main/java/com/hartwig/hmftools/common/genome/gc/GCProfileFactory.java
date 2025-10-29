@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -66,14 +67,14 @@ public final class GCProfileFactory
         return chrProfileMap;
     }
 
-    public static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, final String fileName) throws IOException
+    public static ListMultimap<Chromosome, GCProfile> loadGCContent(int windowSize, final String fileName) throws IOException
     {
         return loadGCContent(windowSize, Files.readAllLines(new File(fileName).toPath()));
     }
 
-    private static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, final List<String> lines)
+    private static ListMultimap<Chromosome, GCProfile> loadGCContent(int windowSize, final List<String> lines)
     {
-        final Multimap<Chromosome, GCProfile> result = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, GCProfile> result = ArrayListMultimap.create();
         for(String line : lines)
         {
             final GCProfile gcProfile = fromLine(windowSize, line);

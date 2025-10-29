@@ -11,6 +11,8 @@ public class GenotypeIds
     public final String ReferenceId;
     public final String TumorId;
 
+    public static final int INVALID_GENOTYPE_ORDINAL = -1;
+
     public GenotypeIds(final int referenceOrdinal, final int tumorOrdinal, final String referenceId, final String tumorId)
     {
         ReferenceOrdinal = referenceOrdinal;

@@ -46,6 +46,7 @@ public class FileLiftover
     private static final String OUTPUT_FILE = "output_file";
     private static final String SORT_OUTPUT = "sort_output";
     private static final String SOURCE_REF_GENOME_VERSION = "source_ref_genome_version";
+    private static final String WRITE_OLD_COORDS = "write_old_coords";
 
     public FileLiftover(final ConfigBuilder configBuilder)
     {
@@ -56,6 +57,7 @@ public class FileLiftover
         RefGenomeVersion destVersion = sourceVersion.is37() ? V38 : V37;
 
         boolean sortOutput = configBuilder.hasFlag(SORT_OUTPUT);
+        boolean writeOldCoords = configBuilder.hasFlag(WRITE_OLD_COORDS);
 
         GenomeLiftoverCache liftoverCache = new GenomeLiftoverCache(true);
 
@@ -90,7 +92,24 @@ public class FileLiftover
 
             BufferedWriter writer = createBufferedWriter(outputFile);
 
-            writer.write(header);
+            if(writeOldCoords)
+            {
+                StringJoiner headerSj = new StringJoiner(delim);
+                headerSj.add(header);
+                headerSj.add("OldChromosome");
+
+                if(posIndex != INVALID_FIELD)
+                    headerSj.add("OldPosition");
+                else
+                    headerSj.add("OldPositionStart").add("OldPositionEnd");
+
+                writer.write(headerSj.toString());
+            }
+            else
+            {
+                writer.write(header);
+            }
+
             writer.newLine();
 
             int failedLiftoverCount = 0;
@@ -188,6 +207,17 @@ public class FileLiftover
                     }
                 }
 
+                if(writeOldCoords)
+                {
+                    sj.add(chromosome);
+                    sj.add(String.valueOf(origPosStart));
+
+                    if(posEndIndex != INVALID_FIELD)
+                    {
+                        sj.add(String.valueOf(origPosEnd));
+                    }
+                }
+
                 if(liftoverOk)
                 {
                     if(sortOutput)
@@ -263,6 +293,7 @@ public class FileLiftover
         configBuilder.addConfigItem(SOURCE_REF_GENOME_VERSION, true, "Source ref genome version");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addFlag(SORT_OUTPUT, "Sort output by chromosome and position");
+        configBuilder.addFlag(WRITE_OLD_COORDS, "Sort output by chromosome and position");
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

@@ -7,11 +7,12 @@
 ### Calculating read depths and masking
 COBALT starts with finding the mean read depth per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
-Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
+Windows with a GC content less than 0.23 or greater than 0.69 or with an average mappability below 0.85 are excluded from further analysis.
+Windows intersecting the Ig pseudo-gene regions of chromosomes 15 and 16 are also excluded.
 
 ### GC normalisation
 Next we apply a GC normalization to calculate the read ratios. To do this we divide the read depth of each window by the median read depth of
-all windows sharing the same GC content then normalise further to the ratio of the median to mean read depth of all windows.
+all windows sharing the same per percentile bucket of GC content over a range of GC content: [0.25:0.67]. The results are smoothed futher for each bucket by taking the mean of the percentile bucket and the 2 adjacent percentile buckets.  We then normalise further to the ratio of the median to mean read depth of all windows.   
 
 ### Diploid normalisation
 
@@ -28,7 +29,7 @@ male sex chromosomes in addition to the following exceptions:
 | `TETRASOMY_9P`               | 9P               | 1.5                |
 
 ### Depth window consolidation
-Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
+Sparse information in COBALT may cause a noisy fit for low pass WGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
 least 8 per bucket. The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000).   This formula allows
 consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadDepth >> 8. We should
 never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
@@ -73,19 +74,21 @@ java -jar -Xmx8G cobalt.jar \
     -tumor_bam /sample_data/SAMPLE_ID.bam \ 
     -output_dir /sample_data/ \ 
     -threads 10 \ 
+    -ref_genome_version 37
     -gc_profile /ref_data/GC_profile.1000bp.37.cnp
 ```
 
 ## Mandatory Arguments
 
-| Argument      | Description                                                                               |
-|---------------|-------------------------------------------------------------------------------------------|
-| reference     | Name of the reference sample                                                              |
-| reference_bam | Path to reference BAM file                                                                |
-| tumor         | Name of tumor sample                                                                      |
-| tumor_bam     | Path to tumor BAM file                                                                    |
-| output_dir    | Path to the output directory. This directory will be created if it does not already exist |
-| gc_profile    | Path to GC profile                                                                        |
+| Argument           | Description                                                                               |
+|--------------------|-------------------------------------------------------------------------------------------|
+| reference          | Name of the reference sample                                                              |
+| reference_bam      | Path to reference BAM file                                                                |
+| tumor              | Name of tumor sample                                                                      |
+| tumor_bam          | Path to tumor BAM file                                                                    |
+| output_dir         | Path to the output directory. This directory will be created if it does not already exist |
+| gc_profile         | Path to GC profile                                                                        |
+| ref_genome_version | One of `37` or `38`                                                                       |
 
 A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). This file contains 5 columns for each 1kb window of the genome {chromosome,position,GC Proportion,Non N Proportion,Average Mappability}.  A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
 

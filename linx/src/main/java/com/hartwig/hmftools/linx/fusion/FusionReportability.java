@@ -79,7 +79,7 @@ public class FusionReportability
             }
         }
 
-        if(upTrans.gene().type() == SGL || downTrans.gene().type() == SGL)
+        if(upTrans.breakendGeneData().svType() == SGL || downTrans.breakendGeneData().svType() == SGL)
         {
             if(fusion.knownType() != KNOWN_PAIR && fusion.knownType() != IG_KNOWN_PAIR)
                 nonReportableReasons.add(SGL_NOT_KNOWN);
@@ -243,7 +243,7 @@ public class FusionReportability
 
         factor /= 10;
 
-        fusionPriorityScore += upTrans.gene().jcn() * factor;
+        fusionPriorityScore += upTrans.breakendGeneData().jcn() * factor;
 
         return fusionPriorityScore;
     }

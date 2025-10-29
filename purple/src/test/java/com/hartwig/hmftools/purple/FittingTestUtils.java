@@ -7,8 +7,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.Segmentation;
 
 public class FittingTestUtils
 {
@@ -32,38 +31,26 @@ public class FittingTestUtils
         return new CobaltChromosomes(medianRatios);
     }
 
-    public static Segmentation createSegmentation(final ReferenceData referenceData)
-    {
-        try
-        {
-            return new Segmentation(referenceData);
-        }
-        catch(Exception e)
-        {
-            return null;
-        }
-    }
-
     public static final int DEFAULT_REF_DEPTH = 30;
-    public static final int DEFAULT_TUMOR_DEPTH = 1000;
+    public static final int DEFAULT_TUMOR_DEPTH = 100;
 
     public static AmberBAF createAmberBaf(final String chromosome, final int position, final double tumorBAF, final double normalBAF)
     {
         return new AmberBAF(chromosome, position, tumorBAF, DEFAULT_TUMOR_DEPTH, normalBAF, DEFAULT_REF_DEPTH);
     }
 
-    public static CobaltRatio createCobaltRatio(final String chromosome, int position, double tumorRatio)
+    public static CobaltRatio createCobaltRatio(final Chromosome chromosome, int position, double tumorRatio, double tumorGcContent)
     {
-        return ImmutableCobaltRatio.builder()
-                .chromosome(chromosome)
-                .position(position)
-                .tumorReadDepth(0)
-                .referenceReadDepth(0)
-                .referenceGCRatio(1)
-                .referenceGCDiploidRatio(1)
-                .tumorGCRatio(tumorRatio)
-                .referenceGcContent(0.5)
-                .tumorGcContent(0.5).build();
+        return new CobaltRatio(
+                chromosome.toString(),
+                position,
+                0,
+                0,
+                1,
+                1,
+                0.5,
+                tumorRatio,
+                tumorGcContent);
     }
 
     public static ObservedRegion createObservedRegion(final String chromosome, final int start, final int end)
@@ -86,6 +73,28 @@ public class FittingTestUtils
                 0, 2, tumorCopyNumber, observedBaf, tumorCopyNumber, observedBaf);
     }
 
+    public static ObservedRegion createObservedRegion(
+            final String chromosome, final int start, final int end, SegmentSupport support,
+            double observedBaf, double observedTumorRatio,
+            final GermlineStatus germlineStatus, final double tumorCopyNumber)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, support, 10, observedBaf, 10,
+                observedTumorRatio, 1, 1, germlineStatus, false,
+                0.5, 0, 0, 0, 0, 0,
+                0, 2, tumorCopyNumber, observedBaf, tumorCopyNumber, observedBaf);
+    }
+
+    public static ObservedRegion createObservedRegion(String chromosome, int start, int end, int bafCount, double observedTumorRatio,
+            GermlineStatus germlineStatus)
+    {
+        return new ObservedRegion(
+                chromosome, start, end, true, SegmentSupport.NONE, bafCount, 0.5, 10,
+                observedTumorRatio, 1, 1, germlineStatus, false,
+                0.5, 0, 0, 0, 0, 0,
+                0, 2, 2, 0.5, 0, 0.5);
+    }
+
     public static ObservedRegion createDefaultFittedRegion(final String chromosome, final int start, final int end)
     {
         return new ObservedRegion(
@@ -97,7 +106,7 @@ public class FittingTestUtils
 
     public static PurityAdjuster buildPurityAdjuster(final Gender gender, final double purity, final double normFactor)
     {
-        Map<String,Double> observedRatioMap = Maps.newHashMap();
+        Map<String, Double> observedRatioMap = Maps.newHashMap();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -108,14 +117,20 @@ public class FittingTestUtils
             else if(chromosome.equals(HumanChromosome._X))
             {
                 if(gender == Gender.MALE)
+                {
                     observedRatioMap.put(chromosome.toString(), 0.5);
+                }
                 else
+                {
                     observedRatioMap.put(chromosome.toString(), 1.0);
+                }
             }
             else if(chromosome.equals(HumanChromosome._Y))
             {
                 if(gender == Gender.MALE)
+                {
                     observedRatioMap.put(chromosome.toString(), 0.5);
+                }
             }
         }
 

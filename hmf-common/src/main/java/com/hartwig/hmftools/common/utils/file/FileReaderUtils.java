@@ -20,6 +20,18 @@ public class FileReaderUtils
         return fieldsIndexMap;
     }
 
+    public static Integer getColumnIndex(final Map<String,Integer> fieldIndexMap, final String column)
+    {
+        // case sensitive column finder
+        for(Map.Entry<String,Integer> entry : fieldIndexMap.entrySet())
+        {
+            if(entry.getKey().equalsIgnoreCase(column))
+                return entry.getValue();
+        }
+
+        return null;
+    }
+
     public static String getValue(
             final Map<String,Integer> fieldsIndexMap, final String field, final String defaultValue, final String[] values)
     {

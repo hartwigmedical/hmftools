@@ -24,9 +24,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -37,10 +37,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
+import com.hartwig.hmftools.purple.targeted.TargetRegionsData;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -51,17 +52,17 @@ public class ReferenceData
     public final RefGenomeVersion RefGenVersion;
     public final IndexedFastaSequenceFile RefGenome;
 
-    public final Map<Chromosome,GenomePosition> ChromosomeLengths;
-    public final Map<Chromosome,GenomePosition> Centromeres;
+    public final Map<Chromosome, GenomePosition> ChromosomeLengths;
+    public final Map<Chromosome, GenomePosition> Centromeres;
 
     public final EnsemblDataCache GeneTransCache;
 
     public final DriverGenePanel DriverGenes;
-    public final Map<String,List<String>> OtherReportableTranscripts;
+    public final Map<String, List<String>> OtherReportableTranscripts;
     public final GermlineDeletionFrequency CohortGermlineDeletions;
 
-    public final ListMultimap<Chromosome,VariantHotspot> SomaticHotspots;
-    public final ListMultimap<Chromosome,VariantHotspot> GermlineHotspots;
+    public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
+    public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
 
     public final String GcProfileFilename;
     public final TargetRegionsData TargetRegions;
@@ -169,7 +170,9 @@ public class ReferenceData
         loadGeneTransCache();
 
         if(mIsValid && config.tumorOnlyMode())
+        {
             HlaCommon.populateGeneData(GeneTransCache.getChrGeneDataMap().get(hlaChromosome(RefGenVersion)));
+        }
 
         SomaticHotspots = ArrayListMultimap.create();
         GermlineHotspots = ArrayListMultimap.create();
@@ -182,13 +185,14 @@ public class ReferenceData
             GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
                     ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             mIsValid = false;
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
         }
 
-        CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
+        String germlineDeletionFreqFile = config.runGermline() ? configBuilder.getValue(COHORT_DEL_FREQ_FILE) : null;
+        CohortGermlineDeletions = new GermlineDeletionFrequency(germlineDeletionFreqFile);
 
         TargetRegions = new TargetRegionsData(
                 configBuilder.getValue(TARGET_REGIONS_RATIOS), configBuilder.getValue(TARGET_REGION_MSI_INDELS));
@@ -226,7 +230,10 @@ public class ReferenceData
         }
     }
 
-    public boolean isValid() { return mIsValid && TargetRegions.isValid(); }
+    public boolean isValid()
+    {
+        return mIsValid && TargetRegions.isValid();
+    }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
@@ -256,7 +263,7 @@ public class ReferenceData
     }
 
     @VisibleForTesting
-    public ReferenceData(final PurpleConfig config)
+    public ReferenceData()
     {
         mIsValid = true;
         GcProfileFilename = null;

@@ -27,7 +27,7 @@ public class RegionData
         mSampleRegionData = Lists.newArrayList();
     }
 
-    public int gcBucket() { return mGcBucket; }
+    public int profileGcBucket() { return mGcBucket; }
     public double mappability() { return mMappability; }
 
     public void setGcProfile(int gcBucket, double mappability)

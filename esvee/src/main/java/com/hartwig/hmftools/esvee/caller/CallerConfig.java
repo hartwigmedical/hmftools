@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
+import com.hartwig.hmftools.common.sv.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 

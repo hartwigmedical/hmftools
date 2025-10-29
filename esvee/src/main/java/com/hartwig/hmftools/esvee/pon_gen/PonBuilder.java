@@ -8,8 +8,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -38,8 +38,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.Orientation;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.caller.annotation.PonSglRegion;
 import com.hartwig.hmftools.esvee.caller.annotation.PonSvRegion;
@@ -110,7 +110,7 @@ public class PonBuilder
                 taskIndex = 0;
         }
 
-        List<Callable> callableList = ponTasks.stream().collect(Collectors.toList());
+        List<Callable<Void>> callableList = ponTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, callableList.size()))
             System.exit(1);
@@ -126,9 +126,9 @@ public class PonBuilder
     {
         // convert locations into PON entries, applying filters and merging positions as configured
 
-        Map<String,List<PonSvRegion>> chrPonMap = Maps.newHashMap(); // SV entries keyed by starting/lower chromosome
+        Map<String, List<PonSvRegion>> chrPonMap = Maps.newHashMap(); // SV entries keyed by starting/lower chromosome
 
-        for(Map.Entry<String,PonLocations> entry : mPonStore.getSvLocations().entrySet())
+        for(Map.Entry<String, PonLocations> entry : mPonStore.getSvLocations().entrySet())
         {
             String locationKey = entry.getKey();
             String[] locValues = locationValues(locationKey);
@@ -216,7 +216,7 @@ public class PonBuilder
             return mConfig.OutputDir + format("sgl_pon_%s.%s", mConfig.OutputFilenameSuffix, mConfig.WriteBedFiles ? "bed.gz" : "tsv.gz");
     }
 
-    private void writeSvPonFile(final Map<String,List<PonSvRegion>> chrPonMap)
+    private void writeSvPonFile(final Map<String, List<PonSvRegion>> chrPonMap)
     {
         String filename = generateFilename(true);
 
@@ -325,9 +325,9 @@ public class PonBuilder
 
     private void buildSglPON()
     {
-        Map<String,List<PonSglRegion>> chrPonMap = Maps.newHashMap(); // SGL entries keyed by chromosome
+        Map<String, List<PonSglRegion>> chrPonMap = Maps.newHashMap(); // SGL entries keyed by chromosome
 
-        for(Map.Entry<String,PonLocations> entry : mPonStore.getSglLocations().entrySet())
+        for(Map.Entry<String, PonLocations> entry : mPonStore.getSglLocations().entrySet())
         {
             String locationKey = entry.getKey();
             String[] locValues = locationValues(locationKey);
@@ -397,7 +397,7 @@ public class PonBuilder
         writeSglPonFile(chrPonMap);
     }
 
-    private void writeSglPonFile(final Map<String,List<PonSglRegion>> chrPonMap)
+    private void writeSglPonFile(final Map<String, List<PonSglRegion>> chrPonMap)
     {
         String filename = generateFilename(false);
 

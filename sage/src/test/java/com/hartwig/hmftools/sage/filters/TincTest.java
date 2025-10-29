@@ -3,13 +3,10 @@ package com.hartwig.hmftools.sage.filters;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.common.variant.VariantTier.TIER;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
@@ -20,18 +17,14 @@ import static com.hartwig.hmftools.sage.tinc.VariantCache.ChromosomeTask.checkFi
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
-import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.tinc.FilterReason;
 import com.hartwig.hmftools.sage.tinc.TincAnalyser;
 import com.hartwig.hmftools.sage.tinc.TincCalculator;
-import com.hartwig.hmftools.sage.tinc.VariantCache;
 import com.hartwig.hmftools.sage.tinc.VariantData;
 
 import org.junit.Test;
@@ -124,7 +117,7 @@ public class TincTest
         assertEquals(FilterReason.GNOMAD, filterReason);
 
         variant = createTincVariantFromContext(30, 1, 100, 50, mapQualFactor);
-        variant.Context.getGenotype(0).getExtendedAttributes().put(AVG_BASE_QUAL, "25,25");
+        variant.Context.getGenotype(0).getExtendedAttributes().put(AVG_RECALIBRATED_BASE_QUAL, "25,25");
         filterReason = checkFilters(variant);
         assertEquals(FilterReason.LOW_ABQ, filterReason);
 
@@ -149,7 +142,7 @@ public class TincTest
         genotypeBuilder.AD(new int[] { 0, referenceAltFrags });
         genotypeBuilder.DP(referenceDepth);
         genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
-        genotypeBuilder.attribute(AVG_BASE_QUAL, "30,30");
+        genotypeBuilder.attribute(AVG_RECALIBRATED_BASE_QUAL, "30,30");
 
         int refFrags = referenceDepth - referenceAltFrags;
         genotypeBuilder.attribute(READ_CONTEXT_COUNT, format("%d,0,0,0,%d,%d", referenceAltFrags, refFrags, referenceDepth));
@@ -161,7 +154,7 @@ public class TincTest
         genotypeBuilder.AD(new int[] { referenceAltFrags, tumorAltFrags });
         genotypeBuilder.DP(tumorDepth);
         genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
-        genotypeBuilder.attribute(AVG_BASE_QUAL, "30,30");
+        genotypeBuilder.attribute(AVG_RECALIBRATED_BASE_QUAL, "30,30");
 
         refFrags = tumorDepth - tumorAltFrags;
         genotypeBuilder.attribute(READ_CONTEXT_COUNT, format("%d,0,0,0,%d,%d", tumorAltFrags, refFrags, tumorDepth));

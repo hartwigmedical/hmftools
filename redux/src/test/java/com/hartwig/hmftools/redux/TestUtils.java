@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,11 +14,11 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.redux.common.FragmentCoords;
+import com.hartwig.hmftools.redux.duplicate.FragmentCoords;
 import com.hartwig.hmftools.redux.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.redux.consensus.ConsensusReads;
 import com.hartwig.hmftools.redux.unmap.ReadUnmapper;
@@ -38,8 +38,8 @@ public final class TestUtils
     public static final String REF_BASES_G = "GGGGGGGGGG";
     public static final String REF_BASES_T = "TTTTTTTTTT";
 
-    protected static final String CHR_4 = "4";
-    protected static final String CHR_5 = "5";
+    public static final String CHR_4 = "4";
+    public static final String CHR_5 = "5";
 
     public static final String REF_BASES_RANDOM = generateRandomBases(10);
 
@@ -56,12 +56,13 @@ public final class TestUtils
 
     public static ReduxConfig createTestConfig()
     {
-        return new ReduxConfig(new MockRefGenome(), false, false, false, READ_UNMAPPER_DISABLED);
+        return new ReduxConfig(
+                new MockRefGenome(), false, false, false, READ_UNMAPPER_DISABLED);
     }
 
     public static PartitionReader createPartitionRead(final ReduxConfig config, final BamWriter writer)
     {
-        PartitionReader partitionReader = new PartitionReader(config, null);
+        PartitionReader partitionReader = new PartitionReader(config, null, null);
         partitionReader.setBamWriter(writer);
         return partitionReader;
     }
@@ -100,8 +101,8 @@ public final class TestUtils
     }
 
     // unmapping test state
-    protected static final Map<String,List<UnmappingRegion>> CHR_LOCATION_MAP;
-    protected static final ReadUnmapper READ_UNMAPPER;
+    public static final Map<String,List<UnmappingRegion>> CHR_LOCATION_MAP;
+    public static final ReadUnmapper READ_UNMAPPER;
 
     static
     {

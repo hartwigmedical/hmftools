@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -407,7 +407,7 @@ public class VariantFilters
 
     public void applyAdjacentFilters(final Map<String,List<Breakend>> chromosomeBreakends)
     {
-        // filter INVs which are short, unchained and isolated from other variants (exlcuding other similar INVs)
+        // filter INVs which are short, unchained and isolated from other variants (excluding other similar INVs)
         for(List<Breakend> breakends : chromosomeBreakends.values())
         {
             for(int i = 0; i < breakends.size(); ++i)

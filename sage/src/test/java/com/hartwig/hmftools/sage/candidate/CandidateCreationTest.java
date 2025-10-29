@@ -107,13 +107,13 @@ public class CandidateCreationTest
         refContextConsumer.processRead(read);
         refContextConsumer.processRead(readClone);
 
-        List<AltContext> altContexts = refContextCache.altContexts();
+        List<ReadContextCandidate> altContexts = refContextCache.altCandidates();
         assertEquals(2, altContexts.size());
 
-        AltContext snv = altContexts.stream().filter(x -> x.Ref.equals(variant.ref()) && x.Alt.equals(variant.alt())).findFirst().orElse(null);
+        ReadContextCandidate snv = altContexts.stream().filter(x -> x.ref().equals(variant.ref()) && x.alt().equals(variant.alt())).findFirst().orElse(null);
         assertNotNull(snv);
 
-        AltContext snvInsert = altContexts.stream().filter(x -> x.Ref.equals(variant.ref()) && x.Alt.equals("GT")).findFirst().orElse(null);
+        ReadContextCandidate snvInsert = altContexts.stream().filter(x -> x.ref().equals(variant.ref()) && x.alt().equals("GT")).findFirst().orElse(null);
         assertNotNull(snvInsert);
     }
 }

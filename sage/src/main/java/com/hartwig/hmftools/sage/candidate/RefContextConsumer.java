@@ -3,11 +3,14 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.REGION_BLOCK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
@@ -15,7 +18,7 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
 import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
 
 import java.util.List;
 import java.util.Set;
@@ -62,7 +65,7 @@ public class RefContextConsumer
         mBounds = regionBounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
-        mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
+        mReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
         mConfig = config;
 
         mHotspotPositions = Sets.newHashSet();
@@ -114,6 +117,7 @@ public class RefContextConsumer
         ReadInfo readInfo = buildReadInfo(record);
 
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(readInfo.SoftClipLength);
+
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(
                 record, readInfo.NumberOfEvents, applyMapQualEventPenalty(readStart, readEnd));
 
@@ -127,7 +131,8 @@ public class RefContextConsumer
 
         updateRegionBlockDepth(readStart, readEnd);
 
-        int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadMapQualEventsPenalty);
+        double scEventProportion = (double)scEvents / record.getReadLength();
+        int scAdjustedMapQual = (int)round(adjustedMapQual - scEventProportion * mConfig.Quality.ReadMapQualEventsPenalty);
         readInfo.ReadExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record, readInfo.AlignedLength);
 
@@ -182,6 +187,9 @@ public class RefContextConsumer
                 processSoftClip(record, element.getLength(), readIndex, mRefSequence, readInfo, false);
             }
         };
+
+        // debug for read cache and evicting investigations
+        // SG_LOGGER.debug("read({})", readToString(record));
 
         CigarHandler.traverseCigar(record, handler);
 
@@ -311,9 +319,9 @@ public class RefContextConsumer
     private int calcAdjustedMapQualLessEventsPenalty(final SAMRecord record, int numberOfEvents, boolean applyEventPenalty)
     {
         if(!applyEventPenalty)
-            return record.getMappingQuality();;
+            return record.getMappingQuality();
 
-        int eventPenalty = (int)round((numberOfEvents - 1) * mConfig.Quality.ReadMapQualEventsPenalty);
+        int eventPenalty = calcEventPenalty(numberOfEvents, record.getReadBases().length, mConfig.Quality.ReadMapQualEventsPenalty);
 
         int improperPenalty = isImproperPair(record) || record.getSupplementaryAlignmentFlag() ?
                 mConfig.Quality.ImproperPairPenalty : 0;
@@ -384,6 +392,9 @@ public class RefContextConsumer
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         int refIndex = mRefSequence.index(refPositionStart);
+        String chromosome = record.getContig();
+
+        // SG_LOGGER.debug("read({})", readToString(record));
 
         for(int i = 0; i < alignmentLength; i++)
         {
@@ -405,7 +416,7 @@ public class RefContextConsumer
 
             if(readByte != refByte)
             {
-                final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+                final RefContext refContext = mRefContextCache.getOrCreateRefContext(chromosome, refPosition);
                 if(refContext == null)
                     continue;
 
@@ -432,9 +443,10 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
+                        int mnvNumEvents = NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt);
+
                         readInfo.addAltRead(new AltRead(
-                                refContext, mnvRef, mnvAlt, NumberEvents.calcWithMnvRaw(readInfo.NumberOfEvents, mnvRef, mnvAlt),
-                                sufficientMapQuality, record, readBaseIndex));
+                                refContext, mnvRef, mnvAlt, mnvNumEvents, sufficientMapQuality, record, readBaseIndex));
                     }
                 }
             }
@@ -602,7 +614,7 @@ public class RefContextConsumer
 
     private boolean withinReadContext(int readIndex, final SAMRecord record)
     {
-        return readIndex >= mConfig.ReadContextFlankLength && readIndex < record.getReadLength() - mConfig.ReadContextFlankLength;
+        return readIndex >= DEFAULT_FLANK_LENGTH && readIndex < record.getReadLength() - DEFAULT_FLANK_LENGTH;
     }
 
     @VisibleForTesting

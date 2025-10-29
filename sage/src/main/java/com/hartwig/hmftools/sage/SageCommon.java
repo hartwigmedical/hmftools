@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.bamops.BamSampler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SAMRecord;
+
 public class SageCommon
 {
     public static final String APP_NAME = "Sage";
@@ -84,4 +86,6 @@ public class SageCommon
         SG_LOGGER.debug("BAM read-length sampling using default read length({})", DEFAULT_READ_LENGTH);
         config.setReadLength(DEFAULT_READ_LENGTH);
     }
+
+    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 }

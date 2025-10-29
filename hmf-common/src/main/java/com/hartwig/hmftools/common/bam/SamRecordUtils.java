@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 
@@ -39,10 +41,9 @@ public final class SamRecordUtils
 
     public static final String XS_ATTRIBUTE = "XS";
 
-
     // Redux tags
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
-    public static final String UMI_TYPE_ATTRIBUTE = "UT"; // UMI type - single, dual/duplex or no duplicates
+    public static final String CONSENSUS_TYPE_ATTRIBUTE = "UT"; // originally UMI type - single, dual or none
     public static final String UMI_ATTRIBUTE = "UI"; // the UMI group ID
     public static final String CONSENSUS_INFO_DELIM = ";";
     public static final String BASE_MODIFICATIONS_ATTRIBUTE = "MM";
@@ -58,7 +59,7 @@ public final class SamRecordUtils
 
     public static final int UNSET_COUNT = -1;
 
-    private static final int PHRED_OFFSET = 33;
+    public static final int PHRED_OFFSET = 33;
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 
@@ -67,7 +68,6 @@ public final class SamRecordUtils
     {
         return !record.getReadPairedFlag() || record.getFirstOfPairFlag();
     }
-
     public static boolean secondInPair(final SAMRecord record)
     {
         return record.getReadPairedFlag() && record.getSecondOfPairFlag();
@@ -109,29 +109,30 @@ public final class SamRecordUtils
     }
 
     public static void addConsensusReadAttribute(
-            final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType, int pcrClusterCount)
+            final SAMRecord record, int readCount, int firstInPairCount, final ConsensusType consensusType, int pcrClusterCount)
     {
         String consensusReadValue = pcrClusterCount == UNSET_COUNT
                 ? format("%d;%d", readCount, firstInPairCount)
                 : format("%d;%d;%d", readCount, firstInPairCount, pcrClusterCount);
+
         record.setAttribute(CONSENSUS_READ_ATTRIBUTE, consensusReadValue);
-        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+        record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
     }
 
     @VisibleForTesting
-    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
+    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final ConsensusType consensusType)
     {
-        addConsensusReadAttribute(record, readCount, firstInPairCount, umiReadType, UNSET_COUNT);
+        addConsensusReadAttribute(record, readCount, firstInPairCount, consensusType, UNSET_COUNT);
     }
 
-    public static UmiReadType extractUmiType(final SAMRecord record)
+    public static ConsensusType extractConsensusType(final SAMRecord record)
     {
-        String umiTypeStr = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        String consensusTypeStr = record.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
 
-        if(umiTypeStr != null)
-            return UmiReadType.valueOf(umiTypeStr);
+        if(consensusTypeStr != null)
+            return ConsensusType.valueOf(consensusTypeStr);
         else
-            return UmiReadType.NONE;
+            return ConsensusType.NONE;
     }
 
     public static int getMateAlignmentEnd(final SAMRecord read)
@@ -158,29 +159,29 @@ public final class SamRecordUtils
         return getReadBoundaryPosition(readStart, cigarStr, !forwardStrand, true);
     }
 
-    public static int getFivePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, true); }
-
-    public static int getThreePrimeUnclippedPosition(final SAMRecord read) { return getUnclippedPosition(read, false); }
-
-    public static int getUnclippedPosition(final SAMRecord read, boolean fivePrime)
+    public static int getFivePrimeUnclippedPosition(final SAMRecord read)
     {
-        // returns the 5' or 3' position of the read, factoring in any soft-clipped bases
-        int position;
+        // returns the 5' position of the read, factoring in any soft-clipped bases
+        boolean useStart = !read.getReadNegativeStrandFlag();
+        return getUnclippedPosition(read, useStart);
+    }
 
-        if((orientation(read) == ORIENT_FWD) == fivePrime)
+    public static int getThreePrimeUnclippedPosition(final SAMRecord read)
+    {
+        boolean useStart = read.getReadNegativeStrandFlag();
+        return getUnclippedPosition(read, useStart);
+    }
+
+    public static int getUnclippedPosition(final SAMRecord read, boolean isStart)
+    {
+        if(isStart)
         {
-            position = read.getAlignmentStart();
-            if(read.getCigar().isLeftClipped())
-                position -= read.getCigar().getFirstCigarElement().getLength();
+            return read.getAlignmentStart() - leftSoftClipLength(read);
         }
         else
         {
-            position = read.getAlignmentEnd();
-            if(read.getCigar().isRightClipped())
-                position += read.getCigar().getLastCigarElement().getLength();
+            return read.getAlignmentEnd() + rightSoftClipLength(read);
         }
-
-        return position;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
@@ -261,8 +262,15 @@ public final class SamRecordUtils
 
     public static String readToString(final SAMRecord read)
     {
-        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+        if(read.getReadPairedFlag())
+        {
+            return format("id(%s) coords(%s:%d-%d) cigar(%s) baseLen(%d) mate(%s:%d) flags(%d)",
+                    read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                    read.getCigarString(), read.getReadBases().length, read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+        }
+
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) baseLen(%d) flags(%d)",
                 read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+                read.getCigarString(), read.getReadBases().length, read.getFlags());
     }
 }

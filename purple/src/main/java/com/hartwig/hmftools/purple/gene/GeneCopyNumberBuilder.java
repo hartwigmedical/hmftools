@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.gene;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.purple.copynumber.CombinedRegion.weightedAverage;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,16 +16,15 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 public class GeneCopyNumberBuilder
 {
+    private final GeneData mGeneData;
     private final TranscriptData mTransData;
     private final List<PurpleCopyNumber> mCopyNumbers;
-    private final ImmutableGeneCopyNumber.Builder mBuilder;
 
     private double mMinCopyNumber;
     private double mMinMinorAllelePloidy;
@@ -43,6 +44,7 @@ public class GeneCopyNumberBuilder
     private SegmentSupport mMinRegionEndSupport;
     private CopyNumberMethod mMinRegionMethod;
     private int mDepthWindowCount;
+    private double mMinRegionGcContent;
 
     public static List<GeneCopyNumber> createGeneCopyNumbers(
             final RefGenomeVersion refGenomeVersion, final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> copyNumbers)
@@ -79,6 +81,7 @@ public class GeneCopyNumberBuilder
     public GeneCopyNumberBuilder(final GeneData geneData, final TranscriptData transData, final List<PurpleCopyNumber> copyNumbers)
     {
         mCopyNumbers = copyNumbers;
+        mGeneData = geneData;
         mTransData = transData;
 
         mMinCopyNumber = Double.MAX_VALUE;
@@ -99,20 +102,7 @@ public class GeneCopyNumberBuilder
         mMinRegionEndSupport = SegmentSupport.NONE;
         mMinRegionMethod = CopyNumberMethod.UNKNOWN;
         mDepthWindowCount = 0;
-
-        mBuilder = ImmutableGeneCopyNumber.builder()
-                .geneName(geneData.GeneName)
-                .transName(transData.TransName)
-                .isCanonical(transData.IsCanonical)
-                .chromosomeBand(geneData.KaryotypeBand)
-                .chromosome(geneData.Chromosome)
-                .start(geneData.GeneStart)
-                .end(geneData.GeneEnd)
-                .minRegionStart(geneData.GeneStart)
-                .minRegionEnd(geneData.GeneEnd)
-                .minRegionMethod(CopyNumberMethod.UNKNOWN)
-                .minRegionStartSupport(SegmentSupport.NONE)
-                .minRegionEndSupport(SegmentSupport.NONE);
+        mMinRegionGcContent = 0;
     }
 
     public GeneCopyNumber create()
@@ -137,18 +127,12 @@ public class GeneCopyNumberBuilder
             }
         }
 
-        return mBuilder.maxCopyNumber(mMaxCopyNumber)
-                .minRegionStartSupport(mMinRegionStartSupport)
-                .minRegionEndSupport(mMinRegionEndSupport)
-                .minRegionMethod(mMinRegionMethod)
-                .minRegionStart(mMinRegionStart)
-                .minRegionEnd(mMinRegionEnd)
-                .minCopyNumber(mMinCopyNumber)
-                .somaticRegions(mSomaticCount)
-                .minRegions(mMinRegions)
-                .minMinorAlleleCopyNumber(mMinMinorAllelePloidy)
-                .depthWindowCount(mDepthWindowCount)
-                .build();
+        return new GeneCopyNumber(
+                mGeneData.Chromosome, mGeneData.GeneStart, mGeneData.GeneEnd,
+                mGeneData.GeneName, mTransData.TransName, mTransData.IsCanonical,
+                mGeneData.KaryotypeBand, mMaxCopyNumber, mMinCopyNumber, mMinMinorAllelePloidy, mSomaticCount, mMinRegions,
+                mMinRegionStart, mMinRegionEnd, mDepthWindowCount, mMinRegionGcContent, mMinRegionStartSupport,
+                mMinRegionEndSupport, mMinRegionMethod);
     }
 
     private void handleCopyNumber(final PurpleCopyNumber copyNumber)
@@ -206,7 +190,7 @@ public class GeneCopyNumberBuilder
                     mMinRegionEndSupport = copyNumber.segmentEndSupport();
                     mMinRegionMethod = copyNumber.method();
                     mDepthWindowCount = copyNumber.depthWindowCount();
-
+                    mMinRegionGcContent = copyNumber.gcContent();
                 }
                 else if(Doubles.equal(currentCopyNumber, mMinCopyNumber))
                 {
@@ -219,6 +203,7 @@ public class GeneCopyNumberBuilder
                         mMinRegions++;
                     }
 
+                    mMinRegionGcContent = weightedAverage(mDepthWindowCount, mMinRegionGcContent, copyNumber.depthWindowCount(), copyNumber.gcContent());
                     mDepthWindowCount += copyNumber.depthWindowCount();
                 }
             }

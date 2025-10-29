@@ -48,7 +48,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 2D, 800, 1000);
         List<GermlineDeletion> deletions = Lists.newArrayList(reportablePartial2, reportablePartial1);
 
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);
 
         Map<PurpleLossOfHeterozygosity, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(geneCopyNumber));
         PurpleLossOfHeterozygosity loh = map.keySet().iterator().next();
@@ -69,7 +69,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
         // Gene runs from 150 to 950
         GermlineDeletion reportablePartial =
                 GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1D, 100, 1000);
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);
 
         Map<PurpleLossOfHeterozygosity, Boolean> map =
                 factory.getReportabilityMap(Lists.newArrayList(reportablePartial), Lists.newArrayList(geneCopyNumber));
@@ -101,7 +101,7 @@ public class GermlineLossOfHeterozygosityFactoryTest
         List<GermlineDeletion> germlineDeletions =
                 Lists.newArrayList(reportablePartial4, reportablePartial3, reportablePartial2, reportablePartial1);
 
-        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 2D, 4D);
 
         Map<PurpleLossOfHeterozygosity, Boolean> map = factory.getReportabilityMap(germlineDeletions, Lists.newArrayList(geneCopyNumber));
         PurpleLossOfHeterozygosity loh = map.keySet().iterator().next();

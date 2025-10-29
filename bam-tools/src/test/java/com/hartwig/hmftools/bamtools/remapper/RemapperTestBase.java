@@ -2,6 +2,8 @@ package com.hartwig.hmftools.bamtools.remapper;
 
 import static java.lang.Integer.parseInt;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +14,6 @@ import org.junit.Assert;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -92,18 +93,6 @@ public class RemapperTestBase
         return records;
     }
 
-    List<SAMSequenceRecord> readDictionarySequences(File samFile)
-    {
-        try(SamReader samReader = SamReaderFactory.makeDefault().open(samFile))
-        {
-            return new LinkedList<>(samReader.getFileHeader().getSequenceDictionary().getSequences());
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
     File getTestFile(String name)
     {
         ClassLoader classLoader = getClass().getClassLoader();
@@ -127,6 +116,7 @@ public class RemapperTestBase
         Assert.assertEquals(expected.getMateReferenceName(), actual.getMateReferenceName());
         Assert.assertArrayEquals(expected.getReadBases(), actual.getReadBases());
         Assert.assertEquals(expected.getReferenceName(), actual.getReferenceName());
+        Assert.assertEquals(expected.getAttribute(SUPPLEMENTARY_ATTRIBUTE), actual.getAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }
 }
 

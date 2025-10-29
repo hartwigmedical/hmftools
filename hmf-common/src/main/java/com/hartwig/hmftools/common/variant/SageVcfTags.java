@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.variant;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.common.bam.ConsensusType;
+
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 
@@ -53,24 +55,22 @@ public final class SageVcfTags
     public static final String MAP_QUAL_FACTOR = "MQF";
     public static final String MAP_QUAL_FACTOR_DESC = "Map qual heuristic as used in min tumor quality filter";
 
-    public static final String AVG_RAW_BASE_QUAL = "RABQ";
-    public static final String AVG_RAW_BASE_QUAL_DESC = "Average calculated raw base quality in alt reads";
-
-    public static final String AVG_BASE_QUAL = "ABQ";
-    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality (all,alt)";
+    public static final String AVG_RECALIBRATED_BASE_QUAL = "ARCBQ";
+    public static final String AVG_RECALIBRATED_BASE_QUAL_DESC = "Average recalibrated base quality (all,alt)";
 
     public static final String NEARBY_INDEL_FLAG = "NEARBY_INDEL";
     public static final String NEARBY_INDEL_FLAG_DESC = "Variant has an INDEL overlapping its core";
 
-    public static final String MIN_COORDS_FLAG = "COORDS";
-    public static final String MIN_COORDS_FLAG_DESC = "Min unique fragment coordinates in alt reads";
+    public static final String MIN_COORDS_COUNT = "MUC";
+    public static final String MIN_COORDS_COUNT_DESC = "Min unique fragment coordinates in alt reads";
 
-    public static final int UMI_TYPE_COUNT = 6;
+    public static final String AVG_EDGE_DISTANCE_PERC = "AED";
+    public static final String AVG_EDGE_DISTANCE_PERC_DESC = "Average edge distance as percent of read length [alt,total]";
+
+    public static final int CONSENSUS_TYPE_COUNT = ConsensusType.values().length;
+    public static final int CONSENSUS_TAG_TYPE_COUNT = CONSENSUS_TYPE_COUNT * 2;
 
     public static final String TINC_LEVEL = "tincLevel";
-
-    public static final String TINC_RECOVERED_FLAG = "TINC_RECOVERED";
-    public static final String TINC_RECOVERED_DESC = "Variant recovered from germline filters by TINC detection";
 
     public static final String LIST_SEPARATOR = ",";
 

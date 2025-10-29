@@ -32,6 +32,8 @@ public class SageCallConfig
     public final boolean PanelOnly;
     public final boolean RunTinc;
 
+    public static boolean LogCandidates = false;
+
     private final String mResourceDir;
 
     private static final String RESOURCE_DIR = "resource_dir";
@@ -39,6 +41,7 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
+    private static final String LOG_CANDIDATES = "log_candidates";
 
     public static final String RUN_TINC = "run_tinc";
 
@@ -66,6 +69,7 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
+        LogCandidates = configBuilder.hasFlag(LOG_CANDIDATES);
 
         // TINC can only run with a single germline sample
         RunTinc = configBuilder.hasFlag(RUN_TINC) && Common.ReferenceIds.size() == 1;
@@ -123,6 +127,7 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
+        configBuilder.addFlag(LOG_CANDIDATES, "Log candidates to TSV");
 
         configBuilder.addFlag(RUN_TINC, "Run TINC routine");
         TincConfig.registerCommonConfig(configBuilder);
@@ -140,6 +145,7 @@ public class SageCallConfig
         Hotspots = "hotspots";
         PanelOnly = false;
         RunTinc = false;
+        LogCandidates = false;
         mResourceDir = "";
     }
 }

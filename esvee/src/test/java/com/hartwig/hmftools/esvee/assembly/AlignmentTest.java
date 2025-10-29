@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -40,16 +41,20 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.esvee.MockAligner;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
+import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder;
+import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 
+import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
 
 public class AlignmentTest
@@ -735,6 +740,44 @@ public class AlignmentTest
 
         AlternativeAlignment ssx2AltAlignment = alignment2.selectedAltAlignment();
         assertTrue(ssx2Region.containsPosition(ssx2AltAlignment.Chromosome, ssx2AltAlignment.Position));
+    }
+
+    @Test
+    public void testAlignmentRequery()
+    {
+        MockAligner aligner = new MockAligner();
+        AssemblyAligner assemblyAligner = new AssemblyAligner(TEST_CONFIG, aligner, new AlignmentWriter(TEST_CONFIG), null);
+
+        // need to ensure the full assembly sequence length matches the alignments returned
+        AssemblyAlignment assemblyAlignment = AssemblyTestUtils.createAssemblyAlignment(
+                mRefGenome, CHR_1, 200, FORWARD, CHR_2, 200, REVERSE, "", "",
+                50, 200);
+
+        // 2 alignments are returned with a soft-clip which requires requerying
+        List<BwaMemAlignment> initialAlignments = List.of(
+                createBwaAlignment(CHR_1, 101, 200, 0, 0, 99, "100M150S",
+                        "", "", 60, 0, 100),
+                createBwaAlignment(CHR_2, 200, 299, 0, 100, 199, "100S100M50S",
+                        "", "", 60, 0, 100));
+
+        aligner.PendingAlignments.add(initialAlignments);
+
+        List<BwaMemAlignment> requeryAlignments = List.of(
+                createBwaAlignment(CHR_1, 210, 259, 0, 0, 49, "50M",
+                        "", "", 60, 0, 50));
+
+        aligner.PendingAlignments.add(requeryAlignments);
+
+        assemblyAligner.processAssembly(assemblyAlignment);
+    }
+
+    private BwaMemAlignment createBwaAlignment(
+            final String chromosome, int refPosStart, int refPosEnd, int flags, int seqStart, int seqEnd, final String cigar,
+            final String mdTag, final String xaTag,
+            int mapQual, int nMismatches, int alignerScore)
+    {
+        return new BwaMemAlignment(flags, 0, refPosStart - 1, refPosEnd, seqStart, seqEnd, mapQual, nMismatches, alignerScore,
+                0, cigar, mdTag, xaTag, 0, 0, 0);
     }
 
     private AssemblyAlignment createAssemblyAlignment(

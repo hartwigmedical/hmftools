@@ -7,8 +7,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
@@ -112,7 +112,8 @@ public class PhasedVariantClassifier
 
             for(VariantTransImpact transImpact : entry.getValue())
             {
-                if(!transImpact.hasCodingBases() || !transImpact.proteinContext().validRefCodon())
+                // realigned impacts are ignored for the purposes of phasing variants
+                if(!transImpact.hasCodingBases() || !transImpact.proteinContext().validRefCodon() || transImpact.realigned())
                     continue;
 
                 List<VariantTransImpact> transImpacts = Lists.newArrayList(transImpact);
@@ -145,11 +146,11 @@ public class PhasedVariantClassifier
                 catch(Exception e)
                 {
                     String variantsInfo = variants.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
-                    PV_LOGGER.error("failed to phase variants({}): {}", variantsInfo, e.toString());
+                    PV_LOGGER.warn("failed to phase variants({}): {}", variantsInfo, e.toString());
 
                     for(VariantTransImpact vtImpact : transImpacts)
                     {
-                        PV_LOGGER.error("transImpact({}) coding({}) protein({})",
+                        PV_LOGGER.warn("transImpact({}) coding({}) protein({})",
                                 vtImpact.toString(), vtImpact.codingContext(), vtImpact.proteinContext());
                     }
                 }

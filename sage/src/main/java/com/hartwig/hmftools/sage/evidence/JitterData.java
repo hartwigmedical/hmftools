@@ -5,8 +5,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_QUAL_BOOST_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_HARD_FILTER_NOISE_RATE;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_RATIO;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_RATIO_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_NOISE_RATE;
 import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_MIN_TRINUC_ERROR_RATE;
+import static com.hartwig.hmftools.sage.SageConstants.MSI_JITTER_RATIO_HOTSPOT_VAF;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +26,7 @@ public class JitterData
 {
     private int mLengthened;
     private int mShortened;
+    private int mValidQualFullSupport;
     private double mQualBoost;
     private boolean mFilterOnNoise;
     private boolean mHardFilterOnNoise;
@@ -31,6 +35,8 @@ public class JitterData
     {
         mLengthened = 0;
         mShortened = 0;
+        mValidQualFullSupport = 0;
+
         mQualBoost = 1;
         mFilterOnNoise = false;
         mHardFilterOnNoise = false;
@@ -47,6 +53,9 @@ public class JitterData
     public int shortened() { return mShortened; }
     public int lengthened() { return mLengthened; }
     public int[] summary() { return new int[] { mShortened, mLengthened }; }
+
+    public void addValidQualFullSupport() { ++mValidQualFullSupport; }
+    public int validQualFullSupport() { return mValidQualFullSupport; }
 
     public double qualBoost() { return mQualBoost; }
     public boolean hardFilterOnNoise() { return mHardFilterOnNoise; }
@@ -82,7 +91,7 @@ public class JitterData
         if(readContextCounter.readContext().MaxRepeat == null)
             return;
 
-        int fullSupport = readContextCounter.readSupportCounts().Full;
+        int fullSupport = readContextCounter.jitter().validQualFullSupport();
 
         boolean isPanelVariant = readContextCounter.tier() == VariantTier.PANEL || readContextCounter.tier() == VariantTier.HOTSPOT;
 
@@ -183,7 +192,8 @@ public class JitterData
             int total = fullSupport + shortened + lengthened;
             double jitterRatio = fullSupport / (double)total;
             double avgErrorRate = (shortenedErrorRate + lengthenedErrorRate) * 0.5;
-            double minJitterRatio = tier == VariantTier.HOTSPOT ? 1.5 : 2;
+
+            double minJitterRatio = minJitterRatio(tier, jitterRatio);
 
             if(jitterRatio < minJitterRatio * avgErrorRate)
                 return JitterNoiseOutcome.FILTER_VARIANT;
@@ -218,7 +228,8 @@ public class JitterData
 
         // a low full count relative to the total will be classified as within noise
         double jitterRatio = fullSupport / (double)(fullSupport + jitterCount);
-        double minJitterRatio = tier == VariantTier.HOTSPOT ? 1.5 : 2;
+
+        double minJitterRatio = minJitterRatio(tier, jitterRatio);
 
         if(jitterRatio < minJitterRatio * errorRateToUse)
             return JitterNoiseOutcome.FILTER_VARIANT;
@@ -226,11 +237,20 @@ public class JitterData
         return JitterNoiseOutcome.NOISE;
     }
 
+    private static double minJitterRatio(final VariantTier tier, double jitterRatio)
+    {
+        if(tier == VariantTier.HOTSPOT && jitterRatio > MSI_JITTER_RATIO_HOTSPOT_VAF)
+            return MSI_JITTER_MIN_RATIO_HOTSPOT;
+        else
+            return MSI_JITTER_MIN_RATIO;
+    }
+
     @VisibleForTesting
-    public void setValues(int shortened, int lengthened)
+    public void setValues(int shortened, int lengthened, int fullSupport)
     {
         mShortened = shortened;
         mLengthened = lengthened;
+        mValidQualFullSupport = fullSupport;
         mQualBoost = 1;
         mFilterOnNoise = false;
         mHardFilterOnNoise = false;

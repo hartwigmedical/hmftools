@@ -5,8 +5,11 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
-import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
+import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setSbxSequencing;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualBaseRepeat;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualDualRepeat;
@@ -19,9 +22,12 @@ import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findTripleBas
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -31,6 +37,201 @@ import org.junit.Test;
 
 public class SequenceTest
 {
+    @Test
+    public void testSeqBuildSnvMismatches()
+    {
+        String refBuffer = "CCCCC";
+        //                      012345678901
+        String readExtBases1 = "ACGTAAGTACGT";
+        String readBases1 = refBuffer + readExtBases1;
+        String readBases2 = readBases1;
+        String readExtBases3 = "ACGGAAGGACGG";
+        String readBases3 = refBuffer + readExtBases3;
+
+        String cigar = makeCigarString(readBases1, 0, 0);
+
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, cigar);
+
+        int consensusBaseLength = readBases1.length() - refBuffer.length();
+        boolean buildForwards = true;
+
+        List<ReadParseState> readParseStates = Lists.newArrayList(
+                new ReadParseState(buildForwards, read1, refBuffer.length()),
+                new ReadParseState(buildForwards, read2, refBuffer.length()),
+                new ReadParseState(buildForwards, read3, refBuffer.length()));
+
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+
+        String consensusStr = seqBuilder.baseString();
+        assertEquals(readExtBases1, consensusStr);
+        assertTrue(seqBuilder.repeats().isEmpty());
+
+        ReadParseState readState3 = readParseStates.get(2);
+        assertEquals(3, readState3.mismatchInfos().size());
+
+        // test favouring high over medium quals
+        setSbxSequencing();
+
+        read1.getBaseQuality()[8] = SbxBamUtils.SBX_SIMPLEX_QUAL;
+        read2.getBaseQuality()[8] = SbxBamUtils.SBX_DUPLEX_QUAL;
+        read3.getBaseQuality()[8] = SbxBamUtils.SBX_DUPLEX_QUAL;
+
+        read1.getBaseQuality()[12] = SbxBamUtils.SBX_SIMPLEX_QUAL;
+        read2.getBaseQuality()[12] = SbxBamUtils.SBX_SIMPLEX_QUAL;
+        read3.getBaseQuality()[12] = SbxBamUtils.SBX_DUPLEX_QUAL;
+
+        readParseStates.forEach(x -> x.resetAll());
+        seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+
+        consensusStr = seqBuilder.baseString();
+        assertEquals("ACGTAAGGACGT", consensusStr);
+
+        setIlluminaSequencing();
+
+        // repeat test building the other direction
+        readBases1 = readExtBases1 + refBuffer;
+        readBases2 = readBases1;
+        readBases3 = readExtBases3 + refBuffer;
+
+        read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
+        read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
+        read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, cigar);
+
+        buildForwards = false;
+
+        readParseStates = Lists.newArrayList(
+                new ReadParseState(buildForwards, read1, readExtBases1.length() - 1),
+                new ReadParseState(buildForwards, read2, readExtBases1.length() - 1),
+                new ReadParseState(buildForwards, read3, readExtBases1.length() - 1));
+
+        seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+
+        consensusStr = seqBuilder.baseString();
+        assertEquals(readExtBases1, consensusStr);
+        assertTrue(seqBuilder.repeats().isEmpty());
+    }
+
+    @Test
+    public void testSeqBuildIndelMismatches()
+    {
+        String refBuffer = "CCCCC";
+        //                      012345678901
+        String readExtBases1 = "ACGTAAGTACGTGGCC";
+        String readBases1 = refBuffer + readExtBases1;
+        String readBases2 = readBases1;
+
+        // with a del then an insert
+        String readExtBases3 = readExtBases1.substring(0, 4) + readExtBases1.substring(5, 10) + "A" + readExtBases1.substring(10);
+        String readBases3 = refBuffer + readExtBases3;
+
+        // with a 2 inserts then a del
+        String readExtBases4 = readExtBases1.substring(0, 3) + "A" + readExtBases1.substring(3, 6) + "A"
+                + readExtBases1.substring(6, 10) + readExtBases1.substring(11);
+        String readBases4 = refBuffer + readExtBases4;
+
+        String cigar = makeCigarString(readBases1, 0, 0);
+
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, cigar);
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases4, cigar);
+
+        boolean buildForwards = true;
+
+        List<ReadParseState> readParseStates = Lists.newArrayList(
+                new ReadParseState(buildForwards, read1, refBuffer.length()),
+                new ReadParseState(buildForwards, read2, refBuffer.length()),
+                new ReadParseState(buildForwards, read3, refBuffer.length()),
+                new ReadParseState(buildForwards, read4, refBuffer.length()));
+
+        int maxReadLength = readParseStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
+        int consensusBaseLength = maxReadLength - refBuffer.length();
+
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+
+        String consensusStr = seqBuilder.baseString();
+        assertEquals(readExtBases1, consensusStr);
+        assertTrue(seqBuilder.repeats().isEmpty());
+
+        ReadParseState readState3 = readParseStates.get(2);
+        assertEquals(2, readState3.mismatchInfos().size());
+        assertEquals(SequenceDiffType.DELETE, readState3.mismatchInfos().get(0).Type);
+        assertEquals(SequenceDiffType.INSERT, readState3.mismatchInfos().get(1).Type);
+
+        ReadParseState readState4 = readParseStates.get(3);
+        assertEquals(3, readState4.mismatchInfos().size());
+        assertEquals(SequenceDiffType.INSERT, readState4.mismatchInfos().get(0).Type);
+        assertEquals(SequenceDiffType.INSERT, readState4.mismatchInfos().get(1).Type);
+        assertEquals(SequenceDiffType.DELETE, readState4.mismatchInfos().get(2).Type);
+    }
+
+    @Test
+    public void testSeqBuildRepeatMismatches1()
+    {
+        String refBuffer = "CCCCC";
+        //                      012345678901
+        String readPreBases = "ACGTAACCT";
+        String readPostBases = "TGCAGGGG";
+
+        List<String> repeats = List.of("A", "AT", "AAT", "GGCC", "AATTT");
+        List<Integer> readRepeatCounts = List.of(6, 6, 4, 5, 7, 8);
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            boolean buildForwards = (i == 0);
+
+            for(int test = 0; test < repeats.size(); ++test)
+            {
+                String repeat = repeats.get(test);
+
+                List<Read> reads = Lists.newArrayList();
+                List<ReadParseState> readStates = Lists.newArrayList();
+
+                for(int r = 0; r < readRepeatCounts.size(); ++r)
+                {
+                    int repeatCount = readRepeatCounts.get(r);
+
+                    String readBases = readPreBases + repeat.repeat(repeatCount) + readPostBases;
+
+                    if(buildForwards)
+                        readBases = refBuffer + readBases;
+                    else
+                        readBases += refBuffer;
+
+                    String cigar = makeCigarString(readBases, 0, 0);
+                    Read read = createRead(READ_ID_GENERATOR.nextId(), 100, readBases, cigar);
+                    reads.add(read);
+
+                    int readIndexStart = buildForwards ? refBuffer.length() : readBases.length() - refBuffer.length() - 1;
+                    readStates.add(new ReadParseState(buildForwards, read, readIndexStart));
+                }
+
+                int maxReadLength = readStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
+                int consensusBaseLength = maxReadLength - refBuffer.length();
+
+                SequenceBuilder seqBuilder = new SequenceBuilder(readStates, buildForwards, consensusBaseLength);
+
+                String consensusStr = seqBuilder.baseString();
+
+                String firstReadBases = reads.get(0).getBasesString();
+                String consensusBases = buildForwards ?
+                        firstReadBases.substring(refBuffer.length()) : firstReadBases.substring(0, firstReadBases.length() - refBuffer.length());
+
+                assertEquals(consensusBases, consensusStr);
+                assertEquals(1, seqBuilder.repeats().size());
+
+                /*
+                ReadParseState readState3 = readParseStates.get(2);
+                assertEquals(2, readState3.mismatchInfos().size());
+                assertEquals(SequenceDiffType.DELETE, readState3.mismatchInfos().get(0).Type);
+                */
+
+            }
+        }
+    }
+
     @Test
     public void testRepeatTypes()
     {
@@ -225,7 +426,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(2, mismatches);
     }
@@ -266,7 +467,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(4, mismatches);
 
@@ -275,7 +476,7 @@ public class SequenceTest
         firstBases =  "AACGTTTTTAGCTGA";
         secondBases = "AACTTTTTTAGCTGA";
 
-        firstRepeats = findRepeats(secondBases.getBytes());
+        firstRepeats = findRepeats(firstBases.getBytes());
         secondRepeats = findRepeats(secondBases.getBytes());
 
         firstBaseQuals = buildDefaultBaseQuals(secondBases.length());
@@ -291,7 +492,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(1, mismatches);
     }
@@ -331,7 +532,7 @@ public class SequenceTest
         mismatches = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
-                NO_MISMATCH_LIMIT, false, true);
+                NO_MISMATCH_LIMIT);
 
         assertEquals(8, mismatches);
     }

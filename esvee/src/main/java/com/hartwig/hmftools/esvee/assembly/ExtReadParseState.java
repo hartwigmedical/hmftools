@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerCom
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.MAX_NON_LINE_BASES;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findLineExtensionEndIndex;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -236,30 +235,5 @@ public class ExtReadParseState
                 mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
                 mExtensionLength, mJunctionIndex, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches,
                 mLineExtensionIndex >= 0 ? format(" lineIndex(%d)", mLineExtensionIndex) : "", mExhausted ? " exhausted" : "");
-    }
-
-    // unused - may use something like this for other seq-tech
-    public void movePastLowQualBases()
-    {
-        moveNext();
-
-        while(!exhausted() && belowMinQual(currentQual()))
-        {
-            moveNext();
-        }
-    }
-
-    public byte nextHighQualBase()
-    {
-        int index = mCurrentIndex;
-        while(!exhausted() && belowMinQual(mRead.getBaseQuality()[index]))
-        {
-            ++index;
-        }
-
-        if(exhausted())
-            return -1;
-        else
-            return mRead.getBases()[index];
     }
 }

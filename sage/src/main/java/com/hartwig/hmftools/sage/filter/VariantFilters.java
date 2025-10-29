@@ -7,11 +7,9 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
-import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
-import static com.hartwig.hmftools.sage.SageConstants.ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
@@ -19,6 +17,12 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_HET_TUMOR_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_HOTSPOT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_OTHER;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_PANEL;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -26,9 +30,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PER
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_TQP_QUAL_MSI_VARIANT;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_BOOST;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
-import static com.hartwig.hmftools.sage.SageConstants.PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGNED_MAX_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_STRONG_SUPPORT_HOTSPOT;
@@ -47,6 +48,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PE
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -55,7 +58,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -68,8 +71,6 @@ public class VariantFilters
 {
     private final boolean mIsGermline;
     private final FilterConfig mConfig;
-    private final int mReadEdgeDistanceThreshold;
-    private final int mReadEdgeDistanceThresholdPanel;
 
     private final int[] mFilterCounts;
 
@@ -87,17 +88,10 @@ public class VariantFilters
     {
         mConfig = config.Filter;
         mIsGermline = config.IsGermline;
-        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(LOW_CONFIDENCE));
-        mReadEdgeDistanceThresholdPanel = (int)(config.getReadLength() * readEdgeDistanceThresholdPerc(PANEL));
         mFilterCounts = new int[HardFilterType.values().length];
     }
 
-    public int readEdgeDistanceThreshold(final VariantTier tier)
-    {
-        return tier == HOTSPOT || tier == PANEL ? mReadEdgeDistanceThresholdPanel : mReadEdgeDistanceThreshold;
-    }
-
-    private static double readEdgeDistanceThresholdPerc(final VariantTier tier)
+    public static double readEdgeDistanceThreshold(final VariantTier tier)
     {
         return tier == HOTSPOT || tier == PANEL ? MAX_READ_EDGE_DISTANCE_PERC_PANEL : MAX_READ_EDGE_DISTANCE_PERC;
     }
@@ -255,7 +249,19 @@ public class VariantFilters
             filters.add(SoftFilter.JITTER);
         }
 
-        if(belowMinAverageBaseQuality(primaryTumor, tier))
+        if(isUltima())
+        {
+            if(belowExpectedHpQuals(primaryTumor))
+            {
+                filters.add(SoftFilter.MIN_AVG_HP_QUAL);
+            }
+
+            if(belowExpectedT0Quals(primaryTumor))
+            {
+                filters.add(SoftFilter.MIN_AVG_T0_QUAL);
+            }
+        }
+        else if(belowMinAverageBaseQuality(primaryTumor, tier))
         {
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY);
         }
@@ -266,7 +272,7 @@ public class VariantFilters
         return tier == HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
-                && primaryTumor.altBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
+                && primaryTumor.qualCounters().altRecalibratedBaseQualityTotal() >= HOTSPOT_MIN_ALT_BASE_QUAL;
     }
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
@@ -291,7 +297,14 @@ public class VariantFilters
             return true;
         }
 
-        int qualPerRead = (int)round(primaryTumor.qualCounters().modifiedAltBaseQualityTotal() / strongSupport);
+        int strongNonMediumSupport = strongSupport - primaryTumor.strongMediumQualSupport();
+        double recalibratedAltMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltMediumRecalibratedBaseQualityTotal();
+        double recalibratedAltNonMediumBaseQualityTotal = primaryTumor.qualCounters().strongAltRecalibratedBaseQualityTotal() - recalibratedAltMediumBaseQualityTotal;
+        int mediumSupportContribution = (int)(strongNonMediumSupport * recalibratedAltMediumBaseQualityTotal/recalibratedAltNonMediumBaseQualityTotal);
+        int adjustedStrongSupport = strongNonMediumSupport + mediumSupportContribution;
+        double altNonMediumFinalBaseQualityTotal = primaryTumor.qualCounters().altFinalBaseQualityTotal() - primaryTumor.qualCounters().altMediumFinalBaseQualityTotal();
+
+        int qualPerRead = (int)round(altNonMediumFinalBaseQualityTotal / strongNonMediumSupport);
 
         if(boostNovelIndel(tier, primaryTumor))
             qualPerRead += DEFAULT_BASE_QUAL_FIXED_PENALTY;  // should boost by the actual config base qual penalty
@@ -303,7 +316,7 @@ public class VariantFilters
 
         BinomialDistribution distribution = new BinomialDistribution(depth, readQualProb);
 
-        double prob = 1 - distribution.cumulativeProbability(strongSupport - 1);
+        double prob = 1 - distribution.cumulativeProbability(adjustedStrongSupport - 1);
 
         if(isGermline)
         {
@@ -341,7 +354,7 @@ public class VariantFilters
     private static double calcMapQualFactor(
             final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
     {
-        double avgAltModifiedMapQuality = primaryTumor.qualCounters().altModifiedMapQualityTotal() / (double)strongSupport;
+        double avgAltFinalMapQuality = primaryTumor.qualCounters().altFinalMapQualityTotal() / (double)strongSupport;
 
         double avgMapQual = primaryTumor.mapQualityTotal() / (double)depth;
         double avgAltMapQual = primaryTumor.altMapQualityTotal() / (double)altSupport;
@@ -352,7 +365,7 @@ public class VariantFilters
 
         if(highlyPolymorphicSite)
         {
-            avgAltModifiedMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
+            avgAltFinalMapQuality = min(MAP_QUAL_FACTOR_FIXED_PENALTY + HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY, avgAltMapQual);
 
             if(avgAltMapQual >= HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD)
                 mapQualDiffPenalty = 0;
@@ -388,11 +401,12 @@ public class VariantFilters
         double avgAltEdgeDistance = primaryTumor.readEdgeDistance().avgAltDistanceFromEdge();
         double edgeDistancePenalty = 0;
 
-        double readEdgeDistanceThresholdPerc = readEdgeDistanceThresholdPerc(tier);
+        double readEdgeDistanceThresholdPerc = readEdgeDistanceThreshold(tier);
+        double altAvgEdgeDistanceRatio = avgAltEdgeDistance / avgEdgeDistance;
 
-        if(avgAltEdgeDistance / avgEdgeDistance < 2 * readEdgeDistanceThresholdPerc && !highlyPolymorphicSite)
+        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc)
         {
-            edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 1));
+            edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
         }
 
         double repeatPenalty = 0;
@@ -404,7 +418,7 @@ public class VariantFilters
             repeatPenalty = min(3 * primaryTumor.readContext().MaxRepeat.Count, maxPenalty);
         }
 
-        double mapQualFactor = avgAltModifiedMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
+        double mapQualFactor = avgAltFinalMapQuality - MAP_QUAL_FACTOR_FIXED_PENALTY - mapQualDiffPenalty - readStrandBiasPenalty
                 - edgeDistancePenalty - repeatPenalty;
 
         return mapQualFactor;
@@ -419,7 +433,7 @@ public class VariantFilters
     {
         int depth = primaryTumor.depth();
 
-        double baseQualAvg = primaryTumor.baseQualityTotal() / (double)depth;
+        double baseQualAvg = primaryTumor.qualCounters().recalibratedBaseQualityTotal() / (double)depth;
 
         int supportCount = primaryTumor.strongAltSupport();
 
@@ -446,13 +460,14 @@ public class VariantFilters
 
     private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
+        int threshold = tier == HOTSPOT ? mConfig.MinAvgBaseQualHotspot : mConfig.MinAvgBaseQual;
+
         if(primaryTumor.useMsiErrorRate())
             return false;
 
-        if(tier == HOTSPOT)
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
-        else
-            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
+        double avgBaseQuality = primaryTumor.averageAltSeqTechBaseQuality();
+
+        return Doubles.lessThan(avgBaseQuality, threshold);
     }
 
     private boolean applyJitterFilter(final ReadContextCounter primaryTumor)
@@ -468,14 +483,14 @@ public class VariantFilters
         if(primaryTumor.isLongInsert())
             return false;
 
-        int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
+        double altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromEdge();
 
-        int readEdgeDistanceThreshold = readEdgeDistanceThreshold(tier);
+        double edgeDistanceThreshold = readEdgeDistanceThreshold(tier);
 
-        if(altMed >= readEdgeDistanceThreshold)
+        if(altMed >= edgeDistanceThreshold)
             return false;
 
-        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
+        double maxMed = primaryTumor.readEdgeDistance().maxDistanceFromEdge();
 
         // note max MED for all reads * 2 covers scenarios were no reads have the variant centred
         double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());
@@ -500,7 +515,14 @@ public class VariantFilters
     private boolean belowMinStrongSupport(final ReadContextCounter primaryTumor)
     {
         int strongSupportThreshold = primaryTumor.tier() == HOTSPOT ? REQUIRED_STRONG_SUPPORT_HOTSPOT : REQUIRED_STRONG_SUPPORT;
-        return primaryTumor.strongAltSupport() < strongSupportThreshold;
+        int strongSupport;
+        if(primaryTumor.useMsiErrorRate())
+            strongSupport = primaryTumor.jitter().validQualFullSupport();
+        else if(isUltima())
+            strongSupport = primaryTumor.strongAltSupport();  // depending on HP lengths, may not have any high qual reads
+        else
+            strongSupport = primaryTumor.strongHighQualSupport();
+        return strongSupport < strongSupportThreshold;
     }
 
     private boolean belowMinFragmentCoords(final ReadContextCounter primaryTumor)
@@ -535,20 +557,6 @@ public class VariantFilters
         return false;
     }
 
-    private boolean exceedsAltFragmentLength(final ReadContextCounter primaryTumor)
-    {
-        int maxAltLength = primaryTumor.fragmentLengths().maxAltLength();
-        double avgNonAltLength = primaryTumor.fragmentLengths().averageNonAltLength();
-        int altSupport = primaryTumor.altSupport();
-        int nonAltCount = primaryTumor.fragmentLengths().nonAltCount();
-
-        if(avgNonAltLength == 0 || maxAltLength == 0 || nonAltCount < 10 || maxAltLength >= avgNonAltLength)
-            return false;
-
-        double ratioFactor = pow(0.5 * maxAltLength / avgNonAltLength, altSupport);
-        return ratioFactor < ALT_VS_NON_ALT_AVG_FRAG_LENGTH_THRESHOLD;
-    }
-
     // germline and paired tumor-germline tests
     public void applyTumorGermlineFilters(
             final VariantTier tier, final SoftFilterConfig config,
@@ -564,7 +572,7 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_GERMLINE_VAF);
         }
 
-        if(aboveMaxGermlineRelativeQual(config, refCounter, primaryTumor))
+        if(aboveMaxGermlineRelativeQual(tier, refCounter, primaryTumor))
         {
             filters.add(SoftFilter.MAX_GERMLINE_RELATIVE_QUAL);
         }
@@ -602,29 +610,20 @@ public class VariantFilters
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        return aboveMaxGermlineVaf(
-                tier, refCounter.isInLongRepeat(), tumorVaf, adjustedRefAltCount, refCounter.averageAltRecalibratedBaseQuality(),
-                refCounter.readCounts().Total, config.MaxGermlineVaf);
+        return aboveMaxGermlineVaf(tier, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
     }
 
     public static boolean aboveMaxGermlineVaf(
-            final VariantTier tier, boolean isInLongRepeat,
-            double tumorVaf, int adjustedRefAltCount, double baseQualAvg, int refTotalReads, double maxGermlineVaf)
+            final VariantTier tier, double tumorVaf, int adjustedRefAltCount, int refTotalReads, double maxGermlineVaf)
     {
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
 
-        if(tier == PANEL && !isInLongRepeat)
+        if(tier == PANEL || tier == HOTSPOT)
         {
-            maxGermlineVaf += PANEL_MAX_GERMLINE_VAF_BOOST;
-            if(adjustedRefAltCount == 1)
-            {
-                if(baseQualAvg < DEFAULT_MIN_AVG_BASE_QUALITY)
-                {
-                    double tumorLimit = tumorVaf / PANEL_MAX_GERMLINE_VAF_TUMOR_FACTOR;
-                    maxGermlineVaf = max(maxGermlineVaf, min(PANEL_MAX_GERMLINE_VAF_UPPER_LIMIT, tumorLimit));
-                }
-            }
+            double threshold = tier == HOTSPOT ? tumorVaf : tumorVaf / 2;
+
+            maxGermlineVaf = max(min(threshold, maxGermlineVaf * 2), maxGermlineVaf);
         }
 
         double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
@@ -632,19 +631,46 @@ public class VariantFilters
     }
 
     private static boolean aboveMaxGermlineRelativeQual(
-            final SoftFilterConfig config, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
+            final VariantTier tier, final ReadContextCounter refCounter, final ReadContextCounter primaryTumor)
     {
-        return aboveMaxGermlineRelativeQual(config, primaryTumor.tumorQuality(), refCounter.tumorQuality());
+        int tumorAvgAltBaseQuality = (int)round(primaryTumor.averageAltRecalibratedBaseQuality());
+        int refAvgAltBaseQuality = (int)round(refCounter.averageAltRecalibratedBaseQuality());
+        int tumorQuality = primaryTumor.readQuals().Full + primaryTumor.readQuals().PartialCore + primaryTumor.readQuals().Realigned;
+        int refQuality = refCounter.readQuals().Full + refCounter.readQuals().PartialCore + refCounter.readQuals().Realigned;
+
+        return aboveMaxGermlineRelativeQual(
+                tier, tumorQuality, primaryTumor.vaf(), primaryTumor.depth(), tumorAvgAltBaseQuality,
+                refQuality, refCounter.depth(), refCounter.altSupport(), refAvgAltBaseQuality);
     }
 
-    public static boolean aboveMaxGermlineRelativeQual(final SoftFilterConfig config, double tumorQual, double refQual)
+    public static boolean aboveMaxGermlineRelativeQual(
+            final VariantTier tier,
+            double tumorQual, double tumorVaf, int tumorDepth, double tumorAvgBaseQual,
+            double refQual, int refDepth, int refAltSupport, double refAvgBaseQual)
     {
         if(tumorQual == 0)
             return false; // will be handled in tumor filters
 
-        double refTumorQualRatio = refQual / tumorQual;
+        if(refDepth == 0 || tumorDepth == 0)
+            return false; // rely on other germline filters, eg min germline depth
 
-        return Doubles.greaterThan(refTumorQualRatio, config.MaxGermlineRelativeQual);
+        // adjust inputs by avg base qual
+        double adjustedTumorVaf = min(max(tumorVaf - pow(10, -tumorAvgBaseQual / 10), 0.0), MAX_GERMLINE_QUAL_HET_TUMOR_VAF);
+
+        int adjustedRefAd = max((int)round(refAltSupport - refDepth * pow(10, -refAvgBaseQual / 10)), 0);
+        double depthRatio = refDepth / (double)tumorDepth;
+        double adjustedRefQualRatio = refQual / tumorQual / depthRatio;
+
+        BinomialDistribution distribution = new BinomialDistribution(refDepth, adjustedTumorVaf);
+
+        double prob = distribution.cumulativeProbability(adjustedRefAd);
+
+        double probThreshold = tier == HOTSPOT ? MAX_GERMLINE_QUAL_PROB_HOTSPOT :
+                (tier == PANEL ? MAX_GERMLINE_QUAL_PROB_PANEL : MAX_GERMLINE_QUAL_PROB_OTHER);
+
+        double ratioThreshold = tier == HOTSPOT ? MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT : MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
+
+        return prob > probThreshold && adjustedRefQualRatio > ratioThreshold;
     }
 
     private static boolean aboveMaxMnvIndelGermlineAltSupport(final VariantTier tier, final ReadContextCounter refCounter)

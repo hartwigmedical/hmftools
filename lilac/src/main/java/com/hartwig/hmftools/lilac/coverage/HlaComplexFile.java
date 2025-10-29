@@ -10,13 +10,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
-public class HlaComplexFile
+import com.hartwig.hmftools.lilac.GeneSelector;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
+
+public final class HlaComplexFile
 {
-    public static String header()
+    private HlaComplexFile() {}
+
+    public static String header(final GeneSelector genes)
     {
         StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
+        sb.add("ComplexityPenalty");
+        sb.add("Complexity");
         sb.add("HomozygousCount");
+        sb.add("CohortFrequencyPenalty");
         sb.add("CohortFrequency");
         sb.add("RecoveryCount");
         sb.add("WildcardCount");
@@ -24,22 +32,22 @@ public class HlaComplexFile
         sb.add("UniqueCoverage");
         sb.add("SharedCoverage");
         sb.add("WildCoverage");
-        sb.add("A1");
-        sb.add("A2");
-        sb.add("B1");
-        sb.add("B2");
-        sb.add("C1");
-        sb.add("C2");
+        for(HlaGene gene : genes.genes())
+        {
+            sb.add(gene.shortName() + "_1");
+            sb.add(gene.shortName() + "_2");
+        }
+
         return sb.toString();
     }
 
-    public static void writeToFile(final String fileName, final List<ComplexCoverage> coverages)
+    public static void writeToFile(final String fileName, final GeneSelector genes, final Iterable<ComplexCoverage> coverages)
     {
         try
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write(header());
+            writer.write(header(genes));
             writer.newLine();
 
             for(ComplexCoverage coverage : coverages)
@@ -53,7 +61,6 @@ public class HlaComplexFile
         catch(IOException e)
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 
@@ -62,7 +69,10 @@ public class HlaComplexFile
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(String.format("%.2f", coverage.getScore()));
+        sj.add(String.format("%.2f", coverage.getComplexityPenalty()));
+        sj.add(String.format("%d", coverage.getComplexity()));
         sj.add(String.valueOf(coverage.homozygousCount()));
+        sj.add(String.format("%.2f", coverage.getCohortFrequencyPenalty()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
         sj.add(String.valueOf(coverage.recoveredCount()));
         sj.add(String.valueOf(coverage.wildcardCount()));
@@ -76,55 +86,44 @@ public class HlaComplexFile
     }
 
     public static void writeFragmentAssignment(
-            final String fileName, final List<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
+            final BufferedWriter writer, final Iterable<ComplexCoverage> coverages, final List<FragmentAlleles> fragAlleles)
+            throws IOException
     {
-        try
+        StringJoiner sb = new StringJoiner(TSV_DELIM);
+        sb.add("Complex");
+        sb.add("FragmentId");
+        sb.add("FragmentCoords");
+        sb.add("Type");
+        sb.add("FullAlleles");
+        sb.add("WildAlleles");
+        writer.write(sb.toString());
+        writer.newLine();
+
+        for(ComplexCoverage complexCoverage : coverages)
         {
-            BufferedWriter writer = createBufferedWriter(fileName, false);
+            StringJoiner complexAlleles = new StringJoiner(ITEM_DELIM);
+            complexCoverage.getAlleles().forEach(x -> complexAlleles.add(x.toString()));
+            String complexStr = complexAlleles.toString();
 
-            StringJoiner sb = new StringJoiner(TSV_DELIM);
-            sb.add("Complex");
-            sb.add("FragmentId");
-            sb.add("FragmentCoords");
-            sb.add("Type");
-            sb.add("FullAlleles");
-            sb.add("WildAlleles");
-            writer.write(sb.toString());
-            writer.newLine();
+            List<FragmentAlleles> complexFrags = FragmentAlleles.filter(fragAlleles, complexCoverage.getAlleles());
 
-            for(ComplexCoverage complexCoverage : coverages)
+            for(FragmentAlleles fragAllele : complexFrags)
             {
-                StringJoiner complexAlleles = new StringJoiner(ITEM_DELIM);
-                complexCoverage.getAlleles().forEach(x -> complexAlleles.add(x.toString()));
-                String complexStr = complexAlleles.toString();
+                StringJoiner fullAlleles = new StringJoiner(ITEM_DELIM);
+                fragAllele.getFull().forEach(x -> fullAlleles.add(x.toString()));
 
-                List<FragmentAlleles> complexFrags = FragmentAlleles.filter(fragAlleles, complexCoverage.getAlleles());
+                StringJoiner wildAlleles = new StringJoiner(ITEM_DELIM);
+                fragAllele.getWild().forEach(x -> wildAlleles.add(x.toString()));
 
-                for(FragmentAlleles fragAllele : complexFrags)
-                {
-                    StringJoiner fullAlleles = new StringJoiner(ITEM_DELIM);
-                    fragAllele.getFull().forEach(x -> fullAlleles.add(x.toString()));
+                String type = (fragAllele.getFull().size() == 1 && fragAllele.getWild().isEmpty()) ? "UNIQUE_FULL" :
+                        (fragAllele.getFull().isEmpty() && fragAllele.getWild().size() == 1) ? "UNIQUE_WILD" : "SHARED";
 
-                    StringJoiner wildAlleles = new StringJoiner(ITEM_DELIM);
-                    fragAllele.getWild().forEach(x -> wildAlleles.add(x.toString()));
+                writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s",
+                        complexStr, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo(),
+                        type, fullAlleles, wildAlleles));
 
-                    String type = (fragAllele.getFull().size() == 1 && fragAllele.getWild().isEmpty()) ? "UNIQUE_FULL" :
-                            (fragAllele.getFull().isEmpty() && fragAllele.getWild().size() == 1) ? "UNIQUE_WILD" : "SHARED";
-
-                    writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s",
-                            complexStr, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo(),
-                            type, fullAlleles.toString(), wildAlleles.toString()));
-
-                    writer.newLine();
-                }
+                writer.newLine();
             }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 

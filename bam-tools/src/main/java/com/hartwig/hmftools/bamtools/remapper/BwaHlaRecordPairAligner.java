@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.bamtools.remapper;
 
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
+
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -49,17 +55,50 @@ public class BwaHlaRecordPairAligner implements HlaRecordPairAligner
         fixProperPairFlag(principalLeftRemapped);
         fixProperPairFlag(principalRightRemapped);
 
-        List<SAMRecord> result = new ArrayList<>();
-        result.add(principalLeftRemapped);
-        result.add(principalRightRemapped);
+        List<SAMRecord> lefts = new ArrayList<>();
+        List<SAMRecord> rights = new ArrayList<>();
+        lefts.add(principalLeftRemapped);
+        rights.add(principalRightRemapped);
 
         // Calculate and add any supplementary alignments.
         leftAlignments.supplementaryAlignments()
-                .forEach(left -> result.add(left.createSamRecord(mHeader, pair.leftData(), bestAlignedPair.Right)));
+                .forEach(left -> lefts.add(left.createSamRecord(mHeader, pair.leftData(), bestAlignedPair.Right)));
         rightAlignments.supplementaryAlignments()
-                .forEach(right -> result.add(right.createSamRecord(mHeader, pair.rightData(), bestAlignedPair.Left)));
+                .forEach(right -> rights.add(right.createSamRecord(mHeader, pair.rightData(), bestAlignedPair.Left)));
 
+        // Add SA tags for supplementaries.
+        addSupplementaryReadTags(lefts);
+        addSupplementaryReadTags(rights);
+
+        List<SAMRecord> result = new ArrayList<>();
+        result.addAll(lefts);
+        result.addAll(rights);
         return result;
+    }
+
+    static void addSupplementaryReadTags(List<SAMRecord> records)
+    {
+        if (records.size() < 2) {
+            return;
+        }
+        // Setting the SA tag of the records changes their hash values, so we use an IdentityHashMap.
+        Map<SAMRecord, String> recordToTag = new IdentityHashMap<>();
+        records.forEach(record -> recordToTag.put(record, createSATag(record)));
+        records.forEach(record -> {
+            List<String> tagsForRecord = new ArrayList<>();
+            records.forEach(otherRecord -> {
+                if (record != otherRecord) {
+                    tagsForRecord.add(recordToTag.get(otherRecord));
+                }
+            });
+            String tags = String.join("", tagsForRecord);
+            record.setAttribute(SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE, tags);
+        });
+    }
+
+    static String createSATag(SAMRecord record)
+    {
+        return SupplementaryReadData.createSupplementaryReadDataForRecord(record).asSamTag() + ALIGNMENTS_DELIM;
     }
 
     private static void fixProperPairFlag(SAMRecord record)

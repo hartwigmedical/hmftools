@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.aboveLowBaseQual;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +109,7 @@ public class JunctionData
         }
     }
 
-    public void setInitialRead(int minSoftClipHighQual)
+    public void setInitialRead()
     {
         if(mInternalIndel)
             return;
@@ -137,10 +139,13 @@ public class JunctionData
             int scRangeStart = useLeftSoftClip ? 0 : baseQualities.length - scLength;
             int scRangeEnd = useLeftSoftClip ? scLength : baseQualities.length;
 
+            if(scRangeEnd - scRangeStart + 1 < maxHighQualBases)
+                continue;
+
             int aboveQual = 0;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
-                if(baseQualities[i] >= minSoftClipHighQual)
+                if(aboveLowBaseQual(baseQualities[i]))
                     ++aboveQual;
             }
 

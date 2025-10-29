@@ -1,14 +1,18 @@
 package com.hartwig.hmftools.lilac.fragment;
 
+import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.BASE_QUAL_FILTERED;
-import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.copyNucleotideFragment;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
+import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB4;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultiset;
@@ -17,50 +21,38 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.hla.HlaContext;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class AminoAcidFragmentPipeline
 {
-    private final LilacConfig mConfig;
-
-    private final double mMinEvidenceFactor;
-    private final double mMinHighQualEvidenceFactor;
-    private final int mMinVafFilterDepth;
+    // raw per-gene counts of bases and amino-acids
+    public static final ConcurrentHashMap<HlaGene, SequenceCount> RAW_REF_NUCLEOTIDE_COUNTS = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<HlaGene, SequenceCount> RAW_REF_AMINO_ACID_COUNTS = new ConcurrentHashMap<>();
 
     private final List<Fragment> mHighQualRefAminoAcidFragments; // generated from input ref fragments, filtered and amino acids built
 
     // per-gene counts of bases and amino-acids with sufficient support
-    private final Map<String, SequenceCount> mRefNucleotideCounts;
-    private final Map<String, SequenceCount> mRefAminoAcidCounts;
+    private final ConcurrentHashMap<HlaGene, SequenceCount> mRefNucleotideCounts;
+    private final ConcurrentHashMap<HlaGene, SequenceCount> mRefAminoAcidCounts;
 
     private final List<Fragment> mOriginalRefFragments; // copied and used for phasing only, will remain unchanged
 
-    public AminoAcidFragmentPipeline(final LilacConfig config, final List<Fragment> referenceFragments)
+    public AminoAcidFragmentPipeline(final Collection<Fragment> referenceFragments)
     {
-        mConfig = config;
-        mOriginalRefFragments = referenceFragments.stream().map(x -> copyNucleotideFragment(x)).collect(Collectors.toList());
+        mOriginalRefFragments = referenceFragments.stream().map(FragmentUtils::copyNucleotideFragment).collect(Collectors.toList());
 
         mHighQualRefAminoAcidFragments = createHighQualAminoAcidFragments(referenceFragments);
 
-        mMinEvidenceFactor = config.MinEvidenceFactor;
-        mMinHighQualEvidenceFactor = config.MinHighQualEvidenceFactor;
-        mMinVafFilterDepth = config.MinVafFilterDepth;
-
-        mRefNucleotideCounts = Maps.newHashMap();
-        mRefAminoAcidCounts = Maps.newHashMap();
+        mRefNucleotideCounts = new ConcurrentHashMap<>();
+        mRefAminoAcidCounts = new ConcurrentHashMap<>();
     }
 
-    public List<Fragment> highQualRefFragments()
-    {
-        return mHighQualRefAminoAcidFragments;
-    }
+    public List<Fragment> highQualRefFragments() { return mHighQualRefAminoAcidFragments; }
 
-    public Map<String, SequenceCount> getReferenceAminoAcidCounts()
-    {
-        return mRefAminoAcidCounts;
-    }
+    public Map<HlaGene, SequenceCount> getReferenceAminoAcidCounts() { return mRefAminoAcidCounts; }
 
-    private List<Fragment> createHighQualAminoAcidFragments(final List<Fragment> fragments)
+    private static List<Fragment> createHighQualAminoAcidFragments(final Iterable<Fragment> fragments)
     {
         List<Fragment> aminoAcidFragments = Lists.newArrayList();
 
@@ -86,7 +78,7 @@ public class AminoAcidFragmentPipeline
         return createSequenceSets(mRefNucleotideCounts);
     }
 
-    private static List<Set<String>> createSequenceSets(final Map<String, SequenceCount> countsMap)
+    private static List<Set<String>> createSequenceSets(final Map<HlaGene, SequenceCount> countsMap)
     {
         NavigableMap<Integer, Set<String>> refAminoAcids = Maps.newTreeMap();
         for(SequenceCount seqCounts : countsMap.values())
@@ -107,69 +99,69 @@ public class AminoAcidFragmentPipeline
 
         // NOTE: this will create a copy of the fragment which will only be used in the scope of phasing and candidate selection,
         // not for anything to do with coverage
-        String gene = context.geneName();
+        HlaGene gene = context.Gene;
 
         // start with the unfiltered fragments again
-        List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream()
-                .filter(x -> x.containsGene(gene))
-                .collect(Collectors.toList());
+        List<Fragment> geneRefNucFrags = mOriginalRefFragments.stream().filter(x -> x.containsGene(gene)).toList();
 
-        if(geneRefNucFrags.isEmpty())
+        if(context.Gene != HLA_DRB3 && context.Gene != HLA_DRB4)
         {
-            return Collections.emptyList();
+            List<Fragment> rawGeneNucFrags = mOriginalRefFragments.stream().filter(x -> x.readGene() == gene).toList();
+            SequenceCount rawNucCount = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, rawGeneNucFrags);
+            List<Fragment> geneRefAcidFrags = rawGeneNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
+            geneRefAcidFrags.forEach(Fragment::buildAminoAcids);
+            SequenceCount rawAcidCount = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, geneRefAcidFrags);
+            RAW_REF_NUCLEOTIDE_COUNTS.put(gene, rawNucCount);
+            RAW_REF_AMINO_ACID_COUNTS.put(gene, rawAcidCount);
         }
 
-        List<Fragment> highQualFrags = geneRefNucFrags.stream()
-                .map(x -> copyNucleotideFragment(x))
-                .collect(Collectors.toList());
+        if(geneRefNucFrags.isEmpty())
+            return Collections.emptyList();
 
-        highQualFrags.forEach(x -> x.removeLowQualBases());
-        highQualFrags = highQualFrags.stream().filter(x -> x.hasNucleotides()).collect(Collectors.toList());
+        List<Fragment> highQualFrags = geneRefNucFrags.stream().map(FragmentUtils::copyNucleotideFragment).toList();
+        highQualFrags.forEach(Fragment::removeLowQualBases);
+        highQualFrags = highQualFrags.stream().filter(Fragment::hasNucleotides).toList();
 
         List<Fragment> qualEnrichedNucFrags = NucleotideFragmentQualEnrichment.qualityFilterFragments(
-                mMinVafFilterDepth, mMinEvidenceFactor, mMinHighQualEvidenceFactor, geneRefNucFrags, highQualFrags);
+                context, geneRefNucFrags, highQualFrags);
 
         int maxCommonAminoAcidExonBoundary = GENE_CACHE.MaxCommonAminoAcidExonBoundary;
 
         Set<Integer> aminoAcidBoundaries = context.AminoAcidBoundaries.stream()
                 .filter(x -> x <= maxCommonAminoAcidExonBoundary).collect(Collectors.toSet());
 
-        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(
-                mMinVafFilterDepth, mMinEvidenceFactor, aminoAcidBoundaries);
+        NucleotideSpliceEnrichment spliceEnricher = new NucleotideSpliceEnrichment(aminoAcidBoundaries);
         List<Fragment> spliceEnrichedNucFrags = spliceEnricher.applySpliceInfo(qualEnrichedNucFrags, highQualFrags);
 
-        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(mConfig, spliceEnrichedNucFrags);
+        List<Fragment> enrichedAminoAcidFrags = AminoAcidQualEnrichment.qualityFilterAminoAcidFragments(
+                context, spliceEnrichedNucFrags, MIN_EVIDENCE_FACTOR);
 
         // cache support at each base and amino acid for later writing and recovery of low-qual support
-        SequenceCount refNucleotideCounts = SequenceCount.nucleotides(mMinVafFilterDepth, mMinEvidenceFactor, enrichedAminoAcidFrags);
-        SequenceCount refAminoAcidCounts = SequenceCount.aminoAcids(mMinVafFilterDepth, mMinEvidenceFactor, enrichedAminoAcidFrags);
+        SequenceCount refNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
+        SequenceCount refAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, enrichedAminoAcidFrags);
         setCounts(gene, refNucleotideCounts, refAminoAcidCounts);
 
         return enrichedAminoAcidFrags;
     }
 
-    private synchronized void setCounts(final String gene, final SequenceCount refNucleotideCounts, final SequenceCount refAminoAcidCounts)
+    private void setCounts(final HlaGene gene, final SequenceCount refNucleotideCounts, final SequenceCount refAminoAcidCounts)
     {
         mRefNucleotideCounts.put(gene, refNucleotideCounts);
         mRefAminoAcidCounts.put(gene, refAminoAcidCounts);
     }
 
-    public List<Fragment> calcComparisonCoverageFragments(final List<Fragment> comparisonFragments)
+    public List<Fragment> calcComparisonCoverageFragments(final Iterable<Fragment> comparisonFragments)
     {
         List<Fragment> highQualFragments = createHighQualAminoAcidFragments(comparisonFragments);
 
         if(highQualFragments.isEmpty())
-        {
             return Lists.newArrayList();
-        }
 
-        SequenceCount referenceNucleotideCounts = SequenceCount.nucleotides(
-                mMinVafFilterDepth, mMinEvidenceFactor, mHighQualRefAminoAcidFragments);
-        SequenceCount referenceAminoAcidCounts = SequenceCount.aminoAcids(
-                mMinVafFilterDepth, mMinEvidenceFactor, mHighQualRefAminoAcidFragments);
+        SequenceCount referenceNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, mHighQualRefAminoAcidFragments);
+        SequenceCount referenceAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, mHighQualRefAminoAcidFragments);
 
-        SequenceCount tumorNucleotideCounts = SequenceCount.nucleotides(mMinVafFilterDepth, mMinEvidenceFactor, highQualFragments);
-        SequenceCount tumorAminoAcidCounts = SequenceCount.aminoAcids(mMinVafFilterDepth, mMinEvidenceFactor, highQualFragments);
+        SequenceCount tumorNucleotideCounts = SequenceCount.buildFromNucleotides(MIN_EVIDENCE_FACTOR, highQualFragments);
+        SequenceCount tumorAminoAcidCounts = SequenceCount.buildFromAminoAcids(MIN_EVIDENCE_FACTOR, highQualFragments);
 
         final List<SequenceCountDiff> nucleotideDifferences = SequenceCountDiff.create(referenceNucleotideCounts, tumorNucleotideCounts)
                 .stream().filter(x -> x.TumorCount > 0).collect(Collectors.toList());
@@ -183,8 +175,8 @@ public class AminoAcidFragmentPipeline
         return variantFilteredTumorAminoAcids;
     }
 
-    private static boolean containsVariant(
-            final Fragment fragment, final List<SequenceCountDiff> nucelotideVariants, final List<SequenceCountDiff> aminoAcidVariants)
+    private static boolean containsVariant(final Fragment fragment, final Collection<SequenceCountDiff> nucelotideVariants,
+            final Collection<SequenceCountDiff> aminoAcidVariants)
     {
         return nucelotideVariants.stream().anyMatch(x -> containsNucleotideVariant(fragment, x))
                 || aminoAcidVariants.stream().anyMatch(x -> containsAminoAcidVariant(fragment, x));
@@ -202,16 +194,20 @@ public class AminoAcidFragmentPipeline
 
     public void writeCounts(final LilacConfig config)
     {
-        for(Map.Entry<String, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
+        for(Map.Entry<HlaGene, SequenceCount> entry : mRefAminoAcidCounts.entrySet())
         {
-            String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".aminoacids.txt"));
+            HlaGene gene = entry.getKey();
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".aminoacids.txt", false),
+                    RAW_REF_AMINO_ACID_COUNTS.get(gene));
         }
 
-        for(Map.Entry<String, SequenceCount> entry : mRefNucleotideCounts.entrySet())
+        for(Map.Entry<HlaGene, SequenceCount> entry : mRefNucleotideCounts.entrySet())
         {
-            String gene = entry.getKey();
-            entry.getValue().writeVertically(config.formFileId(gene + ".nucleotides.txt"));
+            HlaGene gene = entry.getKey();
+            entry.getValue().writeVertically(
+                    config.formFileId(gene.longName() + ".nucleotides.txt", false),
+                    RAW_REF_NUCLEOTIDE_COUNTS.get(gene));
         }
     }
 }

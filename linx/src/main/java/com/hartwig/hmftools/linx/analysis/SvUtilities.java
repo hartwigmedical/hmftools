@@ -6,8 +6,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
@@ -16,6 +16,8 @@ import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -289,7 +291,8 @@ public final class SvUtilities {
     public static String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
     public static String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
 
-    public static List<ChrBaseRegion> loadConfigFile(final List<String> fileLines, final RefGenomeVersion refGenomeVersion, final String delim)
+    public static List<ChrBaseRegion> loadConfigFile(
+            final List<String> fileLines, @Nullable final RefGenomeVersion refGenomeVersion, final String delim)
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
@@ -306,8 +309,17 @@ public final class SvUtilities {
                 return null;
             }
 
-            regions.add(new ChrBaseRegion(
-                    refGenomeVersion.versionedChromosome(items[0]), Integer.parseInt(items[1]), Integer.parseInt(items[2])));
+            String chromosome = refGenomeVersion != null
+                    ? refGenomeVersion.versionedChromosome(items[0])
+                    : items[0];
+
+            ChrBaseRegion region = new ChrBaseRegion(
+                    chromosome,
+                    Integer.parseInt(items[1]),
+                    Integer.parseInt(items[2])
+            );
+
+            regions.add(region);
         }
 
         return regions;
@@ -317,6 +329,4 @@ public final class SvUtilities {
     {
         return loadConfigFile(fileLines, refGenomeVersion, CSV_DELIM);
     }
-
-
 }

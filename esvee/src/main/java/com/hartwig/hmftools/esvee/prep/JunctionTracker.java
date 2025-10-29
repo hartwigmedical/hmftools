@@ -7,10 +7,9 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
@@ -22,6 +21,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RA
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.isDiscordantUnpairedReadGroup;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -277,7 +277,7 @@ public class JunctionTracker
             }
         }
 
-        mJunctions.forEach(x -> x.setInitialRead(LOW_BASE_QUAL_THRESHOLD));
+        mJunctions.forEach(x -> x.setInitialRead());
 
         perfCounterStop(PerfCounters.InitJunctions);
 
@@ -353,13 +353,13 @@ public class JunctionTracker
             if(hasBlacklistedRead)
                 continue;
 
-            if(mDiscordantGroupFinder.isDiscordantGroup(readGroup))
-            {
-                mDiscordantStats.processReadGroup(readGroup);
+            boolean isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
 
-                if(mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
-                    mCandidateDiscordantGroups.add(readGroup);
-            }
+            if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
+                mCandidateDiscordantGroups.add(readGroup);
+
+            if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
+                mDiscordantStats.processReadGroup(readGroup);
         }
 
         perfCounterStop(PerfCounters.JunctionSupport);
@@ -424,7 +424,7 @@ public class JunctionTracker
 
                 Orientation orientation = (i == 0) ? REVERSE : FORWARD;
 
-                int position = orientation.isReverse() ? read.start() : read.end();
+                int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
                 // junctions cannot fall in blacklist regions
                 if(positionInBlacklist(position))
@@ -473,7 +473,7 @@ public class JunctionTracker
 
     private boolean readInBlacklist(final PrepRead read)
     {
-        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.start(), read.end()));
+        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.AlignmentStart, read.AlignmentEnd));
     }
 
     private boolean readMateInBlacklist(final PrepRead read)
@@ -519,8 +519,8 @@ public class JunctionTracker
         if(indelCoords == null)
             return;
 
-        int impliedUnclippedStart = read.start();
-        int impliedUnclippedEnd = read.end();
+        int impliedUnclippedStart = read.AlignmentStart;
+        int impliedUnclippedEnd = read.AlignmentEnd;
 
         if(indelCoords.isInsert())
         {
@@ -533,8 +533,8 @@ public class JunctionTracker
             impliedUnclippedEnd -= indelCoords.Length;
         }
 
-        int readBoundsMin = min(read.start(), impliedUnclippedStart);
-        int readBoundsMax = max(read.end(), impliedUnclippedEnd);
+        int readBoundsMin = min(read.AlignmentStart, impliedUnclippedStart);
+        int readBoundsMax = max(read.AlignmentEnd, impliedUnclippedEnd);
 
         // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
         for(JunctionData junctionData : mJunctions)
@@ -580,7 +580,7 @@ public class JunctionTracker
 
     private JunctionData getOrCreateJunction(final PrepRead read, final Orientation orientation)
     {
-        int junctionPosition = orientation.isReverse() ? read.start() : read.end();
+        int junctionPosition = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
         return getOrCreateJunction(read, junctionPosition, orientation);
     }
 
@@ -768,7 +768,7 @@ public class JunctionTracker
             if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
                 return currentIndex;
 
-            if(read.end() < junctionData.Position)
+            if(read.AlignmentEnd < junctionData.Position)
             {
                 // search lower
                 if(lowerIndex + 1 == currentIndex)
@@ -777,7 +777,7 @@ public class JunctionTracker
                 upperIndex = currentIndex;
                 currentIndex = (lowerIndex + upperIndex) / 2;
             }
-            else if(read.start() > junctionData.Position)
+            else if(read.AlignmentStart > junctionData.Position)
             {
                 // search higher
                 if(currentIndex + 1 == upperIndex)
@@ -806,10 +806,10 @@ public class JunctionTracker
 
     private boolean readWithinJunctionRange(final PrepRead read, final JunctionData junctionData, int maxDistance)
     {
-        if(abs(read.end() - junctionData.Position) <= maxDistance)
+        if(abs(read.AlignmentEnd - junctionData.Position) <= maxDistance)
             return true;
 
-        if(abs(read.start() - junctionData.Position) <= maxDistance)
+        if(abs(read.AlignmentStart - junctionData.Position) <= maxDistance)
             return true;
 
         return false;

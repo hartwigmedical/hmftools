@@ -84,6 +84,9 @@ public class FragmentCache
 
                 if(existingFragment.expectedSupplementaryCount() > 0)
                     ++mStats.FragmentsWithSupplementaries;
+
+                if(existingFragment.requiredMateCigarFix())
+                    ++mStats.MateCigarFixed;
             }
         }
 

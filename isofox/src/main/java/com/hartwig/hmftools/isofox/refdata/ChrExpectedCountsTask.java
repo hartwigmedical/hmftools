@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
-public class ChrExpectedCountsTask implements Callable
+public class ChrExpectedCountsTask implements Callable<Void>
 {
     private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
@@ -48,10 +48,10 @@ public class ChrExpectedCountsTask implements Callable
     }
 
     @Override
-    public Long call()
+    public Void call()
     {
         generateExpectedCounts();
-        return (long)0;
+        return null;
     }
 
     private void generateExpectedCounts()

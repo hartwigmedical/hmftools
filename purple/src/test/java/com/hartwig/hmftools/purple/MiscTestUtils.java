@@ -16,10 +16,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.SegmentSupport;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.gc.ImmutableGCProfile;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -27,8 +26,6 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +82,6 @@ public final class MiscTestUtils
             context.getCommonInfo().putAttribute(PURPLE_BIALLELIC_FLAG, true);
 
         double variantCopyNumber = 2 * vaf;
-        double adjustedCopyNumber = 2;
 
         context.getCommonInfo().putAttribute(PURPLE_VARIANT_CN, variantCopyNumber);
 
@@ -148,5 +144,23 @@ public final class MiscTestUtils
                 .log10PError(logError)
                 .unfiltered()
                 .make(true);
+    }
+
+    @NotNull
+    public static GCProfile gcProfile(Chromosome chromosome, int start, int windowSize, double mappability, double gcContent)
+    {
+        return gcProfile(chromosome.toString(), start, windowSize, mappability, gcContent);
+    }
+
+    public static GCProfile gcProfile(String chromosome, int start, int windowSize, double mappability, double gcContent)
+    {
+        return ImmutableGCProfile.builder()
+                .chromosome(chromosome)
+                .start(start)
+                .end(start + windowSize - 1)
+                .mappablePercentage(mappability)
+                .gcContent(gcContent)
+                .nonNPercentage(1)
+                .build();
     }
 }

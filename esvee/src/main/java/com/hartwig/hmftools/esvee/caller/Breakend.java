@@ -34,16 +34,14 @@ public class Breakend
     public final Orientation Orient;
     public final boolean IsStart; // the start breakend in an SV, or true if a SGL
 
-    public final Genotype RefGenotype;
-    public final Genotype TumorGenotype;
-
     public final String InsertSequence;
-
     public final Interval ConfidenceInterval;
     public final Interval InexactHomology;
     public final boolean IsLineInsertion;
 
     private final Variant mVariant;
+    private final Genotype mRefGenotype;
+    private final Genotype mTumorGenotype;
 
     private Breakend mLineSiteBreakend;
 
@@ -59,8 +57,8 @@ public class Breakend
         Orient = orientation;
         IsStart = isStart;
 
-        RefGenotype = refGenotype;
-        TumorGenotype = tumorGenotype;
+        mRefGenotype = refGenotype;
+        mTumorGenotype = tumorGenotype;
 
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
@@ -108,6 +106,11 @@ public class Breakend
     public boolean isStart() { return IsStart;}
     public boolean isEnd() { return !IsStart;}
 
+    public double calcAllelicFrequency()
+    {
+        return mTumorGenotype != null ? calcAllelicFrequency(mTumorGenotype) : calcAllelicFrequency(mRefGenotype);
+    }
+
     public double calcAllelicFrequency(final Genotype genotype)
     {
         // set in the depth annotator, which has the same logic as here - so can remove this in future
@@ -125,10 +128,10 @@ public class Breakend
 
     public int fragmentCount(final Genotype genotype)
     {
-        return getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
+        return genotype != null ? getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0) : 0;
     }
 
-    public int fragmentCount() { return fragmentCount(TumorGenotype) + fragmentCount(RefGenotype); }
+    public int fragmentCount() { return fragmentCount(mTumorGenotype) + fragmentCount(mRefGenotype); }
 
     // convenience
     public boolean isSgl() { return mVariant.isSgl(); }

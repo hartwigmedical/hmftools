@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
+import static com.hartwig.hmftools.common.redux.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
 import com.hartwig.hmftools.sage.common.ReadContextMatcher;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
@@ -312,7 +312,7 @@ public class JitterTest
     public void testMsiJitterCalcs()
     {
         JitterModelParams jitterParams = new JitterModelParams(
-                "A/T",	ConsensusType.IGNORE, 0.05,0.05, 0.11,	0.0444,
+                "A/T", ConsensusType.NONE, 0.05,0.05, 0.11,	0.0444,
                 -0.1835,	1.0164);
 
         MsiModelParams modelParams = new MsiModelParams(jitterParams);
@@ -330,15 +330,15 @@ public class JitterTest
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
         JitterModelParams jitterParams1 = new JitterModelParams(
-                "A/T",	ConsensusType.IGNORE, 0.05,0.06, 0.07,	0.0444,
+                "A/T", ConsensusType.NONE, 0.05,0.06, 0.07,	0.0444,
                 -0.1835,	1.0164);
 
         JitterModelParams jitterParams2 = new JitterModelParams(
-                "AT/TA",	ConsensusType.IGNORE, 0.02,0.03, 0.04,	0.0444,
+                "AT/TA", ConsensusType.NONE, 0.02,0.03, 0.04,	0.0444,
                 -0.1835,	1.0164);
 
         JitterModelParams jitterParams3 = new JitterModelParams(
-                REPEAT_UNIT_3_PLUS_LABEL,	ConsensusType.IGNORE, 0.1, 0.11, 0.12, 0.0133,
+                REPEAT_UNIT_3_PLUS_LABEL, ConsensusType.NONE, 0.1, 0.11, 0.12, 0.0133,
                 0.1115, 1.6087);
 
         String sampleId = TEST_SAMPLE;
@@ -378,7 +378,7 @@ public class JitterTest
         MsiJitterCalcs msiJitterCalcs = new MsiJitterCalcs();
 
         JitterModelParams jitterParams1 = new JitterModelParams(
-                "A/C/G/T",	ConsensusType.IGNORE, 0.05,0.06, 0.07,	0.05,
+                "A/C/G/T", ConsensusType.NONE, 0.05,0.06, 0.07,	0.05,
                 -0.02,	0.05);
 
         msiJitterCalcs.setSampleParams(TEST_SAMPLE, List.of(jitterParams1));
@@ -395,11 +395,10 @@ public class JitterTest
         VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
         ReadContextCounter readContextCounter = createReadCounter(0, readContext);
 
-        JitterData jitterData = new JitterData();
+        JitterData jitterData = readContextCounter.jitter();
 
         // lengthened is noise
-        jitterData.setValues(10, 10);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(10, 10, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -407,8 +406,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // shortened is noise
-        jitterData.setValues(5, 35);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(5, 35, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -416,8 +414,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // both noise
-        jitterData.setValues(5, 2);
-        readContextCounter.readSupportCounts().Full = 50;
+        jitterData.setValues(5, 2, 50);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -425,8 +422,7 @@ public class JitterTest
         assertFalse(jitterData.filterOnNoise());
 
         // shortened too high
-        jitterData.setValues(21, 1);
-        readContextCounter.readSupportCounts().Full = 10;
+        jitterData.setValues(21, 1, 10);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -434,8 +430,7 @@ public class JitterTest
         assertEquals(1, jitterData.qualBoost(), 0.01);
 
         // again for lengthened
-        jitterData.setValues(1, 60);
-        readContextCounter.readSupportCounts().Full = 2;
+        jitterData.setValues(1, 60, 2);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 
@@ -443,8 +438,7 @@ public class JitterTest
         assertEquals(1, jitterData.qualBoost(), 0.01);
 
         // combined
-        jitterData.setValues(126, 126);
-        readContextCounter.readSupportCounts().Full = 35;
+        jitterData.setValues(126, 126, 35);
 
         jitterData.setJitterQualFilterState(msiJitterCalcs, readContextCounter);
 

@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -16,6 +15,7 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import htsjdk.samtools.CigarElement;
@@ -245,5 +245,33 @@ public class ReadCigarInfo
         }
 
         return new ReadCigarInfo(readStart, cigar, flankPosStart, flankPosEnd, corePosStart, corePosEnd, finalIndexStart, finalIndexEnd);
+    }
+
+    @VisibleForTesting
+    public static boolean hasIndelInCore(final List<CigarElement> cigarElements, int coreIndexStart, int coreIndexEnd)
+    {
+        int readIndex = 0;
+        for(CigarElement element : cigarElements)
+        {
+            if(readIndex > coreIndexEnd)
+                break;
+
+            if(element.getOperator().consumesReadBases())
+            {
+                int elementReadIndexEnd = readIndex + element.getLength() - 1;
+
+                if(element.getOperator() == I && elementReadIndexEnd >= coreIndexStart)
+                    return true;
+            }
+            else
+            {
+                if(element.getOperator() == D && readIndex >= coreIndexStart)
+                    return true;
+            }
+
+            readIndex += element.getLength();
+        }
+
+        return false;
     }
 }

@@ -3,61 +3,53 @@ package com.hartwig.hmftools.lilac;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_PREFIX;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class GeneCache
 {
-    public final MhcClass ClassType;
-    public final Map<String,TranscriptData> GeneTranscriptMap;
+    public final Map<HlaGene, TranscriptData> GeneTranscriptMap;
     public final List<TranscriptData> Transcripts;
 
-    public final List<String> GeneIds; // strips off 'HLA-' prefix, used for logging and look-ups
-    public final List<String> GeneNames; // long names matching Ensembl
+    public final List<HlaGene> GeneNames; // long names matching Ensembl
 
     public final int ExpectAlleleCount;
 
-    public final Map<String,List<Integer>> AminoAcidExonBoundaries;
+    public final Map<HlaGene, List<Integer>> AminoAcidExonBoundaries;
     public final int MaxCommonAminoAcidExonBoundary;
 
-    public final Map<String,List<Integer>> NucleotideExonBoundaries;
-    public final Map<String,Integer> NucleotideLengths;
+    public final Map<HlaGene, List<Integer>> NucleotideExonBoundaries;
+    public final Map<HlaGene, Integer> NucleotideLengths;
 
-    public GeneCache(final MhcClass mhcClass, final Map<String,TranscriptData> hlaTranscriptMap)
+    public GeneCache(final Map<HlaGene, TranscriptData> hlaTranscriptMap)
     {
-        ClassType = mhcClass;
         GeneTranscriptMap = hlaTranscriptMap;
 
         // establish other properties and commonly used constants
         GeneNames = GeneTranscriptMap.keySet().stream().sorted().toList(); // long names matching Ensembl
-        GeneIds = GeneNames.stream().map(x -> shortGeneName(x)).collect(Collectors.toList());
 
         Transcripts = Lists.newArrayListWithExpectedSize(hlaTranscriptMap.size());
         GeneNames.forEach(x -> Transcripts.add(GeneTranscriptMap.get(x)));
 
-        ExpectAlleleCount = GeneIds.size() * 2;
+        ExpectAlleleCount = GeneNames.size() * 2;
 
         AminoAcidExonBoundaries = Maps.newHashMap();
         NucleotideExonBoundaries = Maps.newHashMap();
         NucleotideLengths = Maps.newHashMap();
 
-        for(String geneName : GeneNames)
-        {
+        for(HlaGene geneName : GeneNames)
             setExonBoundaryValues(geneName, GeneTranscriptMap.get(geneName));
-        }
 
         MaxCommonAminoAcidExonBoundary = findMaxCommonAminoAcidBoundary();
     }
 
-    private void setExonBoundaryValues(final String geneName, final TranscriptData transcriptData)
+    private void setExonBoundaryValues(final HlaGene geneName, final TranscriptData transcriptData)
     {
         boolean forwardStrand = transcriptData.posStrand();
 
@@ -132,11 +124,13 @@ public class GeneCache
 
     private int findMaxCommonAminoAcidBoundary()
     {
-        int maxCommonAminoAcidBoundary = 0;
+        int maxCommonAminoAcidBoundary = -1;
 
         List<List<Integer>> aminoAcidBoundaries = AminoAcidExonBoundaries.values().stream().toList();
 
         List<Integer> firstSet = aminoAcidBoundaries.get(0);
+        if(aminoAcidBoundaries.size() == 1)
+            return firstSet.get(firstSet.size() - 1);
 
         for(Integer aaExonBoundary : firstSet)
         {
@@ -160,15 +154,5 @@ public class GeneCache
         }
 
         return maxCommonAminoAcidBoundary;
-    }
-
-    public static String shortGeneName(final String gene)
-    {
-        return gene.startsWith(HLA_PREFIX) ? gene.substring(gene.length() - 1) : gene;
-    }
-
-    public static String longGeneName(final String gene)
-    {
-        return gene.length() == 1 ? HLA_PREFIX + gene : gene;
     }
 }

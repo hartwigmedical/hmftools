@@ -7,9 +7,7 @@ import static com.hartwig.hmftools.purple.fitting.WholeGenomeDuplication.wholeGe
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
-import com.hartwig.hmftools.common.driver.DeletionDrivers;
+import com.hartwig.hmftools.purple.drivers.DeletionDrivers;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -21,7 +19,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 import com.hartwig.hmftools.purple.copynumber.LohCalcData;
 import com.hartwig.hmftools.purple.copynumber.LohCalcs;
 import com.hartwig.hmftools.purple.fitting.BestFit;

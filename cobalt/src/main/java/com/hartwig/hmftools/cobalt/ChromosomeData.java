@@ -2,15 +2,15 @@ package com.hartwig.hmftools.cobalt;
 
 public class ChromosomeData
 {
-    public final String Contig;
+    public final String Name;
     public final int Length;
 
-    public ChromosomeData(String contig, int length)
+    public ChromosomeData(String name, int length)
     {
-        Contig = contig;
+        Name = name;
         Length = length;
     }
 
     @Override
-    public String toString() { return Contig; }
+    public String toString() { return Name; }
 }

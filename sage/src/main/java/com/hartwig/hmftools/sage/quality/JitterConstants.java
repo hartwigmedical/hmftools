@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.basequal.jitter.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
+import static com.hartwig.hmftools.common.redux.JitterModelParams.REPEAT_UNIT_3_PLUS_LABEL;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.basequal.jitter.ConsensusType;
-import com.hartwig.hmftools.common.basequal.jitter.JitterModelParams;
+import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.redux.JitterModelParams;
 
 public final class JitterConstants
 {

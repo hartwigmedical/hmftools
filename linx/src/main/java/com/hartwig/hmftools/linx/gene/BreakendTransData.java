@@ -32,7 +32,7 @@ public class BreakendTransData
     public final int ExonDownstream;
 
     @NotNull
-    private final BreakendGeneData mGene;
+    private final BreakendGeneData mBreakendGeneData;
 
     public final int CodingBases; // number of bases into coding where this breakend occurs
     public final int TotalCodingBases;
@@ -69,7 +69,7 @@ public class BreakendTransData
         ExonUpstream = exonUpstream;
         ExonDownstream = exonDownstream;
 
-        mGene = gene;
+        mBreakendGeneData = gene;
 
         Phase = PHASE_NONE;
 
@@ -130,11 +130,11 @@ public class BreakendTransData
     }
 
     @NotNull
-    public BreakendGeneData gene() { return mGene; }
+    public BreakendGeneData breakendGeneData() { return mBreakendGeneData; }
 
-    public int svPosition() { return mGene.position(); }
-    public String geneName() { return mGene.geneName(); }
-    public boolean isUpstream() { return mGene.isUpstream(); }
+    public int svPosition() { return mBreakendGeneData.position(); }
+    public String geneName() { return mBreakendGeneData.geneName(); }
+    public boolean isUpstream() { return mBreakendGeneData.isUpstream(); }
 
     // convenience
     public int transId() { return TransData.TransId; }
@@ -163,7 +163,7 @@ public class BreakendTransData
 
     public boolean isPostTranscript()
     {
-        if(mGene.strand() == POS_STRAND)
+        if(mBreakendGeneData.strand() == POS_STRAND)
             return svPosition() > TransData.TransEnd;
         else
             return svPosition() < TransData.TransStart;
@@ -174,7 +174,7 @@ public class BreakendTransData
         if(!isPromoter())
             return 0;
 
-        if(mGene.strand() == POS_STRAND)
+        if(mBreakendGeneData.strand() == POS_STRAND)
             return TransData.TransStart - svPosition();
         else
             return svPosition() - TransData.TransEnd;
@@ -235,7 +235,7 @@ public class BreakendTransData
             return;
         }
 
-        int position = gene().position();
+        int position = breakendGeneData().position();
 
         if(positionWithin(position, TransData.CodingStart, TransData.CodingEnd))
         {
@@ -303,7 +303,7 @@ public class BreakendTransData
 
     public final String toString()
     {
-        return mGene.geneName() + " " + TransData.TransName;
+        return mBreakendGeneData.geneName() + " " + TransData.TransName;
     }
 
     public void addProteinFeature(final String feature, boolean isPreserved)

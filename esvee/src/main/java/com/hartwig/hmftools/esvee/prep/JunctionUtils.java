@@ -4,20 +4,16 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_LOWER_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_SCORE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
-import static com.hartwig.hmftools.esvee.prep.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.calcRepeatTrimmedAlignmentScore;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.esvee.prep.types.FragmentData.unclippedPosition;
@@ -26,6 +22,7 @@ import static com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus.DUPLICATE;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -40,15 +37,14 @@ import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.SAMFlag;
 
 public final class JunctionUtils
 {
     public static boolean hasOtherJunctionSupport(
             final PrepRead read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        int unclippedStart = read.unclippedStart();
-        int unclippedEnd = read.unclippedEnd();
+        int unclippedStart = read.UnclippedStart;
+        int unclippedEnd = read.UnclippedEnd;
 
         // first check for a read crossing the junction
         if(positionWithin(junctionData.Position, unclippedStart, unclippedEnd))
@@ -58,11 +54,11 @@ public final class JunctionUtils
 
             if(junctionData.isForward())
             {
-                junctionDistance = min(abs(unclippedEnd - junctionData.Position), abs(read.end() - junctionData.Position));
+                junctionDistance = min(abs(unclippedEnd - junctionData.Position), abs(read.AlignmentEnd - junctionData.Position));
             }
             else
             {
-                junctionDistance = min(abs(unclippedStart - junctionData.Position), abs(read.start() - junctionData.Position));
+                junctionDistance = min(abs(unclippedStart - junctionData.Position), abs(read.AlignmentStart - junctionData.Position));
             }
 
             // any soft-clipping on the correct side if close to the junction
@@ -86,17 +82,17 @@ public final class JunctionUtils
 
         if(junctionData.isForward())
         {
-            if(read.end() > junctionData.Position)
+            if(read.AlignmentEnd > junctionData.Position)
                 return false;
 
-            junctionDistance = abs(read.end() - junctionData.Position);
+            junctionDistance = abs(read.AlignmentEnd - junctionData.Position);
         }
         else
         {
-            if(read.start() < junctionData.Position) //  || abs(read.end() - junctionData.Position) > filterConfig.maxSupportingFragmentDistance()
+            if(read.AlignmentStart < junctionData.Position) //  || abs(read.AlignmentEnd - junctionData.Position) > filterConfig.maxSupportingFragmentDistance()
                 return false;
 
-            junctionDistance = abs(read.start() - junctionData.Position);
+            junctionDistance = abs(read.AlignmentStart - junctionData.Position);
         }
 
         if(junctionDistance <= filterConfig.maxSupportingFragmentDistance())
@@ -131,7 +127,7 @@ public final class JunctionUtils
             if(!rightSoftClipped)
                 return false;
 
-            int readRightPos = read.end();
+            int readRightPos = read.AlignmentEnd;
 
             if(readRightPos == junctionData.Position)
                 return true;
@@ -162,7 +158,7 @@ public final class JunctionUtils
             }
 
             // must also overlap the junction
-            if(read.start() > junctionData.Position || readRightPos + scLength < junctionData.Position)
+            if(read.AlignmentStart > junctionData.Position || readRightPos + scLength < junctionData.Position)
                 return false;
 
             int readEndPosIndex = readLength - scLength - 1;
@@ -170,12 +166,12 @@ public final class JunctionUtils
             int juncReadLength = juncRead.readBases().length();
             int juncReadScLength = juncRead.cigar().getLastCigarElement().getLength();
             int juncReadEndPosIndex = juncReadLength - juncReadScLength - 1;
-            int endPosDiff = juncRead.end() - readRightPos;
+            int endPosDiff = juncRead.AlignmentEnd - readRightPos;
 
             int junctionReadOffset = juncReadEndPosIndex - readEndPosIndex - endPosDiff;
 
             // test all overlapping bases - either from ref or soft-clip bases
-            int startIndex = readLength - scLength - min(max(read.end() - junctionData.Position, 0), firstMatchLength);
+            int startIndex = readLength - scLength - min(max(read.AlignmentEnd - junctionData.Position, 0), firstMatchLength);
 
             if(startIndex < 0)
                 return false;
@@ -216,7 +212,7 @@ public final class JunctionUtils
             if(!leftSoftClipped)
                 return false;
 
-            int readLeftPos = read.start();
+            int readLeftPos = read.AlignmentStart;
 
             if(readLeftPos == junctionData.Position)
                 return true;
@@ -250,17 +246,17 @@ public final class JunctionUtils
                 }
             }
 
-            if(read.end() < junctionData.Position || readLeftPos - scLength > junctionData.Position)
+            if(read.AlignmentEnd < junctionData.Position || readLeftPos - scLength > junctionData.Position)
                 return false;
 
             int juncReadScLength = juncRead.cigar().getFirstCigarElement().getLength();
-            int posOffset = juncRead.start() - readLeftPos;
+            int posOffset = juncRead.AlignmentStart - readLeftPos;
             int softClipDiff = juncReadScLength - scLength;
             int junctionReadOffset = softClipDiff - posOffset;
             int juncReadLength = juncRead.readBases().length();
 
             // check matches from the SC bases up until the end of the first match element or junction/read diff
-            int endIndex = scLength + min(max(junctionData.Position - read.start(), 0), firstMatchLength);
+            int endIndex = scLength + min(max(junctionData.Position - read.AlignmentStart, 0), firstMatchLength);
 
             int highQualMismatches = 0;
             int baseMatches = 0;
@@ -297,7 +293,12 @@ public final class JunctionUtils
 
     public static boolean hasWellAnchoredRead(final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        for(PrepRead read : junctionData.readTypeReads().get(ReadType.JUNCTION))
+        Collection<PrepRead> junctionReads = junctionData.readTypeReads().get(ReadType.JUNCTION);
+
+        if(junctionReads.stream().anyMatch(x -> x.hasLineTail()))
+            return true;
+
+        for(PrepRead read : junctionReads)
         {
             double adjustedAlignScore = calcRepeatTrimmedAlignmentScore(read, MIN_CALC_ALIGNMENT_SCORE, true);
 

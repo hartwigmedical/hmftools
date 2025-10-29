@@ -44,7 +44,6 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
-import static com.hartwig.hmftools.esvee.common.FileCommon.setLowBaseQualThreshold;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
@@ -107,7 +106,6 @@ public class AssemblyConfig
     public final List<Junction> SpecificJunctions;
 
     private final List<String> mLogReadIds;
-    private final boolean mCheckLogReadIds;
 
     public final int AssemblyRefBaseWriteMax;
     public final boolean AssemblyDetailedTsv;
@@ -143,6 +141,11 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
+        this(configBuilder, false);
+    }
+
+    public AssemblyConfig(final ConfigBuilder configBuilder, boolean asSubRoutine)
+    {
         if(!configBuilder.hasValue(OUTPUT_DIR) && configBuilder.hasValue(TUMOR_BAM))
         {
             List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
@@ -159,30 +162,48 @@ public class AssemblyConfig
 
         TumorIds = parseSampleBamLists(configBuilder, TUMOR);
 
-        if(configBuilder.hasValue(TUMOR_BAM))
-            TumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
-        else
-            TumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+        TumorBams = Lists.newArrayList();
+        ReferenceBams = Lists.newArrayList();
+        ReferenceIds = Lists.newArrayList();
+
+        List<String> prepTumorBams = formPrepBamFilenames(PrepDir, TumorIds);
+
+        if(prepTumorBams.size() == TumorIds.size())
+            TumorBams.addAll(prepTumorBams);
+        else if(!asSubRoutine)
+            TumorBams.addAll(parseSampleBamLists(configBuilder, TUMOR_BAM));
 
         if(configBuilder.hasValue(REFERENCE))
         {
-            ReferenceIds = parseSampleBamLists(configBuilder, REFERENCE);
+            ReferenceIds.addAll(parseSampleBamLists(configBuilder, REFERENCE));
 
-            if(configBuilder.hasValue(REFERENCE_BAM))
-                ReferenceBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
-            else
-                ReferenceBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+            List<String> prepRefBams = formPrepBamFilenames(PrepDir, ReferenceIds);
+
+            if(prepRefBams.size() == ReferenceIds.size())
+                ReferenceBams.addAll(prepRefBams);
+            else if(!asSubRoutine)
+                ReferenceBams.addAll(parseSampleBamLists(configBuilder, REFERENCE_BAM));
         }
-        else
+
+        if(TumorIds.isEmpty() && ReferenceIds.isEmpty())
         {
-            ReferenceIds = Collections.emptyList();
-            ReferenceBams = Collections.emptyList();
+            SV_LOGGER.error("no tumor or reference IDs provided");
+            System.exit(1);
         }
 
-        if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
+        if(TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
             SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
+        }
+
+        if(asSubRoutine)
+        {
+            if(!TumorBams.isEmpty())
+                SV_LOGGER.debug("processing tumor prep bam(s): {}", TumorBams);
+
+            if(!ReferenceBams.isEmpty())
+                SV_LOGGER.debug("processing reference prep bam(s): {}", ReferenceBams);
         }
 
         // in germline mode, transfer to reference values to the tumor ones
@@ -223,7 +244,6 @@ public class AssemblyConfig
         WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
 
         setSequencingType(configBuilder);
-        setLowBaseQualThreshold(configBuilder);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -260,7 +280,6 @@ public class AssemblyConfig
         AssemblyDetailedTsv = configBuilder.hasFlag(ASSEMBLY_TSV_DETAILED) || hasFilters;
 
         mLogReadIds = parseLogReadIds(configBuilder);
-        mCheckLogReadIds = !mLogReadIds.isEmpty();
 
         DiscordantOnlyDisabled = configBuilder.hasFlag(DISC_ONLY_DISABLED);
 
@@ -304,12 +323,6 @@ public class AssemblyConfig
         return formEsveeInputFilename(OutputDir, sampleId(), writeType.fileId(), OutputId);
     }
 
-    public void logReadId(final SAMRecord record, final String caller)
-    {
-        if(mCheckLogReadIds)
-            logReadId(record.getReadName(), caller);
-    }
-
     private void logReadId(final String readId, final String caller)
     {
         // debugging only
@@ -319,7 +332,7 @@ public class AssemblyConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
         configBuilder.addConfigItem(TUMOR_BAM, false, TUMOR_BAMS_DESC);
 
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
@@ -406,7 +419,6 @@ public class AssemblyConfig
         PerfLogTime = 0;
         AssemblyDetailedTsv = false;
         mLogReadIds = Collections.emptyList();
-        mCheckLogReadIds = false;
 
         AssemblyMapQualThreshold = -1;
         AssemblyRefBaseWriteMax = 0;

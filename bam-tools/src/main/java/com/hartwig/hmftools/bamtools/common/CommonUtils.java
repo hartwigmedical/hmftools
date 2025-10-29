@@ -27,7 +27,6 @@ public final class CommonUtils
 
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_FILE = "regions_file";
-    public static final String READ_LENGTH = "read_length";
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 

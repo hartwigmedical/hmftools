@@ -4,8 +4,8 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_BASE_MAX_GAP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
@@ -176,7 +176,7 @@ public class PhaseSetBuilder
         initialisePerfStage(Stage.FormLocalLinks);
 
         // find local candidate links
-        findSplitLinkCandidates(true);
+        findSplitLinkCandidates(true, null);
 
         // prioritise and capture local links
         Collections.sort(mExtensionCandidates, new ExtensionCandidate.LocalLinkComparator());
@@ -238,7 +238,7 @@ public class PhaseSetBuilder
         return true;
     }
 
-    private void findSplitLinkCandidates(boolean localIndelOnly)
+    private void findSplitLinkCandidates(boolean localIndelOnly, @Nullable final Set<JunctionAssembly> extendedAssemblies)
     {
         if(mAssemblies.size() < 2)
             return;
@@ -247,7 +247,7 @@ public class PhaseSetBuilder
         // if not, check that a pair hasn't already been tested
         // if no support is found then no need to check the link
 
-        for(int i = 0; i < mAssemblies.size(); ++i)
+        for(int i = 0; i < mAssemblies.size() - 1; ++i)
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
@@ -267,6 +267,17 @@ public class PhaseSetBuilder
 
                 if(!localIndelOnly && !allowLocalIndelSecondaryLinks(assembly2))
                     continue;
+
+                if(extendedAssemblies != null)
+                {
+                    // ignore if neither assembly has been extended
+                    if(!extendedAssemblies.contains(assembly1) && !extendedAssemblies.contains(assembly2))
+                        continue;
+
+                    // or if the link has already been formed
+                    if(mSplitLinks.stream().anyMatch(x -> x.matches(assembly1, assembly2)))
+                        continue;
+                }
 
                 boolean isLocalIndel = isAssemblyIndelLink(assembly1, assembly2);
                 boolean isLocalLinkCandidate = false;
@@ -435,7 +446,7 @@ public class PhaseSetBuilder
         // check non-local links after first attempting to extend bases using unmapped and remote reads
         findUnmappedExtensions();
 
-        List<JunctionAssembly> extendedAssemblies = applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidates, null);
+        Set<JunctionAssembly> extendedAssemblies = applyOtherLinksAndExtensions(Stage.FindNonLocalLinkCandidates, null);
 
         if(!extendedAssemblies.isEmpty())
         {
@@ -444,11 +455,11 @@ public class PhaseSetBuilder
         }
     }
 
-    private List<JunctionAssembly> applyOtherLinksAndExtensions(final Stage stage, @Nullable final List<JunctionAssembly> extendedAssemblies)
+    private Set<JunctionAssembly> applyOtherLinksAndExtensions(final Stage stage, @Nullable final Set<JunctionAssembly> extendedAssemblies)
     {
         initialisePerfStage(stage);
 
-        findSplitLinkCandidates(false); // since local candidate links have already been found and applied
+        findSplitLinkCandidates(false, extendedAssemblies); // since local candidate links have already been found and applied
 
         checkLogPerfTime();
 
@@ -465,13 +476,13 @@ public class PhaseSetBuilder
                 .collect(Collectors.toList());
 
         if(remainingCandidates.isEmpty())
-            return Collections.emptyList();
+            return Collections.emptySet();
 
         Collections.sort(remainingCandidates, new ExtensionCandidate.StandardComparator());
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
 
-        List<JunctionAssembly> newlyExtendedAssemblies = Lists.newArrayList();
+        Set<JunctionAssembly> newlyExtendedAssemblies = Sets.newHashSet();
 
         for(ExtensionCandidate extensionCandidate : remainingCandidates)
         {

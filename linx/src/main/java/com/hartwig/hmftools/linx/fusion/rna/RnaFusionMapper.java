@@ -39,7 +39,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
-import com.hartwig.hmftools.common.utils.sv.StartEndPair;
+import com.hartwig.hmftools.common.sv.StartEndPair;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.fusion.GeneFusion;
@@ -358,7 +358,7 @@ public class RnaFusionMapper
                     if(!isViable)
                     {
                         // for non-viable breakends, provide the exons skipped count
-                        String geneId = closestTrans.gene().geneId();
+                        String geneId = closestTrans.breakendGeneData().geneId();
                         final int rnaExonData[] = mGeneTransCache.getExonRankings(geneId, rnaPosition);
                         final int svPosExonData[] = mGeneTransCache.getExonRankings(geneId, closestBreakend.position());
 
@@ -386,8 +386,8 @@ public class RnaFusionMapper
 
         for(final GeneFusion dnaFusion : mDnaFusions)
         {
-            if(transUp != null && dnaFusion.upstreamTrans().gene().id() == transUp.gene().id()
-            && transDown != null && dnaFusion.downstreamTrans().gene().id() == transDown.gene().id())
+            if(transUp != null && dnaFusion.upstreamTrans().breakendGeneData().varId() == transUp.breakendGeneData().varId()
+            && transDown != null && dnaFusion.downstreamTrans().breakendGeneData().varId() == transDown.breakendGeneData().varId())
             {
                 matchType = DnaRnaMatchType.SVS;
                 reportableFusion = dnaFusion.reportable();
@@ -399,7 +399,7 @@ public class RnaFusionMapper
                     LNX_LOGGER.debug("genePair rna({}-{}) differs from dna({}-{}) for same SVs({} & {})",
                             rnaFusion.GeneNames[FS_UP], rnaFusion.GeneNames[FS_DOWN],
                             dnaFusion.upstreamTrans().geneName(), dnaFusion.downstreamTrans().geneName(),
-                            transUp.gene().id(), transDown.gene().id());
+                            transUp.breakendGeneData().varId(), transDown.breakendGeneData().varId());
 
                     // override the gene selection for downstream analysis
                     rnaFusion.GeneNames[FS_UP] = dnaFusion.upstreamTrans().geneName();
@@ -433,8 +433,8 @@ public class RnaFusionMapper
         {
             final GeneFusion fusion = entry.getKey();
 
-            if(transUp != null && fusion.upstreamTrans().gene().id() == transUp.gene().id()
-            && transDown != null && fusion.downstreamTrans().gene().id() == transDown.gene().id())
+            if(transUp != null && fusion.upstreamTrans().breakendGeneData().varId() == transUp.breakendGeneData().varId()
+            && transDown != null && fusion.downstreamTrans().breakendGeneData().varId() == transDown.breakendGeneData().varId())
             {
                 rnaFusion.setDnaFusionMatch(DnaRnaMatchType.INVALID, entry.getValue(), false);
                 return;

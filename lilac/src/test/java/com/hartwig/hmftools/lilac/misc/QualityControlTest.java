@@ -2,6 +2,8 @@ package com.hartwig.hmftools.lilac.misc;
 
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_UNMATCHED_HAPLOTYPE_SUPPORT;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +18,6 @@ import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class QualityControlTest
@@ -56,25 +57,25 @@ public class QualityControlTest
 
         List<Haplotype> noMissing = HaplotypeQC.unmatchedHaplotype(
                 victim, 0, Lists.newArrayList(catCandidate, atcCandidate), aminoAcidCount, Lists.newArrayList());
-        Assert.assertEquals(0, noMissing.size());
+        assertEquals(0, noMissing.size());
 
         List<Haplotype> catMissing = HaplotypeQC.unmatchedHaplotype(
                 victim, 0, Lists.newArrayList(atcCandidate), aminoAcidCount, Lists.newArrayList());
-        Assert.assertEquals(1, catMissing.size());
-        Assert.assertEquals("CART", catMissing.get((0)).Haplotype);
+        assertEquals(1, catMissing.size());
+        assertEquals("CART", catMissing.get((0)).Haplotype);
 
         List<Haplotype> catNotMissingBecauseOfMinEvidence = HaplotypeQC.unmatchedHaplotype(
                 victim, 5, Lists.newArrayList(atcCandidate), aminoAcidCount, Lists.newArrayList());
-        Assert.assertEquals(0, catNotMissingBecauseOfMinEvidence.size());
+        assertEquals(0, catNotMissingBecauseOfMinEvidence.size());
 
         List<Haplotype> wildAtcMatch = HaplotypeQC.unmatchedHaplotype(
                 victim, 0, Lists.newArrayList(wildAtcCandidate), aminoAcidCount, Lists.newArrayList());
-        Assert.assertEquals(1, wildAtcMatch.size());
-        Assert.assertEquals("CART", wildAtcMatch.get((0)).Haplotype);
+        assertEquals(1, wildAtcMatch.size());
+        assertEquals("CART", wildAtcMatch.get((0)).Haplotype);
 
         List<Haplotype> wildMatch = HaplotypeQC.unmatchedHaplotype(
                 victim, 0, Lists.newArrayList(wildCandidate), aminoAcidCount, Lists.newArrayList());
-        Assert.assertEquals(0, wildMatch.size());
+        assertEquals(0, wildMatch.size());
     }
 
     @Test
@@ -119,9 +120,9 @@ public class QualityControlTest
 
         List<HlaSequenceLoci> winningSequences = Lists.newArrayList(winningSeq1, winningSeq2, winningSeq3);
 
-        AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes, 1000);
-        Assert.assertEquals(3, qc.UnusedAminoAcids);
-        Assert.assertEquals(10, qc.UnusedAminoAcidMaxFrags);
+        AminoAcidQC qc = AminoAcidQC.create(winningSequences, Lists.newArrayList(), aminoAcidCount, unmatchedHaplotypes);
+        assertEquals(3, qc.UnusedAminoAcids);
+        assertEquals(10, qc.UnusedAminoAcidMaxFrags);
     }
 
     private HlaSequenceLoci createSequenceLoci(final String allele, final String sequenceStr)

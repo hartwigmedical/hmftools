@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.filter;
 
 import static com.hartwig.hmftools.sage.SageCallConfig.RUN_TINC;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT_TINC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
@@ -45,6 +46,12 @@ public class FilterConfig
     private static final String MIN_AVG_BASE_QUAL_HOTSPOT = "min_avg_base_qual_hotspot";
     private static final String REF_SAMPLE_COUNT = "ref_sample_count";
 
+    private static final String ULTIMA_CANDIDATE_MIN_HIGH_BQ = "ultima_cand_min_high_bq";
+
+    // sequencing specific filters
+    public static int ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = 0;
+    public static int ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN = 8;
+
     public FilterConfig(final ConfigBuilder configBuilder)
     {
         DisableSoftFilter = configBuilder.hasFlag(DISABLE_SOFT_FILTER);
@@ -60,13 +67,18 @@ public class FilterConfig
         HardMinTumorQual = configBuilder.getInteger(HARD_MIN_TUMOR_QUAL);
         HardMinTumorVaf = configBuilder.getDecimal(HARD_MIN_TUMOR_VAF);
         HardMinTumorRawAltSupport = configBuilder.getInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT);
+
         MinAvgBaseQual = configBuilder.getInteger(MIN_AVG_BASE_QUAL);
         MinAvgBaseQualHotspot = configBuilder.getInteger(MIN_AVG_BASE_QUAL_HOTSPOT);
+
         SoftHotspotFilter = new SoftFilterConfig(configBuilder, "hotspot", DEFAULT_HOTSPOT_FILTER);
         SoftPanelFilter = new SoftFilterConfig(configBuilder, "panel", DEFAULT_PANEL_FILTER);
         SoftHighConfidenceFilter = new SoftFilterConfig(configBuilder, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
         SoftLowConfidenceFilter = new SoftFilterConfig(configBuilder, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
         ReferenceSampleCount = configBuilder.getInteger(REF_SAMPLE_COUNT);
+
+        if(configBuilder.hasValue(ULTIMA_CANDIDATE_MIN_HIGH_BQ))
+            ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = configBuilder.getInteger(ULTIMA_CANDIDATE_MIN_HIGH_BQ);
     }
 
     public FilterConfig()
@@ -113,5 +125,9 @@ public class FilterConfig
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_PANEL_FILTER);
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_HIGH_CONFIDENCE_FILTER);
         SoftFilterConfig.registerConfig(configBuilder, DEFAULT_LOW_CONFIDENCE_FILTER);
+
+        configBuilder.addInteger(
+                ULTIMA_CANDIDATE_MIN_HIGH_BQ, "Ultima min required non-low-qual in core reads",
+                ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD);
     }
 }

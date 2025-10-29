@@ -6,7 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.redux.PartitionReader.fullyUnmapped;
 import static com.hartwig.hmftools.redux.PartitionReader.shouldFilterRead;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
-import static com.hartwig.hmftools.redux.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MAX_NON_OVERLAPPING_BASES;
 import static com.hartwig.hmftools.redux.common.ReadInfo.readToString;
 import static com.hartwig.hmftools.redux.unmap.ReadUnmapper.overlapsUnmapRegion;
 import static com.hartwig.hmftools.redux.unmap.UnmapRegion.UNMAPPED_READS;
@@ -22,9 +22,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.UnmappingRegion;
+import com.hartwig.hmftools.common.mappability.UnmappingRegion;
 import com.hartwig.hmftools.redux.BamReader;
 import com.hartwig.hmftools.redux.ReduxConfig;
+import com.hartwig.hmftools.redux.consensus.UltimaRoutines;
 import com.hartwig.hmftools.redux.write.BamWriterSync;
 import com.hartwig.hmftools.redux.write.FileWriterCache;
 
@@ -249,6 +250,7 @@ public class RegionUnmapper extends Thread
     public static void processFullyUnmappedReads(final ReduxConfig config, final BamWriterSync fullyUnmappedBamWriter)
     {
         int totalUnmappedReads = 0;
+        boolean isUltima = ReduxConfig.isUltima();
 
         for(String bamFilename : config.BamFiles)
         {
@@ -260,6 +262,10 @@ public class RegionUnmapper extends Thread
             while(iterator.hasNext())
             {
                 SAMRecord record = iterator.next();
+
+                if(isUltima)
+                    UltimaRoutines.stripAttributes(record, null);
+
                 fullyUnmappedBamWriter.writeRecordSync(record);
                 ++totalUnmappedReads;
             }

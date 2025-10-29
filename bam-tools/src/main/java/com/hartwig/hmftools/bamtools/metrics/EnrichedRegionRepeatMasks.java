@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_END;
 import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_START;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.sv.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -32,8 +32,8 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
-import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+import com.hartwig.hmftools.common.sv.RepeatMaskAnnotations;
+import com.hartwig.hmftools.common.sv.RepeatMaskData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -91,7 +91,7 @@ public class EnrichedRegionRepeatMasks
             ++taskIndex;
         }
 
-        final List<Callable> callableList = annotationTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = annotationTasks.stream().collect(Collectors.toList());
         if(!TaskExecutor.executeTasks(callableList, mThreads))
             System.exit(1);
 
@@ -163,7 +163,7 @@ public class EnrichedRegionRepeatMasks
         return regions;
     }
 
-    private class AnnotationTask implements Callable
+    private class AnnotationTask implements Callable<Void>
     {
         private final int mTaskId;
         public final List<RegionData> Regions;
@@ -175,7 +175,7 @@ public class EnrichedRegionRepeatMasks
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             for(int i = 0; i < Regions.size(); ++i)
             {
@@ -190,7 +190,7 @@ public class EnrichedRegionRepeatMasks
 
             BT_LOGGER.debug("{}: complete", mTaskId);
 
-            return (long)0;
+            return null;
         }
     }
 
@@ -241,7 +241,7 @@ public class EnrichedRegionRepeatMasks
         addThreadOptions(configBuilder);
 
         addLoggingOptions(configBuilder);
-        
+
         configBuilder.checkAndParseCommandLine(args);
 
         EnrichedRegionRepeatMasks enrichedRegionRepeatMasks = new EnrichedRegionRepeatMasks(configBuilder);

@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 
@@ -52,9 +53,6 @@ public class SoftFilterTest
     private static final String REF_BASES = "X" + generateRandomBases(100);
 
     private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
-
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
-            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME, MSI_JITTER_CALCS);
 
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
@@ -114,31 +112,34 @@ public class SoftFilterTest
         String altBase = readContextCounter.alt();
 
         SAMRecord read = createSamRecord(
-                TEST_READ_ID, CHR_1, 45, REF_BASES.substring(45, position) + altBase + REF_BASES.substring(position + 1, 75), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45,
+                REF_BASES.substring(45, position) + altBase + REF_BASES.substring(position + 1, 95), "50M");
 
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
 
         SAMRecord read2 = createSamRecord(
-                TEST_READ_ID, CHR_1, 45,  REF_BASES.substring(42, position) + altBase + REF_BASES.substring(position + 1, 70), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45,
+                REF_BASES.substring(42, position) + altBase + REF_BASES.substring(position + 1, 95), "50M");
 
         readContextCounter.processRead(read2, 1, null);
         readContextCounter.processRead(read2, 1, null);
 
         // factor in soft-clipped bases and use a FULL match rather than CORE
-        SAMRecord read3 = createSamRecord(
-                TEST_READ_ID, CHR_1, 46,
-                TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK, "8S13M4S");
+        String readBases = TEST_LEFT_FLANK + REF_BASES.substring(position - 2, position) +  altBase
+                + REF_BASES.substring(position + 1, position + 3) + TEST_RIGHT_FLANK.repeat(5);
+
+        SAMRecord read3 = createSamRecord(TEST_READ_ID, CHR_1, 46, readBases, "8S13M24S");
 
         readContextCounter.processRead(read3, 1, null);
 
         // a read supporting the ref
-        SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
+        SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M"); // was 98
         readContextCounter.processRead(read4, 1, null);
 
-        assertEquals(4, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge());
-        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromEdge());
+        assertEquals(0.06, readContextCounter.readEdgeDistance().maxAltDistanceFromEdge(), 0.01);
+        assertEquals(0.48, readContextCounter.readEdgeDistance().maxDistanceFromEdge(), 0.01);
 
         SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 
@@ -227,6 +228,62 @@ public class SoftFilterTest
     }
 
     @Test
+    public void testGermlineRelativeQualFilter()
+    {
+        int position = 50;
+
+        String refBase = REF_BASES.substring(position, position + 1);
+        String altBase = getNextBase(refBase);
+        SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
+
+        VariantReadContext readContext = createReadContext(
+                variant, REF_BASES.substring(48, position), REF_BASES.substring(position + 1, 53), REF_BASES.substring(38, 48), REF_BASES.substring(53, 63));
+
+        ReadContextCounter refCounter = createReadCounter(readContext, true);
+        ReadContextCounter tumorCounter = createReadCounter(readContext);
+
+        int readPosStart = 20;
+
+        String altReadBases = REF_BASES.substring(readPosStart, position) + altBase + REF_BASES.substring(position + 1, 80);
+        String readCigar = buildCigarString(altReadBases.length());
+
+        SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
+        tumorCounter.processRead(altRead, 1, null);
+
+        refCounter.processRead(altRead, 1, null);
+
+        String refBases = REF_BASES.substring(readPosStart, 80);
+        readCigar = buildCigarString(altReadBases.length());
+        SAMRecord refRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, refBases, readCigar);
+
+        for(int i = 0; i < 12; ++i)
+        {
+            refCounter.processRead(refRead, 1, null);
+        }
+
+        assertEquals(1, refCounter.altSupport());
+        assertEquals(13, refCounter.depth());
+
+        Candidate candidate = new Candidate(PANEL, readContext, 1, 1);
+        SageVariant snv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
+
+        FILTERS.applySoftFilters(snv);
+
+        assertFalse(snv.filters().contains(MAX_GERMLINE_RELATIVE_QUAL));
+
+        // now exceeding the limit
+        refCounter.processRead(altRead, 1, null);
+        refCounter.processRead(altRead, 1, null);
+
+        candidate = new Candidate(PANEL, readContext, 1, 1);
+        snv = new SageVariant(candidate, List.of(refCounter), List.of(tumorCounter));
+
+        FILTERS.applySoftFilters(snv);
+
+        assertTrue(snv.filters().contains(MAX_GERMLINE_RELATIVE_QUAL));
+    }
+
+    @Test
     public void testSimpleAtGermlineVaf()
     {
         int position = 50;
@@ -286,8 +343,6 @@ public class SoftFilterTest
         SAMRecord altRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, readPosStart, altReadBases, readCigar);
         tumorCounter.processRead(altRead, 1, null);
 
-        // String simpleAltReadBases = REF_BASES.substring(readPosStart, position - 1) + "G" + altBases + REF_BASES.substring(position + 3, 80);
-        // SAMRecord simpleAltRead = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 20, simpleAltReadBases, readCigar);
         altRead.getBaseQualities()[30] = 10;
         refCounter.processRead(altRead, 1, null);
 

@@ -22,7 +22,7 @@ public class RefContextCache
     private final SageConfig mConfig;
     private final EvictingArray mEvictingArray;
     private final PanelSelector mPanelSelector;
-    private final List<AltContext> mSavedCandidates;
+    private final List<ReadContextCandidate> mSavedCandidates;
     private final HotspotSelector mHotspotSelector;
 
     public RefContextCache(final SageConfig config, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
@@ -46,7 +46,7 @@ public class RefContextCache
         return mEvictingArray.getOrCreateRefContext(position, aLong -> new RefContext(chromosome, position));
     }
 
-    public List<AltContext> altContexts()
+    public List<ReadContextCandidate> altCandidates()
     {
         mEvictingArray.evictAll();
         Collections.sort(mSavedCandidates);
@@ -71,7 +71,7 @@ public class RefContextCache
             altContext.selectCandidates();
 
             if(altContext.hasValidCandidate())
-                mSavedCandidates.add(altContext);
+                mSavedCandidates.add(altContext.candidate());
 
             if(altContext.hasSecondCandidate())
                 mSavedCandidates.add(altContext.secondCandidate());
@@ -94,6 +94,6 @@ public class RefContextCache
         if(mHotspotSelector.isHotspot(altContext))
             return true;
 
-        return altContext.aboveMinAltSupport();
+        return altContext.hasMinAltSupport();
     }
 }

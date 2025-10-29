@@ -36,7 +36,6 @@ import com.hartwig.hmftools.purple.ReferenceData;
 import com.hartwig.hmftools.purple.SampleData;
 import com.hartwig.hmftools.purple.copynumber.PurpleCopyNumberFactory;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.purple.segment.Segmentation;
 
 public class PurityPloidyFitter
 {
@@ -191,9 +190,10 @@ public class PurityPloidyFitter
         FittedPurity lowestPurityFit = !diploidCandidates.isEmpty() ?
                 diploidCandidates.stream().min(Comparator.comparingDouble(FittedPurity::purity)).get() : mCopyNumberPurityFit;
 
+        boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
         if(mConfig.tumorOnlyMode() || mTargetedMode)
         {
-            if(mHasChimerism || highlyDiploidSomaticOrPanel(mCopyNumberPurityFit))
+            if(mHasChimerism || highlyDiploidSomaticOrPanel(mCopyNumberPurityFit, highlyDiploid))
             {
                 mSomaticPurityFit = mVariantPurityFitter.calcSomaticOnlyFit(mCopyNumberFitCandidates);
 
@@ -226,7 +226,6 @@ public class PurityPloidyFitter
             return;
         }
 
-        boolean highlyDiploid = isHighlyDiploid(mFitPurityScore);
         boolean hasTumor = !highlyDiploid || mVariantPurityFitter.hasTumor();
 
         PPL_LOGGER.info("maxDiploidProportion({}) diploidCandidates({}) purityRange({} - {}) hasTumor({})",
@@ -331,7 +330,7 @@ public class PurityPloidyFitter
         PPL_LOGGER.debug("building copy numbers");
         mFittedRegions.addAll(mRegionFitCalculator.fitRegion(fittedPurity.purity(), fittedPurity.normFactor(), mObservedRegions));
 
-        copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.variants());
+        copyNumberFactory.buildCopyNumbers(mFittedRegions, mSampleData.SvCache.somaticVariants());
 
         mCopyNumbers.addAll(copyNumberFactory.copyNumbers());
 

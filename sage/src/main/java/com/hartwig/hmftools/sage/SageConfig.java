@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.sage;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
@@ -15,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_ID
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
@@ -24,10 +28,11 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLIC
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.NON_ILLUMINA_MAX_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
+import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
 
 import java.io.File;
 import java.util.Arrays;
@@ -45,10 +50,11 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.seqtech.UltimaQualRecalibration;
+import com.hartwig.hmftools.sage.seqtech.UltimaUtils;
 import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
@@ -67,8 +73,8 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BqrConfig BQR;
-    public final String JitterParamsDir;
+    public final boolean SkipBqr;
+    public final String JitterBqrDir;
     public final boolean SkipMsiJitter;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
@@ -77,10 +83,13 @@ public class SageConfig
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
-    public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
-    public final SequencingType Sequencing;
+
+    // global for convenience
+    public static boolean AppendMode = false;
+
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
 
@@ -91,7 +100,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final List<BasePosition> SpecificPositions;
+    public final List<SimpleVariant> SpecificVariants;;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -106,17 +115,18 @@ public class SageConfig
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     private static final String SLICE_SIZE = "slice_size";
-    private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";
     private static final String READ_LENGTH = "read_length";
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
-    private static final String JITTER_PARAMS_DIR = "jitter_param_dir";
+    private static final String JITTER_BQR_DIR = "jitter_bqr_dir";
+    private static final String SKIP_BQR = "skip_bqr";
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
+    // debug options
+    private static final String SPECIFIC_VARIANTS_FILE = "specific_var_file";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
@@ -144,21 +154,37 @@ public class SageConfig
                     .forEach(x -> ReferenceBams.add(SampleDataDir + x));
         }
 
-
-        IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
-
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
-        ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
-        MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
+        // ensure that when append is run in panel mode, that max depth is applied to all variants regardless of their tier
+        if(AppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
+        {
+            MaxReadDepth = MaxReadDepthPanel;
+        }
+        else
+        {
+            MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
+        }
+
+        if(configBuilder.hasValue(READ_LENGTH))
+        {
+            mReadLength = configBuilder.getInteger(READ_LENGTH);
+        }
+        else if(isUltima() || isSbx())
+        {
+            mReadLength = NON_ILLUMINA_MAX_READ_LENGTH;
+        }
+        else
+        {
+            mReadLength = 0; // will be set from sampling the BAM
+        }
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
@@ -169,31 +195,32 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        BQR = new BqrConfig(configBuilder);
 
-        if(configBuilder.hasValue(JITTER_PARAMS_DIR))
+        SkipBqr = configBuilder.hasFlag(SKIP_BQR);
+
+        if(configBuilder.hasValue(JITTER_BQR_DIR))
         {
-            JitterParamsDir = configBuilder.getValue(JITTER_PARAMS_DIR);
+            JitterBqrDir = configBuilder.getValue(JITTER_BQR_DIR);
         }
         else
         {
             // otherwise assume these are located with the BAMs
             if(!ReferenceBams.isEmpty())
             {
-                JitterParamsDir = pathFromFile(ReferenceBams.get(0));
+                JitterBqrDir = pathFromFile(ReferenceBams.get(0));
             }
             else if(!SampleDataDir.isEmpty())
             {
-                JitterParamsDir = SampleDataDir;
+                JitterBqrDir = SampleDataDir;
             }
             else if(configBuilder.hasValue(TUMOR_BAM))
             {
                 String tumorBam = configBuilder.getValue(TUMOR_BAM).split(SAMPLE_DELIM)[0];
-                JitterParamsDir = pathFromFile(tumorBam);
+                JitterBqrDir = pathFromFile(tumorBam);
             }
             else
             {
-                JitterParamsDir = null;
+                JitterBqrDir = null;
             }
         }
 
@@ -201,7 +228,14 @@ public class SageConfig
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
-        Sequencing = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
+
+        if(isUltima())
+        {
+            UltimaUtils.loadBqrCache(configBuilder.getValue(UltimaQualRecalibration.CFG_FILENAME));
+        }
+
+        IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
@@ -222,22 +256,24 @@ public class SageConfig
             }
         }
 
-        SpecificPositions = Lists.newArrayList();
+        SpecificVariants = Lists.newArrayList();
 
-        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
+        if(!SpecificChrRegions.hasFilters() && !Visualiser.Enabled && configBuilder.hasValue(SPECIFIC_VARIANTS_FILE))
         {
-            String[] specPositionsStr = configBuilder.getValue(SPECIFIC_POSITIONS).split(ITEM_DELIM);
-
-            for(String specPosStr : specPositionsStr)
+            try
             {
-                String[] items = specPosStr.split(":", 2);
-                SpecificPositions.add(new BasePosition(items[0], Integer.parseInt(items[1])));
+                SpecificVariants.addAll(SimpleVariant.loadSimpleVariants(configBuilder.getValue(SPECIFIC_VARIANTS_FILE)));
+
+                for(SimpleVariant variant : SpecificVariants)
+                {
+                    SpecificChrRegions.addRegion(new ChrBaseRegion(
+                            variant.Chromosome, variant.Position - VIS_VARIANT_BUFFER,
+                            variant.Position + VIS_VARIANT_BUFFER));
+                }
             }
-
-            if(SpecificChrRegions.Regions.isEmpty())
+            catch(Exception e)
             {
-                SpecificPositions.forEach(x -> SpecificChrRegions.addRegion(
-                        new ChrBaseRegion(x.Chromosome, x.Position - 300, x.Position + 300)));
+                mIsValid = false;
             }
         }
 
@@ -258,6 +294,10 @@ public class SageConfig
 
     public void setReadLength(int readLength)
     {
+        if(isUltima() || isSbx())
+        {
+            readLength = max(readLength, NON_ILLUMINA_MAX_READ_LENGTH);
+        }
         if(readLength != DEFAULT_READ_LENGTH)
         {
             SG_LOGGER.info("max observed read length set({})", readLength);
@@ -265,6 +305,11 @@ public class SageConfig
 
         mReadLength = readLength;
     }
+
+    // convenience
+    public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
+    public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
     public String outputDir() { return pathFromFile(OutputFile); }
 
@@ -335,8 +380,6 @@ public class SageConfig
         return false;
     }
 
-    public boolean bqrRecordWritingOnly() { return BQR.WriteReads; }
-
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
@@ -349,10 +392,6 @@ public class SageConfig
 
         addRefGenomeConfig(configBuilder, true);
 
-        // is this common?
-        configBuilder.addInteger(
-                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_FLANK_LENGTH);
-
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
@@ -360,7 +399,7 @@ public class SageConfig
         configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", DEFAULT_MAX_PARTITION_SLICES);
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
-        configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel or high depth mode", DEFAULT_MAX_READ_DEPTH_PANEL);
+        configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
         configBuilder.addFlag(GERMLINE, "Run with germline filters disabled");
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
@@ -368,10 +407,11 @@ public class SageConfig
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
-        BqrConfig.registerConfig(configBuilder);
+        configBuilder.addFlag(SKIP_BQR, "Disable base quality recalibration");
         SequencingType.registerConfig(configBuilder);
+        UltimaQualRecalibration.registerConfig(configBuilder);
 
-        configBuilder.addPath(JITTER_PARAMS_DIR, false, "Path to sample jitter parameter files");
+        configBuilder.addPath(JITTER_BQR_DIR, false, "Path to sample jitter and BQR files, otherise uses BAM directory");
         configBuilder.addFlag(SKIP_MSI_JITTER, "Skip loading sample-specific MSI jitter parameter files");
 
         VisConfig.registerConfig(configBuilder);
@@ -384,8 +424,8 @@ public class SageConfig
 
         // debug
         configBuilder.addConfigItem(
-                SPECIFIC_POSITIONS,
-                "Restrict to specific positions(s) of form chromosome:position, separated by ';'");
+                SPECIFIC_VARIANTS_FILE,
+                "Restrict to specific variants of form chromosome:position:ref:alt, separated by ';'");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -399,17 +439,16 @@ public class SageConfig
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
-        BQR = new BqrConfig();
-        JitterParamsDir = null;
+        SkipBqr = true;
+        JitterBqrDir = null;
         SkipMsiJitter = false;
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         IsGermline = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
-        MaxReadDepth = highDepthMode ? DEFAULT_MAX_READ_DEPTH_PANEL : DEFAULT_MAX_READ_DEPTH;
+        MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
-        ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
@@ -419,12 +458,11 @@ public class SageConfig
         LogLpsData = false;
         PerfWarnTime = 0;
         RefGenVersion = V37;
-        BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        Sequencing = SequencingType.ILLUMINA;
+        BamStringency = ValidationStringency.SILENT;
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
-        SpecificPositions = Collections.emptyList();
+        SpecificVariants = Collections.emptyList();
         LogEvidenceReads = false;
     }
 }

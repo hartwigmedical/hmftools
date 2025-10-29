@@ -2,10 +2,6 @@ package com.hartwig.hmftools.lilac.seq;
 
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,19 +9,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
+
 import org.jetbrains.annotations.NotNull;
 
-public class HlaSequenceFile
+public final class HlaSequenceFile
 {
     public static final char SEQUENCE_DELIM = '|';
 
-    public static HlaSequenceLoci createFromReference(final HlaAllele allele, final String sequenceStr, boolean isProteinFile)
+    private HlaSequenceFile() {}
+
+    public static HlaSequenceLoci createFromReference(final HlaAllele allele, final String sequenceStr, final boolean isProteinFile)
     {
         List<String> sequences = isProteinFile ?
                 Lists.newArrayListWithExpectedSize(367) : Lists.newArrayListWithExpectedSize(1098);
 
         int index = 0;
-        String sequence = "";
+        StringBuilder sequence = new StringBuilder();
         boolean inMulti = false; // to handle inserts, ie more than 1 char, indicated by splitting the sequence by '|' chars
         while(index < sequenceStr.length())
         {
@@ -37,8 +40,8 @@ public class HlaSequenceFile
                 if(inMulti && isMulti)
                 {
                     inMulti = false;
-                    sequences.add(sequence);
-                    sequence = "";
+                    sequences.add(sequence.toString());
+                    sequence.setLength(0);
                 }
                 else if(isMulti)
                 {
@@ -47,7 +50,7 @@ public class HlaSequenceFile
                 }
                 else
                 {
-                    sequence += nextChar;
+                    sequence.append(nextChar);
                 }
             }
             else
@@ -61,29 +64,32 @@ public class HlaSequenceFile
         return new HlaSequenceLoci(allele, sequences);
     }
 
-    public static List<HlaSequence> readDefintionFile(final String filename)
+    public static List<HlaSequence> readDefintionFile(final File filename, final HlaGene gene)
     {
         if(filename == null)
             return Lists.newArrayList();
 
         try
         {
-            final List<String> fileData = Files.readAllLines(new File(filename).toPath());
+            List<String> linePrefixes = Lists.newArrayList(gene.shortName() + "*");
+            if(gene == HlaGene.HLA_DRB3 || gene == HlaGene.HLA_DRB4 || gene == HlaGene.HLA_DRB5)
+                linePrefixes.add("DRB1*");
+
+            final List<String> fileData = Files.readAllLines(filename.toPath());
 
             final List<String> orderedAlleles = Lists.newArrayList();
-            final Map<String,HlaSequence> entries = Maps.newHashMap();
+            final Map<String, HlaSequence> entries = Maps.newHashMap();
 
             for(final String line : fileData)
             {
-                String lineData = line.trim();
+                final String lineData = line.trim();
 
-                if(!lineData.startsWith("*", 1))
+                if(linePrefixes.stream().noneMatch(lineData::startsWith))
                     continue;
 
                 String[] split = lineData.split(" ");
                 String alleleStr = split[0].trim();
-                int alleleIndex = lineData.indexOf(alleleStr);
-                String remainder = lineData.substring(alleleIndex + alleleStr.length()).trim().replace(" ", "");
+                String remainder = lineData.substring(alleleStr.length()).trim().replace(" ", "");
 
                 HlaSequence sequence = entries.get(alleleStr);
 
@@ -98,25 +104,25 @@ public class HlaSequenceFile
                 }
             }
 
-            return orderedAlleles.stream().map(x -> entries.get(x)).collect(Collectors.toList());
+            return orderedAlleles.stream().map(entries::get).collect(Collectors.toList());
 
             // return entries.values().stream().collect(Collectors.toList());
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            LL_LOGGER.error("failed to read HLF nucleotide file({}): {}", filename, e.toString());
+            LL_LOGGER.error("failed to read HLF nucleotide file({}): {}", filename.toString(), e.toString());
             return Lists.newArrayList();
         }
     }
 
     @NotNull
-    public static List<HlaSequence> reduceToFourDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToFourDigit(final Iterable<HlaSequence> sequences)
     {
         return reduce(sequences, true);
     }
 
     @NotNull
-    public static List<HlaSequence> reduceToSixDigit(final List<HlaSequence> sequences)
+    public static List<HlaSequence> reduceToSixDigit(final Iterable<HlaSequence> sequences)
     {
         return reduce(sequences, false);
     }
@@ -126,9 +132,9 @@ public class HlaSequenceFile
         return new HlaAllele(allele.Gene, allele.AlleleGroup, allele.Protein, allele.Synonymous, "", null, null);
     }
 
-    private static List<HlaSequence> reduce(final List<HlaSequence> sequences, boolean toFourDigit)
+    private static List<HlaSequence> reduce(final Iterable<HlaSequence> sequences, boolean toFourDigit)
     {
-        Map<String,HlaSequence> reducedMap = Maps.newHashMap();
+        Map<String, HlaSequence> reducedMap = Maps.newHashMap();
         List<String> orderAlleles = Lists.newArrayList();
 
         for(HlaSequence sequence : sequences)
@@ -142,6 +148,6 @@ public class HlaSequenceFile
             reducedMap.put(reducedAllele.toString(), new HlaSequence(reducedAllele, sequence.getRawSequence()));
         }
 
-        return orderAlleles.stream().map(x -> reducedMap.get(x)).collect(Collectors.toList());
+        return orderAlleles.stream().map(reducedMap::get).collect(Collectors.toList());
     }
 }

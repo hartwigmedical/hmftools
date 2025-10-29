@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
+import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -203,6 +205,9 @@ public class CandidateVariantPhaser implements VariantPhaser
 
             // require more reads to keep a group where there are high numbers in a collection (ie 2 at 3100, 3 at 31K, 4 at 310K)
             int readCountThreshold = max((int)round(log10(collection.groups().size())) - 2, INITIAL_MIN_READ_COUNT);
+
+            if(isUltima() || isSbx()) // further lower for these seq-techs with longer reads
+                readCountThreshold = Math.max(readCountThreshold - 1, INITIAL_MIN_READ_COUNT);
 
             if(readCountThreshold >= 3)
             {

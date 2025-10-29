@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.sage.quality.QualityConfig.HIGH_DEPTH_MODE;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.SageConfig;
 

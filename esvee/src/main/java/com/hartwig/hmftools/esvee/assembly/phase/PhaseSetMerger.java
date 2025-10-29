@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createBaseQualsAboveMinThreshold;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionSequence.PHASED_ASSEMBLY_MATCH_SEQ_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
@@ -162,11 +162,11 @@ public final class PhaseSetMerger
             if(firstBases == null && secondBases == null)
             {
                 firstBases = firstSequence.getBytes();
-                firstBaseQuals = createMinBaseQuals(firstLength);
+                firstBaseQuals = createBaseQualsAboveMinThreshold(firstLength);
                 firstRepeats = RepeatInfo.findRepeats(firstBases);
 
                 secondBases = secondSequence.getBytes();
-                secondBaseQuals = createMinBaseQuals(secondLength);
+                secondBaseQuals = createBaseQualsAboveMinThreshold(secondLength);
                 secondRepeats = RepeatInfo.findRepeats(secondBases);
             }
 

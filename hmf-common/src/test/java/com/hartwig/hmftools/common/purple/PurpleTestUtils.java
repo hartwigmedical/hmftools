@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple;
 import java.util.Collection;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -18,30 +18,31 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 public class PurpleTestUtils
 {
 
-    public static ImmutableCobaltRatio.Builder cobalt(@NotNull final String chromosome, int position, double ratio)
+    public static CobaltRatio cobalt(@NotNull final String chromosome, int position, double ratio)
     {
-        return ImmutableCobaltRatio.builder()
-                .chromosome(chromosome)
-                .position(position)
-                .tumorReadDepth(0)
-                .referenceReadDepth(0)
-                .referenceGCRatio(1)
-                .referenceGCDiploidRatio(1)
-                .tumorGCRatio(ratio)
-                .referenceGcContent(0.5)
-                .tumorGcContent(0.5);
+        return new CobaltRatio(
+                chromosome,
+                position,
+                0, // referenceReadDepth
+                1, // referenceGCRatio
+                0.5, // referenceGcContent
+                1, // referenceGCDiploidRatio
+                0, // tumorReadDepth
+                ratio, // tumorGCRatio
+                0.5); // tumorGcContent
     }
 
     public static ImmutablePurpleCopyNumber.Builder createCopyNumber(
-            final String chromosome, final int start, final int end, final double copyNumber)
+            final String chromosome, final int start, final int end, final double copyNumber,
+            final SegmentSupport startSupport, final SegmentSupport endSupport)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(chromosome)
                 .start(start)
                 .end(end)
                 .averageTumorCopyNumber(copyNumber)
-                .segmentStartSupport(SegmentSupport.NONE)
-                .segmentEndSupport(SegmentSupport.NONE)
+                .segmentStartSupport(startSupport)
+                .segmentEndSupport(endSupport)
                 .method(CopyNumberMethod.UNKNOWN)
                 .bafCount(0)
                 .depthWindowCount(1)
@@ -50,6 +51,12 @@ public class PurpleTestUtils
                 .maxStart(start)
                 .averageObservedBAF(0.5)
                 .averageActualBAF(0.5);
+    }
+
+    public static ImmutablePurpleCopyNumber.Builder createCopyNumber(
+            final String chromosome, final int start, final int end, final double copyNumber)
+    {
+        return createCopyNumber(chromosome, start, end, copyNumber, SegmentSupport.NONE, SegmentSupport.NONE);
     }
 
     public static ImmutableStructuralVariantImpl.Builder createStructuralVariant(
@@ -102,20 +109,12 @@ public class PurpleTestUtils
     public static ImmutableStructuralVariantLegImpl.Builder createStartLeg(final String startChromosome, final int startPosition,
             final StructuralVariantType type)
     {
-        final byte startOrientation;
-        switch(type)
+        final byte startOrientation = switch(type)
         {
-            case DUP:
-                startOrientation = -1;
-                break;
-            case BND:
-            case INV:
-                startOrientation = 1;
-                break;
-            default:
-                startOrientation = 1;
-                break;
-        }
+            case DUP -> -1;
+            case BND, INV -> 1;
+            default -> 1;
+        };
 
         return ImmutableStructuralVariantLegImpl.builder()
                 .chromosome(startChromosome)
@@ -128,20 +127,12 @@ public class PurpleTestUtils
     private static ImmutableStructuralVariantLegImpl.Builder createEndLeg(
             final String endChromosome, final int endPosition, final StructuralVariantType type)
     {
-        final byte endOrientation;
-        switch(type)
+        final byte endOrientation = switch(type)
         {
-            case DUP:
-                endOrientation = 1;
-                break;
-            case BND:
-            case INV:
-                endOrientation = 1;
-                break;
-            default:
-                endOrientation = -1;
-                break;
-        }
+            case DUP -> 1;
+            case BND, INV -> 1;
+            default -> -1;
+        };
 
         return ImmutableStructuralVariantLegImpl.builder()
                 .chromosome(endChromosome)

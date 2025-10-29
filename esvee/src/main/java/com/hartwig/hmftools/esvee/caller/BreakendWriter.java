@@ -195,7 +195,7 @@ public class BreakendWriter
 
         sj.add(filtersStr);
 
-        sj.add(format("%.3f", breakend.calcAllelicFrequency(breakend.TumorGenotype)));
+        sj.add(format("%.3f", breakend.calcAllelicFrequency()));
 
         sj.add(String.valueOf(breakend.sv().ponCount()));
 

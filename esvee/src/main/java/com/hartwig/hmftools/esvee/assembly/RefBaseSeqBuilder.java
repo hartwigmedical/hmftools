@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
@@ -157,7 +158,7 @@ public class RefBaseSeqBuilder
                 break;
 
             byte consensusBase = 0;
-            int consensusMaxQual = 0;
+            byte consensusMaxQual = 0;
             int consensusQualTotal = 0;
             int consensusReadCount = 0;
 
@@ -196,7 +197,7 @@ public class RefBaseSeqBuilder
                     continue;
 
                 byte base = read.currentBase();
-                int qual = read.currentQual();
+                byte qual = read.currentQual();
 
                 if(Nucleotides.baseIndex(base) < 0)
                 {
@@ -217,7 +218,7 @@ public class RefBaseSeqBuilder
                     }
                     else if(base == consensusBase)
                     {
-                        consensusMaxQual = max(qual, consensusMaxQual);
+                        consensusMaxQual = maxQual(qual, consensusMaxQual);
                         consensusQualTotal += qual;
                         ++consensusReadCount;
                         continue;
@@ -386,7 +387,7 @@ public class RefBaseSeqBuilder
     }
 
     private static void markReadBaseMatches(
-            final List<RefReadParseState> reads, final CigarOperator currentElementType, final byte consensusBase, final int consensusQual)
+            final List<RefReadParseState> reads, final CigarOperator currentElementType, final byte consensusBase, final byte consensusQual)
     {
         for(RefReadParseState read : reads)
         {

@@ -1,8 +1,14 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import static com.hartwig.hmftools.lilac.GeneCache.longGeneName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -12,15 +18,11 @@ import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public class CopyNumberAssignment
 {
-    private final Map<String,List<CopyNumberData>> mSampleCopyNumberData;
+    private final Map<String, List<CopyNumberData>> mSampleCopyNumberData;
 
     public CopyNumberAssignment()
     {
@@ -34,11 +36,17 @@ public class CopyNumberAssignment
 
         try
         {
+
+            Predicate<GeneCopyNumber> filterPredicate = x ->
+            {
+                HlaGene gene = HlaGene.fromString(x.geneName());
+                return gene != null && GENE_CACHE.GeneNames.contains(gene);
+            };
             List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                    .filter(x -> GENE_CACHE.GeneNames.contains(x.geneName())).collect(Collectors.toList());
+                    .filter(filterPredicate).toList();
 
             List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                    .map(x -> new CopyNumberData(x.geneName(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
+                    .map(x -> new CopyNumberData(HlaGene.fromString(x.geneName()), x.minCopyNumber(), x.MinMinorAlleleCopyNumber))
                     .collect(Collectors.toList());
 
             mSampleCopyNumberData.put(config.Sample, cnDataList);
@@ -49,21 +57,20 @@ public class CopyNumberAssignment
         }
     }
 
-    public static List<Double> formEmptyAlleleCopyNumber(final List<HlaAllele> winners)
+    public static List<Double> formEmptyAlleleCopyNumber(final Iterable<HlaAllele> winners)
     {
         List<Double> alleleCN = Lists.newArrayList();
         winners.forEach(x -> alleleCN.add(0.0));
         return alleleCN;
     }
 
-    public void assign(
-            final String sampleId, final List<HlaAllele> winners,
-            final ComplexCoverage refCoverage, final ComplexCoverage tumorCoverage, final List<Double> copyNumbers)
+    public void assign(final String sampleId, final ComplexCoverage refCoverage, final ComplexCoverage tumorCoverage,
+            final Collection<Double> copyNumbers)
     {
         LL_LOGGER.info("calculating tumor copy number of winning alleles");
 
         if(refCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount
-        || tumorCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount)
+                || tumorCoverage.getAlleleCoverage().size() != GENE_CACHE.ExpectAlleleCount)
         {
             return;
         }
@@ -83,12 +90,12 @@ public class CopyNumberAssignment
             AlleleCoverage tumorCoverage1 = tumorCoverage.getAlleleCoverage().get(index);
             AlleleCoverage tumorCoverage2 = tumorCoverage.getAlleleCoverage().get(index + 1);
 
-            String gene = longGeneName(refCoverage1.Allele.Gene);
-            CopyNumberData cnData = cnDataList.stream().filter(x -> x.Gene.equals(gene)).findFirst().orElse(null);
+            HlaGene gene = refCoverage1.Allele.Gene;
+            CopyNumberData cnData = cnDataList.stream().filter(x -> x.Gene == gene).findFirst().orElse(null);
 
             if(cnData == null)
             {
-                LL_LOGGER.warn("missing gene({}) copy number data", gene);
+                LL_LOGGER.warn("missing gene({}) copy number data", gene.toString());
                 copyNumbers.add(0.0);
                 copyNumbers.add(0.0);
                 continue;
@@ -98,8 +105,8 @@ public class CopyNumberAssignment
         }
     }
 
-    private void alleleCopyNumber(
-            final CopyNumberData copyNumberData, final List<Double> alleleCopyNumbers,
+    private static void alleleCopyNumber(
+            final CopyNumberData copyNumberData, final Collection<Double> alleleCopyNumbers,
             final AlleleCoverage refCoverage1, final AlleleCoverage refCoverage2,
             final AlleleCoverage tumorCoverage1, final AlleleCoverage tumorCoverage2)
     {

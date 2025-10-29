@@ -3,13 +3,23 @@ package com.hartwig.hmftools.redux.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.UNSET;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.N;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
+import com.hartwig.hmftools.common.utils.Arrays;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -17,25 +27,30 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusState
 {
+    public final String ReadId;
     public final boolean IsForward;
     public final String Chromosome;
     public final Map<String, Object> Attributes;
-    private final RefGenome mRefGenome;
     public byte[] Bases;
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
 
-    public int MinUnclippedPosStart;
-    public int MaxUnclippedPosEnd;
-    public int MinAlignedPosStart;
-    public int MaxAlignedPosEnd;
+    public int UnclippedPosStart;
+    public int UnclippedPosEnd;
+    public int AlignmentStart;
+    public int AlignmentEnd;
     public int MapQuality;
     public int NumMutations;
 
     private ConsensusOutcome mOutcome;
+    private final RefGenome mRefGenome;
 
-    public ConsensusState(final boolean isForward, final String chromosome, final RefGenome refGenome)
+    private int mCurrentCigarElementLength;
+    private CigarOperator mCurrentCigarElementOperator;
+
+    public ConsensusState(final String readId, final boolean isForward, final String chromosome, final RefGenome refGenome)
     {
+        ReadId = readId;
         IsForward = isForward;
         Chromosome = chromosome;
         Attributes = Maps.newHashMap();
@@ -44,18 +59,36 @@ public class ConsensusState
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
 
-        MinUnclippedPosStart = 0;
-        MaxUnclippedPosEnd = 0;
-        MinAlignedPosStart = 0;
-        MaxAlignedPosEnd = 0;
+        UnclippedPosStart = 0;
+        UnclippedPosEnd = 0;
+        AlignmentStart = 0;
+        AlignmentEnd = 0;
         MapQuality = 0;
         NumMutations = 0;
+
+        mCurrentCigarElementLength = 0;
+        mCurrentCigarElementOperator = null;
 
         mOutcome = UNSET;
     }
 
     public ConsensusOutcome outcome() { return mOutcome; }
     public void setOutcome(final ConsensusOutcome outcome) { mOutcome = outcome; }
+
+    public void setFromRead(final SAMRecord read, boolean setBaseAndQuals)
+    {
+        int baseLength = read.getBaseQualities().length;
+        setBaseLength(baseLength);
+        setBoundaries(read);
+
+        CigarElements.addAll(read.getCigar().getCigarElements());
+
+        if(setBaseAndQuals)
+        {
+            Arrays.copyArray(read.getReadBases(), Bases, 0, baseLength, 0);
+            Arrays.copyArray(read.getBaseQualities(), BaseQualities, 0, baseLength, 0);
+        }
+    }
 
     public void setBaseLength(int baseLength)
     {
@@ -67,58 +100,82 @@ public class ConsensusState
     {
         int readStart = read.getAlignmentStart();
         int readEnd = read.getAlignmentEnd();
-        int unclippedStart = read.getCigar().isLeftClipped() ? readStart - read.getCigar().getFirstCigarElement().getLength() : readStart;
-        int unclippedEnd = read.getCigar().isRightClipped() ? readEnd + read.getCigar().getLastCigarElement().getLength() : readEnd;
 
-        if(MinUnclippedPosStart == 0)
+        int unclippedStart = readStart - CigarUtils.leftSoftClipLength(read);
+        int unclippedEnd = readEnd + CigarUtils.rightSoftClipLength(read);
+
+        if(UnclippedPosStart == 0)
         {
-            MinUnclippedPosStart = unclippedStart;
-            MaxUnclippedPosEnd = unclippedEnd;
-            MinAlignedPosStart = readStart;
-            MaxAlignedPosEnd = readEnd;
+            UnclippedPosStart = unclippedStart;
+            UnclippedPosEnd = unclippedEnd;
+            AlignmentStart = readStart;
+            AlignmentEnd = readEnd;
         }
         else
         {
-            MinUnclippedPosStart = min(unclippedStart, MinUnclippedPosStart);
-            MaxUnclippedPosEnd = max(unclippedEnd, MaxUnclippedPosEnd);
-            MinAlignedPosStart = min(readStart, MinAlignedPosStart);
-            MaxAlignedPosEnd = max(readEnd, MaxAlignedPosEnd);
+            UnclippedPosStart = min(unclippedStart, UnclippedPosStart);
+            UnclippedPosEnd = max(unclippedEnd, UnclippedPosEnd);
+            AlignmentStart = min(readStart, AlignmentStart);
+            AlignmentEnd = max(readEnd, AlignmentEnd);
         }
     }
 
     public void setBoundaries(int unclippedStart, int unclippedEnd, int readStart, int readEnd)
     {
-        MinUnclippedPosStart = unclippedStart;
-        MaxUnclippedPosEnd = unclippedEnd;
-        MinAlignedPosStart = readStart;
-        MaxAlignedPosEnd = readEnd;
+        UnclippedPosStart = unclippedStart;
+        UnclippedPosEnd = unclippedEnd;
+        AlignmentStart = readStart;
+        AlignmentEnd = readEnd;
+    }
+
+    public static int[] setReadPositionStartOffsets(final List<SAMRecord> reads, final int consensusUnclippedPosition, boolean isStart)
+    {
+        // convention is to return read's position - consensus position
+        int[] positionOffsets = new int[reads.size()];
+
+        for(int i = 0; i < reads.size(); ++i)
+        {
+            SAMRecord read = reads.get(i);
+
+            int readUnclippedPosition = getUnclippedPosition(read, isStart);
+            positionOffsets[i] = readUnclippedPosition - consensusUnclippedPosition;
+        }
+
+        return positionOffsets;
     }
 
     public void addCigarElement(int length, final CigarOperator operator)
     {
         // combine with existing if a match on type
-        if(IsForward)
-        {
-            int lastIndex = CigarElements.size() - 1;
-            if(lastIndex >= 0 && CigarElements.get(lastIndex).getOperator() == operator)
-                CigarElements.set(lastIndex, new CigarElement(CigarElements.get(lastIndex).getLength() + length, operator));
-            else
-                CigarElements.add(new CigarElement(length, operator));
-        }
-        else
-        {
-            int firstIndex = !CigarElements.isEmpty() ? 0 : -1;
-            if(firstIndex >= 0 && CigarElements.get(firstIndex).getOperator() == operator)
-                CigarElements.set(firstIndex, new CigarElement(CigarElements.get(firstIndex).getLength() + length, operator));
-            else
-                CigarElements.add(0, new CigarElement(length, operator));
-        }
+        if(mCurrentCigarElementLength > 0 && mCurrentCigarElementOperator != operator)
+            addCurrentCigarElement();
+
+        mCurrentCigarElementLength += length;
+        mCurrentCigarElementOperator = operator;
     }
+
+    private void addCurrentCigarElement()
+    {
+        if(mCurrentCigarElementLength == 0)
+            return;
+
+        CigarElement element = new CigarElement(mCurrentCigarElementLength, mCurrentCigarElementOperator);
+
+        if(IsForward)
+            CigarElements.add(element);
+        else
+            CigarElements.add(0, element);
+
+        mCurrentCigarElementLength = 0;
+        mCurrentCigarElementOperator = null;
+    }
+
+    public void finaliseCigar() { addCurrentCigarElement(); }
 
     public void setNumMutations()
     {
         NumMutations = 0;
-        byte[] refBases = mRefGenome.getRefBases(Chromosome, MinAlignedPosStart, MaxAlignedPosEnd);
+        byte[] refBases = mRefGenome.getRefBases(Chromosome, AlignmentStart, AlignmentEnd);
 
         if(refBases == null) // abort any attempt to set this property
             return;
@@ -151,7 +208,22 @@ public class ConsensusState
         }
     }
 
-    private static boolean isIndelOrMismatch(CigarOperator cigarOp)
+    protected static boolean deleteOrSplit(final CigarOperator operator)
+    {
+        return operator == D || operator == N;
+    }
+
+    protected static boolean alignedOrClipped(final CigarOperator operator)
+    {
+        return operator == M || operator.isClipping();
+    }
+
+    protected static boolean consumesRefOrUnclippedBases(final CigarOperator operator)
+    {
+        return operator.consumesReferenceBases() || operator == S;
+    }
+
+    protected static boolean isIndelOrMismatch(CigarOperator cigarOp)
     {
         if(cigarOp == CigarOperator.I)
             return true;

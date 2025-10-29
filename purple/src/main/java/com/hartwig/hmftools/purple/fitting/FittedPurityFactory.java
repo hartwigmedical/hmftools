@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.fitting;
 
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,19 +19,19 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.Downsample;
 import com.hartwig.hmftools.purple.FittingConfig;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fittingsnv.SomaticDeviation;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.collection.Downsample;
+import com.hartwig.hmftools.purple.region.FittingRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class FittedPurityFactory
 {
     private final PurpleConfig mConfig;
     private final double mSomaticPenaltyWeight;
-    private final Map<String,Double> mObservedRatioMap;
+    private final Map<String, Double> mObservedRatioMap;
 
     private final int mTotalBAFCount;
     private final double mAverageFittingRatio;
@@ -49,7 +48,8 @@ public class FittedPurityFactory
 
     public FittedPurityFactory(
             final PurpleConfig config, final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes,
-            final RegionFitCalculator regionFitCalculator, final Collection<ObservedRegion> observedRegions, final List<SomaticVariant> variants)
+            final RegionFitCalculator regionFitCalculator, final List<? extends FittingRegion> observedRegions,
+            final List<SomaticVariant> variants)
     {
         mConfig = config;
         mExecutorService = executorService;
@@ -72,7 +72,7 @@ public class FittedPurityFactory
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;
 
-        for(ObservedRegion region : observedRegions)
+        for(FittingRegion region : observedRegions)
         {
             if(useRegionToFitPurity(tumorOnlyMode, cobaltChromosomes, region))
             {
@@ -100,9 +100,15 @@ public class FittedPurityFactory
         }
     }
 
-    public boolean validDataForFit() { return mAverageFittingRatio > 0; }
+    public boolean validDataForFit()
+    {
+        return mAverageFittingRatio > 0;
+    }
 
-    public List<FittedPurity> getFittedPurities() { return mFittedPurities; }
+    public List<FittedPurity> getFittedPurities()
+    {
+        return mFittedPurities;
+    }
 
     public void fitPurity() throws ExecutionException, InterruptedException
     {
@@ -181,7 +187,7 @@ public class FittedPurityFactory
 
         for(ObservedRegionData regionData : mFilteredObservedRegions)
         {
-            ObservedRegion region = regionData.Region;
+            FittingRegion region = regionData.Region;
             RegionFitCalcs regionFitCalcs = mRegionFitCalculator.calculateRegionFit(purity, normFactor, region);
 
             int bafCount = region.bafCount();
@@ -220,7 +226,8 @@ public class FittedPurityFactory
                 .build();
     }
 
-    private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
+    private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes,
+            final FittingRegion region)
     {
         if(region.bafCount() <= 0)
             return false;

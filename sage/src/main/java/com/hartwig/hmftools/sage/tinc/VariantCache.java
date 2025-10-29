@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS_V37;
@@ -45,8 +45,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
@@ -146,7 +146,7 @@ public class VariantCache
 
         LOGGER.debug("loading unfiltered VCF file({})", mConfig.InputVcf);
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        final List<Callable<Void>> callableList = chromosomeTasks.stream().collect(Collectors.toList());
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
         {
@@ -182,7 +182,7 @@ public class VariantCache
 
     private void downsampleFittingVariants()
     {
-        int nthCount = (int)floor(mFittingVariants.size() / (double)TINC_MAX_FITTING_VARIANTS);
+        int nthCount = (int) floor(mFittingVariants.size() / (double) TINC_MAX_FITTING_VARIANTS);
 
         if(nthCount < 2)
             return;
@@ -221,7 +221,7 @@ public class VariantCache
         if(depthTotal == 0)
             return;
 
-        int averageDepth = (int)round(depthTotal / (double)mFittingVariants.size());
+        int averageDepth = (int) round(depthTotal / (double) mFittingVariants.size());
 
         int index = 0;
         while(index < mFittingVariants.size())
@@ -246,7 +246,7 @@ public class VariantCache
         }
     }
 
-    public class ChromosomeTask implements Callable
+    public class ChromosomeTask implements Callable<Void>
     {
         private final HumanChromosome mChromosome;
         private final String mChromosomeStr;
@@ -281,7 +281,7 @@ public class VariantCache
         }
 
         @Override
-        public Long call()
+        public Void call()
         {
             int variantCount = 0;
 
@@ -318,7 +318,7 @@ public class VariantCache
             mGnomadCache.removeCompleteChromosome(mChromosomeStr);
             mPonCache.removeCompleteChromosome(mChromosomeStr);
 
-            return (long) 0;
+            return null;
         }
 
         private void processVariant(final VariantContext variantContext)
@@ -353,7 +353,7 @@ public class VariantCache
             else
             {
                 // GL_ABQ >= 30 (removes low qual GL_AD variants from distorting the fit)
-                int referenceABQ = Integer.parseInt(variant.RefGenotype.getAnyAttribute(AVG_BASE_QUAL).toString().split(CSV_DELIM)[1]);
+                int referenceABQ = Integer.parseInt(variant.RefGenotype.getAnyAttribute(AVG_RECALIBRATED_BASE_QUAL).toString().split(CSV_DELIM)[1]);
 
                 if(variant.ReferenceAltFrags > 0 && referenceABQ < TINC_GERMLINE_ABQ_MIN)
                     filterReason = FilterReason.LOW_ABQ;
@@ -479,7 +479,7 @@ public class VariantCache
             BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.FitVariantsFile));
 
             String line = fileReader.readLine();
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);

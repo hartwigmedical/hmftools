@@ -16,12 +16,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageCallConfig;
+import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -48,13 +49,14 @@ public class RegionThread extends Thread
 
     private final SamSlicerFactory mSamSlicerFactory;
     private final FragmentLengthWriter mFragmentLengths;
+    private final CandidateWriter mCandidateWriter;
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final MsiJitterCalcs msiJitterCalcs,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
-            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengthWriter fragmentLengths)
+            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions, final Queue<PartitionTask> partitions,
+            final RegionResults regionResults, final FragmentLengthWriter fragmentLengths, final CandidateWriter candidateWriter)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -65,6 +67,7 @@ public class RegionThread extends Thread
         mMsiJitterCalcs = msiJitterCalcs;
         mPhaseSetCounter = phaseSetCounter;
         mFragmentLengths = fragmentLengths;
+        mCandidateWriter = candidateWriter;
 
         mPanelRegions = panelRegions;
         mHighConfidenceRegions = highConfidenceRegions;
@@ -135,6 +138,6 @@ public class RegionThread extends Thread
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
                 regionHighConfidence, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter, mSamSlicerFactory,
-                mFragmentLengths);
+                mFragmentLengths, mCandidateWriter);
     }
 }

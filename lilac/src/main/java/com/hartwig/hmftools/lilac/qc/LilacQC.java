@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.FAIL_LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_INDEL_THRESHOLD;
@@ -18,8 +17,9 @@ import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_HAPLOTY
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_INDEL;
 import static com.hartwig.hmftools.lilac.qc.LilacQCStatus.WARN_UNMATCHED_SOMATIC_VARIANT;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -27,15 +27,19 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacQcData;
+import com.hartwig.hmftools.common.utils.file.FileLock;
+import com.hartwig.hmftools.lilac.GeneSelector;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 public final class LilacQC
 {
+    private final GeneSelector mGenes;
+
     public final Set<LilacQCStatus> Status;
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final HlaAllele HlaYAllele;
-    public final byte MedianBaseQual;
+    public final int MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
@@ -44,10 +48,12 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            final double scoreMargin, final String nextSolutionInfo, final byte medianBaseQual, final HlaAllele hlaYAllele,
+            final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
             final AminoAcidQC aminoAcidQC, final BamQC bamQC,
             final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
+        mGenes = genes;
+
         ScoreMargin = scoreMargin;
         NextSolutionInfo = nextSolutionInfo;
         MedianBaseQual = medianBaseQual;
@@ -66,6 +72,7 @@ public final class LilacQC
     public List<String> getHeaderItems()
     {
         List<String> columns = Lists.newArrayList();
+        columns.add("Genes");
         columns.add(LilacQcData.FLD_QC_STATUS);
         columns.add("ScoreMargin");
         columns.add("NextSolutionAlleles");
@@ -74,7 +81,7 @@ public final class LilacQC
         columns.addAll(BamQC.header());
         columns.addAll(CoverageQC.header());
         columns.addAll(AminoAcidQC.header());
-        columns.addAll(com.hartwig.hmftools.lilac.qc.HaplotypeQC.header());
+        columns.addAll(HaplotypeQC.header());
         columns.addAll(SomaticVariantQC.header());
         return columns;
     }
@@ -82,6 +89,7 @@ public final class LilacQC
     public List<String> getBodyItems()
     {
         List<String> columns = Lists.newArrayList();
+        columns.add(mGenes.toString());
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
         Status.forEach(x -> sj.add(x.toString()));
@@ -102,14 +110,14 @@ public final class LilacQC
     public String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getHeaderItems().forEach(x -> sj.add(x));
+        getHeaderItems().forEach(sj::add);
         return sj.toString();
     }
 
     public String body()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        getBodyItems().forEach(x -> sj.add(x));
+        getBodyItems().forEach(sj::add);
         return sj.toString();
     }
 
@@ -130,21 +138,50 @@ public final class LilacQC
 
     public void writefile(final String fileName)
     {
-        try
+        File file = new File(fileName);
+        List<String> existingRecords = Lists.newArrayList();
+        try(FileLock fileLock = FileLock.create(file))
         {
-            BufferedWriter writer = createBufferedWriter(fileName, false);
+            BufferedReader reader = fileLock.getBufferedReader();
+            reader.readLine();
+            String line = reader.readLine();
+            while(line != null)
+            {
+                String genesField = line.split(TSV_DELIM)[0];
+                GeneSelector genes;
+                try
+                {
+                    genes = GeneSelector.valueOf(genesField);
+                }
+                catch(IllegalArgumentException e)
+                {
+                    genes = null;
+                }
 
+                if(genes != null && genes != mGenes)
+                    existingRecords.add(line);
+
+                line = reader.readLine();
+            }
+
+            fileLock.clear();
+            BufferedWriter writer = fileLock.getBufferedWriter();
             writer.write(header());
             writer.newLine();
 
+            for(String existingRecord : existingRecords)
+            {
+                writer.write(existingRecord);
+                writer.newLine();
+            }
+
             writer.write(body());
             writer.newLine();
-
-            writer.close();
+            writer.flush();
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            LL_LOGGER.error("failed to update {}: {}", fileName, e.toString());
         }
     }
 
@@ -177,7 +214,7 @@ public final class LilacQC
             Status.add(WARN_UNMATCHED_AMINO_ACID);
         }
 
-        if(CoverageQC.ATypes == 0 || CoverageQC.BTypes == 0 || CoverageQC.CTypes == 0)
+        if(CoverageQC.CountsByGene.values().stream().anyMatch(x -> x == 0))
         {
             Status.add(WARN_UNMATCHED_ALLELE);
         }

@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.linx.visualiser.CircosConfig;
 import com.hartwig.hmftools.linx.visualiser.data.AdjustedPosition;
@@ -358,6 +359,8 @@ public class CircosDataWriter
     private List<String> createCobaltPcf(List<PurpleSegment> purpleSegments)
     {
         List<String> result = Lists.newArrayList();
+
+        purpleSegments = purpleSegments.stream().filter(x -> x.GermlineState == GermlineStatus.DIPLOID).toList();
 
         for(PurpleSegment purpleSegment : purpleSegments)
         {

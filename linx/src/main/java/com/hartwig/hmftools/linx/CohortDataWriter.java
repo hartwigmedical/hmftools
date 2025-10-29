@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.linx;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -28,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -136,50 +139,61 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "SVS");
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_SVS" : "SVS");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            // definitional fields
-            writer.write("SampleId\tId\tType\tClusterId\tClusterCount");
-            writer.write("\tChrStart\tPosStart\tOrientStart\tArmStart\tChrEnd\tPosEnd\tOrientEnd\tArmEnd");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            // position and copy number
-            writer.write("\tCNStart\tCNChgStart\tCNEnd\tCNChgEnd\tJcn\tJcnMin\tJcnMax");
+            // definitional fields
+            sj.add("SampleId").add("Id").add("Type").add("ClusterId").add("ClusterCount");
+            sj.add("ChrStart").add("PosStart").add("OrientStart").add("ArmStart").add("ChrEnd").add("PosEnd").add("OrientEnd").add("ArmEnd");
+
+            if(mConfig.isSomatic())
+            {
+                // position and copy number
+                sj.add("CNStart").add("CNChgStart").add("CNEnd").add("CNChgEnd").add("Jcn").add("JcnMin").add("JcnMax");
+            }
 
             // cluster info
-            writer.write("\tClusterReason\tClusterDesc\tResolvedType");
+            sj.add("ClusterReason").add("ClusterDesc").add("ResolvedType");
 
-            writer.write("\tFSStart\tFSEnd\tLEStart\tLEEnd");
+            sj.add("FSStart").add("FSEnd").add("LEStart").add("LEEnd");
 
             // linked pair info
-            writer.write("\tLnkSvStart\tLnkLenStart\tLnkSvEnd\tLnkLenEnd\tAsmbStart\tAsmbEnd");
+            sj.add("LnkSvStart").add("LnkLenStart").add("LnkSvEnd").add("LnkLenEnd").add("AsmbStart").add("AsmbEnd");
 
             // chain info
-            writer.write("\tChainId\tChainCount\tChainIndex");
+            sj.add("ChainId").add("ChainCount").add("ChainIndex");
 
             // proximity info and other link info
-            writer.write("\tNearestLen\tNearestType\tDBLenStart\tDBLenEnd");
+            sj.add("NearestLen").add("NearestType").add("DBLenStart").add("DBLenEnd");
 
-            // proximity info and other link info
-            writer.write("\tFoldbackLnkStart\tFoldbackLenStart\tFoldbackInfoStart\tFoldbackLnkEnd\tFoldbackLenEnd\tFoldbackInfoEnd");
+            if(mConfig.isSomatic())
+            {
+                // proximity info and other link info
+                sj.add("FoldbackLnkStart").add("FoldbackLenStart").add("FoldbackInfoStart");
+                sj.add("FoldbackLnkEnd").add("FoldbackLenEnd").add("FoldbackInfoEnd");
 
-            // local topology from arm cluster
-            writer.write("\tLocTopIdStart\tLocTopTypeStart\tLocTopTIStart\tLocTopIdEnd\tLocTopTypeEnd\tLocTopTIEnd");
+                // local topology from arm cluster
+                sj.add("LocTopIdStart").add("LocTopTypeStart").add("LocTopTIStart").add("LocTopIdEnd").add("LocTopTypeEnd").add("LocTopTIEnd");
+            }
 
             // gene info
-            writer.write("\tGeneStart\tGeneEnd");
+            sj.add("GeneStart").add("GeneEnd");
 
             if(mConfig.Output.writeSvData())
             {
                 // extra copy number info
-                writer.write("\tMinorAPStartPrev\tMinorAPStartPost\tMinorAPEndPrev\tMinorAPEndPost\tAFStart\tAFEnd");
+                if(mConfig.isSomatic())
+                    sj.add("MinorAPStartPrev").add("MinorAPStartPost").add("MinorAPEndPrev").add("MinorAPEndPost");
 
                 // SV table info
-                writer.write("\tHomologyStart\tHomologyEnd\tInsertSeq\tQualScore");
-                writer.write("\tInsSeqAlignments");
-                writer.write("\tRepeatClass\tRepeatType\tAnchorStart\tAnchorEnd");
+                sj.add("HomologyStart").add("HomologyEnd").add("InsertSeq").add("QualScore").add("AFStart").add("AFEnd");
+                sj.add("InsSeqAlignments").add("RepeatClass").add("RepeatType").add("AnchorStart").add("AnchorEnd");
             }
+
+            writer.write(sj.toString());
 
             writer.newLine();
             return writer;
@@ -212,8 +226,8 @@ public class CohortDataWriter
                     continue;
                 }
 
-                if(mConfig.IsGermline && var.getGenesList(true).isEmpty() && var.getGenesList(false).isEmpty())
-                    continue;
+                // if(mConfig.IsGermline && var.getGenesList(true).isEmpty() && var.getGenesList(false).isEmpty())
+                //    continue;
 
                 final StructuralVariantData dbData = var.getSvData();
 
@@ -221,24 +235,42 @@ public class CohortDataWriter
 
                 final ArmCluster armClusterEnd = !var.isSglBreakend() ? cluster.findArmCluster(var.getBreakend(false)) : null;
 
-                writer.write(String.format("%s\t%d\t%s\t%d\t%d",
-                        sampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-                writer.write(String.format("\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s",
-                        var.chromosome(true), var.position(true), var.orientation(true), asStr(var.arm(true)),
-                        var.chromosome(false), var.position(false), var.orientation(false), asStr(var.arm(false))));
+                sj.add(sampleId);
+                sj.add(String.valueOf(var.id()));
+                sj.add(var.typeStr());
+                sj.add(String.valueOf(cluster.id()));
+                sj.add(String.valueOf(cluster.getSvCount()));
 
-                writer.write(String.format("\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",
-                        dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
-                        dbData.adjustedEndCopyNumber(), dbData.adjustedEndCopyNumberChange(),
-                        dbData.junctionCopyNumber(), var.jcnMin(), var.jcnMax()));
+                sj.add(var.chromosome(true));
+                sj.add(String.valueOf(var.position(true)));
+                sj.add(String.valueOf(var.orientation(true)));
+                sj.add(asStr(var.arm(true)));
+                sj.add(var.chromosome(false));
+                sj.add(String.valueOf(var.position(false)));
+                sj.add(String.valueOf(var.orientation(false)));
+                sj.add(asStr(var.arm(false)));
 
-                writer.write(String.format("\t%s\t%s\t%s",
-                        var.getClusterReason(), cluster.getDesc(), cluster.getResolvedType()));
+                if(mConfig.isSomatic())
+                {
+                    sj.add(format("%.2f", dbData.adjustedStartCopyNumber()));
+                    sj.add(format("%.2f", dbData.adjustedStartCopyNumberChange()));
+                    sj.add(format("%.2f", dbData.adjustedEndCopyNumber()));
+                    sj.add(format("%.2f", dbData.adjustedEndCopyNumberChange()));
+                    sj.add(format("%.2f", dbData.junctionCopyNumber()));
+                    sj.add(format("%.2f", var.jcnMin()));
+                    sj.add(format("%.2f", var.jcnMax()));
+                }
 
-                writer.write(String.format("\t%s\t%s\t%s\t%s",
-                        var.isFragileSite(true), var.isFragileSite(false),
-                        LineElementType.toString(var.getLineElement(true)), LineElementType.toString(var.getLineElement(false))));
+                sj.add(var.getClusterReason());
+                sj.add(cluster.getDesc());
+                sj.add(String.valueOf(cluster.getResolvedType()));
+
+                sj.add(String.valueOf(var.isFragileSite(true)));
+                sj.add(String.valueOf(var.isFragileSite(false)));
+                sj.add(LineElementType.toString(var.getLineElement(true)));
+                sj.add(LineElementType.toString(var.getLineElement(false)));
 
                 // linked pair info
                 for(int be = SE_START; be <= SE_END; ++be)
@@ -247,17 +279,19 @@ public class CohortDataWriter
                     final LinkedPair link = var.getLinkedPair(isStart);
                     if(link != null)
                     {
-                        writer.write(String.format("\t%s\t%d",
-                                link.first() == var ? link.second().id() : link.first().id(), link.baseLength()));
+                        sj.add(String.valueOf(link.first() == var ? link.second().id() : link.first().id()));
+                        sj.add(String.valueOf(link.baseLength()));
                     }
                     else
                     {
-                        writer.write("\t\t-1");
+                        sj.add("");
+                        sj.add("-1");
                     }
                 }
 
                 // assembly info
-                writer.write(String.format("\t%s\t%s", var.assemblyInfoStr(true), var.assemblyInfoStr(false)));
+                sj.add(var.assemblyInfoStr(true));
+                sj.add(var.assemblyInfoStr(false));
 
                 // chain info
                 final SvChain chain = cluster.findChain(var);
@@ -265,14 +299,14 @@ public class CohortDataWriter
 
                 if(chain != null)
                 {
-                    chainStr = String.format("\t%d\t%d\t%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
+                    chainStr = format("%d\t%d\t%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
                 }
                 else
                 {
-                    chainStr = String.format("\t%d\t0\t", cluster.getChainId(var));
+                    chainStr = format("%d\t0\t", cluster.getChainId(var));
                 }
 
-                writer.write(chainStr);
+                sj.add(chainStr);
 
                 // only log DB lengths if the partner is in the cluster
                 final DbPair dbStart = var.getDBLink(true);
@@ -291,46 +325,61 @@ public class CohortDataWriter
                     dbLenEnd = (!var.isInferredSgl() && !dbEnd.getOtherSV(var).isInferredSgl()) ? dbEnd.length() : INF_DB_MARKER;
                 }
 
-                writer.write(String.format("\t%d\t%s\t%d\t%d",
-                        var.getNearestSvDistance(), var.getNearestSvRelation(), dbLenStart, dbLenEnd));
+                sj.add(String.valueOf(var.getNearestSvDistance()));
+                sj.add(var.getNearestSvRelation());
+                sj.add(String.valueOf(dbLenStart));
+                sj.add(String.valueOf(dbLenEnd));
 
-                writer.write(String.format("\t%d\t%d\t%s\t%d\t%d\t%s",
-                        var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
-                        var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
-
-                for(int be = SE_START; be <= SE_END; ++be)
+                if(mConfig.isSomatic())
                 {
-                    ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
+                    sj.add(String.valueOf(var.getFoldbackId(true)));
+                    sj.add(String.valueOf(var.getFoldbackLength(true)));
+                    sj.add(var.getFoldbackInfo(true));
+                    sj.add(String.valueOf(var.getFoldbackId(false)));
+                    sj.add(String.valueOf(var.getFoldbackLength(false)));
+                    sj.add(var.getFoldbackInfo(false));
 
-                    if(armCluster != null)
-                        writer.write(String.format("\t%d\t%s\t%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
-                    else
-                        writer.write("\t-1\t\t0");
+                    for(int be = SE_START; be <= SE_END; ++be)
+                    {
+                        ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
+
+                        if(armCluster != null)
+                            sj.add(format("%d\t%s\t%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
+                        else
+                            sj.add("-1\t\t0");
+                    }
                 }
 
-                writer.write(String.format("\t%s\t%s",
-                        var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true)));
+                sj.add(var.getGeneInBreakend(true, false, true));
+                sj.add(var.getGeneInBreakend(false, false, true));
 
                 if(mConfig.Output.writeSvData())
                 {
-                    writer.write(String.format("\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",
-                            var.getBreakend(true).minorAlleleJcn(true),
-                            var.getBreakend(true).minorAlleleJcn(false),
-                            !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0,
-                            !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0,
-                            dbData.adjustedStartAF(), dbData.adjustedEndAF()));
+                    if(mConfig.isSomatic())
+                    {
+                        sj.add(format("%.2f", var.getBreakend(true).minorAlleleJcn(true)));
+                        sj.add(format("%.2f", var.getBreakend(true).minorAlleleJcn(false)));
+                        sj.add(format("%.2f", !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(true) : 0));
+                        sj.add(format("%.2f", !var.isSglBreakend() ? var.getBreakend(false).minorAlleleJcn(false) : 0));
+                    }
 
                     final String insSeqAlignments = dbData.insertSequenceAlignments().replaceAll(",", ";");
 
-                    writer.write(String.format("\t%s\t%s\t%s\t%.0f\t%s",
-                            dbData.startHomologySequence(), dbData.endHomologySequence(),
-                            dbData.insertSequence(), dbData.qualityScore(), insSeqAlignments));
+                    sj.add(dbData.startHomologySequence());
+                    sj.add(dbData.endHomologySequence());
+                    sj.add(dbData.insertSequence());
+                    sj.add(format("%.0f", dbData.qualityScore()));
+                    sj.add(format("%.2f", dbData.adjustedStartAF()));
+                    sj.add(format("%.2f", dbData.adjustedEndAF()));
 
-                    writer.write(String.format("\t%s\t%s\t%d\t%d",
-                            dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
-                            dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
+                    sj.add(insSeqAlignments);
+                    sj.add(dbData.insertSequenceRepeatClass());
+                    sj.add(dbData.insertSequenceRepeatType());
+                    sj.add(String.valueOf(dbData.startAnchoringSupportDistance()));
+                    sj.add(String.valueOf(dbData.endAnchoringSupportDistance()));
                 }
 
+                writer.write(sj.toString());
                 writer.newLine();
             }
         }
@@ -347,24 +396,32 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "CLUSTERS");
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_CLUSTERS" : "CLUSTERS");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId\tClusterId\tClusterDesc\tClusterCount\tCategory\tResolvedType\tSynthetic\tFullyChained\tChainCount");
-            writer.write("\tDelCount\tDupCount\tInsCount\tInvCount\tBndCount\tSglCount\tInfCount");
-            writer.write("\tClusterReasons\tConsistency\tIsLINE\tReplication\tMinJcn\tMaxJcn\tFoldbacks");
-            writer.write("\tArmCount\tOriginArms\tFragmentArms\tConsistentArms\tComplexArms\tAnnotations\tAlleleValidPerc");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("\tTotalTIs\tAssemblyTIs\tShortTIs\tIntTIs\tExtTIs\tIntShortTIs\tExtShortTIs\tIntTIsCnGain");
-            writer.write("\tExtTIsCnGain\tOverlapTIs\tChainEndsFace\tChainEndsAway\tUnchainedSVs");
+            sj.add("SampleId").add("ClusterId").add("ClusterDesc").add("ClusterCount").add("Category").add("ResolvedType").add("Synthetic");
+            sj.add("FullyChained").add("ChainCount").add("DelCount").add("DupCount").add("InsCount").add("InvCount").add("BndCount");
+            sj.add("SglCount").add("InfCount").add("ClusterReasons").add("Consistency").add("IsLINE");
 
-            writer.write("\tDBs\tShortDBs\tTotalDBLength\tTotalDeleted\tTravDelCount\tTravDelLength");
-            writer.write("\tTotalRange\tChainedLength\tImpliedTIs");
+            if(mConfig.isSomatic())
+            {
+                sj.add("Replication").add("MinJcn").add("MaxJcn").add("Foldbacks").add("ArmCount").add("OriginArms");
+                sj.add("FragmentArms").add("ConsistentArms").add("ComplexArms").add("Annotations").add("AlleleValidPerc");
 
-            writer.write("\tArmClusterCount\tAcTotalTIs\tAcIsolatedBE\tAcTIOnly\tAcDsb\tAcSimpleDup");
-            writer.write("\tAcSingleFb\tAcFbDsb\tAcComplexFb\tAcComplexLine\tAcSameOrient\tAcComplexOther");
+                sj.add("TotalTIs").add("AssemblyTIs").add("ShortTIs").add("IntTIs").add("ExtTIs").add("IntShortTIs").add("ExtShortTIs");
+                sj.add("IntTIsCnGain").add("ExtTIsCnGain").add("OverlapTIs").add("ChainEndsFace").add("ChainEndsAway").add("UnchainedSVs");
+            }
 
+            sj.add("DBs").add("ShortDBs").add("TotalDBLength").add("TotalDeleted").add("TravDelCount").add("TravDelLength");
+            sj.add("TotalRange").add("ChainedLength").add("ImpliedTIs");
+
+            sj.add("ArmClusterCount").add("AcTotalTIs").add("AcIsolatedBE").add("AcTIOnly").add("AcDsb").add("AcSimpleDup");
+            sj.add("AcSingleFb").add("AcFbDsb").add("AcComplexFb").add("AcComplexLine").add("AcSameOrient").add("AcComplexOther");
+
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
@@ -404,14 +461,25 @@ public class CohortDataWriter
 
                 final String category = getClusterCategory(cluster);
 
-                writer.write(String.format("%s\t%d\t%s\t%d\t%s\t%s\t%s\t%s\t%d",
-                        sampleId, cluster.id(), cluster.getDesc(), clusterSvCount,
-                        category, resolvedType, cluster.isSyntheticType(),
-                        cluster.isFullyChained(false), cluster.getChains().size()));
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        cluster.getTypeCount(DEL), cluster.getTypeCount(DUP), cluster.getTypeCount(INS),
-                        cluster.getTypeCount(INV), cluster.getTypeCount(BND), cluster.getTypeCount(SGL), cluster.getTypeCount(INF)));
+                sj.add(sampleId);
+                sj.add(String.valueOf(cluster.id()));
+                sj.add(cluster.getDesc());
+                sj.add(String.valueOf(clusterSvCount));
+                sj.add(category);
+                sj.add(String.valueOf(resolvedType));
+                sj.add(String.valueOf(cluster.isSyntheticType()));
+                sj.add(String.valueOf(cluster.isFullyChained(false)));
+                sj.add(String.valueOf(cluster.getChains().size()));
+
+                sj.add(String.valueOf(cluster.getTypeCount(DEL)));
+                sj.add(String.valueOf(cluster.getTypeCount(DUP)));
+                sj.add(String.valueOf(cluster.getTypeCount(INS)));
+                sj.add(String.valueOf(cluster.getTypeCount(INV)));
+                sj.add(String.valueOf(cluster.getTypeCount(BND)));
+                sj.add(String.valueOf(cluster.getTypeCount(SGL)));
+                sj.add(String.valueOf(cluster.getTypeCount(INF)));
 
                 double foldbackCount = 0;
 
@@ -424,48 +492,76 @@ public class CohortDataWriter
                         foldbackCount += 0.5;
                 }
 
-                writer.write(String.format("\t%s\t%d\t%s\t%s\t%.1f\t%.1f\t%.0f",
-                        cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
-                        cluster.requiresReplication(), cluster.getMinJcn(), cluster.getMaxJcn(), foldbackCount));
+                sj.add(cluster.getClusteringReasons());
+                sj.add(String.valueOf(cluster.getConsistencyCount()));
+                sj.add(String.valueOf(cluster.hasLinkingLineElements()));
 
                 final ClusterMetrics metrics = cluster.getMetrics();
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%s\t%.2f",
-                        cluster.getArmCount(), metrics.OriginArms, metrics.FragmentArms, metrics.ConsistentArms,
-                        metrics.ComplexArms, cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
+                if(mConfig.isSomatic())
+                {
+                    sj.add(String.valueOf(cluster.requiresReplication()));
+                    sj.add(format("%.2f", cluster.getMinJcn()));
+                    sj.add(format("%.2f", cluster.getMaxJcn()));
+                    sj.add(String.valueOf(foldbackCount));
 
-                long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.baseLength() <= SHORT_TI_LENGTH).count();
+                    sj.add(String.valueOf(cluster.getArmCount()));
+                    sj.add(String.valueOf(metrics.OriginArms));
+                    sj.add(String.valueOf(metrics.FragmentArms));
+                    sj.add(String.valueOf(metrics.ConsistentArms));
+                    sj.add(String.valueOf(metrics.ComplexArms));
+                    sj.add(cluster.getAnnotations());
+                    sj.add(format("%.2f", metrics.ValidAlleleJcnSegmentPerc));
 
-                writer.write(String.format("\t%d\t%d\t%d",
-                        cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
+                    long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.baseLength() <= SHORT_TI_LENGTH).count();
 
-                final ChainMetrics chainMetrics = cluster.getLinkMetrics();
+                    sj.add(String.valueOf(cluster.getLinkedPairs().size()));
+                    sj.add(String.valueOf(cluster.getAssemblyLinkedPairs().size()));
+                    sj.add(String.valueOf(shortTIs));
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        chainMetrics.InternalTIs, chainMetrics.ExternalTIs, chainMetrics.InternalShortTIs, chainMetrics.ExternalShortTIs,
-                        chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
-                        chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway, cluster.getUnlinkedSVs().size()));
+                    final ChainMetrics chainMetrics = cluster.getLinkMetrics();
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d",
-                        metrics.DBCount, metrics.ShortDBCount, metrics.TotalDBLength,
-                        metrics.TotalDeleted, metrics.TraversedDelCount, metrics.TraversedDelLength));
+                    sj.add(String.valueOf(chainMetrics.InternalTIs));
+                    sj.add(String.valueOf(chainMetrics.ExternalTIs));
+                    sj.add(String.valueOf(chainMetrics.InternalShortTIs));
+                    sj.add(String.valueOf(chainMetrics.ExternalShortTIs));
+                    sj.add(String.valueOf(chainMetrics.InternalTICnGain));
+                    sj.add(String.valueOf(chainMetrics.ExternalTICnGain));
+                    sj.add(String.valueOf(chainMetrics.OverlappingTIs));
+                    sj.add(String.valueOf(chainMetrics.ChainEndsFace));
+                    sj.add(String.valueOf(chainMetrics.ChainEndsAway));
+                    sj.add(String.valueOf(cluster.getUnlinkedSVs().size()));
+                }
 
-                writer.write(String.format("\t%d\t%d\t%d",
-                        metrics.TotalRange, metrics.ChainedLength, metrics.ImpliedTICount));
+                sj.add(String.valueOf(metrics.DBCount));
+                sj.add(String.valueOf(metrics.ShortDBCount));
+                sj.add(String.valueOf(metrics.TotalDBLength));
+                sj.add(String.valueOf(metrics.TotalDeleted));
+                sj.add(String.valueOf(metrics.TraversedDelCount));
+                sj.add(String.valueOf(metrics.TraversedDelLength));
+
+                sj.add(String.valueOf(metrics.TotalRange));
+                sj.add(String.valueOf(metrics.ChainedLength));
+                sj.add(String.valueOf(metrics.ImpliedTICount));
 
                 final int[] armClusterData = getArmClusterData(cluster);
                 long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        cluster.getArmClusters().size(), armClusterTIs, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()],
-                        armClusterData[ArmClusterType.TI_ONLY.ordinal()], armClusterData[ArmClusterType.DSB.ordinal()],
-                        armClusterData[ArmClusterType.SIMPLE_DUP.ordinal()], armClusterData[ArmClusterType.FOLDBACK.ordinal()],
-                        armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()], armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()],
-                        armClusterData[ArmClusterType.COMPLEX_LINE.ordinal()], armClusterData[ArmClusterType.SAME_ORIENT.ordinal()],
-                        armClusterData[ArmClusterType.COMPLEX_OTHER.ordinal()]));
+                sj.add(String.valueOf(cluster.getArmClusters().size()));
+                sj.add(String.valueOf(armClusterTIs));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.ISOLATED_BE.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.TI_ONLY.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.DSB.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.SIMPLE_DUP.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.FOLDBACK.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.COMPLEX_LINE.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.SAME_ORIENT.ordinal()]));
+                sj.add(String.valueOf(armClusterData[ArmClusterType.COMPLEX_OTHER.ordinal()]));
 
+                writer.write(sj.toString());
                 writer.newLine();
-
             }
         }
         catch (final IOException e)
@@ -481,15 +577,29 @@ public class CohortDataWriter
 
         try
         {
-            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, "LINKS");;
+            String outputFileName = cohortDataFilename(mConfig.OutputDataPath, mConfig.IsGermline ? "GERMLINE_LINKS" : "LINKS");;
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId\tClusterId\tClusterCount\tResolvedType");
-            writer.write("\tChainId\tChainCount\tChainConsistent\tLinkReason\tLinkIndex\tChainIndex\tJcn\tJcnUncertainty");
-            writer.write("\tIsAssembled\tTILength\tNextSvDist\tNextClusteredSvDist\tTraversedSVCount");
-            writer.write("\tLocationType\tOverlapCount\tCopyNumberGain");
-            writer.write("\tId1\tId2\tChrArm\tPosStart\tPosEnd\tLocTopTypeStart\tLocTopTypeEnd\tGeneStart\tGeneEnd\tExonMatch\tIsDM");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("SampleId").add("ClusterId").add("ClusterCount").add("ResolvedType");
+            sj.add("ChainId").add("ChainCount").add("ChainConsistent").add("LinkReason").add("LinkIndex").add("ChainIndex").add("Jcn").add("JcnUncertainty");
+            sj.add("IsAssembled").add("TILength").add("NextSvDist").add("NextClusteredSvDist");
+
+            if(mConfig.isSomatic())
+            {
+                sj.add("TraversedSVCount").add("LocationType").add("OverlapCount").add("CopyNumberGain");
+            }
+
+            sj.add("Id1").add("Id2").add("ChrArm").add("PosStart").add("PosEnd");
+            sj.add("LocTopTypeStart").add("LocTopTypeEnd").add("GeneStart").add("GeneEnd").add("ExonMatch");
+
+            if(mConfig.isSomatic())
+            {
+                sj.add("IsDM");
+            }
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -550,29 +660,60 @@ public class CohortDataWriter
                         final SvBreakend beStart = pair.getBreakend(true);
                         final SvBreakend beEnd = pair.getBreakend(false);
 
-                        writer.write(String.format("%s\t%d\t%d\t%s",
-                                sampleId, cluster.id(), clusterSvCount, cluster.getResolvedType()));
+                        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-                        writer.write(String.format("\t%d\t%d\t%s\t%s\t%d\t%s\t%s\t%.3f",
-                                chain.id(), chainSvCount, chainConsistent, pair.getLinkReason(), pair.getLinkIndex(),
-                                chainIndexStr, formatJcn(chain.jcn()), chain.jcnUncertainty()));
+                        sj.add(sampleId);
+                        sj.add(String.valueOf(cluster.id()));
+                        sj.add(String.valueOf(clusterSvCount));
+                        sj.add(String.valueOf(cluster.getResolvedType()));
 
-                        writer.write(String.format("\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%s",
-                                pair.isAssembled(), pair.baseLength(),
-                                pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
-                                pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
+                        sj.add(String.valueOf(chain.id()));
+                        sj.add(String.valueOf(chainSvCount));
+                        sj.add(String.valueOf(chainConsistent));
+                        sj.add(pair.getLinkReason());
+                        sj.add(String.valueOf(pair.getLinkIndex()));
+                        sj.add(chainIndexStr);
+                        sj.add(formatJcn(chain.jcn()));
+                        sj.add(format("%.3f", chain.jcnUncertainty()));
+
+                        sj.add(String.valueOf(pair.isAssembled()));
+                        sj.add(String.valueOf(pair.baseLength()));
+                        sj.add(String.valueOf(pair.getNextSvDistance()));
+                        sj.add(String.valueOf(pair.getNextClusteredSvDistance()));
+
+                        if(mConfig.isSomatic())
+                        {
+                            sj.add(String.valueOf(pair.getTraversedSVCount()));
+                            sj.add(pair.locationType());
+                            sj.add(String.valueOf(pair.overlapCount()));
+                            sj.add(String.valueOf(pair.hasCopyNumberGain()));
+                        }
 
                         ArmCluster acStart = cluster.findArmCluster(beStart);
                         ArmCluster acEnd = cluster.findArmCluster(beEnd);
 
-                        writer.write(String.format("\t%d\t%d\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
-                                beStart.getSV().id(), beEnd.getSV().id(),
-                                beStart.getChrArm(), beStart.position(), beEnd.position(),
-                                acStart != null ? acStart.getTypeStr() : "", acEnd != null ? acEnd.getTypeStr() : "",
-                                beStart.getSV().getGeneInBreakend(beStart.usesStart(), false),
-                                beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false),
-                                pair.getExonMatchData(), isDoubleMinute));
+                        sj.add(String.valueOf(beStart.getSV().id()));
+                        sj.add(String.valueOf(beEnd.getSV().id()));
+                        sj.add(beStart.getChrArm());
+                        sj.add(String.valueOf(beStart.position()));
+                        sj.add(String.valueOf(beEnd.position()));
+                        sj.add(acStart != null ? acStart.getTypeStr() : "");
+                        sj.add(acEnd != null ? acEnd.getTypeStr() : "");
+                        sj.add(beStart.getSV().getGeneInBreakend(beStart.usesStart(), false));
+                        sj.add(beEnd.getSV().getGeneInBreakend(beEnd.usesStart(), false));
 
+                        if(mConfig.IsGermline)
+                        {
+
+                        }
+
+
+                        sj.add(pair.getExonMatchData());
+
+                        if(mConfig.isSomatic())
+                            sj.add(String.valueOf(isDoubleMinute));
+
+                        writer.write(sj.toString());
                         writer.newLine();
                     }
                 }

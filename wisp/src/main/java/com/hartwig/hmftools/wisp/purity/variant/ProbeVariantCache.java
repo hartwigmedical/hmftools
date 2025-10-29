@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_TUMOR_ID;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_VARIANT;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.GERMLINE_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_CLONAL_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_CODING_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.REPORTABLE_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.CategoryType.SUBCLONAL_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.GERMLINE_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_CLONAL_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_CODING_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.OTHER_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.REPORTABLE_MUTATION;
+import static com.hartwig.hmftools.wisp.common.CategoryType.SUBCLONAL_MUTATION;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,22 +21,26 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.wisp.probe.CategoryType;
+import com.hartwig.hmftools.wisp.common.CategoryType;
 
 public class ProbeVariantCache
 {
-    private final Map<String,List<SimpleVariant>> mTumorVariants; // map of tumor ID to probe variants in the panel
+    private final Map<String, List<SimpleVariant>> mTumorVariants; // map of tumor ID to probe variants in the panel
 
     public ProbeVariantCache(final String filename)
     {
         mTumorVariants = Maps.newHashMap();
 
         if(filename != null)
+        {
             loadVariants(filename);
+        }
     }
 
-    public List<SimpleVariant> getSampleVariants(final String tumorId) { return mTumorVariants.get(tumorId); }
+    public List<SimpleVariant> getSampleVariants(final String tumorId)
+    {
+        return mTumorVariants.get(tumorId);
+    }
 
     private void loadVariants(final String filename)
     {
@@ -45,7 +49,7 @@ public class ProbeVariantCache
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String header = lines.get(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int tumorIdIndex = fieldsIndexMap.get(FLD_TUMOR_ID);
             int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
@@ -72,7 +76,7 @@ public class ProbeVariantCache
                 CategoryType category = CategoryType.valueOf(values[categoryIndex]);
 
                 if(category == REPORTABLE_MUTATION || category == GERMLINE_MUTATION || category == OTHER_CODING_MUTATION
-                || category == OTHER_CLONAL_MUTATION || category == OTHER_MUTATION || category == SUBCLONAL_MUTATION)
+                        || category == OTHER_CLONAL_MUTATION || category == OTHER_MUTATION || category == SUBCLONAL_MUTATION)
                 {
                     String variantStr = values[variantIndex];
 
@@ -88,7 +92,7 @@ public class ProbeVariantCache
             }
 
             CT_LOGGER.info("loaded {} tumor sample probe variants from file({})",
-                    mTumorVariants.values().stream().mapToInt(x -> x.size()).sum(), filename);
+                    mTumorVariants.values().stream().mapToInt(List::size).sum(), filename);
         }
         catch(Exception e)
         {

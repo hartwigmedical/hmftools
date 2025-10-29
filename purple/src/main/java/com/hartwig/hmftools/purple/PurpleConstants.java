@@ -50,6 +50,7 @@ public class PurpleConstants
 
     public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
     public static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
+    public static final double TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.1;
     public static final double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
     public static final double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
     public static final double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
@@ -58,7 +59,8 @@ public class PurpleConstants
     public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
     public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
     
-    public static final double AMBIGUOUS_BAF_THRESHOLD = 0.535;
+    public static final double DEFAULT_AMBIGUOUS_BAF_THRESHOLD = 0.535;
+    public static double AMBIGUOUS_BAF_THRESHOLD = DEFAULT_AMBIGUOUS_BAF_THRESHOLD;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -104,6 +106,10 @@ public class PurpleConstants
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
     public static final int DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE = 500;
+
+    public static final double GERMLINE_SV_TINC_FACTOR = 2;
+    public static final double GERMLINE_SV_TINC_MARGIN = 0.02;
+    public static final double GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER = 2;
 
     // germline deletions
     public static final int GERMLINE_DEL_GENE_BUFFER = 500;

@@ -1,23 +1,25 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class FragmentAlleles
 {
     private final Fragment mFragment;
-    private final List<HlaAllele> mFull;
-    private final List<HlaAllele> mWild;
+    private final Set<HlaAllele> mFull;
+    private final Set<HlaAllele> mWild;
 
     public FragmentAlleles(final Fragment fragment, final List<HlaAllele> full, final List<HlaAllele> wild)
     {
         mFragment = fragment;
-        mFull = full;
-        mWild = wild;
+        mFull = Sets.newHashSet(full);
+        mWild = Sets.newHashSet(wild);
     }
 
     public boolean contains(final HlaAllele allele)
@@ -27,8 +29,8 @@ public class FragmentAlleles
 
     public final Fragment getFragment() { return mFragment; }
 
-    public final List<HlaAllele> getFull() { return mFull; }
-    public final List<HlaAllele> getWild() { return mWild; }
+    public final Set<HlaAllele> getFull() { return mFull; }
+    public final Set<HlaAllele> getWild() { return mWild; }
 
     public static List<FragmentAlleles> filter(final List<FragmentAlleles> fragAlleleList, final List<HlaAllele> alleles)
     {

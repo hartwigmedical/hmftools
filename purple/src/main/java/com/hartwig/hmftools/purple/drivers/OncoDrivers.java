@@ -60,7 +60,7 @@ public class OncoDrivers extends SomaticVariantDriverFinder
             for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
             {
                 if(geneCopyNumbers.size() == 1
-                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.transName())))
+                || geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
                 {
                     // confirm this variant has a reportable effect against the specific transcript or the gene itself
                     DriverCatalog driverRecord = createOncoDriver(
@@ -88,10 +88,10 @@ public class OncoDrivers extends SomaticVariantDriverFinder
 
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
-                .chromosomeBand(geneCopyNumber.chromosomeBand())
+                .chromosomeBand(geneCopyNumber.ChromosomeBand)
                 .gene(geneCopyNumber.geneName())
-                .transcript(geneCopyNumber.transName())
-                .isCanonical(geneCopyNumber.isCanonical())
+                .transcript(geneCopyNumber.TransName)
+                .isCanonical(geneCopyNumber.IsCanonical)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
                 .driverLikelihood(1)

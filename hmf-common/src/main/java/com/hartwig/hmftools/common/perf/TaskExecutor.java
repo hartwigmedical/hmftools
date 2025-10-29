@@ -18,9 +18,11 @@ import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TaskExecutor
+public final class TaskExecutor
 {
-    protected static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
+    private TaskExecutor() {}
+
+    static final Logger LOGGER = LogManager.getLogger(TaskExecutor.class);
 
     public static final String THREADS = "threads";
     public static final String THREADS_DESC = "Number of threads, 0 or 1 not multi-threaded";
@@ -40,11 +42,11 @@ public class TaskExecutor
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
 
-    public static boolean executeTasks(final List<Callable> tasks, int threadCount)
+    public static <T> boolean executeTasks(final List<Callable<T>> tasks, int threadCount)
     {
         if(threadCount <= 1)
         {
-            for(Callable task : tasks)
+            for(Callable<T> task : tasks)
             {
                 try
                 {
@@ -65,9 +67,9 @@ public class TaskExecutor
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%0" + digits + "d").build();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
-        List<Future<?>> threadTaskList = new ArrayList<>();
+        List<Future<T>> threadTaskList = new ArrayList<>();
 
-        for(Callable<?> task : tasks)
+        for(Callable<T> task : tasks)
         {
             threadTaskList.add(executorService.submit(task));
         }
@@ -89,16 +91,16 @@ public class TaskExecutor
         return executeTasks(tasks.stream().map(Executors::callable).collect(Collectors.toList()), threadCount);
     }
 
-    private static boolean checkTaskCompletion(final List<Future<?>> taskList)
+    private static <T> boolean checkTaskCompletion(final List<Future<T>> taskList)
     {
         try
         {
-            for(Future<?> future : taskList)
+            for(Future<T> future : taskList)
             {
                 future.get();
             }
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             LOGGER.error("task execution error: {}", e.toString());
             e.printStackTrace();

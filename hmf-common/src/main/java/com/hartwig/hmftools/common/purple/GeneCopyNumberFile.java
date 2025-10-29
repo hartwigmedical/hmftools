@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.DriverType;
 
 public final class GeneCopyNumberFile
 {
@@ -73,6 +74,8 @@ public final class GeneCopyNumberFile
                 .add("minRegionMethod")
                 .add("minMinorAlleleCopyNumber")
                 .add("depthWindowCount")
+                .add("gcContent")
+                //.add("reportableStatus")
                 .toString();
     }
 
@@ -82,20 +85,23 @@ public final class GeneCopyNumberFile
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
                 .add(geneCopyNumber.geneName())
-                .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
-                .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
-                .add(String.valueOf(geneCopyNumber.somaticRegions()))
-                .add(geneCopyNumber.transName())
-                .add(String.valueOf(geneCopyNumber.isCanonical()))
-                .add(geneCopyNumber.chromosomeBand())
-                .add(String.valueOf(geneCopyNumber.minRegions()))
-                .add(String.valueOf(geneCopyNumber.minRegionStart()))
-                .add(String.valueOf(geneCopyNumber.minRegionEnd()))
-                .add(String.valueOf(geneCopyNumber.minRegionStartSupport()))
-                .add(String.valueOf(geneCopyNumber.minRegionEndSupport()))
-                .add(String.valueOf(geneCopyNumber.minRegionMethod()))
-                .add(FORMAT.format(geneCopyNumber.minMinorAlleleCopyNumber()))
-                .add(String.valueOf(geneCopyNumber.depthWindowCount()))
+                .add(FORMAT.format(geneCopyNumber.MinCopyNumber))
+                .add(FORMAT.format(geneCopyNumber.MaxCopyNumber))
+                .add(String.valueOf(geneCopyNumber.SomaticRegions))
+                .add(geneCopyNumber.TransName)
+                .add(String.valueOf(geneCopyNumber.IsCanonical))
+                .add(geneCopyNumber.ChromosomeBand)
+                .add(String.valueOf(geneCopyNumber.MinRegions))
+                .add(String.valueOf(geneCopyNumber.MinRegionStart))
+                .add(String.valueOf(geneCopyNumber.MinRegionEnd))
+                .add(String.valueOf(geneCopyNumber.MinRegionStartSupport))
+                .add(String.valueOf(geneCopyNumber.MinRegionEndSupport))
+                .add(String.valueOf(geneCopyNumber.MinRegionMethod))
+                .add(FORMAT.format(geneCopyNumber.MinMinorAlleleCopyNumber))
+                .add(String.valueOf(geneCopyNumber.DepthWindowCount))
+                .add(FORMAT.format(geneCopyNumber.GcContent))
+                .add(String.valueOf(geneCopyNumber.reportableStatus()))
+                .add(String.valueOf(geneCopyNumber.driverType()))
                 .toString();
     }
 
@@ -113,7 +119,7 @@ public final class GeneCopyNumberFile
         int maxCnIndex = fieldsIndexMap.get("maxCopyNumber");
         int somRegionsIndex = fieldsIndexMap.get("somaticRegions");
         int transIdIndex = fieldsIndexMap.get("transcriptId");
-        Integer canonicalIndex = fieldsIndexMap.get("isCanonical");
+        int canonicalIndex = fieldsIndexMap.get("isCanonical");
         int chrBandIndex = fieldsIndexMap.get("chromosomeBand");
         int minRegionIndex = fieldsIndexMap.get("minRegions");
         int minRegionStartIndex = fieldsIndexMap.get("minRegionStart");
@@ -122,7 +128,10 @@ public final class GeneCopyNumberFile
         int minRegionEndSupIndex = fieldsIndexMap.get("minRegionEndSupport");
         int minRegionMethodIndex = fieldsIndexMap.get("minRegionMethod");
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
-        Integer dwcIndex = fieldsIndexMap.get("depthWindowCount");
+        int dwcIndex = fieldsIndexMap.get("depthWindowCount");
+        Integer gcIndex = fieldsIndexMap.get("gcContent");
+        Integer reportableIndex = fieldsIndexMap.get("reportableStatus");
+        Integer driverIndex = fieldsIndexMap.get("driverType");
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -130,27 +139,30 @@ public final class GeneCopyNumberFile
         {
             String[] values = line.split(TSV_DELIM, -1);
 
-            final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
-                    .chromosome(values[chrIndex])
-                    .start(Integer.parseInt(values[startIndex]))
-                    .end(Integer.parseInt(values[endIndex]))
-                    .geneName(values[geneIndex])
-                    .minCopyNumber(Double.parseDouble(values[minCnIndex]))
-                    .maxCopyNumber(Double.parseDouble(values[maxCnIndex]))
-                    .somaticRegions(Integer.parseInt(values[somRegionsIndex]))
-                    .transName(values[transIdIndex])
-                    .isCanonical(canonicalIndex != null ? Boolean.parseBoolean(values[canonicalIndex]) : true)
-                    .chromosomeBand(values[chrBandIndex])
-                    .minRegions(minRegionIndex)
-                    .minRegionStart(Integer.parseInt(values[minRegionStartIndex]))
-                    .minRegionEnd(Integer.parseInt(values[minRegionEndIndex]))
-                    .minRegionMethod(CopyNumberMethod.valueOf(values[minRegionMethodIndex]))
-                    .minRegionStartSupport(SegmentSupport.valueOf(values[minRegionStartSupIndex]))
-                    .minRegionEndSupport(SegmentSupport.valueOf(values[minRegionEndSupIndex]))
-                    .minMinorAlleleCopyNumber(Double.parseDouble(values[mmACnIndex]))
-                    .depthWindowCount(dwcIndex != null ? Integer.parseInt(values[dwcIndex]) : 0);
+            double gcContent = gcIndex != null ? Double.parseDouble(values[gcIndex]) : 0; // introduced in Purple v4.2
 
-            geneCopyNumbers.add(builder.build());
+            GeneCopyNumber geneCopyNumber = new GeneCopyNumber(
+                    values[chrIndex], Integer.parseInt(values[startIndex]), Integer.parseInt(values[endIndex]),
+                    values[geneIndex], values[transIdIndex], Boolean.parseBoolean(values[canonicalIndex]), values[chrBandIndex],
+                    Double.parseDouble(values[maxCnIndex]), Double.parseDouble(values[minCnIndex]), Double.parseDouble(values[mmACnIndex]),
+                    Integer.parseInt(values[somRegionsIndex]), Integer.parseInt(values[minRegionIndex]),
+                    Integer.parseInt(values[minRegionStartIndex]), Integer.parseInt(values[minRegionEndIndex]),
+                    Integer.parseInt(values[dwcIndex]), gcContent,
+                    SegmentSupport.valueOf(values[minRegionStartSupIndex]), SegmentSupport.valueOf(values[minRegionEndSupIndex]),
+                    CopyNumberMethod.valueOf(values[minRegionMethodIndex]));
+
+            // introduced in Purple v4.3
+            if(reportableIndex != null)
+            {
+                geneCopyNumber.setReportableStatus(ReportableStatus.valueOf(values[reportableIndex]));
+            }
+
+            if(driverIndex != null)
+            {
+                geneCopyNumber.setDriverType(DriverType.valueOf(values[driverIndex]));
+            }
+
+            geneCopyNumbers.add(geneCopyNumber);
         }
 
         return geneCopyNumbers;
