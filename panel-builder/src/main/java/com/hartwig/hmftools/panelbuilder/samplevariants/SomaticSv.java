@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSglProbe;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildSvProbe;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSglProbe;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxCluster;
@@ -135,14 +136,16 @@ public class SomaticSv implements Variant
         if(mVariant.type() == StructuralVariantType.SGL)
         {
             return buildSglProbe(
-                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(), mVariant.insertSequence(),
+                    mVariant.startChromosome(), mVariant.startPosition(), Orientation.fromByte(mVariant.startOrientation()),
+                    mVariant.insertSequence(),
                     PROBE_LENGTH);
         }
         else
         {
             return buildSvProbe(
-                    mVariant.startChromosome(), mVariant.startPosition(), mVariant.startOrientation(),
-                    mVariant.endChromosome(), mVariant.endPosition(), mVariant.endOrientation(), mVariant.insertSequence(),
+                    mVariant.startChromosome(), mVariant.startPosition(), Orientation.fromByte(mVariant.startOrientation()),
+                    mVariant.endChromosome(), mVariant.endPosition(), Orientation.fromByte(mVariant.endOrientation()),
+                    mVariant.insertSequence(),
                     PROBE_LENGTH);
         }
     }

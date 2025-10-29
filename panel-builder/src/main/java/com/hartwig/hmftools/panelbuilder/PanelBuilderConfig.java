@@ -33,6 +33,7 @@ public record PanelBuilderConfig(
         int cnBackboneResolution,
         boolean includeCdr3,
         @Nullable String customRegionsFile,
+        @Nullable String customSvsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         @Nullable String outputId,
         String outputDir,
@@ -53,6 +54,8 @@ public record PanelBuilderConfig(
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
     private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file";
+    private static final String CFG_CUSTOM_SVS_FILE = "custom_svs";
+    private static final String DESC_CUSTOM_SV_FILE = "Custom structural variants TSV file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
     private static final String DESC_VERBOSE_OUTPUT = "Output more information which may be useful for debugging";
 
@@ -71,6 +74,7 @@ public record PanelBuilderConfig(
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
                 configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
+                configBuilder.getValue(CFG_CUSTOM_SVS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
                 parseOutputDir(configBuilder),
@@ -92,6 +96,7 @@ public record PanelBuilderConfig(
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
         configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
+        configBuilder.addPath(CFG_CUSTOM_SVS_FILE, false, DESC_CUSTOM_SV_FILE);
 
         SampleVariantsConfig.registerConfig(configBuilder);
 

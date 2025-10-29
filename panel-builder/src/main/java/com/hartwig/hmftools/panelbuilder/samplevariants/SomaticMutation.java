@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.panelbuilder.samplevariants.VariantProbeBuilder.buildMutationProbe;
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildIndelProbe;
 
 import java.util.List;
 import java.util.Optional;
@@ -110,7 +110,7 @@ public class SomaticMutation implements Variant
     @Override
     public SequenceDefinition generateProbe()
     {
-        return buildMutationProbe(
+        return buildIndelProbe(
                 mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(), mVariantDecorator.alt(),
                 PROBE_LENGTH);
     }

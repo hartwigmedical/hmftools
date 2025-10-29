@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -230,5 +231,17 @@ public class RegionUtils
             }
         });
         return result;
+    }
+
+    public static boolean isRegionValid(final ChrBaseRegion region, final Map<String, Integer> chromosomeLengths)
+    {
+        Integer chromosomeLength = chromosomeLengths.get(region.chromosome());
+        return region.hasValidPositions() && chromosomeLength != null && region.end() <= chromosomeLength;
+    }
+
+    public static boolean isPositionValid(final BasePosition position, final Map<String, Integer> chromosomeLengths)
+    {
+        Integer chromosomeLength = chromosomeLengths.get(position.Chromosome);
+        return position.Position >= 1 && chromosomeLength != null && position.Position <= chromosomeLength;
     }
 }

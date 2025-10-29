@@ -78,6 +78,7 @@ public class PanelBuilderApplication
         // Probes generated first will exclude overlapping probes generated afterward.
         Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
+        generateCustomSvProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
         generateSampleVariantProbes();
@@ -166,6 +167,19 @@ public class PanelBuilderApplication
         else
         {
             CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData.
+        }
+    }
+
+    private void generateCustomSvProbes()
+    {
+        if(mConfig.customSvsFile() == null)
+        {
+            LOGGER.info("Custom SVs not provided; skipping custom SV probes");
+        }
+        else
+        {
+            CustomSvs.generateProbes(mConfig.customSvsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }

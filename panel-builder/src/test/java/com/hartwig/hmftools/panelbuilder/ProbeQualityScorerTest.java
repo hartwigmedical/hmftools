@@ -20,7 +20,7 @@ import org.junit.Test;
 
 public class ProbeQualityScorerTest
 {
-    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
+    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "extra");
 
     private static final int BATCH_SIZE = 3;
     private static final int BUFFER_SIZE = 999999;      // I.e. unlimited

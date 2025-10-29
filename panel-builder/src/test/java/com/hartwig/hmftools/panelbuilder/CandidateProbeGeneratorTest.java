@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class CandidateProbeGeneratorTest
 {
-    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "extra");
+    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "extra");
 
     private final CandidateProbeGenerator mGenerator;
 
