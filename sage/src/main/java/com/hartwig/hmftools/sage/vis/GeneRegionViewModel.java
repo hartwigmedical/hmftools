@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 public interface GeneRegionViewModel
 {
-    record AminoAcidViewModel_(BaseRegion baseRegion, int aminoAcidPos, char ref, char alt) implements GeneRegionViewModel
+    record AminoAcidViewModel(BaseRegion baseRegion, int aminoAcidPos, char ref, char alt, int insertAfterLength) implements GeneRegionViewModel
     {
         public boolean matchesRef()
         {
@@ -12,5 +12,6 @@ public interface GeneRegionViewModel
         }
     }
 
+    record NonCodingExonicRegionViewModel(BaseRegion baseRegion) implements GeneRegionViewModel {}
     record IntronicRegionViewModel(BaseRegion baseRegion) implements GeneRegionViewModel {}
 }

@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.sage.vis.AminoAcidVariant.INDEL;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.lighten;
 import static com.hartwig.hmftools.sage.vis.SvgUtil.drawStringFromCenter;
@@ -26,9 +25,11 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel_;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.AminoAcidViewModel;
 import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.IntronicRegionViewModel;
+import com.hartwig.hmftools.sage.vis.GeneRegionViewModel.NonCodingExonicRegionViewModel;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -474,7 +475,7 @@ public class SvgRender
 
     @Nullable
     public static SVGGraphics2D renderGeneData(double baseBoxSizePx, final BaseRegion renderRegion, final String geneName,
-            final boolean posStrand, final List<GeneRegionViewModel> aminoAcids)
+            boolean posStrand, final List<GeneRegionViewModel> aminoAcids)
     {
         // TODO: cleanup.
 
@@ -483,10 +484,10 @@ public class SvgRender
         AffineTransform origTransform = svgCanvas_.getTransform();
 
         svgCanvas_.setTransform(origTransform);
-        renderGeneRegions(svgCanvas_, 0.0, 0.0, baseBoxSizePx, renderRegion, aminoAcids, true);
+        renderGeneRegions(svgCanvas_, 0.0, 0.0, baseBoxSizePx, renderRegion, posStrand, aminoAcids, true);
 
         svgCanvas_.setTransform(origTransform);
-        renderGeneRegions(svgCanvas_, 0.0, baseBoxSizePx, baseBoxSizePx, renderRegion, aminoAcids, false);
+        renderGeneRegions(svgCanvas_, 0.0, baseBoxSizePx, baseBoxSizePx, renderRegion, posStrand, aminoAcids, false);
 
         svgCanvas_.setTransform(origTransform);
         renderGeneStrand(svgCanvas_, 0.0, 2.0 * baseBoxSizePx, baseBoxSizePx, renderRegion, posStrand);
@@ -498,11 +499,9 @@ public class SvgRender
     }
 
     public static void renderGeneRegions(final SVGGraphics2D svgCanvas__, final double xOffset, final double yOffset, double baseBoxSizePx,
-            final BaseRegion renderRegion, final List<GeneRegionViewModel> geneRegions, final boolean renderRef)
+            final BaseRegion renderRegion, boolean posStrand, final List<GeneRegionViewModel> viewModels, final boolean renderRef)
     {
         // TODO: cleanup
-
-        final char stopCodon = '*';
 
         // work in units of BASE_BOX_SIZE
         svgCanvas__.scale(baseBoxSizePx, baseBoxSizePx);
@@ -516,12 +515,12 @@ public class SvgRender
         final Color darkPurple = new Color(92, 12, 121);
         List<Color> matchBgColours = Lists.newArrayList(lightBlue, darkBlue);
         List<Color> mismatchBgColours = Lists.newArrayList(lightPurple, darkPurple);
-        for(int i = 0; i < geneRegions.size(); i++)
+        for(int i = 0; i < viewModels.size(); i++)
         {
-            GeneRegionViewModel geneRegion = geneRegions.get(i);
-            if(geneRegion instanceof IntronicRegionViewModel)
+            GeneRegionViewModel viewModel = viewModels.get(i);
+            if(viewModel instanceof IntronicRegionViewModel)
             {
-                IntronicRegionViewModel intronModel = (IntronicRegionViewModel) geneRegion;
+                IntronicRegionViewModel intronModel = (IntronicRegionViewModel) viewModel;
                 if(intronModel.baseRegion().start() > renderRegion.end())
                     break;
 
@@ -540,7 +539,20 @@ public class SvgRender
                 continue;
             }
 
-            AminoAcidViewModel_ aaModel = (AminoAcidViewModel_) geneRegion;
+            if(viewModel instanceof NonCodingExonicRegionViewModel)
+            {
+                NonCodingExonicRegionViewModel exonModel = (NonCodingExonicRegionViewModel) viewModel;
+                if(exonModel.baseRegion().start() > renderRegion.end())
+                    break;
+
+                if(exonModel.baseRegion().end() < renderRegion.start())
+                    continue;
+
+                // TODO:
+                throw new NotImplementedException("TODO");
+            }
+
+            AminoAcidViewModel aaModel = (AminoAcidViewModel) viewModel;
             BaseRegion aaRegion = aaModel.baseRegion();
             char aa = renderRef ? aaModel.ref() : aaModel.alt();
             boolean matchesRef = renderRef || aaModel.matchesRef();
@@ -557,14 +569,22 @@ public class SvgRender
             int boxIdx = startPos - renderRegion.start() + BOX_PADDING;
 
             Color bgColour;
-            // TODO: join dels together
-            if(!renderRef && aa == INDEL)
+            // TODO: join dels
+            if(!renderRef && aa == '.')
             {
                 drawDel(svgCanvas__, currentXOffset, currentYOffset, 1, boxIdx, boxIdx + boxWidth - 1);
                 continue;
             }
 
-            if(aa == stopCodon)
+            // TODO: render ins
+            if(aaModel.insertAfterLength() > 0)
+            {
+                // TODO:
+                throw new NotImplementedException("TODO");
+            }
+
+            // TODO: green for start codon.
+            if(aa == '*')
             {
                 bgColour = Color.RED;
             }

@@ -28,7 +28,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegions;
+import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegionViewModels;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
@@ -43,12 +43,8 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_C
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.INFRAME_DELETION_TYPE;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.INTRON_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.MISSENSE_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.SYNONYMOUS_VARIANT_TYPE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
@@ -109,9 +105,7 @@ import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
-import com.hartwig.hmftools.sage.vis.AminoAcidVariant.AminoAcidSubstitution;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -279,7 +273,8 @@ public class VariantVis
         tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
         refVis.forEach(x -> x.downsampleReadEvidenceRecords());
 
-        Pair<DomContent, VariantContext> aaAnnotations = getAminoAcidsElements(config, refData, firstVis.mViewRegion, sageVariant);
+        Pair<DomContent, VariantContext> aaAnnotations = getAminoAcidsElements(
+                config, refData, firstVis.mViewRegion, sageVariant, firstVis.mRefViewModel);
 
         Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaAnnotations)).flatMap(x -> x.stream());
         Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaAnnotations)).flatMap(x -> x.stream());
@@ -567,8 +562,8 @@ public class VariantVis
     }
 
     @Nullable
-    private static Pair<DomContent, VariantContext> getAminoAcidsElements(
-            final VisConfig config, @Nullable final ReferenceData refData, final BaseRegion viewRegion, final SageVariant sageVariant)
+    private static Pair<DomContent, VariantContext> getAminoAcidsElements(final VisConfig config, @Nullable final ReferenceData refData,
+            final BaseRegion viewRegion, final SageVariant sageVariant, final BaseSeqViewModel refNucs)
     {
         if(config.Vcf == null)
         {
@@ -598,7 +593,7 @@ public class VariantVis
             return null;
 
         String transcriptName = null;
-        List<AminoAcidVariant> aaVariants = Lists.newArrayList();
+        List<AminoAcidEvent> aaEvents = Lists.newArrayList();
         VariantContext variant = null;
         for(VariantContext variantContext : vcfVariants)
         {
@@ -613,17 +608,14 @@ public class VariantVis
             }
 
             String aaVariantType = impact.get(AA_VARIANT_TYPE_IDX);
-            if(aaVariantType.equals(MISSENSE_VARIANT_TYPE) || aaVariantType.equals(INFRAME_DELETION_TYPE))
+            String hgvs = impact.get(HGVS_INDEX);
+            if(hgvs.equals("p.?") || hgvs.equals("unknown"))
             {
-                AminoAcidSubstitution aaVariant = AminoAcidSubstitution.parse(impact.get(HGVS_INDEX));
-                aaVariants.add(aaVariant);
+                aaEvents = null;
             }
-            else if(aaVariantType.equals(SYNONYMOUS_VARIANT_TYPE) || aaVariantType.equals(INTRON_VARIANT_TYPE))
+            else if(aaEvents != null && !hgvs.equals(""))
             {
-            }
-            else
-            {
-                throw new RuntimeException("Cannot interpret AA variant type: " + aaVariantType);
+                aaEvents.addAll(AminoAcidEvent.parse(hgvs));
             }
 
             if(!variantContext.getContig().equals(simpleVariant.chromosome()))
@@ -644,7 +636,10 @@ public class VariantVis
         TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
         TranscriptData transcriptExons = refData.GeneDataCache.getTranscriptData(transcriptAminoAcids.GeneId, transcriptName);
 
-        DomContent aaElement = renderAminoAcids(viewRegion, transcriptExons, transcriptAminoAcids, aaVariants);
+        if(aaEvents == null)
+            aaEvents = Collections.emptyList();
+
+        DomContent aaElement = renderAminoAcids(viewRegion, transcriptExons, transcriptAminoAcids, aaEvents, refNucs);
         if(aaElement == null)
             return null;
 
@@ -888,10 +883,10 @@ public class VariantVis
 
     @Nullable
     private static DomContent renderAminoAcids(final BaseRegion viewRegion, final TranscriptData transcriptExons,
-            final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidVariant> variants)
+            final TranscriptAminoAcids transcriptAminoAcids, final List<AminoAcidEvent> events, final BaseSeqViewModel refNucs)
     {
         boolean posStrand = transcriptExons.Strand == (byte) 1;
-        List<GeneRegionViewModel> aminoAcids = getGeneRegions(transcriptExons, transcriptAminoAcids, variants);
+        List<GeneRegionViewModel> aminoAcids = getGeneRegionViewModels(transcriptExons, transcriptAminoAcids, events, refNucs);
         SVGGraphics2D svgCanvas = renderGeneData(READ_HEIGHT_PX, viewRegion, transcriptAminoAcids.GeneName, posStrand, aminoAcids);
         if(svgCanvas == null)
             return null;
