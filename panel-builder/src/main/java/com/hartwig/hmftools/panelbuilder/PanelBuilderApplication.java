@@ -85,8 +85,8 @@ public class PanelBuilderApplication
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
-        mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
-        mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
+        mOutputWriter.writeProbeTargetedRegions(mPanelData.coveredTargetRegions());
+        mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
         mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
         if(geneExtraOutput != null)
         {

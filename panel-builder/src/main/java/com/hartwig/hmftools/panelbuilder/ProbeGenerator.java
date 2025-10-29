@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartWithoutG
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.computeUncoveredRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionNegatedIntersection;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
@@ -91,7 +91,7 @@ public class ProbeGenerator
         else
         {
             // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
-            subregions = computeUncoveredRegions(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+            subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
                     .stream()
                     .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
                     .toList();
@@ -172,7 +172,7 @@ public class ProbeGenerator
         // they will likely still be captured during sequencing).
         Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().singleRegion().baseRegion());
         Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
-        List<RejectedRegion> rejectedRegions = computeUncoveredRegions(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
+        List<RejectedRegion> rejectedRegions = regionNegatedIntersection(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
                 .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
                 .toList();
 
@@ -481,6 +481,7 @@ public class ProbeGenerator
         return bestCandidate
                 .map(probe ->
                 {
+                    // TODO: this checks if the whole probe is covered but we are only interested in the centre position
                     if(coverage.isCovered(probe.definition()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(candidateTargetRegions);
