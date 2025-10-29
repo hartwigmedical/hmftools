@@ -96,4 +96,6 @@ public class RefContextCache
 
         return altContext.hasMinAltSupport();
     }
+
+    public void clear() { mSavedCandidates.clear(); }
 }

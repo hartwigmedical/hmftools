@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVAL
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
@@ -260,8 +261,37 @@ public final class UltimaUtils
 
     public static boolean checkLowQualInCore(final VariantReadContext readContext)
     {
-        return readContext.MaxRepeat == null || readContext.MaxRepeat.repeatLength() > 1
-                || readContext.MaxRepeat.Count < ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
+        // exclude from checking if the variant has a long homopolymer
+        if(readContext.MaxRepeat != null && readContext.MaxRepeat.repeatLength() == 1
+        && readContext.MaxRepeat.Count >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+        {
+            return false;
+        }
+
+        if(readContext.coreLength() < ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN + MIN_CORE_DISTANCE)
+            return true;
+
+        // check for a sufficiently long single-base repeat anywhere in the read bases
+        byte lastBase = readContext.ReadBases[0];
+        int repeatCount = 1;
+        for(int i = 1; i < readContext.ReadBases.length; ++i)
+        {
+            byte nextBase = readContext.ReadBases[i];
+            if(nextBase == lastBase)
+            {
+                ++repeatCount;
+
+                if(repeatCount >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+                    return false;
+            }
+            else
+            {
+                lastBase = nextBase;
+                repeatCount = 1;
+            }
+        }
+
+        return true;
     }
 
     private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
