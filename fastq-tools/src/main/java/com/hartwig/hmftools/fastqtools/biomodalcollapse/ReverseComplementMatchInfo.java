@@ -2,7 +2,7 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 
 import java.util.List;
 
