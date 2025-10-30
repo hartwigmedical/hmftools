@@ -263,7 +263,7 @@ Probe evaluation criteria:
 
 - `QS>=0.1`
 
-### Custom Structural Variants Input File
+#### Custom Structural Variants Input File
 
 TSV file with these columns:
 
@@ -275,6 +275,7 @@ TSV file with these columns:
 | ChromosomeEnd    | String      | Chromosome name of breakend 2, as matching the reference genome. |
 | PositionEnd      | Integer     | 1-indexed position of breakend 2.                                |
 | OrientationEnd   | `1` or `-1` | Orientation of breakend 2.                                       |
+| InsertSequence   | String      | Nucleotide sequence inserted in between the two breakends.       |
 | ExtraInfo        | String      | Arbitrary label which will be included in the output.            |
 
 Example:
