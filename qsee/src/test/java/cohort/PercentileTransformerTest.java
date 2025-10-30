@@ -2,6 +2,9 @@ package cohort;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -9,18 +12,32 @@ import org.junit.Test;
 public class PercentileTransformerTest
 {
 
-    private final double[] COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10 };
+    private final double[] COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.NaN };
+    private final int PERCENTILE_INTERVAL = 10;
     private PercentileTransformer TRANSFORMER;
 
     @Before
     public void setUp()
     {
-        TRANSFORMER = PercentileTransformer.withInterval(10);
+        TRANSFORMER = PercentileTransformer.withInterval(PERCENTILE_INTERVAL);
         TRANSFORMER.fit(COHORT_VALUES);
     }
 
     @Test
-    public void canDedupCohortValuesDuringFit()
+    public void nanValuesIgnoredDuringFit()
+    {
+        PercentileTransformer transformerWithNan = TRANSFORMER;
+
+        PercentileTransformer transformerWithoutNan = PercentileTransformer.withInterval(PERCENTILE_INTERVAL);
+        double[] cohortValuesWithoutNan = Arrays.stream(COHORT_VALUES).filter(value -> !Double.isNaN(value)).toArray();
+        transformerWithoutNan.fit(cohortValuesWithoutNan);
+
+        assertArrayEquals(transformerWithNan.getPercentiles(), transformerWithoutNan.getPercentiles(), 0.001);
+        assertArrayEquals(transformerWithNan.getRefValues(), transformerWithoutNan.getRefValues(), 0.001);
+    }
+
+    @Test
+    public void cohortValuesDedupedDuringFit()
     {
         double[] expectedDedupPercentiles = { 5, 20, 30, 70 };
         double[] expectedDedupRefValues = { 0, 4, 8.5, 10 };

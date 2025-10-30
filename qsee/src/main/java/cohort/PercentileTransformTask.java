@@ -2,6 +2,8 @@ package cohort;
 
 import static common.QseeConstants.QC_LOGGER;
 
+import java.util.Arrays;
+
 import feature.FeatureKey;
 
 public class PercentileTransformTask implements Runnable
@@ -45,9 +47,10 @@ public class PercentileTransformTask implements Runnable
     {
         double[] featureValues = mSampleFeatureMatrix.getColumnValues(mFeatureIndex);
 
-        mTransformer.fit(featureValues);
-
         FeatureKey featureKey = mSampleFeatureMatrix.getFeatureKeys().get(mFeatureIndex);
+
+        mTransformer.fit(featureValues, featureKey);
+
         mPercentileFeatureMatrix.addColumn(featureKey, mTransformer.getRefValues());
 
         logProgress();
