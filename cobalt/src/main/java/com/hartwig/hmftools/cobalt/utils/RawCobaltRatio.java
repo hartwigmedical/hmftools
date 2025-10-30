@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.cobalt.utils;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,25 +24,58 @@ public record RawCobaltRatio(
 
     public RawCobaltRatio differences(final RawCobaltRatio other, final double epsilon)
     {
-        List<DoubleDifference> differences = Lists.newArrayList();
-        differences.add(new DoubleDifference(referenceReadCount, other.referenceReadCount, epsilon));
-        differences.add(new DoubleDifference(tumorReadCount, other.tumorReadCount, epsilon));
-        differences.add(new DoubleDifference(referenceGcRatio, other.referenceGcRatio, epsilon));
-        differences.add(new DoubleDifference(tumorGcRatio, other.tumorGcRatio, epsilon));
-        differences.add(new DoubleDifference(referenceGcDiploidRatio, other.referenceGcDiploidRatio, epsilon));
-        differences.add(new DoubleDifference(referenceGCContent, other.referenceGCContent, epsilon));
-        differences.add(new DoubleDifference(tumorGCContent, other.tumorGCContent, epsilon));
-        boolean hasDifference = differences.stream().anyMatch(diff -> diff.hasDifference);
+        Double tumorReadCountDiff = new DoubleDifference(tumorReadCount, other.tumorReadCount, epsilon).difference;
+        Double tumorGcRatioDiff = new DoubleDifference(tumorGcRatio, other.tumorGcRatio, epsilon).difference;
+        Double tumorGcContentDiff = new DoubleDifference(tumorGCContent, other.tumorGCContent, epsilon).difference;
+        if(Doubles.isZero(tumorReadCount))
+        {
+            Preconditions.checkArgument(Doubles.isZero(other.tumorReadCount));
+            tumorReadCountDiff = 0.0;
+            tumorGcRatioDiff = 0.0;
+            tumorGcContentDiff = 0.0;
+        }
+        if(Doubles.isZero(tumorGCContent))
+        {
+            Preconditions.checkArgument(Doubles.isZero(other.tumorGCContent));
+            tumorGcRatioDiff = 0.0;
+            tumorGcContentDiff = 0.0;
+        }
+        Double refReadCountDiff = new DoubleDifference(referenceReadCount, other.referenceReadCount, epsilon).difference;
+        Double refGcRatioDiff = new DoubleDifference(referenceGcRatio, other.referenceGcRatio, epsilon).difference;
+        Double refGcDiploidRatioDiff = new DoubleDifference(referenceGcDiploidRatio, other.referenceGcDiploidRatio, epsilon).difference;
+        Double refGcContentDiff = new DoubleDifference(referenceGCContent, other.referenceGCContent, epsilon).difference;
+        if(Doubles.isZero(referenceReadCount))
+        {
+            Preconditions.checkArgument(Doubles.isZero(other.referenceReadCount));
+            refReadCountDiff = 0.0;
+            refGcRatioDiff = 0.0;
+            refGcDiploidRatioDiff = 0.0;
+            refGcContentDiff = 0.0;
+        }
+        if(Doubles.isZero(referenceGCContent))
+        {
+            Preconditions.checkArgument(Doubles.isZero(other.referenceGCContent));
+            refGcRatioDiff = 0.0;
+            refGcDiploidRatioDiff = 0.0;
+            refGcContentDiff = 0.0;
+        }
+        boolean hasDifference = !Doubles.isZero(tumorReadCountDiff) ||
+                !Doubles.isZero(tumorGcRatioDiff) ||
+                !Doubles.isZero(tumorGcContentDiff) ||
+                !Doubles.isZero(refReadCountDiff) ||
+                !Doubles.isZero(refGcRatioDiff) ||
+                !Doubles.isZero(refGcDiploidRatioDiff) ||
+                !Doubles.isZero(refGcContentDiff);
         if(hasDifference)
         {
             return new RawCobaltRatio(chromosome, position,
-                    differences.get(0).difference,
-                    differences.get(1).difference,
-                    differences.get(2).difference,
-                    differences.get(3).difference,
-                    differences.get(4).difference,
-                    differences.get(5).difference,
-                    differences.get(6).difference);
+                    refReadCountDiff,
+                    tumorReadCountDiff,
+                    refGcRatioDiff,
+                    tumorGcRatioDiff,
+                    refGcDiploidRatioDiff,
+                    refGcContentDiff,
+                    tumorGcContentDiff);
         }
         return null;
     }

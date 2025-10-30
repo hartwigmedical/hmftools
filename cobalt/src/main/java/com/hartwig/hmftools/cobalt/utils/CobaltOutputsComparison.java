@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
@@ -72,6 +73,10 @@ public class CobaltOutputsComparison
         {
             RawCobaltRatio originalRatio = originalRatios.get(i);
             RawCobaltRatio comparisonRatio = comparisonRatios.get(i);
+            if(Doubles.isZero(originalRatio.tumorReadCount()) && Doubles.isZero(originalRatio.referenceReadCount()))
+            {
+                continue;
+            }
             if(originalRatio.matchesPosition(comparisonRatio))
             {
                 RawCobaltRatio difference = originalRatio.differences(comparisonRatio, epsilon);
@@ -87,7 +92,7 @@ public class CobaltOutputsComparison
                 CB_LOGGER.warn("Original and comparison ratio files have mis-matched entries at index {}.", i);
             }
         }
-        CB_LOGGER.info("Number of differences in ratios: {}", differences.size()/3);
+        CB_LOGGER.info("Number of differences in ratios: {}", differences.size() / 3);
         String differencesFileName = checkAddDirSeparator(mOutputDirectory.getAbsolutePath()) + mSampleId + ".diff.tsv.gz";
         RawCobaltRatioFile.write(differencesFileName, differences);
     }

@@ -93,7 +93,7 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
-        assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(0).tumorGcContent(), 0.01);
 
         assertEquals("chr1", ratios.get(1).chromosome());
         assertEquals(1001, ratios.get(1).position());
@@ -134,12 +134,12 @@ public class ProcessBamTest
         List<CobaltRatio> ratios1 = tumorRatioResults.get(_1);
         List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(10, ratios1.size());
-        for (int i=0; i < 5; i++)
+        for(int i = 0; i < 5; i++)
         {
             assertEquals(-1.0, ratios1.get(i).tumorGCRatio(), 0.01);
             assertEquals(1.0, ratios2.get(i).tumorGCRatio(), 0.01);
         }
-        for (int i=5; i < 10; i++)
+        for(int i = 5; i < 10; i++)
         {
             assertEquals(1.0, ratios1.get(i).tumorGCRatio(), 0.01);
             assertEquals(-1.0, ratios2.get(i).tumorGCRatio(), 0.01);
@@ -163,7 +163,7 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(0).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(0).referenceGcContent(), 0.01);
         assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
 
         assertEquals("chr1", ratios.get(1).chromosome());
@@ -182,7 +182,7 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(2).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).referenceGCDiploidRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(2).referenceGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(2).referenceGcContent(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGcContent(), 0.01);
     }
 
@@ -203,8 +203,8 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(0).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(0).referenceGCDiploidRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(0).referenceGcContent(), 0.01);
-        assertEquals(-1.0, ratios.get(0).tumorGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(0).referenceGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(0).tumorGcContent(), 0.01);
 
         assertEquals("chr1", ratios.get(1).chromosome());
         assertEquals(1001, ratios.get(1).position());
@@ -222,8 +222,8 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(2).referenceGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).referenceGCDiploidRatio(), 0.01);
-        assertEquals(-1.0, ratios.get(2).referenceGcContent(), 0.01);
-        assertEquals(-1.0, ratios.get(2).tumorGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(2).referenceGcContent(), 0.01);
+        assertEquals(0.0, ratios.get(2).tumorGcContent(), 0.01);
     }
 
     @Test
@@ -282,9 +282,9 @@ public class ProcessBamTest
         representativeWindows.add(74);
         representativeWindows.add(95);
 
-        for (int i=0; i < 100; i++)
+        for(int i = 0; i < 100; i++)
         {
-            if (representativeWindows.contains(i))
+            if(representativeWindows.contains(i))
             {
                 assertEquals(2.0 / 3.0, ratios1.get(i).tumorGCRatio(), 0.01);
                 assertEquals(4.0 / 3.0, ratios2.get(i).tumorGCRatio(), 0.01);
@@ -319,7 +319,7 @@ public class ProcessBamTest
         assertEquals(100, ratios1.size());
         List<CobaltRatio> ratios2 = tumorRatioResults.get(_2);
         assertEquals(100, ratios2.size());
-        for (int i=0; i < 100; i++)
+        for(int i = 0; i < 100; i++)
         {
             assertEquals(1.0, ratios1.get(i).tumorGCRatio(), 0.01);
             assertEquals(1.0, ratios2.get(i).tumorGCRatio(), 0.01);
@@ -431,6 +431,58 @@ public class ProcessBamTest
         assertEquals(1.0, ratios.get(1).tumorGCRatio(), 0.01);
         assertEquals(-1.0, ratios.get(2).tumorGCRatio(), 0.01);
         assertEquals(1.0, ratios.get(3).tumorGCRatio(), 0.01);
+    }
+
+    @Test
+    public void handleDepth0WindowsTargeted() throws Exception
+    {
+        // 1 chr of length 8000
+        // 1:2000 depth 100, gc 0.5
+        // 2001:4000 depth 100, gc 0.51
+        // 4001:5000 depth 100, gc 0.52
+        // 5001:6000 depth 0, gc 0
+        // 6001:8000 depth 100, gc 0.53
+        sample = "depth_0_windows";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardChr1GCFile(8000);
+        createStandardChr1PanelFile(8000, 1.000001);
+
+        runCobalt();
+
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        assertEquals(4001, ratios.get(4).position());
+        assertEquals(1.0, ratios.get(4).tumorGCRatio(), 0.01);
+        assertEquals(100.0, ratios.get(4).tumorReadDepth(), 0.01);
+        assertEquals(0.52, ratios.get(4).tumorGcContent(), 0.01);
+
+        assertEquals(5001, ratios.get(5).position());
+        assertEquals(0.0, ratios.get(5).tumorGCRatio(), 0.01);
+        assertEquals(0.0, ratios.get(5).tumorReadDepth(), 0.01);
+        assertEquals(0.0, ratios.get(5).tumorGcContent(), 0.01);
+    }
+
+    @Test
+    public void handleDepth0WindowWholeGenome() throws Exception
+    {
+        sample = "depth_0_windows";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardChr1GCFile(8000);
+
+        runCobalt(false);
+
+        List<CobaltRatio> ratios = tumorRatioResults.get(_1);
+        assertEquals(4001, ratios.get(4).position());
+        assertEquals(100.0, ratios.get(4).tumorReadDepth(), 0.01);
+        assertEquals(0.52, ratios.get(4).tumorGcContent(), 0.01);
+
+        assertEquals(5001, ratios.get(5).position());
+        assertEquals(0.0, ratios.get(5).tumorGCRatio(), 0.01);
+        assertEquals(0.0, ratios.get(5).tumorReadDepth(), 0.01);
+        assertEquals(0.0, ratios.get(5).tumorGcContent(), 0.01);
     }
 
     @Test
@@ -772,7 +824,7 @@ public class ProcessBamTest
         regionOffset = 0;
         int chr15Length = 101_991_189;
         int chr16Length = 90_338_345;
-        Map<HumanChromosome,Integer> lengthsMap = new HashMap<>();
+        Map<HumanChromosome, Integer> lengthsMap = new HashMap<>();
         lengthsMap.put(_15, rounded1000(chr15Length));
         lengthsMap.put(_16, rounded1000(chr16Length));
         createStandardMultiChromosomeGCFile(lengthsMap);
@@ -865,7 +917,7 @@ public class ProcessBamTest
         {
             assertEquals(1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
-        for(int i = 69; i < ratios.size(); i++)
+        for(int i = 69; i < 100; i++)
         {
             assertEquals(-1.0, ratios.get(i).tumorGCRatio(), 0.01);
         }
@@ -943,7 +995,7 @@ public class ProcessBamTest
 
     private void createStandardMultiChromosomeGCFile(final int length, HumanChromosome... chromosomes) throws IOException
     {
-        Map<HumanChromosome,Integer> lengthsMap = new HashMap<>();
+        Map<HumanChromosome, Integer> lengthsMap = new HashMap<>();
         for(HumanChromosome chr : chromosomes)
         {
             lengthsMap.put(chr, length);

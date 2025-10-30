@@ -19,7 +19,7 @@ public class TableSmoother
     public Table smoothed()
     {
         Table toSmooth = mInput.where(mInput.intColumn(0).isGreaterThan(0));
-        boolean row0Presnt = toSmooth.rowCount() > mInput.rowCount();
+        boolean row0Presnt = toSmooth.rowCount() < mInput.rowCount();
         int rowCount = toSmooth.rowCount();
         if(rowCount < 3)
         {
@@ -33,15 +33,14 @@ public class TableSmoother
         );
         toSmooth.sortOn(name0).rollingStream(3).forEach(rows -> addSmoothedRow(output, rows));
 
-        if (row0Presnt)
+        if(row0Presnt)
         {
             Row newRow = output.appendRow();
             newRow.setInt(0, 0);
             newRow.setDouble(1, 1);
             newRow.setDouble(2, 1);
         }
-        output.sortOn(name0);
-        return output;
+        return output.sortOn(name0);
     }
 
     private void addSmoothedRow(Table output, Row[] rows)

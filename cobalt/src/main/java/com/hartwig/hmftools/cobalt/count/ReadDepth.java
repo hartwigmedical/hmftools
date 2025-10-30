@@ -12,6 +12,6 @@ public class ReadDepth
         Chromosome = chromosome;
         StartPosition = startPosition;
         ReadDepth = readDepth;
-        ReadGcContent = readGcContent;
+        ReadGcContent = readDepth == 0 ? 0 : readGcContent;
     }
 }

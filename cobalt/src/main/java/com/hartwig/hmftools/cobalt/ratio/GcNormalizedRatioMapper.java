@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import static com.hartwig.hmftools.cobalt.CobaltColumns.RATIO;
 import static com.hartwig.hmftools.cobalt.CobaltColumns.READ_GC_CONTENT;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.GC_BUCKET_MAX;
@@ -11,8 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.cobalt.CobaltColumns;
-import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
+import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
 import tech.tablesaw.aggregate.AggregateFunctions;
@@ -50,7 +51,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
 
         // skipped masked regions
         Table gcMedianCalcDf = inputRatios.where(
-                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0) // TODO: change to >= 0.0
+                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThanOrEqualTo(0.0)
                         .and(
                                 inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(GC_BUCKET_MIN, GC_BUCKET_MAX)
                                         .or(
@@ -63,8 +64,10 @@ public class GcNormalizedRatioMapper implements RatioMapper
         NumericAggregateFunction aggFunc = AggregateFunctions.median;
 
         // get the sample median and mean
-        mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
-        mSampleMeanReadDepth = gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO).mean();
+        mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.where(gcMedianCalcDf.doubleColumn(RATIO).isGreaterThan(0.0))
+                .doubleColumn(CobaltColumns.RATIO));
+        mSampleMeanReadDepth =
+                gcMedianCalcDf.where(gcMedianCalcDf.doubleColumn(RATIO).isGreaterThan(0.0)).doubleColumn(CobaltColumns.RATIO).mean();
 
         // group by gcBucket and apply median, to create a table with columns: gcBucket, gcMedianCount, windowCount
         gcMedianCalcDf = gcMedianCalcDf.retainColumns(CobaltColumns.GC_BUCKET, CobaltColumns.RATIO)
@@ -102,7 +105,9 @@ public class GcNormalizedRatioMapper implements RatioMapper
             double upperBound = GC_RATIO_MAX + 0.02;
 
             ratiosWithMedianCount = ratiosWithMedianCount.where(
-                    ratiosWithMedianCount.doubleColumn(READ_GC_CONTENT).isBetweenInclusive(lowerBound, upperBound));
+                    ratiosWithMedianCount.doubleColumn(READ_GC_CONTENT).isBetweenInclusive(lowerBound, upperBound)
+                            .or(ratiosWithMedianCount.doubleColumn(RATIO)
+                                    .isZero())); // We don't want these being set to -1, they should be 0.
         }
         mGCMedianReadDepth = gcMedianCalcDf;
         return ratiosWithMedianCount;

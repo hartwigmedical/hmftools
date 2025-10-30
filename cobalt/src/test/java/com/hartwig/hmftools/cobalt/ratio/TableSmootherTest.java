@@ -101,6 +101,26 @@ public class TableSmootherTest
         checkRow(3, 5, 1.3, 13);
     }
 
+    @Test
+    public void handleGc0Test()
+    {
+        addRow(0, 0, 0);
+        addRow(1, 1.0, 10);
+        addRow(2, 1.3, 13);
+        addRow(3, 1.0, 10);
+        addRow(4, 1.3, 13);
+        addRow(5, 1.6, 16);
+        addRow(6, 1.0, 10);
+
+        smoothIt();
+        assertEquals(5, output.rowCount());
+        checkRow(0, 0, 1, 1.0);
+        checkRow(1, 2, 1.1, 11.0);
+        checkRow(2, 3, 1.2, 12.0);
+        checkRow(3, 4, 1.3, 13.0);
+        checkRow(4, 5, 1.3, 13);
+    }
+
     private void checkRow(int index, int col0, double col1, double col2)
     {
         Row row = output.row(index);
@@ -120,6 +140,5 @@ public class TableSmootherTest
         row.setInt(COL_0, col0);
         row.setDouble(COL_1, col1);
         row.setDouble(COL_2, col2);
-
     }
 }
