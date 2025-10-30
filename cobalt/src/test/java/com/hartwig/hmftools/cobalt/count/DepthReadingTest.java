@@ -23,6 +23,14 @@ public class DepthReadingTest
         assertEquals(readDepth, reading.ReadDepth, 0.0001);
         assertEquals(readGcContent, reading.ReadGcContent, 0.0001);
     }
+
+    @Test
+    public void depth0Test()
+    {
+        DepthReading reading = new DepthReading("1", 3001, 0, Double.NaN);
+        assertEquals(0.0, reading.ReadDepth, 0.0001);
+        assertEquals(0.0, reading.ReadGcContent, 0.0001);
+    }
     
     @Test
     public void testEquals()

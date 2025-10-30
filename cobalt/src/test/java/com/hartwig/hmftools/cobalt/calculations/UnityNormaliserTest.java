@@ -80,7 +80,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
     }
 
     @Test
-    public void onlyIncludePositiveValues()
+    public void handle0s()
     {
         BamRatio br1 = br(_1, 1001, 10.0, 0.45, true);
         BamRatio br2 = br(_1, 2001, 0.0, 0.46, true);
@@ -98,7 +98,7 @@ public class UnityNormaliserTest extends CalculationsTestBase
 
         bamRatios.forEach(normaliser::normalise);
         Assert.assertEquals(10.0/30.0, br1.ratio(), 0.001);
-        Assert.assertEquals(-1.0, br2.ratio(), 0.001);
+        Assert.assertEquals(0.0, br2.ratio(), 0.001);
         Assert.assertEquals(50.0/30.0, br3.ratio(), 0.001);
         Assert.assertEquals(-1.0, br4.ratio(), 0.001);
     }

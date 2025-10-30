@@ -35,6 +35,11 @@ public class CobaltWindow
         IsInTargetRegion = isInTargetRegion;
     }
 
+    public boolean include()
+    {
+        return !IsInExcludedRegion && IsInTargetRegion;
+    }
+
     public CobaltWindow bucketed(final GCPail bucket)
     {
         Preconditions.checkArgument(this.GcBucket == null);
@@ -77,6 +82,8 @@ public class CobaltWindow
                 "Chromosome=" + Chromosome +
                 ", Position=" + Position +
                 ", ReadDepth=" + mDepthReading +
+                ", IsInExcludedRegion=" + IsInExcludedRegion +
+                ", IsInTargetRegion=" + IsInTargetRegion +
                 '}';
     }
 }

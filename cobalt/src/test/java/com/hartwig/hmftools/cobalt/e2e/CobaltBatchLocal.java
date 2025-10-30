@@ -38,8 +38,8 @@ public class CobaltBatchLocal
     @Test
     public void run() throws Exception
     {
-//                List<String> samples = List.of("Sample_13927535");
-        List<String> samples = List.of("Sample_13927535", "Sample_15307684", "Sample_15846501");
+                List<String> samples = List.of("Sample_13927535");
+//        List<String> samples = List.of("Sample_13927535", "Sample_15307684", "Sample_15846501");
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         List<Future<?>> futures = new ArrayList<>();
         samples.forEach(sample -> addExecutorTaskForSample(futures, executorService, sample));

@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 public class BamRatio
 {
@@ -61,7 +62,12 @@ public class BamRatio
 
     public void normaliseDiploidAdjustedRatio(double factor)
     {
-        if (factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio <= 0)
+        // ratio 0 => {-1 if not relevant, 0 if relevant}
+        if (DiploidAdjustedRatio == 0.0)
+        {
+            return;
+        }
+        if (factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio < 0)
         {
             DiploidAdjustedRatio = -1.0;
         }
@@ -73,7 +79,14 @@ public class BamRatio
 
     public void setDiploidAdjustedRatio(double ratio)
     {
-        DiploidAdjustedRatio = ratio;
+        if (Ratio == 0.0)
+        {
+            DiploidAdjustedRatio = 0.0;
+        }
+        else
+        {
+            DiploidAdjustedRatio = ratio;
+        }
     }
 
     public double getDiploidAdjustedRatio()
@@ -92,7 +105,11 @@ public class BamRatio
 
     private void normalise(final double factor)
     {
-        if (!Included | Ratio <= 0)
+        if (Doubles.isZero(Ratio))
+        {
+            return;
+        }
+        if (!Included | Ratio < 0)
         {
             Ratio = -1.0;
             return;

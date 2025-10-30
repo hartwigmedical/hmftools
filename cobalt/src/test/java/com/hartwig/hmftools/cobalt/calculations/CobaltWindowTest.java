@@ -45,6 +45,23 @@ public class CobaltWindowTest
     }
 
     @Test
+    public void included()
+    {
+        GCPail bucket = new GCPail(49);
+        CobaltWindow window = new CobaltWindow(_1, readDepth, bucket, true);
+        assertTrue(window.include());
+
+        window = new CobaltWindow(_2, readDepth2, true,true);
+        assertFalse(window.include());
+        window = new CobaltWindow(_2, readDepth2, true,false);
+        assertFalse(window.include());
+        window = new CobaltWindow(_2, readDepth2, false,true);
+        assertTrue(window.include());
+        window = new CobaltWindow(_2, readDepth2, false,false);
+        assertFalse(window.include());
+    }
+
+    @Test
     public void bucketedTest()
     {
         final GCPail gcBucket = new GCPail(bucketIndex(readDepth2.ReadGcContent));
@@ -93,11 +110,11 @@ public class CobaltWindowTest
     @Test
     public void bucketedDepth0Test()
     {
-        final GCPail gcBucket = new GCPail(bucketIndex(readDepth2.ReadGcContent));
+        final GCPail gcBucket = new GCPail(bucketIndex(0.0));
         gcBucket.addReading(99.0);
         assertEquals(99.0, gcBucket.median(), 0.001);
 
-        DepthReading depth0 = new DepthReading("2", 5001, 0.0, readDepth2.ReadGcContent);
+        DepthReading depth0 = new DepthReading("2", 5001, 0.0, Double.NaN);
         CobaltWindow window = new CobaltWindow(_2, depth0, false,true);
         CobaltWindow bucketed = window.bucketed(gcBucket);
         assertEquals(depth0, bucketed.mDepthReading);

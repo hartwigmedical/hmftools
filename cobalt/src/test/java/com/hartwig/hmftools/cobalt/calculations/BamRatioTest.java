@@ -19,6 +19,37 @@ public class BamRatioTest
     DepthReading readDepth = new DepthReading("1", 1001, 82, 0.49);
 
     @Test
+    public void depth0Test()
+    {
+        DepthReading depth0Reading = new DepthReading("1", 1001, 0.0, Double.NaN);
+        BamRatio br = new BamRatio(_1, depth0Reading, true);
+
+        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ratio(), 0.0001);
+        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
+
+        // Depth 0 readings are invariant under normalisation and enrichment.
+        br.normaliseByMean(3.4);
+        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ratio(), 0.0001);
+        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
+
+        br.normaliseForGc(45.89);
+        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ratio(), 0.0001);
+        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
+
+        br.applyEnrichment(34.56);
+        assertEquals(0.0, br.readDepth(), 0.0001);
+        assertEquals(0.0, br.ratio(), 0.0001);
+        assertEquals(0.0, br.gcContent(), 0.0001);
+        assertEquals(-1.0, br.getDiploidAdjustedRatio(), 0.0001);
+    }
+
+    @Test
     public void constructors()
     {
         BamRatio br = new BamRatio(_Y, 19_001, 123.4, 0.55);
@@ -84,10 +115,11 @@ public class BamRatioTest
     {
         DepthReading rd0 = new DepthReading("1", 1001, 0.0, 0.49);
         BamRatio ratio = new BamRatio(_1, rd0, true);
+        assertEquals(0.0, ratio.gcContent(), 0.001);
         ratio.normaliseByMean(0.5);
         assertEquals(0.0, ratio.readDepth(), 0.001);
-        assertEquals(-1.0, ratio.ratio(), 0.001);
-        assertEquals(0.49, ratio.gcContent(), 0.001);
+        assertEquals(0.0, ratio.ratio(), 0.001);
+        assertEquals(0.0, ratio.gcContent(), 0.001);
     }
 
     @Test
@@ -144,6 +176,17 @@ public class BamRatioTest
         assertEquals(1.8, ratio.getDiploidAdjustedRatio(), 0.001);
         ratio.normaliseDiploidAdjustedRatio(0.0);
         assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+    }
+
+    @Test
+    public void diploidRatioWhenReadRatioIsZero()
+    {
+        BamRatio ratio = new BamRatio(_1, 1001, 0.0, 0.0);
+        assertEquals(-1.0, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.setDiploidAdjustedRatio(1.8);
+        assertEquals(0.0, ratio.getDiploidAdjustedRatio(), 0.001);
+        ratio.normaliseDiploidAdjustedRatio(10.0);
+        assertEquals(0.0, ratio.getDiploidAdjustedRatio(), 0.001);
     }
 
     @Test

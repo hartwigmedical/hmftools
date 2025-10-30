@@ -53,10 +53,10 @@ public abstract class BamCalculation
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();
         WindowsByChromosome.forEach((chromosome, window) ->
         {
-            // Windows are converted to BamRatios. The essential value of a BamRatio is its ratio,
-            // which is set to either the depth or -1.0 if the window is off-target (always false in whole genome mode).
-            // Subsequent normalisation steps adjust the ratio value, but leave values of -1.0 unchanged.
-            BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, Scope.onTarget(chromosome, window.Position));
+            // Windows are converted to BamRatios. The essential values of a BamRatio are its ratio
+            // and whether it is included (not masked out due to mapability, GC, targeted mode).
+            // Subsequent normalisation steps adjust the ratio value, but non-included BamRatios have a ratio fixed at -1.
+            BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, window.include());
             // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 it the bucket is null.
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
             // Apply enrichment (does nothing in whole genome mode).

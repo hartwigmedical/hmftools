@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.utils;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,5 +47,11 @@ public record RawCobaltRatio(
                     differences.get(6).difference);
         }
         return null;
+    }
+
+    public CobaltRatio toCobaltRatio()
+    {
+        return  new CobaltRatio(chromosome, position, referenceReadCount, referenceGcRatio, referenceGCContent, referenceGcDiploidRatio,
+                tumorReadCount, tumorGcRatio, tumorGCContent);
     }
 }
