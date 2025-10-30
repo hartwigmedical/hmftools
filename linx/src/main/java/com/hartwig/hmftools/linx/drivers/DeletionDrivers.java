@@ -282,7 +282,7 @@ public class DeletionDrivers
             return;
 
         // both the SVs involved in the deletion must be disruptive, ie cannot be simple intronic DELs
-        final String geneId = transcript.gene().geneId();
+        final String geneId = transcript.breakendGeneData().geneId();
 
         final SvBreakend otherBreakend = dbLink.getOtherBreakend(breakend);
 
@@ -303,7 +303,7 @@ public class DeletionDrivers
                 breakend, breakend.getCluster().id(), transcript.geneName(), transcript.transName(),
                 formatJcn(cnLowSide), dbLink.length(), formatJcn(otherSvJcn));
 
-        DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData, DriverType.HOM_DEL_DISRUPTION);
+        DriverGeneData dgData = mDataCache.createDriverData(transcript.breakendGeneData(), transcript.TransData, DriverType.HOM_DEL_DISRUPTION);
 
         if(dgData != null)
         {
@@ -319,7 +319,7 @@ public class DeletionDrivers
             final SvBreakend breakend, final BreakendTransData transcript,
             final List<String> delDriverGeneIds, final List<DriverGeneData> disDelDrivers)
     {
-        final String geneId = transcript.gene().geneId();
+        final String geneId = transcript.breakendGeneData().geneId();
 
         // DUP must be wholly contained within the same gene
         if(breakend.getSV().getGenesList(!breakend.usesStart()).stream().noneMatch(x -> x.geneId().equals(geneId)))
@@ -347,7 +347,7 @@ public class DeletionDrivers
                     transcript.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
                     formatJcn(breakend.copyNumberLowSide()), formatJcn(otherBreakend.copyNumberLowSide()), formatJcn(breakend.jcn()));
 
-            DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData, DriverType.HOM_DUP_DISRUPTION);
+            DriverGeneData dgData = mDataCache.createDriverData(transcript.breakendGeneData(), transcript.TransData, DriverType.HOM_DUP_DISRUPTION);
 
             if(dgData != null)
             {

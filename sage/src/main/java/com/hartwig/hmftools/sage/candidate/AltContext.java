@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
+import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.checkLowQualInCore;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.ReadMatchInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -35,8 +38,12 @@ public class AltContext extends SimpleVariant
 
     private boolean mAboveMinAltSupport;
     private final Set<String> mUniqueReadIds;
+
+    private int mHighQualCoreSupport;
+    private boolean mHasHighQualCoreSupport;
+
     private ReadContextCandidate mCandidate;
-    private AltContext mSecondCandidate; // relevant if has a different read context and sufficient support
+    private ReadContextCandidate mSecondCandidate; // relevant if has a different read context and sufficient support
 
     public AltContext(final RefContext refContext, final String ref, final String alt)
     {
@@ -46,43 +53,27 @@ public class AltContext extends SimpleVariant
         mReadContextCandidates = Lists.newArrayList();
         mUniqueReadIds = Sets.newHashSet();
         mAboveMinAltSupport = false;
+        mHighQualCoreSupport = 0;
         mCandidate = null;
         mSecondCandidate = null;
-    }
 
-    private AltContext(final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate)
-    {
-        super(refContext.Chromosome, refContext.Position, ref, alt);
-        RefContext = refContext;
-
-        mCandidate = candidate;
-        mAboveMinAltSupport = true;
-        mUniqueReadIds = null;
-        mReadContextCandidates = null;
+        mHasHighQualCoreSupport = !isUltima() || ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD == 0;
     }
 
     public VariantReadContext readContext() { return mCandidate.readContext(); }
 
-    @Override
+    public String chromosome() { return RefContext.chromosome(); }
+    public int position() { return RefContext.position(); }
     public String ref() { return Ref; }
-
-    @Override
     public String alt() { return Alt; }
 
-    @Override
-    public String chromosome() { return RefContext.chromosome(); }
-
-    @Override
-    public int position() { return RefContext.position(); }
-
-    public int fullMatchSupport() { return mCandidate.FullMatch; }
-    public int coreMatchSupport() { return mCandidate.CoreMatch; }
-    public int lowQualInCoreCount() { return mCandidate.LowQualInCoreCount; }
-    public int minNumberOfEvents() { return mCandidate.MinNumberOfEvents; }
+    public boolean hasMinAltSupport() { return mAboveMinAltSupport && mHasHighQualCoreSupport; }
 
     public boolean hasValidCandidate() { return mCandidate != null; }
+    public ReadContextCandidate candidate() { return mCandidate; }
+
     public boolean hasSecondCandidate() { return mSecondCandidate != null; }
-    public AltContext secondCandidate() { return mSecondCandidate; }
+    public ReadContextCandidate secondCandidate() { return mSecondCandidate; }
 
     public void addReadContext(
             int numberOfEvents, final SAMRecord read, final int variantReadIndex,
@@ -90,6 +81,20 @@ public class AltContext extends SimpleVariant
     {
         int coreMatch = 0;
         ReadContextCandidate fullMatchCandidate = null;
+
+        List<Integer> lowQualIndices = null;
+
+        if(isUltima())
+        {
+            if(!mHasHighQualCoreSupport || SageCallConfig.LogCandidates)
+            {
+                // only extract Ultima low-qual bases if they are required
+                lowQualIndices = UltimaBamUtils.extractLowQualIndices(read);
+
+                if(lowQualInCore(variantReadIndex, lowQualIndices, null))
+                    return;
+            }
+        }
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
@@ -111,13 +116,13 @@ public class AltContext extends SimpleVariant
                     break;
             }
 
-            if(isUltima())
+            if(lowQualIndices != null && (matchInfo.MatchType == FULL || matchInfo.MatchType == CORE))
             {
-                if(matchInfo.MatchType == FULL || matchInfo.MatchType == CORE)
-                {
-                    if(lowQualInCore(candidate.readContext(), read, variantReadIndex))
-                        ++candidate.LowQualInCoreCount;
-                }
+                // skip checking if not required for candidate logging
+                if(lowQualInCore(variantReadIndex, lowQualIndices, candidate.readContext()))
+                    ++candidate.LowQualInCoreCount;
+                else
+                    ++mHighQualCoreSupport;
             }
         }
 
@@ -128,13 +133,23 @@ public class AltContext extends SimpleVariant
             if(readContext == null)
                 return;
 
-            ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, readContext);
-            candidate.CoreMatch += coreMatch;
+            boolean hasValidCore = true;
 
-            if(isUltima() && lowQualInCore(candidate.readContext(), read, variantReadIndex))
-                ++candidate.LowQualInCoreCount;
+            if(isUltima())
+            {
+                if(lowQualInCore(variantReadIndex, lowQualIndices, readContext))
+                    hasValidCore = false;
+                else
+                    ++mHighQualCoreSupport;
+            }
 
-            mReadContextCandidates.add(candidate);
+            if(hasValidCore)
+            {
+                ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, readContext);
+                candidate.CoreMatch += coreMatch;
+
+                mReadContextCandidates.add(candidate);
+            }
         }
 
         // keep enough reads to test the (unique) raw alt support limit
@@ -148,10 +163,49 @@ public class AltContext extends SimpleVariant
                 mUniqueReadIds.clear();
             }
         }
+
+        if(!mHasHighQualCoreSupport)
+            mHasHighQualCoreSupport = mHighQualCoreSupport >= ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD;
+    }
+
+    private boolean lowQualInCore(int variantReadIndex, final List<Integer> lowQualIndices, @Nullable final VariantReadContext readContext)
+    {
+        if(lowQualIndices == null || lowQualIndices.isEmpty())
+            return false;
+
+        int coreIndexStart, coreIndexEnd;
+
+        if(readContext != null)
+        {
+            if(!checkLowQualInCore(readContext))
+                return false;
+
+            coreIndexStart = variantReadIndex - readContext.leftCoreLength();
+            coreIndexEnd = variantReadIndex + readContext.rightCoreLength();
+        }
+        else
+        {
+            coreIndexStart = variantReadIndex - MIN_CORE_DISTANCE;
+            coreIndexEnd = variantReadIndex + Alt.length() - 1 + MIN_CORE_DISTANCE;
+        }
+
+        for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
+        {
+            if(lowQualIndices.contains(index))
+                return true;
+        }
+
+        return false;
     }
 
     public void selectCandidates()
     {
+        if(isUltima() && !mHasHighQualCoreSupport)
+        {
+            mReadContextCandidates.clear();
+            return;
+        }
+
         if(mReadContextCandidates.isEmpty())
             return;
 
@@ -180,34 +234,13 @@ public class AltContext extends SimpleVariant
                 if(coreStr.contains(topCore) || topCore.contains(coreStr))
                     continue;
 
-                mSecondCandidate = new AltContext(RefContext, Ref, Alt, candidate);
+                mSecondCandidate = candidate;
                 break;
             }
         }
 
         mReadContextCandidates.clear();
     }
-
-    private boolean lowQualInCore(final VariantReadContext readContext, final SAMRecord read, int variantReadIndex)
-    {
-        List<Integer> lowQualIndices = UltimaBamUtils.extractLowQualIndices(read);
-
-        if(lowQualIndices.isEmpty())
-            return false;
-
-        int coreIndexStart = variantReadIndex - readContext.leftCoreLength();
-        int coreIndexEnd = variantReadIndex + readContext.rightCoreLength();
-
-        for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
-        {
-            if(lowQualIndices.contains(index))
-                return true;
-        }
-
-        return false;
-    }
-
-    public boolean aboveMinAltSupport() { return mAboveMinAltSupport; }
 
     @Override
     public boolean equals(@Nullable Object another)
@@ -239,5 +272,4 @@ public class AltContext extends SimpleVariant
         return String.format("var(%s:%d %s->%s) readCandidates(%d)",
                 chromosome(), position(), Ref, Alt, mReadContextCandidates != null ? mReadContextCandidates.size() : 0);
     }
-
 }

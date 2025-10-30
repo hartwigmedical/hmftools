@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_FIRST;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.QualCappingOption.CAP_BY_SECOND;
 

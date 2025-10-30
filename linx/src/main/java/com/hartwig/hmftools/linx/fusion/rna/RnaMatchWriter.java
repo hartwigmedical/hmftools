@@ -113,11 +113,11 @@ public class RnaMatchWriter
 
                 if(trans != null)
                 {
-                    final BreakendGeneData gene = trans.gene();
+                    final BreakendGeneData gene = trans.breakendGeneData();
 
                     // SV breakend info
                     mWriter.write(String.format(",%d,%d,%s,%s",
-                            gene.id(), gene.position(), gene.type(), rnaFusion.getClusterInfo(isUpstream)));
+                            gene.varId(), gene.position(), gene.svType(), rnaFusion.getClusterInfo(isUpstream)));
 
                     // transcript info and viability
                     mWriter.write(String.format(",%s,%s,%s,%d,%s,%s,%d,%s,%d",

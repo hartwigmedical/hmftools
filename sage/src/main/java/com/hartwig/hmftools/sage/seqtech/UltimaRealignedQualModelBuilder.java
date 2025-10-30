@@ -307,8 +307,8 @@ public class UltimaRealignedQualModelBuilder
                 varReadIndexOffset -= lastMatchedLength;
             }
 
-            String ref = String.valueOf((char) firstRefBase) + delBasesString;
-            String alt = String.valueOf((char) firstAltBase);
+            String ref = String.valueOf((char)firstRefBase) + delBasesString;
+            String alt = String.valueOf((char)firstAltBase);
 
             SimpleVariant variant = new SimpleVariant(chromosome, delHomopolymer.VariantPos, ref, alt);
 

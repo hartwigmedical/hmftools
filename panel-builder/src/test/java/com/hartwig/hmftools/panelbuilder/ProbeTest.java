@@ -10,17 +10,26 @@ import org.junit.Test;
 
 public class ProbeTest
 {
-    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM, "test");
-    private static final SequenceDefinition DEFINITION = SequenceDefinition.exactRegion(new ChrBaseRegion("1", 100, 129));
+    private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "test");
+    private static final SequenceDefinition DEFINITION = SequenceDefinition.singleRegion(new ChrBaseRegion("1", 100, 129));
     private static final String SEQUENCE = "ACGTACGTACACGTACGTACACGTACGTAC";
     private static final ProbeEvaluator.Criteria EVAL_CRITERIA = new ProbeEvaluator.Criteria(0.8, 0.45, 0.1);
 
     @Test
     public void testWith()
     {
+        Probe probe = new Probe(DEFINITION, null, METADATA, null, null, null, null);
+
+        probe = probe.withSequence(SEQUENCE);
+        assertEquals(SEQUENCE, probe.sequence());
+
         double qualityScore = 0.1;
+        probe = probe.withQualityScore(qualityScore);
+        assertEquals(qualityScore, probe.qualityScore(), 0);
+
         double gcContent = 0.2;
-        Probe probe = new Probe(DEFINITION, SEQUENCE, METADATA, null, null, qualityScore, gcContent);
+        probe = probe.withGcContent(gcContent);
+        assertEquals(gcContent, probe.gcContent(), 0);
 
         probe = probe.withEvalCriteria(EVAL_CRITERIA);
         assertEquals(EVAL_CRITERIA, probe.evalCriteria());

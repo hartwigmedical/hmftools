@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.isCoveredBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,7 +26,7 @@ public class PanelData implements PanelCoverage
     @Override
     public boolean isCovered(final ChrBaseRegion region)
     {
-        return isCoveredBy(region, coveredRegions());
+        return isFullyOverlappedBy(region, coveredRegions());
     }
 
     @Override

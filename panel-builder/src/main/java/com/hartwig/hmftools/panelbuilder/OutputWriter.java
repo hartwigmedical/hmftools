@@ -9,12 +9,12 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_E
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_PROBES_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_REGIONS_FILE_NAME;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CANDIDATE_TARGET_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_TARGETED_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.TARGET_REGIONS_FILE_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,10 +37,10 @@ public class OutputWriter implements AutoCloseable
     private final DelimFileWriter<Probe> mPanelProbesTsvWriter;
     private final BufferedWriter mPanelProbesBedWriter;
     private final BufferedWriter mPanelProbesFastaWriter;
-    private final BufferedWriter mTargetRegionsBedWriter;
+    private final BufferedWriter mProbeTargetedRegionsBedWriter;
     private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
     private final BufferedWriter mRejectedRegionsBedWriter;
-    private final BufferedWriter mCandidateRegionsBedWriter;
+    private final BufferedWriter mCandidateTargetRegionsBedWriter;
     @Nullable
     private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
     @Nullable
@@ -60,7 +60,6 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_GC_CONTENT = "GCContent";
     private static final String FLD_TARGET_TYPE = "TargetType";
     private static final String FLD_TARGET_EXTRA_INFO = "TargetExtra";
-    private static final String FLD_REJECT_REASON = "RejectReason";
     private static final String FLD_EVAL_CRITERIA = "EvalCriteria";
     private static final String FLD_PROBE_COUNT = "ProbeCount";
 
@@ -71,14 +70,13 @@ public class OutputWriter implements AutoCloseable
 
     private static final List<String> REJECTED_REGIONS_COLUMNS = List.of(
             FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END,
-            FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
-            FLD_REJECT_REASON);
+            FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO);
 
     private static final List<String> CANDIDATE_PROBES_COLUMNS = List.of(
             FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT,
-            FLD_EVAL_CRITERIA, FLD_REJECT_REASON);
+            FLD_EVAL_CRITERIA);
 
     private static final List<String> GENE_STATS_COLUMNS = List.of(
             FLD_GENE_NAME,
@@ -103,10 +101,10 @@ public class OutputWriter implements AutoCloseable
         String panelProbesTsvFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + TSV_EXT);
         String panelProbesBedFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + BED_EXT);
         String panelProbesFastaFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + FASTA_EXT);
-        String targetRegionsBedFile = outputFilePath.apply(TARGET_REGIONS_FILE_NAME);
+        String probeTargetedRegionsBedFile = outputFilePath.apply(PROBE_TARGETED_REGIONS_FILE_NAME);
         String rejectedRegionsTsvFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + TSV_EXT);
         String rejectedRegionsBedFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + BED_EXT);
-        String candidateRegionsBedFile = outputFilePath.apply(CANDIDATE_REGIONS_FILE_NAME);
+        String candidateTargetRegionsBedFile = outputFilePath.apply(CANDIDATE_TARGET_REGIONS_FILE_NAME);
         String candidateProbesTsvFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
         String geneStatsTsvFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
 
@@ -114,13 +112,13 @@ public class OutputWriter implements AutoCloseable
         mPanelProbesBedWriter = createBufferedWriter(panelProbesBedFile);
         mPanelProbesFastaWriter = createBufferedWriter(panelProbesFastaFile);
 
-        mTargetRegionsBedWriter = createBufferedWriter(targetRegionsBedFile);
+        mProbeTargetedRegionsBedWriter = createBufferedWriter(probeTargetedRegionsBedFile);
 
         mRejectedRegionsTsvWriter =
                 new DelimFileWriter<>(rejectedRegionsTsvFile, REJECTED_REGIONS_COLUMNS, OutputWriter::writeRejectedRegionsTsvRow);
         mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsBedFile);
 
-        mCandidateRegionsBedWriter = createBufferedWriter(candidateRegionsBedFile);
+        mCandidateTargetRegionsBedWriter = createBufferedWriter(candidateTargetRegionsBedFile);
 
         if(verboseOutput)
         {
@@ -145,7 +143,7 @@ public class OutputWriter implements AutoCloseable
 
         // Must be sorted for BED files since some tools expect sorted order.
         probes = probes.stream().sorted(Comparator.comparing(
-                probe -> probe.definition().exactRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
+                probe -> probe.definition().singleRegionOrNull(), Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
         for(Probe probe : probes)
         {
@@ -160,7 +158,7 @@ public class OutputWriter implements AutoCloseable
             }
 
             mPanelProbesTsvWriter.writeRow(probe);
-            if(probe.definition().isExactRegion())
+            if(probe.definition().isSingleRegion())
             {
                 writePanelProbesBedRow(probe);
             }
@@ -174,18 +172,18 @@ public class OutputWriter implements AutoCloseable
         ChrBaseRegion start = definition.startRegion();
         ChrBaseRegion end = definition.endRegion();
         row.setOrNull(FLD_START_REGION, start == null ? null : start.toString());
-        row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
+        row.set(FLD_INSERT_SEQ, definition.insertSequence());
         row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
-        row.set(FLD_SEQUENCE, probe.sequence());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
-        row.set(FLD_GC_CONTENT, probe.gcContent());
+        row.setOrNull(FLD_SEQUENCE, probe.sequence());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
     }
 
     private void writePanelProbesBedRow(final Probe probe) throws IOException
     {
-        mPanelProbesBedWriter.write(formatBedRow(probe.definition().exactRegion(), probeBedName(probe)));
+        mPanelProbesBedWriter.write(formatBedRow(probe.definition().singleRegion(), probeBedName(probe)));
     }
 
     private void writePanelProbesFastaRecord(final Probe probe) throws IOException
@@ -200,22 +198,22 @@ public class OutputWriter implements AutoCloseable
         mPanelProbesFastaWriter.write(format(">%s\n%s\n", label, sequence));
     }
 
-    public void writeTargetRegions(List<TargetRegion> regions) throws IOException
+    public void writeProbeTargetedRegions(List<TargetRegion> regions) throws IOException
     {
-        LOGGER.debug("Writing {} target regions to file", regions.size());
+        LOGGER.debug("Writing {} probe targeted regions to file", regions.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
         regions = regions.stream().sorted(Comparator.comparing(TargetRegion::region)).toList();
 
         for(TargetRegion region : regions)
         {
-            writeTargetRegionsBedRow(region);
+            writeProbeTargetedRegionsBedRow(region);
         }
     }
 
-    private void writeTargetRegionsBedRow(final TargetRegion region) throws IOException
+    private void writeProbeTargetedRegionsBedRow(final TargetRegion region) throws IOException
     {
-        writeTargetRegionBedRow(region, mTargetRegionsBedWriter);
+        writeTargetRegionBedRow(region, mProbeTargetedRegionsBedWriter);
     }
 
     public void writeRejectedRegions(List<RejectedRegion> regions) throws IOException
@@ -239,7 +237,6 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_POSITION_END, region.region().end());
         row.set(FLD_TARGET_TYPE, region.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, region.metadata().extraInfo());
-        row.set(FLD_REJECT_REASON, region.reason());
     }
 
     private void writeRejectedRegionsBedRow(final RejectedRegion region) throws IOException
@@ -247,16 +244,16 @@ public class OutputWriter implements AutoCloseable
         mRejectedRegionsBedWriter.write(formatBedRow(region.region(), targetMetadataToBedName(region.metadata())));
     }
 
-    public void writeCandidateRegions(List<TargetRegion> regions) throws IOException
+    public void writeCandidateTargetRegions(List<TargetRegion> regions) throws IOException
     {
-        LOGGER.debug("Writing {} candidate regions to file", regions.size());
+        LOGGER.debug("Writing {} candidate target regions to file", regions.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
         regions = regions.stream().sorted(Comparator.comparing(TargetRegion::region)).toList();
 
         for(TargetRegion region : regions)
         {
-            writeTargetRegionBedRow(region, mCandidateRegionsBedWriter);
+            writeTargetRegionBedRow(region, mCandidateTargetRegionsBedWriter);
         }
     }
 
@@ -297,15 +294,14 @@ public class OutputWriter implements AutoCloseable
         ChrBaseRegion start = definition.startRegion();
         ChrBaseRegion end = definition.endRegion();
         row.setOrNull(FLD_START_REGION, start == null ? null : start.toString());
-        row.setOrNull(FLD_INSERT_SEQ, definition.insertSequence());
+        row.set(FLD_INSERT_SEQ, definition.insertSequence());
         row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
         row.set(FLD_SEQUENCE, probe.sequence());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());
         row.set(FLD_TARGET_EXTRA_INFO, probe.metadata().extraInfo());
-        row.set(FLD_QUALITY_SCORE, probe.qualityScore());
-        row.set(FLD_GC_CONTENT, probe.gcContent());
+        row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
+        row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.setOrNull(FLD_EVAL_CRITERIA, requireNonNull(probe.evalCriteria()).toString());
-        row.setOrNull(FLD_REJECT_REASON, probe.rejectionReason());
     }
 
     private static void writeTargetRegionBedRow(final TargetRegion region, BufferedWriter writer) throws IOException
@@ -315,8 +311,8 @@ public class OutputWriter implements AutoCloseable
 
     private static String probeBedName(final Probe probe)
     {
-        double qualityScore = probe.qualityScore();
-        double gcContent = probe.gcContent();
+        double qualityScore = requireNonNull(probe.qualityScore());
+        double gcContent = requireNonNull(probe.gcContent());
         String baseName = targetMetadataToBedName(probe.metadata());
         return format("%s:QS=%.2f:GC=%.2f", baseName, qualityScore, gcContent);
     }
@@ -365,12 +361,12 @@ public class OutputWriter implements AutoCloseable
         mPanelProbesBedWriter.close();
         mPanelProbesFastaWriter.close();
 
-        mTargetRegionsBedWriter.close();
+        mProbeTargetedRegionsBedWriter.close();
 
         mRejectedRegionsTsvWriter.close();
         mRejectedRegionsBedWriter.close();
 
-        mCandidateRegionsBedWriter.close();
+        mCandidateTargetRegionsBedWriter.close();
 
         if(mCandidateProbesTsvWriter != null)
         {

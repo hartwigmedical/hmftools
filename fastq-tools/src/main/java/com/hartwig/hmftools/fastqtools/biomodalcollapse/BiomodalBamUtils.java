@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sequencing;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
 import static java.lang.String.format;
 

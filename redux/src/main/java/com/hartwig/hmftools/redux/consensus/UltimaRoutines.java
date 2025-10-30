@@ -52,7 +52,8 @@ public final class UltimaRoutines
 
     public static void stripAttributes(final SAMRecord record, @Nullable final UltimaStats stats)
     {
-        boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment() && !record.getSupplementaryAlignmentFlag();
+        boolean keepUltimaRequired = !record.getReadUnmappedFlag() && !record.isSecondaryAlignment()
+                && !record.getSupplementaryAlignmentFlag() && !record.getDuplicateReadFlag();
 
         if(UTLIMA_DROP_QUAL_TAGS)
             keepUltimaRequired = false;

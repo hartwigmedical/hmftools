@@ -220,7 +220,6 @@ public class GeneCoverage
         {
             DEPTH_BUCKETS.add(depthBucket);
         }
-
     }
 
     private static int[] baseCoverageSummary(final List<ExonCoverage> exons)

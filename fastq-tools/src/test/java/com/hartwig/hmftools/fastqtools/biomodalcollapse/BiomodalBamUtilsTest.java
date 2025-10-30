@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.common.sequencing;
+package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_PREFIX;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.MM_SUFFIX;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMSkipValuesFromMMValue;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getMMValueFromModCReadIndices;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndicesFromMMSkipValues;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.getModCReadIndicesFromMMValue;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.MM_PREFIX;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.MM_SUFFIX;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.getMMSkipValuesFromMMValue;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.getMMValueFromModCReadIndices;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.getModCReadIndicesFromMMSkipValues;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.getModCReadIndicesFromMMValue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

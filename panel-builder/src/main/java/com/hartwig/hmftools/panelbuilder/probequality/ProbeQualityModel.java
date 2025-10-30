@@ -65,8 +65,14 @@ public class ProbeQualityModel
     {
     }
 
+    public List<Result> computeFromSeqString(final List<String> probes)
+    {
+        List<byte[]> probeBytes = probes.stream().map(String::getBytes).toList();
+        return computeFromSeqBytes(probeBytes);
+    }
+
     // Compute probe qualities for a list of probes.
-    public List<Result> compute(final List<byte[]> probes)
+    public List<Result> computeFromSeqBytes(final List<byte[]> probes)
     {
         probes.forEach(probe ->
         {

@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
@@ -32,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 public class PanelBuilderApplication
 {
     private final PanelBuilderConfig mConfig;
-    private final RefGenomeSource mRefGenome;
+    private final RefGenomeInterface mRefGenome;
     private final RefGenomeVersion mRefGenomeVersion;
     private final ProbeGenerator mProbeGenerator;
     private PanelData mPanelData;
@@ -45,8 +47,9 @@ public class PanelBuilderApplication
     {
         mConfig = config;
 
-        mRefGenome = loadRefGenome(mConfig.refGenomeFile());
-        mRefGenomeVersion = deriveRefGenomeVersion(mRefGenome);
+        RefGenomeSource refGenomeSource = loadRefGenome(mConfig.refGenomeFile());
+        mRefGenome = new CachedRefGenome(refGenomeSource, 2000, 10);
+        mRefGenomeVersion = deriveRefGenomeVersion(refGenomeSource);
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());
@@ -75,14 +78,15 @@ public class PanelBuilderApplication
         // Probes generated first will exclude overlapping probes generated afterward.
         Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
+        generateCustomSvProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
         generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
-        mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
-        mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
+        mOutputWriter.writeProbeTargetedRegions(mPanelData.coveredTargetRegions());
+        mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
         mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
         if(geneExtraOutput != null)
         {
@@ -167,6 +171,19 @@ public class PanelBuilderApplication
         }
     }
 
+    private void generateCustomSvProbes()
+    {
+        if(mConfig.customSvsFile() == null)
+        {
+            LOGGER.info("Custom SVs not provided; skipping custom SV probes");
+        }
+        else
+        {
+            CustomSvs.generateProbes(mConfig.customSvsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            // Result is stored into mPanelData.
+        }
+    }
+
     private void generateSampleVariantProbes()
     {
         if(mConfig.sampleVariants() == null)
@@ -195,7 +212,7 @@ public class PanelBuilderApplication
 
     private void printPanelStats()
     {
-        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.sequence().length()).sum();
+        long probeBases = mPanelData.probes().stream().mapToLong(probe -> probe.definition().baseLength()).sum();
         LOGGER.info("Panel stats:");
         LOGGER.info("  Probe bases: {}", probeBases);
     }

@@ -31,7 +31,8 @@ public class SageCallConfig
     public final String Hotspots;
     public final boolean PanelOnly;
     public final boolean RunTinc;
-    public final boolean LogCandidates;
+
+    public static boolean LogCandidates = false;
 
     private final String mResourceDir;
 

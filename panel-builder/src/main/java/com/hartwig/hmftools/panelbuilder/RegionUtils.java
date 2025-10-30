@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -17,86 +18,96 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 // Miscellaneous utility functionality for base regions.
 public class RegionUtils
 {
-    // Compute regions within `targetRegion` which do not overlap `coveredRegions`.
-    public static List<BaseRegion> computeUncoveredRegions(final BaseRegion targetRegion, Stream<BaseRegion> coveredRegions)
+    // Compute regions within `region1` which do not overlap any of `regions`.
+    public static List<BaseRegion> regionNegatedIntersection(final BaseRegion region1, Stream<BaseRegion> regions)
     {
-        if(!targetRegion.hasValidPositions())
+        if(!region1.hasValidPositions())
         {
             throw new IllegalArgumentException("Invalid region");
         }
-        coveredRegions = coveredRegions.peek(coveredRegion ->
+        regions = regions.peek(region ->
         {
-            if(!coveredRegion.hasValidPositions())
+            if(!region.hasValidPositions())
             {
                 throw new IllegalArgumentException("Invalid region");
             }
         });
 
-        // Ignore covered positions which don't overlap the target region, since they can never produce an uncovered region.
-        coveredRegions = coveredRegions.filter(targetRegion::overlaps);
+        // Ignore positions which don't overlap region1, since they can never be part of the result.
+        regions = regions.filter(region1::overlaps);
 
         // Sort by start position ascending, then end position ascending.
-        coveredRegions = coveredRegions.sorted(Comparator.comparing(BaseRegion::start).thenComparing(BaseRegion::end));
+        regions = regions.sorted(Comparator.comparing(BaseRegion::start).thenComparing(BaseRegion::end));
 
-        List<BaseRegion> uncoveredRegions = new ArrayList<>();
+        List<BaseRegion> result = new ArrayList<>();
 
-        Iterator<BaseRegion> iterator = coveredRegions.iterator();
-        // Setting this to just before the target region simplifies handling of first and last uncovered regions.
-        int prevCoveredPos = targetRegion.start() - 1;
+        Iterator<BaseRegion> iterator = regions.iterator();
+        // Setting this to just before region1 simplifies handling of the first and last unoverlapped regions.
+        int prevOverlapPos = region1.start() - 1;
 
-        // Remaining covered regions.
         while(iterator.hasNext())
         {
-            BaseRegion coveredRegion = iterator.next();
+            BaseRegion region = iterator.next();
             // Possibilities:
             //   - Current region starts at same position as previous:
             //     - And ends >= previous end: nothing to do.
             //   - Current region starts after previous start:
             //     - And ends <= previous end + 1: nothing to do.
-            //     - And ends > previous end + 1: uncovered region in between.
-            if(coveredRegion.start() > prevCoveredPos + 1)
+            //     - And ends > previous end + 1: unoverlapped region in between.
+            if(region.start() > prevOverlapPos + 1)
             {
-                int uncoveredStart = prevCoveredPos + 1;
-                int uncoveredEnd = min(coveredRegion.start() - 1, targetRegion.end());
-                uncoveredRegions.add(new BaseRegion(uncoveredStart, uncoveredEnd));
+                result.add(new BaseRegion(prevOverlapPos + 1, min(region.start() - 1, region1.end())));
             }
-            prevCoveredPos = max(prevCoveredPos, coveredRegion.end());
+            prevOverlapPos = max(prevOverlapPos, region.end());
         }
 
-        if(prevCoveredPos < targetRegion.end())
+        if(prevOverlapPos < region1.end())
         {
-            // Covered regions end before the end of the target region, so there is an uncovered region afterward.
-            uncoveredRegions.add(new BaseRegion(prevCoveredPos + 1, targetRegion.end()));
+            // Overlapped regions end before the end of region1, so there is an unoverlapped region afterward.
+            result.add(new BaseRegion(prevOverlapPos + 1, region1.end()));
         }
 
-        return uncoveredRegions;
+        return result;
     }
 
-    // Checks if `targetRegion` is fully covered by `coveredRegions`.
-    public static boolean isCoveredBy(final ChrBaseRegion targetRegion, Stream<ChrBaseRegion> coveredRegions)
+    // Checks if all the bases within `queryRegion` are also within the union of `regions`.
+    public static boolean isFullyOverlappedBy(final ChrBaseRegion queryRegion, Stream<ChrBaseRegion> regions)
     {
-        // Similar to computeUncoveredRegions() but without tracking the uncovered regions.
-        coveredRegions = coveredRegions.filter(targetRegion::overlaps);
-        coveredRegions = coveredRegions.sorted(Comparator.comparing(ChrBaseRegion::start).thenComparing(ChrBaseRegion::end));
-        Iterator<ChrBaseRegion> iterator = coveredRegions.iterator();
-        int prevCovered = targetRegion.start() - 1;
+        if(!queryRegion.hasValidPositions())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        regions = regions.peek(region ->
+        {
+            if(!region.hasValidPositions())
+            {
+                throw new IllegalArgumentException("Invalid region");
+            }
+        });
+
+        // Similar to regionNegatedIntersection() but without tracking the resulting regions.
+        Iterator<ChrBaseRegion> iterator = regions
+                .filter(queryRegion::overlaps)
+                .sorted(Comparator.comparing(ChrBaseRegion::start).thenComparing(ChrBaseRegion::end))
+                .iterator();
+        int prevOverlapped = queryRegion.start() - 1;
         if(!iterator.hasNext())
         {
-            // No overlapping regions, therefore can't be covered.
+            // No overlapping regions.
             return false;
         }
         while(iterator.hasNext())
         {
-            ChrBaseRegion coveredRegion = iterator.next();
-            if(coveredRegion.start() > prevCovered + 1)
+            ChrBaseRegion region = iterator.next();
+            if(region.start() > prevOverlapped + 1)
             {
-                // Since the regions are sorted by start, a gap must mean an uncovered region.
+                // Since the regions are sorted by start, a gap must mean an unoverlapped region.
                 return false;
             }
-            prevCovered = max(prevCovered, coveredRegion.end());
+            prevOverlapped = max(prevOverlapped, region.end());
         }
-        // Could be a gap at the end, if not then the whole region must be covered.
-        return prevCovered >= targetRegion.end();
+        // Could be a gap at the end, if not then the whole region must be overlapped.
+        return prevOverlapped >= queryRegion.end();
     }
 
     public static double regionCentreFloat(final BaseRegion region)
@@ -230,5 +241,17 @@ public class RegionUtils
             }
         });
         return result;
+    }
+
+    public static boolean isRegionValid(final ChrBaseRegion region, final Map<String, Integer> chromosomeLengths)
+    {
+        Integer chromosomeLength = chromosomeLengths.get(region.chromosome());
+        return region.hasValidPositions() && chromosomeLength != null && region.end() <= chromosomeLength;
+    }
+
+    public static boolean isPositionValid(final BasePosition position, final Map<String, Integer> chromosomeLengths)
+    {
+        Integer chromosomeLength = chromosomeLengths.get(position.Chromosome);
+        return position.Position >= 1 && chromosomeLength != null && position.Position <= chromosomeLength;
     }
 }

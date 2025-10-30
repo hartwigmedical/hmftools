@@ -9,6 +9,7 @@ public record ProbeGenerationResult(
         List<Probe> probes,
         // Regions which were potentially targeted to be covered (and may or may not be covered). For informational purposes only.
         List<TargetRegion> candidateTargetRegions,
+        // TODO: should remove this and store the target subrange in each probe. calculate total target regions later
         // Regions which were targeted to be covered and are covered by probe regions. Guaranteed to be a subset of the probe regions.
         List<TargetRegion> coveredTargetRegions,
         // Regions which could not be covered due for various reasons. For informational purposes only.
@@ -48,10 +49,10 @@ public record ProbeGenerationResult(
     }
 
     // Convenience method for creating a result from rejecting multiple entire target regions.
-    public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets, final String rejectionReason)
+    public static ProbeGenerationResult rejectTargets(final List<TargetRegion> targets)
     {
         List<RejectedRegion> rejectedRegions = targets.stream()
-                .map(target -> new RejectedRegion(target.region(), target.metadata(), rejectionReason))
+                .map(target -> new RejectedRegion(target.region(), target.metadata()))
                 .toList();
         return new ProbeGenerationResult(
                 emptyList(),

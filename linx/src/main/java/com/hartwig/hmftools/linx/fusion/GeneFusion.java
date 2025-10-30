@@ -77,7 +77,7 @@ public class GeneFusion
             return mTranscripts[FS_UP].geneName() + "_" + mTranscripts[FS_DOWN].geneName();
     }
 
-    public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].gene().id(); }
+    public int svId(boolean isUpstream) { return mTranscripts[fsIndex(isUpstream)].breakendGeneData().varId(); }
 
     public BreakendTransData[] transcripts() { return mTranscripts; }
     public BreakendTransData upstreamTrans() { return mTranscripts[FS_UP]; }
@@ -164,7 +164,7 @@ public class GeneFusion
 
     public boolean sameChromosome()
     {
-        return mTranscripts[FS_UP].gene().chromosome().equals(mTranscripts[FS_DOWN].gene().chromosome());
+        return mTranscripts[FS_UP].breakendGeneData().chromosome().equals(mTranscripts[FS_DOWN].breakendGeneData().chromosome());
     }
 
     public int distance()
@@ -172,7 +172,7 @@ public class GeneFusion
         if(!sameChromosome())
             return 0;
 
-        return abs(mTranscripts[FS_UP].gene().position() - mTranscripts[FS_DOWN].gene().position());
+        return abs(mTranscripts[FS_UP].breakendGeneData().position() - mTranscripts[FS_DOWN].breakendGeneData().position());
     }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)
@@ -256,17 +256,17 @@ public class GeneFusion
 
     public String svIdPair()
     {
-        return String.format("%d_%d", mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id());
+        return String.format("%d_%d", mTranscripts[FS_UP].breakendGeneData().varId(), mTranscripts[FS_DOWN].breakendGeneData().varId());
     }
 
     public final String toString()
     {
         return String.format("%d: %s type(%s) reportable(%s reason=%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
                 mId, name(), knownTypeStr(), mIsReportable, mReportableReasons, mPhaseMatched,
-                mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id(),
-                mTranscripts[FS_UP].gene().chromosome(), mTranscripts[FS_UP].gene().orientation(),
-                mTranscripts[FS_UP].gene().position(), getFusedExon(true),
-                mTranscripts[FS_DOWN].gene().chromosome(), mTranscripts[FS_DOWN].gene().orientation(),
-                mTranscripts[FS_DOWN].gene().position(), getFusedExon(false));
+                mTranscripts[FS_UP].breakendGeneData().varId(), mTranscripts[FS_DOWN].breakendGeneData().varId(),
+                mTranscripts[FS_UP].breakendGeneData().chromosome(), mTranscripts[FS_UP].breakendGeneData().orientation(),
+                mTranscripts[FS_UP].breakendGeneData().position(), getFusedExon(true),
+                mTranscripts[FS_DOWN].breakendGeneData().chromosome(), mTranscripts[FS_DOWN].breakendGeneData().orientation(),
+                mTranscripts[FS_DOWN].breakendGeneData().position(), getFusedExon(false));
     }
 }

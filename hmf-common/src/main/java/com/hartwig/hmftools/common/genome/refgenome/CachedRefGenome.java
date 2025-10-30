@@ -12,8 +12,8 @@ import java.util.Objects;
 
 public class CachedRefGenome implements RefGenomeInterface
 {
-    private static final int BLOCK_SIZE = 1_000;
-    private static final int MAX_CACHED_BLOCKS = 3;
+    private static final int DEFAULT_BLOCK_SIZE = 1_000;
+    private static final int DEFAULT_MAX_CACHED_BLOCKS = 3;
 
     private static class Block
     {
@@ -45,17 +45,17 @@ public class CachedRefGenome implements RefGenomeInterface
         }
     }
 
-    private static class BlockCache extends LinkedHashMap<Block, byte[]>
+    private class BlockCache extends LinkedHashMap<Block, byte[]>
     {
         public BlockCache()
         {
-            super(MAX_CACHED_BLOCKS + 1, 0.75f, true);
+            super(mMaxCachedBlocks + 1, 0.75f, true);
         }
 
         @Override
         protected boolean removeEldestEntry(Map.Entry<Block, byte[]> eldest)
         {
-            return size() > MAX_CACHED_BLOCKS;
+            return size() > mMaxCachedBlocks;
         }
     }
 
@@ -64,10 +64,19 @@ public class CachedRefGenome implements RefGenomeInterface
     {
         @Override protected BlockCache initialValue() { return new BlockCache(); }
     };
+    private final int mBlockSize;
+    private final int mMaxCachedBlocks;
+
+    public CachedRefGenome(final RefGenomeInterface refGenome, int blockSize, int maxCachedBlocks)
+    {
+        mRefGenome = refGenome;
+        mBlockSize = blockSize;
+        mMaxCachedBlocks = maxCachedBlocks;
+    }
 
     public CachedRefGenome(final RefGenomeInterface refGenome)
     {
-        mRefGenome = refGenome;
+        this(refGenome, DEFAULT_BLOCK_SIZE, DEFAULT_MAX_CACHED_BLOCKS);
     }
 
     @Override
@@ -106,13 +115,13 @@ public class CachedRefGenome implements RefGenomeInterface
 
         byte[] bases = new byte[posEnd - posStart + 1];
         int basesIdx = 0;
-        int startBlockIdx = (posStart - chrStartPos) / BLOCK_SIZE;
-        int endBlockIdx = (posEnd - chrStartPos) / BLOCK_SIZE;
+        int startBlockIdx = (posStart - chrStartPos) / mBlockSize;
+        int endBlockIdx = (posEnd - chrStartPos) / mBlockSize;
         for(int i = startBlockIdx; i <= endBlockIdx; i++)
         {
             byte[] block = getBlock(chromosome, i);
-            int blockStart = i * BLOCK_SIZE + chrStartPos;
-            int blockEnd = min(blockStart + BLOCK_SIZE - 1, chrEndPos);
+            int blockStart = i * mBlockSize + chrStartPos;
+            int blockEnd = min(blockStart + mBlockSize - 1, chrEndPos);
             int startIdx = max(posStart, blockStart) - blockStart;
             int endIdx = min(posEnd, blockEnd) - blockStart;
             int basesCopied = endIdx - startIdx + 1;
@@ -131,9 +140,9 @@ public class CachedRefGenome implements RefGenomeInterface
         if(pos < chrStartPos || pos > chrEndPos)
             throw new IllegalArgumentException(format("Requested ref genome base out of bounds: %s:%d", chromosome, pos));
 
-        int blockIdx = (pos - chrStartPos) / BLOCK_SIZE;
+        int blockIdx = (pos - chrStartPos) / mBlockSize;
         byte[] block = getBlock(chromosome, blockIdx);
-        int blockStart = blockIdx * BLOCK_SIZE + chrStartPos;
+        int blockStart = blockIdx * mBlockSize + chrStartPos;
         int idx = pos - blockStart;
         return block[idx];
     }
@@ -154,8 +163,8 @@ public class CachedRefGenome implements RefGenomeInterface
 
         int chrStartPos = oneBasedIndexing() ? 1 : 0;
         int chrEndPos = getChromosomeLength(chromosome) - 1 + chrStartPos;
-        int blockStart = blockIdx * BLOCK_SIZE + chrStartPos;
-        int blockEnd = min(blockStart + BLOCK_SIZE - 1, chrEndPos);
+        int blockStart = blockIdx * mBlockSize + chrStartPos;
+        int blockEnd = min(blockStart + mBlockSize - 1, chrEndPos);
         bases = mRefGenome.getBases(chromosome, blockStart, blockEnd);
         blockCache.put(block, bases);
         return bases;

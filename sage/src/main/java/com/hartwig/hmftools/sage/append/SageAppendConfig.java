@@ -16,7 +16,7 @@ public class SageAppendConfig
 
     public SageAppendConfig(final String version, final ConfigBuilder configBuilder)
     {
-        Common = new SageConfig(version, configBuilder, true);
+        Common = new SageConfig(version, configBuilder);
 
         InputVcf = configBuilder.getValue(INPUT_VCF);
         FilterToGenes = configBuilder.hasFlag(FILTER_TO_GENES);

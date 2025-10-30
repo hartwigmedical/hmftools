@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.SequenceUtils.isDnaSequenceNormal;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public record SequenceDefinition(
         @Nullable ChrBaseRegion startRegion,
         // If REVERSE then start region is reverse complemented.
         @Nullable Orientation startOrientation,
-        @Nullable String insertSequence,
+        String insertSequence,
         @Nullable ChrBaseRegion endRegion,
         // If REVERSE then end region is reverse complemented.
         @Nullable Orientation endOrientation
@@ -26,47 +28,63 @@ public record SequenceDefinition(
 {
     public SequenceDefinition
     {
-        boolean valid1 = startRegion != null && startOrientation == null && insertSequence == null && endRegion == null;
-        boolean valid2 = insertSequence != null && (startRegion != null || endRegion != null);
-        if(!(valid1 || valid2))
+        // Simple single region.
+        boolean single =
+                startRegion != null && startOrientation == null && insertSequence.isEmpty() && endRegion == null && endOrientation == null;
+        // SNV/INDEL/SV. start (+ insert) + end
+        boolean genericVariant =
+                startRegion != null && startOrientation != null && endRegion != null && endOrientation != null
+                        // Ensure the regions don't join each other; otherwise that should be constructed as a single region.
+                        && (!insertSequence.isEmpty() || startRegion.end() + 1 != endRegion.start());
+        // SGL SV. start + insert
+        boolean sgl1 =
+                startRegion != null && startOrientation != null && !insertSequence.isEmpty() && endRegion == null && endOrientation == null;
+        // SGL SV. insert + end
+        boolean sgl2 =
+                startRegion == null && startOrientation == null && !insertSequence.isEmpty() && endRegion != null && endOrientation != null;
+        if(!(single || genericVariant || sgl1 || sgl2))
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid sequence definition");
         }
         if(startRegion != null && !startRegion.hasValidPositions())
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid startRegion");
         }
         if(endRegion != null && !endRegion.hasValidPositions())
         {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid endRegion");
         }
-        if(startRegion == null && startOrientation != null)
+        if(!insertSequence.isEmpty() && !isDnaSequenceNormal(insertSequence))
         {
-            throw new IllegalArgumentException();
-        }
-        if(endRegion == null && endOrientation != null)
-        {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Invalid insertSequence: " + insertSequence);
         }
     }
 
-    public static SequenceDefinition exactRegion(final ChrBaseRegion region)
+    public static SequenceDefinition singleRegion(final ChrBaseRegion region)
     {
-        return new SequenceDefinition(region, null, null, null, null);
+        return new SequenceDefinition(region, null, "", null, null);
     }
 
-    public static SequenceDefinition simpleMutation(final ChrBaseRegion startRegion, final String insertSequence,
+    public static SequenceDefinition simpleVariant(final ChrBaseRegion startRegion, final String insertSequence,
             final ChrBaseRegion endRegion)
     {
-        Orientation startOrientation = startRegion == null ? null : Orientation.FORWARD;
-        Orientation endOrientation = endRegion == null ? null : Orientation.FORWARD;
-        return new SequenceDefinition(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
+        return new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
     }
 
     public static SequenceDefinition structuralVariant(final ChrBaseRegion startRegion, final Orientation startOrientation,
-            final String insertSequence, final ChrBaseRegion endRegion, final Orientation endOrientation)
+            String insertSequence, final ChrBaseRegion endRegion, final Orientation endOrientation)
     {
         return new SequenceDefinition(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
+    }
+
+    public static SequenceDefinition forwardSgl(final ChrBaseRegion startRegion, final String insertSequence)
+    {
+        return new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, null, null);
+    }
+
+    public static SequenceDefinition reverseSgl(final String insertSequence, final ChrBaseRegion endRegion)
+    {
+        return new SequenceDefinition(null, null, insertSequence, endRegion, Orientation.FORWARD);
     }
 
     public List<ChrBaseRegion> regions()
@@ -102,15 +120,15 @@ public record SequenceDefinition(
     }
 
     // Checks if the probe is defined by a single region.
-    public boolean isExactRegion()
+    public boolean isSingleRegion()
     {
-        return startRegion != null && insertSequence == null && endRegion == null;
+        return startRegion != null && insertSequence.isEmpty() && endRegion == null;
     }
 
     // Gets the single region that the probe is defined by, or throws an exception.
-    public ChrBaseRegion exactRegion()
+    public ChrBaseRegion singleRegion()
     {
-        ChrBaseRegion region = exactRegionOrNull();
+        ChrBaseRegion region = singleRegionOrNull();
         if(region == null)
         {
             throw new IllegalArgumentException("Probe has multiple regions");
@@ -122,8 +140,8 @@ public record SequenceDefinition(
     }
 
     @Nullable
-    public ChrBaseRegion exactRegionOrNull()
+    public ChrBaseRegion singleRegionOrNull()
     {
-        return isExactRegion() ? startRegion : null;
+        return isSingleRegion() ? startRegion : null;
     }
 }

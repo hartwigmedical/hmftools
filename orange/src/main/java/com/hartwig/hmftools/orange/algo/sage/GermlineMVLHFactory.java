@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.orange.algo.sage;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,49 +8,39 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class GermlineMVLHFactory
 {
-    @NotNull
-    public static Map<String, Double> loadGermlineMVLHPerGene(@NotNull String sageGermlineGeneCoverageTsv,
-            @NotNull List<DriverGene> driverGenes) throws IOException
+    public static Map<String, Double> loadGermlineMVLHPerGene(
+            final String sageGermlineGeneCoverageTsv,
+            final List<DriverGene> driverGenes) throws IOException
     {
-        List<String> lines = Files.readAllLines(new File(sageGermlineGeneCoverageTsv).toPath());
-        return parseMVLHPerGene(lines, driverGenes);
+        List<GeneDepth> geneDepths = GeneDepthFile.read(sageGermlineGeneCoverageTsv);
+        return parseMVLHPerGene(geneDepths, driverGenes);
     }
 
-    @NotNull
     @VisibleForTesting
-    static Map<String, Double> parseMVLHPerGene(@NotNull List<String> lines, @NotNull List<DriverGene> driverGenes)
+    static Map<String, Double> parseMVLHPerGene(final List<GeneDepth> geneDepths, final List<DriverGene> driverGenes)
     {
-        String header = lines.get(0);
-
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
-        int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
-
         Map<String, Double> mvlhPerGene = Maps.newTreeMap();
-        for(String line : lines.subList(1, lines.size()))
-        {
-            String[] values = line.split(TSV_DELIM);
-            String gene = values[geneIndex];
-            double mvlh = Double.parseDouble(values[mvlhIndex]);
 
-            DriverGene matchingDriverGene = findMatchingDriverGene(gene, driverGenes);
+        for(GeneDepth geneDepth : geneDepths)
+        {
+            DriverGene matchingDriverGene = findMatchingDriverGene(geneDepth.Gene, driverGenes);
             if(matchingDriverGene != null && hasReliableMVLH(matchingDriverGene))
             {
-                mvlhPerGene.put(gene, mvlh);
+                mvlhPerGene.put(geneDepth.Gene, geneDepth.MissedVariantLikelihood);
             }
         }
         return mvlhPerGene;
     }
 
     @Nullable
-    private static DriverGene findMatchingDriverGene(@NotNull String geneName, @NotNull List<DriverGene> driverGenes)
+    private static DriverGene findMatchingDriverGene(final String geneName, final List<DriverGene> driverGenes)
     {
         List<DriverGene> matchingDriverGenes = driverGenes.stream().filter(d -> d.gene().equals(geneName)).collect(Collectors.toList());
         if(matchingDriverGenes.size() == 1)
@@ -72,7 +57,7 @@ public final class GermlineMVLHFactory
         }
     }
 
-    private static boolean hasReliableMVLH(@NotNull DriverGene driverGene)
+    private static boolean hasReliableMVLH(final DriverGene driverGene)
     {
         // Note: fix this when SAGE germline starts running genome wide
         return driverGene.reportSomatic() || driverGene.reportGermline() || driverGene.reportPGX();

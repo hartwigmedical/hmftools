@@ -20,7 +20,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_ID
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
@@ -88,6 +87,8 @@ public class SageConfig
     public final ValidationStringency BamStringency;
 
     // global for convenience
+    public static boolean AppendMode = false;
+
     public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final VisConfig Visualiser;
@@ -99,7 +100,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final List<BasePosition> SpecificPositions;
+    public final List<SimpleVariant> SpecificVariants;;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -124,17 +125,13 @@ public class SageConfig
     private static final String SKIP_MSI_JITTER = "skip_msi_jitter";
     private static final String GERMLINE = "germline";
 
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
+    // debug options
+    private static final String SPECIFIC_VARIANTS_FILE = "specific_var_file";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
     public SageConfig(final String version, final ConfigBuilder configBuilder)
-    {
-        this(version, configBuilder, false);
-    }
-
-    public SageConfig(final String version, final ConfigBuilder configBuilder, boolean isAppendMode)
     {
         mIsValid = true;
         Version = version;
@@ -167,7 +164,7 @@ public class SageConfig
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
         // ensure that when append is run in panel mode, that max depth is applied to all variants regardless of their tier
-        if(isAppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
+        if(AppendMode && configBuilder.hasFlag(HIGH_DEPTH_MODE) && !configBuilder.hasValue(MAX_READ_DEPTH))
         {
             MaxReadDepth = MaxReadDepthPanel;
         }
@@ -188,7 +185,6 @@ public class SageConfig
         {
             mReadLength = 0; // will be set from sampling the BAM
         }
-
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
@@ -234,7 +230,7 @@ public class SageConfig
 
         SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
-        if(isUltima() && configBuilder.hasValue(UltimaQualRecalibration.CFG_FILENAME))
+        if(isUltima())
         {
             UltimaUtils.loadBqrCache(configBuilder.getValue(UltimaQualRecalibration.CFG_FILENAME));
         }
@@ -260,22 +256,24 @@ public class SageConfig
             }
         }
 
-        SpecificPositions = Lists.newArrayList();
+        SpecificVariants = Lists.newArrayList();
 
-        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
+        if(!SpecificChrRegions.hasFilters() && !Visualiser.Enabled && configBuilder.hasValue(SPECIFIC_VARIANTS_FILE))
         {
-            String[] specPositionsStr = configBuilder.getValue(SPECIFIC_POSITIONS).split(ITEM_DELIM);
-
-            for(String specPosStr : specPositionsStr)
+            try
             {
-                String[] items = specPosStr.split(":", 2);
-                SpecificPositions.add(new BasePosition(items[0], Integer.parseInt(items[1])));
+                SpecificVariants.addAll(SimpleVariant.loadSimpleVariants(configBuilder.getValue(SPECIFIC_VARIANTS_FILE)));
+
+                for(SimpleVariant variant : SpecificVariants)
+                {
+                    SpecificChrRegions.addRegion(new ChrBaseRegion(
+                            variant.Chromosome, variant.Position - VIS_VARIANT_BUFFER,
+                            variant.Position + VIS_VARIANT_BUFFER));
+                }
             }
-
-            if(SpecificChrRegions.Regions.isEmpty())
+            catch(Exception e)
             {
-                SpecificPositions.forEach(x -> SpecificChrRegions.addRegion(
-                        new ChrBaseRegion(x.Chromosome, x.Position - 300, x.Position + 300)));
+                mIsValid = false;
             }
         }
 
@@ -426,8 +424,8 @@ public class SageConfig
 
         // debug
         configBuilder.addConfigItem(
-                SPECIFIC_POSITIONS,
-                "Restrict to specific positions(s) of form chromosome:position, separated by ';'");
+                SPECIFIC_VARIANTS_FILE,
+                "Restrict to specific variants of form chromosome:position:ref:alt, separated by ';'");
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
@@ -464,7 +462,7 @@ public class SageConfig
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;
-        SpecificPositions = Collections.emptyList();
+        SpecificVariants = Collections.emptyList();
         LogEvidenceReads = false;
     }
 }

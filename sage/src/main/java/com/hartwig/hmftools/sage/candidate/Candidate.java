@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -15,50 +16,58 @@ public class Candidate
     private int mLowQualInCoreCount;
 
     public Candidate(
-            final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int fullMatchSupport)
+            final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int fullMatchSupport,
+            int coreMatchSupport, int lowQualInCoreCount)
     {
         mTier = tier;
         mReadContext = readContext;
         mMinNumberOfEvents = minNumberOfEvents;
         mFullMatchSupport = fullMatchSupport;
-        mCoreMatchSupport = 0;
-        mLowQualInCoreCount = 0;
+        mCoreMatchSupport = coreMatchSupport;
+        mLowQualInCoreCount = lowQualInCoreCount;
     }
 
-    public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
+    public Candidate(final VariantTier tier, final VariantReadContext readContext)
+    {
+        this(tier, readContext, 0, 0, 0, 0);
+    }
+
+    public static Candidate fromAltCandidate(final VariantTier tier, final ReadContextCandidate readContextCandidate)
     {
         Candidate candidate = new Candidate(
-                tier, altContext.readContext(), altContext.minNumberOfEvents(), altContext.fullMatchSupport());
+                tier, readContextCandidate.readContext(), readContextCandidate.MinNumberOfEvents, readContextCandidate.FullMatch,
+                readContextCandidate.CoreMatch, readContextCandidate.LowQualInCoreCount);
 
-        candidate.setCoreMatchSupport(altContext.coreMatchSupport());
-        candidate.setLowQualInCoreCount(altContext.lowQualInCoreCount());
         return candidate;
     }
 
-    public void update(final AltContext altContext)
+    public void updateAltCandidate(final ReadContextCandidate altCandidate)
     {
-        int altContextSupport = altContext.fullMatchSupport();
+        int altContextSupport = altCandidate.FullMatch;
         if(altContextSupport > mFullMatchSupport)
         {
             mFullMatchSupport = altContextSupport;
-            mReadContext = altContext.readContext();
-            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altContext.minNumberOfEvents());
+            mReadContext = altCandidate.readContext();
+            mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altCandidate.MinNumberOfEvents);
         }
     }
 
     public VariantTier tier() { return mTier; }
     public SimpleVariant variant() { return mReadContext.variant(); }
     public VariantReadContext readContext() { return mReadContext; }
-    public int minNumberOfEvents() { return mMinNumberOfEvents; }
-    public int fullMatchSupport() { return mFullMatchSupport; }
     public String chromosome() { return mReadContext.variant().Chromosome; }
     public int position() { return mReadContext.variant().Position; }
 
-    public void setCoreMatchSupport(int count) { mCoreMatchSupport = count; }
+    public int minNumberOfEvents() { return mMinNumberOfEvents; }
+    public int fullMatchSupport() { return mFullMatchSupport; }
     public int coreMatchSupport() { return mCoreMatchSupport; }
-
-    public void setLowQualInCoreCount(int count) { mLowQualInCoreCount = count; }
     public int lowQualInCoreCount() { return mLowQualInCoreCount; }
 
     public String toString() { return String.format("var(%s) tier(%s)", mReadContext.variant(), mTier); }
+
+    @VisibleForTesting
+    public Candidate(final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int fullMatchSupport)
+    {
+        this(tier, readContext, minNumberOfEvents, fullMatchSupport, 0, 0);
+    }
 }

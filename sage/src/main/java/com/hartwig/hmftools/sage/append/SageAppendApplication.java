@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.SageCommon;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.BqrCache;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
@@ -66,6 +67,8 @@ public class SageAppendApplication
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = fromAppName(APP_NAME);
+
+        SageConfig.AppendMode = true;
         mConfig = new SageAppendConfig(version.version(), configBuilder);
         mFragmentLengths = new FragmentLengthWriter(mConfig.Common);
 
@@ -139,9 +142,9 @@ public class SageAppendApplication
                     continue;
             }
 
-            if(!mConfig.Common.SpecificPositions.isEmpty())
+            if(!mConfig.Common.SpecificVariants.isEmpty())
             {
-                if(mConfig.Common.SpecificPositions.stream().noneMatch(x -> x.matches(variant.getContig(), variant.getStart())))
+                if(mConfig.Common.SpecificVariants.stream().noneMatch(x -> x.matches(variant.getContig(), variant.getStart())))
                 {
                     continue;
                 }

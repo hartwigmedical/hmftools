@@ -362,12 +362,12 @@ public class RnaFusionAnnotator
 
         // if the RNA boundary is at or before the 2nd exon (which has the first splice acceptor), then the breakend can
         // be upstream as far the previous gene or 100K
-        final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.gene().geneId(), trans.transName());
+        final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.breakendGeneData().geneId(), trans.transName());
 
         if(transData == null || transData.exons().isEmpty())
             return false;
 
-        int strand = trans.gene().strand();
+        int strand = trans.breakendGeneData().strand();
 
         // first find the matching exon boundary for this RNA fusion boundary
         for(int i = 0; i < transData.exons().size(); ++i)

@@ -249,7 +249,13 @@ public class PartitionReader
 
         ++mStats.TotalReads;
 
-        read.setDuplicateReadFlag(false);
+        if(read.getDuplicateReadFlag())
+        {
+            if(isUltima()) // currently no purpose for keeping these
+                return;
+
+            read.setDuplicateReadFlag(false);
+        }
 
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))

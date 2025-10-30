@@ -49,9 +49,4 @@ public class Utils
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
                 .filter(offset -> offset >= minOffset && offset <= maxOffset);
     }
-
-    public static boolean isDnaSequenceNormal(final String sequence)
-    {
-        return sequence.matches("^[acgtACGT]*$");
-    }
 }
