@@ -24,73 +24,30 @@ public class BamMetricsPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
-    private BamMetricSummary mBamMetricSummary;
-    private BamMetricCoverage mBamMetricCoverage;
-    private BamMetricFragmentLength mBamMetricFragmentLength;
-    private List<GeneDepth> mBamMetricGeneCoverage;
-
     public BamMetricsPrep(PrepConfig config)
     {
         mConfig = config;
     }
 
-    private void loadBamMetricsFiles(String bamMetricsDir, String sampleId) throws IOException
+    private BamMetricCoverage loadCoverage(String sampleId, SampleType sampleType) throws IOException
     {
-        String filePath;
-
-        filePath = BamMetricSummary.generateFilename(bamMetricsDir, sampleId);
-        mBamMetricSummary = BamMetricSummary.read(filePath);
-
-        filePath = BamMetricCoverage.generateFilename(bamMetricsDir, sampleId);
-        mBamMetricCoverage = BamMetricCoverage.read(filePath);
-
-        filePath = BamMetricFragmentLength.generateFilename(bamMetricsDir, sampleId);
-        mBamMetricFragmentLength = BamMetricFragmentLength.read(filePath);
-
-        filePath = GeneDepthFile.generateGeneCoverageFilename(bamMetricsDir, sampleId);
-        mBamMetricGeneCoverage = GeneDepthFile.read(filePath);
+        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        String filePath = BamMetricCoverage.generateFilename(baseDir, sampleId);
+        return BamMetricCoverage.read(filePath);
     }
 
-    private static List<Feature> getSummaryStats(BamMetricSummary summary)
+    private BamMetricFragmentLength loadFragmentLengths(String sampleId, SampleType sampleType) throws IOException
     {
-        List<Feature> features = new ArrayList<>();
-
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "MeanCoverage", summary.meanCoverage()));
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "LowMapQualPercent", summary.lowMapQualPercent()));
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "LowBaseQualPercent", summary.lowBaseQualPercent()));
-
-        features.add(new Feature(FeatureType.READ_STATS, "DuplicateReadsRate", (double) summary.duplicateReads() / summary.totalReads()));
-        features.add(new Feature(FeatureType.READ_STATS, "DualStrandReadsRate", (double) summary.dualStrandReads() / summary.totalReads()));
-
-        return features;
+        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        String filePath = BamMetricFragmentLength.generateFilename(baseDir, sampleId);
+        return BamMetricFragmentLength.read(filePath);
     }
 
-    private static final int[] MIN_COVERAGE_THRESHOLDS = { 10, 30, 100, 250 };
-
-    private static List<Feature> calcPropBasesWithMinCoverage(List<ValueFrequency> coverageBaseCounts)
+    private List<GeneDepth> loadGeneCoverage(String sampleId, SampleType sampleType) throws IOException
     {
-        List<Feature> features = new ArrayList<>();
-
-        long totalBases = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
-        for(int coverageThreshold : MIN_COVERAGE_THRESHOLDS)
-        {
-            long basesAboveCoverageThres = coverageBaseCounts.stream()
-                    .filter(x -> x.Value >= coverageThreshold)
-                    .mapToLong(x -> x.Count)
-                    .sum();
-
-            double propAboveCoverageThres = (double) basesAboveCoverageThres / totalBases;
-
-            Feature feature = new Feature(
-                    FeatureType.COVERAGE_STATS,
-                    String.format("Coverage ≥ %s", coverageThreshold),
-                    propAboveCoverageThres
-            );
-
-            features.add(feature);
-        }
-
-        return features;
+        String baseDir = mConfig.getBamMetricsDir(sampleId, sampleType);
+        String filePath = GeneDepthFile.generateGeneCoverageFilename(baseDir, sampleId);
+        return GeneDepthFile.read(filePath);
     }
 
     private static List<Feature> calcPropBasesWithCoverage(List<ValueFrequency> coverageBaseCounts)
@@ -126,19 +83,17 @@ public class BamMetricsPrep implements CategoryPrep
     @Override
     public List<Feature> extractSampleData(String sampleId, @NotNull SampleType sampleType) throws IOException
     {
-        String bamMetricsDir = mConfig.getBamMetricsDir(sampleId, sampleType);
-        loadBamMetricsFiles(bamMetricsDir, sampleId);
+        BamMetricCoverage coverage = loadCoverage(sampleId, sampleType);
+        List<Feature> propBasesWithCoverage = calcPropBasesWithCoverage(coverage.Coverage);
 
-        List<Feature> summaryStats = getSummaryStats(mBamMetricSummary);
-        List<Feature> propBasesWithCoverage = calcPropBasesWithCoverage(mBamMetricCoverage.Coverage);
-        List<Feature> propBasesWithMinCoverage  = calcPropBasesWithMinCoverage(mBamMetricCoverage.Coverage);
-        List<Feature> fragmentLengthDistribution = calcPropFragmentsWithLength(mBamMetricFragmentLength.FragmentLengths);
-        List<Feature> missedVariantLikelihoods = getMissedVariantLikelihoods(mBamMetricGeneCoverage, mConfig.DriverGenes);
+        BamMetricFragmentLength fragmentLengths = loadFragmentLengths(sampleId, sampleType);
+        List<Feature> fragmentLengthDistribution = calcPropFragmentsWithLength(fragmentLengths.FragmentLengths);
+
+        List<GeneDepth> geneCoverage = loadGeneCoverage(sampleId, sampleType);
+        List<Feature> missedVariantLikelihoods = getMissedVariantLikelihoods(geneCoverage, mConfig.DriverGenes);
 
         List<Feature> features = new ArrayList<>();
-        features.addAll(summaryStats);
         features.addAll(propBasesWithCoverage);
-        features.addAll(propBasesWithMinCoverage);
         features.addAll(fragmentLengthDistribution);
         features.addAll(missedVariantLikelihoods);
 
