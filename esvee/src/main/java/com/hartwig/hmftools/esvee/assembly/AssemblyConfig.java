@@ -36,6 +36,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.setSeqTechSpecifics;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
@@ -249,6 +250,7 @@ public class AssemblyConfig
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
         setSequencingType(configBuilder);
+        setSeqTechSpecifics();
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
