@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
 import com.hartwig.hmftools.common.metrics.BamMetricFragmentLength;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
+import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +27,7 @@ public class BamMetricsPrep implements CategoryPrep
     private BamMetricSummary mBamMetricSummary;
     private BamMetricCoverage mBamMetricCoverage;
     private BamMetricFragmentLength mBamMetricFragmentLength;
+    private List<GeneDepth> mBamMetricGeneCoverage;
 
     public BamMetricsPrep(PrepConfig config)
     {
@@ -45,8 +47,8 @@ public class BamMetricsPrep implements CategoryPrep
         filePath = BamMetricFragmentLength.generateFilename(bamMetricsDir, sampleId);
         mBamMetricFragmentLength = BamMetricFragmentLength.read(filePath);
 
-        // TODO
-        // loadBamMetricGeneCoverage(bamMetricsDir, sampleId);
+        filePath = GeneDepthFile.generateGeneCoverageFilename(bamMetricsDir, sampleId);
+        mBamMetricGeneCoverage = GeneDepthFile.read(filePath);
     }
 
     private static List<Feature> getSummaryStats(BamMetricSummary summary)
@@ -113,7 +115,7 @@ public class BamMetricsPrep implements CategoryPrep
 
     private static List<Feature> getMissedVariantLikelihoods(List<GeneDepth> geneDepths, List<DriverGene> driverGenes)
     {
-        List<DriverGene> selectedGenes = driverGenes.stream().filter(DriverGene::reportSomatic).toList();
+        List<String> selectedGenes = driverGenes.stream().filter(DriverGene::reportSomatic).map(DriverGene::gene).toList();
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
 
         return selectedGeneDepths.stream()
@@ -131,16 +133,14 @@ public class BamMetricsPrep implements CategoryPrep
         List<Feature> propBasesWithCoverage = calcPropBasesWithCoverage(mBamMetricCoverage.Coverage);
         List<Feature> propBasesWithMinCoverage  = calcPropBasesWithMinCoverage(mBamMetricCoverage.Coverage);
         List<Feature> fragmentLengthDistribution = calcPropFragmentsWithLength(mBamMetricFragmentLength.FragmentLengths);
-
-        // TODO
-        // List<GeneDepth> geneDepths = new ArrayList<>();
-        // List<Feature> missedVariantLikelihoods = getMissedVariantLikelihoods(geneDepths, mConfig.DriverGenes);
+        List<Feature> missedVariantLikelihoods = getMissedVariantLikelihoods(mBamMetricGeneCoverage, mConfig.DriverGenes);
 
         List<Feature> features = new ArrayList<>();
         features.addAll(summaryStats);
         features.addAll(propBasesWithCoverage);
         features.addAll(propBasesWithMinCoverage);
         features.addAll(fragmentLengthDistribution);
+        features.addAll(missedVariantLikelihoods);
 
         return features;
     }
