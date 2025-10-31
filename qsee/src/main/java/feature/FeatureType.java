@@ -2,9 +2,9 @@ package feature;
 
 public enum FeatureType
 {
-    AMBER_QC                     (VisType.TABLE, SourceTool.AMBER),
-    PURPLE_QC                    (VisType.TABLE, SourceTool.PURPLE),
-    PURPLE_PURITY                (VisType.TABLE, SourceTool.PURPLE),
+    GENERAL_PURPLE               (VisType.TABLE, SourceTool.PURPLE),
+    GENERAL_AMBER                (VisType.TABLE, SourceTool.AMBER),
+    MUTATIONAL_BURDEN            (VisType.TABLE, SourceTool.PURPLE),
     COVERAGE_STATS               (VisType.TABLE, SourceTool.BAM_METRICS),
     READ_STATS                   (VisType.TABLE, SourceTool.BAM_METRICS),
 
@@ -16,8 +16,8 @@ public enum FeatureType
     MISSED_VARIANT_LIKELIHOOD    (VisType.PLOT, SourceTool.BAM_METRICS),
     BQR_PER_SNV96_CONTEXT        (VisType.PLOT, SourceTool.REDUX),
     BQR_PER_ORIG_QUAL            (VisType.PLOT, SourceTool.REDUX),
-    MS_INDEL_ERROR_RATES(VisType.PLOT, SourceTool.REDUX),
-    MS_INDEL_ERROR_BIAS(VisType.PLOT, SourceTool.REDUX),
+    MS_INDEL_ERROR_RATES         (VisType.PLOT, SourceTool.REDUX),
+    MS_INDEL_ERROR_BIAS          (VisType.PLOT, SourceTool.REDUX),
     ;
 
     private final VisType mVisType;
