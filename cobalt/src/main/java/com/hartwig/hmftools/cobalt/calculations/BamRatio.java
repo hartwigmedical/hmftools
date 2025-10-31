@@ -105,6 +105,11 @@ public class BamRatio
 
     private void normalise(final double factor)
     {
+        if(Double.isNaN(factor))
+        {
+            Included = false;
+            Ratio = -1.0;
+        }
         if (Doubles.isZero(Ratio))
         {
             return;

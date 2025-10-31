@@ -283,6 +283,14 @@ public class BamRatioTest
     }
 
     @Test
+    public void handleNaNEnrichmentForDepth0Window()
+    {
+        BamRatio ratio = new BamRatio(_1, 1001, 0.0, 0.0);
+        ratio.applyEnrichment(Double.NaN);
+        checkBlanked(ratio);
+    }
+
+    @Test
     public void toStringTest()
     {
         assertTrue(new BamRatio(_1, readDepth, true).toString().contains("82"));
