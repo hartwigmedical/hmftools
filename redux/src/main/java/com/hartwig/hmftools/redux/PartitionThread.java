@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -175,6 +176,8 @@ public class PartitionThread extends Thread
         if(refGenome == null)
             return formHumanChromosomeRegions(specificRegions, refGenomeVersion);
 
-        return RefGenomeSource.formRefGenomeRegions(specificRegions, refGenome);
+        CachedRefGenome cachedRefGenome = (CachedRefGenome)refGenome;
+        RefGenomeSource refGenomeSource = (RefGenomeSource)cachedRefGenome.refGenome();
+        return refGenomeSource.formRefGenomeRegions(specificRegions);
     }
 }

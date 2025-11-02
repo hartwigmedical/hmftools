@@ -70,6 +70,8 @@ public class CachedRefGenome implements RefGenomeInterface
         mRefGenome = refGenome;
     }
 
+    public final RefGenomeInterface refGenome() { return mRefGenome; }
+
     @Override
     public String getBaseString(final String chromosome, final int posStart, final int posEnd)
     {
