@@ -79,9 +79,7 @@
     "somaticDrivers": [],
     "germlineDrivers": null,
     "allSomaticVariants": [],
-    "reportableSomaticVariants": [],
     "allGermlineVariants": null,
-    "reportableGermlineVariants": null,
     "allSomaticCopyNumbers": [],
     "allSomaticGeneCopyNumbers": [],
     "allSomaticGainsDels": [],
@@ -95,17 +93,14 @@
   "linx": {
     "allSomaticStructuralVariants": [],
     "allSomaticFusions": [],
-    "reportableSomaticFusions": [],
     "allSomaticBreakends": [],
-    "reportableSomaticBreakends": [],
     "somaticHomozygousDisruptions": [],
     "additionalSuspectSomaticBreakends": [],
     "additionalSuspectSomaticFusions": [],
     "additionalViableSomaticFusions": []
   },
   "virusInterpreter": {
-    "allViruses": [],
-    "reportableViruses": []
+    "allViruses": []
   },
   "chord": {
     "hrdValue": 0,

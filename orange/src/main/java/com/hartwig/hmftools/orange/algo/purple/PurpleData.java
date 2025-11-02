@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;

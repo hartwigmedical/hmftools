@@ -192,7 +192,6 @@ public final class LinxDataLoader
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
-
             if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
             {
                 reportableGermlineSvs.add(germlineSv);

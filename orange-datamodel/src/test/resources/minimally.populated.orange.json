@@ -362,7 +362,7 @@
         "domainsLost": ""
       }
     ],
-    "reportableSomaticFusions": [
+    "allSomaticBreakends": [
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
@@ -467,19 +467,6 @@
         "blacklisted": false,
         "driverLikelihood": "LOW",
         "percentageCovered": 0.4,
-        "meanCoverage": 0
-      }
-    ],
-    "reportableViruses": [
-      {
-        "name": "Human papillomavirus 16",
-        "qcStatus": "NO_ABNORMALITIES",
-        "integrations": 1,
-        "interpretation": "HPV",
-        "reported": true,
-        "blacklisted": false,
-        "driverLikelihood": "HIGH",
-        "percentageCovered": 0.9,
         "meanCoverage": 0
       }
     ]
