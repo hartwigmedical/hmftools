@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.interpretation;
+package com.hartwig.hmftools.datamodel.finding;
 
 import java.text.DecimalFormat;
 import java.util.List;

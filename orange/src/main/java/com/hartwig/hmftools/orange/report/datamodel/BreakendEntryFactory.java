@@ -1,18 +1,16 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.datamodel.finding;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class BreakendEntryFactory
@@ -20,18 +18,14 @@ public final class BreakendEntryFactory
     public static List<BreakendEntry> create(
             final List<LinxBreakend> breakends, final List<LinxSvAnnotation> variants, final List<LinxDriver> drivers)
     {
-        List<BreakendEntry> entries = Lists.newArrayList();
+        List<BreakendEntry> entries = new ArrayList<>();
         for(LinxBreakend breakend : breakends)
         {
             entries.add(ImmutableBreakendEntry.builder()
+                    .linxBreakend(breakend)
                     .location(breakend.chromosome() + breakend.chromosomeBand())
-                    .gene(breakend.gene())
-                    .canonical(breakend.isCanonical())
-                    .exonUp(breakend.exonUp())
-                    .type(breakend.type())
                     .range(range(breakend))
                     .clusterId(determineClusterId(breakend, variants))
-                    .junctionCopyNumber(breakend.junctionCopyNumber())
                     .undisruptedCopyNumber(correctUndisruptedCopyNumber(breakend, drivers))
                     .build());
         }
@@ -61,7 +55,7 @@ public final class BreakendEntryFactory
         if(exonRange == null)
         {
             LOGGER.warn("Could not format range for breakend: {}", breakend);
-            return Strings.EMPTY;
+            return "";
         }
 
         return exonRange + " " + breakend.geneOrientation();

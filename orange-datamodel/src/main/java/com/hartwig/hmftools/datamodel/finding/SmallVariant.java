@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantEntry
+public abstract class SmallVariant
 {
     @NotNull
     public abstract String gene();

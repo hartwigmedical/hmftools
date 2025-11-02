@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+
 import org.junit.Test;
 
 public class DriverInterpretationTest

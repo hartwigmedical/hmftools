@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.finding.BreakendEntry;
+import com.hartwig.hmftools.datamodel.finding.BreakendEntryFactory;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
