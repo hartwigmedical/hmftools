@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.immutables.value.Value;
@@ -8,28 +9,54 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BreakendEntry
+public interface BreakendEntry
 {
-    @NotNull
-    public abstract String location();
+    @NotNull LinxBreakend linxBreakend();
 
     @NotNull
-    public abstract String gene();
+    String location();
 
-    public abstract boolean canonical();
+    @Value.Derived
+    @NotNull default String gene()
+    {
+        return linxBreakend().gene();
+    }
 
-    public abstract int exonUp();
+    @Value.Derived
+    default boolean reported()
+    {
+        return linxBreakend().reported();
+    }
+
+    @Value.Derived
+    default boolean canonical()
+    {
+        return linxBreakend().isCanonical();
+    }
+
+    @Value.Derived
+    default int exonUp()
+    {
+        return linxBreakend().exonUp();
+    }
+
+    @Value.Derived
+    @NotNull default LinxBreakendType type()
+    {
+        return linxBreakend().type();
+    }
 
     @NotNull
-    public abstract LinxBreakendType type();
+    String range();
 
-    @NotNull
-    public abstract String range();
+    int clusterId();
 
-    public abstract int clusterId();
+    @Value.Derived
+    default double junctionCopyNumber()
+    {
+        return linxBreakend().junctionCopyNumber();
+    }
 
-    public abstract double junctionCopyNumber();
-
-    public abstract double undisruptedCopyNumber();
+    double undisruptedCopyNumber();
 
 }

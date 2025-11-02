@@ -1,29 +1,21 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.codon.AminoAcids;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.orange.report.interpretation.Drivers;
 
-import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class VariantEntryFactory
+public final class SmallVariantFactory
 {
     @NotNull
-    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+    public static List<SmallVariant> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
     {
-        List<VariantEntry> entries = Lists.newArrayList();
+        List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
         {
             if(hasCanonicalImpact(variant))
@@ -46,7 +38,7 @@ public final class VariantEntryFactory
     }
 
     @NotNull
-    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
+    private static SmallVariant toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -63,29 +55,24 @@ public final class VariantEntryFactory
             transcriptImpact = variant.canonicalImpact();
         }
 
-        return ImmutableVariantEntry.builder()
-                .gene(variant.gene())
+        return ImmutableSmallVariant.builder()
+                .purpleVariant(variant)
+                .driver(driver)
+                .transcriptImpact(transcriptImpact)
                 .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))
-                .affectedCodon(transcriptImpact.affectedCodon())
-                .impact(determineImpact(transcriptImpact))
-                .variantCopyNumber(variant.adjustedCopyNumber() * Math.max(0, Math.min(1, variant.adjustedVAF())))
-                .totalCopyNumber(variant.adjustedCopyNumber())
-                .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
-                .biallelic(variant.biallelic())
-                .biallelicProbability(variant.biallelicProbability())
-                .hotspot(variant.hotspot())
-                .driverLikelihood(driver != null ? driver.driverLikelihood() : null)
-                .clonalLikelihood(1 - variant.subclonalLikelihood())
-                .localPhaseSets(variant.localPhaseSets())
-                .rnaDepth(variant.rnaDepth())
-                .genotypeStatus(variant.genotypeStatus())
+                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : null)
                 .build();
+    }
+
+    private static String findingKey()
+    {
+
     }
 
     @NotNull
     private static List<PurpleVariant> findReportedVariantsForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver)
     {
-        List<PurpleVariant> reportedVariantsForDriver = Lists.newArrayList();
+        List<PurpleVariant> reportedVariantsForDriver = new ArrayList<>();
         List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
         for(PurpleVariant variant : reportedVariantsForGene)
         {
@@ -101,7 +88,7 @@ public final class VariantEntryFactory
     @NotNull
     private static List<PurpleVariant> findReportedVariantsForGene(@NotNull List<PurpleVariant> variants, @NotNull String geneToFind)
     {
-        List<PurpleVariant> reportedVariantsForGene = Lists.newArrayList();
+        List<PurpleVariant> reportedVariantsForGene = new ArrayList<>();
         for(PurpleVariant variant : variants)
         {
             if(variant.reported() && variant.gene().equals(geneToFind))
@@ -113,7 +100,6 @@ public final class VariantEntryFactory
     }
 
     @Nullable
-    @VisibleForTesting
     static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind)
     {
         if(variant.canonicalImpact().transcript().equals(transcriptToFind))
@@ -130,36 +116,6 @@ public final class VariantEntryFactory
         }
 
         return null;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static String determineImpact(@NotNull PurpleTranscriptImpact impact)
-    {
-        String hgvsProteinImpact = impact.hgvsProteinImpact();
-        if(!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?"))
-        {
-            return AminoAcids.forceSingleLetterProteinAnnotation(hgvsProteinImpact);
-        }
-
-        String hgvsCodingImpact = impact.hgvsCodingImpact();
-        if(!hgvsCodingImpact.isEmpty())
-        {
-            return impact.codingEffect() == PurpleCodingEffect.SPLICE ? hgvsCodingImpact + " splice" : hgvsCodingImpact;
-        }
-
-        Set<PurpleVariantEffect> effects = impact.effects();
-        if(effects.contains(PurpleVariantEffect.UPSTREAM_GENE))
-        {
-            return "upstream";
-        }
-
-        StringJoiner joiner = new StringJoiner(", ");
-        for(PurpleVariantEffect effect : effects)
-        {
-            joiner.add(VariantEffect.valueOf(effect.name()).effect());
-        }
-        return joiner.toString();
     }
 
     private static boolean hasCanonicalImpact(@NotNull PurpleVariant variant)
