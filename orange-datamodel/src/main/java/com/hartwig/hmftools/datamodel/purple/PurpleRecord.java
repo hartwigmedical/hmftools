@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -30,14 +32,24 @@ public interface PurpleRecord
     @NotNull
     List<PurpleVariant> allSomaticVariants();
 
+    @Gson.Ignore
     @NotNull
-    List<PurpleVariant> reportableSomaticVariants();
+    default List<PurpleVariant> reportableSomaticVariants()
+    {
+        return allSomaticVariants().stream().filter(PurpleVariant::reported).toList();
+    }
 
     @Nullable
     List<PurpleVariant> allGermlineVariants();
 
+    @Gson.Ignore
     @Nullable
-    List<PurpleVariant> reportableGermlineVariants();
+    default List<PurpleVariant> reportableGermlineVariants()
+    {
+        return Optional.ofNullable(allGermlineVariants())
+                .map(o -> o.stream().filter(PurpleVariant::reported).toList())
+                .orElse(null);
+    }
 
     @NotNull
     List<PurpleCopyNumber> allSomaticCopyNumbers();

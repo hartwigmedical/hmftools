@@ -58,9 +58,7 @@ public final class ReportLimiter
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
                 .allSomaticVariants(max1(purple.allSomaticVariants()))
-                .reportableSomaticVariants(max1(purple.reportableSomaticVariants()))
                 .allGermlineVariants(max1(purple.allGermlineVariants()))
-                .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
                 .allSomaticCopyNumbers(max1(purple.allSomaticCopyNumbers()))
                 .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
                 .reportableSomaticGainsDels(max1(purple.reportableSomaticGainsDels()))
@@ -88,13 +86,10 @@ public final class ReportLimiter
                 .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
                         filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
-                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .allSomaticBreakends(filteredAllSomaticBreakends)
-                .reportableSomaticBreakends(filteredReportableSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
                 .allGermlineBreakends(filteredAllGermlineBreakends)
-                .reportableGermlineBreakends(filteredReportableGermlineBreakends)
                 .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }

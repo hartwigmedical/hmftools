@@ -168,7 +168,7 @@ public final class LinxDataLoader
 
     @NotNull
     private static List<LinxGermlineDisruption> selectReportableGermlineSvs(
-            @NotNull List<LinxGermlineDisruption> germlineSvs, @NotNull List<LinxBreakend> reportableGermlineBreakends)
+            @NotNull List<LinxGermlineDisruption> germlineSvs, @Nullable List<LinxBreakend> reportableGermlineBreakends)
     {
         List<LinxGermlineDisruption> reportableGermlineSvs = new ArrayList<>();
 
@@ -179,7 +179,6 @@ public final class LinxDataLoader
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
-
             if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
             {
                 reportableGermlineSvs.add(germlineSv);

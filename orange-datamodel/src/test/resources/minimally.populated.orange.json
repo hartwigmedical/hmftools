@@ -146,93 +146,7 @@
         "localPhaseSets": null
       }
     ],
-    "reportableSomaticVariants": [
-      {
-        "type": "SNP",
-        "gene": "SF3B1",
-        "chromosome": "2",
-        "position": 198266779,
-        "ref": "G",
-        "alt": "A",
-        "worstCodingEffect": "MISSENSE",
-        "adjustedVAF": 0.6711,
-        "repeatCount": 2,
-        "canonicalImpact": {
-          "transcript": "ENST00000335508",
-          "hgvsCodingImpact": "c.2153C\u003eT",
-          "hgvsProteinImpact": "p.Pro718Leu",
-          "affectedCodon": 2153,
-          "affectedExon": 12,
-          "inSpliceRegion": false,
-          "effects": [
-            "MISSENSE"
-          ],
-          "codingEffect": "MISSENSE",
-          "reported": true
-        },
-        "otherImpacts": [],
-        "hotspot": "NON_HOTSPOT",
-        "tumorDepth": {
-          "totalReadCount": 20,
-          "alleleReadCount": 10
-        },
-        "reported": true,
-        "adjustedCopyNumber": 3.02,
-        "minorAlleleCopyNumber": 0.4,
-        "variantCopyNumber": 2.03,
-        "biallelic": false,
-        "biallelicProbability": 0.1,
-        "genotypeStatus": "UNKNOWN",
-        "subclonalLikelihood": 0.0,
-        "localPhaseSets": null
-      }
-    ],
     "allGermlineVariants": [
-      {
-        "type": "SNP",
-        "gene": "BRCA1",
-        "chromosome": "17",
-        "position": 41209068,
-        "ref": "C",
-        "alt": "T",
-        "worstCodingEffect": "MISSENSE",
-        "adjustedVAF": 0.6711,
-        "repeatCount": 2,
-        "canonicalImpact": {
-          "transcript": "ENST00000471181",
-          "hgvsCodingImpact": "c.5340+1G>A",
-          "hgvsProteinImpact": "p.?",
-          "affectedCodon": null,
-          "affectedExon": null,
-          "inSpliceRegion": true,
-          "effects": [
-            "SPLICE_DONOR",
-            "INTRONIC"
-          ],
-          "codingEffect": "SPLICE",
-          "reported": true
-        },
-        "otherImpacts": [],
-        "hotspot": "HOTSPOT",
-        "tumorDepth": {
-          "totalReadCount": 30,
-          "alleleReadCount": 20
-        },
-        "reported": true,
-        "adjustedCopyNumber": 2.0,
-        "minorAlleleCopyNumber": 0.8,
-        "variantCopyNumber": 1.0,
-        "biallelic": false,
-        "biallelicProbability": 0.0,
-        "genotypeStatus": "HET",
-        "subclonalLikelihood": 0.2,
-        "localPhaseSets": [
-          1,
-          2
-        ]
-      }
-    ],
-    "reportableGermlineVariants": [
       {
         "type": "SNP",
         "gene": "BRCA1",
@@ -387,58 +301,9 @@
         "domainsLost": ""
       }
     ],
-    "reportableSomaticFusions": [
-      {
-        "reported": true,
-        "reportedType": "KNOWN_PAIR",
-        "unreportedReasons": [
-          "NONE"
-        ],
-        "driverLikelihood": "HIGH",
-        "fusedExonUp": 1,
-        "fusedExonDown": 2,
-        "name": "TMPRSS2-ETV4",
-        "geneStart": "TMPRSS2",
-        "geneTranscriptStart": "ENST00000332149",
-        "geneContextStart": "Exon 1",
-        "geneEnd": "ETV4",
-        "geneTranscriptEnd": "ENST00000319349",
-        "geneContextEnd": "Exon 2",
-        "phased": "INFRAME",
-        "junctionCopyNumber": 1.1,
-        "chainLinks": 0,
-        "chainTerminated": false,
-        "domainsKept": "",
-        "domainsLost": ""
-      }
-    ],
     "allSomaticBreakends": [
       {
-        "reported": false,
-        "disruptive": false,
-        "id": 0,
-        "svId": 1,
-        "gene": "NF1",
-        "chromosome": "1",
-        "chromosomeBand": "p12",
-        "transcript": "trans",
-        "isCanonical": true,
-        "type": "DUP",
-        "junctionCopyNumber": 1.1,
-        "undisruptedCopyNumber": 1.0,
-        "nextSpliceExonRank": -1,
-        "exonUp": 1,
-        "exonDown": 2,
-        "geneOrientation": "Upstream",
-        "orientation": -1,
-        "strand": -1,
-        "regionType": "EXONIC",
-        "codingType": "UTR_3P"
-      }
-    ],
-    "reportableSomaticBreakends": [
-      {
-        "reported": false,
+        "reported": true,
         "disruptive": false,
         "id": 0,
         "svId": 1,
@@ -518,19 +383,6 @@
         "blacklisted": false,
         "driverLikelihood": "LOW",
         "percentageCovered": 0.4,
-        "meanCoverage": 0
-      }
-    ],
-    "reportableViruses": [
-      {
-        "name": "Human papillomavirus 16",
-        "qcStatus": "NO_ABNORMALITIES",
-        "integrations": 1,
-        "interpretation": "HPV",
-        "reported": true,
-        "blacklisted": false,
-        "driverLikelihood": "HIGH",
-        "percentageCovered": 0.9,
         "meanCoverage": 0
       }
     ]

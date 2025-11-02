@@ -15,6 +15,10 @@ public interface VirusInterpreterData
     @NotNull
     List<VirusInterpreterEntry> allViruses();
 
+    @Gson.Ignore
     @NotNull
-    List<VirusInterpreterEntry> reportableViruses();
+    default List<VirusInterpreterEntry> reportableViruses()
+    {
+        return allViruses().stream().filter(VirusInterpreterEntry::reported).toList();
+    }
 }

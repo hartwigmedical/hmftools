@@ -103,9 +103,7 @@ public final class GermlineConversion
                 .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
                 .addAllAllSomaticVariants(additionalReportableVariants)
-                .addAllReportableSomaticVariants(additionalReportableVariants)
                 .allGermlineVariants(null)
-                .reportableGermlineVariants(null)
                 .reportableSomaticGainsDels(mergedReportableSomaticGainsDels)
                 .allGermlineDeletions(null)
                 .allGermlineFullDels(null)
@@ -401,11 +399,9 @@ public final class GermlineConversion
                 .from(linx)
                 .addAllAllSomaticStructuralVariants(additionalStructuralVariants)
                 .addAllAllSomaticBreakends(additionalReportableBreakends)
-                .addAllReportableSomaticBreakends(additionalReportableBreakends)
                 .addAllSomaticHomozygousDisruptions(additionalHomozygousDisruptions)
                 .allGermlineStructuralVariants(null)
                 .allGermlineBreakends(null)
-                .reportableGermlineBreakends(null)
                 .germlineHomozygousDisruptions(null)
                 .build();
     }

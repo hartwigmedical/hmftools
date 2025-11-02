@@ -20,8 +20,6 @@ public final class VirusInterpreter
     {
         return com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData.builder()
                 .allViruses(ConversionUtil.mapToIterable(filterBlacklistedViruses(interpreterData.allViruses()), OrangeConversion::convert))
-                .reportableViruses(ConversionUtil.mapToIterable(filterBlacklistedViruses(
-                        interpreterData.reportableViruses()), OrangeConversion::convert))
                 .build();
     }
 

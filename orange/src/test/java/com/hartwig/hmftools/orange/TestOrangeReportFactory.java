@@ -147,25 +147,26 @@ public final class TestOrangeReportFactory
     {
         return ImmutablePurpleRecord.builder()
                 .from(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addAllSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("ARID1A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
+                                .reported(true)
                                 .build())
                         .build())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addAllSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                                .reported(true)
                                 .build())
                         .build())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addAllSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
-                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").build())
+                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").reported(true).build())
                         .addLocalPhaseSets(42256)
                         .build())
                 .allGermlineVariants(Lists.newArrayList())
-                .reportableGermlineVariants(Lists.newArrayList())
                 .reportableGermlineFullDels(Lists.newArrayList())
                 .reportableGermlineLossOfHeterozygosities(Lists.newArrayList())
                 .build();
@@ -177,17 +178,16 @@ public final class TestOrangeReportFactory
         LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
                 .allGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineBreakends(Lists.newArrayList())
-                .reportableGermlineBreakends(Lists.newArrayList())
                 .build();
     }
 
@@ -329,7 +329,7 @@ public final class TestOrangeReportFactory
                 .driverLikelihood(VirusLikelihoodType.UNKNOWN)
                 .build());
 
-        return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
+        return ImmutableVirusInterpreterData.builder().allViruses(reportableViruses).build();
     }
 
     @NotNull
