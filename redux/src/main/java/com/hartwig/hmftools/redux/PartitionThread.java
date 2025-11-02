@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.CachedRefGenome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -109,9 +110,15 @@ public class PartitionThread extends Thread
 
         List<ChrBaseRegion> genomeRegions;
         if(refGenome == null)
+        {
             genomeRegions = formHumanChromosomeRegions(specificRegions, refGenomeVersion); // limit to human chromosomes
+        }
         else
-            genomeRegions = RefGenomeSource.formRefGenomeRegions(specificRegions, refGenome); // take all from ref genome sequences
+        {
+            CachedRefGenome cachedRefGenome = (CachedRefGenome)refGenome;
+            RefGenomeSource refGenomeSource = (RefGenomeSource)cachedRefGenome.refGenome();
+            genomeRegions = refGenomeSource.formRefGenomeRegions(specificRegions);
+        }
 
         // divvy up standard chromosomes amongst the reads evenly by base length, but for other contigs just add them to the final thread
 
