@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
@@ -26,6 +27,8 @@ import com.hartwig.hmftools.redux.write.FileWriterCache;
 import com.hartwig.hmftools.redux.write.PartitionInfo;
 
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.SAMSequenceRecord;
 
 public class PartitionThread extends Thread
 {
@@ -178,21 +181,21 @@ public class PartitionThread extends Thread
         if(refGenome == null)
             return humanChromosomeRegions(specificRegions, refGenomeVersion);
 
+        RefGenomeSource refGenomeSource = (RefGenomeSource)refGenome;
+
         List<ChrBaseRegion> inputRegions = Lists.newArrayList();
 
-        for(Map.Entry<String,Integer> contigEntry : refGenome.chromosomeLengths().entrySet())
+        // form regions in same order as in dictionary
+        for(SAMSequenceRecord sequenceRecord : refGenomeSource.refGenomeFile().getSequenceDictionary().getSequences())
         {
-            String contig = contigEntry.getKey();
+            String contig = sequenceRecord.getSequenceName();
 
             if(specificRegions.excludeChromosome(contig))
                 continue;
 
-            int contigLength = contigEntry.getValue();
-
-            inputRegions.add(new ChrBaseRegion(contig, 1, contigLength));
+            inputRegions.add(new ChrBaseRegion(contig, 1, sequenceRecord.getSequenceLength()));
         }
 
-        Collections.sort(inputRegions);
 
         return inputRegions;
     }
