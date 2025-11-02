@@ -2,15 +2,15 @@ package com.hartwig.hmftools.redux;
 
 import static com.hartwig.hmftools.common.bamops.BamMerger.formSequenceIntervals;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bamops.SequenceInfo;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import htsjdk.samtools.SAMSequenceRecord;
 

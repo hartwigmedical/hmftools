@@ -9,7 +9,12 @@ import static com.hartwig.hmftools.redux.TestUtils.createFragmentCoords;
 import static com.hartwig.hmftools.redux.TestUtils.createTestConfig;
 import static com.hartwig.hmftools.redux.TestUtils.setBaseQualities;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,8 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.redux.common.DuplicateGroup;
 import com.hartwig.hmftools.redux.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.redux.common.FragmentCoords;
-
-import org.junit.jupiter.api.Test;
 
 import htsjdk.samtools.SAMRecord;
 

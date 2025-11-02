@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.flipFirstInPair;
 import static com.hartwig.hmftools.redux.common.DuplicateGroupCollapser.SINGLE_END_JITTER_COLLAPSE_DISTANCE;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.redux.common.FragmentCoordReads;
 import com.hartwig.hmftools.redux.common.ReadInfo;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 

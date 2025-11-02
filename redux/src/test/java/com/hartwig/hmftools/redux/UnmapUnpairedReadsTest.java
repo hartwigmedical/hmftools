@@ -14,16 +14,16 @@ import static com.hartwig.hmftools.redux.TestUtils.checkTransformRead;
 import static com.hartwig.hmftools.redux.UnmapReadsTest.READ_BASES;
 import static com.hartwig.hmftools.redux.UnmapReadsTest.SOFT_CLIPPED_READ_CIGAR;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
