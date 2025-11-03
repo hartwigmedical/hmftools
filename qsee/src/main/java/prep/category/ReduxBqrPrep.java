@@ -17,8 +17,6 @@ import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import feature.FeatureKey;
 import feature.FeatureType;
 import feature.Feature;
@@ -33,10 +31,10 @@ public class ReduxBqrPrep implements CategoryPrep
 
     private static final int HI_QUAL_THRESHOLD = 30;
 
-    private static final String KEY_FLD_READ_TYPE = "readType";
-    private static final String KEY_FLD_STANDARD_MUTATION = "standardMutation";
-    private static final String KEY_FLD_STANDARD_TRINUC_CONTEXT = "standardTrinucContext";
-    private static final String KEY_FLD_ORIGINAL_QUAL = "originalQualBin";
+    private static final String FIELD_READ_TYPE = "readType";
+    private static final String FIELD_STANDARD_MUTATION = "standardMutation";
+    private static final String FIELD_STANDARD_TRINUC_CONTEXT = "standardTrinucContext";
+    private static final String FIELD_ORIGINAL_QUAL = "originalQualBin";
 
     public ReduxBqrPrep(PrepConfig config)
     {
@@ -174,12 +172,13 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            FeatureKey key = FeatureKey.ofPairs(
-                    FeatureType.BQR_PER_SNV96_CONTEXT,
-                    Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
-                    Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
-                    Pair.of(KEY_FLD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext)
+            String featureName = FeatureKey.formMultiFieldName(
+                    FIELD_READ_TYPE, bqrRecord.ReadType.toString(),
+                    FIELD_STANDARD_MUTATION, bqrRecord.StandardMutation,
+                    FIELD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext
             );
+
+            FeatureKey key = new FeatureKey(FeatureType.BQR_PER_SNV96_CONTEXT, featureName);
 
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
             bqrRecordGroups.get(key).add(bqrRecord);
@@ -198,12 +197,13 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
         {
-            FeatureKey key = FeatureKey.ofPairs(
-                    FeatureType.BQR_PER_ORIG_QUAL,
-                    Pair.of(KEY_FLD_READ_TYPE, bqrRecord.ReadType.toString()),
-                    Pair.of(KEY_FLD_STANDARD_MUTATION, bqrRecord.StandardMutation),
-                    Pair.of(KEY_FLD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin())
+            String featureName = FeatureKey.formMultiFieldName(
+                    FIELD_READ_TYPE, bqrRecord.ReadType.toString(),
+                    FIELD_STANDARD_MUTATION, bqrRecord.StandardMutation,
+                    FIELD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin()
             );
+
+            FeatureKey key = new FeatureKey(FeatureType.BQR_PER_ORIG_QUAL, featureName);
 
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
             bqrRecordGroups.get(key).add(bqrRecord);

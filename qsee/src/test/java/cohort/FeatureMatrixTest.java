@@ -12,7 +12,6 @@ import java.util.stream.IntStream;
 import org.junit.Test;
 
 import feature.Feature;
-import feature.FeatureKey;
 
 public class FeatureMatrixTest
 {
@@ -51,9 +50,9 @@ public class FeatureMatrixTest
         List<String> actualSampleIds = matrix.getRowIds();
         assertEquals(expectedSampleIds, actualSampleIds);
 
-        List<FeatureKey> expectedFeatureKeys = FeatureKey.ofNames("feature1", "feature2", "feature3");
-        List<FeatureKey> actualFeatureKeys = matrix.getFeatureKeys();
-        assertEquals(expectedFeatureKeys, actualFeatureKeys);
+        List<String> actualFeatureNames = matrix.getFeatureKeys().stream().map(x -> x.name()).toList();
+        List<String> expectedFeatureNames = List.of("feature1", "feature2", "feature3");
+        assertEquals(expectedFeatureNames, actualFeatureNames);
 
         double[][] expectedValues = {
                 { 1.1, 1.2, Double.NaN },
@@ -108,14 +107,11 @@ public class FeatureMatrixTest
         assertEquals(expectedSampleIds, actualSampleIds);
 
         // Check column names order
-        List<FeatureKey> expectedFeatureKeys = IntStream.range(0, NUM_FEATURES)
-                .mapToObj(x -> FeatureKey.of(formTestFeatureKey(x)))
-                .toList();
+        List<String> expectedFeatureNames = IntStream.range(0, NUM_FEATURES).mapToObj(x -> formTestFeatureName(x)).toList();
+        List<String> actualFeatureNames = matrix.getFeatureKeys().stream().map(x -> x.name()).toList();
 
-        List<FeatureKey> actualFeatureKeys = matrix.getFeatureKeys();
-
-        printDiffs(expectedFeatureKeys, actualFeatureKeys);
-        assertEquals(expectedFeatureKeys, actualFeatureKeys);
+        printDiffs(expectedFeatureNames, actualFeatureNames);
+        assertEquals(expectedFeatureNames, actualFeatureNames);
 
         // Check values
         double[][] expectedValues = createExpectedValues(NUM_SAMPLE_THREADS, NUM_FEATURES);
@@ -129,7 +125,7 @@ public class FeatureMatrixTest
     }
 
     private static String formTestSampleId(int sampleIndex) { return String.format("sample%d", sampleIndex); }
-    private static String formTestFeatureKey(int featureIndex) { return String.format("feature%d", featureIndex); }
+    private static String formTestFeatureName(int featureIndex) { return String.format("feature%d", featureIndex); }
     private static double formTestFeatureValue(int sampleIndex, int featureIndex) { return sampleIndex + 0.1*featureIndex; }
 
     private Thread createAddRowThread(FeatureMatrix matrix, int sampleIndex, int numFeatures)
@@ -139,7 +135,7 @@ public class FeatureMatrixTest
         List<Feature> features = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < numFeatures; ++featureIndex)
         {
-            String featureName = formTestFeatureKey(featureIndex);
+            String featureName = formTestFeatureName(featureIndex);
             double featureValue = formTestFeatureValue(sampleIndex, featureIndex);
             features.add(createTestFeature(featureName, featureValue));
         }

@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import feature.FeatureKey;
 import feature.FeatureType;
 import feature.Feature;
@@ -27,7 +25,7 @@ public class CobaltGcMediansPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
-    private static final String KEY_FLD_GC_BUCKET = "GCBucket";
+    private static final String FIELD_GC_BUCKET = "GCBucket";
 
     public CobaltGcMediansPrep(PrepConfig config)
     {
@@ -73,12 +71,8 @@ public class CobaltGcMediansPrep implements CategoryPrep
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            FeatureKey key = FeatureKey.ofPair(
-                    FeatureType.GC_BIAS,
-                    Pair.of(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket()))
-            );
-
-            Feature feature = new Feature(key, normalisedDepth, SourceTool.COBALT);
+            String featureName = FeatureKey.formMultiFieldName(FIELD_GC_BUCKET, String.valueOf(bucket.bucket()));
+            Feature feature = new Feature(FeatureType.GC_BIAS, featureName, normalisedDepth, SourceTool.COBALT);
 
             features.add(feature);
         }

@@ -1,83 +1,45 @@
 package feature;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.stream.Stream;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
 
 public class FeatureKey
 {
-    @Nullable private final FeatureType mType;
+    private final FeatureType mType;
     private final String mName;
 
     // For multi-field keys
-    private static final String KEY_VALUE_SEPARATOR = "=";
-    private static final String KEY_VALUE_PAIR_SEPARATOR = ";";
+    private static final String FIELD_KEY_VALUE_SEPARATOR = "=";
+    private static final String FIELD_SEPARATOR = ";";
 
-    public FeatureKey(@Nullable FeatureType type, String name)
+    public FeatureKey(FeatureType type, String name)
     {
         mType = type;
-        mName = name;
-    }
-
-    public FeatureKey(String name)
-    {
-        mType = null;
         mName = name;
     }
 
     public String name() { return mName; }
     public FeatureType type() { return mType; }
 
-    public static FeatureKey of(FeatureType type, String name) { return new FeatureKey(type, name); }
-
-    public static FeatureKey of(String name) { return new FeatureKey(name); }
-
-    @VisibleForTesting
-    public static List<FeatureKey> ofNames(String... names) { return Stream.of(names).map(FeatureKey::new).toList(); }
-
-    public static FeatureKey ofPair(FeatureType type, Pair<String, String> pair)
+    public static String formMultiFieldName(String... keyValuePairs)
     {
-        return new FeatureKey(type, nameFromPair(pair.getKey(), pair.getValue()));
-    }
-
-    @SafeVarargs
-    public static FeatureKey ofPairs(FeatureType type, Pair<String, String>... pairs)
-    {
-        return new FeatureKey(type, nameFromPairs(pairs));
-    }
-
-    @SafeVarargs
-    public static FeatureKey ofPairs(Pair<String, String>... pairs)
-    {
-        return new FeatureKey(null, nameFromPairs(pairs));
-    }
-
-    private static String nameFromPair(String fieldName, String fieldValue)
-    {
-        return fieldName + KEY_VALUE_SEPARATOR + fieldValue;
-    }
-
-    @SafeVarargs
-    private static String nameFromPairs(Pair<String, String>... pairs)
-    {
-        StringJoiner joiner = new StringJoiner(KEY_VALUE_PAIR_SEPARATOR);
-
-        for(Pair<String, String> pair : pairs)
+        if(keyValuePairs.length % 2 != 0)
         {
-            String fieldString = nameFromPair(pair.getKey(), pair.getValue());
-            joiner.add(fieldString);
+            throw new IllegalArgumentException("Must provide an even number of arguments (key-value pairs)");
         }
 
-        return joiner.toString();
-    }
+        StringJoiner featureName = new StringJoiner(FIELD_SEPARATOR);
 
-    public FeatureKey withType(FeatureType type) { return new FeatureKey(type, mName); }
+        for(int i = 0; i < keyValuePairs.length; i += 2)
+        {
+            String fieldName = keyValuePairs[i];
+            String fieldValue = keyValuePairs[i + 1];
+            String fieldString = fieldName + FIELD_KEY_VALUE_SEPARATOR + fieldValue;
+            featureName.add(fieldString);
+        }
+
+        return featureName.toString();
+    }
 
     @Override
     public String toString()

@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.redux.JitterCountsTable;
 import com.hartwig.hmftools.common.redux.JitterCountsTableFile;
 import com.hartwig.hmftools.common.redux.JitterTableRow;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import feature.Feature;
 import feature.FeatureKey;
 import feature.FeatureType;
@@ -29,9 +27,9 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
 
     private static final int MAX_REF_UNIT_COUNT = 15;
 
-    private static final String KEY_FLD_REPEAT_TYPE = "repeatUnitType";
-    private static final String KEY_FLD_CONSENSUS_TYPE = "consensusType";
-    private static final String KEY_FLD_REF_NUM_UNITS = "refNumUnits";
+    private static final String FIELD_REPEAT_TYPE = "repeatUnitType";
+    private static final String FIELD_CONSENSUS_TYPE = "consensusType";
+    private static final String FIELD_REF_NUM_UNITS = "refNumUnits";
 
     public ReduxMsIndelErrorPrep(PrepConfig config)
     {
@@ -126,23 +124,23 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
     @VisibleForTesting
     static List<JitterTableRow> aggregateByRepeatType(List<JitterTableRow> table)
     {
-        Map<FeatureKey, List<JitterTableRow>> groupedTables = new LinkedHashMap<>();
+        Map<String, List<JitterTableRow>> groupedTables = new LinkedHashMap<>();
         for(JitterTableRow row : table)
         {
-            FeatureKey key = FeatureKey.ofPairs(
-                    Pair.of(KEY_FLD_CONSENSUS_TYPE, row.getConsensusType().toString()),
-                    Pair.of(KEY_FLD_REPEAT_TYPE, getRepeatType(row.getRepeatUnit())),
-                    Pair.of(KEY_FLD_REF_NUM_UNITS, String.valueOf(row.refNumUnits()))
+            String groupName = FeatureKey.formMultiFieldName(
+                    FIELD_CONSENSUS_TYPE, row.getConsensusType().toString(),
+                    FIELD_REPEAT_TYPE, getRepeatType(row.getRepeatUnit()),
+                    FIELD_REF_NUM_UNITS, String.valueOf(row.refNumUnits())
             );
 
-            groupedTables.putIfAbsent(key, new ArrayList<>());
-            groupedTables.get(key).add(row);
+            groupedTables.putIfAbsent(groupName, new ArrayList<>());
+            groupedTables.get(groupName).add(row);
         }
 
         List<JitterTableRow> newTable = new ArrayList<>();
-        for(FeatureKey key : groupedTables.keySet())
+        for(String groupName : groupedTables.keySet())
         {
-            List<JitterTableRow> groupRows = groupedTables.get(key);
+            List<JitterTableRow> groupRows = groupedTables.get(groupName);
 
             JitterTableRow oldFirstRow = groupRows.get(0);
 
@@ -206,19 +204,19 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
             int insertionReadCount = row.getJitterReadCount(INSERTIONS_KEY);
             int indelReadCount = deletionReadCount + insertionReadCount;
 
-            FeatureKey key = FeatureKey.ofPairs(
-                    Pair.of(KEY_FLD_CONSENSUS_TYPE, consensusType),
-                    Pair.of(KEY_FLD_REPEAT_TYPE, repeatType),
-                    Pair.of(KEY_FLD_REF_NUM_UNITS, refNumUnits)
+            String featureName = FeatureKey.formMultiFieldName(
+                    FIELD_CONSENSUS_TYPE, consensusType,
+                    FIELD_REPEAT_TYPE, repeatType,
+                    FIELD_REF_NUM_UNITS, refNumUnits
             );
 
             double indelPhredScore = calcPhredScore(indelReadCount, totalReadCount);
-            indelPhredScores.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_RATES), indelPhredScore, SourceTool.REDUX));
+            indelPhredScores.add(new Feature(FeatureType.MS_INDEL_ERROR_RATES, featureName, indelPhredScore, SourceTool.REDUX));
 
             double insertionPhredScore = calcPhredScore(insertionReadCount, totalReadCount);
             double deletionPhredScore = calcPhredScore(deletionReadCount, totalReadCount);
             double indelPhredScoreDiff = deletionPhredScore - insertionPhredScore;
-            indelPhredScoreDiffs.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_BIAS), indelPhredScoreDiff, SourceTool.REDUX));
+            indelPhredScoreDiffs.add(new Feature(FeatureType.MS_INDEL_ERROR_BIAS, featureName, indelPhredScoreDiff, SourceTool.REDUX));
         }
 
         List<Feature> features = new ArrayList<>();
