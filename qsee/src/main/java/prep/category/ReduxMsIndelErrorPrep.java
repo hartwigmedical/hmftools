@@ -181,9 +181,10 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
 
     private static double calcPhredScore(int count, int totalCount)
     {
-        return (totalCount > 0)
-                ? -10 * Math.log10(count / (double) totalCount)
-                : Double.NaN;
+        if(count == 0 || totalCount == 0)
+            return Double.NaN;
+
+        return -10 * Math.log10(count / (double) totalCount);
     }
 
     @VisibleForTesting
