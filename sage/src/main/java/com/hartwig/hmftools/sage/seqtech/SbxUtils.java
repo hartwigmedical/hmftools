@@ -17,6 +17,7 @@ import htsjdk.samtools.SAMRecord;
 public final class SbxUtils
 {
     public static final byte MATCHING_BASE_QUALITY_SBX = 10;
+    public static final int MQF_NM_1_THRESHOLD_DEDUCTION = 10;
 
     public static ConsensusType determineConsensusType(final VariantReadContext readContext, int readVarIndex, final SAMRecord record)
     {

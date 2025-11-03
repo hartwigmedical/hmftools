@@ -488,7 +488,12 @@ public class ReadContextCounter
 
         RealignedType realignedType = RealignedType.NONE;
 
-        if(matchType != ReadContextMatch.REF)
+        boolean checkRealignment = matchType != ReadContextMatch.REF;
+
+        if(!checkRealignment && isSbx() && !mIsIndel && mReadContext.hasIndelInCore())
+            checkRealignment = true;
+
+        if(checkRealignment)
         {
             if(realignedReadIndex == null)
                 realignedReadIndex = realignedReadIndexPosition(mReadContext, record);
