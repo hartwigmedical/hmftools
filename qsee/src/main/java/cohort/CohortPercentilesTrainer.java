@@ -99,10 +99,13 @@ public class CohortPercentilesTrainer
         {
             PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES);
 
-            PercentileTransformTask task = new PercentileTransformTask(
-                    featureIndex, sampleFeatureMatrix, transformer, percentileFeatureMatrix);
+            double[] featureValues = sampleFeatureMatrix.getColumnValues(featureIndex);
+            FeatureKey featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
 
-            featureTransformTasks.add(task);
+            transformer.fit(featureValues, featureKey);
+
+            SourceTool sourceTool = sampleFeatureMatrix.getSourceTool(featureKey);
+            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), sourceTool);
         }
 
         TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
@@ -111,6 +114,7 @@ public class CohortPercentilesTrainer
         Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
         percentileFeatureMatrix.getFeatureKeys().sort(comparator);
     }
+
 
     private void writePercentiles(BufferedWriter writer, FeatureMatrix percentileFeatureMatrix, SampleType sampleType) throws IOException
     {
