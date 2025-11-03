@@ -22,6 +22,7 @@ public class PercentileTransformer
     private double[] mRefValuesDeduped;
 
     private boolean mFitted;
+    private boolean mFittedWithAllNaN;
 
     private PercentileTransformer(double[] percentiles, double[] refValues, boolean fitted)
     {
@@ -32,7 +33,14 @@ public class PercentileTransformer
 
     private PercentileTransformer(double[] percentiles)
     {
-        this(percentiles, new double[percentiles.length], false);
+        this(percentiles, initialiseRefValues(percentiles.length), false);
+    }
+
+    private static double[] initialiseRefValues(int length)
+    {
+        double[] array = new double[length];
+        Arrays.fill(array, Double.NaN);
+        return array;
     }
 
     public static PercentileTransformer withInterval(double percentileInterval)
@@ -79,8 +87,8 @@ public class PercentileTransformer
         if(notSorted(percentiles) || notSorted(refValues))
             throw new IllegalArgumentException("Percentiles and ref values should be sorted in ascending order");
 
-        if(hasNaNs(percentiles) || hasNaNs(refValues))
-            throw new IllegalArgumentException("Percentiles and ref values should not contain NaNs");
+        if(Arrays.stream(percentiles).anyMatch(Double::isNaN))
+            throw new IllegalArgumentException("Percentiles should not contain NaNs");
 
         if(percentiles.length < 2 || percentiles[0] != 0 || percentiles[percentiles.length-1] != 100)
             throw new IllegalArgumentException("Data for at least percentiles 0 and 100 should be provided");
@@ -96,39 +104,33 @@ public class PercentileTransformer
         return IntStream.range(1, values.length).anyMatch(i -> values[i] < values[i - 1]);
     }
 
-    private static boolean hasNaNs(double[] values)
-    {
-        return Arrays.stream(values).anyMatch(Double::isNaN);
-    }
-
     public void fit(double[] cohortValues, @Nullable FeatureKey featureKey)
     {
         if(mFitted)
-        {
             throw new IllegalStateException("PercentileTransformer already fitted");
-        }
 
-        double[] cohortValuesFiltered = Arrays.stream(cohortValues)
-                .filter(x -> !Double.isNaN(x))
-                .toArray();
+        if(cohortValues.length == 0)
+            throw new IllegalArgumentException("Cohort values must not be empty");
 
+        double[] cohortValuesFiltered = Arrays.stream(cohortValues).filter(x -> !Double.isNaN(x)).toArray();
         int nanCount = cohortValues.length - cohortValuesFiltered.length;
-        if(nanCount > 0)
-        {
-            String message = (featureKey != null)
-                    ? String.format("Removed %s NaN(s) during percentile fit for feature: %s", nanCount, featureKey)
-                    : String.format("Removed %s NaN(s) during percentile fit", nanCount);
 
+        if(nanCount == cohortValues.length)
+        {
+            String message = String.format("All %s cohort values are NaN", cohortValues.length);
+            message += (featureKey != null) ? " for feature: " + featureKey : "";
             QC_LOGGER.warn(message);
+
+            mFitted = true;
+            mFittedWithAllNaN = true;
+
+            return;
         }
-
-        if(cohortValuesFiltered.length == 0)
+        else if(nanCount > 0)
         {
-            String message = (featureKey != null)
-                    ? "Cohort values empty for feature: " + featureKey
-                    : "Cohort values empty";
-
-            throw new IllegalStateException(message);
+            String message = String.format("Removed %s NaN(s) from %s cohort values", nanCount, cohortValues.length);
+            message += (featureKey != null) ? " for feature: " + featureKey : "";
+            QC_LOGGER.warn(message);
         }
 
         double[] cohortValuesSorted = Arrays.copyOf(cohortValuesFiltered, cohortValuesFiltered.length);
@@ -193,52 +195,27 @@ public class PercentileTransformer
         mPercentilesDeduped = refValuesToMeanPctMap.values().stream().mapToDouble(x -> x).toArray();
     }
 
-    private void checkFitted()
-    {
-        if(!mFitted)
-        {
-            throw new IllegalStateException("PercentileTransformer not fitted");
-        }
-    }
-
     public double transform(double inputValue)
     {
-        checkFitted();
+        double[] percentiles = mPercentilesDeduped;
+        double[] refValues = mRefValuesDeduped;
 
         if(Double.isNaN(inputValue))
-        {
             throw new IllegalArgumentException("Input value cannot be NaN");
-        }
 
-        return transformValueToPercentile(inputValue, mRefValuesDeduped, mPercentilesDeduped);
-    }
+        if(!mFitted)
+            throw new IllegalStateException("PercentileTransformer not fitted");
 
-    public double[] transform(double[] inputValues)
-    {
-        checkFitted();
+        if(mFittedWithAllNaN)
+            return Double.NaN;
 
-        double[] percentiles = new double[inputValues.length];
-        for(int i = 0; i < inputValues.length; i++)
-        {
-            percentiles[i] = transformValueToPercentile(inputValues[i], mRefValuesDeduped, mPercentilesDeduped);
-        }
-
-        return percentiles;
-    }
-
-    private double transformValueToPercentile(double inputValue, double[] refValues, double[] percentiles)
-    {
         if(inputValue < refValues[0])
-        {
             return Double.NEGATIVE_INFINITY;
-        }
 
         if(inputValue > refValues[refValues.length - 1])
-        {
             return Double.POSITIVE_INFINITY;
-        }
 
-        int matchIndex = java.util.Arrays.binarySearch(refValues, inputValue);
+        int matchIndex = Arrays.binarySearch(refValues, inputValue);
         if(matchIndex >= 0)
         {
             return percentiles[matchIndex];

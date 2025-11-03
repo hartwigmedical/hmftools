@@ -6,30 +6,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.junit.Before;
 import org.junit.Test;
 
 public class PercentileTransformerTest
 {
-
-    private final double[] COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.NaN };
-    private final int PERCENTILE_INTERVAL = 10;
-    private PercentileTransformer TRANSFORMER;
-
-    @Before
-    public void setUp()
-    {
-        TRANSFORMER = PercentileTransformer.withInterval(PERCENTILE_INTERVAL);
-        TRANSFORMER.fit(COHORT_VALUES);
-    }
+    private final int DEFAULT_PERCENTILE_INTERVAL = 10;
+    private final double[] DEFAULT_COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.NaN };
 
     @Test
     public void nanValuesIgnoredDuringFit()
     {
-        PercentileTransformer transformerWithNan = TRANSFORMER;
+        PercentileTransformer transformerWithNan = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        transformerWithNan.fit(DEFAULT_COHORT_VALUES);
 
-        PercentileTransformer transformerWithoutNan = PercentileTransformer.withInterval(PERCENTILE_INTERVAL);
-        double[] cohortValuesWithoutNan = Arrays.stream(COHORT_VALUES).filter(value -> !Double.isNaN(value)).toArray();
+        PercentileTransformer transformerWithoutNan = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        double[] cohortValuesWithoutNan = Arrays.stream(DEFAULT_COHORT_VALUES).filter(value -> !Double.isNaN(value)).toArray();
         transformerWithoutNan.fit(cohortValuesWithoutNan);
 
         assertArrayEquals(transformerWithNan.getPercentiles(), transformerWithoutNan.getPercentiles(), 0.001);
@@ -39,32 +30,69 @@ public class PercentileTransformerTest
     @Test
     public void cohortValuesDedupedDuringFit()
     {
+        PercentileTransformer transformer = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        transformer.fit(DEFAULT_COHORT_VALUES);
+
         double[] expectedDedupPercentiles = { 5, 20, 30, 70 };
         double[] expectedDedupRefValues = { 0, 4, 8.5, 10 };
 
-        double[] actualDedupPercentiles = TRANSFORMER.getPercentilesDeduped();
-        double[] actualDedupRefValues = TRANSFORMER.getRefValuesDeduped();
+        double[] actualDedupPercentiles = transformer.getPercentilesDeduped();
+        double[] actualDedupRefValues = transformer.getRefValuesDeduped();
 
         assertArrayEquals(expectedDedupPercentiles, actualDedupPercentiles, 0.001);
         assertArrayEquals(expectedDedupRefValues, actualDedupRefValues, 0.001);
     }
 
     @Test
-    public void canTransformInputValuesToPercentiles()
+    public void canTransformCohortValuesToPercentiles()
     {
+        PercentileTransformer transformer = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        transformer.fit(DEFAULT_COHORT_VALUES);
+
         // Matches ref data exactly
-        assertEquals(5,  TRANSFORMER.transform(0),   0.01);
-        assertEquals(20, TRANSFORMER.transform(4),   0.01);
-        assertEquals(30, TRANSFORMER.transform(8.5), 0.01);
-        assertEquals(70, TRANSFORMER.transform(10),  0.01);
+        assertEquals(5,  transformer.transform(0),   0.01);
+        assertEquals(20, transformer.transform(4),   0.01);
+        assertEquals(30, transformer.transform(8.5), 0.01);
+        assertEquals(70, transformer.transform(10),  0.01);
 
         // Requires interpolation
-        assertEquals(12.50, TRANSFORMER.transform(2),  0.01);
-        assertEquals(26.67, TRANSFORMER.transform(7),  0.01);
+        assertEquals(12.50, transformer.transform(2),  0.01);
+        assertEquals(26.67, transformer.transform(7),  0.01);
 
         // Out of bounds
-        assertEquals(Double.POSITIVE_INFINITY, TRANSFORMER.transform( 1000),  0.01);
-        assertEquals(Double.NEGATIVE_INFINITY, TRANSFORMER.transform(-1000),  0.01);
+        assertEquals(Double.POSITIVE_INFINITY, transformer.transform( 1000),  0.01);
+        assertEquals(Double.NEGATIVE_INFINITY, transformer.transform(-1000),  0.01);
+    }
+
+    @Test
+    public void canFitOneCohortValue()
+    {
+        PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(3);
+        double[] cohortValues = { 5 };
+        transformer.fit(cohortValues);
+
+        double[] expectedPercentiles = { 50 };
+        double[] expectedRefValues = { 5 };
+
+        double[] actualPercentiles = transformer.getPercentilesDeduped();
+        double[] actualRefValues = transformer.getRefValuesDeduped();
+
+        assertArrayEquals(expectedRefValues, actualRefValues, 0.1);
+        assertArrayEquals(expectedPercentiles, actualPercentiles, 0.1);
+    }
+
+    @Test
+    public void canFitAndTransformFromAllNanCohortValues()
+    {
+        PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(3);
+        double[] cohortValues = { Double.NaN, Double.NaN };
+
+        transformer.fit(cohortValues);
+
+        double expectedPercentile = Double.NaN;
+        double actualPercentile = transformer.transform(0);
+
+        assertEquals(expectedPercentile, actualPercentile, 0.1);
     }
 
     @Test
