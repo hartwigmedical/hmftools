@@ -11,10 +11,10 @@ import org.junit.Test;
 public class PercentileTransformerTest
 {
     private final int DEFAULT_PERCENTILE_INTERVAL = 10;
-    private final double[] DEFAULT_COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.NaN };
+    private final double[] DEFAULT_COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.POSITIVE_INFINITY };
 
     @Test
-    public void nanValuesIgnoredDuringFit()
+    public void nanAndInfIgnoredDuringFit()
     {
         PercentileTransformer transformerWithNan = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
         transformerWithNan.fit(DEFAULT_COHORT_VALUES);

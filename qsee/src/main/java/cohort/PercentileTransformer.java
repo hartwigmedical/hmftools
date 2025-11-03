@@ -87,8 +87,8 @@ public class PercentileTransformer
         if(notSorted(percentiles) || notSorted(refValues))
             throw new IllegalArgumentException("Percentiles and ref values should be sorted in ascending order");
 
-        if(Arrays.stream(percentiles).anyMatch(Double::isNaN))
-            throw new IllegalArgumentException("Percentiles should not contain NaNs");
+        if(Arrays.stream(percentiles).anyMatch(x -> x < 0 || x > 100))
+            throw new IllegalArgumentException("Percentiles should be between 0 and 100");
 
         if(percentiles.length < 2 || percentiles[0] != 0 || percentiles[percentiles.length-1] != 100)
             throw new IllegalArgumentException("Data for at least percentiles 0 and 100 should be provided");
@@ -112,12 +112,15 @@ public class PercentileTransformer
         if(cohortValues.length == 0)
             throw new IllegalArgumentException("Cohort values must not be empty");
 
-        double[] cohortValuesFiltered = Arrays.stream(cohortValues).filter(x -> !Double.isNaN(x)).toArray();
-        int nanCount = cohortValues.length - cohortValuesFiltered.length;
+        double[] cohortValuesFiltered = Arrays.stream(cohortValues)
+                .filter(x -> !Double.isNaN(x) && Double.isFinite(x))
+                .toArray();
 
-        if(nanCount == cohortValues.length)
+        int invalidValuesCount = cohortValues.length - cohortValuesFiltered.length;
+
+        if(invalidValuesCount == cohortValues.length)
         {
-            String message = String.format("All %s cohort values are NaN", cohortValues.length);
+            String message = String.format("All %s cohort values are NaN/Infinite (transform will return NaN)", cohortValues.length);
             message += (featureKey != null) ? " for feature: " + featureKey : "";
             QC_LOGGER.warn(message);
 
@@ -126,9 +129,9 @@ public class PercentileTransformer
 
             return;
         }
-        else if(nanCount > 0)
+        else if(invalidValuesCount > 0)
         {
-            String message = String.format("Removed %s NaN(s) from %s cohort values", nanCount, cohortValues.length);
+            String message = String.format("Removed %s NaN/Infinite value(s) from %s cohort values", invalidValuesCount, cohortValues.length);
             message += (featureKey != null) ? " for feature: " + featureKey : "";
             QC_LOGGER.warn(message);
         }
