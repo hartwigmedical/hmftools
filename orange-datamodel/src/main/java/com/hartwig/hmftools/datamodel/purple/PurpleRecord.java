@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
