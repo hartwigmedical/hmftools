@@ -22,6 +22,8 @@ public class ReadContextCandidate implements Comparable<ReadContextCandidate>
         mReadContext = readContext;
         mMatcher = new ReadContextMatcher(mReadContext, false, false);
         MinNumberOfEvents = numberOfEvents;
+        FullMatch = 0;
+        CoreMatch = 0;
         LowQualInCoreCount = 0;
     }
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVAL
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
 import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
@@ -259,11 +261,59 @@ public final class UltimaUtils
         return true;
     }
 
-    public static boolean checkLowQualInCore(final VariantReadContext readContext)
+    public static boolean hasLongHomopolymerInContext(final SimpleVariant variant, final SAMRecord read, final int varReadIndex)
     {
+        int standardLength = MIN_CORE_DISTANCE + DEFAULT_FLANK_LENGTH;
+        int coreStartIndex = max(varReadIndex - standardLength, 0);
+        int coreEndIndex = min(varReadIndex + (variant.altLength() - 1) + standardLength, read.getReadBases().length - 1);
+
+        byte lastBase = read.getReadBases()[coreStartIndex];
+        int repeatCount = 1;
+        for(int i = coreStartIndex + 1; i <= coreEndIndex; ++i)
+        {
+            byte nextBase = read.getReadBases()[i];
+            if(nextBase == lastBase)
+            {
+                ++repeatCount;
+
+                if(repeatCount >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+                    return false;
+            }
+            else
+            {
+                lastBase = nextBase;
+                repeatCount = 1;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean lowQualInReadCore(final SimpleVariant variant, int variantReadIndex, final List<Integer> lowQualIndices)
+    {
+        if(lowQualIndices == null || lowQualIndices.isEmpty())
+            return false;
+
+        int coreIndexStart = variantReadIndex - MIN_CORE_DISTANCE;
+        int coreIndexEnd = variantReadIndex + variant.alt().length() - 1 + MIN_CORE_DISTANCE;
+
+        for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
+        {
+            if(lowQualIndices.contains(index))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static boolean lowQualInReadContextCore(int variantReadIndex, final List<Integer> lowQualIndices, final VariantReadContext readContext)
+    {
+        if(lowQualIndices == null || lowQualIndices.isEmpty())
+            return false;
+
         // exclude from checking if the variant has a long homopolymer
         if(readContext.MaxRepeat != null && readContext.MaxRepeat.repeatLength() == 1
-        && readContext.MaxRepeat.Count >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+                && readContext.MaxRepeat.Count >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
         {
             return false;
         }
@@ -291,7 +341,16 @@ public final class UltimaUtils
             }
         }
 
-        return true;
+        int coreIndexStart = variantReadIndex - readContext.leftCoreLength();
+        int coreIndexEnd = variantReadIndex + readContext.rightCoreLength();
+
+        for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
+        {
+            if(lowQualIndices.contains(index))
+                return true;
+        }
+
+        return false;
     }
 
     private static final List<String> SINGLE_HOMOPOLYMERS = List.of("A", "C", "G", "T");
