@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import feature.Feature;
 import feature.FeatureKey;
 import feature.FeatureType;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -212,12 +213,12 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
             );
 
             double indelPhredScore = calcPhredScore(indelReadCount, totalReadCount);
-            indelPhredScores.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_RATES), indelPhredScore));
+            indelPhredScores.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_RATES), indelPhredScore, SourceTool.REDUX));
 
             double insertionPhredScore = calcPhredScore(insertionReadCount, totalReadCount);
             double deletionPhredScore = calcPhredScore(deletionReadCount, totalReadCount);
             double indelPhredScoreDiff = deletionPhredScore - insertionPhredScore;
-            indelPhredScoreDiffs.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_BIAS), indelPhredScoreDiff));
+            indelPhredScoreDiffs.add(new Feature(key.withType(FeatureType.MS_INDEL_ERROR_BIAS), indelPhredScoreDiff, SourceTool.REDUX));
         }
 
         List<Feature> features = new ArrayList<>();

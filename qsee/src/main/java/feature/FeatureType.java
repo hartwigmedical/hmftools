@@ -2,45 +2,31 @@ package feature;
 
 public enum FeatureType
 {
-    GENERAL_PURPLE               (VisType.TABLE, SourceTool.PURPLE),
-    GENERAL_AMBER                (VisType.TABLE, SourceTool.AMBER),
-    MUTATIONAL_BURDEN            (VisType.TABLE, SourceTool.PURPLE),
-    COVERAGE_STATS               (VisType.TABLE, SourceTool.BAM_METRICS),
-    READ_STATS                   (VisType.TABLE, SourceTool.BAM_METRICS),
+    GENERAL                      (VisType.TABLE),
+    MUTATIONAL_BURDEN            (VisType.TABLE),
+    COVERAGE_STATS               (VisType.TABLE),
+    READ_STATS                   (VisType.TABLE),
 
-    COVERAGE_DISTRIBUTION        (VisType.PLOT, SourceTool.BAM_METRICS),
-    FRAG_LENGTH_DISTRIBUTION     (VisType.PLOT, SourceTool.BAM_METRICS),
-    GC_BIAS                      (VisType.PLOT, SourceTool.COBALT),
-    DISCORDANT_FRAG_TYPE_COUNTS  (VisType.PLOT, SourceTool.ESVEE),
-    DUPLICATE_FREQ               (VisType.PLOT, SourceTool.REDUX),
-    MISSED_VARIANT_LIKELIHOOD    (VisType.PLOT, SourceTool.BAM_METRICS),
-    BQR_PER_SNV96_CONTEXT        (VisType.PLOT, SourceTool.REDUX),
-    BQR_PER_ORIG_QUAL            (VisType.PLOT, SourceTool.REDUX),
-    MS_INDEL_ERROR_RATES         (VisType.PLOT, SourceTool.REDUX),
-    MS_INDEL_ERROR_BIAS          (VisType.PLOT, SourceTool.REDUX),
+    COVERAGE_DISTRIBUTION        (VisType.PLOT),
+    FRAG_LENGTH_DISTRIBUTION     (VisType.PLOT),
+    GC_BIAS                      (VisType.PLOT),
+    DISCORDANT_FRAG_TYPE_COUNTS  (VisType.PLOT),
+    DUPLICATE_FREQ               (VisType.PLOT),
+    MISSED_VARIANT_LIKELIHOOD    (VisType.PLOT),
+    BQR_PER_SNV96_CONTEXT        (VisType.PLOT),
+    BQR_PER_ORIG_QUAL            (VisType.PLOT),
+    MS_INDEL_ERROR_RATES         (VisType.PLOT),
+    MS_INDEL_ERROR_BIAS          (VisType.PLOT),
     ;
 
     private final VisType mVisType;
-    private final SourceTool mSourceTool;
 
-    FeatureType(VisType visType, SourceTool sourceTool)
+    FeatureType(VisType visType)
     {
-        mSourceTool = sourceTool;
         mVisType = visType;
     }
 
-    public SourceTool sourceTool() { return mSourceTool; }
     public VisType visType() { return mVisType; }
-
-    public enum SourceTool
-    {
-        AMBER,
-        BAM_METRICS,
-        COBALT,
-        ESVEE,
-        PURPLE,
-        REDUX,
-    }
 
     public enum VisType
     {
@@ -51,7 +37,7 @@ public enum FeatureType
     @Override
     public String toString()
     {
-        return String.format("featureType(%s) sourceTool(%s) visType(%s)",
-                this.name(), mSourceTool.name(), mVisType.name());
+        return String.format("featureType(%s) visType(%s)",
+                this.name(), mVisType.name());
     }
 }

@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import common.SampleType;
 import feature.Feature;
 import feature.FeatureType;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -62,24 +63,24 @@ public class SummaryTablePrep implements CategoryPrep
     private static List<Feature> getGeneralStats(PurityContext purplePurityContext, AmberQC amberQC)
     {
         return List.of(
-                new Feature(FeatureType.GENERAL_PURPLE, "Purity", purplePurityContext.bestFit().purity()),
-                new Feature(FeatureType.GENERAL_PURPLE, "Ploidy", purplePurityContext.bestFit().ploidy()),
-                new Feature(FeatureType.GENERAL_PURPLE, "TINC level", purplePurityContext.qc().tincLevel()),
-                new Feature(FeatureType.GENERAL_PURPLE, "Deleted genes", purplePurityContext.qc().deletedGenes()),
-                new Feature(FeatureType.GENERAL_PURPLE, "Unsupported CN segments", purplePurityContext.qc().unsupportedCopyNumberSegments()),
-                new Feature(FeatureType.GENERAL_PURPLE, "LOH percent", purplePurityContext.qc().lohPercent()),
-                new Feature(FeatureType.GENERAL_PURPLE, "Chimerism percent", purplePurityContext.qc().chimerismPercentage()),
-                new Feature(FeatureType.GENERAL_PURPLE, "Contamination", purplePurityContext.qc().contamination()),
-                new Feature(FeatureType.GENERAL_AMBER, "Consanguinity prop.", amberQC.consanguinityProportion())
+                new Feature(FeatureType.GENERAL, "Purity", purplePurityContext.bestFit().purity(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Ploidy", purplePurityContext.bestFit().ploidy(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "TINC level", purplePurityContext.qc().tincLevel(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Deleted genes", purplePurityContext.qc().deletedGenes(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Unsupported CN segments", purplePurityContext.qc().unsupportedCopyNumberSegments(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "LOH percent", purplePurityContext.qc().lohPercent(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Chimerism percent", purplePurityContext.qc().chimerismPercentage(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Contamination", purplePurityContext.qc().contamination(), SourceTool.PURPLE),
+                new Feature(FeatureType.GENERAL, "Consanguinity prop.", amberQC.consanguinityProportion(), SourceTool.PURPLE)
         );
     }
 
     private static List<Feature> getTmbStats(PurityContext purplePurityContext)
     {
         return List.of(
-                new Feature(FeatureType.MUTATIONAL_BURDEN, "Small variants per MB", purplePurityContext.tumorMutationalBurdenPerMb()),
-                new Feature(FeatureType.MUTATIONAL_BURDEN, "MS indels per per MB", purplePurityContext.microsatelliteIndelsPerMb()),
-                new Feature(FeatureType.MUTATIONAL_BURDEN, "Structural variants", purplePurityContext.svTumorMutationalBurden())
+                new Feature(FeatureType.MUTATIONAL_BURDEN, "Small variants per MB", purplePurityContext.tumorMutationalBurdenPerMb(), SourceTool.PURPLE),
+                new Feature(FeatureType.MUTATIONAL_BURDEN, "MS indels per per MB", purplePurityContext.microsatelliteIndelsPerMb(), SourceTool.PURPLE),
+                new Feature(FeatureType.MUTATIONAL_BURDEN, "Structural variants", purplePurityContext.svTumorMutationalBurden(), SourceTool.PURPLE)
         );
 
     }
@@ -90,15 +91,15 @@ public class SummaryTablePrep implements CategoryPrep
     {
         List<Feature> features = new ArrayList<>();
 
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "Mean coverage", bamMetricSummary.meanCoverage()));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "Mean coverage", bamMetricSummary.meanCoverage(), SourceTool.PURPLE));
 
         for(int coverageThreshold : MIN_COVERAGE_THRESHOLDS)
         {
             features.add(calcPropBasesWithMinCoverage(bamMetricCoverage, coverageThreshold));
         }
 
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "Low map qual percent", bamMetricSummary.lowMapQualPercent()));
-        features.add(new Feature(FeatureType.COVERAGE_STATS, "Low base qual percent", bamMetricSummary.lowBaseQualPercent()));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "Low map qual percent", bamMetricSummary.lowMapQualPercent(), SourceTool.BAM_METRICS));
+        features.add(new Feature(FeatureType.COVERAGE_STATS, "Low base qual percent", bamMetricSummary.lowBaseQualPercent(), SourceTool.BAM_METRICS));
 
         return features;
     }
@@ -120,15 +121,16 @@ public class SummaryTablePrep implements CategoryPrep
         return new Feature(
                 FeatureType.COVERAGE_STATS,
                 String.format("Coverage ≥ %s", coverageThreshold),
-                propAboveCoverageThres
+                propAboveCoverageThres,
+                SourceTool.BAM_METRICS
         );
     }
 
     private static List<Feature> getReadStats(BamMetricSummary bamMetricSummary)
     {
         return List.of(
-                new Feature(FeatureType.READ_STATS, "Duplicate reads rate", (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads()),
-                new Feature(FeatureType.READ_STATS, "Dual-strand reads rate", (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads())
+                new Feature(FeatureType.READ_STATS, "Duplicate reads rate", (double) bamMetricSummary.duplicateReads() / bamMetricSummary.totalReads(), SourceTool.BAM_METRICS),
+                new Feature(FeatureType.READ_STATS, "Dual-strand reads rate", (double) bamMetricSummary.dualStrandReads() / bamMetricSummary.totalReads(), SourceTool.BAM_METRICS)
         );
     }
 

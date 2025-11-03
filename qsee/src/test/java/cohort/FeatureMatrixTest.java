@@ -20,25 +20,25 @@ public class FeatureMatrixTest
     public void canAddRowsIncrementally()
     {
         List<Feature> sample1Features = List.of(
-                new Feature("feature1", 1.1),
-                new Feature("feature2", 1.2)
+                createTestFeature("feature1", 1.1),
+                createTestFeature("feature2", 1.2)
         );
 
         List<Feature> sample2Features = List.of(
-                new Feature("feature1", 2.1),
-                new Feature("feature2", 2.2)
+                createTestFeature("feature1", 2.1),
+                createTestFeature("feature2", 2.2)
         );
 
         List<Feature> sample3Features = List.of(
-                new Feature("feature1", 3.1),
-                new Feature("feature2", 3.2),
-                new Feature("feature3", 3.3)
+                createTestFeature("feature1", 3.1),
+                createTestFeature("feature2", 3.2),
+                createTestFeature("feature3", 3.3)
         );
 
         List<Feature> sample4Features = List.of(
-                new Feature("feature1", 4.1),
-                new Feature("feature2", 4.2),
-                new Feature("feature3", 4.3)
+                createTestFeature("feature1", 4.1),
+                createTestFeature("feature2", 4.2),
+                createTestFeature("feature3", 4.3)
         );
 
         FeatureMatrix matrix = new FeatureMatrix(new HashMap<>(), 4);
@@ -123,6 +123,11 @@ public class FeatureMatrixTest
         assertArrayEquals(expectedValues, actualValues);
     }
 
+    private static Feature createTestFeature(String name, double value)
+    {
+        return new Feature(null, name, value, null);
+    }
+
     private static String formTestSampleId(int sampleIndex) { return String.format("sample%d", sampleIndex); }
     private static String formTestFeatureKey(int featureIndex) { return String.format("feature%d", featureIndex); }
     private static double formTestFeatureValue(int sampleIndex, int featureIndex) { return sampleIndex + 0.1*featureIndex; }
@@ -134,9 +139,9 @@ public class FeatureMatrixTest
         List<Feature> features = new ArrayList<>();
         for(int featureIndex = 0; featureIndex < numFeatures; ++featureIndex)
         {
-            FeatureKey featureKey = FeatureKey.of(formTestFeatureKey(featureIndex));
+            String featureName = formTestFeatureKey(featureIndex);
             double featureValue = formTestFeatureValue(sampleIndex, featureIndex);
-            features.add(new Feature(featureKey, featureValue));
+            features.add(createTestFeature(featureName, featureValue));
         }
 
         return new Thread(() -> matrix.addRow(sampleId, features));

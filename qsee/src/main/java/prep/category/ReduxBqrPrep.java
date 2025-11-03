@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import feature.FeatureKey;
 import feature.FeatureType;
 import feature.Feature;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -187,7 +188,7 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x)))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), SourceTool.REDUX))
                 .toList();
     }
 
@@ -211,7 +212,7 @@ public class ReduxBqrPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x)))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), SourceTool.REDUX))
                 .toList();
     }
 

@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import common.SampleType;
 import feature.FeatureKey;
 import feature.FeatureType;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.CategoryPrepFactory;
 import prep.PrepConfig;
@@ -120,11 +121,12 @@ public class CohortPercentilesTrainer
             {
                 FeatureKey featureKey = percentileFeatureMatrix.getFeatureKeys().get(featureIndex);
                 FeatureType featureType = featureKey.type();
+                SourceTool sourceTool = percentileFeatureMatrix.getSourceTool(featureKey);
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
 
                 line.add(featureType.visType().name());
-                line.add(featureType.sourceTool().name());
+                line.add(sourceTool.toString());
                 line.add(featureType.name());
                 line.add(featureKey.name());
 

@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import common.SampleType;
 import feature.Feature;
 import feature.FeatureType;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -56,7 +57,7 @@ public class BamMetricsPrep implements CategoryPrep
 
         return coverageBaseCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalCount;
-            return new Feature(FeatureType.COVERAGE_DISTRIBUTION, String.valueOf(x.Value), propBases);
+            return new Feature(FeatureType.COVERAGE_DISTRIBUTION, String.valueOf(x.Value), propBases, SourceTool.BAM_METRICS);
         }).toList();
     }
 
@@ -66,7 +67,7 @@ public class BamMetricsPrep implements CategoryPrep
 
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
-            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases);
+            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases, SourceTool.BAM_METRICS);
         }).toList();
     }
 
@@ -76,7 +77,7 @@ public class BamMetricsPrep implements CategoryPrep
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
 
         return selectedGeneDepths.stream()
-                .map(x -> new Feature(FeatureType.MISSED_VARIANT_LIKELIHOOD, x.Gene, x.MissedVariantLikelihood))
+                .map(x -> new Feature(FeatureType.MISSED_VARIANT_LIKELIHOOD, x.Gene, x.MissedVariantLikelihood, SourceTool.BAM_METRICS))
                 .toList();
     }
 

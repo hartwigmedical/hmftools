@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import feature.FeatureKey;
 import feature.FeatureType;
 import feature.Feature;
+import feature.SourceTool;
 import prep.CategoryPrep;
 import prep.PrepConfig;
 
@@ -77,7 +78,7 @@ public class CobaltGcMediansPrep implements CategoryPrep
                     Pair.of(KEY_FLD_GC_BUCKET, String.valueOf(bucket.bucket()))
             );
 
-            Feature feature = new Feature(key, normalisedDepth);
+            Feature feature = new Feature(key, normalisedDepth, SourceTool.COBALT);
 
             features.add(feature);
         }
