@@ -2,7 +2,6 @@ package cohort;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-
 import static common.QseeConstants.APP_NAME;
 import static common.QseeConstants.QC_LOGGER;
 import static common.QseeConstants.QSEE_FILE_ID;
@@ -49,6 +48,33 @@ public class CohortPercentilesTrainer
         return basePath + File.separator + sampleId + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
     }
 
+    private static List<String> getPercentileNames()
+    {
+        double[] percentiles = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES).getPercentiles();
+
+        return Arrays.stream(percentiles)
+                .mapToObj(x -> PERCENTILE_FORMAT.format(x))
+                .toList();
+    }
+
+    private void writeHeader(BufferedWriter writer) throws IOException
+    {
+        StringJoiner header = new StringJoiner(TSV_DELIM);
+        header.add("SampleType");
+        header.add("FeatureType");
+        header.add("FeatureName");
+        header.add("SourceTool");
+
+        for(String percentileName : getPercentileNames())
+        {
+            String percentileColumnName = "Pct_" + percentileName;
+            header.add(percentileColumnName);
+        }
+
+        writer.write(header.toString());
+        writer.newLine();
+    }
+
     private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
     {
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
@@ -66,17 +92,6 @@ public class CohortPercentilesTrainer
         return sampleFeatureMatrix;
     }
 
-    private FeatureMatrix initialisePercentileFeatureMatrix()
-    {
-        double[] percentiles = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES).getPercentiles();
-
-        List<String> percentileNames = Arrays.stream(percentiles)
-                .mapToObj(x -> PERCENTILE_FORMAT.format(x))
-                .toList();
-
-        return new FeatureMatrix(new ConcurrentHashMap<>(), percentileNames);
-    }
-
     private void calcPercentiles(FeatureMatrix sampleFeatureMatrix, FeatureMatrix percentileFeatureMatrix)
     {
         List<Runnable> featureTransformTasks = new ArrayList<>();
@@ -92,73 +107,47 @@ public class CohortPercentilesTrainer
 
         TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
         featureTransformTasks.clear();
+
+        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
+        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
     }
 
-    private void writeToFile(String outputFile, FeatureMatrix percentileFeatureMatrix)
+    private void writePercentiles(BufferedWriter writer, FeatureMatrix percentileFeatureMatrix, SampleType sampleType) throws IOException
     {
-        try
+        for(int featureIndex = 0; featureIndex < percentileFeatureMatrix.numFeatures(); featureIndex++)
         {
-            BufferedWriter writer = createBufferedWriter(outputFile);
+            FeatureKey featureKey = percentileFeatureMatrix.getFeatureKeys().get(featureIndex);
+            FeatureType featureType = featureKey.type();
+            SourceTool sourceTool = percentileFeatureMatrix.getSourceTool(featureKey);
 
-            // Write header
-            StringJoiner header = new StringJoiner(TSV_DELIM);
-            header.add("FeatureType");
-            header.add("FeatureName");
-            header.add("SourceTool");
+            StringJoiner line = new StringJoiner(TSV_DELIM);
 
-            List<String> percentileNames = percentileFeatureMatrix.getRowIds();
-            for(String percentileName : percentileNames)
-            {
-                String percentileColumnName = "Pct_" + percentileName;
-                header.add(percentileColumnName);
-            }
+            line.add(sampleType.name());
+            line.add(featureType.name());
+            line.add(featureKey.name());
+            line.add(sourceTool.toString());
 
-            writer.write(header.toString());
+            double[] percentileValues = percentileFeatureMatrix.getColumnValues(featureIndex);
+
+            String percentileValuesStr = Arrays.stream(percentileValues)
+                    .mapToObj(REF_VALUE_FORMAT::format)
+                    .collect(Collectors.joining(TSV_DELIM));
+
+            line.add(percentileValuesStr);
+
+            writer.write(line.toString());
             writer.newLine();
-
-            // Write contents
-            for(int featureIndex = 0; featureIndex < percentileFeatureMatrix.numFeatures(); featureIndex++)
-            {
-                FeatureKey featureKey = percentileFeatureMatrix.getFeatureKeys().get(featureIndex);
-                FeatureType featureType = featureKey.type();
-                SourceTool sourceTool = percentileFeatureMatrix.getSourceTool(featureKey);
-
-                StringJoiner line = new StringJoiner(TSV_DELIM);
-
-                line.add(featureType.name());
-                line.add(featureKey.name());
-                line.add(sourceTool.toString());
-
-                double[] percentileValues = percentileFeatureMatrix.getColumnValues(featureIndex);
-
-                String percentileValuesStr = Arrays.stream(percentileValues)
-                        .mapToObj(REF_VALUE_FORMAT::format)
-                        .collect(Collectors.joining(TSV_DELIM));
-
-                line.add(percentileValuesStr);
-
-                writer.write(line.toString());
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            QC_LOGGER.error("Failed to write percentile data to file: {}", e.toString());
-            e.printStackTrace();
         }
     }
 
-    public void run(SampleType sampleType)
+    private void runFor(SampleType sampleType, BufferedWriter writer) throws IOException
     {
-        QC_LOGGER.info("Running prep for sample type: {}", sampleType.toString());
+        QC_LOGGER.info("Calculating {} cohort percentiles", sampleType.toString());
 
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
         List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
-        FeatureMatrix percentileFeatureMatrix = initialisePercentileFeatureMatrix();
-
+        FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), getPercentileNames());
         for(CategoryPrep categoryPrep : categoryPreps)
         {
             QC_LOGGER.info("Running prep for category: {}", categoryPrep.getClass().getSimpleName());
@@ -168,12 +157,35 @@ public class CohortPercentilesTrainer
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
         }
 
-        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
-        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
+        QC_LOGGER.info("Writing cohort percentile data to file");
+        writePercentiles(writer, percentileFeatureMatrix, sampleType);
 
-        String outputFile = generateFilename(mConfig.OutputDir, "cohort." + sampleType.toString().toLowerCase());
+        QC_LOGGER.info("Completed calculating {} cohort percentiles", sampleType.toString());
+    }
+
+    public void run()
+    {
+        String outputFile = generateFilename(mConfig.OutputDir, "cohort");
         QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
-        writeToFile(outputFile, percentileFeatureMatrix);
+
+        try(BufferedWriter writer = createBufferedWriter(outputFile))
+        {
+            writeHeader(writer);
+
+            if(!mConfig.TumorIds.isEmpty())
+            {
+                runFor(SampleType.TUMOR, writer);
+            }
+
+            if(!mConfig.ReferenceIds.isEmpty())
+            {
+                runFor(SampleType.REFERENCE, writer);
+            }
+        }
+        catch(IOException e)
+        {
+            QC_LOGGER.error("Failed to write percentile data", e);
+        }
     }
 
     public static void main(String[] args)
@@ -185,16 +197,7 @@ public class CohortPercentilesTrainer
 
         PrepConfig prepConfig = new PrepConfig(configBuilder);
 
-        if(!prepConfig.TumorIds.isEmpty())
-        {
-            CohortPercentilesTrainer trainer = new CohortPercentilesTrainer(prepConfig);
-            trainer.run(SampleType.TUMOR);
-        }
-
-        if(!prepConfig.ReferenceIds.isEmpty())
-        {
-            CohortPercentilesTrainer trainer = new CohortPercentilesTrainer(prepConfig);
-            trainer.run(SampleType.REFERENCE);
-        }
+        new CohortPercentilesTrainer(prepConfig).run();
     }
 }
+
