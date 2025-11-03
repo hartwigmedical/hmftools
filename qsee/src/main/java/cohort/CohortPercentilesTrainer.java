@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -132,7 +133,7 @@ public class CohortPercentilesTrainer
 
                 String percentileValuesStr = Arrays.stream(percentileValues)
                         .mapToObj(REF_VALUE_FORMAT::format)
-                        .collect(java.util.stream.Collectors.joining(TSV_DELIM));
+                        .collect(Collectors.joining(TSV_DELIM));
 
                 line.add(percentileValuesStr);
 
