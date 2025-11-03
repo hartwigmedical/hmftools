@@ -101,10 +101,9 @@ public class CohortPercentilesTrainer
 
             // Write header
             StringJoiner header = new StringJoiner(TSV_DELIM);
-            header.add("VisType");
-            header.add("SourceTool");
             header.add("FeatureType");
             header.add("FeatureName");
+            header.add("SourceTool");
 
             List<String> percentileNames = percentileFeatureMatrix.getRowIds();
             for(String percentileName : percentileNames)
@@ -125,10 +124,9 @@ public class CohortPercentilesTrainer
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
 
-                line.add(featureType.visType().name());
-                line.add(sourceTool.toString());
                 line.add(featureType.name());
                 line.add(featureKey.name());
+                line.add(sourceTool.toString());
 
                 double[] percentileValues = percentileFeatureMatrix.getColumnValues(featureIndex);
 
