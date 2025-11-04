@@ -50,9 +50,8 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.common.CommonUtils;
 
-public class ExtensionSeqBuilder
+public class ExtensionSeqBuilderOld
 {
     private final Junction mJunction;
     private final List<ExtReadParseState> mReads;
@@ -74,7 +73,7 @@ public class ExtensionSeqBuilder
 
     private static final int READ_REPEAT_COUNT_INVALID = -1;
 
-    public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
+    public ExtensionSeqBuilderOld(final Junction junction, final List<Read> reads)
     {
         mJunction = junction;
         mIsForward = mJunction.isForward();
@@ -205,7 +204,7 @@ public class ExtensionSeqBuilder
         if(mMaxRepeat != null)
         {
             repeatIndexStart = mIsForward ? mMaxRepeat.Index : mMaxRepeat.postRepeatIndex() - 1;
-            int repeatLength = mMaxRepeat.baseLength();
+            int repeatLength = mMaxRepeat.repeatLength();
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
                 if(mReads.get(readIndex).exceedsMaxMismatches())
@@ -586,7 +585,7 @@ public class ExtensionSeqBuilder
 
         // adjust the repeat start index on the reverse strand to the consensus count
         if(!mIsForward && consensusRepeatCount != maxRepeat.Count)
-            repeatIndexStart -= (consensusRepeatCount - maxRepeat.Count) * maxRepeat.baseLength();
+            repeatIndexStart -= (consensusRepeatCount - maxRepeat.Count) * maxRepeat.repeatLength();
 
         mMaxRepeat = new RepeatInfo(repeatIndexStart, maxRepeat.Bases, consensusRepeatCount);
         mMaxRepeatCount = consensusRepeatCount + maxRefRepeatCount;
@@ -667,7 +666,7 @@ public class ExtensionSeqBuilder
             int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
 
             int firstRepeatEndIndex = mIsForward ?
-                    mMaxRepeat.Index + mMaxRepeat.baseLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.baseLength();
+                    mMaxRepeat.Index + mMaxRepeat.repeatLength() : mMaxRepeat.postRepeatIndex() - 1 - mMaxRepeat.repeatLength();
 
             for(int readIndex = 0; readIndex < mReads.size(); ++readIndex)
             {
@@ -762,7 +761,7 @@ public class ExtensionSeqBuilder
         if(mMaxRepeat != null)
         {
             repeatIndexStart = mIsForward ? mMaxRepeat.Index : mMaxRepeat.postRepeatIndex() - 1;
-            repeatLength = mMaxRepeat.baseLength();
+            repeatLength = mMaxRepeat.repeatLength();
         }
 
         int permittedCountDiff = permittedRepeatCount(mMaxRepeatCount);
@@ -820,7 +819,7 @@ public class ExtensionSeqBuilder
             int readRepeatCount = getRepeatCount(read, mMaxRepeat, readRepeatIndexStart, mIsForward);
 
             if(readRepeatCount != READ_REPEAT_COUNT_INVALID && abs(readRepeatCount - mMaxRepeat.Count) <= permittedCountDiff)
-                repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.baseLength();
+                repeatSkipCount = (readRepeatCount - mMaxRepeat.Count) * mMaxRepeat.repeatLength();
         }
         else if(mJunction.indelCoords() != null && read.indelCoords() != null
         && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
