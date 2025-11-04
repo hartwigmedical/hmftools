@@ -181,7 +181,7 @@ public class PrepConfig
                     referenceIds.add(values[referenceIdIndex]);
             }
 
-            QC_LOGGER.info("Loaded {} tumor samples and {} reference samples", tumorIds.size(), referenceIds.size());
+            QC_LOGGER.debug("Loaded {} tumor and {} reference sample IDs from file", tumorIds.size(), referenceIds.size());
         }
         catch(IOException e)
         {
