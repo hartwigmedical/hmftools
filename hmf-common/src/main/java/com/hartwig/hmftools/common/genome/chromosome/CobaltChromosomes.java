@@ -115,14 +115,7 @@ public class CobaltChromosomes
 
             if(Doubles.positive(typicalRatio))
             {
-                CobaltChromosome cobaltChromosome = ImmutableCobaltChromosome.builder()
-                        .contig(medianRatio.Chromosome)
-                        .typicalRatio(typicalRatio)
-                        .actualRatio(actualRatio)
-                        .isAllosome(chromosome.isAllosome())
-                        .isAutosome(chromosome.isAutosome())
-                        .mosiac(aberration == GermlineAberration.MOSAIC_X)
-                        .build();
+                CobaltChromosome cobaltChromosome = new CobaltChromosome(chromosome,typicalRatio,actualRatio, aberration == GermlineAberration.MOSAIC_X);
 
                 mChromosomeMap.put(medianRatio.Chromosome, cobaltChromosome);
             }

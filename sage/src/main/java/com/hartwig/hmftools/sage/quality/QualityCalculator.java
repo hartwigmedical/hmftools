@@ -265,7 +265,7 @@ public class QualityCalculator
 
     public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final ConsensusType readType)
     {
-        if(rawQuality == 0)
+        if(rawQuality <= BaseQualAdjustment.BASE_QUAL_MINIMUM)
             return 0; // never adjust a zero qual up
 
         if(mQualityRecalibrationMap == null)

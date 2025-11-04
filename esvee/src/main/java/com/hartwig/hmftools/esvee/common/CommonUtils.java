@@ -21,6 +21,7 @@ public final class CommonUtils
     public static boolean belowMinQual(byte qual) { return BaseQualAdjustment.isLowBaseQual(qual); }
 
     public static boolean isHighBaseQual(byte qual) { return BaseQualAdjustment.isHighBaseQual(qual, SvConstants.SEQUENCING_TYPE); }
+    public static boolean isMediumBaseQual(byte qual) { return BaseQualAdjustment.isMediumBaseQual(qual, SvConstants.SEQUENCING_TYPE); }
 
     public static boolean isHigherBaseQualCategory(byte qual1, byte qual2)
     {

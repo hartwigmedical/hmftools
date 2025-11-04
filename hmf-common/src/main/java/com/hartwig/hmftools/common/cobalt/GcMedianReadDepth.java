@@ -36,9 +36,4 @@ public class GcMedianReadDepth
     {
         return mMedianReadDepthPerGCBucket.getOrDefault(bucket, NO_READ_DEPTH_VALUE);
     }
-
-    public double medianReadDepth(final GCProfile profile)
-    {
-        return medianReadDepth(GCBucket.create(profile));
-    }
 }

@@ -391,10 +391,6 @@ public class PartitionReader
                 RD_LOGGER.error("post-process read error: {}", readToString(read));
             }
         }
-        else if(isUltima())
-        {
-            UltimaRoutines.finaliseRead(mConfig.RefGenome, read);
-        }
     }
 
     private static final int LOG_PERF_FRAG_COUNT = 3000;

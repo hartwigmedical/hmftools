@@ -9,6 +9,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
@@ -48,6 +49,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PE
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
+import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MQF_NM_1_THRESHOLD_DEDUCTION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
@@ -348,7 +350,12 @@ public class VariantFilters
 
         primaryTumor.setMapQualFactor(mapQualFactor);
 
-        return mapQualFactor < config.MapQualFactor;
+        double threshold = config.MapQualFactor;
+
+        if(isSbx() && primaryTumor.minNumberOfEvents() == 1)
+            threshold -= MQF_NM_1_THRESHOLD_DEDUCTION;
+
+        return mapQualFactor < threshold;
     }
 
     private static double calcMapQualFactor(

@@ -7,11 +7,16 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.MATCH;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class ReadParseState
@@ -25,10 +30,10 @@ public class ReadParseState
     private boolean mExhausted;
     private boolean mIsValid;
 
-    private double mMismatchPenality;
     public int mHighQualMatches;
+    private List<SequenceDiffInfo> mMismatches;
 
-    private final List<SequenceDiffInfo> mMismatches;
+    private List<Integer> mLowQualIndices; // only used for Ultima for now
 
     public ReadParseState(final boolean moveForward, final Read read, final int startIndex)
     {
@@ -44,9 +49,9 @@ public class ReadParseState
         // move to the required index
         resetIndex();
 
-        mMismatchPenality = 0;
         mHighQualMatches = 0; // was initialised to 1 for first ref base for ref base building
-        mMismatches = Lists.newArrayList();
+        mMismatches = null;
+        mLowQualIndices = null;
     }
 
     public Read read()
@@ -66,23 +71,37 @@ public class ReadParseState
 
     public int highQualMatches() { return mHighQualMatches; }
     public void addHighQualMatch() { ++mHighQualMatches; }
-    public List<SequenceDiffInfo> mismatchInfos() { return mMismatches; }
-    public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo) { mMismatches.add(seqDiffInfo); }
+    public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
 
-    public double mismatchPenality() { return mMismatchPenality; }
-    public void addMismatch() { ++mMismatchPenality; }
+    public List<SequenceDiffInfo> mismatches() { return mMismatches != null ? mMismatches : Collections.emptyList(); }
+    public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo)
+    {
+        if(mMismatches == null)
+            mMismatches = Lists.newArrayList();
+
+        mMismatches.add(seqDiffInfo);
+    }
 
     public void resetMatches()
     {
-        mMismatchPenality = 0;
         mHighQualMatches = 0;
-        mMismatches.clear();
+
+        if(mMismatches != null)
+            mMismatches.clear();
     }
 
-    public boolean exceedsMaxMismatches(double maxMismatchPenalty) { return mMismatchPenality > maxMismatchPenalty; }
+    public double mismatchPenalty()
+    {
+        if(mMismatches == null)
+            return 0;
+
+        return mMismatches.stream().mapToDouble(x -> x.MismatchPenalty).sum();
+    }
+    public boolean exceedsMaxMismatches(double maxMismatchPenalty) { return mismatchPenalty() > maxMismatchPenalty; }
 
     public void moveOnMatchType(final SequenceDiffInfo seqDiffInfo)
     {
+        // handle differences other than repeat adjustments
         if(seqDiffInfo.RepeatCount != 0)
             return;
 
@@ -145,9 +164,6 @@ public class ReadParseState
         }
     }
 
-    public byte getPreviousBase()  { return getAdjacentBase(false); }
-    public byte getNextBase() { return getAdjacentBase(true); }
-
     private byte getAdjacentBase(boolean getUpper)
     {
         if(mMoveForward == getUpper)
@@ -156,8 +172,11 @@ public class ReadParseState
             return mReadIndex < 1 ? NO_BASE : mRead.getBases()[mReadIndex - 1];
     }
 
-    public byte[] getPreviousBases(int baseCount) { return getAdjacentBases(baseCount, !mMoveForward); }
     public byte[] getNextBases(int baseCount) { return getAdjacentBases(baseCount, mMoveForward); }
+
+    public byte[] getPreviousBases(int baseCount) { return getAdjacentBases(baseCount, !mMoveForward); }
+    public byte getPreviousBase()  { return getAdjacentBase(false); }
+    public byte getNextBase() { return getAdjacentBase(true); }
 
     private byte[] getAdjacentBases(int baseCount, boolean getUpper)
     {
@@ -190,10 +209,41 @@ public class ReadParseState
         return bases;
     }
 
+    public BaseQualType rangeMinQualType(int readIndexStart, int readIndexEnd)
+    {
+        if(isUltima())
+        {
+            if(mLowQualIndices == null)
+                mLowQualIndices = UltimaBamUtils.extractLowQualIndices(mRead.bamRecord());
+
+            for(int i = readIndexStart; i <= readIndexEnd; ++i)
+            {
+                if(mLowQualIndices.contains(i))
+                    return BaseQualType.LOW;
+            }
+
+            return BaseQualType.HIGH;
+        }
+        else
+        {
+            final byte[] baseQuals = mRead.getBaseQuality();
+
+            for(int i = readIndexStart; i <= readIndexEnd; ++i)
+            {
+                if(isHighBaseQual(baseQuals[i]))
+                    return BaseQualType.HIGH;
+                else if(isMediumBaseQual(baseQuals[i]))
+                    return BaseQualType.MEDIUM;
+            }
+        }
+
+        return BaseQualType.LOW;
+    }
+
     public String toString()
     {
         return format("%s: index(%d/%d) %s hqMatch(%d) mismatch(%.1f)",
-                mRead.id(), mReadIndex, mBaseLength - 1, mExhausted ? "exhausted" : "active", mHighQualMatches, mMismatchPenality);
+                mRead.id(), mReadIndex, mBaseLength - 1, mExhausted ? "exhausted" : "active", mHighQualMatches, mismatchPenalty());
     }
 
     @VisibleForTesting

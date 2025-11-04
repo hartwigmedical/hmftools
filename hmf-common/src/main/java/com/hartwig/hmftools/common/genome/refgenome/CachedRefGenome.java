@@ -79,6 +79,8 @@ public class CachedRefGenome implements RefGenomeInterface
         this(refGenome, DEFAULT_BLOCK_SIZE, DEFAULT_MAX_CACHED_BLOCKS);
     }
 
+    public final RefGenomeInterface refGenome() { return mRefGenome; }
+
     @Override
     public String getBaseString(final String chromosome, final int posStart, final int posEnd)
     {

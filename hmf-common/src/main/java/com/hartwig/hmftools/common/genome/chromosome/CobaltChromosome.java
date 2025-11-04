@@ -2,28 +2,49 @@ package com.hartwig.hmftools.common.genome.chromosome;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltChromosome extends Chromosome
+public record CobaltChromosome(HumanChromosome humanChromosome, double typicalRatio, double actualRatio, boolean mosiac)
+        implements Chromosome
 {
-    @NotNull
-    String contig();
+    @Override
+    public String contig()
+    {
+        return humanChromosome().contig();
+    }
 
-    double typicalRatio();
+    public double typicalRatio()
+    {
+        return typicalRatio;
+    }
 
-    double actualRatio();
+    public double actualRatio()
+    {
+        return actualRatio;
+    }
 
-    boolean mosiac();
+    public boolean mosiac()
+    {
+        return mosiac;
+    }
 
-    default boolean isNormal() {
+    public boolean isNormal()
+    {
         return Doubles.equal(typicalRatio(), actualRatio());
     }
 
-    default boolean isDiploid() {
+    @Override
+    public boolean isAutosome()
+    {
+        return humanChromosome().isAutosome();
+    }
+
+    @Override
+    public boolean isAllosome()
+    {
+        return humanChromosome().isAllosome();
+    }
+
+    public boolean isDiploid()
+    {
         return Doubles.equal(actualRatio(), 1.0);
     }
 }

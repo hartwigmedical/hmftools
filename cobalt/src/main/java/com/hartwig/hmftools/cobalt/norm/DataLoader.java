@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class DataLoader
 {
-    public static void addTargetRegions(final List<ChrBaseRegion> bedRegions, final Map<String,List<RegionData>> chrRegionData)
+    public static void addTargetRegions(final List<ChrBaseRegion> bedRegions, final Map<String, List<RegionData>> chrRegionData)
     {
         String currentChromosome = "";
         List<RegionData> regions = null;
@@ -34,7 +34,7 @@ public class DataLoader
                 chrRegionData.put(region.chromosome(), regions);
             }
 
-            int startPosition = (int)(floor(region.start()/(double)REGION_SIZE) * REGION_SIZE + 1);
+            int startPosition = (int) (floor(region.start() / (double) REGION_SIZE) * REGION_SIZE + 1);
             int endPosition = startPosition + REGION_SIZE - 1;
 
             addRegion(regions, startPosition);
@@ -52,23 +52,25 @@ public class DataLoader
     {
         RegionData prevRegion = !regions.isEmpty() ? regions.get(regions.size() - 1) : null;
         if(prevRegion != null && prevRegion.Position == position)
+        {
             return;
+        }
 
         regions.add(new RegionData(position));
     }
 
     public static void addCobaltSampleData(
             final Gender amberGender, final String cobaltPanelFilename, final String cobaltWgsFilename,
-            final Map<String,List<RegionData>> chrRegionData)
+            final Map<String, List<RegionData>> chrRegionData)
     {
         try
         {
             CB_LOGGER.info("reading Cobalt ratios from {}", cobaltPanelFilename);
 
-            Map<Chromosome,List<CobaltRatio>> sampleChrPanelRatios = CobaltRatioFile.readWithGender(
+            Map<Chromosome, List<CobaltRatio>> sampleChrPanelRatios = CobaltRatioFile.readWithGender(
                     cobaltPanelFilename, amberGender, true);
 
-            Map<Chromosome,List<CobaltRatio>> chrWgsRatios = null;
+            Map<Chromosome, List<CobaltRatio>> chrWgsRatios = null;
 
             if(!cobaltWgsFilename.isEmpty())
             {
@@ -77,7 +79,7 @@ public class DataLoader
                 chrWgsRatios = CobaltRatioFile.readWithGender(cobaltWgsFilename, amberGender, true);
             }
 
-            for(Map.Entry<String,List<RegionData>> entry : chrRegionData.entrySet())
+            for(Map.Entry<String, List<RegionData>> entry : chrRegionData.entrySet())
             {
                 String chrStr = entry.getKey();
                 List<RegionData> regions = entry.getValue();
@@ -86,7 +88,9 @@ public class DataLoader
                 List<CobaltRatio> sampleCobaltRatios = sampleChrPanelRatios.get(chromosome);
 
                 if(sampleCobaltRatios == null)
+                {
                     continue;
+                }
 
                 double defaultWgsGcRatio = wgsGcRatio(amberGender, chromosome);
                 List<CobaltRatio> cobaltWgsRatios = chrWgsRatios != null ? chrWgsRatios.get(chromosome) : Collections.emptyList();
@@ -101,14 +105,20 @@ public class DataLoader
                     while(true)
                     {
                         if(cobaltIndex >= sampleCobaltRatios.size())
+                        {
                             break;
+                        }
 
                         cobaltRatio = sampleCobaltRatios.get(cobaltIndex);
 
                         if(cobaltRatio.position() == region.Position)
+                        {
                             break;
+                        }
                         else if(cobaltRatio.position() > region.Position)
+                        {
                             break;
+                        }
 
                         ++cobaltIndex;
                     }
@@ -119,14 +129,20 @@ public class DataLoader
                     while(true)
                     {
                         if(cobaltWgsIndex >= cobaltWgsRatios.size())
+                        {
                             break;
+                        }
 
                         cobaltWgsRatio = cobaltWgsRatios.get(cobaltWgsIndex);
 
                         if(cobaltWgsRatio.position() == region.Position)
+                        {
                             break;
+                        }
                         else if(cobaltWgsRatio.position() > region.Position)
+                        {
                             break;
+                        }
 
                         ++cobaltWgsIndex;
                     }
@@ -159,10 +175,16 @@ public class DataLoader
     private static double wgsGcRatio(final Gender amberGender, final HumanChromosome chromosome)
     {
         if(chromosome == HumanChromosome._X)
+        {
             return amberGender == Gender.FEMALE ? 1 : 0.5;
+        }
         else if(chromosome == HumanChromosome._Y)
+        {
             return amberGender == Gender.FEMALE ? 0 : 0.5;
+        }
         else
+        {
             return 1;
+        }
     }
 }

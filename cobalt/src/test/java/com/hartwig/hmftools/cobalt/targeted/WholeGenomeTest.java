@@ -1,0 +1,76 @@
+package com.hartwig.hmftools.cobalt.targeted;
+
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
+import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class WholeGenomeTest
+{
+    WholeGenome scope;
+
+    @Before
+    public void setup()
+    {
+        scope = new WholeGenome();
+    }
+
+    @Test
+    public void enrichmentQuotientTest()
+    {
+        check(_1, 1);
+        check(_1, 1001);
+        check(_1, 10_001);
+        check(_1, 11_001);
+        check(_2, 3001);
+        check(_2, 4001);
+        check(_3, 1);
+        check(_3, 9001);
+    }
+
+    @Test
+    public void resultsConsolidator()
+    {
+        assertTrue(scope.resultsConsolidator(7.9) instanceof LowCoverageConsolidator);
+        assertTrue(scope.resultsConsolidator(8.0) instanceof LowCoverageConsolidator);
+        assertTrue(scope.resultsConsolidator(8.1) instanceof NoOpConsolidator);
+        assertTrue(scope.resultsConsolidator(Double.NaN) instanceof NoOpConsolidator);
+    }
+
+    @Test
+    public void onTargetTest()
+    {
+        assertTrue(scope.onTarget(_1, 4_999));
+        assertTrue(scope.onTarget(_1, 5_000));
+        assertTrue(scope.onTarget(_1, 8_000));
+        assertTrue(scope.onTarget(_3, 5_001));
+    }
+
+    @Test
+    public void finalNormaliserTest()
+    {
+        assertTrue(scope.finalNormaliser() instanceof DoNothingNormaliser);
+    }
+
+    @Test
+    public void medianByMeanNormaliserTest()
+    {
+        assertEquals(ReadDepthStatisticsNormaliser.class, scope.medianByMeanNormaliser().getClass());
+    }
+
+    void check(Chromosome chromosome, int position)
+    {
+        assertEquals(1.0, scope.enrichmentQuotient(chromosome, position), 0.0001);
+    }
+}

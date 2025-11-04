@@ -63,6 +63,12 @@ public enum HumanChromosome implements Chromosome
             _13.shortName(), _14.shortName(), _15.shortName(), _21.shortName(), _22.shortName());
 
     @Override
+    public String contig()
+    {
+        return shortName(); // todo test, refactor
+    }
+
+    @Override
     public boolean isAutosome()
     {
         return mIsAutosome;
@@ -131,6 +137,8 @@ public enum HumanChromosome implements Chromosome
     {
         return mName;
     }
+
+
 
     public static boolean hasShortArm(final String chromosome)
     {

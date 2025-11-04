@@ -141,7 +141,7 @@ public enum JitterMatch
 
         // at least one flank must be fully present and the core must be covered
         int coreReadIndexStart = flankReadIndexStart + readContext.leftFlankLength();
-        int coreReadIndexEnd = flankReadIndexEnd - readContext.rightFlankLength();
+        int coreReadIndexEnd = flankReadIndexEnd - readContext.rightFlankLength() + (jitterType == LENGTHENED ? repeatLength : 0);
 
         if(coreReadIndexStart < 0 || coreReadIndexEnd >= readBases.length)
             return false;
@@ -154,7 +154,7 @@ public enum JitterMatch
         int altMatchCount = 0;
         int permittedLowQualMismatches = 1;
         int permittedLowQualRangeLower = readContext.VarIndex;
-        int permittedLowQualRangeUpper = altIndexUpper + (jitterType == LENGTHENED ? 1 : 0);
+        int permittedLowQualRangeUpper = altIndexUpper + (jitterType == LENGTHENED ? repeatLength : 0);
 
         for(; readIndex <= flankReadIndexEnd; ++readIndex, ++readContextIndex)
         {

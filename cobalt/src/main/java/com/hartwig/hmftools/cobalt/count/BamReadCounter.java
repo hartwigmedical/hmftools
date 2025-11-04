@@ -7,25 +7,22 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.ChromosomeData;
-import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
-import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.bam.BamSlicer;
 
 import org.apache.commons.lang3.Validate;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
@@ -33,166 +30,86 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import tech.tablesaw.api.*;
 
 public class BamReadCounter
 {
     private final CobaltConfig mConfig;
-
-    private final int mMinMappingQuality;
-    private final boolean mIncludeDuplicates;
-
-    private Table mReferenceDepths = null;
-    private Table mTumorDepths = null;
-
-    private final ExecutorService mExecutorService;
+    private final String mBamPath;
     private final SamReaderFactory mReaderFactory;
-
-    private final List<ChromosomeData> mChromosomes;
-
-    private final ReadDepthAccumulator mRefReadDepthAccumulator;
-    private final ReadDepthAccumulator mTumorReadDepthAccumulator;
-
-    private final ChromosomePositionCodec mChromosomePosCodec;
-
-    public Table getReferenceDepths() { return mReferenceDepths; }
-    public Table getTumorDepths() { return mTumorDepths; }
+    private final List<Future<?>> tasks = new ArrayList<>();
+    private final List<ChromosomeData> mChromosomes = Lists.newArrayList();
+    private final ReadDepthAccumulator mReadDepthAccumulator;
 
     public BamReadCounter(
             final int windowSize, final CobaltConfig config,
-            final ExecutorService executorService, final SamReaderFactory readerFactory,
-            final ChromosomePositionCodec chromosomePosCodec)
+            final ExecutorService executorService,
+            final String bamPath) throws IOException
     {
         mConfig = config;
-
-        mMinMappingQuality = config.MinMappingQuality;
-        mIncludeDuplicates = config.IncludeDuplicates;
-        mExecutorService = executorService;
-        mReaderFactory = readerFactory;
-        mChromosomePosCodec = chromosomePosCodec;
-        mRefReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
-        mTumorReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
-        mChromosomes = Lists.newArrayList();
-    }
-
-    public List<ChromosomeData> chromosomes() { return mChromosomes; }
-
-    public void generateDepths()throws ExecutionException, InterruptedException, IOException
-    {
-        String referenceBam = mConfig.ReferenceBamPath;
-        String tumorBam = mConfig.TumorBamPath;
-
-        loadChromosomes(mReaderFactory, referenceBam, tumorBam);
-
-        List<Future<?>> tasks = new ArrayList<>();
-        List<SamReader> samReaders = Collections.synchronizedList(new ArrayList<>());
-
-        if(tumorBam != null)
-        {
-            CB_LOGGER.info("calculating read depths from {}", tumorBam);
-            tasks.addAll(createFutures(tumorBam, mTumorReadDepthAccumulator, samReaders));
-        }
-
-        if(referenceBam != null)
-        {
-            CB_LOGGER.info("calculating read depths from {}", referenceBam);
-            tasks.addAll(createFutures(referenceBam, mRefReadDepthAccumulator, samReaders));
-        }
-
-        // wait for all tasks to complete
-        for(Future<?> f : tasks)
-        {
-            f.get();
-        }
-
-        if(tumorBam != null)
-        {
-            mTumorDepths = generateDepths(mTumorReadDepthAccumulator);
-        }
-
-        if(referenceBam != null)
-        {
-            mReferenceDepths = generateDepths(mRefReadDepthAccumulator);
-        }
-
-        // close all sam readers
-        for(SamReader samReader : samReaders)
-        {
-            samReader.close();
-        }
-
-        CB_LOGGER.info("read depth complete");
-    }
-
-    private List<Future<?>> createFutures(final String bamFilePath, final ReadDepthAccumulator readDepthCounter, List<SamReader> samReaderList)
-    {
-        // add all the chromosomes
+        mBamPath = bamPath;
+        mReaderFactory = config.readerFactory();
+        loadChromosomes();
+        mReadDepthAccumulator = new ReadDepthAccumulator(windowSize);
         for(ChromosomeData chromosome : mChromosomes)
         {
-            readDepthCounter.addChromosome(chromosome.Name, chromosome.Length);
+            mReadDepthAccumulator.addChromosome(chromosome.Name, chromosome.Length);
         }
 
-        final File bamFile = new File(bamFilePath);
-
-        // One bam reader per thread instead of one per task
-        final ThreadLocal<SamReader> threadBamReader = ThreadLocal.withInitial(() -> {
-            SamReader samReader = mReaderFactory.open(bamFile);
-            samReaderList.add(samReader);
-            return samReader;
-        });
-
-        final List<ChrBaseRegion> partitions = partitionGenome();
-        final List<Future<?>> futures = new ArrayList<>();
-        for(ChrBaseRegion baseRegion : partitions)
+        CB_LOGGER.info("calculating read depths from {}", mBamPath);
+        for(ChrBaseRegion baseRegion : partitionGenome())
         {
-            Runnable task = () -> sliceRegionTask(threadBamReader, baseRegion, readDepthCounter);
-            futures.add(mExecutorService.submit(task));
+            Runnable task = () -> sliceRegionTask(baseRegion);
+            tasks.add(executorService.submit(task));
         }
-
-        return futures;
     }
 
-    private void sliceRegionTask(ThreadLocal<SamReader> samReaderSupplier, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
+    private void sliceRegionTask(ChrBaseRegion region)
     {
         CB_LOGGER.debug("region({}) accumulating read depth", region);
-
-        final SamReader reader = samReaderSupplier.get();
-
-        BamSlicer bamSlicer = new BamSlicer(mMinMappingQuality, mIncludeDuplicates, false, false);
-
-        bamSlicer.slice(reader, region, samRecord -> processRead(samRecord, region, readDepthAccumulator));
-
+        final File bamFile = new File(mBamPath);
+        try(SamReader reader = mReaderFactory.open(bamFile))
+        {
+            BamSlicer bamSlicer = new BamSlicer(mConfig.MinMappingQuality, mConfig.IncludeDuplicates, false, false);
+            bamSlicer.slice(reader, region, samRecord -> processRead(samRecord, region));
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.warn("bam reading failed", e);
+        }
         CB_LOGGER.debug("region({}) complete", region);
     }
 
-    private void processRead(final SAMRecord record, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
+    private void processRead(final SAMRecord record, ChrBaseRegion region)
     {
-        if(mIncludeDuplicates)
+        if(mConfig.IncludeDuplicates)
         {
             // revert to only analysing the raw reads
             if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            {
                 return;
+            }
         }
         else
         {
             if(record.getDuplicateReadFlag())
+            {
                 return;
+            }
         }
 
         Validate.isTrue(record.getContig().equals(region.Chromosome));
 
         for(AlignmentBlock currentBlock : record.getAlignmentBlocks())
         {
-            accumulateAlignmentBlock(region, readDepthAccumulator, currentBlock.getReadStart(), currentBlock.getReferenceStart(),
-                    currentBlock.getLength(), record.getReadBases());
+            accumulateAlignmentBlock(region, currentBlock, record.getReadBases());
         }
     }
 
-    static void accumulateAlignmentBlock(
-            final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
-            final int alignmentBlockReadStart, final int alignmentBlockReferenceStart, final int alignmentBlockLength,
-            byte[] readBases)
+    void accumulateAlignmentBlock(ChrBaseRegion region, AlignmentBlock block, byte[] readBases)
     {
+        int alignmentBlockReadStart = block.getReadStart();
+        int alignmentBlockReferenceStart = block.getReferenceStart();
+        int alignmentBlockLength = block.getLength();
         // NOTE: we need to adjust start and end to avoid adding counts to regions that belongs to another task
         // as if we do that they will be double counted
         int genomeStart = Math.max(alignmentBlockReferenceStart, region.start());
@@ -206,57 +123,43 @@ public class BamReadCounter
         // use 0 based index here such that we can use it with java string
         int readStartIndex = alignmentBlockReadStart - 1;
         readStartIndex += (genomeStart - alignmentBlockReferenceStart);
-        readDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
+        mReadDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
     }
 
-    private Table generateDepths(ReadDepthAccumulator readDepthAccumulator)
+    public ListMultimap<HumanChromosome, DepthReading> calculateReadDepths() throws ExecutionException, InterruptedException
     {
-        final Table readDepthTable = Table.create("readDepths",
-                StringColumn.create(CobaltColumns.CHROMOSOME),
-                IntColumn.create(CobaltColumns.POSITION),
-                DoubleColumn.create(CobaltColumns.READ_DEPTH),
-                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
-
-        for(ChromosomeData chromosome : mChromosomes)
+        for(Future<?> f : tasks)
         {
-            List<ReadDepth> readDepths = readDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
-            Objects.requireNonNull(readDepths);
-            for (ReadDepth readDepth : readDepths)
-            {
-                Row row = readDepthTable.appendRow();
-                row.setString(CobaltColumns.CHROMOSOME, chromosome.Name);
-                row.setInt(CobaltColumns.POSITION, readDepth.StartPosition);
-                row.setDouble(CobaltColumns.READ_DEPTH, readDepth.ReadDepth);
-                row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.ReadGcContent);
-            }
+            f.get();
         }
 
-        mChromosomePosCodec.addEncodedChrPosColumn(readDepthTable, false);
-
-        return readDepthTable;
+        ListMultimap<HumanChromosome, DepthReading> result = ArrayListMultimap.create();
+        for(ChromosomeData chromosome : mChromosomes)
+        {
+            List<DepthReading> readDepths = mReadDepthAccumulator.getChromosomeReadDepths(chromosome.Name);
+            Objects.requireNonNull(readDepths);
+            HumanChromosome humanChromosome = HumanChromosome.fromString(chromosome.Name);
+            result.putAll(humanChromosome, readDepths);
+        }
+        return result;
     }
 
-    private void loadChromosomes(
-            final SamReaderFactory readerFactory,  @Nullable final String referenceBam, @Nullable final String tumorBam) throws IOException
+    private void loadChromosomes() throws IOException
     {
-        Collection<ChromosomeData> chromosomes = new ArrayList<>();
-
-        Validate.isTrue(referenceBam != null || tumorBam != null);
-
-        try(SamReader reader = readerFactory.open(new File(referenceBam != null ? referenceBam : tumorBam)))
+        try(SamReader reader = mReaderFactory.open(new File(mBamPath)))
         {
             SAMSequenceDictionary dictionary = reader.getFileHeader().getSequenceDictionary();
-
             for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
             {
                 String sequenceName = samSequenceRecord.getSequenceName();
-
                 if(!HumanChromosome.contains(sequenceName))
+                {
                     continue;
-
+                }
                 if(mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificChrRegions.excludeChromosome(sequenceName))
+                {
                     continue;
-
+                }
                 mChromosomes.add(new ChromosomeData(sequenceName, samSequenceRecord.getSequenceLength()));
             }
         }

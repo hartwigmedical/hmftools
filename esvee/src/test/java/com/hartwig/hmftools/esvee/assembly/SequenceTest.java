@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
-import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
@@ -43,9 +42,11 @@ public class SequenceTest
         String refBuffer = "CCCCC";
         //                      012345678901
         String readExtBases1 = "ACGTAAGTACGT";
+        String readExtBases3 = "ACGGAAGGACGG";
+        //                         T   G   T
+
         String readBases1 = refBuffer + readExtBases1;
         String readBases2 = readBases1;
-        String readExtBases3 = "ACGGAAGGACGG";
         String readBases3 = refBuffer + readExtBases3;
 
         String cigar = makeCigarString(readBases1, 0, 0);
@@ -62,19 +63,19 @@ public class SequenceTest
                 new ReadParseState(buildForwards, read2, refBuffer.length()),
                 new ReadParseState(buildForwards, read3, refBuffer.length()));
 
-        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, 0);
 
         String consensusStr = seqBuilder.baseString();
         assertEquals(readExtBases1, consensusStr);
         assertTrue(seqBuilder.repeats().isEmpty());
 
         ReadParseState readState3 = readParseStates.get(2);
-        assertEquals(3, readState3.mismatchInfos().size());
+        assertEquals(3, readState3.mismatches().size());
 
         // test favouring high over medium quals
         setSbxSequencing();
 
-        read1.getBaseQuality()[8] = SbxBamUtils.SBX_SIMPLEX_QUAL;
+        read1.getBaseQuality()[8] = SbxBamUtils.SBX_SIMPLEX_QUAL; // read with medium qual is the tie-breaker
         read2.getBaseQuality()[8] = SbxBamUtils.SBX_DUPLEX_QUAL;
         read3.getBaseQuality()[8] = SbxBamUtils.SBX_DUPLEX_QUAL;
 
@@ -86,7 +87,7 @@ public class SequenceTest
         seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
 
         consensusStr = seqBuilder.baseString();
-        assertEquals("ACGTAAGGACGT", consensusStr);
+        assertEquals("ACGTAAGTACGT", consensusStr);
 
         setIlluminaSequencing();
 
@@ -149,22 +150,22 @@ public class SequenceTest
         int maxReadLength = readParseStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
         int consensusBaseLength = maxReadLength - refBuffer.length();
 
-        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength);
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, 0);
 
         String consensusStr = seqBuilder.baseString();
         assertEquals(readExtBases1, consensusStr);
         assertTrue(seqBuilder.repeats().isEmpty());
 
         ReadParseState readState3 = readParseStates.get(2);
-        assertEquals(2, readState3.mismatchInfos().size());
-        assertEquals(SequenceDiffType.DELETE, readState3.mismatchInfos().get(0).Type);
-        assertEquals(SequenceDiffType.INSERT, readState3.mismatchInfos().get(1).Type);
+        assertEquals(2, readState3.mismatches().size());
+        assertEquals(SequenceDiffType.DELETE, readState3.mismatches().get(0).Type);
+        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(1).Type);
 
         ReadParseState readState4 = readParseStates.get(3);
-        assertEquals(3, readState4.mismatchInfos().size());
-        assertEquals(SequenceDiffType.INSERT, readState4.mismatchInfos().get(0).Type);
-        assertEquals(SequenceDiffType.INSERT, readState4.mismatchInfos().get(1).Type);
-        assertEquals(SequenceDiffType.DELETE, readState4.mismatchInfos().get(2).Type);
+        assertEquals(3, readState4.mismatches().size());
+        assertEquals(SequenceDiffType.INSERT, readState4.mismatches().get(0).Type);
+        assertEquals(SequenceDiffType.INSERT, readState4.mismatches().get(1).Type);
+        assertEquals(SequenceDiffType.DELETE, readState4.mismatches().get(2).Type);
     }
 
     @Test
@@ -231,6 +232,10 @@ public class SequenceTest
             }
         }
     }
+
+
+
+
 
     @Test
     public void testRepeatTypes()

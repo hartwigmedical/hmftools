@@ -12,5 +12,8 @@ public class ChromosomeData
     }
 
     @Override
-    public String toString() { return Name; }
+    public String toString()
+    {
+        return Name;
+    }
 }

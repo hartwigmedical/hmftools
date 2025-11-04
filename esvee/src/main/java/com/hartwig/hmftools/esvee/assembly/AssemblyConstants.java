@@ -46,6 +46,14 @@ public final class AssemblyConstants
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
     public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
 
+    public static final double READ_MISMATCH_PENALTY = 1;
+    public static final double READ_MISMATCH_MED_QUAL_PENALTY = 0.25;
+    public static final double PERMITTED_READ_MISMATCH_PENALTY_BASE = 0.5;
+
+    public static final int READ_MISMATCH_LOW_REPEAT_COUNT = 4;
+    public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
+    public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
+
     // repeat identification and sequence comparison
     public static final int MAX_REPEAT_BASE_COUNT = 5;
     public static final int MIN_SINGLE_REPEAT = 4;

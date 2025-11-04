@@ -28,6 +28,12 @@ public record CobaltRatio(
                 referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio, tumorGcContent);
     }
 
+    public CobaltRatio normaliseTumorGcRatio(double factor)
+    {
+        return new CobaltRatio(chromosome, position, referenceReadDepth, referenceGCRatio, referenceGcContent,
+                referenceGCDiploidRatio, tumorReadDepth, tumorGCRatio / factor, tumorGcContent);
+    }
+
     public CobaltRatio mask()
     {
         return new CobaltRatio(
