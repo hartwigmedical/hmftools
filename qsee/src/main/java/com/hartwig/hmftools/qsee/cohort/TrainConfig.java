@@ -20,7 +20,7 @@ public class TrainConfig
     {
         Prep = new PrepConfig(configBuilder);
         NumPercentiles = configBuilder.getInteger(NUM_PERCENTILES);
-        PercentileInterval = configBuilder.getInteger(PERCENTILE_INTERVAL);
+        PercentileInterval = configBuilder.getDecimal(PERCENTILE_INTERVAL);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
