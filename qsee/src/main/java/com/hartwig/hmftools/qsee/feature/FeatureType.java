@@ -1,0 +1,18 @@
+package com.hartwig.hmftools.qsee.feature;
+
+public enum FeatureType
+{
+    SUMMARY_TABLE,
+
+    COVERAGE_DISTRIBUTION,
+    FRAG_LENGTH_DISTRIBUTION,
+    GC_BIAS,
+    DISCORDANT_FRAG_TYPE_COUNTS,
+    DUPLICATE_FREQ,
+    MISSED_VARIANT_LIKELIHOOD,
+    BQR_PER_SNV96_CONTEXT,
+    BQR_PER_ORIG_QUAL,
+    MS_INDEL_ERROR_RATES,
+    MS_INDEL_ERROR_BIAS,
+    ;
+}
