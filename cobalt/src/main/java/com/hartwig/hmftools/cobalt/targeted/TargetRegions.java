@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
-import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,10 +9,8 @@ import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormalise
 import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
-import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
-import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public class TargetRegions implements CobaltScope
@@ -75,9 +71,9 @@ public class TargetRegions implements CobaltScope
     }
 
     @Override
-    public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
+    public double enrichmentQuotient(final Chromosome chromosome, final int position)
     {
-        TargetRegionEnrichment enrichment = getEnrichment(chromosome, readDepth.StartPosition);
+        TargetRegionEnrichment enrichment = getEnrichment(chromosome, position);
         return enrichment == null ? -1.0 : enrichment.Enrichment;
     }
 

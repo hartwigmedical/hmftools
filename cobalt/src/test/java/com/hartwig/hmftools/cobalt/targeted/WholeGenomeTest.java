@@ -11,7 +11,6 @@ import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
-import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.junit.Before;
@@ -22,7 +21,8 @@ public class WholeGenomeTest
     WholeGenome scope;
 
     @Before
-    public void setup(){
+    public void setup()
+    {
         scope = new WholeGenome();
     }
 
@@ -71,11 +71,6 @@ public class WholeGenomeTest
 
     void check(Chromosome chromosome, int position)
     {
-        assertEquals(1.0, scope.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);
-    }
-
-    private DepthReading rd(Chromosome chromosome, int position)
-    {
-        return new DepthReading(chromosome.contig(), position, 100, 0.5);
+        assertEquals(1.0, scope.enrichmentQuotient(chromosome, position), 0.0001);
     }
 }

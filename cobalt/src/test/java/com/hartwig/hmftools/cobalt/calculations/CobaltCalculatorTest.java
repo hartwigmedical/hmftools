@@ -73,7 +73,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         }
 
         @Override
-        public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
+        public double enrichmentQuotient(final Chromosome chromosome, final int position)
         {
             if(chromosome == _1)
             {
@@ -480,7 +480,7 @@ public class CobaltCalculatorTest extends CalculationsTestBase
         double referenceNormalisationFactor = expectedRawReferenceRatios.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
         List<CobaltRatio> ratios1 = cobaltRatios.get(_1);
         assertEquals(15, ratios1.size());
-        checkRatio(ratios1.get(0), _1, 1, rd1[0], -1.0, -1.0, -1.0, -1.0, rgc1[0],    -1.0);
+        checkRatio(ratios1.get(0), _1, 1, rd1[0], -1.0, -1.0, -1.0, -1.0, rgc1[0], -1.0);
         checkRatio(ratios1.get(1), _1, 1001, rd1[1], -1.0, -1.0, -1.0, -1.0, rgc1[1], -1.0);
         checkRatio(ratios1.get(2), _1, 2001, rd1[2], -1.0, -1.0, -1.0, -1.0, rgc1[2], -1.0);
         checkRatio(ratios1.get(3), _1, 3001, rd1[3], -1.0, -1.0, -1.0, -1.0, rgc1[3], -1.0);

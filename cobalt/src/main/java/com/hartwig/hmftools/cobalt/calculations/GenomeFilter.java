@@ -6,4 +6,5 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 public interface GenomeFilter
 {
     boolean exclude(final Chromosome chromosome, DepthReading readDepth);
+    Double referenceGcValueForWindow(final Chromosome chromosome, int position);
 }

@@ -40,10 +40,11 @@ public abstract class BamCalculation
         // All windows will be on-target in whole-genome mode.
         final boolean isInTargetRegion = Scope.onTarget(chromosome, readDepth.StartPosition);
         final CobaltWindow rawWindow = new CobaltWindow(chromosome, readDepth, isExcluded, isInTargetRegion);
-        final GCPail bucket = mGCPailsList.getGCPail(readDepth.ReadGcContent);
+        final CobaltWindow gcCorrectedWindow = rawWindow.correctedByReferenceValue(mGenomeFilter);
+        final GCPail bucket = mGCPailsList.getGCPail(gcCorrectedWindow.GcContent);
         // Assign a bucket to the window, recording the GC statistics at the same time.
         // The bucket will be set to null in the bucketed window for excluded or off-target readings.
-        final CobaltWindow bucketedWindow = rawWindow.bucketed(bucket);
+        final CobaltWindow bucketedWindow = gcCorrectedWindow.bucketed(bucket);
         WindowsByChromosome.put(chromosome, bucketedWindow);
     }
 
@@ -55,12 +56,12 @@ public abstract class BamCalculation
         {
             // Windows are converted to BamRatios. The essential values of a BamRatio are its ratio
             // and whether it is included (not masked out due to mapability, GC, targeted mode).
-            // Subsequent normalisation steps adjust the ratio value, but non-included BamRatios have a ratio fixed at -1.
-            BamRatio bamRatio = new BamRatio(chromosome, window.mDepthReading, window.include());
-            // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 it the bucket is null.
+            // Subsequent normalisation steps adjust the ratio value, but excluded BamRatios have a ratio fixed at -1.
+            BamRatio bamRatio = window.toBamRatio();
+            // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 if the bucket is null.
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
             // Apply enrichment (does nothing in whole genome mode).
-            bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.mDepthReading));
+            bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.Position));
             bamResults.put(chromosome, bamRatio);
         });
         // Apply the remaining normalisation and consolidation steps. Some of these are no-ops depending on the mode.

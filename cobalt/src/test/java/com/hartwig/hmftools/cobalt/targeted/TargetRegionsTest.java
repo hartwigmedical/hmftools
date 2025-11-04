@@ -13,7 +13,6 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
-import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.junit.Before;
@@ -108,12 +107,7 @@ public class TargetRegionsTest
 
     void check(double expected, Chromosome chromosome, int position)
     {
-        assertEquals(expected, enricher.enrichmentQuotient(chromosome, rd(chromosome, position)), 0.0001);
-    }
-
-    private DepthReading rd(Chromosome chromosome, int position)
-    {
-        return new DepthReading(chromosome.contig(), position, 100, 0.5);
+        assertEquals(expected, enricher.enrichmentQuotient(chromosome, position), 0.0001);
     }
 
     private TargetRegionEnrichment tre(Chromosome chromosome, int position, double enrichment)

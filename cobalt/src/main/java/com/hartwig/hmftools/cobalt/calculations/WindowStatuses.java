@@ -16,15 +16,18 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public class WindowStatuses implements GenomeFilter
 {
     private final ListMultimap<Chromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
+    private final ListMultimap<Chromosome, GCProfile> GcProfileData;
 
     public WindowStatuses(ListMultimap<Chromosome, GCProfile> gcProfileData,
             List<ChrBaseRegion> exclusions,
             ListMultimap<Chromosome, DiploidStatus> diploidRegions)
     {
+        GcProfileData = gcProfileData;
         boolean checkDiploid = !diploidRegions.isEmpty();
         SuppliedExcludedRegions excludedRegions = new SuppliedExcludedRegions(exclusions);
         ListMultimap<Chromosome, GCProfile> toExclude = excludedRegions.findIntersections(gcProfileData);
-        gcProfileData.keySet().forEach(chromosome -> {
+        gcProfileData.keySet().forEach(chromosome ->
+        {
             List<DiploidStatus> diploidStatuses = diploidRegions.get(chromosome);
             List<GCProfile> gcProfiles = gcProfileData.get(chromosome);
             gcProfiles.forEach(gcProfile ->
@@ -34,7 +37,7 @@ public class WindowStatuses implements GenomeFilter
                 if(checkDiploid)
                 {
                     int index = indexFor(gcProfile.start());
-                    if (index < diploidStatuses.size())
+                    if(index < diploidStatuses.size())
                     {
                         nonDiploid = !diploidStatuses.get(index).isDiploid;
                     }
@@ -48,10 +51,15 @@ public class WindowStatuses implements GenomeFilter
         });
     }
 
+    public Double referenceGcValueForWindow(final Chromosome chromosome, int position)
+    {
+        return GcProfileData.get(chromosome).get(indexFor(position)).gcContent();
+    }
+
     @Override
     public boolean exclude(final Chromosome chromosome, final DepthReading readDepth)
     {
-        List<WindowStatus> statusesForChromosome= mStatusesByChromosome.get(chromosome);
+        List<WindowStatus> statusesForChromosome = mStatusesByChromosome.get(chromosome);
         WindowStatus status = statusesForChromosome.get(indexFor(readDepth.StartPosition));
         return status.maskedOut();
     }

@@ -8,7 +8,6 @@ import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
-import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public class WholeGenome implements CobaltScope
@@ -26,7 +25,7 @@ public class WholeGenome implements CobaltScope
     }
 
     @Override
-    public double enrichmentQuotient(final Chromosome chromosome, final DepthReading readDepth)
+    public double enrichmentQuotient(final Chromosome chromosome, final int position)
     {
         return 1.0;
     }
@@ -40,7 +39,7 @@ public class WholeGenome implements CobaltScope
     @Override
     public ResultsConsolidator resultsConsolidator(final double medianReadDepth)
     {
-        if (Double.isNaN(medianReadDepth))
+        if(Double.isNaN(medianReadDepth))
         {
             return new NoOpConsolidator();
         }

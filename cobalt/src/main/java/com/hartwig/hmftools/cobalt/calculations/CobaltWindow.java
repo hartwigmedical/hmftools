@@ -8,28 +8,31 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 public class CobaltWindow
 {
-    public final Chromosome Chromosome;
+    public final Chromosome mChromosome;
     public final int Position;
-    public final DepthReading mDepthReading;
+    private final Double ReadDepth;
+    public final Double GcContent;
     public final GCPail GcBucket;
     public final boolean IsInExcludedRegion;
     public final boolean IsInTargetRegion;
 
     public CobaltWindow(final Chromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
     {
-        Chromosome = chromosome;
+        mChromosome = chromosome;
         Position = depth.StartPosition;
-        this.mDepthReading = depth;
+        ReadDepth = depth.ReadDepth;
+        GcContent = depth.ReadGcContent;
         this.GcBucket = null;
         IsInExcludedRegion = isInExcludedRegion;
         IsInTargetRegion = isInTargetRegion;
     }
 
-    public CobaltWindow(final Chromosome chromosome, DepthReading depthReading, final GCPail GcBucket, boolean isInTargetRegion)
+    public CobaltWindow(Chromosome chromosome, int position, double readDepth, double gcContent, GCPail GcBucket, boolean isInTargetRegion)
     {
-        Chromosome = chromosome;
-        Position = depthReading.StartPosition;
-        this.mDepthReading = depthReading;
+        mChromosome = chromosome;
+        Position = position;
+        ReadDepth = readDepth;
+        GcContent = gcContent;
         this.GcBucket = GcBucket;
         IsInExcludedRegion = false;
         IsInTargetRegion = isInTargetRegion;
@@ -40,21 +43,49 @@ public class CobaltWindow
         return !IsInExcludedRegion && IsInTargetRegion;
     }
 
+    public BamRatio toBamRatio()
+    {
+        return new BamRatio(mChromosome, Position, ReadDepth, GcContent, include());
+    }
+
+    public CobaltWindow correctedByReferenceValue(GenomeFilter genomeData)
+    {
+        Preconditions.checkArgument(this.GcBucket == null);
+        if(ReadDepth >= 1.0 || ReadDepth < 0)
+        {
+            return this;
+        }
+        if(!include())
+        {
+            return this;
+        }
+        double referenceValue;
+        try
+        {
+            referenceValue = genomeData.referenceGcValueForWindow(mChromosome, Position);
+        }
+        catch(Exception e)
+        {
+            return this;
+        }
+        return new CobaltWindow(mChromosome, Position, ReadDepth, referenceValue, null, IsInTargetRegion);
+    }
+
     public CobaltWindow bucketed(final GCPail bucket)
     {
         Preconditions.checkArgument(this.GcBucket == null);
-        Preconditions.checkArgument(GCPail.bucketIndex(mDepthReading.ReadGcContent) == bucket.mGC);
+        Preconditions.checkArgument(GCPail.bucketIndex(GcContent) == bucket.mGC);
         if(IsInExcludedRegion)
         {
             return this;
         }
         else
         {
-            if(this.Chromosome.isAutosome() && IsInTargetRegion && mDepthReading.ReadDepth > 0)
+            if(this.mChromosome.isAutosome() && IsInTargetRegion && ReadDepth > 0)
             {
-                bucket.addReading(mDepthReading.ReadDepth);
+                bucket.addReading(ReadDepth);
             }
-            return new CobaltWindow(Chromosome, mDepthReading, bucket, IsInTargetRegion);
+            return new CobaltWindow(mChromosome, Position, ReadDepth, GcContent, bucket, IsInTargetRegion);
         }
     }
 
@@ -66,22 +97,23 @@ public class CobaltWindow
             return false;
         }
         final CobaltWindow that = (CobaltWindow) o;
-        return Position == that.Position && Chromosome == that.Chromosome;
+        return Position == that.Position && mChromosome == that.mChromosome;
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(Chromosome, Position);
+        return Objects.hash(mChromosome, Position);
     }
 
     @Override
     public String toString()
     {
         return "CobaltWindow{" +
-                "Chromosome=" + Chromosome +
+                "Chromosome=" + mChromosome +
                 ", Position=" + Position +
-                ", ReadDepth=" + mDepthReading +
+                ", ReadDepth=" + ReadDepth +
+                ", GcContent=" + GcContent +
                 ", IsInExcludedRegion=" + IsInExcludedRegion +
                 ", IsInTargetRegion=" + IsInTargetRegion +
                 '}';

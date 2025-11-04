@@ -29,21 +29,21 @@ public class BamCalculationTest extends CalculationsTestBase
     @Before
     public void setup()
     {
-        DepthNormaliser = new RecordingNormaliser(1.0/2.0);
-        MbScaleNormaliser = new RecordingNormaliser(1.0/3.0);
-        FinalNormaliser = new RecordingNormaliser(1.0/5.0);
+        DepthNormaliser = new RecordingNormaliser(1.0 / 2.0);
+        MbScaleNormaliser = new RecordingNormaliser(1.0 / 3.0);
+        FinalNormaliser = new RecordingNormaliser(1.0 / 5.0);
         final GenomeFilter genomeFilter = Mockito.mock(GenomeFilter.class);
         Mockito.when(genomeFilter.exclude(Mockito.any(), Mockito.any())).thenReturn(false);
         final CobaltScope scope = Mockito.mock(CobaltScope.class);
         Mockito.when(scope.onTarget(Mockito.any(), Mockito.any(Integer.class))).thenReturn(true);
-        Mockito.when(scope.enrichmentQuotient(Mockito.any(), Mockito.any())).thenReturn(1.0);
+        Mockito.when(scope.enrichmentQuotient(Mockito.any(), Mockito.anyInt())).thenReturn(1.0);
         calculation = new BC(genomeFilter, scope, V38);
     }
 
     @Test
     public void normalisationOrderTest()
     {
-        calculation.addReading(_1, dr(_1,1, 1, 0.40));
+        calculation.addReading(_1, dr(_1, 1, 1, 0.40));
 
         calculation.calculateRatios();
 
@@ -64,12 +64,12 @@ public class BamCalculationTest extends CalculationsTestBase
     @Test
     public void medianReadDepthsTest()
     {
-        calculation.addReading(_1, dr(_1,1, 1, 0.40));
+        calculation.addReading(_1, dr(_1, 1, 1, 0.40));
         calculation.calculateRatios();
         GcMedianReadDepth gcMedianReadDepth = calculation.medianReadDepths();
         assertEquals(1.23, gcMedianReadDepth.meanReadDepth(), 0.001);
         assertEquals(2.45, gcMedianReadDepth.medianReadDepth(), 0.001);
-        assertEquals(1.0/3.0, gcMedianReadDepth.medianReadDepth(new ImmutableGCBucket(40)), 0.001);
+        assertEquals(1.0 / 3.0, gcMedianReadDepth.medianReadDepth(new ImmutableGCBucket(40)), 0.001);
     }
 
     class BC extends BamCalculation
@@ -104,7 +104,7 @@ public class BamCalculationTest extends CalculationsTestBase
         }
     }
 
-    class RecordingNormaliser extends ReadDepthStatisticsNormaliser
+    static class RecordingNormaliser extends ReadDepthStatisticsNormaliser
     {
         final double Factor;
         final List<Double> NormalisedValues = new ArrayList<>();

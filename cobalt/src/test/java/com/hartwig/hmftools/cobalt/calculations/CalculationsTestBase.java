@@ -27,6 +27,7 @@ public class CalculationsTestBase
     {
         return gcProfile(chromosome, position, 0.50, mappablePercentage);
     }
+
     GCProfile gcProfile(Chromosome chromosome, int position, double gc, double mappablePercentage)
     {
         return ImmutableGCProfile.builder()

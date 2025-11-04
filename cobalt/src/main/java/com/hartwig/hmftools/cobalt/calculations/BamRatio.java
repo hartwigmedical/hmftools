@@ -18,16 +18,7 @@ public class BamRatio
 
     public BamRatio(Chromosome chromosome, DepthReading readDepth, boolean inTargetRegion)
     {
-        mChromosome = chromosome;
-        Position = readDepth.StartPosition;
-        mReadDepth = Double.isFinite(readDepth.ReadDepth) ? readDepth.ReadDepth : -1.0;
-        Ratio = mReadDepth;
-        GcContent = Double.isFinite(readDepth.ReadGcContent) ? readDepth.ReadGcContent : -1.0;
-        Included = inTargetRegion;
-        if (!Included)
-        {
-            Ratio = -1.0;
-        }
+        this(chromosome, readDepth.StartPosition, readDepth.ReadDepth, readDepth.ReadGcContent, inTargetRegion);
     }
 
     public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent)
@@ -43,6 +34,20 @@ public class BamRatio
         Ratio = ratio;
         GcContent = gcContent;
         Included = true;
+    }
+
+    public BamRatio(Chromosome chromosome, int position, double readDepth, double gcContent, boolean included)
+    {
+        mChromosome = chromosome;
+        Position = position;
+        mReadDepth = Double.isFinite(readDepth) ? readDepth : -1.0;
+        Ratio = mReadDepth;
+        GcContent = Double.isFinite(gcContent) ? gcContent : -1.0;
+        Included = included;
+        if (!Included)
+        {
+            Ratio = -1.0;
+        }
     }
 
     public void normaliseForGc(double medianReadDepthForGcBucket)

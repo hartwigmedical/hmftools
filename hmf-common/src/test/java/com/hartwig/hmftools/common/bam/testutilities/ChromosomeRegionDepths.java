@@ -20,6 +20,7 @@ public abstract class ChromosomeRegionDepths
 
     public void addRange(final int start, final int end, final int depth)
     {
+        System.out.println("start = " + start + ", end = " + end + ", depth = " + depth);
         RegionDepth newRange = new RegionDepth(mChromosome, start, end, depth);
         if(!ranges.isEmpty())
         {

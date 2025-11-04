@@ -71,7 +71,7 @@ public class CobaltApplication
             results.keySet().forEach(chromosome -> collectedRatios.addAll(results.get(chromosome)));
             CobaltRatioFile.write(mConfig.cobaltRatiosFileName(), collectedRatios);
 
-            if (mConfig.TumorId != null)
+            if(mConfig.TumorId != null)
             {
                 CB_LOGGER.info("persisting tumor {} GC read count to {}", mConfig.TumorId, mConfig.OutputDir);
                 CobaltGcMedianFile.write(mConfig.tumorGcMedianFileName(), calculator.tumorMedianReadDepth());
@@ -96,7 +96,7 @@ public class CobaltApplication
         }
         catch(Exception e)
         {
-            CB_LOGGER.error("error: {}", e.toString());
+            CB_LOGGER.error("error running Cobalt", e);
             System.exit(1);
         }
         finally

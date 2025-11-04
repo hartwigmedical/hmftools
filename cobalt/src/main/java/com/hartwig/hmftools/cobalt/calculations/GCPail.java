@@ -25,7 +25,7 @@ public class GCPail
 
     public double median()
     {
-        if (mStatistics.getN() == 0)
+        if(mStatistics.getN() == 0)
         {
             return 0;
         }

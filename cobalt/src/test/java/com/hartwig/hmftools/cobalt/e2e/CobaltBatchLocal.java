@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cobalt.e2e;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
-import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.COMPARISON_VALUES_DIR;
 import static com.hartwig.hmftools.cobalt.utils.CobaltOutputsComparison.ORIGINAL_VALUES_DIR;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
@@ -112,7 +111,7 @@ public class CobaltBatchLocal
 
     private void runComparer(String sample)
     {
-        String originalValuesDir = "/Users/timlavers/work/scratch/cobalt_baselines/pmhaem/" + sample;
+        String originalValuesDir = "/Users/timlavers/work/scratch/cobalt_baselines_3/pmhaem/" + sample;
         String comparisonValuesDir = cobaltOutputBase + sample;
         String outputDir = "/Users/timlavers/work/junk/";
         String[] args = new String[8];

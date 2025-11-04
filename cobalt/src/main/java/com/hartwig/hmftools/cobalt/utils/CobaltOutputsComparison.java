@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -67,7 +66,7 @@ public class CobaltOutputsComparison
             CB_LOGGER.warn("Cobalt ratios files have different lengths. Original size: {}. Comparison size: {}", originalRatios.size(), comparisonRatios.size());
             return;
         }
-        double epsilon = 0.001;
+        double epsilon = 0.01;
         List<RawCobaltRatio> differences = new ArrayList<>();
         for(int i = 0; i < length; i++)
         {

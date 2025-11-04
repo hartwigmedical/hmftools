@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -18,40 +19,41 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class WindowStatusesTest extends CalculationsTestBase
 {
     private WindowStatuses statuses;
 
-    @Test
-    public void excludeTest()
+    @Before
+    public void setup()
     {
         ListMultimap<Chromosome, GCProfile> gcProfiles = ArrayListMultimap.create();
         gcProfiles.put(_1, gcProfile(_1, 1, 0.47, 0.70));    // not mappable
-        gcProfiles.put(_1, gcProfile(_1, 1001, 0.47, 0.50)); // not mappable
-        gcProfiles.put(_1, gcProfile(_1, 2001, 0.47, 1.0));
-        gcProfiles.put(_1, gcProfile(_1, 3001, 0.47, 1.0));
-        gcProfiles.put(_1, gcProfile(_1, 4001, 0.47, 1.0));
-        gcProfiles.put(_1, gcProfile(_1, 5001, 0.47, 1.0));
+        gcProfiles.put(_1, gcProfile(_1, 1001, 0.48, 0.50)); // not mappable
+        gcProfiles.put(_1, gcProfile(_1, 2001, 0.49, 1.0));
+        gcProfiles.put(_1, gcProfile(_1, 3001, 0.50, 1.0));
+        gcProfiles.put(_1, gcProfile(_1, 4001, 0.51, 1.0));
+        gcProfiles.put(_1, gcProfile(_1, 5001, 0.52, 1.0));
 
         gcProfiles.put(_2, gcProfile(_2, 1, 0.57, 1.0));
-        gcProfiles.put(_2, gcProfile(_2, 1001, 0.57, 1.0));
-        gcProfiles.put(_2, gcProfile(_2, 2001, 0.57, 0.50)); // not mappable
+        gcProfiles.put(_2, gcProfile(_2, 1001, 0.58, 1.0));
+        gcProfiles.put(_2, gcProfile(_2, 2001, 0.59, 0.50)); // not mappable
         gcProfiles.put(_2, gcProfile(_2, 3001, 0.57, 1.0));
 
         gcProfiles.put(_3, gcProfile(_3, 1, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 1001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 2001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 3001, 0.47, 0.8)); // not mappable
+        gcProfiles.put(_3, gcProfile(_3, 1001, 0.48, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 2001, 0.49, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 3001, 0.50, 0.8)); // not mappable
         gcProfiles.put(_3, gcProfile(_3, 4001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 5001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 6001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 7001, 0.47, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 5001, 0.48, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 6001, 0.49, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 7001, 0.50, 1.0));
         gcProfiles.put(_3, gcProfile(_3, 8001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 9001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 10001, 0.47, 1.0));
-        gcProfiles.put(_3, gcProfile(_3, 11001, 0.47, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 9001, 0.48, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 10001, 0.49, 1.0));
+        gcProfiles.put(_3, gcProfile(_3, 11001, 0.50, 1.0));
 
         List<ChrBaseRegion> exclusions = new ArrayList<>();
         exclusions.add(cbr(_1, 1100, 1200));
@@ -81,8 +83,22 @@ public class WindowStatusesTest extends CalculationsTestBase
         diploidRegions.put(_3, ds(_3, 9001, true));
         diploidRegions.put(_3, ds(_3, 10001, true));
 
-
         statuses = new WindowStatuses(gcProfiles, exclusions, diploidRegions);
+    }
+
+    @Test
+    public void gcReferenceValueTest()
+    {
+        assertEquals(0.47, statuses.referenceGcValueForWindow(_1, 0), 0.0001);
+        assertEquals(0.48, statuses.referenceGcValueForWindow(_1, 1000), 0.0001);
+        assertEquals(0.57, statuses.referenceGcValueForWindow(_2, 1), 0.0001);
+        assertEquals(0.47, statuses.referenceGcValueForWindow(_3, 1), 0.0001);
+        assertEquals(0.48, statuses.referenceGcValueForWindow(_3, 1000), 0.0001);
+    }
+
+    @Test
+    public void excludeTest()
+    {
         checkExcluded(_1, 1);    // not mappable, contains excluded regions
         checkExcluded(_1, 1001); // not mappable
         checkIncluded(_1, 2001);
