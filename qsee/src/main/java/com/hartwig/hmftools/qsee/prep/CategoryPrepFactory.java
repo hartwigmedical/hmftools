@@ -13,9 +13,9 @@ import com.hartwig.hmftools.qsee.prep.category.SummaryTablePrep;
 
 public class CategoryPrepFactory
 {
-    PrepConfig mConfig;
+    CommonPrepConfig mConfig;
 
-    public CategoryPrepFactory(PrepConfig config)
+    public CategoryPrepFactory(CommonPrepConfig config)
     {
         mConfig = config;
     }

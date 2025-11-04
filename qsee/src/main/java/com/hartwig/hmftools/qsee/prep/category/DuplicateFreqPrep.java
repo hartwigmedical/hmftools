@@ -9,15 +9,15 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 
 public class DuplicateFreqPrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
 
     private static final int MAX_DUP_READS = 100;
 
-    public DuplicateFreqPrep(PrepConfig config)
+    public DuplicateFreqPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

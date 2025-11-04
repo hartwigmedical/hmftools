@@ -11,15 +11,15 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 
 import org.jetbrains.annotations.NotNull;
 
 public class MissedGeneVariantPrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
 
-    public MissedGeneVariantPrep(PrepConfig config)
+    public MissedGeneVariantPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

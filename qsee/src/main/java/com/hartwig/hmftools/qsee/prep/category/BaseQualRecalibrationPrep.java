@@ -22,11 +22,11 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
 
     private static final int HI_QUAL_THRESHOLD = 30;
@@ -36,7 +36,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "standardTrinucContext";
     private static final String FIELD_ORIGINAL_QUAL = "originalQualBin";
 
-    public BaseQualRecalibrationPrep(PrepConfig config)
+    public BaseQualRecalibrationPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

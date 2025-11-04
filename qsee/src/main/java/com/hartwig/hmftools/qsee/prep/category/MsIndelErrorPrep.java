@@ -19,11 +19,11 @@ import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 
 public class MsIndelErrorPrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
 
     private static final int MAX_REF_UNIT_COUNT = 15;
 
@@ -31,7 +31,7 @@ public class MsIndelErrorPrep implements CategoryPrep
     private static final String FIELD_CONSENSUS_TYPE = "consensusType";
     private static final String FIELD_REF_NUM_UNITS = "refNumUnits";
 
-    public MsIndelErrorPrep(PrepConfig config)
+    public MsIndelErrorPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

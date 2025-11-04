@@ -27,13 +27,13 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepFactory;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.SamplePrepTask;
 
 public class CohortPercentilesTrainer
 {
     private final TrainConfig mTrainConfig;
-    private final PrepConfig mPrepConfig;
+    private final CommonPrepConfig mCommonPrepConfig;
 
     private final double[] mPercentiles;
 
@@ -43,7 +43,7 @@ public class CohortPercentilesTrainer
     public CohortPercentilesTrainer(final TrainConfig trainConfig)
     {
         mTrainConfig = trainConfig;
-        mPrepConfig = trainConfig.Prep;
+        mCommonPrepConfig = trainConfig.CommonPrep;
 
         mPercentiles = mTrainConfig.hasPercentileInterval()
                 ? PercentileTransformer.withInterval(mTrainConfig.PercentileInterval).getPercentiles()
@@ -57,11 +57,11 @@ public class CohortPercentilesTrainer
         List<Runnable> samplePrepTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
-            SamplePrepTask task = new SamplePrepTask(categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix, mPrepConfig.AllowMissingInput);
+            SamplePrepTask task = new SamplePrepTask(categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix, mCommonPrepConfig.AllowMissingInput);
             samplePrepTasks.add(task);
         }
 
-        TaskExecutor.executeRunnables(samplePrepTasks, mPrepConfig.Threads);
+        TaskExecutor.executeRunnables(samplePrepTasks, mCommonPrepConfig.Threads);
         samplePrepTasks.clear();
 
         return sampleFeatureMatrix;
@@ -83,7 +83,7 @@ public class CohortPercentilesTrainer
             percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), sourceTool);
         }
 
-        TaskExecutor.executeRunnables(featureTransformTasks, mPrepConfig.Threads);
+        TaskExecutor.executeRunnables(featureTransformTasks, mCommonPrepConfig.Threads);
         featureTransformTasks.clear();
 
         Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
@@ -140,8 +140,8 @@ public class CohortPercentilesTrainer
     {
         QC_LOGGER.info("Calculating {} cohort percentiles", sampleType.toString());
 
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mPrepConfig).createCategoryPreps();
-        List<String> sampleIds = mPrepConfig.getSampleIds(sampleType);
+        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mCommonPrepConfig).createCategoryPreps();
+        List<String> sampleIds = mCommonPrepConfig.getSampleIds(sampleType);
 
         FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), getPercentileNames());
         for(CategoryPrep categoryPrep : categoryPreps)
@@ -165,12 +165,12 @@ public class CohortPercentilesTrainer
 
             writeHeader(writer);
 
-            if(!mPrepConfig.TumorIds.isEmpty())
+            if(!mCommonPrepConfig.TumorIds.isEmpty())
             {
                 runFor(SampleType.TUMOR, writer);
             }
 
-            if(!mPrepConfig.ReferenceIds.isEmpty())
+            if(!mCommonPrepConfig.ReferenceIds.isEmpty())
             {
                 runFor(SampleType.REFERENCE, writer);
             }
@@ -183,7 +183,7 @@ public class CohortPercentilesTrainer
 
     private String getOutputFilename()
     {
-        return mPrepConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+        return mCommonPrepConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
     }
 
     private List<String> getPercentileNames()
@@ -216,7 +216,7 @@ public class CohortPercentilesTrainer
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        PrepConfig.registerConfig(configBuilder);
+        CommonPrepConfig.registerConfig(configBuilder);
         TrainConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

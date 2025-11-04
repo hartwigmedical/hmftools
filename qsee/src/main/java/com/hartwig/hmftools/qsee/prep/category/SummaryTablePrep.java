@@ -18,14 +18,14 @@ import org.jetbrains.annotations.NotNull;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.table.SummaryTableFeature;
 
 public class SummaryTablePrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
 
-    public SummaryTablePrep(PrepConfig config)
+    public SummaryTablePrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

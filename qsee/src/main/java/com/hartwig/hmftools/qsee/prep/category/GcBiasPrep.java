@@ -19,15 +19,15 @@ import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.PrepConfig;
+import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 
 public class GcBiasPrep implements CategoryPrep
 {
-    private final PrepConfig mConfig;
+    private final CommonPrepConfig mConfig;
 
     private static final String FIELD_GC_BUCKET = "GCBucket";
 
-    public GcBiasPrep(PrepConfig config)
+    public GcBiasPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }

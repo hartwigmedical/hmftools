@@ -50,7 +50,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import com.hartwig.hmftools.qsee.common.SampleType;
 
-public class PrepConfig
+public class CommonPrepConfig
 {
     public final List<String> TumorIds;
     public final List<String> ReferenceIds;
@@ -75,7 +75,7 @@ public class PrepConfig
     public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
     public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
 
-    public PrepConfig(final ConfigBuilder configBuilder)
+    public CommonPrepConfig(final ConfigBuilder configBuilder)
     {
         checkSampleIdsProvided(configBuilder);
         TumorIds = new ArrayList<>();
