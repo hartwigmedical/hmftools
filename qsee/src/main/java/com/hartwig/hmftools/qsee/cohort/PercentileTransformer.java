@@ -107,7 +107,7 @@ public class PercentileTransformer
         {
             String message = String.format("All %s cohort values are NaN/Infinite (transform will return NaN)", cohortValues.length);
             message += (featureKey != null) ? " for feature: " + featureKey : "";
-            QC_LOGGER.warn(message);
+            QC_LOGGER.trace(message);
 
             mFitted = true;
             mFittedWithAllNaN = true;
@@ -118,7 +118,7 @@ public class PercentileTransformer
         {
             String message = String.format("Removed %s NaN/Infinite value(s) from %s cohort values", invalidValuesCount, cohortValues.length);
             message += (featureKey != null) ? " for feature: " + featureKey : "";
-            QC_LOGGER.warn(message);
+            QC_LOGGER.trace(message);
         }
 
         double[] cohortValuesSorted = Arrays.copyOf(cohortValuesFiltered, cohortValuesFiltered.length);
