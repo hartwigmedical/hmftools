@@ -1,24 +1,65 @@
 # COBALT
-
 **Co**unt **ba**m **l**ines determines the read depth ratios of the supplied tumor and reference genomes. 
 
-## Algorithm
+# Algorithm
+The main steps are:
+- reads are apportioned to windows to give raw depths and GC proportions per window
+- filtering is applied to exclude windows that have unreliable data
+- raw results are normalised to account for GC bias and other confounders
+- a piecewise constant fitting algorithm is applied to segment the chromosomes to regions of constant copy number.
 
-### Calculating read depths and masking
-COBALT starts with finding the mean read depth per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
-in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
-Windows with a GC content less than 0.23 or greater than 0.69 or with an average mappability below 0.85 are excluded from further analysis.
-Windows intersecting the Ig pseudo-gene regions of chromosomes 15 and 16 are also excluded.
+## Counting
+### Window depth accumulation
+Each read is assigned proportionally to the windows that it overlaps.
+Reads of quality less than 10 (configurable) are ignored,
+as are unmapped, duplicated, secondary and supplementary reads.
+The raw count of bases from reads overlapping each window
+is divided by the window length (1000) to give a raw depth.
 
+### Window GC proportion
+The proportion of Gs and Cs in bases of reads within a window is determined.
+For low-depth windows (raw depth < 1.0), however, this value is overridden with the GC
+value from the supplied GC profile data.
+
+## Filtering
+### Pseudo gene region filtering
+Certain windows overlap pseudo genes on chromosomes 15 and 16 that produce artefactually high copy numbers.
+These windows are excluded.
+
+### Diploid region filtering
+In tumor-only whole-genome mode, diploid regions can be specified, and windows that are outside of these regions are excluded.
+
+### Target region filtering
+In target region mode, only those windows that fall within the specified target regions are retained.
+
+### GC Filtering
+Windows with GC proportions outside the range [0.24,0.67] (configurable) are excluded.
+
+### Mappability filtering
+Windows with a mappability value less than 0.85 (configurable) are excluded.
+
+## Normalisation
 ### GC normalisation
-Next we apply a GC normalization to calculate the read ratios. To do this we divide the read depth of each window by the median read depth of
-all windows sharing the same per percentile bucket of GC content over a range of GC content: [0.25:0.67]. The results are smoothed futher for each bucket by taking the mean of the percentile bucket and the 2 adjacent percentile buckets.  We then normalise further to the ratio of the median to mean read depth of all windows.   
+Each window is assigned to a bucket according to its GC proportion.
+Median read depths  for allosome reads are calculated for each bucket.
+The median read depths for the buckets are smoothed by averaging the value for each bucket with
+those of its two neighbors. This produces a read depth normalisation factor for each bucket.
+The read depth of each window is normalised by the factor for its associated GC bucket.
+This produces a 'ratio' value which is the subject of all later normalisation steps
+and which is the value used to detect copy number changes.
 
-### Diploid normalisation
+### Target region enrichment
+In targeted mode, the ratio for each window is divided by a supplied enrichment factor.
 
-The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
-This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) should be diploid for autosomes and haploid for 
-male sex chromosomes in addition to the following exceptions:
+### Median/mean normalisation
+The median and mean read depths across all windows are calculated. The quotient of these
+values is then applied as a normalisation factor across all windows.
+
+### Diploid ratio normalisation
+In whole-genome mode, windows are normalised to remove mega-base scale GC biases.
+This normalization assumes that the median ratio of each 10Mb window (minimum 1Mb readable) 
+should be diploid for autosomes and haploid for
+male sex chromosomes, in addition to the following exceptions:
 
 | Aberration                   | Chromosome       | Normalized Ratio   |
 |------------------------------|------------------|--------------------|
@@ -28,29 +69,26 @@ male sex chromosomes in addition to the following exceptions:
 | `TRISOMY_[X,21,13,18,15,9P]` | X,21,13,18,15,9P | 1.5                |
 | `TETRASOMY_9P`               | 9P               | 1.5                |
 
-### Depth window consolidation
-Sparse information in COBALT may cause a noisy fit for low pass WGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
-least 8 per bucket. The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000).   This formula allows
-consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadDepth >> 8. We should
-never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
 
-For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated for the consolidated bucket and set to the centre
-window in the consolidated bucket.  The other buckets are masked.
+### Unity normalisation
+The final normalisation step is to normalise so that in the output
+file, the mean of the ratios for the windows is 1.0.
 
-### Germline chromosomal aberrations
+## Depth window consolidation
+Sparse information in COBALT may cause a noisy fit for low pass WGS.
+Therefore, we consolidate buckets to try to reach a median read depth of at least 8 per bucket. 
+The ConsolidatedBucketSize is set to
+```clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000)```.
+This formula allows consolidation into buckets of up to 1000 depth windows.
+For standard WGS this should have no effect as medianTumorReadDepth >> 8.
+We should never consolidate across regions of more than 3Mb (so never across centromere).
+Consolidation is not used in targeted sequencing mode.
 
-Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
+For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated 
+for the consolidated bucket and set to the centre window in the consolidated bucket.  
+The other buckets are masked.
 
-| Aberration                | Gender | Ratio Criteria                                   |
-|---------------------------|--------|--------------------------------------------------|
-| `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
-| `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
-| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                         |
-
-*By checking against autosomes we rule out very high GC bias in the reference.  
-
-### Segmentation
-
+## Segmentation
 Finally, the Bioconductor copy number package is used to generate segments from the ratio file.
 
 All resource files for this tool and the WiGiTs pipeline are available for download via the [HMF Resource page](../pipeline/README_RESOURCES.md).
@@ -64,8 +102,71 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
     install("dplyr")
 ```
 
-COBALT requires Java 17+ and can be run with the minimum set of arguments as follows:
+## Sequence and configuration of Cobalt stages
+| Order | Step            | Type          | Parameters                     | Tumor, Targeted | Reference, Targeted | Tumor, Whole Genome | Reference, Whole Genome |
+|-------|-----------------|---------------|--------------------------------|-----------------|---------------------|---------------------|-------------------------|
+| 1     | Read depths     | counting      | `min_quality`                  | Y               | Y                   | Y                   | Y                       |
+| 2     | GC proportion   | counting      | `gc_profile`                   | Y               | Y                   | Y                   | Y                       |
+| 3     | Pseudo genes    | filtering     | built-in properties files      | Y               | Y                   | Y                   | Y                       |
+| 3     | Mappability     | filtering     | `gc_profile`                   | Y               | Y                   | Y                   | Y                       |
+| 3     | Diploid regions | filtering     | `tumor_only_diploid_bed`       | N               | N                   | Y                   | Y                       |
+| 4     | Target regions  | filtering     | `target_region_norm_file`      | Y               | Y                   | N                   | N                       |
+| 5     | GC              | filtering     | `gc_ratio_min`, `gc_ratio_max` | Y               | Y                   | Y                   | Y                       |
+| 5     | GC              | normalisation | `gc_profile`                   | Y               | Y                   | Y                   | Y                       |
+| 6     | Enrichment      | normalisation | `target_region_norm_file`      | Y               | Y                   | N                   | N                       |
+| 7     | Median/mean     | normalisation |                                | N               | N                   | Y                   | Y                       |
+| 8     | Low coverage    | consolidation |                                | N               | N                   | Y                   | Y                       |
+| 9     | Diploid ratios  | normalisation |                                | N               | N                   | Y                   | Y                       |
+| 10    | Unity           | normalisation |                                | Y               | Y                   | N                   | N                       |
+| 11    | Copy number     | segmentation  | `pcf_gamma`, `skip_pcf_calc`   | Y               | Y                   | Y                   | Y                       |
 
+
+### Germline chromosomal aberrations
+Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
+
+| Aberration                | Gender | Ratio Criteria                                   |
+|---------------------------|--------|--------------------------------------------------|
+| `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
+| `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
+| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                         |
+
+*By checking against autosomes we rule out very high GC bias in the reference.  
+
+# Running Cobalt
+## Tumor-only Mode
+In the absence of a reference bam and reference COBALT will  be run in tumor-only mode.
+
+Without a means to determine which regions of the normal are diploid, a bed file specifying these
+locations must be included with the `tumor-only-diploid-bed` parameter.
+A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download
+from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). To create this bed file we examined the COBALT output of 100 samples.  
+We considered each 1000 base region to be diploid if 50% or more of the samples
+were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point.
+
+As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations.
+No reference pcf file will be created. The output reference ratios will be 1 or -1 on all chromosomes even
+if they are allosomes.  Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender.
+
+## Germline Only Mode
+In the absence of a tumor bam and tumor COBALT will  be run in germline mode.
+Counts and ratios are only calculated and fitted for the reference sample.
+
+## Targeted Mode
+COBALT may be run on targeted data. For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
+
+## Arguments
+COBALT requires Java 17+ and for tumor-only mode can be run with the minimum set of arguments as follows:
+```
+java -jar -Xmx8G cobalt.jar \
+    -tumor SAMPLE_ID \
+    -tumor_bam /sample_data/SAMPLE_ID.bam \ 
+    -output_dir /sample_data/ \ 
+    -threads 10 \ 
+    -ref_genome_version 37
+    -gc_profile /ref_data/GC_profile.1000bp.37.cnp
+```
+
+For in tumor-reference mode the reference sample must be supplied:
 ```
 java -jar -Xmx8G cobalt.jar \
     -reference SAMPLE_ID_R \
@@ -78,24 +179,25 @@ java -jar -Xmx8G cobalt.jar \
     -gc_profile /ref_data/GC_profile.1000bp.37.cnp
 ```
 
-## Mandatory Arguments
-
+### Mandatory Arguments
 | Argument           | Description                                                                               |
 |--------------------|-------------------------------------------------------------------------------------------|
-| reference          | Name of the reference sample                                                              |
+| reference          | Name of the reference sample (not needed if tumor supplied)                               |
 | reference_bam      | Path to reference BAM file                                                                |
-| tumor              | Name of tumor sample                                                                      |
+| tumor              | Name of tumor sample (not needed if reference supplied)                                   |
 | tumor_bam          | Path to tumor BAM file                                                                    |
 | output_dir         | Path to the output directory. This directory will be created if it does not already exist |
 | gc_profile         | Path to GC profile                                                                        |
 | ref_genome_version | One of `37` or `38`                                                                       |
 
-A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). This file contains 5 columns for each 1kb window of the genome {chromosome,position,GC Proportion,Non N Proportion,Average Mappability}.  A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
+A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to 
+download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). This file contains 5 columns for each 1kb window 
+of the genome {chromosome,position,GC Proportion,Non N Proportion,Average Mappability}.  
+A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
 
 COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome argument must be included.
 
-## Optional Arguments
-
+### Optional Arguments
 | Argument               | Default | Description                                                 |
 |------------------------|---------|-------------------------------------------------------------|
 | threads                | 4       | Number of threads to use                                    |
@@ -105,21 +207,6 @@ COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome ar
 | tumor_only_diploid_bed | NA      | Bed file of diploid regions of the genome                   |
 | pcf_gamma              | 100     | Gamma value for use in R copy_number pcf function           |
 | target_region          | None    | Target region TSV file for use in targeted mode.            |
-
-## Tumor Only Mode
-In the absence of a reference bam and reference COBALT will  be run in tumor_only mode.    
-
-Without a means to determine which regions of the normal are diploid, a bed file specifying these locations must be included with the `tumor-only-diploid-bed` parameter. A 37 bed file (DiploidRegions.37.bed.gz) and 38 equivalent are available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). To create this bed file we examined the COBALT output of 100 samples.  We considered each 1000 base region to be diploid if 50% or more of the samples were diploid (0.85 >= referenceGCDiploidRatio <= 1.15 ) at this point. 
-
-As no reference data is supplied, COBALT does not try to determine gender or any chromosomal aberrations.  No reference pcf file will be created. The output reference ratios will be 1 or -1 on all chromosomes even if they are allosomes.  Downstream, PURPLE will adjust the allosome ratios according to the AMBER gender. 
-
-## Germline Only Mode
-
-In the absence of a tumor bam and tumor COBALT will  be run in germline mode.   Counts and ratios are only calculated and fitted for the reference sample.
-
-## Targeted Mode
-
-COBALT may be run on targeted data.   For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -136,7 +223,7 @@ Peak memory is measure in gigabytes.
 | 32      | 11           | 184      | 4.33     |
 | 48      | 10           | 153      | 4.35     |
 
-## Output
+# Output
 The following tab delimited files are written:
 
 `/run_dir/cobalt/TUMOR.cobalt.ratio.tsv.gz`
@@ -145,20 +232,21 @@ The following tab delimited files are written:
 
 `/run_dir/cobalt/REFERENCE.cobalt.ratio.pcf`
 
-TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor:
+TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor
+and the GC proportions:
 
-| Chromosome | Position | ReferenceReadDepth | TumorReadDepth | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
-|------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
-| 1          | 4000001  | 20.4               | 50.4           | 0.8803           | 0.855        | 0.8982                  |
-| 1          | 4001001  | 20.3               | 57.0           | 0.8429           | 0.9149       | 0.86                    |
-| 1          | 4002001  | 15.5               | 47.3           | 0.6463           | 0.7654       | 0.6594                  |
-| 1          | 4003001  | 26.0               | 56.6           | 1.098            | 0.9328       | 1.1203                  |
-| 1          | 4004001  | 25.6               | 55.0           | 1.1144           | 0.9428       | 1.1371                  |
+| chromosome | position | referenceReadDepth | tumorReadDepth | referenceGCRatio | tumorGCRatio | referenceGCDiploidRatio | referenceGCContent | tumorGCContent |
+|------------|----------|--------------------|----------------|------------------|--------------|-------------------------|--------------------|----------------|
+| 1          | 4000001  | 37.367             | 143.34         | 0.8827           | 0.9754       | 0.8904                  | 0.6                | 0.6022         |
+| 1          | 4001001  | 41.327             | 119.101        | 1.0626           | 0.8792       | 1.0719                  | 0.5433             | 0.5391         |
+| 1          | 4002001  | 35.33              | 127.256        | 0.8346           | 0.8802       | 0.8418                  | 0.5994             | 0.5941         |
+| 1          | 4003001  | 35.928             | 111.033        | 0.9737           | 0.8496       | 0.9822                  | 0.4767             | 0.4753         |
+| 1          | 4004001  | 36.938             | 122.323        | 0.8725           | 0.8324       | 0.8801                  | 0.5973             | 0.5985         |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
 
-## Version History and Download Links
+# Version History and Download Links
 - [1.14.1](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14.1)
   - Fix crash bug in the bucket consolidation.
 - [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14)
