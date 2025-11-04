@@ -2,6 +2,8 @@ package com.hartwig.hmftools.qsee.prep;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
+import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
@@ -21,12 +23,15 @@ public class SamplePrepTask implements Runnable
 
     private List<Feature> mFeatures;
 
+    private final boolean mAllowMissingInput;
+
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
     public SamplePrepTask(CategoryPrep categoryPrep,
             List<String> sampleIds, int sampleIndex, SampleType sampleType,
-            @Nullable FeatureMatrix sampleFeatureMatrix)
+            @Nullable FeatureMatrix sampleFeatureMatrix,
+            boolean allowMissingInput)
     {
         mCategoryPrep = categoryPrep;
 
@@ -35,6 +40,8 @@ public class SamplePrepTask implements Runnable
         mSampleType = sampleType;
 
         mSampleFeatureMatrix = sampleFeatureMatrix;
+
+        mAllowMissingInput = allowMissingInput;
     }
 
     private void logProgress(int sampleIndex)
@@ -68,19 +75,27 @@ public class SamplePrepTask implements Runnable
         try
         {
             logProgress(mSampleIndex);
-
             mFeatures = mCategoryPrep.extractSampleData(sampleId, mSampleType);
+        }
+        catch(NoSuchFileException e)
+        {
+            mFeatures = new ArrayList<>();
+            QC_LOGGER.error("{} - missing input file(s) for sample {}: {}",
+                    mCategoryPrep.getClass().getSimpleName(), sampleId, e.getMessage());
 
-            if(mSampleFeatureMatrix != null)
-            {
-                mSampleFeatureMatrix.addRow(sampleId, mFeatures);
-                mFeatures = null;
-            }
+            if(!mAllowMissingInput)
+                System.exit(1);
         }
         catch(Exception e)
         {
-            QC_LOGGER.error("Failed to run {} for sample: {}", mCategoryPrep.getClass().toString(), sampleId, e);
+            QC_LOGGER.error("Failed to run {} for sample: {}", mCategoryPrep.getClass().getSimpleName(), sampleId, e);
             System.exit(1);
+        }
+
+        if(mSampleFeatureMatrix != null)
+        {
+            mSampleFeatureMatrix.addRow(sampleId, mFeatures);
+            mFeatures = null;
         }
     }
 }

@@ -66,12 +66,14 @@ public class PrepConfig
 
     public final List<DriverGene> DriverGenes;
 
+    public final boolean AllowMissingInput;
+
     public final String OutputDir;
 
     public final int Threads;
 
-    public static final String FLD_TUMOR_ID = "TumorId";
-    public static final String FLD_REFERENCE_ID = "ReferenceId";
+    public static final String ALLOW_MISSING_INPUT = "allow_missing_input";
+    public static final String ALLOW_MISSING_INPUT_DESC = "Continue sample data extraction even if some input files are missing";
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
@@ -100,6 +102,8 @@ public class PrepConfig
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
 
+        AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
+
         OutputDir = parseOutputDir(configBuilder);
 
         Threads = TaskExecutor.parseThreads(configBuilder);
@@ -123,6 +127,8 @@ public class PrepConfig
         configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
 
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
+
+        configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
         configBuilder.addPath(OUTPUT_DIR, false, OUTPUT_DIR_DESC);
 
@@ -155,6 +161,9 @@ public class PrepConfig
     {
         try
         {
+            String FLD_TUMOR_ID = "TumorId";
+            String FLD_REFERENCE_ID = "ReferenceId";
+
             List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(SAMPLE_ID_FILE)));
 
             String header = lines.get(0);
