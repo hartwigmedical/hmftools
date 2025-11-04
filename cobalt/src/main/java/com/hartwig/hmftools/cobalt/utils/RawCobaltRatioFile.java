@@ -64,7 +64,7 @@ public class RawCobaltRatioFile
         this.fileName = fileName;
     }
 
-    List<RawCobaltRatio> read()
+    public List<RawCobaltRatio> read()
     {
         List<RawCobaltRatio> ratios = new ArrayList<>();
         try(DelimFileReader reader = new DelimFileReader(fileName))

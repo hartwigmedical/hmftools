@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MIN;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_PCF_GAMMA;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE_DESC;
@@ -28,14 +29,32 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreate
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.count.BRC;
+import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
+import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
+import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
+import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
+import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
+import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
+import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
@@ -44,17 +63,12 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class CobaltConfig
 {
-    public enum Mode
-    {
-        TUMOR_GERMLINE,
-        TUMOR_ONLY,
-        GERMLIHE_ONLY
-    }
-
     public static final String TUMOR_ONLY_DIPLOID_BED = "tumor_only_diploid_bed";
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     public static final String PCF_GAMMA = "pcf_gamma";
@@ -204,19 +218,101 @@ public class CobaltConfig
         }
     }
 
-    public Mode mode()
+    public SamReaderFactory readerFactory()
     {
-        if(ReferenceId != null && TumorId == null)
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(BamStringency);
+
+        if(RefGenomePath != null && !RefGenomePath.isEmpty())
         {
-            return Mode.GERMLIHE_ONLY;
+            return readerFactory.referenceSource(new ReferenceSource(new File(RefGenomePath)));
         }
 
-        if(ReferenceId == null && TumorId != null)
-        {
-            return Mode.TUMOR_ONLY;
-        }
+        return readerFactory;
+    }
 
-        return Mode.TUMOR_GERMLINE;
+    public CobaltScope scope()
+    {
+        if(TargetRegionNormFile == null)
+        {
+            return new WholeGenome();
+        }
+        else
+        {
+            TargetedRegionsNormalisationFile enrichmentFile = new TargetedRegionsNormalisationFile(TargetRegionNormFile);
+            final RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(RefGenVersion);
+            TargetRegions.ChromosomeData chromosomeData = chromosome -> refGenomeCoordinates.lengths().get(chromosome);
+            return new TargetRegions(enrichmentFile.load(), chromosomeData);
+        }
+    }
+
+    public ListMultimap<Chromosome, GCProfile> gcProfileData()
+    {
+        try
+        {
+            return GCProfileFactory.loadGCContent(WINDOW_SIZE, GcProfilePath);
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to load GC profile data: {}", e.toString());
+            return ArrayListMultimap.create();
+        }
+    }
+
+    public ListMultimap<Chromosome, DiploidStatus> diploidRegions()
+    {
+        if (TumorOnlyDiploidBed == null)
+        {
+            return ArrayListMultimap.create();
+        }
+        try {
+            return new DiploidRegionLoader(TumorOnlyDiploidBed).regions();
+        }
+        catch (IOException e)
+        {
+            CB_LOGGER.error("failed to load diploid regions bed file: {}", e.toString());
+            return ArrayListMultimap.create();
+        }
+    }
+
+
+    public BRC tumorBamReader(ExecutorService executorService) throws IOException
+    {
+        return bamReader(executorService, TumorBamPath);
+    }
+
+    public BRC referenceBamReader(ExecutorService executorService) throws IOException
+    {
+        return bamReader(executorService, ReferenceBamPath);
+    }
+
+    public String cobaltRatiosFileName()
+    {
+        return CobaltRatioFile.generateFilename(OutputDir, TumorId != null ? TumorId : ReferenceId);
+    }
+
+    public String medianRatiosFileName()
+    {
+        return CobaltMedianRatioFile.generateFilename(OutputDir, ReferenceId);
+    }
+
+    public String tumorGcMedianFileName()
+    {
+        return CobaltGcMedianFile.generateFilename(OutputDir, TumorId);
+    }
+
+    public String referenceGcMedianFileName()
+    {
+        return CobaltGcMedianFile.generateFilename(OutputDir, ReferenceId);
+    }
+
+    public List<ChrBaseRegion> excludedRegions()
+    {
+        return mExcludedRegions;
+    }
+
+    public RefGenomeVersion genome()
+    {
+        return RefGenVersion;
     }
 
     private void loadExcludedRegions()
@@ -233,5 +329,14 @@ public class CobaltConfig
         {
             CB_LOGGER.error("failed to load excluded regions: {}", e.toString());
         }
+    }
+
+    private BRC bamReader(ExecutorService executorService, String bamPath) throws IOException
+    {
+        if(bamPath != null)
+        {
+            return new BRC(WINDOW_SIZE, this, executorService, bamPath);
+        }
+        return  null;
     }
 }

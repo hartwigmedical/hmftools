@@ -38,13 +38,13 @@ public record ChromosomeWindow(HumanChromosome chromosome, int start, int end)
         return buildPairFromBases(bases);
     }
 
-    public Pair<BaseRegion, BaseRegion> toBasesWithGivenGC(double gcRatio)
+    public Pair<BaseRegion, BaseRegion> toBasesWithGivenGC(int  gcPercentage)
     {
-        Preconditions.checkArgument(gcRatio >= 0.0 && gcRatio <= 1.0);
+        Preconditions.checkArgument(gcPercentage >= 0 && gcPercentage <= 100);
         int length = end - start;
         Preconditions.checkArgument(length > 0);
         Preconditions.checkArgument(length % 100 == 0);
-        int gCount = (int) (length * gcRatio);
+        int gCount = (length * gcPercentage)/100;
         String gPart = "G".repeat(gCount);
         String aPart = "A".repeat(length - gCount);
         byte[] bases = (gPart + aPart).getBytes();

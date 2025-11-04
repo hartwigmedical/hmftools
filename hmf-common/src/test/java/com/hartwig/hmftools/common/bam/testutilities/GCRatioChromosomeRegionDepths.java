@@ -6,17 +6,17 @@ import htsjdk.samtools.SAMFileWriter;
 
 public class GCRatioChromosomeRegionDepths extends ChromosomeRegionDepths
 {
-    private final double gcRatio;
+    private final int gcPercentage;
 
-    public GCRatioChromosomeRegionDepths(final HumanChromosome mChromosome, final double gcRatio)
+    public GCRatioChromosomeRegionDepths(final HumanChromosome mChromosome, final int gcPercentage)
     {
         super(mChromosome);
-        this.gcRatio = gcRatio;
+        this.gcPercentage = gcPercentage;
     }
 
     @Override
     public void writeEntriesForRange(final RegionDepth range, final SAMFileWriter bamWriter)
     {
-        range.length100ReadsBamRegionWriter().writeEntries(bamWriter, window -> window.toBasesWithGivenGC(gcRatio));
+        range.length100ReadsBamRegionWriter().writeEntries(bamWriter, window -> window.toBasesWithGivenGC(gcPercentage));
     }
 }
