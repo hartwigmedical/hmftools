@@ -32,29 +32,62 @@ import com.hartwig.hmftools.qsee.prep.SamplePrepTask;
 
 public class CohortPercentilesTrainer
 {
-    private final PrepConfig mConfig;
+    private final TrainConfig mTrainConfig;
+    private final PrepConfig mPrepConfig;
 
-    private static final int NUM_PERCENTILES = 11;
+    private final double[] mPercentiles;
+
     private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
     private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.########");
 
-    public CohortPercentilesTrainer(final PrepConfig config)
+    public CohortPercentilesTrainer(final TrainConfig trainConfig)
     {
-        mConfig = config;
+        mTrainConfig = trainConfig;
+        mPrepConfig = trainConfig.Prep;
+
+        mPercentiles = mTrainConfig.hasPercentileInterval()
+                ? PercentileTransformer.withInterval(mTrainConfig.PercentileInterval).getPercentiles()
+                : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
     }
 
-    public static String generateFilename(final String basePath, final String sampleId)
+    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
     {
-        return basePath + File.separator + sampleId + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
+
+        List<Runnable> samplePrepTasks = new ArrayList<>();
+        for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
+        {
+            SamplePrepTask task = new SamplePrepTask(categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix);
+            samplePrepTasks.add(task);
+        }
+
+        TaskExecutor.executeRunnables(samplePrepTasks, mPrepConfig.Threads);
+        samplePrepTasks.clear();
+
+        return sampleFeatureMatrix;
     }
 
-    private static List<String> getPercentileNames()
+    private void calcPercentiles(FeatureMatrix sampleFeatureMatrix, FeatureMatrix percentileFeatureMatrix)
     {
-        double[] percentiles = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES).getPercentiles();
+        List<Runnable> featureTransformTasks = new ArrayList<>();
+        for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
+        {
+            PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles);
 
-        return Arrays.stream(percentiles)
-                .mapToObj(x -> PERCENTILE_FORMAT.format(x))
-                .toList();
+            double[] featureValues = sampleFeatureMatrix.getColumnValues(featureIndex);
+            FeatureKey featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
+
+            transformer.fit(featureValues, featureKey);
+
+            SourceTool sourceTool = sampleFeatureMatrix.getSourceTool(featureKey);
+            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), sourceTool);
+        }
+
+        TaskExecutor.executeRunnables(featureTransformTasks, mPrepConfig.Threads);
+        featureTransformTasks.clear();
+
+        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
+        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
     }
 
     private void writeHeader(BufferedWriter writer) throws IOException
@@ -74,47 +107,6 @@ public class CohortPercentilesTrainer
         writer.write(header.toString());
         writer.newLine();
     }
-
-    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
-    {
-        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
-
-        List<Runnable> samplePrepTasks = new ArrayList<>();
-        for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
-        {
-            SamplePrepTask task = new SamplePrepTask(categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix);
-            samplePrepTasks.add(task);
-        }
-
-        TaskExecutor.executeRunnables(samplePrepTasks, mConfig.Threads);
-        samplePrepTasks.clear();
-
-        return sampleFeatureMatrix;
-    }
-
-    private void calcPercentiles(FeatureMatrix sampleFeatureMatrix, FeatureMatrix percentileFeatureMatrix)
-    {
-        List<Runnable> featureTransformTasks = new ArrayList<>();
-        for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
-        {
-            PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(NUM_PERCENTILES);
-
-            double[] featureValues = sampleFeatureMatrix.getColumnValues(featureIndex);
-            FeatureKey featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
-
-            transformer.fit(featureValues, featureKey);
-
-            SourceTool sourceTool = sampleFeatureMatrix.getSourceTool(featureKey);
-            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), sourceTool);
-        }
-
-        TaskExecutor.executeRunnables(featureTransformTasks, mConfig.Threads);
-        featureTransformTasks.clear();
-
-        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
-        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
-    }
-
 
     private void writePercentiles(BufferedWriter writer, FeatureMatrix percentileFeatureMatrix, SampleType sampleType) throws IOException
     {
@@ -148,47 +140,76 @@ public class CohortPercentilesTrainer
     {
         QC_LOGGER.info("Calculating {} cohort percentiles", sampleType.toString());
 
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
-        List<String> sampleIds = mConfig.getSampleIds(sampleType);
+        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mPrepConfig).createCategoryPreps();
+        List<String> sampleIds = mPrepConfig.getSampleIds(sampleType);
 
         FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), getPercentileNames());
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.info("Running prep for category: {}", categoryPrep.getClass().getSimpleName());
+            QC_LOGGER.info("Extracting sample data for category: {}", categoryPrep.getClass().getSimpleName());
             FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType);
 
             QC_LOGGER.info("Calculating percentiles for category: {}", categoryPrep.getClass().getSimpleName());
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
         }
 
-        QC_LOGGER.info("Writing cohort percentile data to file");
+        QC_LOGGER.info("Writing cohort percentile data to file: {}", getOutputFilename());
         writePercentiles(writer, percentileFeatureMatrix, sampleType);
-
-        QC_LOGGER.info("Completed calculating {} cohort percentiles", sampleType.toString());
     }
 
     public void run()
     {
-        String outputFile = generateFilename(mConfig.OutputDir, "cohort");
-        QC_LOGGER.info("Writing cohort percentile data to: {}", outputFile);
-
-        try(BufferedWriter writer = createBufferedWriter(outputFile))
+        try(BufferedWriter writer = createBufferedWriter(getOutputFilename()))
         {
+            QC_LOGGER.info("Calculating cohort percentiles: {}", getPercentilesString());
+
             writeHeader(writer);
 
-            if(!mConfig.TumorIds.isEmpty())
+            if(!mPrepConfig.TumorIds.isEmpty())
             {
                 runFor(SampleType.TUMOR, writer);
             }
 
-            if(!mConfig.ReferenceIds.isEmpty())
+            if(!mPrepConfig.ReferenceIds.isEmpty())
             {
                 runFor(SampleType.REFERENCE, writer);
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            QC_LOGGER.error("Failed to write percentile data", e);
+            QC_LOGGER.error("Failed to calculate cohort percentiles", e);
+        }
+    }
+
+    private String getOutputFilename()
+    {
+        return mPrepConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+    }
+
+    private List<String> getPercentileNames()
+    {
+        return Arrays.stream(mPercentiles).mapToObj(PERCENTILE_FORMAT::format).toList();
+    }
+
+    private String getPercentilesString()
+    {
+        int SHOW_ALL_THRESHOLD = 10;
+
+        if(mPercentiles.length <= SHOW_ALL_THRESHOLD)
+        {
+            return Arrays.stream(mPercentiles)
+                    .mapToObj(PERCENTILE_FORMAT::format)
+                    .collect(Collectors.joining(", "));
+        }
+        else
+        {
+            return String.format(
+                    "%s, %s, ..., %s, %s",
+                    PERCENTILE_FORMAT.format(mPercentiles[0]),
+                    PERCENTILE_FORMAT.format(mPercentiles[1]),
+                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
+                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 1])
+            );
         }
     }
 
@@ -196,12 +217,13 @@ public class CohortPercentilesTrainer
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         PrepConfig.registerConfig(configBuilder);
+        TrainConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
-        PrepConfig prepConfig = new PrepConfig(configBuilder);
+        TrainConfig config = new TrainConfig(configBuilder);
 
-        new CohortPercentilesTrainer(prepConfig).run();
+        new CohortPercentilesTrainer(config).run();
     }
 }
 
