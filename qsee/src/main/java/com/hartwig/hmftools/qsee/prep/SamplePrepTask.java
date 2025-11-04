@@ -53,14 +53,14 @@ public class SamplePrepTask implements Runnable
 
         int PROGRESS_INTERVAL = 100;
 
-        boolean hasManySamples = sampleCount >= PROGRESS_INTERVAL;
+        boolean hasManySamples = sampleCount >= PROGRESS_INTERVAL*2;
 
         if(hasManySamples)
         {
             boolean isSampleAtInterval = (sampleIndex+1) % PROGRESS_INTERVAL == 0;
             boolean isLastSample = sampleIndex == sampleCount-1;
 
-            if(isLastSample || isSampleAtInterval)
+            if(isSampleAtInterval || isLastSample)
             {
                 QC_LOGGER.debug("Progress: {}/{} - current sample: {}", sampleIndex+1, sampleCount, mSampleIds.get(sampleIndex));
             }
