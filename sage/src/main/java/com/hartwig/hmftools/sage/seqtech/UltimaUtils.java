@@ -277,7 +277,7 @@ public final class UltimaUtils
                 ++repeatCount;
 
                 if(repeatCount >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
-                    return false;
+                    return true;
             }
             else
             {
@@ -286,7 +286,7 @@ public final class UltimaUtils
             }
         }
 
-        return true;
+        return false;
     }
 
     public static boolean lowQualInReadCore(final SimpleVariant variant, int variantReadIndex, final List<Integer> lowQualIndices)
@@ -313,13 +313,10 @@ public final class UltimaUtils
 
         // exclude from checking if the variant has a long homopolymer
         if(readContext.MaxRepeat != null && readContext.MaxRepeat.repeatLength() == 1
-                && readContext.MaxRepeat.Count >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
+        && readContext.MaxRepeat.Count >= ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN)
         {
             return false;
         }
-
-        if(readContext.coreLength() < ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN + MIN_CORE_DISTANCE)
-            return true;
 
         // check for a sufficiently long single-base repeat anywhere in the read bases
         byte lastBase = readContext.ReadBases[0];

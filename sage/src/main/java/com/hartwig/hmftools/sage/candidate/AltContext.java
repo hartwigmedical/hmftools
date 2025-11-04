@@ -87,7 +87,7 @@ public class AltContext extends SimpleVariant
         if(mCheckHighQualCoreSupport == null)
         {
             // check if this variant ought to check low-qual bases for this and subsequent reads
-            mCheckHighQualCoreSupport = UltimaUtils.hasLongHomopolymerInContext(this, read, variantReadIndex);
+            mCheckHighQualCoreSupport = !UltimaUtils.hasLongHomopolymerInContext(this, read, variantReadIndex);
         }
 
         List<Integer> lowQualIndices = null;
