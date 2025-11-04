@@ -2,8 +2,10 @@ package com.hartwig.hmftools.qsee.prep;
 
 import java.util.List;
 
-import com.hartwig.hmftools.qsee.prep.category.BamMetricsPrep;
 import com.hartwig.hmftools.qsee.prep.category.CobaltGcMediansPrep;
+import com.hartwig.hmftools.qsee.prep.category.CoverageDistributionPrep;
+import com.hartwig.hmftools.qsee.prep.category.FragLengthDistributionPrep;
+import com.hartwig.hmftools.qsee.prep.category.GeneCoveragePrep;
 import com.hartwig.hmftools.qsee.prep.category.ReduxBqrPrep;
 import com.hartwig.hmftools.qsee.prep.category.ReduxDupFreqPrep;
 import com.hartwig.hmftools.qsee.prep.category.ReduxMsIndelErrorPrep;
@@ -22,7 +24,9 @@ public class CategoryPrepFactory
     {
         return List.of(
                 new SummaryTablePrep(mConfig),
-                new BamMetricsPrep(mConfig),
+                new CoverageDistributionPrep(mConfig),
+                new FragLengthDistributionPrep(mConfig),
+                new GeneCoveragePrep(mConfig),
                 new ReduxDupFreqPrep(mConfig),
                 new CobaltGcMediansPrep(mConfig),
                 new ReduxBqrPrep(mConfig),
