@@ -28,10 +28,10 @@ public class RepeatInfo
         Count = count;
     }
 
-    public int lastIndex() { return Index + length() - 1; }
-    public int postRepeatIndex() { return Index + length(); }
-    public int length() { return Count * Bases.length(); }
-    public int baseLength() { return Bases.length(); }
+    public int lastIndex() { return Index + totalLength() - 1; }
+    public int postRepeatIndex() { return Index + totalLength(); }
+    public int totalLength() { return Count * Bases.length(); }
+    public int repeatLength() { return Bases.length(); }
 
     public boolean matchesType(final RepeatInfo other) { return Bases.equals(other.Bases); }
 
@@ -90,7 +90,7 @@ public class RepeatInfo
                 else
                     repeats.add(repeat);
 
-                index += repeat.length();
+                index += repeat.totalLength();
             }
             else
             {
@@ -392,7 +392,7 @@ public class RepeatInfo
                     refBasesTrimmed.append("_");
 
                 refBasesTrimmed.append(format("%s%d_", currentRepeat.Bases, currentRepeat.Count));
-                currentIndex += currentRepeat.length();
+                currentIndex += currentRepeat.totalLength();
                 trimmedBasesLength += currentRepeat.Bases.length() * 2;
             }
             else
@@ -439,7 +439,7 @@ public class RepeatInfo
 
             if(currentRepeat != null && currentRepeat.Index == currentIndex)
             {
-                currentIndex += currentRepeat.length();
+                currentIndex += currentRepeat.totalLength();
                 trimmedBasesLength += currentRepeat.Bases.length() * 2; // only count the repeat twice
             }
             else

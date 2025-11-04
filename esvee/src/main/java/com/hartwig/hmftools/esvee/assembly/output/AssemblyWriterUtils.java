@@ -196,7 +196,7 @@ public final class AssemblyWriterUtils
             if(longest == null || repeat.Count > longest.Count)
                 longest = repeat;
 
-            if(longestSequence == null || repeat.length() > longest.length())
+            if(longestSequence == null || repeat.totalLength() > longest.totalLength())
                 longestSequence = repeat;
         }
 

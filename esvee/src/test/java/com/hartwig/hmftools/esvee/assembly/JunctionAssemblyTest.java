@@ -117,7 +117,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        ExtensionSeqBuilderOld extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -141,7 +141,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -175,7 +175,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        ExtensionSeqBuilderOld extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -199,7 +199,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, extBases.length(), 0));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -236,7 +236,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read1b, read1c, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        ExtensionSeqBuilderOld extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -280,7 +280,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4, read1b);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        ExtensionSeqBuilderOld extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -325,7 +325,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read1b, read3, read4, read5);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        ExtensionSeqBuilderOld extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertNotNull(extSeqBuilder.maxRepeat());
@@ -372,7 +372,7 @@ public class JunctionAssemblyTest
 
         reads = List.of(read1, read1b, read3, read4, read5);
 
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
+        extSeqBuilder = new ExtensionSeqBuilderOld(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertNotNull(extSeqBuilder.maxRepeat());

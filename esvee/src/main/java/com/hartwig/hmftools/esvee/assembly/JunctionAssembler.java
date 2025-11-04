@@ -122,7 +122,7 @@ public class JunctionAssembler
         if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
             return Collections.emptyList();
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
+        ExtensionSeqBuilderOld extensionSeqBuilder = new ExtensionSeqBuilderOld(mJunction, extensionReads);
 
         int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 
@@ -351,7 +351,7 @@ public class JunctionAssembler
         if(firstAssembly.hasLineSequence())
             return null;
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
+        ExtensionSeqBuilderOld extensionSeqBuilder = new ExtensionSeqBuilderOld(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())
             return null;
@@ -391,7 +391,7 @@ public class JunctionAssembler
     }
 
     private void addJunctionReads(
-            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
+            final JunctionAssembly assembly, final ExtensionSeqBuilderOld extensionSeqBuilder, final List<Read> junctionReads)
     {
         int mismatchReadCount = 0;
 
@@ -408,7 +408,7 @@ public class JunctionAssembler
         assembly.addMismatchReadCount(mismatchReadCount);
     }
 
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
+    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilderOld extensionSeqBuilder, final Read read)
     {
         ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
 
@@ -420,6 +420,31 @@ public class JunctionAssembler
 
         assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
         return true;
+    }
+
+    private void addJunctionReads(
+            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
+    {
+        int mismatchReadCount = 0;
+
+        // test other junction-spanning reads against this new assembly
+        for(Read read : junctionReads)
+        {
+            if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
+                continue;
+
+            ReadParseState readInfo = extensionSeqBuilder.checkAddJunctionRead(read);
+            if(readInfo == null || readInfo.mismatched())
+            {
+                ++mismatchReadCount;
+            }
+            else
+            {
+                assembly.addSupport(read, JUNCTION, readInfo.startIndex(), readInfo.matchedBases(), readInfo.mismatchCount());
+            }
+        }
+
+        assembly.addMismatchReadCount(mismatchReadCount);
     }
 
     private boolean meetsMinSupportThreshold(final List<SupportRead> support)

@@ -48,7 +48,14 @@ public final class AssemblyConstants
 
     public static final double READ_MISMATCH_PENALTY = 1;
     public static final double READ_MISMATCH_MED_QUAL_PENALTY = 0.25;
-    public static final double PERMITTED_READ_MISMATCH_PENALTY_BASE = 0.5;
+
+    public static final int READ_MISMATCH_PENALTY_LENGTH_1 = 5;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_2 = 15;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.25;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_3 = 100;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 2;
 
     public static final int READ_MISMATCH_LOW_REPEAT_COUNT = 4;
     public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;

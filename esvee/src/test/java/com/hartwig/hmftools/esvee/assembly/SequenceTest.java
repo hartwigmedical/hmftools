@@ -26,16 +26,26 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SequenceTest
 {
+    public SequenceTest()
+    {}
+
+    @After
+    public void resetSequencingType() { setIlluminaSequencing(); }
+
+
     @Test
     public void testSeqBuildSnvMismatches()
     {
@@ -63,7 +73,7 @@ public class SequenceTest
                 new ReadParseState(buildForwards, read2, refBuffer.length()),
                 new ReadParseState(buildForwards, read3, refBuffer.length()));
 
-        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, 0);
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, true);
 
         String consensusStr = seqBuilder.baseString();
         assertEquals(readExtBases1, consensusStr);
@@ -150,7 +160,7 @@ public class SequenceTest
         int maxReadLength = readParseStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
         int consensusBaseLength = maxReadLength - refBuffer.length();
 
-        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, 0);
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, true);
 
         String consensusStr = seqBuilder.baseString();
         assertEquals(readExtBases1, consensusStr);
@@ -166,6 +176,48 @@ public class SequenceTest
         assertEquals(SequenceDiffType.INSERT, readState4.mismatches().get(0).Type);
         assertEquals(SequenceDiffType.INSERT, readState4.mismatches().get(1).Type);
         assertEquals(SequenceDiffType.DELETE, readState4.mismatches().get(2).Type);
+    }
+
+    @Test
+    public void testSeqBuildLowQualIndel()
+    {
+        String refBuffer = "CCCCC";
+        //                      012345678901
+        String readExtBases1 = "AACCGGTTAACC";
+        String readBases1 = refBuffer + readExtBases1;
+        String readBases2 = readBases1;
+
+        // a low-qual 1-base insert, should not be treated as a loq-qual SNV mismatch
+        String readExtBases3 = readExtBases1.substring(0, 6) + "A" + readExtBases1.substring(6);
+        String readBases3 = refBuffer + readExtBases3;
+
+        String cigar = makeCigarString(readBases1, 0, 0);
+
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases1, cigar);
+        Read read2 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases2, cigar);
+        Read read3 = createRead(READ_ID_GENERATOR.nextId(), 100, readBases3, makeCigarString(readBases3, 0, 0));
+        read3.getBaseQuality()[refBuffer.length() + 6] = 10;
+
+        boolean buildForwards = true;
+
+        List<ReadParseState> readParseStates = Lists.newArrayList(
+                new ReadParseState(buildForwards, read1, refBuffer.length()),
+                new ReadParseState(buildForwards, read2, refBuffer.length()),
+                new ReadParseState(buildForwards, read3, refBuffer.length()));
+
+        int maxReadLength = readParseStates.stream().mapToInt(x -> x.read().basesLength()).max().orElse(0);
+        int consensusBaseLength = maxReadLength - refBuffer.length();
+
+        SequenceBuilder seqBuilder = new SequenceBuilder(readParseStates, buildForwards, consensusBaseLength, true);
+
+        String consensusStr = seqBuilder.baseString();
+        assertEquals(readExtBases1, consensusStr);
+        assertTrue(seqBuilder.repeats().isEmpty());
+
+        ReadParseState readState3 = readParseStates.get(2);
+        assertEquals(1, readState3.mismatches().size());
+        assertEquals(SequenceDiffType.INSERT, readState3.mismatches().get(0).Type);
+        assertEquals(0, readState3.mismatches().get(0).MismatchPenalty, 0.1);
     }
 
     @Test

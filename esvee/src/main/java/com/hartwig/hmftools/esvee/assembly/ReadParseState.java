@@ -28,8 +28,9 @@ public class ReadParseState
     private int mReadIndex;
 
     private boolean mExhausted;
-    private boolean mIsValid;
+    private boolean mMismatched;
 
+    public int mBaseMatches;
     public int mHighQualMatches;
     private List<SequenceDiffInfo> mMismatches;
 
@@ -44,11 +45,12 @@ public class ReadParseState
 
         mExhausted = false;
         mReadIndex = 0;
-        mIsValid = true;
 
         // move to the required index
         resetIndex();
 
+        mMismatched = false;
+        mBaseMatches = 0;
         mHighQualMatches = 0; // was initialised to 1 for first ref base for ref base building
         mMismatches = null;
         mLowQualIndices = null;
@@ -59,21 +61,40 @@ public class ReadParseState
         return mRead;
     }
 
-    public boolean isValid() { return mIsValid; }
-    public void markInvalid() { mIsValid = false; }
+    // public boolean isValid() { return mMismatched; }
+    public boolean mismatched() { return mMismatched; }
+    public void markMismatched() { mMismatched = true; }
 
     public boolean exhausted() { return mExhausted; }
 
+    public int startIndex() { return mStartIndex; }
     public int readIndex() { return mReadIndex; }
 
     public byte currentBase() { return mRead.getBases()[mReadIndex]; }
     public byte currentQual() { return mRead.getBaseQuality()[mReadIndex]; }
 
-    public int highQualMatches() { return mHighQualMatches; }
-    public void addHighQualMatch() { ++mHighQualMatches; }
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
 
+    public int matchedBases() { return mBaseMatches; }
+
+    public void addBaseMatch(boolean isHighQual)
+    {
+        ++mBaseMatches;
+
+        if(isHighQual)
+            ++mHighQualMatches;
+    }
+
+    public void addBaseMatches(int count, int highQualCount)
+    {
+        mBaseMatches += count;
+        mHighQualMatches += highQualCount;
+    }
+
+    public int highQualMatches() { return mHighQualMatches; }
+
     public List<SequenceDiffInfo> mismatches() { return mMismatches != null ? mMismatches : Collections.emptyList(); }
+    public int mismatchCount() { return mMismatches != null ? mMismatches.size() : 0; }
     public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo)
     {
         if(mMismatches == null)
@@ -85,6 +106,7 @@ public class ReadParseState
     public void resetMatches()
     {
         mHighQualMatches = 0;
+        mBaseMatches = 0;
 
         if(mMismatches != null)
             mMismatches.clear();
@@ -209,6 +231,35 @@ public class ReadParseState
         return bases;
     }
 
+    public int highQualBaseCount(int readIndexStart, int readIndexEnd)
+    {
+        int highQualBases = 0;
+        for(int i = readIndexStart; i <= readIndexEnd; ++i)
+        {
+            if(i >= 0 && i < mRead.getBaseQuality().length)
+            {
+                if(isHighBaseQual(mRead.getBaseQuality()[i]))
+                    ++highQualBases;
+            }
+        }
+
+        return highQualBases;
+    }
+
+    public BaseQualType qualType(int index) { return rangeMinQualType(index, index); }
+
+    public BaseQualType straddlingQualType(int readIndexStart, int readIndexEnd)
+    {
+        BaseQualType qualTypeStart = qualType(readIndexStart);
+        BaseQualType qualTypeEnd = qualType(readIndexEnd);
+
+        if(qualTypeStart == qualTypeEnd)
+            return qualTypeStart;
+
+        // returns the lower qual-type value
+        return qualTypeStart.ordinal() > qualTypeEnd.ordinal() ? qualTypeStart : qualTypeEnd;
+    }
+
     public BaseQualType rangeMinQualType(int readIndexStart, int readIndexEnd)
     {
         if(isUltima())
@@ -242,8 +293,9 @@ public class ReadParseState
 
     public String toString()
     {
-        return format("%s: index(%d/%d) %s hqMatch(%d) mismatch(%.1f)",
-                mRead.id(), mReadIndex, mBaseLength - 1, mExhausted ? "exhausted" : "active", mHighQualMatches, mismatchPenalty());
+        return format("%s: index(%d/%d) state(%s) hqMatch(%d) mismatch(%.1f)",
+                mRead.id(), mReadIndex, mBaseLength - 1, mMismatched ? "mismatched" : (mExhausted ? "exhausted" : "active"),
+                mHighQualMatches, mismatchPenalty());
     }
 
     @VisibleForTesting

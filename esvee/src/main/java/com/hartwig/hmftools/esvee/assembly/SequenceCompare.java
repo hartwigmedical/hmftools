@@ -10,9 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIF
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
@@ -290,7 +288,7 @@ public final class SequenceCompare
                 // how should this make use of max repeat count differences?
                 if(firstRepeat.Bases.contains(secondRepeat.Bases) && firstRepeat.Count == 2)
                 {
-                    int ratio = firstRepeat.baseLength() / secondRepeat.baseLength();
+                    int ratio = firstRepeat.repeatLength() / secondRepeat.repeatLength();
 
                     if(secondRepeat.Count != firstRepeat.Count * ratio)
                         return 0;
@@ -299,7 +297,7 @@ public final class SequenceCompare
                 }
                 else if(secondRepeat.Bases.contains(firstRepeat.Bases) && secondRepeat.Count == 2)
                 {
-                    int ratio = secondRepeat.baseLength() / firstRepeat.baseLength();
+                    int ratio = secondRepeat.repeatLength() / firstRepeat.repeatLength();
 
                     if(firstRepeat.Count != secondRepeat.Count * ratio)
                         return 0;
