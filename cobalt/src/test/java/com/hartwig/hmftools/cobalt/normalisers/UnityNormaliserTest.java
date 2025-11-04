@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 import static org.immutables.value.internal.$guava$.collect.$ImmutableList.of;
 
 import java.util.List;
+
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
+import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
 
 import org.junit.Assert;
 import org.junit.Test;

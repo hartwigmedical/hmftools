@@ -14,7 +14,7 @@ public class DepthReading
         Chromosome = chromosome;
         StartPosition = startPosition;
         ReadDepth = readDepth;
-        ReadGcContent = readDepth == 0 ? 0 :readGcContent;
+        ReadGcContent = readDepth == 0 ? 0 : readGcContent;
     }
 
     @Override

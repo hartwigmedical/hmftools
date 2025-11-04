@@ -51,7 +51,7 @@ public record RawCobaltRatio(
 
     public CobaltRatio toCobaltRatio()
     {
-        return  new CobaltRatio(chromosome, position, referenceReadCount, referenceGcRatio, referenceGCContent, referenceGcDiploidRatio,
+        return new CobaltRatio(chromosome, position, referenceReadCount, referenceGcRatio, referenceGCContent, referenceGcDiploidRatio,
                 tumorReadCount, tumorGcRatio, tumorGCContent);
     }
 }

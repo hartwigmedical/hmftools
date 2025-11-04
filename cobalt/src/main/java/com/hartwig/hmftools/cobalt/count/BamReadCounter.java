@@ -31,7 +31,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BRC
+public class BamReadCounter
 {
     private final CobaltConfig mConfig;
     private final String mBamPath;
@@ -40,7 +40,7 @@ public class BRC
     private final List<ChromosomeData> mChromosomes = Lists.newArrayList();
     private final ReadDepthAccumulator mReadDepthAccumulator;
 
-    public BRC(
+    public BamReadCounter(
             final int windowSize, final CobaltConfig config,
             final ExecutorService executorService,
             final String bamPath) throws IOException
@@ -126,7 +126,7 @@ public class BRC
         mReadDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
     }
 
-    public ListMultimap<HumanChromosome, DepthReading> calculateReadDepths()throws ExecutionException, InterruptedException
+    public ListMultimap<HumanChromosome, DepthReading> calculateReadDepths() throws ExecutionException, InterruptedException
     {
         for(Future<?> f : tasks)
         {

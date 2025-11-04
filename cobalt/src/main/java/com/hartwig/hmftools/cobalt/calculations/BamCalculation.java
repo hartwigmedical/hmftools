@@ -7,23 +7,25 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public abstract class BamCalculation
+abstract class BamCalculation
 {
     private final ListMultimap<Chromosome, CobaltWindow> WindowsByChromosome = ArrayListMultimap.create();
     private final GCPailsList mGCPailsList = new GCPailsList();
-    private final GenomeFilter mGenomeFilter;
+    private final WindowStatuses mGenomeFilter;
     protected final CobaltScope Scope;
     private GcBucketStatistics BucketStatistics;
     final ReadDepthStatisticsNormaliser MeanNormaliser;
     final ResultsNormaliser MegaBaseScaleNormaliser;
     private final ResultsNormaliser FinalNormaliser;
 
-    public BamCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
+    BamCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
         this.mGenomeFilter = mGenomeFilter;
         this.Scope = scope;
@@ -32,7 +34,7 @@ public abstract class BamCalculation
         MegaBaseScaleNormaliser = createMegaBaseScaleNormaliser(version);
     }
 
-    public void addReading(Chromosome chromosome, DepthReading readDepth)
+    void addReading(Chromosome chromosome, DepthReading readDepth)
     {
         // The genome filter takes into account gc mappability, excluded pseudo-gene regions
         // and excluded non-diploid regions, depending on the mode.
@@ -48,7 +50,7 @@ public abstract class BamCalculation
         WindowsByChromosome.put(chromosome, bucketedWindow);
     }
 
-    public ListMultimap<Chromosome, BamRatio> calculateRatios()
+    ListMultimap<Chromosome, BamRatio> calculateRatios()
     {
         BucketStatistics = new GcBucketStatistics(mGCPailsList, GC_BUCKET_MIN, GC_BUCKET_MAX);
         final ListMultimap<Chromosome, BamRatio> bamResults = ArrayListMultimap.create();

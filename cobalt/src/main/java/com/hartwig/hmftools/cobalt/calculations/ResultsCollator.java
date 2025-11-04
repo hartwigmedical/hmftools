@@ -12,16 +12,16 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class ResultsCollator
+class ResultsCollator
 {
     private final RefGenomeVersion GenomeVersion;
 
-    public ResultsCollator(RefGenomeVersion genomeVersion)
+    ResultsCollator(RefGenomeVersion genomeVersion)
     {
         this.GenomeVersion = genomeVersion;
     }
 
-    public ListMultimap<Chromosome, CobaltRatio> collateResults(ListMultimap<Chromosome, BamRatio> tumorResults,
+    ListMultimap<Chromosome, CobaltRatio> collateResults(ListMultimap<Chromosome, BamRatio> tumorResults,
             ListMultimap<Chromosome, BamRatio> referenceResults)
     {
         checkArgument(!tumorResults.isEmpty() || !referenceResults.isEmpty());
@@ -52,11 +52,11 @@ public class ResultsCollator
         checkArgument(referenceRatio != null || tumorRatio != null);
         checkArgument(referenceRatio == null || tumorRatio == null || referenceRatio.mChromosome.equals(tumorRatio.mChromosome));
         checkArgument(referenceRatio == null || tumorRatio == null || referenceRatio.Position == tumorRatio.Position);
-        if (tumorRatio == null)
+        if(tumorRatio == null)
         {
             return referenceOnlyCobaltRatio(referenceRatio);
         }
-        if (referenceRatio == null)
+        if(referenceRatio == null)
         {
             return tumorOnlyCobaltRatio(tumorRatio);
         }
@@ -72,6 +72,7 @@ public class ResultsCollator
                 -1.0, -1.0, -1.0, -1.0,
                 tumorRatio.readDepth(), tumorRatio.ratio(), tumorRatio.gcContent());
     }
+
     private CobaltRatio referenceOnlyCobaltRatio(BamRatio referenceRatio)
     {
         checkArgument(referenceRatio != null);

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
+import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.Doubles;

@@ -10,8 +10,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.calculations.NoOpReadDepthStatisticsNormaliser;
-import com.hartwig.hmftools.cobalt.calculations.UnityNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.NoOpReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.UnityNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 

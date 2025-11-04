@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.cobalt.utils;
 
-import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.*;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.chromosome;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.position;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCContent;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCDiploidRatio;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceGCRatio;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.referenceReadDepth;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorGCContent;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorGCRatio;
+import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.Column.tumorReadDepth;
 import static com.hartwig.hmftools.common.cobalt.CobaltRatioFile.FORMAT;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 
@@ -45,7 +53,8 @@ public class RawCobaltRatioFile
         try(BufferedWriter writer = createGzipBufferedWriter(fileName))
         {
             DelimFileWriter.write(writer, columns, ratios,
-                    (ratio, row) -> {
+                    (ratio, row) ->
+                    {
                         row.set(chromosome, ratio.chromosome());
                         row.set(position, ratio.position());
                         row.set(referenceReadDepth, ratio.referenceReadCount(), FORMAT);

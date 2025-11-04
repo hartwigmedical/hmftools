@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.ratio;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import static org.junit.Assert.assertEquals;
 

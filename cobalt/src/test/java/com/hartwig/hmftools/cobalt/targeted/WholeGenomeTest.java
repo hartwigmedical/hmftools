@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
-import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;

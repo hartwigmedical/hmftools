@@ -2,9 +2,9 @@ package com.hartwig.hmftools.cobalt.targeted;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
-import com.hartwig.hmftools.cobalt.calculations.DoNothingNormaliser;
-import com.hartwig.hmftools.cobalt.calculations.ReadDepthStatisticsNormaliser;
-import com.hartwig.hmftools.cobalt.calculations.ResultsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.consolidation.LowCoverageConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;

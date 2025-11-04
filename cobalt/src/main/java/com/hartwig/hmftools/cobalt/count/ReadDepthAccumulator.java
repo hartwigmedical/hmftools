@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 //
 // This class must be thread safe, maybe we should change it to non thread safe but put
 // all updating of counts in one thread.
-public class ReadDepthAccumulator
+class ReadDepthAccumulator
 {
     // raw counts of read bases
     private static class ChromosomeWindowCounts
@@ -37,6 +37,7 @@ public class ReadDepthAccumulator
         {
             windowReadBaseCounts.getAndAdd(windowIndex, count);
         }
+
         public void addGcCount(int windowIndex, int count)
         {
             windowGcCounts.getAndAdd(windowIndex, count);
@@ -46,6 +47,7 @@ public class ReadDepthAccumulator
         {
             return windowReadBaseCounts.get(windowIndex);
         }
+
         public int getGcCount(int windowIndex)
         {
             return windowGcCounts.get(windowIndex);
@@ -55,12 +57,12 @@ public class ReadDepthAccumulator
     private final int mWindowSize;
     private final Map<String, ChromosomeWindowCounts> mChromosomeWindowCounts = new ConcurrentHashMap<>();
 
-    public ReadDepthAccumulator(int windowSize)
+    ReadDepthAccumulator(int windowSize)
     {
         mWindowSize = windowSize;
     }
 
-    public void addChromosome(String chromosome, int chromosomeLength)
+    void addChromosome(String chromosome, int chromosomeLength)
     {
         Validate.isTrue(!mChromosomeWindowCounts.containsKey(chromosome));
         int numWindows = chromosomeLength / mWindowSize;
@@ -68,7 +70,7 @@ public class ReadDepthAccumulator
     }
 
     @NotNull
-    public List<DepthReading> getChromosomeReadDepths(String chromosome)
+    List<DepthReading> getChromosomeReadDepths(String chromosome)
     {
         ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
 
@@ -95,7 +97,7 @@ public class ReadDepthAccumulator
     // this function is thread safe
     // genomeStart is 1 based and genomeEnd is inclusive
     // readStartIndex is 0 based
-    public void addReadAlignmentToCounts(String chromosome, int genomeStart, int alignmentLength, byte[] readBases, int readStartIndex)
+    void addReadAlignmentToCounts(String chromosome, int genomeStart, int alignmentLength, byte[] readBases, int readStartIndex)
     {
         ChromosomeWindowCounts windowCounts = mChromosomeWindowCounts.get(chromosome);
 
@@ -105,7 +107,7 @@ public class ReadDepthAccumulator
             return;
         }
 
-        for(int windowIndex = getWindowIndex(genomeStart);; windowIndex++)
+        for(int windowIndex = getWindowIndex(genomeStart); ; windowIndex++)
         {
             int windowStart = getGenomePosition(windowIndex);
 
@@ -153,6 +155,7 @@ public class ReadDepthAccumulator
     {
         return (position - 1) / mWindowSize;
     }
+
     private int getGenomePosition(int windowIndex)
     {
         return windowIndex * mWindowSize + 1;

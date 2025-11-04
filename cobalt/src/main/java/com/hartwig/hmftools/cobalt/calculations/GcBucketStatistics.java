@@ -8,22 +8,22 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 
-public class GcBucketStatistics
+class GcBucketStatistics
 {
     private final int MinAllowedGc;
     private final int MaxAllowedGc;
     private final double[] MeanDepths = new double[101];
 
-    public GcBucketStatistics(GCPailsList gcPailsList, int minAllowedGc, int maxAllowedGc)
+    GcBucketStatistics(GCPailsList gcPailsList, int minAllowedGc, int maxAllowedGc)
     {
         Preconditions.checkArgument(minAllowedGc > 0);
         Preconditions.checkArgument(maxAllowedGc < 100);
         this.MinAllowedGc = minAllowedGc;
         this.MaxAllowedGc = maxAllowedGc;
-        double[] window = {-1.0, -1.0, -1.0};
+        double[] window = { -1.0, -1.0, -1.0 };
         for(int i = 0; i < MeanDepths.length - 1; i++)
         {
-            GCPail gcPail = gcPailsList.getBuckets().get(i+1);
+            GCPail gcPail = gcPailsList.getBuckets().get(i + 1);
             window[0] = window[1];
             window[1] = window[2];
             window[2] = gcPail.median();
@@ -39,10 +39,10 @@ public class GcBucketStatistics
         MeanDepths[100] = -1.0;
     }
 
-    public Map<GCBucket, Double> bucketToMedianReadDepth()
+    Map<GCBucket, Double> bucketToMedianReadDepth()
     {
         Map<GCBucket, Double> bucketToMedian = new HashMap<>();
-        for (int i=0; i<101; i++)
+        for(int i = 0; i < 101; i++)
         {
             if(MeanDepths[i] > 0)
             {
@@ -52,14 +52,14 @@ public class GcBucketStatistics
         return bucketToMedian;
     }
 
-    public boolean isAllowed(GCPail gcPail)
+    boolean isAllowed(GCPail gcPail)
     {
         return gcPail != null && gcPail.mGC > MinAllowedGc && gcPail.mGC <= MaxAllowedGc;
     }
 
-    public double medianReadDepth(GCPail gcBucket)
+    double medianReadDepth(GCPail gcBucket)
     {
-        if (!isAllowed(gcBucket))
+        if(!isAllowed(gcBucket))
         {
             return -1;
         }

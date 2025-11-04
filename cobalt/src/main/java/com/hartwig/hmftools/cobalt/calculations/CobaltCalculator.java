@@ -28,7 +28,7 @@ public class CobaltCalculator
             CobaltConfig config)
     {
         Preconditions.checkArgument(!tumourDepthReadings.isEmpty() || !referenceDepthReadings.isEmpty());
-        GenomeFilter mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.excludedRegions(), config.diploidRegions());
+        WindowStatuses mWindowStatuses = new WindowStatuses(config.gcProfileData(), config.excludedRegions(), config.diploidRegions());
         CobaltScope scope = config.scope();
 
         TumorCalculation tumorCalc = new TumorCalculation(mWindowStatuses, scope, config.genome());

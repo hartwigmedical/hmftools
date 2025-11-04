@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
@@ -19,7 +20,6 @@ public class DiploidNormaliser implements ResultsNormaliser
     private final RefGenomeVersion mRefGenomeVersion;
     private final Map<Chromosome, DiploidRatioNormaliser> chromosomeToNormaliser = new HashMap<>();
     private List<MedianRatio> mMedianRatios;
-    private final Map<Chromosome, Double> mChromosomeToExpectedValue = new HashMap<>();
 
     public DiploidNormaliser(final int rollingMedianMaxDistance, final int rollingMedianMinCoverage,
             final RefGenomeVersion mRefGenomeVersion)

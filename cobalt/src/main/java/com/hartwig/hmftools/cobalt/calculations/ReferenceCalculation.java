@@ -6,14 +6,18 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.ROLLING_MEDIAN_MIN_COV
 import java.util.List;
 
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
+import com.hartwig.hmftools.cobalt.normalisers.DiploidNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class ReferenceCalculation extends BamCalculation
+class ReferenceCalculation extends BamCalculation
 {
     private final ResultsConsolidator mResultsConsolidator;
-    public ReferenceCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version,
+
+    ReferenceCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope, RefGenomeVersion version,
             final ResultsConsolidator mResultsConsolidator)
     {
         super(mGenomeFilter, scope, version);

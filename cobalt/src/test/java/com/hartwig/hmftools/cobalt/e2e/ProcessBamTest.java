@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +75,7 @@ public class ProcessBamTest
         referenceBamFile = null;
         tumorRatioResults = null;
         medianRatioResults = null;
-        tempDir = new File("/Users/timlavers/work/junk/rubbish/tmp");
+        tempDir = Files.createTempDirectory("pbt").toFile();
         outputDir = new File(tempDir, "output");
         diploidBedFile = null;
         //noinspection ResultOfMethodCallIgnored

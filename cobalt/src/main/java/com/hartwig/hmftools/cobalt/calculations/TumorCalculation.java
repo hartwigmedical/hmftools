@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.cobalt.calculations;
 
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
+import com.hartwig.hmftools.cobalt.normalisers.DoNothingNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
-public class TumorCalculation extends BamCalculation
+class TumorCalculation extends BamCalculation
 {
     private ResultsConsolidator mResultsConsolidator;
-    public TumorCalculation(final GenomeFilter mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
+
+    TumorCalculation(final WindowStatuses mGenomeFilter, CobaltScope scope, RefGenomeVersion version)
     {
         super(mGenomeFilter, scope, version);
     }
@@ -25,9 +29,8 @@ public class TumorCalculation extends BamCalculation
     @Override
     ResultsConsolidator consolidator()
     {
-        if (mResultsConsolidator == null)
+        if(mResultsConsolidator == null)
         {
-            // todo make it null if empty
             mResultsConsolidator = Scope.resultsConsolidator(MeanNormaliser.readDepthMedian());
         }
         return mResultsConsolidator;

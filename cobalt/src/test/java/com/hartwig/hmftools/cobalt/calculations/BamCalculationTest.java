@@ -10,6 +10,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
+import com.hartwig.hmftools.cobalt.normalisers.ReadDepthStatisticsNormaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
 import com.hartwig.hmftools.common.cobalt.GcMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
@@ -32,7 +34,7 @@ public class BamCalculationTest extends CalculationsTestBase
         DepthNormaliser = new RecordingNormaliser(1.0 / 2.0);
         MbScaleNormaliser = new RecordingNormaliser(1.0 / 3.0);
         FinalNormaliser = new RecordingNormaliser(1.0 / 5.0);
-        final GenomeFilter genomeFilter = Mockito.mock(GenomeFilter.class);
+        final WindowStatuses genomeFilter = Mockito.mock(WindowStatuses.class);
         Mockito.when(genomeFilter.exclude(Mockito.any(), Mockito.any())).thenReturn(false);
         final CobaltScope scope = Mockito.mock(CobaltScope.class);
         Mockito.when(scope.onTarget(Mockito.any(), Mockito.any(Integer.class))).thenReturn(true);
@@ -74,7 +76,7 @@ public class BamCalculationTest extends CalculationsTestBase
 
     class BC extends BamCalculation
     {
-        public BC(final GenomeFilter mGenomeFilter, final CobaltScope scope, final RefGenomeVersion version)
+        public BC(final WindowStatuses mGenomeFilter, final CobaltScope scope, final RefGenomeVersion version)
         {
             super(mGenomeFilter, scope, version);
         }

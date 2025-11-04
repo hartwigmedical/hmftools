@@ -1,20 +1,20 @@
-package com.hartwig.hmftools.cobalt.ratio;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-public class RollingMedian
+class RollingMedian
 {
     private final PriorityQueue<Double> mMinheap;
     private final PriorityQueue<Double> mMaxheap;
 
-    public RollingMedian()
+    RollingMedian()
     {
-       mMinheap = new PriorityQueue<>(new MinHeapComparator());
-       mMaxheap = new PriorityQueue<>(new MaxHeapComparator());
+        mMinheap = new PriorityQueue<>(new MinHeapComparator());
+        mMaxheap = new PriorityQueue<>(new MaxHeapComparator());
     }
 
-    public void add(double n)
+    void add(double n)
     {
         if(isEmpty())
         {
@@ -35,7 +35,7 @@ public class RollingMedian
         fixChaos();
     }
 
-    public void remove(double n)
+    void remove(double n)
     {
         if(!isEmpty())
         {
@@ -51,7 +51,7 @@ public class RollingMedian
         fixChaos();
     }
 
-    public int size()
+    int size()
     {
         return mMaxheap.size() + mMinheap.size();
     }

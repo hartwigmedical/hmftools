@@ -25,8 +25,15 @@ public class SampleRegionData
         mAdjustedGcRatio = 0;
     }
 
-    public double adjustedGcRatio() { return mAdjustedGcRatio; }
-    public void setAdjustedGcRatio(double adjustedGcRatio) { mAdjustedGcRatio = adjustedGcRatio; }
+    public double adjustedGcRatio()
+    {
+        return mAdjustedGcRatio;
+    }
+
+    public void setAdjustedGcRatio(double adjustedGcRatio)
+    {
+        mAdjustedGcRatio = adjustedGcRatio;
+    }
 
     public String toString()
     {

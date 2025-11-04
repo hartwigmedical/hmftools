@@ -3,24 +3,24 @@ package com.hartwig.hmftools.cobalt.calculations;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GCPailsList
+class GCPailsList
 {
     private final List<GCPail> mBuckets = new ArrayList<>(101);
 
-    public GCPailsList()
+    GCPailsList()
     {
-        for (int i = 0; i < 101; i++)
+        for(int i = 0; i < 101; i++)
         {
             mBuckets.add(new GCPail(i));
         }
     }
 
-    public GCPail getGCPail(double gcContent)
+    GCPail getGCPail(double gcContent)
     {
         return mBuckets.get(GCPail.bucketIndex(gcContent));
     }
 
-    public List<GCPail> getBuckets()
+    List<GCPail> getBuckets()
     {
         return mBuckets;
     }

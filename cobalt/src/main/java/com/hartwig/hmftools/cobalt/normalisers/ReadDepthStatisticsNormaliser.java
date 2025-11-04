@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
-import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MAX;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_GC_RATIO_MIN;
 
 import com.google.common.base.Preconditions;
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -20,7 +20,7 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
     {
         mReadDepthMean = descriptiveStatistics.getMean();
         mReadDepthMedian = descriptiveStatistics.getPercentile(50);
-        Ratio =  mReadDepthMean / mReadDepthMedian;
+        Ratio = mReadDepthMean / mReadDepthMedian;
     }
 
     public double readDepthMean()
@@ -38,11 +38,11 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
     {
         Preconditions.checkState(Ratio < 0.0);
 
-        if (!bamRatio.mChromosome.isAutosome())
+        if(!bamRatio.mChromosome.isAutosome())
         {
             return;
         }
-        if (bamRatio.gcContent() < DEFAULT_GC_RATIO_MIN)
+        if(bamRatio.gcContent() < DEFAULT_GC_RATIO_MIN)
         {
             return;
         }
@@ -51,7 +51,7 @@ public class ReadDepthStatisticsNormaliser implements ResultsNormaliser
             return;
         }
         double ratio = bamRatio.ratio();
-        if (ratio > 0.0)
+        if(ratio > 0.0)
         {
             descriptiveStatistics.addValue(bamRatio.readDepth());
         }

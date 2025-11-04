@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
+
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 
 public interface ResultsNormaliser
 {

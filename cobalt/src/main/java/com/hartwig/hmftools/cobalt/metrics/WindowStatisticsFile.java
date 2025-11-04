@@ -38,7 +38,8 @@ public class WindowStatisticsFile
         try(BufferedWriter writer = createGzipBufferedWriter(fileName))
         {
             DelimFileWriter.write(writer, columns, statistics,
-                    (windowStatistics, row) -> {
+                    (windowStatistics, row) ->
+                    {
                         row.set(Column.chromosome, windowStatistics.chromosome());
                         row.set(Column.position, windowStatistics.position());
                         row.set(Column.count, windowStatistics.count());

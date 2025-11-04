@@ -44,7 +44,7 @@ public class BamRatio
         Ratio = mReadDepth;
         GcContent = Double.isFinite(gcContent) ? gcContent : -1.0;
         Included = included;
-        if (!Included)
+        if(!Included)
         {
             Ratio = -1.0;
         }
@@ -68,11 +68,11 @@ public class BamRatio
     public void normaliseDiploidAdjustedRatio(double factor)
     {
         // ratio 0 => {-1 if not relevant, 0 if relevant}
-        if (DiploidAdjustedRatio == 0.0)
+        if(DiploidAdjustedRatio == 0.0)
         {
             return;
         }
-        if (factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio < 0)
+        if(factor <= 0 || Double.isNaN(factor) || DiploidAdjustedRatio < 0)
         {
             DiploidAdjustedRatio = -1.0;
         }
@@ -84,7 +84,7 @@ public class BamRatio
 
     public void setDiploidAdjustedRatio(double ratio)
     {
-        if (Ratio == 0.0)
+        if(Ratio == 0.0)
         {
             DiploidAdjustedRatio = 0.0;
         }
@@ -102,7 +102,7 @@ public class BamRatio
     public void overrideRatio(double ratio)
     {
         Ratio = ratio;
-        if (Ratio > 0)
+        if(Ratio > 0)
         {
             Included = true;
         }
@@ -115,11 +115,11 @@ public class BamRatio
             Included = false;
             Ratio = -1.0;
         }
-        if (Doubles.isZero(Ratio))
+        if(Doubles.isZero(Ratio))
         {
             return;
         }
-        if (!Included | Ratio < 0)
+        if(!Included | Ratio < 0)
         {
             Ratio = -1.0;
             return;

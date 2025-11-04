@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.hartwig.hmftools.cobalt.ratio.RollingMedian;
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-class DiploidRatioNormaliser
+public class DiploidRatioNormaliser
 {
     private int mStartIndex = 0;
     private int mEndIndex = -1;
@@ -31,7 +31,7 @@ class DiploidRatioNormaliser
 
     void recordRatio(final BamRatio bamRatio)
     {
-        if (isValid(bamRatio.ratio()))
+        if(isValid(bamRatio.ratio()))
         {
             mRatios.add(bamRatio);
             mRatioStatistics.addValue(bamRatio.ratio());
@@ -62,7 +62,7 @@ class DiploidRatioNormaliser
 
     private void checkThatDataHasBeenFinalised()
     {
-        if (mMedian == null)
+        if(mMedian == null)
         {
             throw new IllegalStateException("Cannot get median until data collection is finalised");
         }
@@ -71,7 +71,7 @@ class DiploidRatioNormaliser
     double normalise(final BamRatio bamRatio)
     {
         checkThatDataHasBeenFinalised();
-        if (!isValid(bamRatio.ratio()))
+        if(!isValid(bamRatio.ratio()))
         {
             return bamRatio.ratio();
         }

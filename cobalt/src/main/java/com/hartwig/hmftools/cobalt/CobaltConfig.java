@@ -39,12 +39,12 @@ import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.count.BRC;
+import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
 import com.hartwig.hmftools.cobalt.diploid.DiploidStatus;
 import com.hartwig.hmftools.cobalt.exclusions.ExcludedRegionsFile;
-import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.CobaltScope;
+import com.hartwig.hmftools.cobalt.targeted.TargetRegions;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRegionsNormalisationFile;
 import com.hartwig.hmftools.cobalt.targeted.WholeGenome;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -260,27 +260,27 @@ public class CobaltConfig
 
     public ListMultimap<Chromosome, DiploidStatus> diploidRegions()
     {
-        if (TumorOnlyDiploidBed == null)
+        if(TumorOnlyDiploidBed == null)
         {
             return ArrayListMultimap.create();
         }
-        try {
+        try
+        {
             return new DiploidRegionLoader(TumorOnlyDiploidBed).regions();
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CB_LOGGER.error("failed to load diploid regions bed file: {}", e.toString());
             return ArrayListMultimap.create();
         }
     }
 
-
-    public BRC tumorBamReader(ExecutorService executorService) throws IOException
+    public BamReadCounter tumorBamReader(ExecutorService executorService) throws IOException
     {
         return bamReader(executorService, TumorBamPath);
     }
 
-    public BRC referenceBamReader(ExecutorService executorService) throws IOException
+    public BamReadCounter referenceBamReader(ExecutorService executorService) throws IOException
     {
         return bamReader(executorService, ReferenceBamPath);
     }
@@ -331,12 +331,12 @@ public class CobaltConfig
         }
     }
 
-    private BRC bamReader(ExecutorService executorService, String bamPath) throws IOException
+    private BamReadCounter bamReader(ExecutorService executorService, String bamPath) throws IOException
     {
         if(bamPath != null)
         {
-            return new BRC(WINDOW_SIZE, this, executorService, bamPath);
+            return new BamReadCounter(WINDOW_SIZE, this, executorService, bamPath);
         }
-        return  null;
+        return null;
     }
 }

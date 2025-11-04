@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadFactory;
 import com.google.common.collect.ListMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.calculations.CobaltCalculator;
-import com.hartwig.hmftools.cobalt.count.BRC;
+import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
@@ -56,8 +56,8 @@ public class CobaltApplication
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
         try
         {
-            BRC brcTumor = mConfig.tumorBamReader(executorService);
-            BRC brcRef = mConfig.referenceBamReader(executorService);
+            BamReadCounter brcTumor = mConfig.tumorBamReader(executorService);
+            BamReadCounter brcRef = mConfig.referenceBamReader(executorService);
 
             ListMultimap<HumanChromosome, DepthReading> tumourDepths = brcTumor == null ? create() : brcTumor.calculateReadDepths();
             CB_LOGGER.info("Tumor depths collected, size: {}", tumourDepths.size());

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 
@@ -7,6 +7,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
+import com.hartwig.hmftools.cobalt.calculations.CalculationsTestBase;
 
 import org.junit.Test;
 

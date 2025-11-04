@@ -82,7 +82,8 @@ public class LowCoverageConsolidator implements ResultsConsolidator
                     if(bamRatio.Position > bucket.EndPosition)
                     {
                         // Turn the current bucket into a consolidated ratio and add it to the results
-                        BamRatio consolidated = new BamRatio(chromosome,bucket.BucketPosition, bucketRatios.getMean(), bucketGCs.getMean());
+                        BamRatio consolidated =
+                                new BamRatio(chromosome, bucket.BucketPosition, bucketRatios.getMean(), bucketGCs.getMean());
                         result.put(chromosome, consolidated);
                         if(bucketItr.hasNext())
                         {
@@ -109,9 +110,9 @@ public class LowCoverageConsolidator implements ResultsConsolidator
                 }
             }
             // Wrap up the last bucket, if there is one.
-            if (bucket != null)
+            if(bucket != null)
             {
-                BamRatio consolidated = new BamRatio(chromosome,bucket.BucketPosition, bucketRatios.getMean(), bucketGCs.getMean());
+                BamRatio consolidated = new BamRatio(chromosome, bucket.BucketPosition, bucketRatios.getMean(), bucketGCs.getMean());
                 result.put(chromosome, consolidated);
             }
         }

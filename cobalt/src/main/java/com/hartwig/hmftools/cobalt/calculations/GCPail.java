@@ -6,24 +6,24 @@ import com.google.common.base.Preconditions;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class GCPail
+class GCPail
 {
-    public static int bucketIndex(final double gcContent)
+    static int bucketIndex(final double gcContent)
     {
         return (int) Math.round(gcContent * 100);
     }
 
-    public final int mGC;
+    final int mGC;
     private final DescriptiveStatistics mStatistics = new DescriptiveStatistics();
 
-    public GCPail(final int mGC)
+    GCPail(final int mGC)
     {
         Preconditions.checkArgument(mGC >= 0);
         Preconditions.checkArgument(mGC <= 100);
         this.mGC = mGC;
     }
 
-    public double median()
+    double median()
     {
         if(mStatistics.getN() == 0)
         {
@@ -32,7 +32,7 @@ public class GCPail
         return mStatistics.getPercentile(50);
     }
 
-    public void addReading(final double value)
+    void addReading(final double value)
     {
         mStatistics.addValue(value);
     }

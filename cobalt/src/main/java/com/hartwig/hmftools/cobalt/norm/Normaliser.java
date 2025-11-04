@@ -24,7 +24,7 @@ public class Normaliser
         - apply a min relative enrichment threshold
     */
 
-    public static void calcSampleAdjustedRatios(final List<String> samples, final Map<String,List<RegionData>> chrRegionData)
+    public static void calcSampleAdjustedRatios(final List<String> samples, final Map<String, List<RegionData>> chrRegionData)
     {
         for(int i = 0; i < samples.size(); ++i)
         {
@@ -33,7 +33,7 @@ public class Normaliser
         }
     }
 
-    public static NormCalcData calcSampleAdjustedRatios(final int sampleIndex, final Map<String,List<RegionData>> chrRegionData)
+    public static NormCalcData calcSampleAdjustedRatios(final int sampleIndex, final Map<String, List<RegionData>> chrRegionData)
     {
         // calculate interpolated median read count per GC bucket across filtered regions
 
@@ -47,7 +47,9 @@ public class Normaliser
             String chromosome = entry.getKey();
 
             if(!useChromosome(chromosome))
+            {
                 continue;
+            }
 
             List<RegionData> regions = entry.getValue();
 
@@ -56,32 +58,30 @@ public class Normaliser
                 SampleRegionData sampleRegionData = regionData.getSampleData(sampleIndex);
 
                 if(!useRegion(regionData, sampleRegionData))
+                {
                     continue;
+                }
 
                 double readCount = sampleRegionData.ReadDepth;
                 sampleReadDepths.add(readCount);
                 sampleReadCountTotal += readCount;
 
                 // take the GC bucket from the sample's region data, not the GC profile
-                List<Double> bucketDepths = gcBucketReadDepths.get(sampleRegionData.PanelGcBucket);
-
-                if(bucketDepths == null)
-                {
-                    bucketDepths = Lists.newArrayList();
-                    gcBucketReadDepths.put(sampleRegionData.PanelGcBucket, bucketDepths);
-                }
+                List<Double> bucketDepths = gcBucketReadDepths.computeIfAbsent(sampleRegionData.PanelGcBucket, k -> Lists.newArrayList());
 
                 bucketDepths.add(readCount);
             }
         }
 
         if(sampleReadDepths.isEmpty())
+        {
             return NormCalcData.INVALID;
+        }
 
         double sampleMeanReadCount = sampleReadCountTotal / sampleReadDepths.size();
         double sampleMedianReadCount = median(sampleReadDepths);
 
-        Map<Integer,Double> gcBucketMedians = new HashMap<>();
+        Map<Integer, Double> gcBucketMedians = new HashMap<>();
 
         for(Map.Entry<Integer, List<Double>> entry : gcBucketReadDepths.entrySet())
         {
@@ -94,7 +94,7 @@ public class Normaliser
     }
 
     public static void applySampleNormalisation(
-            final int sampleIndex, final Map<String,List<RegionData>> chrRegionData, final NormCalcData normCalcData)
+            final int sampleIndex, final Map<String, List<RegionData>> chrRegionData, final NormCalcData normCalcData)
     {
         // apply the median values into each sample's adjusted calcs
         double sampleMedianNormalisation = normCalcData.sampleMedianNormalisation();
@@ -108,7 +108,9 @@ public class Normaliser
                 Double gcBucketMedian = normCalcData.GcBucketMedians.get(sampleRegionData.PanelGcBucket);
 
                 if(gcBucketMedian == null || gcBucketMedian == 0)
+                {
                     continue;
+                }
 
                 double adjustedRatio = sampleMedianNormalisation * sampleRegionData.ReadDepth / gcBucketMedian;
 
@@ -125,15 +127,19 @@ public class Normaliser
     public static boolean useRegion(final RegionData regionData, final SampleRegionData sampleRegionData)
     {
         if(regionData.mappability() < MAPPABILITY_THRESHOLD)
+        {
             return false;
+        }
 
         if(sampleRegionData.ReadDepth < 0)
+        {
             return false;
+        }
 
         return sampleRegionData.PanelGcBucket >= GC_BUCKET_MIN && sampleRegionData.PanelGcBucket <= GC_BUCKET_MAX;
     }
 
-    public static void calcRelativeEnrichment(final Map<String,List<RegionData>> chrRegionData, double minEnrichmentRatio)
+    public static void calcRelativeEnrichment(final Map<String, List<RegionData>> chrRegionData, double minEnrichmentRatio)
     {
         for(List<RegionData> regions : chrRegionData.values())
         {
@@ -152,7 +158,9 @@ public class Normaliser
                 double medianEnrichment = median(sampleRelativeEnrichment);
 
                 if(medianEnrichment >= minEnrichmentRatio)
+                {
                     regionData.setRelativeEnrichment(medianEnrichment);
+                }
             }
         }
     }

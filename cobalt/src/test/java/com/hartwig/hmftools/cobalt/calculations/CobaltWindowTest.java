@@ -103,7 +103,7 @@ public class CobaltWindowTest
     @Test
     public void correctedByReferenceValueTest()
     {
-        GenomeFilter filter = Mockito.mock(GenomeFilter.class);
+        WindowStatuses filter = Mockito.mock(WindowStatuses.class);
         Mockito.when(filter.referenceGcValueForWindow(_1, readDepth.StartPosition)).thenReturn(0.89);
 
         CobaltWindow window = new CobaltWindow(_1, readDepth.StartPosition, readDepth.ReadDepth, readDepth.ReadGcContent, null, true);

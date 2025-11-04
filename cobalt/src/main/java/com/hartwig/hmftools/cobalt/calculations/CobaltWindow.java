@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
-public class CobaltWindow
+class CobaltWindow
 {
     public final Chromosome mChromosome;
     public final int Position;
@@ -16,7 +16,7 @@ public class CobaltWindow
     public final boolean IsInExcludedRegion;
     public final boolean IsInTargetRegion;
 
-    public CobaltWindow(final Chromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
+    CobaltWindow(final Chromosome chromosome, final DepthReading depth, boolean isInExcludedRegion, boolean isInTargetRegion)
     {
         mChromosome = chromosome;
         Position = depth.StartPosition;
@@ -27,7 +27,7 @@ public class CobaltWindow
         IsInTargetRegion = isInTargetRegion;
     }
 
-    public CobaltWindow(Chromosome chromosome, int position, double readDepth, double gcContent, GCPail GcBucket, boolean isInTargetRegion)
+    CobaltWindow(Chromosome chromosome, int position, double readDepth, double gcContent, GCPail GcBucket, boolean isInTargetRegion)
     {
         mChromosome = chromosome;
         Position = position;
@@ -38,17 +38,17 @@ public class CobaltWindow
         IsInTargetRegion = isInTargetRegion;
     }
 
-    public boolean include()
+    boolean include()
     {
         return !IsInExcludedRegion && IsInTargetRegion;
     }
 
-    public BamRatio toBamRatio()
+    BamRatio toBamRatio()
     {
         return new BamRatio(mChromosome, Position, ReadDepth, GcContent, include());
     }
 
-    public CobaltWindow correctedByReferenceValue(GenomeFilter genomeData)
+    CobaltWindow correctedByReferenceValue(WindowStatuses genomeData)
     {
         Preconditions.checkArgument(this.GcBucket == null);
         if(ReadDepth >= 1.0 || ReadDepth < 0)
@@ -71,7 +71,7 @@ public class CobaltWindow
         return new CobaltWindow(mChromosome, Position, ReadDepth, referenceValue, null, IsInTargetRegion);
     }
 
-    public CobaltWindow bucketed(final GCPail bucket)
+    CobaltWindow bucketed(final GCPail bucket)
     {
         Preconditions.checkArgument(this.GcBucket == null);
         Preconditions.checkArgument(GCPail.bucketIndex(GcContent) == bucket.mGC);

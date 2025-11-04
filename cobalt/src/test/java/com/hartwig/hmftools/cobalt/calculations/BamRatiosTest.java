@@ -20,7 +20,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.consolidation.NoOpConsolidator;
 import com.hartwig.hmftools.cobalt.consolidation.ResultsConsolidator;
-import com.hartwig.hmftools.cobalt.norm.Normaliser;
+import com.hartwig.hmftools.cobalt.normalisers.ResultsNormaliser;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.junit.Assert;
@@ -58,7 +58,8 @@ public class BamRatiosTest extends CalculationsTestBase
     @Test
     public void normaliseTest()
     {
-        class RecordingNormaliser implements ResultsNormaliser {
+        class RecordingNormaliser implements ResultsNormaliser
+        {
             final Set<BamRatio> ratiosRecorded = new HashSet<>();
             final Set<BamRatio> ratiosNormalised = new HashSet<>();
             boolean DataCollectionFinishedCalled = false;

@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.cobalt.calculations;
+package com.hartwig.hmftools.cobalt.normalisers;
+
+import com.hartwig.hmftools.cobalt.calculations.BamRatio;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -12,17 +14,17 @@ public class UnityNormaliser implements ResultsNormaliser
     @Override
     public void recordValue(final BamRatio bamRatio)
     {
-        if (!bamRatio.mChromosome.isAutosome())
+        if(!bamRatio.mChromosome.isAutosome())
         {
             return;
         }
         double ratio = bamRatio.ratio();
-        if (ratio > 0.0)
+        if(ratio > 0.0)
         {
             RatiosStatistics.addValue(ratio);
         }
         double mbScaleRatio = bamRatio.getDiploidAdjustedRatio();
-        if (mbScaleRatio > 0.0)
+        if(mbScaleRatio > 0.0)
         {
             MegaBaseScaleRatioStatistics.addValue(mbScaleRatio);
         }
@@ -39,7 +41,7 @@ public class UnityNormaliser implements ResultsNormaliser
     public void normalise(BamRatio bamRatio)
     {
         bamRatio.normaliseByMean(Mean);
-        if (MegaBaseScaleRatioStatistics.getN() > 0)
+        if(MegaBaseScaleRatioStatistics.getN() > 0)
         {
             bamRatio.normaliseDiploidAdjustedRatio(MegaBaseScaleMean);
         }

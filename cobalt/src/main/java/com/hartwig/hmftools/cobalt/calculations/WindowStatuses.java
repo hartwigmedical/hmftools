@@ -13,12 +13,12 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-public class WindowStatuses implements GenomeFilter
+class WindowStatuses
 {
     private final ListMultimap<Chromosome, WindowStatus> mStatusesByChromosome = ArrayListMultimap.create();
     private final ListMultimap<Chromosome, GCProfile> GcProfileData;
 
-    public WindowStatuses(ListMultimap<Chromosome, GCProfile> gcProfileData,
+    WindowStatuses(ListMultimap<Chromosome, GCProfile> gcProfileData,
             List<ChrBaseRegion> exclusions,
             ListMultimap<Chromosome, DiploidStatus> diploidRegions)
     {
@@ -51,13 +51,12 @@ public class WindowStatuses implements GenomeFilter
         });
     }
 
-    public Double referenceGcValueForWindow(final Chromosome chromosome, int position)
+    Double referenceGcValueForWindow(final Chromosome chromosome, int position)
     {
         return GcProfileData.get(chromosome).get(indexFor(position)).gcContent();
     }
 
-    @Override
-    public boolean exclude(final Chromosome chromosome, final DepthReading readDepth)
+    boolean exclude(final Chromosome chromosome, final DepthReading readDepth)
     {
         List<WindowStatus> statusesForChromosome = mStatusesByChromosome.get(chromosome);
         WindowStatus status = statusesForChromosome.get(indexFor(readDepth.StartPosition));
