@@ -39,24 +39,23 @@ public class SamplePrepTask implements Runnable
 
     private void logProgress(int sampleIndex)
     {
-        int PROGRESS_INTERVAL = 100;
-        int FEW_SAMPLES_THRESHOLD = 10;
-
         int sampleCount = mSampleIds.size();
-        String sampleId = mSampleIds.get(sampleIndex);
 
         if(sampleCount == 1)
-        {
-            QC_LOGGER.debug("Extracting data for sample: {}}", sampleId);
-        }
-        else
-        {
-            boolean hasFewSamples = sampleCount <= FEW_SAMPLES_THRESHOLD;
-            boolean isSampleAtInterval = sampleIndex == sampleCount-1 || (sampleIndex+1) % PROGRESS_INTERVAL == 0;
+            return;
 
-            if(hasFewSamples || isSampleAtInterval)
+        int PROGRESS_INTERVAL = 100;
+
+        boolean hasManySamples = sampleCount >= PROGRESS_INTERVAL;
+
+        if(hasManySamples)
+        {
+            boolean isSampleAtInterval = (sampleIndex+1) % PROGRESS_INTERVAL == 0;
+            boolean isLastSample = sampleIndex == sampleCount-1;
+
+            if(isLastSample || isSampleAtInterval)
             {
-                QC_LOGGER.debug("Extracting data for sample {}/{}: {}", sampleIndex+1, sampleCount, sampleId);
+                QC_LOGGER.debug("Progress: {}/{} - current sample: {}", sampleIndex+1, sampleCount, mSampleIds.get(sampleIndex));
             }
         }
     }
