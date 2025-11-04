@@ -24,7 +24,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.PrepConfig;
 
-public class ReduxBqrPrep implements CategoryPrep
+public class BaseQualRecalibrationPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
@@ -36,7 +36,7 @@ public class ReduxBqrPrep implements CategoryPrep
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "standardTrinucContext";
     private static final String FIELD_ORIGINAL_QUAL = "originalQualBin";
 
-    public ReduxBqrPrep(PrepConfig config)
+    public BaseQualRecalibrationPrep(PrepConfig config)
     {
         mConfig = config;
     }

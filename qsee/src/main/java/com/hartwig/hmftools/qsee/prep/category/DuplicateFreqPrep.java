@@ -11,13 +11,13 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.PrepConfig;
 
-public class ReduxDupFreqPrep implements CategoryPrep
+public class DuplicateFreqPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
     private static final int MAX_DUP_READS = 100;
 
-    public ReduxDupFreqPrep(PrepConfig config)
+    public DuplicateFreqPrep(PrepConfig config)
     {
         mConfig = config;
     }

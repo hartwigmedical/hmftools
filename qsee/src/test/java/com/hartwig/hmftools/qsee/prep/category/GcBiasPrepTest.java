@@ -11,9 +11,8 @@ import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 import org.junit.Test;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.prep.category.CobaltGcMediansPrep;
 
-public class CobaltGcMediansPrepTest
+public class GcBiasPrepTest
 {
     @Test
     public void canNormaliseMedianReadDepths(){
@@ -23,7 +22,7 @@ public class CobaltGcMediansPrepTest
                        new ImmutableGCBucket(26), 105.0)
         );
 
-        List<Feature> features = CobaltGcMediansPrep.normaliseMedianReadDepths(gcMedianReadDepth);
+        List<Feature> features = GcBiasPrep.normaliseMedianReadDepths(gcMedianReadDepth);
 
         Feature actualFeature;
 

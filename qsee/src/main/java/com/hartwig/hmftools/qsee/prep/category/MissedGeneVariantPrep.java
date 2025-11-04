@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.metrics.BamMetricCoverage;
-import com.hartwig.hmftools.common.metrics.BamMetricFragmentLength;
 import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
-import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -19,11 +15,11 @@ import com.hartwig.hmftools.qsee.prep.PrepConfig;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GeneCoveragePrep implements CategoryPrep
+public class MissedGeneVariantPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
-    public GeneCoveragePrep(PrepConfig config)
+    public MissedGeneVariantPrep(PrepConfig config)
     {
         mConfig = config;
     }

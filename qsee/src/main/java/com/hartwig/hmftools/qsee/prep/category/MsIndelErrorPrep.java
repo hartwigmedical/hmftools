@@ -21,7 +21,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.PrepConfig;
 
-public class ReduxMsIndelErrorPrep implements CategoryPrep
+public class MsIndelErrorPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
@@ -31,7 +31,7 @@ public class ReduxMsIndelErrorPrep implements CategoryPrep
     private static final String FIELD_CONSENSUS_TYPE = "consensusType";
     private static final String FIELD_REF_NUM_UNITS = "refNumUnits";
 
-    public ReduxMsIndelErrorPrep(PrepConfig config)
+    public MsIndelErrorPrep(PrepConfig config)
     {
         mConfig = config;
     }

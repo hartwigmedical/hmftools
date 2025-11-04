@@ -2,19 +2,19 @@ package com.hartwig.hmftools.qsee.prep.category;
 
 import static org.junit.Assert.assertEquals;
 
-import static com.hartwig.hmftools.qsee.prep.category.ReduxBqrPrep.calcChangeInQualPerOriginalQual;
-import static com.hartwig.hmftools.qsee.prep.category.ReduxBqrPrep.calcChangeInQualPerTrinucContext;
+import static com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep.calcChangeInQualPerOriginalQual;
+import static com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep.calcChangeInQualPerTrinucContext;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.ConsensusType;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
-import com.hartwig.hmftools.qsee.prep.category.ReduxBqrPrep.ExtendedBqrRecord;
+import com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep.ExtendedBqrRecord;
 
 import org.junit.Test;
 
-public class ReduxBqrPrepTest
+public class BaseQualRecalibrationPrepTest
 {
     private static final List<ExtendedBqrRecord> BQR_RECORDS = List.of(
             // C>G_CCC

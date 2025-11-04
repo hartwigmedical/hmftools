@@ -2,13 +2,13 @@ package com.hartwig.hmftools.qsee.prep;
 
 import java.util.List;
 
-import com.hartwig.hmftools.qsee.prep.category.CobaltGcMediansPrep;
+import com.hartwig.hmftools.qsee.prep.category.GcBiasPrep;
 import com.hartwig.hmftools.qsee.prep.category.CoverageDistributionPrep;
 import com.hartwig.hmftools.qsee.prep.category.FragLengthDistributionPrep;
-import com.hartwig.hmftools.qsee.prep.category.GeneCoveragePrep;
-import com.hartwig.hmftools.qsee.prep.category.ReduxBqrPrep;
-import com.hartwig.hmftools.qsee.prep.category.ReduxDupFreqPrep;
-import com.hartwig.hmftools.qsee.prep.category.ReduxMsIndelErrorPrep;
+import com.hartwig.hmftools.qsee.prep.category.MissedGeneVariantPrep;
+import com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep;
+import com.hartwig.hmftools.qsee.prep.category.DuplicateFreqPrep;
+import com.hartwig.hmftools.qsee.prep.category.MsIndelErrorPrep;
 import com.hartwig.hmftools.qsee.prep.category.SummaryTablePrep;
 
 public class CategoryPrepFactory
@@ -26,11 +26,11 @@ public class CategoryPrepFactory
                 new SummaryTablePrep(mConfig),
                 new CoverageDistributionPrep(mConfig),
                 new FragLengthDistributionPrep(mConfig),
-                new GeneCoveragePrep(mConfig),
-                new ReduxDupFreqPrep(mConfig),
-                new CobaltGcMediansPrep(mConfig),
-                new ReduxBqrPrep(mConfig),
-                new ReduxMsIndelErrorPrep(mConfig)
+                new MissedGeneVariantPrep(mConfig),
+                new DuplicateFreqPrep(mConfig),
+                new GcBiasPrep(mConfig),
+                new BaseQualRecalibrationPrep(mConfig),
+                new MsIndelErrorPrep(mConfig)
         );
     }
 }

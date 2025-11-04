@@ -2,8 +2,8 @@ package com.hartwig.hmftools.qsee.prep.category;
 
 import static org.junit.Assert.assertEquals;
 
-import static com.hartwig.hmftools.qsee.prep.category.ReduxMsIndelErrorPrep.DELETIONS_KEY;
-import static com.hartwig.hmftools.qsee.prep.category.ReduxMsIndelErrorPrep.INSERTIONS_KEY;
+import static com.hartwig.hmftools.qsee.prep.category.MsIndelErrorPrep.DELETIONS_KEY;
+import static com.hartwig.hmftools.qsee.prep.category.MsIndelErrorPrep.INSERTIONS_KEY;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -15,9 +15,8 @@ import org.junit.Test;
 
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
-import com.hartwig.hmftools.qsee.prep.category.ReduxMsIndelErrorPrep;
 
-public class ReduxMsIndelErrorPrepTest
+public class MsIndelErrorPrepTest
 {
     @Test
     public void canAggregateByJitter()
@@ -27,7 +26,7 @@ public class ReduxMsIndelErrorPrepTest
                 new int[] {  1,  2,  5, 0, 6, 3, 1 }
         );
 
-        JitterTableRow output = ReduxMsIndelErrorPrep.aggregateByJitter(List.of(input)).get(0);
+        JitterTableRow output = MsIndelErrorPrep.aggregateByJitter(List.of(input)).get(0);
 
         int actualJitterCountDeletions = output.jitterCounts().get(DELETIONS_KEY);
         int actualJitterCountInsertions = output.jitterCounts().get(INSERTIONS_KEY);
@@ -74,7 +73,7 @@ public class ReduxMsIndelErrorPrepTest
                 createJitterTableRow(1, "≥3bp repeat", ConsensusType.NONE, 18, 18, 36)
         );
 
-        List<JitterTableRow> actualOutput = ReduxMsIndelErrorPrep.aggregateByRepeatType(table);
+        List<JitterTableRow> actualOutput = MsIndelErrorPrep.aggregateByRepeatType(table);
 
         assertEquals(expectedOutput.size(), actualOutput.size());
 
@@ -98,7 +97,7 @@ public class ReduxMsIndelErrorPrepTest
                 createJitterTableRow(4, "A/T repeat", ConsensusType.NONE, 6, 4, 100)
         );
 
-        List<Feature> actualOutput = ReduxMsIndelErrorPrep.calcPhredScores(table);
+        List<Feature> actualOutput = MsIndelErrorPrep.calcPhredScores(table);
 
         Feature microsatelliteIndelErrorRate = actualOutput.get(0);
         Feature microsatelliteIndelErrorBias = actualOutput.get(1);

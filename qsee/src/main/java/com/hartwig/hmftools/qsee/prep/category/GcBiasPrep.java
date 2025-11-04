@@ -21,13 +21,13 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.PrepConfig;
 
-public class CobaltGcMediansPrep implements CategoryPrep
+public class GcBiasPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
     private static final String FIELD_GC_BUCKET = "GCBucket";
 
-    public CobaltGcMediansPrep(PrepConfig config)
+    public GcBiasPrep(PrepConfig config)
     {
         mConfig = config;
     }
