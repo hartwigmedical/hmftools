@@ -43,40 +43,25 @@ public class PercentileTransformer
         return array;
     }
 
-    public static PercentileTransformer withInterval(double percentileInterval)
+    public static PercentileTransformer withNumPercentiles(int numPercentiles)
     {
-        if(percentileInterval <= 0 || percentileInterval >= 100)
-        {
-            throw new IllegalArgumentException("Percentile interval should be between 0 and 100");
-        }
+        if(numPercentiles <= 0)
+            throw new IllegalArgumentException("Number of percentiles should be greater than 0");
 
-        int numPercentiles = (int) Math.ceil(100.0 / percentileInterval) + 1;
-        double[] percentiles = new double[numPercentiles];
-
-        double currentPercentile = 0;
-        for(int i = 0; i < numPercentiles; i++)
-        {
-            percentiles[i] = currentPercentile;
-            currentPercentile += percentileInterval;
-        }
+        double increment = 100.0 / (numPercentiles - 1);
+        double[] percentiles = IntStream.range(0, numPercentiles).mapToDouble(i -> i * increment).toArray();
 
         return new PercentileTransformer(percentiles);
     }
 
-    public static PercentileTransformer withNumPercentiles(int numPercentiles)
+    public static PercentileTransformer withInterval(double percentileInterval)
     {
-        if(numPercentiles <= 0)
-        {
-            throw new IllegalArgumentException("Number of percentiles should be greater than 0");
-        }
+        if(percentileInterval <= 0 || percentileInterval >= 100)
+            throw new IllegalArgumentException("Percentile interval should be between 0 and 100");
 
-        double[] percentiles = new double[numPercentiles];
-        for(int i = 0; i < numPercentiles; i++)
-        {
-            percentiles[i] = 100 * (double)i / (double)(numPercentiles - 1);
-        }
+        int numPercentiles = (int) Math.ceil(100.0 / percentileInterval) + 1;
 
-        return new PercentileTransformer(percentiles);
+        return withNumPercentiles(numPercentiles);
     }
 
     public static PercentileTransformer fromPrefitData(double[] percentiles, double[] refValues)

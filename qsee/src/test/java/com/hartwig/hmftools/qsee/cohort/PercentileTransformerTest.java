@@ -98,6 +98,18 @@ public class PercentileTransformerTest
     }
 
     @Test
+    public void canCreateFromNumPercentilesOrInterval()
+    {
+        double[] expectedPercentiles = { 0, 25, 50, 75, 100 };
+
+        PercentileTransformer transformerNumPct = PercentileTransformer.withNumPercentiles(5);
+        PercentileTransformer transformerInterval = PercentileTransformer.withInterval(25);
+
+        assertArrayEquals(expectedPercentiles, transformerNumPct.getPercentiles(), 0.1);
+        assertArrayEquals(expectedPercentiles, transformerInterval.getPercentiles(), 0.1);
+    }
+
+    @Test
     public void canCreateFromPrefitData()
     {
         double[] prefitPercentiles = { 0, 25, 50, 75, 100 };
