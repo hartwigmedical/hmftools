@@ -13,6 +13,8 @@ public class SegmenterTest extends SegmentationTestBase
     @Test
     public void compareAlgorithmWithExhaustiveSearch()
     {
+        compareEvaluationMethods(d(0.5, 0.51, 0.49, 10.09, 9.92, 10.02), 50.0);
+        compareEvaluationMethods(d(0.5, 0.51, 0.49, 0.52), 50.0);
         compareEvaluationMethods(d(1, 1, 2, 2), 50.0);
         compareEvaluationMethods(d(1, 1, 2, 2), 10.0);
         compareEvaluationMethods(d(-1, 1, -2, 2), 10.0);

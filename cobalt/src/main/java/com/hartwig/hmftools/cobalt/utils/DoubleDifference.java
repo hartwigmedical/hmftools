@@ -7,7 +7,7 @@ public class DoubleDifference
 
     public DoubleDifference(Double original, Double comparison, Double epsilon)
     {
-        if (original == 0)
+        if(original == 0)
         {
             if(comparison == 0)
             {

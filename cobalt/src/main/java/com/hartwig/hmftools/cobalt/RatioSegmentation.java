@@ -9,8 +9,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.RExecutor;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
 public class RatioSegmentation
 {

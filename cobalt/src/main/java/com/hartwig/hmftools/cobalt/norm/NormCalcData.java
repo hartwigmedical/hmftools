@@ -9,14 +9,14 @@ public class NormCalcData
     public final double SampleMedianReadDepth;
     public final int SampleFilteredRegionCount;
 
-    public final Map<Integer,Double> GcBucketMedians;
+    public final Map<Integer, Double> GcBucketMedians;
 
     public static NormCalcData INVALID = new NormCalcData(
             0, 0, 0, Collections.emptyMap());
 
     public NormCalcData(
             final double sampleMeanReadDepth, final double sampleMedianReadDepth, final int sampleFilteredRegionCount,
-            final Map<Integer,Double> gcBucketMedians)
+            final Map<Integer, Double> gcBucketMedians)
     {
         SampleMeanReadDepth = sampleMeanReadDepth;
         SampleMedianReadDepth = sampleMedianReadDepth;
@@ -24,6 +24,9 @@ public class NormCalcData
         GcBucketMedians = gcBucketMedians;
     }
 
-    public double sampleMedianNormalisation() { return SampleMeanReadDepth > 0 ? SampleMedianReadDepth / SampleMeanReadDepth : 0; }
+    public double sampleMedianNormalisation()
+    {
+        return SampleMeanReadDepth > 0 ? SampleMedianReadDepth / SampleMeanReadDepth : 0;
+    }
 
 }

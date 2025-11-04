@@ -87,7 +87,7 @@ public class CobaltOutputsComparison
                 CB_LOGGER.warn("Original and comparison ratio files have mis-matched entries at index {}.", i);
             }
         }
-        CB_LOGGER.info("Number of differences in ratios: {}", differences.size()/3);
+        CB_LOGGER.info("Number of differences in ratios: {}", differences.size() / 3);
         String differencesFileName = checkAddDirSeparator(mOutputDirectory.getAbsolutePath()) + mSampleId + ".diff.tsv.gz";
         RawCobaltRatioFile.write(differencesFileName, differences);
     }

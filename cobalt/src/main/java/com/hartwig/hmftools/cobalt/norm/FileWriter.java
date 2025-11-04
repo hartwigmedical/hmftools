@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 public class FileWriter
 {
     public static void writeNormalisationFile(
-            final Map<String,List<RegionData>> chrRegionData, final RefGenomeVersion refGenomeVersion, final String outputFile)
+            final Map<String, List<RegionData>> chrRegionData, final RefGenomeVersion refGenomeVersion, final String outputFile)
     {
         CB_LOGGER.info("writing normalisation file: {}", outputFile);
 
@@ -34,7 +34,9 @@ public class FileWriter
                 String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
 
                 if(!chrRegionData.containsKey(chrStr))
+                {
                     continue;
+                }
 
                 for(RegionData regionData : chrRegionData.get(chrStr))
                 {
@@ -56,7 +58,7 @@ public class FileWriter
     }
 
     public static void writeDetailedFile(
-            final Map<String,List<RegionData>> chrRegionData, final List<String> sampleIds, final String outputFile)
+            final Map<String, List<RegionData>> chrRegionData, final List<String> sampleIds, final String outputFile)
     {
         try
         {

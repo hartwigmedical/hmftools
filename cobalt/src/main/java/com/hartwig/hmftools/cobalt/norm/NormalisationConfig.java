@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cobalt.norm;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.registerCommonConfig;
 import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
@@ -49,7 +47,7 @@ public class NormalisationConfig
     public final String DetailedFile;
     public final RefGenomeVersion RefGenVersion;
 
-    private final Map<String,String> mPanelToWgsSampleIdMappings; // if required, mapping from panel to WGS
+    private final Map<String, String> mPanelToWgsSampleIdMappings; // if required, mapping from panel to WGS
 
     private static final String COBALT_WGS_DIR = "cobalt_wgs_dir";
     private static final String OUTPUT_FILE = "output_file";
@@ -81,13 +79,15 @@ public class NormalisationConfig
 
     public String getWgsSampleId(final String sampleId)
     {
-        return mPanelToWgsSampleIdMappings.containsKey(sampleId) ? mPanelToWgsSampleIdMappings.get(sampleId) : sampleId;
+        return mPanelToWgsSampleIdMappings.getOrDefault(sampleId, sampleId);
     }
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
         if(!configBuilder.hasValue(SAMPLE_ID_FILE))
+        {
             return;
+        }
 
         try
         {
@@ -95,7 +95,7 @@ public class NormalisationConfig
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int sampleIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
             Integer wgsSampleIndex = fieldsIndexMap.get(WGS_SAMPLE_ID);
@@ -106,7 +106,9 @@ public class NormalisationConfig
                 String[] values = line.split(CSV_DELIM, -1);
 
                 if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
+                {
                     continue;
+                }
 
                 String sampleId = values[sampleIndex];
 
