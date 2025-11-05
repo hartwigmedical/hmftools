@@ -21,6 +21,8 @@ public class FragLengthDistributionPrep implements CategoryPrep
 
     private final static SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
+    private final static String FIELD_FRAG_LENGTH = "FragLength";
+
     public FragLengthDistributionPrep(CommonPrepConfig config)
     {
         mConfig = config;
@@ -41,7 +43,10 @@ public class FragLengthDistributionPrep implements CategoryPrep
 
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
-            FeatureKey key = new FeatureKey(String.valueOf(x.Value), FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
+
+            String featureName = FeatureKey.formSingleFieldName(FIELD_FRAG_LENGTH, String.valueOf(x.Value));
+            FeatureKey key = new FeatureKey(featureName, FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
+
             return new Feature(key, propBases);
         }).toList();
     }

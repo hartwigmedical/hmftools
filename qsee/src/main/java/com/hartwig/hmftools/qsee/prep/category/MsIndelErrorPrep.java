@@ -29,9 +29,9 @@ public class MsIndelErrorPrep implements CategoryPrep
 
     private static final int MAX_REF_UNIT_COUNT = 15;
 
-    private static final String FIELD_REPEAT_TYPE = "repeatUnitType";
-    private static final String FIELD_CONSENSUS_TYPE = "consensusType";
-    private static final String FIELD_REF_NUM_UNITS = "refNumUnits";
+    private static final String FIELD_REPEAT_TYPE = "RepeatUnitType";
+    private static final String FIELD_CONSENSUS_TYPE = "ConsensusType";
+    private static final String FIELD_REF_NUM_UNITS = "RefNumUnits";
 
     public MsIndelErrorPrep(CommonPrepConfig config)
     {

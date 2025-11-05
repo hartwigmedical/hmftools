@@ -24,6 +24,11 @@ public class FeatureKey
     public FeatureType type() { return mType; }
     public SourceTool sourceTool() { return mSourceTool; }
 
+    public static String formSingleFieldName(String fieldName, String fieldValue)
+    {
+        return fieldName + FIELD_KEY_VALUE_SEPARATOR + fieldValue;
+    }
+
     public static String formMultiFieldName(String... keyValuePairs)
     {
         if(keyValuePairs.length % 2 != 0)

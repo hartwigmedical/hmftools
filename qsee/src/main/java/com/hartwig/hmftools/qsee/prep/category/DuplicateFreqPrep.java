@@ -18,6 +18,8 @@ public class DuplicateFreqPrep implements CategoryPrep
 
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
 
+    private static final String FIELD_READ_COUNT = "ReadCount";
+
     private static final int MAX_DUP_READS = 100;
 
     public DuplicateFreqPrep(CommonPrepConfig config)
@@ -44,7 +46,8 @@ public class DuplicateFreqPrep implements CategoryPrep
         {
             if(dupFreq.ReadCount < MAX_DUP_READS)
             {
-                FeatureKey key = new FeatureKey(String.valueOf(dupFreq.ReadCount), FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
+                String featureName = FeatureKey.formSingleFieldName(FIELD_READ_COUNT, String.valueOf(dupFreq.ReadCount));
+                FeatureKey key = new FeatureKey(featureName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
                 features.add(new Feature(key, (double) dupFreq.Count / totalCount));
             }
             else
@@ -53,7 +56,8 @@ public class DuplicateFreqPrep implements CategoryPrep
             }
         }
 
-        FeatureKey aboveMaxDupKey = new FeatureKey(String.format("≥%s", MAX_DUP_READS), FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
+        String aboveMaxDupName = FeatureKey.formSingleFieldName(FIELD_READ_COUNT, String.format("≥%s",MAX_DUP_READS));
+        FeatureKey aboveMaxDupKey = new FeatureKey(aboveMaxDupName, FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
         features.add(new Feature(aboveMaxDupKey, (double) aboveMaxDupReadsCount / totalCount));
 
         return features;

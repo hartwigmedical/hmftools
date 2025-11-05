@@ -21,6 +21,8 @@ public class CoverageDistributionPrep implements CategoryPrep
 
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
+    private static final String FIELD_READ_DEPTH = "ReadDepth";
+
     public CoverageDistributionPrep(CommonPrepConfig config)
     {
         mConfig = config;
@@ -40,8 +42,12 @@ public class CoverageDistributionPrep implements CategoryPrep
         long totalCount = coverageBaseCounts.stream().mapToLong(x -> x.Count).sum();
 
         return coverageBaseCounts.stream().map(x -> {
+
             double propBases = (double) x.Count / totalCount;
-            FeatureKey key = new FeatureKey(String.valueOf(x.Value), FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
+
+            String featureName = FeatureKey.formSingleFieldName(FIELD_READ_DEPTH, String.valueOf(x.Value));
+            FeatureKey key = new FeatureKey(featureName, FeatureType.COVERAGE_DISTRIBUTION, SOURCE_TOOL);
+
             return new Feature(key, propBases);
         }).toList();
     }

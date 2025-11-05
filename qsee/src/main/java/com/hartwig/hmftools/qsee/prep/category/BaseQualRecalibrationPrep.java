@@ -33,10 +33,10 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
 
     private static final int HI_QUAL_THRESHOLD = 30;
 
-    private static final String FIELD_READ_TYPE = "readType";
-    private static final String FIELD_STANDARD_MUTATION = "standardMutation";
-    private static final String FIELD_STANDARD_TRINUC_CONTEXT = "standardTrinucContext";
-    private static final String FIELD_ORIGINAL_QUAL = "originalQualBin";
+    private static final String FIELD_READ_TYPE = "ReadType";
+    private static final String FIELD_STANDARD_MUTATION = "StandardMutation";
+    private static final String FIELD_STANDARD_TRINUC_CONTEXT = "StandardTrinucContext";
+    private static final String FIELD_ORIGINAL_QUAL = "OriginalQualBin";
 
     public BaseQualRecalibrationPrep(CommonPrepConfig config)
     {

@@ -75,7 +75,7 @@ public class GcBiasPrep implements CategoryPrep
 
             double normalisedDepth = medianReadDepth / overallMedianReadDepth;
 
-            String featureName = FeatureKey.formMultiFieldName(FIELD_GC_BUCKET, String.valueOf(bucket.bucket()));
+            String featureName = FeatureKey.formSingleFieldName(FIELD_GC_BUCKET, String.valueOf(bucket.bucket()));
             FeatureKey key = new FeatureKey(featureName, FeatureType.GC_BIAS, SOURCE_TOOL);
             Feature feature = new Feature(key, normalisedDepth);
 

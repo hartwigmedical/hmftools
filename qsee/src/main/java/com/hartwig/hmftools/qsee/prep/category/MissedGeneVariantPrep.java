@@ -22,12 +22,17 @@ public class MissedGeneVariantPrep implements CategoryPrep
 
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
+    private static final String FIELD_GENE = "Gene";
+
     public MissedGeneVariantPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }
 
-    public SourceTool sourceTool() { return SOURCE_TOOL; }
+    public SourceTool sourceTool()
+    {
+        return SOURCE_TOOL;
+    }
 
     private List<GeneDepth> loadGeneCoverage(String sampleId, SampleType sampleType) throws IOException
     {
@@ -42,8 +47,10 @@ public class MissedGeneVariantPrep implements CategoryPrep
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
 
         return selectedGeneDepths.stream()
-                .map(x -> {
-                    FeatureKey key = new FeatureKey(x.Gene, FeatureType.MISSED_VARIANT_LIKELIHOOD, SOURCE_TOOL);
+                .map(x ->
+                {
+                    String featureName = FeatureKey.formSingleFieldName(FIELD_GENE, x.Gene);
+                    FeatureKey key = new FeatureKey(featureName, FeatureType.MISSED_VARIANT_LIKELIHOOD, SOURCE_TOOL);
                     return new Feature(key, x.MissedVariantLikelihood);
                 })
                 .toList();
