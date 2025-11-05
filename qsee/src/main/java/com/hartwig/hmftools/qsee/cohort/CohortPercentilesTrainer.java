@@ -45,8 +45,8 @@ public class CohortPercentilesTrainer
         mTrainConfig = trainConfig;
         mCommonPrepConfig = trainConfig.CommonPrep;
 
-        mPercentiles = mTrainConfig.hasPercentileInterval()
-                ? PercentileTransformer.withInterval(mTrainConfig.PercentileInterval).getPercentiles()
+        mPercentiles = mTrainConfig.hasPercentileIncrement()
+                ? PercentileTransformer.withIncrement(mTrainConfig.PercentileIncrement).getPercentiles()
                 : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
     }
 

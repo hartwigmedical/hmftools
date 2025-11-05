@@ -6,22 +6,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import com.hartwig.hmftools.qsee.cohort.PercentileTransformer;
-
 import org.junit.Test;
 
 public class PercentileTransformerTest
 {
-    private final int DEFAULT_PERCENTILE_INTERVAL = 10;
+    private final int DEFAULT_PERCENTILE_INCREMENT = 10;
     private final double[] DEFAULT_COHORT_VALUES = { 0, 0, 5, 10, 10, 10, 10, 10, 10, 10, Double.NaN, Double.POSITIVE_INFINITY };
 
     @Test
     public void nanAndInfIgnoredDuringFit()
     {
-        PercentileTransformer transformerWithNan = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        PercentileTransformer transformerWithNan = PercentileTransformer.withIncrement(DEFAULT_PERCENTILE_INCREMENT);
         transformerWithNan.fit(DEFAULT_COHORT_VALUES);
 
-        PercentileTransformer transformerWithoutNan = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        PercentileTransformer transformerWithoutNan = PercentileTransformer.withIncrement(DEFAULT_PERCENTILE_INCREMENT);
         double[] cohortValuesWithoutNan = Arrays.stream(DEFAULT_COHORT_VALUES).filter(value -> !Double.isNaN(value)).toArray();
         transformerWithoutNan.fit(cohortValuesWithoutNan);
 
@@ -32,7 +30,7 @@ public class PercentileTransformerTest
     @Test
     public void cohortValuesDedupedDuringFit()
     {
-        PercentileTransformer transformer = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        PercentileTransformer transformer = PercentileTransformer.withIncrement(DEFAULT_PERCENTILE_INCREMENT);
         transformer.fit(DEFAULT_COHORT_VALUES);
 
         double[] expectedDedupPercentiles = { 5, 20, 30, 70 };
@@ -48,7 +46,7 @@ public class PercentileTransformerTest
     @Test
     public void canTransformCohortValuesToPercentiles()
     {
-        PercentileTransformer transformer = PercentileTransformer.withInterval(DEFAULT_PERCENTILE_INTERVAL);
+        PercentileTransformer transformer = PercentileTransformer.withIncrement(DEFAULT_PERCENTILE_INCREMENT);
         transformer.fit(DEFAULT_COHORT_VALUES);
 
         // Matches ref data exactly
@@ -98,15 +96,15 @@ public class PercentileTransformerTest
     }
 
     @Test
-    public void canCreateFromNumPercentilesOrInterval()
+    public void canCreateFromNumPercentilesOrIncrement()
     {
         double[] expectedPercentiles = { 0, 25, 50, 75, 100 };
 
         PercentileTransformer transformerNumPct = PercentileTransformer.withNumPercentiles(5);
-        PercentileTransformer transformerInterval = PercentileTransformer.withInterval(25);
+        PercentileTransformer transformerIncrement = PercentileTransformer.withIncrement(25);
 
         assertArrayEquals(expectedPercentiles, transformerNumPct.getPercentiles(), 0.1);
-        assertArrayEquals(expectedPercentiles, transformerInterval.getPercentiles(), 0.1);
+        assertArrayEquals(expectedPercentiles, transformerIncrement.getPercentiles(), 0.1);
     }
 
     @Test

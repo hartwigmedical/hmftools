@@ -8,20 +8,20 @@ public class TrainConfig
     public final CommonPrepConfig CommonPrep;
 
     public final int NumPercentiles;
-    public final double PercentileInterval;
+    public final double PercentileIncrement;
 
     private static final String NUM_PERCENTILES = "num_percentiles";
     private static final String NUM_PERCENTILES_DESC = "Number of percentiles (e.g. 5 would give percentiles: 0, 25, 50, 75, 100)";
 
-    private static final String PERCENTILE_INTERVAL = "percentile_interval";
-    private static final String PERCENTILE_INTERVAL_DESC = "Percentile interval (e.g. 25 would give percentiles: 0, 25, 50, 75, 100)";
+    private static final String PERCENTILE_INCREMENT = "percentile_increment";
+    private static final String PERCENTILE_INCREMENT_DESC = "Percentile increment (e.g. 25 would give percentiles: 0, 25, 50, 75, 100)";
 
     public TrainConfig(final ConfigBuilder configBuilder)
     {
         CommonPrep = new CommonPrepConfig(configBuilder);
 
         NumPercentiles = configBuilder.getInteger(NUM_PERCENTILES);
-        PercentileInterval = configBuilder.getDecimal(PERCENTILE_INTERVAL);
+        PercentileIncrement = configBuilder.getDecimal(PERCENTILE_INCREMENT);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -29,9 +29,9 @@ public class TrainConfig
         CommonPrepConfig.registerConfig(configBuilder);
 
         configBuilder.addInteger(NUM_PERCENTILES, NUM_PERCENTILES_DESC, 101);
-        configBuilder.addDecimal(PERCENTILE_INTERVAL, PERCENTILE_INTERVAL_DESC, Double.NaN);
+        configBuilder.addDecimal(PERCENTILE_INCREMENT, PERCENTILE_INCREMENT_DESC, Double.NaN);
     }
 
-    public boolean hasPercentileInterval() { return !Double.isNaN(PercentileInterval); }
+    public boolean hasPercentileIncrement() { return !Double.isNaN(PercentileIncrement); }
 }
 

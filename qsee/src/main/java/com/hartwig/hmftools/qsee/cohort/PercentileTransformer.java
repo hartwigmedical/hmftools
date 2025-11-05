@@ -54,12 +54,12 @@ public class PercentileTransformer
         return new PercentileTransformer(percentiles);
     }
 
-    public static PercentileTransformer withInterval(double percentileInterval)
+    public static PercentileTransformer withIncrement(double increment)
     {
-        if(percentileInterval <= 0 || percentileInterval >= 100)
-            throw new IllegalArgumentException("Percentile interval should be between 0 and 100");
+        if(increment <= 0 || increment >= 100)
+            throw new IllegalArgumentException("Percentile increment should be between 0 and 100");
 
-        int numPercentiles = (int) Math.ceil(100.0 / percentileInterval) + 1;
+        int numPercentiles = (int) Math.ceil(100.0 / increment) + 1;
 
         return withNumPercentiles(numPercentiles);
     }
