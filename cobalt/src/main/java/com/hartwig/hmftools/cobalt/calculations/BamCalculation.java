@@ -62,7 +62,7 @@ abstract class BamCalculation
             BamRatio bamRatio = window.toBamRatio();
             // Normalise by the GC factor for the window's bucket. This will set the ratio to -1.0 if the bucket is null.
             bamRatio.normaliseForGc(BucketStatistics.medianReadDepth(window.GcBucket));
-            // Apply enrichment (does nothing in whole genome mode).
+            // Target region normalisation (does nothing in whole genome mode).
             bamRatio.applyEnrichment(Scope.enrichmentQuotient(chromosome, window.Position));
             bamResults.put(chromosome, bamRatio);
         });

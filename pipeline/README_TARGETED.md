@@ -297,12 +297,8 @@ java -cp isofox.jar com.hartwig.hmftools.isofox.cohort.CohortAnalyser \
 ## Targeted analysis pipeline differences 
 
 ### Functional differences per tool
-
-<TO DO: make into a table>
-
 #### COBALT
-COBALT normalises copy number and masks off-target regions according to the CN normalisation file. If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.
-Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment. The GC bias is calculated using on target regions only.
+See [Cobalt README](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/README.md#Sequence-and-configuration-of-cobalt-stages).
 
 #### AMBER
 The following filters are applied:
