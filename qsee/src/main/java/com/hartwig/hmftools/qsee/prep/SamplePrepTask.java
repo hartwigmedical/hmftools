@@ -18,12 +18,10 @@ public class SamplePrepTask implements Runnable
 
     private final List<String> mSampleIds;
     private final int mSampleIndex;
-
     private final SampleType mSampleType;
-
     private List<Feature> mFeatures;
-
     private final boolean mAllowMissingInput;
+
     private final String mLogPrefix;
 
     @Nullable
@@ -31,18 +29,21 @@ public class SamplePrepTask implements Runnable
 
     public SamplePrepTask(CategoryPrep categoryPrep,
             List<String> sampleIds, int sampleIndex, SampleType sampleType,
-            @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput, String logPrefix)
+            @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput)
     {
         mCategoryPrep = categoryPrep;
-
         mSampleIds = sampleIds;
         mSampleIndex = sampleIndex;
         mSampleType = sampleType;
-
         mSampleFeatureMatrix = sampleFeatureMatrix;
-
         mAllowMissingInput = allowMissingInput;
-        mLogPrefix = logPrefix;
+
+        mLogPrefix = logPrefix(sampleType, categoryPrep);
+    }
+
+    public static String logPrefix(SampleType sampleType, CategoryPrep categoryPrep)
+    {
+        return String.format("sampleType(%s) category(%s) -", sampleType, categoryPrep.name());
     }
 
     private void logProgress(int sampleIndex)
@@ -63,7 +64,8 @@ public class SamplePrepTask implements Runnable
 
             if(isSampleAtInterval || isLastSample)
             {
-                QC_LOGGER.debug("{} Progress: {}/{} - current sample: {}", mLogPrefix, sampleIndex+1, sampleCount, mSampleIds.get(sampleIndex));
+                QC_LOGGER.debug("{} Progress: {}/{} - current sample: {}",
+                        mLogPrefix, sampleIndex+1, sampleCount, mSampleIds.get(sampleIndex));
             }
         }
     }

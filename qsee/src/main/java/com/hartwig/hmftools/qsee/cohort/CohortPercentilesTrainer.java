@@ -52,7 +52,7 @@ public class CohortPercentilesTrainer
                 : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
     }
 
-    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType, String logPrefix)
+    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
     {
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
 
@@ -61,7 +61,7 @@ public class CohortPercentilesTrainer
         {
             SamplePrepTask task = new SamplePrepTask(
                     categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix,
-                    mCommonPrepConfig.AllowMissingInput, logPrefix
+                    mCommonPrepConfig.AllowMissingInput
             );
 
             samplePrepTasks.add(task);
@@ -114,10 +114,10 @@ public class CohortPercentilesTrainer
 
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            String logPrefix = String.format("sampleType(%s) category(%s) -", sampleType, categoryPrep.name());
+            String logPrefix = SamplePrepTask.logPrefix(sampleType, categoryPrep);
 
             QC_LOGGER.info("{} Extracting sample data", logPrefix);
-            FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType, logPrefix);
+            FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType);
 
             QC_LOGGER.info("{} Calculating percentiles", logPrefix);
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
