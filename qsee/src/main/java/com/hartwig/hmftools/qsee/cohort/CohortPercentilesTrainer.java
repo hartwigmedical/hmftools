@@ -183,7 +183,7 @@ public class CohortPercentilesTrainer
             calcPercentilesFor(SampleType.TUMOR);
 
         if(!mCommonPrepConfig.ReferenceIds.isEmpty())
-            calcPercentilesFor(SampleType.REFERENCE);
+            calcPercentilesFor(SampleType.NORMAL);
 
         writePercentileRefValues();
     }
