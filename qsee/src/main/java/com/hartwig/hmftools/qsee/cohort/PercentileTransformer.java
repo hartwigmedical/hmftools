@@ -59,6 +59,9 @@ public class PercentileTransformer
         if(increment <= 0 || increment >= 100)
             throw new IllegalArgumentException("Percentile increment should be between 0 and 100");
 
+        if(100 % increment != 0)
+            throw new IllegalArgumentException("Percentile increment should evenly divide 100 (e.g. 0.1, 1, 10, 25, etc)");
+
         int numPercentiles = (int) Math.ceil(100.0 / increment) + 1;
 
         return withNumPercentiles(numPercentiles);
