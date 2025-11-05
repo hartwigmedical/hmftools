@@ -18,10 +18,16 @@ public class FragLengthDistributionPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
+    private final static String NAME = "Fragment length distribution";
+    private final static SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
+
     public FragLengthDistributionPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }
+
+    public String name() { return NAME; }
+    public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private BamMetricFragmentLength loadFragmentLengths(String sampleId, SampleType sampleType) throws IOException
     {
@@ -36,7 +42,7 @@ public class FragLengthDistributionPrep implements CategoryPrep
 
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
-            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases, SourceTool.BAM_METRICS);
+            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases, SOURCE_TOOL);
         }).toList();
     }
 

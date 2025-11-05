@@ -18,10 +18,16 @@ public class CoverageDistributionPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
+    private static final String NAME = "Coverage distribution";
+    private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
+
     public CoverageDistributionPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }
+
+    public String name() { return NAME; }
+    public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private BamMetricCoverage loadCoverage(String sampleId, SampleType sampleType) throws IOException
     {
@@ -36,7 +42,7 @@ public class CoverageDistributionPrep implements CategoryPrep
 
         return coverageBaseCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalCount;
-            return new Feature(FeatureType.COVERAGE_DISTRIBUTION, String.valueOf(x.Value), propBases, SourceTool.BAM_METRICS);
+            return new Feature(FeatureType.COVERAGE_DISTRIBUTION, String.valueOf(x.Value), propBases, SOURCE_TOOL);
         }).toList();
     }
 

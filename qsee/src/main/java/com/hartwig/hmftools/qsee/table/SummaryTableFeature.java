@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.qsee.table;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
@@ -40,6 +43,11 @@ public enum SummaryTableFeature
         mGroup = group;
         mMetric = metric;
         mSourceTool = sourceTool;
+    }
+
+    public static List<SourceTool> sourceTools()
+    {
+        return Arrays.stream(values()).map(SummaryTableFeature::sourceTool).distinct().sorted().toList();
     }
 
     public SourceTool sourceTool() { return mSourceTool; }

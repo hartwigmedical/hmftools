@@ -6,9 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public interface CategoryPrep
 {
+    String name();
+    SourceTool sourceTool();
+
     default @Nullable List<Feature> extractSampleData(String sampleId) throws Exception
     {
         return extractSampleData(sampleId, null);

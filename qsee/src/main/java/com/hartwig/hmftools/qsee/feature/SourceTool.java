@@ -8,4 +8,6 @@ public enum SourceTool
     ESVEE,
     PURPLE,
     REDUX,
+
+    MULTIPLE;
 }

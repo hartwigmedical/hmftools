@@ -146,10 +146,10 @@ public class CohortPercentilesTrainer
         FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), getPercentileNames());
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.info("Extracting sample data for category: {}", categoryPrep.getClass().getSimpleName());
+            QC_LOGGER.info("category({}) - Extracting sample data", categoryPrep.name());
             FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType);
 
-            QC_LOGGER.info("Calculating percentiles for category: {}", categoryPrep.getClass().getSimpleName());
+            QC_LOGGER.info("category({}) - Calculating percentiles", categoryPrep.name());
             calcPercentiles(sampleFeatureMatrix, percentileFeatureMatrix);
         }
 
@@ -161,7 +161,7 @@ public class CohortPercentilesTrainer
     {
         try(BufferedWriter writer = createBufferedWriter(getOutputFilename()))
         {
-            QC_LOGGER.info("Calculating cohort percentiles: {}", getPercentilesString());
+            QC_LOGGER.info("Using percentiles: {}", getPercentilesString());
 
             writeHeader(writer);
 
@@ -204,9 +204,11 @@ public class CohortPercentilesTrainer
         else
         {
             return String.format(
-                    "%s, %s, ..., %s, %s",
+                    "%s, %s, %s, ..., %s, %s, %s",
                     PERCENTILE_FORMAT.format(mPercentiles[0]),
                     PERCENTILE_FORMAT.format(mPercentiles[1]),
+                    PERCENTILE_FORMAT.format(mPercentiles[2]),
+                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 3]),
                     PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
                     PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 1])
             );

@@ -25,6 +25,9 @@ public class MsIndelErrorPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
+    private static final String NAME = "Microsatellite indel error rates";
+    private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
+
     private static final int MAX_REF_UNIT_COUNT = 15;
 
     private static final String FIELD_REPEAT_TYPE = "repeatUnitType";
@@ -35,6 +38,9 @@ public class MsIndelErrorPrep implements CategoryPrep
     {
         mConfig = config;
     }
+
+    public String name() { return NAME; }
+    public SourceTool sourceTool(){ return SOURCE_TOOL; }
 
     private String findBackwardsCompatibleJitterFile(String sampleId) throws NoSuchFileException
     {
@@ -212,12 +218,12 @@ public class MsIndelErrorPrep implements CategoryPrep
             );
 
             double indelPhredScore = calcPhredScore(indelReadCount, totalReadCount);
-            indelPhredScores.add(new Feature(FeatureType.MS_INDEL_ERROR_RATES, featureName, indelPhredScore, SourceTool.REDUX));
+            indelPhredScores.add(new Feature(FeatureType.MS_INDEL_ERROR_RATES, featureName, indelPhredScore, SOURCE_TOOL));
 
             double insertionPhredScore = calcPhredScore(insertionReadCount, totalReadCount);
             double deletionPhredScore = calcPhredScore(deletionReadCount, totalReadCount);
             double indelPhredScoreDiff = deletionPhredScore - insertionPhredScore;
-            indelPhredScoreDiffs.add(new Feature(FeatureType.MS_INDEL_ERROR_BIAS, featureName, indelPhredScoreDiff, SourceTool.REDUX));
+            indelPhredScoreDiffs.add(new Feature(FeatureType.MS_INDEL_ERROR_BIAS, featureName, indelPhredScoreDiff, SOURCE_TOOL));
         }
 
         List<Feature> features = new ArrayList<>();

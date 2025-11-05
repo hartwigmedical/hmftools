@@ -29,6 +29,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     private final CommonPrepConfig mConfig;
     private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
 
+    private static final String NAME = "Base quality recalibration";
+    private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
+
     private static final int HI_QUAL_THRESHOLD = 30;
 
     private static final String FIELD_READ_TYPE = "readType";
@@ -40,6 +43,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     {
         mConfig = config;
     }
+
+    public String name() { return NAME; }
+    public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     @VisibleForTesting
     static class ExtendedBqrRecord
@@ -186,7 +192,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x), SourceTool.REDUX))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), SOURCE_TOOL))
                 .toList();
     }
 
@@ -211,7 +217,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x), SourceTool.REDUX))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x), SOURCE_TOOL))
                 .toList();
     }
 

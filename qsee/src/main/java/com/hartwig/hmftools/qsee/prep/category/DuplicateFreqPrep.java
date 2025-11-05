@@ -15,12 +15,18 @@ public class DuplicateFreqPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
+    private static final String NAME = "Duplicate read group frequency";
+    private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
+
     private static final int MAX_DUP_READS = 100;
 
     public DuplicateFreqPrep(CommonPrepConfig config)
     {
         mConfig = config;
     }
+
+    public String name() { return NAME; }
+    public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private List<DuplicateFrequency> loadDuplicateFrequencies(String sampleId) throws IOException
     {
@@ -43,7 +49,7 @@ public class DuplicateFreqPrep implements CategoryPrep
                         FeatureType.DUPLICATE_FREQ,
                         String.valueOf(dupFreq.ReadCount),
                         (double) dupFreq.Count / totalCount,
-                        SourceTool.REDUX
+                        SOURCE_TOOL
                 ));
             }
             else
@@ -56,7 +62,7 @@ public class DuplicateFreqPrep implements CategoryPrep
                 FeatureType.DUPLICATE_FREQ,
                 String.format("≥%s", MAX_DUP_READS),
                 (double) aboveMaxDupReadsCount / totalCount,
-                SourceTool.REDUX
+                SOURCE_TOOL
         ));
 
         return features;

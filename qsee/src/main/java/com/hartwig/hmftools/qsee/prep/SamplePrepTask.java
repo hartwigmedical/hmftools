@@ -80,15 +80,15 @@ public class SamplePrepTask implements Runnable
         catch(NoSuchFileException e)
         {
             mFeatures = new ArrayList<>();
-            QC_LOGGER.error("{} - missing input file(s) for sample {}: {}",
-                    mCategoryPrep.getClass().getSimpleName(), sampleId, e.getMessage());
+            QC_LOGGER.error("category({}) - sample({}) missing input file(s): {}",
+                    mCategoryPrep.name(), sampleId, e.getMessage());
 
             if(!mAllowMissingInput)
                 System.exit(1);
         }
         catch(Exception e)
         {
-            QC_LOGGER.error("Failed to run {} for sample: {}", mCategoryPrep.getClass().getSimpleName(), sampleId, e);
+            QC_LOGGER.error("category({}) - failed to run for sample({})", mCategoryPrep.name(), sampleId, e);
             System.exit(1);
         }
 
