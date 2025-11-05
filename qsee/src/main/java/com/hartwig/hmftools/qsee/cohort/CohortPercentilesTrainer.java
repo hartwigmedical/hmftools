@@ -37,7 +37,7 @@ public class CohortPercentilesTrainer
 
     private final double[] mPercentiles;
 
-    private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.##");
+    private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.########");
     private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.########");
 
     public CohortPercentilesTrainer(final TrainConfig trainConfig)
@@ -79,8 +79,7 @@ public class CohortPercentilesTrainer
 
             transformer.fit(featureValues, featureKey);
 
-            SourceTool sourceTool = sampleFeatureMatrix.getSourceTool(featureKey);
-            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), sourceTool);
+            percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), featureKey.sourceTool());
         }
 
         TaskExecutor.executeRunnables(featureTransformTasks, mCommonPrepConfig.Threads);
@@ -114,7 +113,7 @@ public class CohortPercentilesTrainer
         {
             FeatureKey featureKey = percentileFeatureMatrix.getFeatureKeys().get(featureIndex);
             FeatureType featureType = featureKey.type();
-            SourceTool sourceTool = percentileFeatureMatrix.getSourceTool(featureKey);
+            SourceTool sourceTool = featureKey.sourceTool();
 
             StringJoiner line = new StringJoiner(TSV_DELIM);
 

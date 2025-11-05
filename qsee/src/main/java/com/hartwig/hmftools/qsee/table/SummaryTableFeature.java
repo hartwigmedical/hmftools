@@ -55,6 +55,6 @@ public enum SummaryTableFeature
     public FeatureKey key()
     {
         String featureName = FeatureKey.formMultiFieldName("group", mGroup.humanReadableName(), "metric", mMetric);
-        return new FeatureKey(FeatureType.SUMMARY_TABLE, featureName);
+        return new FeatureKey(featureName, FeatureType.SUMMARY_TABLE, mSourceTool);
     }
 }

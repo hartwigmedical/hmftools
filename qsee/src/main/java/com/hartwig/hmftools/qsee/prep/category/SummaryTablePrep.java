@@ -68,7 +68,7 @@ public class SummaryTablePrep implements CategoryPrep
 
     private static Feature createFeature(SummaryTableFeature feature, double value)
     {
-        return new Feature(feature.key(), value, feature.sourceTool());
+        return new Feature(feature.key(), value);
     }
 
     private static List<Feature> getGeneralStats(PurityContext purplePurityContext, AmberQC amberQC)

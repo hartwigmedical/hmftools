@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.metrics.GeneDepth;
 import com.hartwig.hmftools.common.metrics.GeneDepthFile;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
@@ -43,7 +44,10 @@ public class MissedGeneVariantPrep implements CategoryPrep
         List<GeneDepth> selectedGeneDepths = geneDepths.stream().filter(x -> selectedGenes.contains(x.Gene)).toList();
 
         return selectedGeneDepths.stream()
-                .map(x -> new Feature(FeatureType.MISSED_VARIANT_LIKELIHOOD, x.Gene, x.MissedVariantLikelihood, SOURCE_TOOL))
+                .map(x -> {
+                    FeatureKey key = new FeatureKey(x.Gene, FeatureType.MISSED_VARIANT_LIKELIHOOD, SOURCE_TOOL);
+                    return new Feature(key, x.MissedVariantLikelihood);
+                })
                 .toList();
     }
 

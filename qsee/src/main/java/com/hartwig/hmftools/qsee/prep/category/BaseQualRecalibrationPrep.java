@@ -183,7 +183,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
                     FIELD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext
             );
 
-            FeatureKey key = new FeatureKey(FeatureType.BQR_PER_SNV96_CONTEXT, featureName);
+            FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_SNV96_CONTEXT, SOURCE_TOOL);
 
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
             bqrRecordGroups.get(key).add(bqrRecord);
@@ -192,7 +192,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x), SOURCE_TOOL))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x)))
                 .toList();
     }
 
@@ -208,7 +208,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
                     FIELD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin()
             );
 
-            FeatureKey key = new FeatureKey(FeatureType.BQR_PER_ORIG_QUAL, featureName);
+            FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_ORIG_QUAL, SOURCE_TOOL);
 
             bqrRecordGroups.putIfAbsent(key, new ArrayList<>());
             bqrRecordGroups.get(key).add(bqrRecord);
@@ -217,7 +217,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         Map<FeatureKey, Double> meanChangeInQuals = calcMeanChangeInQualPerGroup(bqrRecordGroups);
 
         return meanChangeInQuals.keySet().stream()
-                .map(x -> new Feature(x, meanChangeInQuals.get(x), SOURCE_TOOL))
+                .map(x -> new Feature(x, meanChangeInQuals.get(x)))
                 .toList();
     }
 

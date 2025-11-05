@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.metrics.BamMetricFragmentLength;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
@@ -42,7 +43,8 @@ public class FragLengthDistributionPrep implements CategoryPrep
 
         return fragmentLengthCounts.stream().map(x -> {
             double propBases = (double) x.Count / totalFragments;
-            return new Feature(FeatureType.FRAG_LENGTH_DISTRIBUTION, String.valueOf(x.Value), propBases, SOURCE_TOOL);
+            FeatureKey key = new FeatureKey(String.valueOf(x.Value), FeatureType.FRAG_LENGTH_DISTRIBUTION, SOURCE_TOOL);
+            return new Feature(key, propBases);
         }).toList();
     }
 

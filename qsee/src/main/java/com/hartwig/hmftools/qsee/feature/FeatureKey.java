@@ -5,21 +5,24 @@ import java.util.StringJoiner;
 
 public class FeatureKey
 {
-    private final FeatureType mType;
     private final String mName;
+    private final FeatureType mType;
+    private final SourceTool mSourceTool;
 
     // For multi-field keys
     private static final String FIELD_KEY_VALUE_SEPARATOR = "=";
     private static final String FIELD_SEPARATOR = ";";
 
-    public FeatureKey(FeatureType type, String name)
+    public FeatureKey(String name, FeatureType type, SourceTool sourceTool)
     {
-        mType = type;
         mName = name;
+        mType = type;
+        mSourceTool = sourceTool;
     }
 
     public String name() { return mName; }
     public FeatureType type() { return mType; }
+    public SourceTool sourceTool() { return mSourceTool; }
 
     public static String formMultiFieldName(String... keyValuePairs)
     {

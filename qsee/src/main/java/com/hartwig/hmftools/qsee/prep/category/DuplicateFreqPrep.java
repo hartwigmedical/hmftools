@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.redux.DuplicateFrequency;
 import com.hartwig.hmftools.qsee.feature.Feature;
+import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
@@ -45,12 +46,8 @@ public class DuplicateFreqPrep implements CategoryPrep
         {
             if(dupFreq.ReadCount < MAX_DUP_READS)
             {
-                features.add(new Feature(
-                        FeatureType.DUPLICATE_FREQ,
-                        String.valueOf(dupFreq.ReadCount),
-                        (double) dupFreq.Count / totalCount,
-                        SOURCE_TOOL
-                ));
+                FeatureKey key = new FeatureKey(String.valueOf(dupFreq.ReadCount), FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
+                features.add(new Feature(key, (double) dupFreq.Count / totalCount));
             }
             else
             {
@@ -58,12 +55,8 @@ public class DuplicateFreqPrep implements CategoryPrep
             }
         }
 
-        features.add(new Feature(
-                FeatureType.DUPLICATE_FREQ,
-                String.format("≥%s", MAX_DUP_READS),
-                (double) aboveMaxDupReadsCount / totalCount,
-                SOURCE_TOOL
-        ));
+        FeatureKey aboveMaxDupKey = new FeatureKey(String.format("≥%s", MAX_DUP_READS), FeatureType.DUPLICATE_FREQ, SOURCE_TOOL);
+        features.add(new Feature(aboveMaxDupKey, (double) aboveMaxDupReadsCount / totalCount));
 
         return features;
     }

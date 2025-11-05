@@ -30,9 +30,6 @@ public class FeatureMatrix
     // Therefore, store feature keys (= Map keys) in a list to store the insertion order of features.
     private final List<FeatureKey> mFeatureKeys = new ArrayList<>();
 
-    // Store feature metadata
-    private final Map<FeatureKey, SourceTool> mFeatureSourceToolMap = new HashMap<>();
-
     private static final double EMPTY_VALUE = Double.NaN;
 
     public FeatureMatrix(Map<FeatureKey, double[]> featureValuesMap, List<String> expectedRowIds)
@@ -74,7 +71,6 @@ public class FeatureMatrix
             FeatureKey key = feature.key();
             addColumnIfMissing(key);
             mFeatureValuesMap.get(key)[rowIndex] = feature.value();
-            mFeatureSourceToolMap.putIfAbsent(key, feature.sourceTool());
         }
     }
 
@@ -100,7 +96,6 @@ public class FeatureMatrix
 
         mFeatureKeys.add(key);
         mFeatureValuesMap.put(key, features);
-        mFeatureSourceToolMap.putIfAbsent(key, sourceTool);
     }
 
     public FeatureMatrix reorderRows(List<String> rowIdsOrdered)
@@ -203,6 +198,4 @@ public class FeatureMatrix
     {
         return mFeatureValuesMap.get(key);
     }
-
-    public SourceTool getSourceTool(FeatureKey key) { return mFeatureSourceToolMap.get(key); }
 }

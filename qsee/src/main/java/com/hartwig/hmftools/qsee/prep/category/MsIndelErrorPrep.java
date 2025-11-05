@@ -218,12 +218,14 @@ public class MsIndelErrorPrep implements CategoryPrep
             );
 
             double indelPhredScore = calcPhredScore(indelReadCount, totalReadCount);
-            indelPhredScores.add(new Feature(FeatureType.MS_INDEL_ERROR_RATES, featureName, indelPhredScore, SOURCE_TOOL));
+            FeatureKey indelPhredKey = new FeatureKey(featureName, FeatureType.MS_INDEL_ERROR_RATES, SOURCE_TOOL);
+            indelPhredScores.add(new Feature(indelPhredKey, indelPhredScore));
 
             double insertionPhredScore = calcPhredScore(insertionReadCount, totalReadCount);
             double deletionPhredScore = calcPhredScore(deletionReadCount, totalReadCount);
             double indelPhredScoreDiff = deletionPhredScore - insertionPhredScore;
-            indelPhredScoreDiffs.add(new Feature(FeatureType.MS_INDEL_ERROR_BIAS, featureName, indelPhredScoreDiff, SOURCE_TOOL));
+            FeatureKey indelPhredScoreDiffKey = new FeatureKey(featureName, FeatureType.MS_INDEL_ERROR_BIAS, SOURCE_TOOL);
+            indelPhredScoreDiffs.add(new Feature(indelPhredScoreDiffKey, indelPhredScoreDiff));
         }
 
         List<Feature> features = new ArrayList<>();

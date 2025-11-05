@@ -4,25 +4,20 @@ public class Feature
 {
     private final FeatureKey mKey;
     private final double mValue;
-    private final SourceTool mSourceTool;
 
-    public Feature(FeatureType type, String name, double value, SourceTool sourceTool)
+    public Feature(String name, double value, FeatureType type, SourceTool sourceTool)
     {
-        mKey = new FeatureKey(type, name);
+        mKey = new FeatureKey(name, type, sourceTool);
         mValue = value;
-        mSourceTool = sourceTool;
     }
 
-    public Feature(FeatureKey key, double value, SourceTool sourceTool)
+    public Feature(FeatureKey key, double value)
     {
         mKey = key;
         mValue = value;
-        mSourceTool = sourceTool;
     }
 
     public FeatureKey key() { return mKey; }
 
     public double value() { return mValue; }
-
-    public SourceTool sourceTool() { return mSourceTool; }
 }
