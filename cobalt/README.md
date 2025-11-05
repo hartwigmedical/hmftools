@@ -121,17 +121,6 @@ After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.co
 | 11    | Copy number     | segmentation  | `pcf_gamma`, `skip_pcf_calc`   | Y               | Y                   | Y                   | Y                       |
 
 
-### Germline chromosomal aberrations
-Post GC normalization, COBALT is able to detect the following germline chromosomal aberrations from the reference ratio:
-
-| Aberration                | Gender | Ratio Criteria                                   |
-|---------------------------|--------|--------------------------------------------------|
-| `MOSAIC_X`                | FEMALE | X ratio < min(0.8, minAutosomeMedianDepthRatio*) |
-| `KLINEFELTER` (XXY)       | MALE   | X ratio >= 0.65                                  |
-| `TRISOMY_[X,21,13,18,15]` | BOTH   | chromosome ratio >= 1.35                         |
-
-*By checking against autosomes we rule out very high GC bias in the reference.  
-
 # Running Cobalt
 ## Tumor-only Mode
 In the absence of a reference bam and reference COBALT will  be run in tumor-only mode.
