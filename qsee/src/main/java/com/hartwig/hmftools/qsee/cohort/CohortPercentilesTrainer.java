@@ -2,14 +2,17 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_SUFFIX;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-import static com.hartwig.hmftools.qsee.common.QseeConstants.QSEE_FILE_ID;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,9 +41,6 @@ public class CohortPercentilesTrainer
     private final double[] mPercentiles;
 
     private final List<FeaturePercentiles> mFeaturePercentiles = new ArrayList<>();
-
-    private static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.########");
-    private static final DecimalFormat REF_VALUE_FORMAT = new DecimalFormat("0.########");
 
     public CohortPercentilesTrainer(final TrainConfig trainConfig)
     {
@@ -134,18 +134,18 @@ public class CohortPercentilesTrainer
 
             StringJoiner header = new StringJoiner(TSV_DELIM);
 
-            header.add("SampleType");
-            header.add("FeatureType");
-            header.add("FeatureName");
-            header.add("SourceTool");
-            getPercentileNames().forEach(percentileName -> header.add("Pct_" + percentileName));
+            header.add(COL_SAMPLE_TYPE);
+            header.add(COL_FEATURE_TYPE);
+            header.add(COL_FEATURE_NAME);
+            header.add(COL_SOURCE_TOOL);
+            getPercentileNames().forEach(percentileName -> header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + percentileName));
 
             writer.write(header.toString());
             writer.newLine();
 
             for(FeaturePercentiles featurePercentiles : mFeaturePercentiles)
             {
-                FeatureKey featureKey = featurePercentiles.key();
+                FeatureKey featureKey = featurePercentiles.featureKey();
 
                 FeatureType featureType = featureKey.type();
                 SourceTool sourceTool = featureKey.sourceTool();
@@ -160,7 +160,7 @@ public class CohortPercentilesTrainer
                 double[] refValues = featurePercentiles.refValues();
 
                 String refValuesStr = Arrays.stream(refValues)
-                        .mapToObj(REF_VALUE_FORMAT::format)
+                        .mapToObj(CohortPercentilesFile.REF_VALUE_FORMAT::format)
                         .collect(Collectors.joining(TSV_DELIM));
 
                 line.add(refValuesStr);
@@ -190,12 +190,12 @@ public class CohortPercentilesTrainer
 
     private String getOutputFilename()
     {
-        return mCommonPrepConfig.OutputDir + File.separator + "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+        return mCommonPrepConfig.OutputDir + File.separator + COHORT_PERCENTILES_FILE_SUFFIX;
     }
 
     private List<String> getPercentileNames()
     {
-        return Arrays.stream(mPercentiles).mapToObj(PERCENTILE_FORMAT::format).toList();
+        return Arrays.stream(mPercentiles).mapToObj(CohortPercentilesFile.PERCENTILE_FORMAT::format).toList();
     }
 
     private String getPercentilesString()
@@ -205,19 +205,19 @@ public class CohortPercentilesTrainer
         if(mPercentiles.length <= SHOW_ALL_THRESHOLD)
         {
             return Arrays.stream(mPercentiles)
-                    .mapToObj(PERCENTILE_FORMAT::format)
+                    .mapToObj(CohortPercentilesFile.PERCENTILE_FORMAT::format)
                     .collect(Collectors.joining(", "));
         }
         else
         {
             return String.format(
                     "%s, %s, %s, ..., %s, %s, %s",
-                    PERCENTILE_FORMAT.format(mPercentiles[0]),
-                    PERCENTILE_FORMAT.format(mPercentiles[1]),
-                    PERCENTILE_FORMAT.format(mPercentiles[2]),
-                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 3]),
-                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
-                    PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 1])
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[0]),
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[1]),
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[2]),
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 3]),
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
+                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 1])
             );
         }
     }

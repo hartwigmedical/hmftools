@@ -9,5 +9,4 @@ public class QseeConstants
 
     public static final Logger QC_LOGGER = LogManager.getLogger(QseeConstants.class);
 
-    public static final String QSEE_FILE_ID = "qsee";
 }
