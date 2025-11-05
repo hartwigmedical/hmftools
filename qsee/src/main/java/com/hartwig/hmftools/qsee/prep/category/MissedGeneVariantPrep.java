@@ -20,7 +20,6 @@ public class MissedGeneVariantPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "Missed gene variants";
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
     public MissedGeneVariantPrep(CommonPrepConfig config)
@@ -28,7 +27,6 @@ public class MissedGeneVariantPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private List<GeneDepth> loadGeneCoverage(String sampleId, SampleType sampleType) throws IOException

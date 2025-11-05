@@ -25,7 +25,6 @@ public class MsIndelErrorPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "Microsatellite indel error rates";
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
 
     private static final int MAX_REF_UNIT_COUNT = 15;
@@ -39,7 +38,6 @@ public class MsIndelErrorPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool(){ return SOURCE_TOOL; }
 
     private String findBackwardsCompatibleJitterFile(String sampleId) throws NoSuchFileException

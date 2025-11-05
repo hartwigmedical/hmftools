@@ -19,7 +19,6 @@ public class FragLengthDistributionPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private final static String NAME = "Fragment length distribution";
     private final static SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
     public FragLengthDistributionPrep(CommonPrepConfig config)
@@ -27,7 +26,6 @@ public class FragLengthDistributionPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private BamMetricFragmentLength loadFragmentLengths(String sampleId, SampleType sampleType) throws IOException

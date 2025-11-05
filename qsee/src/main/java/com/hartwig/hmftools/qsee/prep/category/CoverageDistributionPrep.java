@@ -19,7 +19,6 @@ public class CoverageDistributionPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "Coverage distribution";
     private static final SourceTool SOURCE_TOOL = SourceTool.BAM_METRICS;
 
     public CoverageDistributionPrep(CommonPrepConfig config)
@@ -27,7 +26,6 @@ public class CoverageDistributionPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private BamMetricCoverage loadCoverage(String sampleId, SampleType sampleType) throws IOException

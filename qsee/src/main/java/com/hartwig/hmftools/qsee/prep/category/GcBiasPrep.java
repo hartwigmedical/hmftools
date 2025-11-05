@@ -25,7 +25,6 @@ public class GcBiasPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "GC bias";
     private static final SourceTool SOURCE_TOOL = SourceTool.COBALT;
 
     private static final String FIELD_GC_BUCKET = "GCBucket";
@@ -35,7 +34,6 @@ public class GcBiasPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SourceTool.COBALT; }
 
     private GcMedianReadDepth loadCobaltGcMedianFile(String sampleId) throws IOException

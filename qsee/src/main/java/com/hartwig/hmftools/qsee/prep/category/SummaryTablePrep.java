@@ -26,7 +26,6 @@ public class SummaryTablePrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "Summary table";
     private static final SourceTool SOURCE_TOOL = SourceTool.MULTIPLE;
 
     public SummaryTablePrep(CommonPrepConfig config)
@@ -34,7 +33,6 @@ public class SummaryTablePrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private AmberQC loadAmberQC(String sampleId) throws IOException

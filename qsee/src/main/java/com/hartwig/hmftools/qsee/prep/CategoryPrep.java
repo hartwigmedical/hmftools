@@ -10,7 +10,12 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public interface CategoryPrep
 {
-    String name();
+    default String name()
+    {
+        String className = this.getClass().getSimpleName();
+        return className.replaceAll("Prep$", "");
+    }
+
     SourceTool sourceTool();
 
     default @Nullable List<Feature> extractSampleData(String sampleId) throws Exception

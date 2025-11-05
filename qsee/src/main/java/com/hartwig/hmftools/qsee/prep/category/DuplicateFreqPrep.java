@@ -16,7 +16,6 @@ public class DuplicateFreqPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
 
-    private static final String NAME = "Duplicate read group frequency";
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
 
     private static final int MAX_DUP_READS = 100;
@@ -26,7 +25,6 @@ public class DuplicateFreqPrep implements CategoryPrep
         mConfig = config;
     }
 
-    public String name() { return NAME; }
     public SourceTool sourceTool() { return SOURCE_TOOL; }
 
     private List<DuplicateFrequency> loadDuplicateFrequencies(String sampleId) throws IOException
