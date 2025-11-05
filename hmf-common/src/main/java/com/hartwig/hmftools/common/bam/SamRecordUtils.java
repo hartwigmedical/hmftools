@@ -83,8 +83,7 @@ public final class SamRecordUtils
         if(record.getReadPairedFlag())
             return record.getInferredInsertSize();
 
-        int insertSize = record.getInferredInsertSize();
-        return insertSize > 0 ? insertSize : record.getReadBases().length;
+        return record.getAlignmentEnd() - record.getAlignmentStart() + 1;
     }
 
     public static int inferredInsertSizeAbs(final SAMRecord record) { return abs(inferredInsertSize(record)); }
