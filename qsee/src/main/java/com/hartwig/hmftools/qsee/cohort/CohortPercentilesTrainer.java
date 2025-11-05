@@ -225,7 +225,6 @@ public class CohortPercentilesTrainer
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        CommonPrepConfig.registerConfig(configBuilder);
         TrainConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
