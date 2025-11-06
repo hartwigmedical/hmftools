@@ -12,7 +12,7 @@ import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 
-public class SamplePrepTask implements Runnable
+public class CategoryPrepTask implements Runnable
 {
     private final CategoryPrep mCategoryPrep;
 
@@ -29,7 +29,7 @@ public class SamplePrepTask implements Runnable
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
-    public SamplePrepTask(CategoryPrep categoryPrep,
+    public CategoryPrepTask(CategoryPrep categoryPrep,
             String sampleId, int sampleIndex, int totalSampleCount, SampleType sampleType,
             @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput)
     {

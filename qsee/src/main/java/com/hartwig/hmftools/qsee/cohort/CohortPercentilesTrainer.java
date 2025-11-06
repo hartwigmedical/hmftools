@@ -31,7 +31,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepFactory;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.prep.SamplePrepTask;
+import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 
 public class CohortPercentilesTrainer
 {
@@ -52,24 +52,24 @@ public class CohortPercentilesTrainer
                 : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
     }
 
-    private FeatureMatrix extractMultiSampleData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
+    private FeatureMatrix extractCohortData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
     {
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
 
-        List<Runnable> samplePrepTasks = new ArrayList<>();
+        List<Runnable> sampleCategoryTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
-            SamplePrepTask task = new SamplePrepTask(
+            CategoryPrepTask task = new CategoryPrepTask(
                     categoryPrep,
                     sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType,
                     sampleFeatureMatrix, mCommonPrepConfig.AllowMissingInput
             );
 
-            samplePrepTasks.add(task);
+            sampleCategoryTasks.add(task);
         }
 
-        TaskExecutor.executeRunnables(samplePrepTasks, mCommonPrepConfig.Threads);
-        samplePrepTasks.clear();
+        TaskExecutor.executeRunnables(sampleCategoryTasks, mCommonPrepConfig.Threads);
+        sampleCategoryTasks.clear();
 
         return sampleFeatureMatrix;
     }
@@ -115,10 +115,10 @@ public class CohortPercentilesTrainer
 
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            String logPrefix = SamplePrepTask.logPrefix(sampleType, categoryPrep);
+            String logPrefix = CategoryPrepTask.logPrefix(sampleType, categoryPrep);
 
-            QC_LOGGER.info("{} Extracting sample data", logPrefix);
-            FeatureMatrix sampleFeatureMatrix = extractMultiSampleData(categoryPrep, sampleIds, sampleType);
+            QC_LOGGER.info("{} Extracting cohort data", logPrefix);
+            FeatureMatrix sampleFeatureMatrix = extractCohortData(categoryPrep, sampleIds, sampleType);
 
             QC_LOGGER.info("{} Calculating percentiles", logPrefix);
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
