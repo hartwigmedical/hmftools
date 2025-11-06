@@ -54,7 +54,8 @@ public class VariantReadContextBuilder
                 return null;
 
             // enforce full flanks
-            if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
+            int minFlankLength = isUltima() && SageConfig.AppendMode ? 1 : mFlankSize;
+            if(readContext.leftFlankLength() < minFlankLength || readContext.rightFlankLength() < minFlankLength)
                 return null;
 
             if(!aboveMinBaseQual(readContext, read, varReadIndex))
@@ -112,7 +113,7 @@ public class VariantReadContextBuilder
         {
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
-            int refBaseLength = read.getReadBases().length - varIndexInRead;
+            int refBaseLength = read.getReadBases().length - varIndexInRead + (variant.isDelete() ? variant.indelLengthAbs() : 0);
             byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
 
             softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
@@ -131,6 +132,12 @@ public class VariantReadContextBuilder
                 homology = refHomology;
             if(homology != null)
                 readCoreEnd += homology.Length;
+
+            if(readCoreEnd + mFlankSize >= read.getReadBases().length && homology != null && SageConfig.AppendMode && isLongInsert(variant))
+            {
+                // most likely a long insert aligned from softclip - assume the old core is correct
+                readCoreEnd = read.getReadBases().length - mFlankSize - 1;
+            }
         }
         else
         {

@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
-import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
 import java.io.BufferedReader;
@@ -24,10 +23,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import static com.hartwig.hmftools.sage.filter.VariantFilters.STRAND_BIAS_CALCS;
 import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -42,7 +43,7 @@ public final class UltimaUtils
     private static final byte TP_ZERO_BASE_QUAL = 0;
 
     private static final byte T0_EXPECTED_QUAL_THRESHOLD_SIMPLE = 18;
-    private static final byte T0_EXPECTED_QUAL_THRESHOLD_COMPLEX = 28;
+    private static final byte T0_EXPECTED_QUAL_THRESHOLD_COMPLEX = 24;
 
     protected static final UltimaQualRecalibration BQR_CACHE = new UltimaQualRecalibration();
 
@@ -167,12 +168,6 @@ public final class UltimaUtils
         return repeatCount;
     }
 
-    public static List<Integer> coreHomopolymerLengths(final VariantReadContext readContext)
-    {
-        List<Homopolymer> homopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
-        return homopolymers.stream().map(x -> x.Length).collect(Collectors.toList());
-    }
-
     @VisibleForTesting
     public static boolean isCleanSnv(final VariantReadContext readContext)
     {
@@ -264,7 +259,7 @@ public final class UltimaUtils
     public static boolean hasLongHomopolymerInContext(final SimpleVariant variant, final SAMRecord read, final int varReadIndex)
     {
         int standardLength = MIN_CORE_DISTANCE + DEFAULT_FLANK_LENGTH;
-        int coreStartIndex = max(varReadIndex - standardLength, 0);
+        int coreStartIndex = max(varReadIndex - standardLength + (variant.isIndel() ? 1 : 0), 0);
         int coreEndIndex = min(varReadIndex + (variant.altLength() - 1) + standardLength, read.getReadBases().length - 1);
 
         byte lastBase = read.getReadBases()[coreStartIndex];
@@ -294,7 +289,7 @@ public final class UltimaUtils
         if(lowQualIndices == null || lowQualIndices.isEmpty())
             return false;
 
-        int coreIndexStart = variantReadIndex - MIN_CORE_DISTANCE;
+        int coreIndexStart = variantReadIndex -  MIN_CORE_DISTANCE + (variant.isIndel() ? 1 : 0);
         int coreIndexEnd = variantReadIndex + variant.alt().length() - 1 + MIN_CORE_DISTANCE;
 
         for(int index = coreIndexStart; index <= coreIndexEnd; ++index)
@@ -369,13 +364,26 @@ public final class UltimaUtils
     }
 
     // variant filters
+    private static final Map<Integer,Double> MIN_HP_QUAL_MAP = Maps.newHashMap();
+
+    static
+    {
+        MIN_HP_QUAL_MAP.put(1, 21.5);
+        MIN_HP_QUAL_MAP.put(2, 20.0);
+        MIN_HP_QUAL_MAP.put(3, 18.5);
+        MIN_HP_QUAL_MAP.put(4, 17.0);
+        MIN_HP_QUAL_MAP.put(5, 15.5);
+        MIN_HP_QUAL_MAP.put(6, 14.0);
+        MIN_HP_QUAL_MAP.put(7, 12.0);
+    }
+
     public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
     {
         if(primaryTumor.isSnv() && !primaryTumor.readContext().hasIndelInCore())
             return false;
 
         UltimaVariantData ultimaData = primaryTumor.ultimaData();
-        final List<Integer> homopolymerLengths = ultimaData.homopolymerLengths();
+        final List<Integer> homopolymerLengths = ultimaData.paddedHomopolymerLengths();
 
         // TODO: make constants and generally improve
         if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
@@ -385,34 +393,31 @@ public final class UltimaUtils
         {
             int length = homopolymerLengths.get(i);
 
+            if(length >= 15)
+                return true;
+
+            double threshold = MIN_HP_QUAL_MAP.getOrDefault(length, 10.0);
+            if(!primaryTumor.isIndel())
+                threshold -= 2.5;
+
             double avgQual = ultimaData.homopolymerAvgQuals().get(i);
 
-            if(length == 1 && avgQual < 24)
-                return true;
-            else if(length == 2 && avgQual < 22)
-                return true;
-            else if(length == 3 && avgQual < 20)
-                return true;
-            else if(length == 4 && avgQual < 18)
-                return true;
-            else if(length == 5 && avgQual < 16)
-                return true;
-            else if(length == 6 && avgQual < 14)
-                return true;
-            else if(length == 7 && avgQual < 12)
-                return true;
-            else if(avgQual < 10)
-                return true;
-            else if(length >= 15)
+            if(avgQual < threshold)
                 return true;
         }
+        
         return false;
     }
 
     public static boolean belowExpectedT0Quals(final ReadContextCounter primaryTumor)
     {
-        int threshold = canSkipRealignedModels(primaryTumor.readContext()) & !primaryTumor.variant().isMNV() ?
-                T0_EXPECTED_QUAL_THRESHOLD_SIMPLE : T0_EXPECTED_QUAL_THRESHOLD_COMPLEX;
+        boolean isSimple = canSkipRealignedModels(primaryTumor.readContext());
+
+        if(primaryTumor.variant().isMNV())
+            isSimple = !STRAND_BIAS_CALCS.allOneSide(
+                    primaryTumor.readStrandBiasAlt()) && !primaryTumor.ultimaData().getQualModels().mOriginalQualModel.canCompute();
+
+        int threshold = isSimple ? T0_EXPECTED_QUAL_THRESHOLD_SIMPLE : T0_EXPECTED_QUAL_THRESHOLD_COMPLEX;
 
         return Collections.min(primaryTumor.ultimaData().t0AvgQuals()) < threshold;
     }

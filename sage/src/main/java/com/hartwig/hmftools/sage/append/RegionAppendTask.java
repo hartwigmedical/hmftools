@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
+import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -36,6 +37,7 @@ import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 
+import com.hartwig.hmftools.sage.vis.VariantVis;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
@@ -117,6 +119,22 @@ public class RegionAppendTask implements Callable<Void>
         createFinalVariants(readContextCounters, mConfig.Common.ReferenceIds);
 
         mVariantPhaser.populateLocalPhaseSetInfo(candidates, mFinalVariants);
+
+        if(mConfig.Common.Visualiser.Enabled)
+        {
+            // in future, the existing genotype info could be displayed by the visualiser too
+            for(int candidateIndex = 0; candidateIndex < mOriginalVariants.size(); ++candidateIndex)
+            {
+                Candidate candidate = candidates.get(candidateIndex);
+
+                List<ReadContextCounter> refCounters = readContextCounters.getReadCounters(candidateIndex);
+
+                SageVariant sageVariant = new SageVariant(candidate, refCounters, Lists.newArrayList());
+
+                VariantVis.writeToHtmlFile(
+                        sageVariant, Lists.newArrayList(), mConfig.Common.ReferenceIds, mConfig.Common.Visualiser);
+            }
+        }
 
         if(mConfig.Common.WriteFragmentLengths)
         {

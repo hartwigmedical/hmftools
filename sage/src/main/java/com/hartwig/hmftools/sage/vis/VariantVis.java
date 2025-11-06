@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -665,11 +666,7 @@ public class VariantVis
         }
 
         readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
-        int insertSize;
-        if(firstRead.getReadPairedFlag())
-            insertSize = abs(firstRead.getInferredInsertSize());
-        else
-            insertSize = firstRead.getAlignmentEnd() - firstRead.getAlignmentStart() + 1;
+        int insertSize = inferredInsertSizeAbs(firstRead);
         readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(insertSize))));
         readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
 

@@ -53,11 +53,14 @@ public class ReadContextCandidate implements Comparable<ReadContextCandidate>
         int fullCompare = -Integer.compare(FullMatch, other.FullMatch);
 
         if(fullCompare != 0)
-        {
             return fullCompare;
-        }
 
-        return -Integer.compare(CoreMatch, other.CoreMatch);
+        int coreCompare = -Integer.compare(CoreMatch, other.CoreMatch);
+
+        if(coreCompare != 0)
+            return coreCompare;
+
+        return Integer.compare(MinNumberOfEvents, other.MinNumberOfEvents);
     }
 
     public String toString()

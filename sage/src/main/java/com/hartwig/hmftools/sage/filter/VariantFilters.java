@@ -84,7 +84,7 @@ public class VariantFilters
         JITTER;
     }
 
-    private static final StrandBiasCalcs mStrandBiasCalcs = new StrandBiasCalcs();
+    public static final StrandBiasCalcs STRAND_BIAS_CALCS = new StrandBiasCalcs();
 
     public VariantFilters(final SageConfig config)
     {
@@ -234,13 +234,13 @@ public class VariantFilters
 
         if(tier != HOTSPOT)
         {
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
+            if(STRAND_BIAS_CALCS.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
             {
                 filters.add(SoftFilter.FRAGMENT_STRAND_BIAS);
             }
 
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasNonAlt())
-            || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
+            if(STRAND_BIAS_CALCS.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasNonAlt())
+            || (primaryTumor.isIndel() && STRAND_BIAS_CALCS.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS);
             }
@@ -411,7 +411,7 @@ public class VariantFilters
         double readEdgeDistanceThresholdPerc = readEdgeDistanceThreshold(tier);
         double altAvgEdgeDistanceRatio = avgAltEdgeDistance / avgEdgeDistance;
 
-        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc)
+        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc && !primaryTumor.isLongIndel())
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
         }

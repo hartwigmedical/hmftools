@@ -10,6 +10,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
@@ -673,7 +674,8 @@ public class ReadContextCounter
 
         if(mFragmentLengthData != null && (support == REF || supportsAlt))
         {
-            mFragmentLengthData.addLength(abs(record.getInferredInsertSize()), supportsAlt);
+            int insertSize = inferredInsertSizeAbs(record);
+            mFragmentLengthData.addLength(insertSize, supportsAlt);
         }
 
         if(support != null && (support == FULL || support == VariantReadSupport.PARTIAL_CORE))

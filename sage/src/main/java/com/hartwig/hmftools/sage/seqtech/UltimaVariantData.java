@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_SCORE_SCALING;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.coreHomopolymerLengths;
+import static com.hartwig.hmftools.sage.seqtech.Homopolymer.getHomopolymers;
 import static com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo.ITEM_DELIM;
 
 import java.util.List;
@@ -23,6 +23,7 @@ public class UltimaVariantData
     private UltimaRealignedQualModels mQualModels;
 
     private final List<Integer> mHomopolymerLengths;
+    private final int[] mHomopolymerPadding;
     private final List<Double> mHomopolymerAvgQuals;
     private final List<Double> mT0AvgQuals;
     private int mHomopolymerAvgQualsCount;
@@ -30,7 +31,9 @@ public class UltimaVariantData
     public UltimaVariantData(final VariantReadContext readContext)
     {
         mReadContext = readContext;
-        mHomopolymerLengths = coreHomopolymerLengths(readContext);
+        List<Homopolymer> homopolymers = getHomopolymers(readContext.ReadBases, readContext.CoreIndexStart, readContext.CoreIndexEnd);
+        mHomopolymerLengths = homopolymers.stream().map(x -> x.Length).collect(Collectors.toList());
+        mHomopolymerPadding = getHomopolymerPadding(homopolymers, readContext);
 
         mHomopolymerAvgQuals = Lists.newArrayList();
         mT0AvgQuals = Lists.newArrayList();
@@ -43,6 +46,17 @@ public class UltimaVariantData
     }
 
     public List<Integer> homopolymerLengths() { return mHomopolymerLengths; }
+    public List<Integer> paddedHomopolymerLengths()
+    {
+        List<Integer> paddedLengths = Lists.newArrayList();
+        for(int i = 0; i < mHomopolymerLengths.size(); ++i)
+        {
+            int leftPadding = i == 0 ? mHomopolymerPadding[0] : 0;
+            int rightPadding = i == homopolymerLengths().size() - 1 ? mHomopolymerPadding[1] : 0;
+            paddedLengths.add(mHomopolymerLengths.get(i) + leftPadding + rightPadding);
+        }
+        return paddedLengths;
+    }
     public List<Double> homopolymerAvgQuals() { return mHomopolymerAvgQuals; }
     public List<Double> t0AvgQuals() { return mT0AvgQuals; }
 
@@ -60,6 +74,27 @@ public class UltimaVariantData
             registerHomopolymerQuals(record, readVarIndex);
             registerT0Quals(record, readVarIndex);
         }
+    }
+
+    public int[] getHomopolymerPadding(final List<Homopolymer> homopolymers, final VariantReadContext readContext)
+    {
+        int leftHpPadding = 0;
+        for(int i = readContext.CoreIndexStart - 1; i >= 0; --i)
+        {
+            if(readContext.ReadBases[i] == homopolymers.get(0).Base)
+                leftHpPadding += 1;
+            else
+                break;
+        }
+        int rightHpPadding = 0;
+        for(int i = readContext.CoreIndexEnd + 1; i < readContext.ReadBases.length; ++i)
+        {
+            if(readContext.ReadBases[i] == homopolymers.get(homopolymers.size() - 1).Base)
+                rightHpPadding += 1;
+            else
+                break;
+        }
+        return new int[] { leftHpPadding, rightHpPadding };
     }
 
     private void registerHomopolymerQuals(final SAMRecord record, int readVarIndex)
@@ -126,7 +161,7 @@ public class UltimaVariantData
         if(mHomopolymerLengths == null)
             return null;
 
-        String lengthsStr = mHomopolymerLengths.stream()
+        String lengthsStr = paddedHomopolymerLengths().stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(ITEM_DELIM));
 
