@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,39 +99,10 @@ public class FeatureMatrix
         mFeatureValuesMap.put(key, features);
     }
 
-    public FeatureMatrix reorderRows(List<String> rowIdsOrdered)
+    public void sortFeatureKeys()
     {
-        if(rowIdsOrdered.size() != numRows())
-        {
-            throw new IllegalArgumentException(String.format("Mismatched no. of rows (%d) provided and no. of rows in matrix (%d)",
-                    rowIdsOrdered.size(), numRows()
-            ));
-        }
-
-        if(!new HashSet<>(rowIdsOrdered).containsAll(mRowIds))
-        {
-            throw new IllegalArgumentException("Row IDs provided do not match the row IDs in the matrix");
-        }
-
-        FeatureMatrix newMatrix = new FeatureMatrix(new HashMap<>(), numRows());
-        newMatrix.mRowIds.addAll(rowIdsOrdered);
-
-        for(int newRowIndex = 0; newRowIndex < numRows(); newRowIndex++)
-        {
-            String newRowId = rowIdsOrdered.get(newRowIndex);
-            int oldRowIndex = mRowIds.indexOf(newRowId);
-
-            for(int featureIndex = 0; featureIndex < numFeatures(); featureIndex++)
-            {
-                FeatureKey featureKey = mFeatureKeys.get(featureIndex);
-                double value = mFeatureValuesMap.get(featureKey)[oldRowIndex];
-
-                newMatrix.addColumnIfMissing(featureKey);
-                newMatrix.mFeatureValuesMap.get(featureKey)[newRowIndex] = value;
-            }
-        }
-
-        return newMatrix;
+        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
+        mFeatureKeys.sort(comparator);
     }
 
     public int numRows() { return mNumRows; }
