@@ -383,7 +383,7 @@ public final class UltimaUtils
             return false;
 
         UltimaVariantData ultimaData = primaryTumor.ultimaData();
-        final List<Integer> homopolymerLengths = ultimaData.paddedHomopolymerLengths();
+        List<Integer> homopolymerLengths = ultimaData.paddedHomopolymerLengths();
 
         // TODO: make constants and generally improve
         if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
@@ -405,7 +405,7 @@ public final class UltimaUtils
             if(avgQual < threshold)
                 return true;
         }
-        
+
         return false;
     }
 
