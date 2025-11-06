@@ -60,8 +60,9 @@ public class CohortPercentilesTrainer
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
             SamplePrepTask task = new SamplePrepTask(
-                    categoryPrep, sampleIds, sampleIndex, sampleType, sampleFeatureMatrix,
-                    mCommonPrepConfig.AllowMissingInput
+                    categoryPrep,
+                    sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType,
+                    sampleFeatureMatrix, mCommonPrepConfig.AllowMissingInput
             );
 
             samplePrepTasks.add(task);

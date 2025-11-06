@@ -16,24 +16,27 @@ public class SamplePrepTask implements Runnable
 {
     private final CategoryPrep mCategoryPrep;
 
-    private final List<String> mSampleIds;
+    private final String mSampleId;
     private final int mSampleIndex;
+    private final int mTotalSampleCount;
     private final SampleType mSampleType;
-    private List<Feature> mFeatures;
     private final boolean mAllowMissingInput;
 
     private final String mLogPrefix;
+
+    private List<Feature> mOutput;
 
     @Nullable
     private final FeatureMatrix mSampleFeatureMatrix;
 
     public SamplePrepTask(CategoryPrep categoryPrep,
-            List<String> sampleIds, int sampleIndex, SampleType sampleType,
+            String sampleId, int sampleIndex, int totalSampleCount, SampleType sampleType,
             @Nullable FeatureMatrix sampleFeatureMatrix, boolean allowMissingInput)
     {
         mCategoryPrep = categoryPrep;
-        mSampleIds = sampleIds;
+        mSampleId = sampleId;
         mSampleIndex = sampleIndex;
+        mTotalSampleCount = totalSampleCount;
         mSampleType = sampleType;
         mSampleFeatureMatrix = sampleFeatureMatrix;
         mAllowMissingInput = allowMissingInput;
@@ -46,26 +49,24 @@ public class SamplePrepTask implements Runnable
         return String.format("sampleType(%s) category(%s) -", sampleType, categoryPrep.name());
     }
 
-    private void logProgress(int sampleIndex)
+    private void logProgress()
     {
-        int sampleCount = mSampleIds.size();
-
-        if(sampleCount == 1)
+        if(mTotalSampleCount == 1)
             return;
 
         int PROGRESS_INTERVAL = 100;
 
-        boolean hasManySamples = sampleCount >= PROGRESS_INTERVAL*2;
+        boolean hasManySamples = mTotalSampleCount >= PROGRESS_INTERVAL * 2;
 
         if(hasManySamples)
         {
-            boolean isSampleAtInterval = (sampleIndex+1) % PROGRESS_INTERVAL == 0;
-            boolean isLastSample = sampleIndex == sampleCount-1;
+            boolean isSampleAtInterval = (mSampleIndex + 1) % PROGRESS_INTERVAL == 0;
+            boolean isLastSample = mSampleIndex == mTotalSampleCount - 1;
 
             if(isSampleAtInterval || isLastSample)
             {
                 QC_LOGGER.debug("{} Progress: {}/{} - current sample: {}",
-                        mLogPrefix, sampleIndex+1, sampleCount, mSampleIds.get(sampleIndex));
+                        mLogPrefix, mSampleIndex + 1, mTotalSampleCount, mSampleId);
             }
         }
     }
@@ -73,31 +74,32 @@ public class SamplePrepTask implements Runnable
     @Override
     public void run()
     {
-        String sampleId = mSampleIds.get(mSampleIndex);
-
         try
         {
-            logProgress(mSampleIndex);
-            mFeatures = mCategoryPrep.extractSampleData(sampleId, mSampleType);
+            logProgress();
+            mOutput = mCategoryPrep.extractSampleData(mSampleId, mSampleType);
         }
         catch(NoSuchFileException e)
         {
-            mFeatures = new ArrayList<>();
-            QC_LOGGER.error("{} sample({}) missing input file(s): {}", mLogPrefix, sampleId, e.getMessage());
+            QC_LOGGER.error("{} sample({}) missing input file(s): {}", mLogPrefix, mSampleId, e.getMessage());
 
             if(!mAllowMissingInput)
                 System.exit(1);
+
+            mOutput = new ArrayList<>();
         }
         catch(Exception e)
         {
-            QC_LOGGER.error("{} Failed to run prep for sample({})", mLogPrefix, sampleId, e);
+            QC_LOGGER.error("{} Failed to run prep for sample({})", mLogPrefix, mSampleId, e);
             System.exit(1);
         }
 
         if(mSampleFeatureMatrix != null)
         {
-            mSampleFeatureMatrix.addRow(sampleId, mFeatures);
-            mFeatures = null;
+            mSampleFeatureMatrix.addRow(mSampleId, mOutput);
+            mOutput = null;
         }
     }
+
+    public List<Feature> getOutput(){ return mOutput; }
 }
