@@ -92,6 +92,8 @@ public class PercentileTransformer
         return IntStream.range(1, values.length).anyMatch(i -> values[i] < values[i - 1]);
     }
 
+    public void fit(double[] cohortValues) { fit(cohortValues, null); }
+
     public void fit(double[] cohortValues, @Nullable FeatureKey featureKey)
     {
         if(mFitted)
@@ -137,11 +139,8 @@ public class PercentileTransformer
         mFitted = true;
     }
 
-    public void fit(double[] cohortValues) { fit(cohortValues, null); }
-
     private static double calcRefValueAtPercentile(double percentile, double[] cohortValues)
     {
-
         double position = (percentile / 100) * (cohortValues.length - 1);
 
         int lowerIndex = (int) Math.floor(position);
@@ -186,47 +185,64 @@ public class PercentileTransformer
         mPercentilesDeduped = refValuesToMeanPctMap.values().stream().mapToDouble(x -> x).toArray();
     }
 
-    public double transform(double inputValue)
+    private void preTransformCheck(double inputValue)
     {
-        double[] percentiles = mPercentilesDeduped;
-        double[] refValues = mRefValuesDeduped;
+        if(!mFitted)
+            throw new IllegalStateException("PercentileTransformer not fitted");
 
         if(Double.isNaN(inputValue))
             throw new IllegalArgumentException("Input value cannot be NaN");
+    }
 
-        if(!mFitted)
-            throw new IllegalStateException("PercentileTransformer not fitted");
+    public double featureValueToPercentile(double featureValue)
+    {
+        preTransformCheck(featureValue);
 
         if(mFittedWithAllNaN)
             return Double.NaN;
 
-        if(inputValue < refValues[0])
+        return linearInterpolate2D(featureValue, mRefValuesDeduped, mPercentilesDeduped);
+    }
+
+    public double percentileToFeatureValue(double percentile)
+    {
+        preTransformCheck(percentile);
+
+        if(mFittedWithAllNaN)
+            return Double.NaN;
+
+        return linearInterpolate2D(percentile, mPercentilesDeduped, mRefValuesDeduped);
+    }
+
+    private static double linearInterpolate2D(double inputXValue, double[] XValues, double[] YValues)
+    {
+        if(inputXValue < XValues[0])
             return Double.NEGATIVE_INFINITY;
 
-        if(inputValue > refValues[refValues.length - 1])
+        if(inputXValue > XValues[XValues.length - 1])
             return Double.POSITIVE_INFINITY;
 
-        int matchIndex = Arrays.binarySearch(refValues, inputValue);
+        int matchIndex = Arrays.binarySearch(XValues, inputXValue);
         if(matchIndex >= 0)
         {
-            return percentiles[matchIndex];
+            return YValues[matchIndex];
         }
 
         int upperIndex = -matchIndex - 1; // When no exact match is found with binary search, a negative match index is returned encoding the insertion point
         int lowerIndex =  upperIndex - 1;
 
-        double lowerRefValue = refValues[lowerIndex];
-        double upperRefValue = refValues[upperIndex];
-        double lowerPercentile = percentiles[lowerIndex];
-        double upperPercentile = percentiles[upperIndex];
+        double lowerXValue = XValues[lowerIndex];
+        double upperXValue = XValues[upperIndex];
+        double lowerYValue = YValues[lowerIndex];
+        double upperYValue = YValues[upperIndex];
 
-        if(lowerRefValue == inputValue)
+        if(lowerXValue == inputXValue)
         {
-            return percentiles[lowerIndex];
+            return YValues[lowerIndex];
         }
 
-        double fraction = (inputValue - lowerRefValue) / (upperRefValue - lowerRefValue);
-        return linearInterpolate(lowerPercentile, upperPercentile, fraction);
+        double fraction = (inputXValue - lowerXValue) / (upperXValue - lowerXValue);
+        return linearInterpolate(lowerYValue, upperYValue, fraction);
     }
 
     private static double linearInterpolate(double lowerValue, double upperValue, double fraction)
