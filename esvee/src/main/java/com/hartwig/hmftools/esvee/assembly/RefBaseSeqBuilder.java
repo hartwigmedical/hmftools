@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
@@ -199,12 +198,6 @@ public class RefBaseSeqBuilder
                 byte base = read.currentBase();
                 byte qual = read.currentQual();
 
-                if(Nucleotides.baseIndex(base) < 0)
-                {
-                    base = DNA_N_BYTE;
-                    qual = 0;
-                }
-
                 if(readCounts == null)
                 {
                     if(consensusBase == NO_BASE || (base != consensusBase && belowMinQual(consensusMaxQual) && aboveMinQual(qual)))
@@ -235,13 +228,13 @@ public class RefBaseSeqBuilder
                     maxQuals = new int[DNA_BASE_COUNT];
 
                     // back port existing counts to the per-base arrays
-                    int baseIndex = Nucleotides.baseIndex(consensusBase);
+                    int baseIndex = AssemblyUtils.baseIndex(consensusBase);
                     totalQuals[baseIndex] = consensusQualTotal;
                     maxQuals[baseIndex] = consensusMaxQual;
                     readCounts[baseIndex] = consensusReadCount;
                 }
 
-                int baseIndex = Nucleotides.baseIndex(base);
+                int baseIndex = AssemblyUtils.baseIndex(base);
 
                 totalQuals[baseIndex] += qual;
                 maxQuals[baseIndex] = max(maxQuals[baseIndex], qual);
@@ -262,7 +255,7 @@ public class RefBaseSeqBuilder
                     }
                 }
 
-                consensusBase = maxBaseIndex < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[maxBaseIndex] : DNA_N_BYTE;
+                consensusBase = DNA_BASE_BYTES[maxBaseIndex];
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
             }
 

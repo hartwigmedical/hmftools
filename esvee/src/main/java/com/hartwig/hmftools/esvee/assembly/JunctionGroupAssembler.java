@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;

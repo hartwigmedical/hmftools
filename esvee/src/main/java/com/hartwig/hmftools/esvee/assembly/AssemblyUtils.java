@@ -32,6 +32,13 @@ public final class AssemblyUtils
     public static final int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
     public static final byte NO_BASE = 0;
 
+    public static int baseIndex(final byte base)
+    {
+        // protects against out of array errors from non-standard letters (N is permitted)
+        int baseIndex = Nucleotides.baseIndex(base);
+        return baseIndex < 0 || baseIndex >= DNA_BASE_COUNT ? DNA_BASE_COUNT - 1 : baseIndex;
+    }
+
     public static int mismatchesPerComparisonLength(final int sequenceLength)
     {
         if(sequenceLength < 15)

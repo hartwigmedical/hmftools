@@ -4,14 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
-import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
-import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.INVALID_QUAL;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.common.utils.Doubles.median;
 import static com.hartwig.hmftools.common.utils.Doubles.medianInteger;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MAX_BASE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
@@ -40,8 +35,6 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 
-import static htsjdk.samtools.util.CoordMath.overlaps;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,7 +45,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
@@ -148,13 +140,6 @@ public class SequenceBuilder
                 byte qual = read.currentQual();
                 boolean isHighQual = isHighBaseQual(qual);
 
-                if(baseIndex(base) < 0)
-                {
-                    base = DNA_N_BYTE;
-                    qual = INVALID_QUAL;
-                    isHighQual = false;
-                }
-
                 boolean hasMismatch = maxQuals != null;
 
                 if(maxQuals == null)
@@ -195,7 +180,7 @@ public class SequenceBuilder
                         mediumQuals = new int[DNA_BASE_COUNT];
 
                         // back port existing counts to the per-base arrays
-                        int baseIndex = baseIndex(consensusBase);
+                        int baseIndex = AssemblyUtils.baseIndex(consensusBase);
                         maxQuals[baseIndex] = consensusMaxQual;
                         highQuals[baseIndex] = consensusHighQualCount;
                         mediumQuals[baseIndex] = consensusMedQualCount;
@@ -204,7 +189,7 @@ public class SequenceBuilder
 
                 if(hasMismatch)
                 {
-                    int baseIndex = baseIndex(base);
+                    int baseIndex = AssemblyUtils.baseIndex(base);
 
                     maxQuals[baseIndex] = maxQual(maxQuals[baseIndex], qual);
 
@@ -253,11 +238,11 @@ public class SequenceBuilder
 
                     if(read != null)
                     {
-                        maxBaseIndex = baseIndex(read.currentBase());
+                        maxBaseIndex = AssemblyUtils.baseIndex(read.currentBase());
                     }
                 }
 
-                consensusBase = maxBaseIndex < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[maxBaseIndex] : DNA_N_BYTE;
+                consensusBase = DNA_BASE_BYTES[maxBaseIndex];
                 consensusMaxQual = maxQuals[maxBaseIndex];
 
                 SequenceDiffInfo[] seqDiffInfos = assessDifferences(consensusBase, consensusMaxQual, activeReads, hpBase, hpCount);
