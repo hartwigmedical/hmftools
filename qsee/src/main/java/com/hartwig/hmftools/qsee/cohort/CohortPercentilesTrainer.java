@@ -40,8 +40,6 @@ public class CohortPercentilesTrainer
 
     private final double[] mPercentiles;
 
-    private final List<FeaturePercentiles> mFeaturePercentiles = new ArrayList<>();
-
     public CohortPercentilesTrainer(final TrainConfig trainConfig)
     {
         mTrainConfig = trainConfig;
@@ -108,10 +106,11 @@ public class CohortPercentilesTrainer
         return cohortPercentiles;
     }
 
-    private void calcPercentilesFor(SampleType sampleType)
+    private List<FeaturePercentiles> process(SampleType sampleType)
     {
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mCommonPrepConfig).createCategoryPreps();
         List<String> sampleIds = mCommonPrepConfig.getSampleIds(sampleType);
+        List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
 
         for(CategoryPrep categoryPrep : categoryPreps)
         {
@@ -123,15 +122,17 @@ public class CohortPercentilesTrainer
             QC_LOGGER.info("{} Calculating percentiles", logPrefix);
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
 
-            mFeaturePercentiles.addAll(categoryPercentiles);
+            cohortPercentiles.addAll(categoryPercentiles);
         }
+
+        return cohortPercentiles;
     }
 
-    private void writePercentileRefValues()
+    private void writeCohortPercentiles(List<FeaturePercentiles> cohortPercentiles, String outputFile)
     {
-        try(BufferedWriter writer = createBufferedWriter(getOutputFilename()))
+        try(BufferedWriter writer = createBufferedWriter(outputFile))
         {
-            QC_LOGGER.info("Writing percentile ref values to {}", getOutputFilename());
+            QC_LOGGER.info("Writing percentile ref values to {}", outputFile);
 
             StringJoiner header = new StringJoiner(TSV_DELIM);
 
@@ -144,7 +145,7 @@ public class CohortPercentilesTrainer
             writer.write(header.toString());
             writer.newLine();
 
-            for(FeaturePercentiles featurePercentiles : mFeaturePercentiles)
+            for(FeaturePercentiles featurePercentiles : cohortPercentiles)
             {
                 FeatureKey featureKey = featurePercentiles.featureKey();
 
@@ -180,18 +181,22 @@ public class CohortPercentilesTrainer
     {
         QC_LOGGER.info("Using percentiles: {}", getPercentilesString());
 
+        List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
+
         if(!mCommonPrepConfig.TumorIds.isEmpty())
-            calcPercentilesFor(SampleType.TUMOR);
+        {
+            List<FeaturePercentiles> tumorPercentiles = process(SampleType.TUMOR);
+            cohortPercentiles.addAll(tumorPercentiles);
+        }
 
         if(!mCommonPrepConfig.ReferenceIds.isEmpty())
-            calcPercentilesFor(SampleType.NORMAL);
+        {
+            List<FeaturePercentiles> referencePercentiles = process(SampleType.NORMAL);
+            cohortPercentiles.addAll(referencePercentiles);
+        }
 
-        writePercentileRefValues();
-    }
-
-    private String getOutputFilename()
-    {
-        return mCommonPrepConfig.OutputDir + File.separator + COHORT_PERCENTILES_FILE_SUFFIX;
+        String outputFile = mCommonPrepConfig.OutputDir + File.separator + COHORT_PERCENTILES_FILE_SUFFIX;
+        writeCohortPercentiles(cohortPercentiles, outputFile);
     }
 
     private List<String> getPercentileNames()
