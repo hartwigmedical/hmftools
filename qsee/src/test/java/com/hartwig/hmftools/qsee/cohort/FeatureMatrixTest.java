@@ -123,7 +123,7 @@ public class FeatureMatrixTest
 
     private static Feature createTestFeature(String name, double value)
     {
-        return new Feature(null, name, value, null);
+        return new Feature(name, value, null, null);
     }
 
     private static String formTestSampleId(int sampleIndex) { return String.format("sample%d", sampleIndex); }
