@@ -122,7 +122,7 @@ public class JunctionAssembler
         if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
             return Collections.emptyList();
 
-        ExtensionSeqBuilderOld extensionSeqBuilder = new ExtensionSeqBuilderOld(mJunction, extensionReads);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         int reqExtensionLength = extensionSeqBuilder.hasLineSequence() ? LINE_MIN_EXTENSION_LENGTH : ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 
@@ -136,7 +136,7 @@ public class JunctionAssembler
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
-                extensionSeqBuilder.repeatInfo());
+                extensionSeqBuilder.repeats());
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
@@ -351,7 +351,7 @@ public class JunctionAssembler
         if(firstAssembly.hasLineSequence())
             return null;
 
-        ExtensionSeqBuilderOld extensionSeqBuilder = new ExtensionSeqBuilderOld(mJunction, extensionReads);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())
             return null;
@@ -369,7 +369,7 @@ public class JunctionAssembler
 
         JunctionAssembly newAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
-                extensionSeqBuilder.repeatInfo());
+                extensionSeqBuilder.repeats());
 
         if(newAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
             return null;
@@ -390,8 +390,9 @@ public class JunctionAssembler
         return newAssembly;
     }
 
+    /*
     private void addJunctionReads(
-            final JunctionAssembly assembly, final ExtensionSeqBuilderOld extensionSeqBuilder, final List<Read> junctionReads)
+            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
     {
         int mismatchReadCount = 0;
 
@@ -408,7 +409,7 @@ public class JunctionAssembler
         assembly.addMismatchReadCount(mismatchReadCount);
     }
 
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilderOld extensionSeqBuilder, final Read read)
+    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
     {
         ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
 
@@ -421,6 +422,7 @@ public class JunctionAssembler
         assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
         return true;
     }
+    */
 
     private void addJunctionReads(
             final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
@@ -440,7 +442,8 @@ public class JunctionAssembler
             }
             else
             {
-                assembly.addSupport(read, JUNCTION, readInfo.startIndex(), readInfo.matchedBases(), readInfo.mismatchCount());
+                assembly.addSupport(
+                        read, JUNCTION, readInfo.startIndex(), readInfo.matchedBases(), readInfo.mismatchCount(true));
             }
         }
 

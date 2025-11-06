@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
@@ -9,9 +10,16 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getRepeatCount;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
@@ -35,26 +43,19 @@ public class ExtensionSeqBuilder
 {
     private final Junction mJunction;
     private final List<ReadParseState> mReads;
-    private final boolean mIsForward;
+    private final boolean mBuildForwards;
     
     private final SequenceBuilder mSequenceBuilder;
-
-    private final int mLineExtensionLength;
 
     private boolean mHasLineSequence;
     private boolean mIsValid;
 
-    // private List<RepeatInfo> mExtensionRepeats;
-    // private boolean mRequiredRebuild;
-    // private RepeatInfo mMaxRepeat;
-    // private int mMaxRepeatCount; // includes any counts back into ref bases
-
-    private static final int READ_REPEAT_COUNT_INVALID = -1;
+    private int mRefRepeatCount; // counts of a repeat which extends back into the ref bases
 
     public ExtensionSeqBuilder(final Junction junction, final List<Read> reads)
     {
         mJunction = junction;
-        mIsForward = mJunction.isForward();
+        mBuildForwards = mJunction.isForward();
         mReads = Lists.newArrayListWithCapacity(reads.size());
 
         int maxExtension = 0;
@@ -81,22 +82,22 @@ public class ExtensionSeqBuilder
 
             maxExtension = max(maxExtension, extensionLength);
 
-            mReads.add(new ReadParseState(mIsForward, read, readJunctionIndex));
+            mReads.add(new ReadParseState(mBuildForwards, read, readJunctionIndex));
         }
 
         int baseLength = maxExtension + 1; // since the junction base itself is included (which is a ref base)
-        mSequenceBuilder = new SequenceBuilder(mReads, mIsForward, baseLength);
+        mSequenceBuilder = new SequenceBuilder(mReads, mBuildForwards, baseLength);
 
         mIsValid = true;
+        mRefRepeatCount = 0;
 
         if(hasLineReads)
         {
-            mLineExtensionLength = findConsensusLineExtension(reads, mJunction);
-            mHasLineSequence = mLineExtensionLength >= LINE_POLY_AT_REQ;
+            int lineExtensionLength = findConsensusLineExtension(reads, mJunction);
+            mHasLineSequence = lineExtensionLength >= LINE_POLY_AT_REQ;
         }
         else
         {
-            mLineExtensionLength = 0;
             mHasLineSequence = false;
         }
 
@@ -112,15 +113,9 @@ public class ExtensionSeqBuilder
     public byte[] extensionBases() { return mSequenceBuilder.bases(); }
     public int extensionLength() { return mSequenceBuilder.bases().length - 1; } // since includes the first ref base
     public byte[] baseQualities() { return mSequenceBuilder.baseQuals(); }
-    public List<RepeatInfo> repeatInfo() { return mSequenceBuilder.repeats(); }
+    public List<RepeatInfo> repeats() { return mSequenceBuilder.repeats(); }
     public boolean isValid() { return mIsValid; }
-
-    public int refBaseRepeatCount()
-    {
-        // TODO:
-        return 0;
-        // return mMaxRepeat != null ? mMaxRepeatCount - mMaxRepeat.Count : 0;
-    }
+    public int refBaseRepeatCount() { return mRefRepeatCount; }
 
     public List<SupportRead> formAssemblySupport()
     {
@@ -144,7 +139,8 @@ public class ExtensionSeqBuilder
     public boolean sufficientHighQualMatches(final ReadParseState read)
     {
         int refBaseRepeatBuffer = refBaseRepeatCount() > 0 ? 2 : 0;
-        return read.highQualMatches() >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH + refBaseRepeatBuffer;
+        int highQualExtensionMatches = read.highQualMatches() - 1; // to remove the initial junction ref bases
+        return highQualExtensionMatches >= ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH + refBaseRepeatBuffer;
     }
 
     public List<Read> mismatchReads()
@@ -161,14 +157,9 @@ public class ExtensionSeqBuilder
         if(readJunctionIndex == INVALID_INDEX)
             return null;
 
-        // calculate how many bases beyond the junction the read extends
-        // for positive orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 3
-        // for negative orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
-        int extensionLength = mJunction.isForward() ? read.basesLength() - readJunctionIndex - 1 : readJunctionIndex;
+        ReadParseState readParseState = new ReadParseState(mBuildForwards, read, readJunctionIndex);
 
-        ReadParseState readParseState = new ReadParseState(mIsForward, read, readJunctionIndex);
-
-        int extensionIndex = mIsForward ? 0 : mSequenceBuilder.baseQuals().length - 1;
+        int extensionIndex = mBuildForwards ? 0 : mSequenceBuilder.baseQuals().length - 1;
 
         int repeatIndexStart = -1;
         int repeatSkipCount = 0;
@@ -199,15 +190,6 @@ public class ExtensionSeqBuilder
             byte qual = readParseState.currentQual();
             boolean isHighQual = isHighBaseQual(qual);
 
-            /*
-            if(Nucleotides.baseIndex(base) < 0) // move to common conversion in Prep or Assembly read loading
-            {
-                base = DNA_N_BYTE;
-                qual = INVALID_QUAL;
-                isHighQual = false;
-            }
-            */
-
             if(base == consensusBase)
             {
                 readParseState.addBaseMatch(isHighQual);
@@ -215,22 +197,17 @@ public class ExtensionSeqBuilder
             }
             else
             {
-                if(!isHighQual)
-                {
-                    // TODO: how to handle a low-qual mismatch masking a repeat or indel diff?
-                }
-                else
-                {
-                    // evaluate difference and decide how to proceed
-                    assessReadMismatch(readParseState, extensionIndex, consensusBase, consensusQual);
+                // evaluate difference and decide how to proceed
+                assessReadMismatch(readParseState, extensionIndex, consensusBase, consensusQual);
 
-                    if(readParseState.exhausted())
-                        break;
-
-                    if(readParseState.mismatched())
-                        return readParseState;
-                }
+                if(readParseState.mismatched())
+                    return readParseState;
             }
+
+            if(readParseState.exhausted())
+                break;
+
+            extensionIndex += mBuildForwards ? 1 : -1;
         }
 
         if(sufficientHighQualMatches(readParseState))
@@ -251,11 +228,63 @@ public class ExtensionSeqBuilder
         byte[] consensusCurrentAndNext = read.getNextBases(NEXT_BASE_CHECK_COUNT);
 
         mSequenceBuilder.populateBases(consensusCurrentAndNext, extensionIndex);
-        mSequenceBuilder.populateBases(consensusNextBases, extensionIndex + (mIsForward ? 1 : -1));
+        mSequenceBuilder.populateBases(consensusNextBases, extensionIndex + (mBuildForwards ? 1 : -1));
 
-        // a novel indel
-        seqDiffInfo = mSequenceBuilder.assessNovelIndelDifferences(
-                read, seqDiffInfo, readNextBases, consensusNextBases, consensusCurrentAndNext);
+        // follow the same ordering for mismatch types as in the sequence building routine:
+        // SNVs
+        // homopolymer repeat diffs
+        // indels (limited to a single base for now)
+        // longer repeat diffs
+
+        RepeatInfo consensusRepeat = null;
+        int previousRepeatLength = 0;
+
+        if(basesMatch(readNextBases, consensusNextBases))
+        {
+            // this will handle the low-qual mismatch
+            seqDiffInfo = SequenceDiffInfo.fromSnv(read, extensionIndex);
+        }
+        else
+        {
+            // first check for repeats
+
+            // for the read to be a possible repeat adjustment (ie expansion or subtraction), it must have a repeat starting on the same
+            // base as the consensus repeat - so first check if such a consensus repeat exists that would reach this base
+
+            int priorExtIndex = extensionIndex + (mBuildForwards ? -1 : 1);
+            consensusRepeat = mSequenceBuilder.findRepeat(priorExtIndex);
+
+            if(consensusRepeat != null)
+            {
+                previousRepeatLength = abs(consensusRepeat.Index - extensionIndex) + 1;
+                int repeatBaseLength = consensusRepeat.repeatLength();
+                int previousRepeatCount = previousRepeatLength / repeatBaseLength;
+                int readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousRepeatCount, mBuildForwards);
+
+                if(readRepeatCount > 0)
+                {
+                    int readRepeatStart = SequenceDiffInfo.repeatIndex(
+                            read.readIndex(), readRepeatCount, consensusRepeat, previousRepeatLength, mBuildForwards, true);
+
+                    int readRepeatEnd = SequenceDiffInfo.repeatIndex(
+                            read.readIndex(), readRepeatCount, consensusRepeat, previousRepeatLength, mBuildForwards, false);
+
+                    int readRepeatIndexBegin = mBuildForwards ? readRepeatStart : readRepeatEnd;
+
+                    BaseQualType baseQualType = read.rangeMinQualType(readRepeatStart, readRepeatEnd);
+
+                    seqDiffInfo = new SequenceDiffInfo(
+                            read.readIndex(), extensionIndex, consensusRepeat.Bases, REPEAT, baseQualType,
+                            readRepeatCount, readRepeatIndexBegin);
+                }
+            }
+
+            if(seqDiffInfo.Type == UNSET)
+            {
+                seqDiffInfo = mSequenceBuilder.assessNovelIndelDifferences(
+                        read, seqDiffInfo, readNextBases, consensusNextBases, consensusCurrentAndNext);
+            }
+       }
 
         if(seqDiffInfo == SequenceDiffInfo.UNSET)
         {
@@ -263,12 +292,7 @@ public class ExtensionSeqBuilder
             seqDiffInfo = SequenceDiffInfo.fromSnv(read, extensionIndex);
         }
 
-        RepeatInfo consensusRepeat = mSequenceBuilder.findRepeat(extensionIndex);
-
-        // TODO:
-        int previousReadBases = 0;
-
-        mSequenceBuilder.applyReadMismatches(read, seqDiffInfo, consensusRepeat, previousReadBases);
+        mSequenceBuilder.applyReadMismatches(read, seqDiffInfo, consensusRepeat, previousRepeatLength);
     }
 
     private void validateFinalBases()
@@ -323,13 +347,42 @@ public class ExtensionSeqBuilder
         if(maxValidExtensionLength == 0 || !hasMinLengthSoftClipRead || validExtensionReadCount < minRequiredReadCount)
         {
             mIsValid = false;
+            return;
         }
+
+        checkRepeatInRefBases();
+    }
+
+    private void checkRepeatInRefBases()
+    {
+        if(mSequenceBuilder.repeats().isEmpty())
+            return;
+
+        RepeatInfo firstRepeat = mSequenceBuilder.repeats().get(0);
+
+        // check if the repeat starts at or close enough to the start of the junction to be considered
+        int repeatJunctionDistance = mBuildForwards ? firstRepeat.Index : mSequenceBuilder.baseLength() - firstRepeat.Index - 1;
+
+        if(repeatJunctionDistance > firstRepeat.repeatLength())
+            return;
+
+        ReadParseState sampleRead = mReads.stream().filter(x -> !x.mismatched()).findFirst().orElse(null);
+
+        if(sampleRead == null)
+            return;
+
+        int junctionIndex = sampleRead.startIndex();
+
+        int repeatIndexStart = junctionIndex + (mBuildForwards ? repeatJunctionDistance - 1 : -repeatJunctionDistance + 1);
+        int previousRepeatCount = RepeatInfo.getRepeatCount(sampleRead.read().getBases(), firstRepeat.Bases, repeatIndexStart, !mBuildForwards);
+
+        if(previousRepeatCount > 0)
+            mRefRepeatCount = previousRepeatCount;
     }
 
     public String toString()
     {
-        return format("junc(%s) reads(%d) baseLength(%d) lineLength(%d)",
-                mJunction.coordsTyped(), mReads.size(), mSequenceBuilder.bases().length, mLineExtensionLength);
+        return format("junc(%s) reads(%d) baseLength(%d)", mJunction.coordsTyped(), mReads.size(), mSequenceBuilder.bases().length);
     }
 
     public boolean hasLineSequence() { return mHasLineSequence; }
@@ -337,51 +390,81 @@ public class ExtensionSeqBuilder
     public String buildInformation()
     {
         // Statistics captured:
-        // ReadCount - candidate read count
-        // ExactMatchReads - read with no mismatches
-        // MismatchReads - excluded from final support
-        // Mismatch types - SNV, 1-base indels, HP repeats, and other repeats
-        // Repeats
+
+        // RC: ReadCount - candidate read count
+        // EX: ExactMatchReads - read with no mismatches
+        // LQ: low qual mismatches
+        // MM: MismatchReads - excluded from final support
+        // SNV: SNV counts excluding low-qual
+        // HPR: homopolymer repeats
+        // OR: other repeats
+        // ID: indels
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 
-        sj.add(String.valueOf(mReads.size()));
+        int exactMatch = 0;
+        int mismatchedReads = 0;
+        int lowQualMismatches = 0;
+        int snvs = 0;
+        int indels = 0;
+        int homopolymers = 0;
+        int otherRepeats = 0;
 
-        int mismatchReads = (int)mReads.stream().filter(x -> x.mismatched()).count();
-        int exactMatchReads = (int)mReads.stream().filter(x -> x.mismatchCount() == 0).count();
-        sj.add(String.valueOf(exactMatchReads));
-        sj.add(String.valueOf(mismatchReads));
-        // sj.add(String.valueOf(mRequiredRebuild));
-
-        int noRepeat = 0;
-        int closeRepeat = 0;
-        int notCloseRepeat = 0;
-        int matchedRepeat = 0;
-
-        /*
-        if(mMaxRepeat != null)
+        for(ReadParseState read : mReads)
         {
-            sj.add(format("%d:%s:%d:%d", mMaxRepeat.Index, mMaxRepeat.Bases, mMaxRepeat.Count, mMaxRepeatCount - mMaxRepeat.Count));
+            if(!sufficientHighQualMatches(read))
+                continue;
 
-            for(int i = 0; i < mReadRepeatCounts.length; ++i)
+            if(read.mismatchCount(false) == 0)
             {
-                if(mReadRepeatCounts[i] <= 0)
-                    ++noRepeat;
-                else if(mReadRepeatCounts[i] == mMaxRepeat.Count)
-                    ++matchedRepeat;
-                else if(abs(mReadRepeatCounts[i] - mMaxRepeat.Count) <= 2)
-                    ++closeRepeat;
-                else
-                    ++notCloseRepeat;
+                ++exactMatch;
             }
+            else if(read.mismatched())
+            {
+                ++mismatchedReads;
+            }
+            else
+            {
+                for(SequenceDiffInfo mismatch : read.mismatches())
+                {
+                    if(mismatch.MismatchPenalty > 0)
+                    {
+                        if(mismatch.Type == BASE)
+                        {
+                            ++snvs;
+                        }
+                        else if(mismatch.Type == REPEAT)
+                        {
+                            if(mismatch.Bases.length() == 1)
+                                ++homopolymers;
+                            else
+                                ++otherRepeats;
+                        }
+                        else if(mismatch.Type == INSERT || (mismatch.Type == DELETE))
+                        {
+                            ++indels;
+                        }
+                    }
+                    else
+                    {
+                        ++lowQualMismatches;
+                    }
+                }
+            }
+        }
 
-            sj.add(format("%d:%d:%d:%d", matchedRepeat, closeRepeat, notCloseRepeat, noRepeat));
-        }
-        else
+        sj.add(format("RC=%d", mReads.size()));
+        sj.add(format("EM=%d", exactMatch));
+        sj.add(format("LQ=%d", lowQualMismatches));
+        sj.add(format("MM=%d", mismatchedReads));
+        sj.add(format("SNV=%d", snvs));
+        sj.add(format("HP=%d", homopolymers));
+        sj.add(format("OR=%d", otherRepeats));
+        sj.add(format("ID=%d", indels));
+
+        for(RepeatInfo repeat : mSequenceBuilder.repeats())
         {
-            sj.add("0:0:0");
-            sj.add("0:0:0:0");
+            sj.add(format("REP:%dx%s", repeat.Count, repeat.Bases));
         }
-        */
 
         return sj.toString();
     }

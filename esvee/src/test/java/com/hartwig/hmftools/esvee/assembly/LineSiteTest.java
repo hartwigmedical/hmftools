@@ -106,7 +106,7 @@ public class LineSiteTest
     @Test
     public void testLineJunctionAssembly()
     {
-        String polyA = "TGTTTATTTTTTTTTTTT"; // allows for 2 non-bases
+        String polyAT = "TGTTTATTTTTTTTTTTT"; // allows for 2 non-bases
 
         String extraBases = "GTAGTGCTGT";
 
@@ -115,21 +115,21 @@ public class LineSiteTest
         // reads with poly-A tails of various lengths but all supporting the junction
         String refBases = REF_BASES_400.substring(51, 101);
 
-        String extBases1 = polyA + extraBases;
+        String extBases1 = polyAT + extraBases;
         String readBases1 = refBases + extBases1;
         Read read1 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases1, makeCigarString(readBases1, 0, extBases1.length()));
         Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
-        String extBases2 = polyA + "TT" + extraBases;
+        String extBases2 = polyAT + "TT" + extraBases;
         String readBases2 = refBases.substring(1) + extBases2;
         Read read2 = createRead(READ_ID_GENERATOR.nextId(), 52, readBases2, makeCigarString(readBases2, 0, extBases2.length()));
 
-        String extBases3 = polyA + "T" + extraBases;
+        String extBases3 = polyAT + "T" + extraBases;
         String readBases3 = refBases + extBases3;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases3, makeCigarString(readBases3, 0, extBases3.length()));
 
         // too short to be marked as line but supports the junction
-        String extBases4 = polyA.substring(0, 12);
+        String extBases4 = polyAT.substring(0, 12);
         String readBases4 = refBases + extBases4;
         Read read4 = createRead(READ_ID_GENERATOR.nextId(), 51, readBases4, makeCigarString(readBases4, 0, extBases4.length()));
 
@@ -147,7 +147,7 @@ public class LineSiteTest
 
         assertTrue(assembly.hasLineSequence());
         assertEquals(5, assembly.supportCount());
-        assertEquals(extBases3, assembly.formJunctionSequence()); // based on taking the median T length
+        assertEquals(extBases1, assembly.formJunctionSequence()); // based on taking the median T length
     }
 
     @Test

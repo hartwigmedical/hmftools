@@ -5,10 +5,15 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
+import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.INVALID_QUAL;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MAX_REPEAT_BASE_COUNT;
+import static com.hartwig.hmftools.common.utils.Doubles.median;
+import static com.hartwig.hmftools.common.utils.Doubles.medianInteger;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MAX_BASE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_PENALTY;
@@ -31,13 +36,15 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.MATCH;
-import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.OTHER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
+
+import static htsjdk.samtools.util.CoordMath.overlaps;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +53,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public class SequenceBuilder
@@ -82,6 +90,7 @@ public class SequenceBuilder
 
         buildSequence();
         trimFinalSequence();
+        findNonMismatchRepeats();
     }
 
     public byte[] bases() { return mBases; }
@@ -91,7 +100,25 @@ public class SequenceBuilder
     public List<ReadParseState> reads() { return mReads; }
     public List<RepeatInfo> repeats() { return mRepeats; }
 
-    public RepeatInfo findRepeat(int baseIndex) { return mRepeats.stream().filter(x -> x.Index == baseIndex).findFirst().orElse(null); }
+    public RepeatInfo findRepeat(int baseIndex)
+    {
+        // find a repeat which starts earlier and reaches as far this base
+        for(RepeatInfo repeat : mRepeats)
+        {
+            if(mBuildForwards)
+            {
+                if(baseIndex >= repeat.Index && baseIndex <= repeat.lastIndex())
+                    return repeat;
+            }
+            else
+            {
+                if(baseIndex >= repeat.Index && baseIndex <= repeat.lastIndex())
+                    return repeat;
+            }
+        }
+
+        return null;
+    }
 
     private void buildSequence()
     {
@@ -121,7 +148,7 @@ public class SequenceBuilder
                 byte qual = read.currentQual();
                 boolean isHighQual = isHighBaseQual(qual);
 
-                if(Nucleotides.baseIndex(base) < 0)
+                if(baseIndex(base) < 0)
                 {
                     base = DNA_N_BYTE;
                     qual = INVALID_QUAL;
@@ -168,7 +195,7 @@ public class SequenceBuilder
                         mediumQuals = new int[DNA_BASE_COUNT];
 
                         // back port existing counts to the per-base arrays
-                        int baseIndex = Nucleotides.baseIndex(consensusBase);
+                        int baseIndex = baseIndex(consensusBase);
                         maxQuals[baseIndex] = consensusMaxQual;
                         highQuals[baseIndex] = consensusHighQualCount;
                         mediumQuals[baseIndex] = consensusMedQualCount;
@@ -177,7 +204,7 @@ public class SequenceBuilder
 
                 if(hasMismatch)
                 {
-                    int baseIndex = Nucleotides.baseIndex(base);
+                    int baseIndex = baseIndex(base);
 
                     maxQuals[baseIndex] = maxQual(maxQuals[baseIndex], qual);
 
@@ -195,6 +222,8 @@ public class SequenceBuilder
                 int maxMediumQual = 0;
                 int maxBaseIndex = 0;
 
+                boolean tieBreak = false;
+
                 for(int b = 0; b < maxQuals.length; ++b)
                 {
                     if(highQuals[b] > maxHighQual)
@@ -208,6 +237,23 @@ public class SequenceBuilder
                         maxHighQual = highQuals[b];
                         maxMediumQual = mediumQuals[b];
                         maxBaseIndex = b;
+                    }
+                    else if(highQuals[b] == maxHighQual && mediumQuals[b] == maxMediumQual)
+                    {
+                        tieBreak = true;
+                    }
+                }
+
+                if(tieBreak)
+                {
+                    // use the read with the lowest mismatches so far
+                    double minMismatches = activeReads.stream().mapToDouble(x -> x.mismatchPenalty()).min().orElse(0);
+
+                    ReadParseState read = activeReads.stream().filter(x -> x.mismatchPenalty() == minMismatches).findFirst().orElse(null);
+
+                    if(read != null)
+                    {
+                        maxBaseIndex = baseIndex(read.currentBase());
                     }
                 }
 
@@ -225,7 +271,11 @@ public class SequenceBuilder
 
                 mCurrentIndex += mBuildForwards ? 1 : -1;
 
-                activeReads.forEach(x -> x.moveNext());
+                for(ReadParseState read : activeReads)
+                {
+                    read.addBaseMatch(isHighBaseQual(read.currentQual()));
+                    read.moveNext();
+                }
             }
 
             if(hpBase == consensusBase)
@@ -255,6 +305,8 @@ public class SequenceBuilder
         }
     }
 
+    private static final int MIN_PREVIOUS_REPEAT_COUNT = READ_MISMATCH_LOW_REPEAT_COUNT - 1;
+
     private SequenceDiffInfo[] assessDifferences(
             byte consensusBase, byte consensusQual, final List<ReadParseState> activeReads, byte hpBase, int hpCount)
     {
@@ -268,7 +320,6 @@ public class SequenceBuilder
 
         int readCount = activeReads.size();
 
-        // first check if bases match after this single base mismatch, ie no indel-based differences
         List<byte[]> allReadNextBases = Lists.newArrayListWithCapacity(readCount);
         List<byte[]> consensusReadNextBases = Lists.newArrayListWithCapacity(readCount);
 
@@ -333,20 +384,20 @@ public class SequenceBuilder
             }
         }
 
-        if(hpCount >= READ_MISMATCH_LOW_REPEAT_COUNT)
+        if(hpCount >= MIN_PREVIOUS_REPEAT_COUNT)
         {
             // look for homopolymer repeat differences
             assessRepeatDifferences(activeReads, seqDiffInfos, hpBase, hpCount);
-            return seqDiffInfos;
+
+            if(Arrays.stream(seqDiffInfos).noneMatch(x -> x == UNSET))
+                return seqDiffInfos;
         }
 
         if(consensusNextBases != null)
         {
             assessNovelIndelDifferences(consensusBase, consensusNextBases, activeReads, allReadNextBases, seqDiffInfos);
 
-            int remainingMismatchCount = (int)Arrays.stream(seqDiffInfos).filter(x -> x == UNSET).count();
-
-            if(remainingMismatchCount == 0)
+            if(Arrays.stream(seqDiffInfos).noneMatch(x -> x == UNSET))
                 return seqDiffInfos;
         }
 
@@ -358,8 +409,7 @@ public class SequenceBuilder
             if(seqDiffInfos[readIndex] == UNSET)
             {
                 ReadParseState read = activeReads.get(readIndex);
-                seqDiffInfos[readIndex] = new SequenceDiffInfo(
-                        read.readIndex(), mCurrentIndex, "", OTHER, 0, read.qualType(read.readIndex()));
+                seqDiffInfos[readIndex] = SequenceDiffInfo.fromSnv(read, mCurrentIndex);
             }
         }
 
@@ -399,7 +449,7 @@ public class SequenceBuilder
             BaseQualType qualType = read.qualType(read.readIndex());
             String base = String.valueOf((char)read.currentBase());
 
-            return new SequenceDiffInfo(read.readIndex(), mCurrentIndex, base, SequenceDiffType.INSERT, 0, qualType);
+            return new SequenceDiffInfo(read.readIndex(), mCurrentIndex, base, SequenceDiffType.INSERT, qualType);
         }
         else
         {
@@ -411,7 +461,7 @@ public class SequenceBuilder
                 BaseQualType qualType = read.straddlingQualType(read.readIndex(), previousIndex); // order doesn't matter
 
                 return new SequenceDiffInfo(
-                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, 0, qualType);
+                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, qualType);
             }
         }
 
@@ -450,7 +500,7 @@ public class SequenceBuilder
         else
         {
             // search for repeats of 2-base
-            for(int repeatLength = 2; repeatLength <= MAX_REPEAT_BASE_COUNT; ++repeatLength)
+            for(int repeatLength = 2; repeatLength <= REPEAT_MAX_BASE_LENGTH; ++repeatLength)
             {
                 String repeatBases = null;
 
@@ -472,7 +522,7 @@ public class SequenceBuilder
                 int repeatIndexStart = mBuildForwards ? mCurrentIndex - 1 : mCurrentIndex + 1;
                 int previousRepeatCount = RepeatInfo.getRepeatCount(mBases, repeatBases, repeatIndexStart, !mBuildForwards);
 
-                if(previousRepeatCount < READ_MISMATCH_LOW_REPEAT_COUNT)
+                if(previousRepeatCount < MIN_PREVIOUS_REPEAT_COUNT)
                     continue;
 
                 int[] repeatReadRepeatCounts = new int[activeReads.size()];
@@ -515,15 +565,16 @@ public class SequenceBuilder
         if(maxReadsWithRepeatCount < 0.5 * activeReads.size())
             return;
 
-        int consensusRepeatCount = findConsensusRepeatCount(seqDiffInfos, maxRepeatReadRepeatCounts);
+        int consensusRepeatCount = findConsensusRepeatCount(maxRepeatReadRepeatCounts);
 
         // register this consensus repeat
         int repeatBaseLength = maxRepeatBases.length();
         int consensusRepeatOffset = maxRepeatPreviousRepeatCount * repeatBaseLength; // previous repeat bases before the current base
         int consensusRepeatIndexStart = mBuildForwards ? mCurrentIndex - consensusRepeatOffset : mCurrentIndex + consensusRepeatOffset;
 
-        RepeatInfo repeatInfo = new RepeatInfo(consensusRepeatIndexStart, maxRepeatBases, consensusRepeatCount);
-        mRepeats.add(repeatInfo);
+        RepeatInfo consensusRepeat = new RepeatInfo(
+                consensusRepeatIndexStart, maxRepeatBases, consensusRepeatCount, mBuildForwards ? Orientation.FORWARD : REVERSE);
+        mRepeats.add(consensusRepeat);
 
         // and then register the diff info for each read, including how many repeats it has
         for(int readIndex = 0; readIndex < activeReads.size(); ++readIndex)
@@ -533,62 +584,66 @@ public class SequenceBuilder
 
             SequenceDiffType diffType = readRepeatCount == consensusRepeatCount ? MATCH : SequenceDiffType.REPEAT;
 
-            // CHECK:
-            int readRepeatStart, readRepeatEnd;
+            int readRepeatStart = SequenceDiffInfo.repeatIndex(
+                    read.readIndex(), readRepeatCount, consensusRepeat, consensusRepeatOffset, mBuildForwards, true);
 
-            if(mBuildForwards)
-            {
-                readRepeatStart = read.readIndex() - consensusRepeatOffset;
-                readRepeatEnd = readRepeatStart + readRepeatCount * repeatBaseLength - 1;
-            }
-            else
-            {
-                readRepeatEnd = read.readIndex() + consensusRepeatOffset;
-                readRepeatStart = readRepeatEnd - readRepeatCount * repeatBaseLength + 1;
+            int readRepeatEnd = SequenceDiffInfo.repeatIndex(
+                    read.readIndex(), readRepeatCount, consensusRepeat, consensusRepeatOffset, mBuildForwards, false);
 
-            }
+            int readRepeatIndexBegin = mBuildForwards ? readRepeatStart : readRepeatEnd;
+
             BaseQualType baseQualType = read.rangeMinQualType(readRepeatStart, readRepeatEnd);
 
             seqDiffInfos[readIndex] = new SequenceDiffInfo(
-                    read.readIndex(), mCurrentIndex, maxRepeatBases, diffType, readRepeatCount, baseQualType);
+                    read.readIndex(), mCurrentIndex, maxRepeatBases, diffType, baseQualType, readRepeatCount, readRepeatIndexBegin);
         }
     }
 
     private int getRepeatCount(final ReadParseState read, final String repeat, int previousRepeatCount)
     {
+        return getRepeatCount(read, repeat, previousRepeatCount, mBuildForwards);
+    }
+
+    protected static int getRepeatCount(final ReadParseState read, final String repeat, int previousRepeatCount, boolean buildForwards)
+    {
         // search forward from the current index
-        int countForward = max(RepeatInfo.getRepeatCount(read.read().getBases(), repeat, read.readIndex(), mBuildForwards), 0);
+        int countForward = max(RepeatInfo.getRepeatCount(read.read().getBases(), repeat, read.readIndex(), buildForwards), 0);
         return previousRepeatCount + countForward;
     }
 
-    private static int findConsensusRepeatCount(final SequenceDiffInfo[] seqDiffInfos, final int[] readRepeatCounts)
+    private static int findConsensusRepeatCount(final int[] readRepeatCounts)
     {
         Map<Integer,Integer> repeatFrequencies = Maps.newHashMap();
+        List<Integer> allCounts = Lists.newArrayList();
 
         for(int readIndex = 0; readIndex < readRepeatCounts.length; ++readIndex)
         {
-            SequenceDiffInfo seqDiffInfo = seqDiffInfos[readIndex];
+            int readRepeatCount = readRepeatCounts[readIndex];
 
-            if(seqDiffInfo.Type == MATCH)
-            {
-                int readRepeatCount = readRepeatCounts[readIndex];
+            if(readRepeatCount < READ_MISMATCH_LOW_REPEAT_COUNT)
+                continue;
 
-                Integer readCount = repeatFrequencies.get(readRepeatCount);
-                repeatFrequencies.put(readRepeatCount, readCount == null ? 1 : readCount + 1);
-            }
+            Integer readCount = repeatFrequencies.get(readRepeatCount);
+            repeatFrequencies.put(readRepeatCount, readCount == null ? 1 : readCount + 1);
+            allCounts.add(readRepeatCount);
         }
 
         int maxRepeatFreq = 0;
         int maxRepeatCount = 0;
-        
+
         // favour a shorter repeat count if a tie break? or if just 2 reads?
         for(Map.Entry<Integer,Integer> entry : repeatFrequencies.entrySet())
         {
-            if(entry.getValue() > maxRepeatFreq)
+            if(entry.getValue() > maxRepeatFreq || (entry.getValue() == maxRepeatFreq && entry.getKey() < maxRepeatCount))
             {
                 maxRepeatCount = entry.getKey();
                 maxRepeatFreq = entry.getValue();
             }
+        }
+
+        if(maxRepeatFreq < 0.33 * allCounts.size())
+        {
+            return medianInteger(allCounts);
         }
 
         return maxRepeatCount;
@@ -770,12 +825,12 @@ public class SequenceBuilder
     }
 
     protected void applyReadMismatches(
-            final ReadParseState read, final SequenceDiffInfo seqDiffInfo, final RepeatInfo consensusRepeat, final int previousReadBases)
+            final ReadParseState read, final SequenceDiffInfo seqDiffInfo, final RepeatInfo consensusRepeat, final int previousRepeatLength)
     {
         // register mismatches and move the read index on as required by the match type
         if(seqDiffInfo.Type != MATCH)
         {
-            seqDiffInfo.MismatchPenalty = calcMismatchPenalty(read, seqDiffInfo, consensusRepeat);
+            seqDiffInfo.MismatchPenalty = calcMismatchPenalty(seqDiffInfo, consensusRepeat);
             read.addMismatchInfo(seqDiffInfo);
 
             if(exceedsReadMismatches(read))
@@ -793,35 +848,23 @@ public class SequenceBuilder
 
         if(consensusRepeat != null)
         {
-            processReadRepeat(read, seqDiffInfo, consensusRepeat, previousReadBases);
+            processReadRepeat(read, seqDiffInfo, consensusRepeat, previousRepeatLength);
         }
     }
 
     protected void processReadRepeat(
-            final ReadParseState read, final SequenceDiffInfo seqDiffInfo, final RepeatInfo consensusRepeat, final int previousReadBases)
+            final ReadParseState read, final SequenceDiffInfo seqDiffInfo, final RepeatInfo consensusRepeat, final int previousRepeatLength)
     {
         int repeatedMatches = consensusRepeat.totalLength();
 
         // move each read's index based on diffs vs the consensus repeat
-        int remainingReadRepeatBases = seqDiffInfo.RepeatCount * consensusRepeat.repeatLength() - previousReadBases;
+        int remainingReadRepeatBases = seqDiffInfo.RepeatCount * consensusRepeat.repeatLength() - previousRepeatLength;
         read.moveNextBases(remainingReadRepeatBases);
 
-        int readRepeatIndexStart, readRepeatIndexEnd;
+        int readRepeatStart = seqDiffInfo.repeatIndex(consensusRepeat, mBuildForwards, true);
+        int readRepeatEnd = seqDiffInfo.repeatIndex(consensusRepeat, mBuildForwards, false);
 
-        if(mBuildForwards)
-        {
-            readRepeatIndexStart = read.readIndex() - previousReadBases;
-            readRepeatIndexEnd = readRepeatIndexStart;
-
-        }
-        else
-        {
-            readRepeatIndexStart = read.readIndex();
-            readRepeatIndexEnd = readRepeatIndexStart + previousReadBases;
-
-        }
-
-        int highQualRepeatBases = read.highQualBaseCount(readRepeatIndexStart, readRepeatIndexEnd);
+        int highQualRepeatBases = read.highQualBaseCount(readRepeatStart, readRepeatEnd);
         read.addBaseMatches(repeatedMatches, highQualRepeatBases);
     }
 
@@ -850,8 +893,7 @@ public class SequenceBuilder
         return READ_MISMATCH_PENALTY_PENALTY_LONG;
     }
 
-    private double calcMismatchPenalty(
-            final ReadParseState read, final SequenceDiffInfo seqDiffInfo, @Nullable final RepeatInfo consensusRepeat)
+    private double calcMismatchPenalty(final SequenceDiffInfo seqDiffInfo, @Nullable final RepeatInfo consensusRepeat)
     {
         if(seqDiffInfo.Type == MATCH)
             return 0;
@@ -910,6 +952,40 @@ public class SequenceBuilder
         }
     }
 
+    private void findNonMismatchRepeats()
+    {
+        // find repeats other than those resulting from read mismatches
+        List<RepeatInfo> allRepeats = RepeatInfo.findRepeats(mBases);
+
+        if(allRepeats.isEmpty())
+            return;
+
+        // keep any which do not overlap with the mismatch repeats, and favour longer counts
+        Collections.sort(allRepeats, Comparator.comparingInt(x -> -x.Count));
+        int index = 0;
+
+        while(index < allRepeats.size())
+        {
+            RepeatInfo repeat = allRepeats.get(index);
+
+            if(mRepeats.stream().anyMatch(x -> x.overlaps(repeat)))
+            {
+                allRepeats.remove(index);
+            }
+            else
+            {
+                if(mBuildForwards)
+                {
+                    mRepeats.add(repeat);
+                }
+                else
+                {
+                    mRepeats.add(new RepeatInfo(repeat.lastIndex(), repeat.Bases, repeat.Count, REVERSE));
+                }
+            }
+        }
+    }
+
     private void trimFinalSequence()
     {
         int currentIndex = mBuildForwards ? 0 : mBases.length - 1;
@@ -932,5 +1008,15 @@ public class SequenceBuilder
         int endIndex = startIndex + validLength - 1;
         mBases = subsetArray(mBases, startIndex, endIndex);
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
+
+        if(!mBuildForwards)
+        {
+            // adjust the repead indicies down
+            for(int i = 0; i < mRepeats.size(); ++i)
+            {
+                RepeatInfo repeat = mRepeats.get(i);
+                mRepeats.set(i, new RepeatInfo(repeat.Index - reduction, repeat.Bases, repeat.Count, repeat.direction()));
+            }
+        }
     }
 }

@@ -75,52 +75,6 @@ public class ReadParseState
 
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
 
-    public int matchedBases() { return mBaseMatches; }
-
-    public void addBaseMatch(boolean isHighQual)
-    {
-        ++mBaseMatches;
-
-        if(isHighQual)
-            ++mHighQualMatches;
-    }
-
-    public void addBaseMatches(int count, int highQualCount)
-    {
-        mBaseMatches += count;
-        mHighQualMatches += highQualCount;
-    }
-
-    public int highQualMatches() { return mHighQualMatches; }
-
-    public List<SequenceDiffInfo> mismatches() { return mMismatches != null ? mMismatches : Collections.emptyList(); }
-    public int mismatchCount() { return mMismatches != null ? mMismatches.size() : 0; }
-    public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo)
-    {
-        if(mMismatches == null)
-            mMismatches = Lists.newArrayList();
-
-        mMismatches.add(seqDiffInfo);
-    }
-
-    public void resetMatches()
-    {
-        mHighQualMatches = 0;
-        mBaseMatches = 0;
-
-        if(mMismatches != null)
-            mMismatches.clear();
-    }
-
-    public double mismatchPenalty()
-    {
-        if(mMismatches == null)
-            return 0;
-
-        return mMismatches.stream().mapToDouble(x -> x.MismatchPenalty).sum();
-    }
-    public boolean exceedsMaxMismatches(double maxMismatchPenalty) { return mismatchPenalty() > maxMismatchPenalty; }
-
     public void moveOnMatchType(final SequenceDiffInfo seqDiffInfo)
     {
         // handle differences other than repeat adjustments
@@ -289,6 +243,62 @@ public class ReadParseState
         }
 
         return BaseQualType.LOW;
+    }
+
+    public int matchedBases() { return mBaseMatches; }
+
+    public void addBaseMatch(boolean isHighQual)
+    {
+        ++mBaseMatches;
+
+        if(isHighQual)
+            ++mHighQualMatches;
+    }
+
+    public void addBaseMatches(int count, int highQualCount)
+    {
+        mBaseMatches += count;
+        mHighQualMatches += highQualCount;
+    }
+
+    public int highQualMatches() { return mHighQualMatches; }
+
+    public List<SequenceDiffInfo> mismatches() { return mMismatches != null ? mMismatches : Collections.emptyList(); }
+
+    public int mismatchCount(boolean excludeLowQual)
+    {
+        if(mMismatches == null)
+            return 0;
+
+        if(excludeLowQual)
+            return (int)mMismatches.stream().filter(x -> x.MismatchPenalty != 0).count();
+
+        return mMismatches.size();
+    }
+
+    public void addMismatchInfo(final SequenceDiffInfo seqDiffInfo)
+    {
+        if(mMismatches == null)
+            mMismatches = Lists.newArrayList();
+
+        mMismatches.add(seqDiffInfo);
+    }
+
+    public void resetMatches()
+    {
+        mHighQualMatches = 0;
+        mBaseMatches = 0;
+
+        if(mMismatches != null)
+            mMismatches.clear();
+    }
+
+    public double mismatchPenalty()
+    {
+        if(mMismatches == null)
+            return 0;
+
+        return mMismatches.stream().mapToDouble(x -> x.MismatchPenalty).sum();
     }
 
     public String toString()

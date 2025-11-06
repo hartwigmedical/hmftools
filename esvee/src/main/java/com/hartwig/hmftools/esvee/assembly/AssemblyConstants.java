@@ -57,15 +57,14 @@ public final class AssemblyConstants
     public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
     public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 2;
 
-    public static final int READ_MISMATCH_LOW_REPEAT_COUNT = 4;
+    public static final int REPEAT_MIN_COUNT = 4;
+    public static final int REPEAT_MAX_BASE_LENGTH = 5;
+
+    public static final int READ_MISMATCH_LOW_REPEAT_COUNT = REPEAT_MIN_COUNT;
     public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
     public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
 
-    // repeat identification and sequence comparison
-    public static final int MAX_REPEAT_BASE_COUNT = 5;
-    public static final int MIN_SINGLE_REPEAT = 4;
-    public static final int MIN_DUAL_REPEAT = 3;
-    public static final int MIN_OTHER_REPEAT = 2;
+    // repeat identification and sequence comparison - deprecated??
     public static final int REPEAT_2_DIFF_COUNT = 11;
     public static final int REPEAT_3_DIFF_COUNT = 16;
 
