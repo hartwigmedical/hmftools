@@ -15,13 +15,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import com.hartwig.hmftools.qsee.common.SampleType;
@@ -32,6 +30,7 @@ import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepFactory;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
+import com.hartwig.hmftools.qsee.prep.FeaturePrep;
 
 public class CohortPercentilesTrainer
 {
@@ -50,32 +49,9 @@ public class CohortPercentilesTrainer
                 : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
     }
 
-    private FeatureMatrix extractCohortData(CategoryPrep categoryPrep, List<String> sampleIds, SampleType sampleType)
-    {
-        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
-
-        List<Runnable> sampleCategoryTasks = new ArrayList<>();
-        for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
-        {
-            CategoryPrepTask task = new CategoryPrepTask(
-                    categoryPrep,
-                    sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType,
-                    sampleFeatureMatrix, mCommonPrepConfig.AllowMissingInput
-            );
-
-            sampleCategoryTasks.add(task);
-        }
-
-        TaskExecutor.executeRunnables(sampleCategoryTasks, mCommonPrepConfig.Threads);
-        sampleCategoryTasks.clear();
-
-        return sampleFeatureMatrix;
-    }
-
     private List<FeaturePercentiles> calcPercentiles(FeatureMatrix sampleFeatureMatrix, SampleType sampleType)
     {
-        FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), getPercentileNames());
-        List<Runnable> featureTransformTasks = new ArrayList<>();
+        FeatureMatrix percentileFeatureMatrix = new FeatureMatrix(new HashMap<>(), getPercentileNames());
 
         for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
         {
@@ -88,11 +64,7 @@ public class CohortPercentilesTrainer
             percentileFeatureMatrix.addColumn(featureKey, transformer.getRefValues(), featureKey.sourceTool());
         }
 
-        TaskExecutor.executeRunnables(featureTransformTasks, mCommonPrepConfig.Threads);
-        featureTransformTasks.clear();
-
-        Comparator<FeatureKey> comparator = Comparator.comparing(FeatureKey::type, Comparator.nullsLast(Comparator.naturalOrder()));
-        percentileFeatureMatrix.getFeatureKeys().sort(comparator);
+        percentileFeatureMatrix.sortFeatureKeys();
 
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
         for(FeatureKey key : percentileFeatureMatrix.getFeatureKeys())
@@ -106,10 +78,16 @@ public class CohortPercentilesTrainer
         return cohortPercentiles;
     }
 
-    private List<FeaturePercentiles> process(SampleType sampleType)
+    private List<FeaturePercentiles> calcPercentilesFor(SampleType sampleType)
     {
+        boolean hasSampleType = !mCommonPrepConfig.getSampleIds(sampleType).isEmpty();
+        if(!hasSampleType)
+        {
+            QC_LOGGER.info("Skipping sampleType({}) as no samples provided", sampleType.name());
+            return new ArrayList<>();
+        }
+
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mCommonPrepConfig).createCategoryPreps();
-        List<String> sampleIds = mCommonPrepConfig.getSampleIds(sampleType);
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
 
         for(CategoryPrep categoryPrep : categoryPreps)
@@ -117,7 +95,8 @@ public class CohortPercentilesTrainer
             String logPrefix = CategoryPrepTask.logPrefix(sampleType, categoryPrep);
 
             QC_LOGGER.info("{} Extracting cohort data", logPrefix);
-            FeatureMatrix sampleFeatureMatrix = extractCohortData(categoryPrep, sampleIds, sampleType);
+            FeaturePrep featurePrep = new FeaturePrep(mCommonPrepConfig);
+            FeatureMatrix sampleFeatureMatrix = featurePrep.prepCohortCategory(categoryPrep, sampleType);
 
             QC_LOGGER.info("{} Calculating percentiles", logPrefix);
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
@@ -179,21 +158,15 @@ public class CohortPercentilesTrainer
 
     public void run()
     {
-        QC_LOGGER.info("Using percentiles: {}", getPercentilesString());
+        QC_LOGGER.info("Running {} with percentiles: {}", this.getClass().getSimpleName(), getPercentilesString());
 
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
 
-        if(!mCommonPrepConfig.TumorIds.isEmpty())
-        {
-            List<FeaturePercentiles> tumorPercentiles = process(SampleType.TUMOR);
-            cohortPercentiles.addAll(tumorPercentiles);
-        }
+        List<FeaturePercentiles> tumorPercentiles = calcPercentilesFor(SampleType.TUMOR);
+        List<FeaturePercentiles> referencePercentiles = calcPercentilesFor(SampleType.NORMAL);
 
-        if(!mCommonPrepConfig.ReferenceIds.isEmpty())
-        {
-            List<FeaturePercentiles> referencePercentiles = process(SampleType.NORMAL);
-            cohortPercentiles.addAll(referencePercentiles);
-        }
+        cohortPercentiles.addAll(tumorPercentiles);
+        cohortPercentiles.addAll(referencePercentiles);
 
         String outputFile = mCommonPrepConfig.OutputDir + File.separator + COHORT_PERCENTILES_FILE_SUFFIX;
         writeCohortPercentiles(cohortPercentiles, outputFile);
