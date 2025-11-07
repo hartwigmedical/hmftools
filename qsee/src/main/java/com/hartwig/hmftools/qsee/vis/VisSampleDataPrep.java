@@ -62,7 +62,7 @@ public class VisSampleDataPrep
         }
         else
         {
-            return new FeaturePrep(mCommonPrepConfig).prepCohort(sampleType);
+            return new FeaturePrep(mCommonPrepConfig).prepMultiSample(sampleType);
         }
     }
 
@@ -71,7 +71,6 @@ public class VisSampleDataPrep
         List<VisSampleData> visSampleData = new ArrayList<>();
 
         QC_LOGGER.info("Creating vis data entries");
-
 
         for(SampleFeatures sampleFeatures : multiSampleFeatures)
         {
@@ -109,9 +108,9 @@ public class VisSampleDataPrep
 
             header.add(COL_SAMPLE_ID);
             header.add(COL_SAMPLE_TYPE);
+            header.add(COL_SOURCE_TOOL);
             header.add(COL_FEATURE_TYPE);
             header.add(COL_FEATURE_NAME);
-            header.add(COL_SOURCE_TOOL);
             header.add(COL_PERCENTILE_IN_COHORT);
 
             writer.write(header.toString());
@@ -124,9 +123,9 @@ public class VisSampleDataPrep
                 StringJoiner line = new StringJoiner(TSV_DELIM);
                 line.add(entry.sampleId());
                 line.add(entry.sampleType().name());
+                line.add(featureKey.sourceTool().name());
                 line.add(featureKey.type().name());
                 line.add(featureKey.name());
-                line.add(featureKey.sourceTool().name());
 
                 String percentileInCohort = CohortPercentilesFile.PERCENTILE_FORMAT.format(entry.percentileInCohort());
                 line.add(percentileInCohort);

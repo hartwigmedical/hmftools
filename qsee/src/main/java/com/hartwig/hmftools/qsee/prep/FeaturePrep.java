@@ -3,8 +3,8 @@ package com.hartwig.hmftools.qsee.prep;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import com.hartwig.hmftools.common.perf.TaskExecutor;
@@ -45,11 +45,42 @@ public class FeaturePrep
         return new SampleFeatures(sampleId, sampleType, features);
     }
 
-    public FeatureMatrix prepCohortCategory(CategoryPrep categoryPrep, SampleType sampleType)
+    public List<SampleFeatures> prepMultiSample(SampleType sampleType)
     {
+        QC_LOGGER.info("Extracting multi-sample data - sampleType({})", sampleType.name());
+
         List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
-        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
+        FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new HashMap<>(), mConfig.getSampleIds(sampleType));
+        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
+        for(CategoryPrep categoryPrep : categoryPreps)
+        {
+            QC_LOGGER.info("Extracting category({})", categoryPrep.name());
+            prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix);
+        }
+
+        sampleFeatureMatrix.sortFeatureKeys();
+
+        List<SampleFeatures> multiSampleFeatures = new ArrayList<>();
+        for(String sampleId : sampleIds)
+        {
+            List<FeatureKey> featureKeys = sampleFeatureMatrix.getFeatureKeys();
+            double[] featureValues = sampleFeatureMatrix.getRowValues(sampleId);
+
+            List<Feature> features = IntStream.range(0, featureKeys.size())
+                    .mapToObj(featureIndex -> new Feature(featureKeys.get(featureIndex), featureValues[featureIndex]))
+                    .toList();
+
+            SampleFeatures sampleFeatures = new SampleFeatures(sampleId, sampleType, features);
+            multiSampleFeatures.add(sampleFeatures);
+        }
+
+        return multiSampleFeatures;
+    }
+
+    public void prepCohortCategory(CategoryPrep categoryPrep, SampleType sampleType, FeatureMatrix outputMatrix)
+    {
+        List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
         List<Runnable> sampleCategoryTasks = new ArrayList<>();
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
@@ -57,7 +88,7 @@ public class FeaturePrep
             CategoryPrepTask task = new CategoryPrepTask(
                     categoryPrep,
                     sampleIds.get(sampleIndex), sampleIndex, sampleIds.size(), sampleType,
-                    sampleFeatureMatrix, mConfig.AllowMissingInput
+                    outputMatrix, mConfig.AllowMissingInput
             );
 
             sampleCategoryTasks.add(task);
@@ -65,42 +96,5 @@ public class FeaturePrep
 
         TaskExecutor.executeRunnables(sampleCategoryTasks, mConfig.Threads);
         sampleCategoryTasks.clear();
-
-        sampleFeatureMatrix.sortFeatureKeys();
-
-        return sampleFeatureMatrix;
-    }
-
-    public List<SampleFeatures> prepCohort(SampleType sampleType)
-    {
-        List<SampleFeatures> cohortFeatures = new ArrayList<>();
-
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
-        for(CategoryPrep categoryPrep : categoryPreps)
-        {
-            QC_LOGGER.info("Extracting cohort data - category({})", categoryPrep.name());
-
-            FeatureMatrix sampleFeatureMatrix = prepCohortCategory(categoryPrep, sampleType);
-
-            List<SampleFeatures> categorySampleFeatures = sampleFeatureMatrix.getRowIds().stream()
-                    .map(sampleId -> getSampleFeatures(sampleFeatureMatrix, sampleId, sampleType))
-                    .toList();
-
-            cohortFeatures.addAll(categorySampleFeatures);
-        }
-
-        return cohortFeatures;
-    }
-
-    private static SampleFeatures getSampleFeatures(FeatureMatrix sampleFeatureMatrix, String sampleId, SampleType sampleType)
-    {
-        List<FeatureKey> featureKeys = sampleFeatureMatrix.getFeatureKeys();
-        double[] featureValues = sampleFeatureMatrix.getRowValues(sampleId);
-
-        List<Feature> features = IntStream.range(0, featureKeys.size())
-                .mapToObj(i -> new Feature(featureKeys.get(i), featureValues[i]))
-                .toList();
-
-        return new SampleFeatures(sampleId, sampleType, features);
     }
 }

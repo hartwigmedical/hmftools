@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -79,8 +80,8 @@ public class CohortPercentilesTrainer
 
     private List<FeaturePercentiles> calcPercentilesFor(SampleType sampleType)
     {
-        boolean hasSampleType = !mCommonPrepConfig.getSampleIds(sampleType).isEmpty();
-        if(!hasSampleType)
+        List<String> sampleIds = mCommonPrepConfig.getSampleIds(sampleType);
+        if(sampleIds.isEmpty())
         {
             QC_LOGGER.info("Skipping sampleType({}) as no samples provided", sampleType.name());
             return new ArrayList<>();
@@ -93,7 +94,10 @@ public class CohortPercentilesTrainer
         {
             QC_LOGGER.info("Extracting cohort data  - sampleType({}) category({})", sampleType, categoryPrep.name());
             FeaturePrep featurePrep = new FeaturePrep(mCommonPrepConfig);
-            FeatureMatrix sampleFeatureMatrix = featurePrep.prepCohortCategory(categoryPrep, sampleType);
+            FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
+            featurePrep.prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix);
+
+            sampleFeatureMatrix.sortFeatureKeys();
 
             QC_LOGGER.info("Calculating percentiles - sampleType({}) category({})", sampleType, categoryPrep.name());
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
@@ -113,9 +117,9 @@ public class CohortPercentilesTrainer
             StringJoiner header = new StringJoiner(TSV_DELIM);
 
             header.add(COL_SAMPLE_TYPE);
+            header.add(COL_SOURCE_TOOL);
             header.add(COL_FEATURE_TYPE);
             header.add(COL_FEATURE_NAME);
-            header.add(COL_SOURCE_TOOL);
             getPercentileNames().forEach(percentileName -> header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + percentileName));
 
             writer.write(header.toString());
@@ -131,9 +135,9 @@ public class CohortPercentilesTrainer
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
                 line.add(sampleType.name());
+                line.add(sourceTool.toString());
                 line.add(featureType.name());
                 line.add(featureKey.name());
-                line.add(sourceTool.toString());
 
                 double[] refValues = featurePercentiles.refValues();
 
