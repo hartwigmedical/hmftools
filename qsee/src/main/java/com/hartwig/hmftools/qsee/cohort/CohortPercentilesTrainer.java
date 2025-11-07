@@ -29,7 +29,6 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepFactory;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.FeaturePrep;
 
 public class CohortPercentilesTrainer
@@ -92,13 +91,11 @@ public class CohortPercentilesTrainer
 
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            String logPrefix = CategoryPrepTask.logPrefix(sampleType, categoryPrep);
-
-            QC_LOGGER.info("{} Extracting cohort data", logPrefix);
+            QC_LOGGER.info("Extracting cohort data  - sampleType({}) category({})", sampleType, categoryPrep.name());
             FeaturePrep featurePrep = new FeaturePrep(mCommonPrepConfig);
             FeatureMatrix sampleFeatureMatrix = featurePrep.prepCohortCategory(categoryPrep, sampleType);
 
-            QC_LOGGER.info("{} Calculating percentiles", logPrefix);
+            QC_LOGGER.info("Calculating percentiles - sampleType({}) category({})", sampleType, categoryPrep.name());
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
 
             cohortPercentiles.addAll(categoryPercentiles);

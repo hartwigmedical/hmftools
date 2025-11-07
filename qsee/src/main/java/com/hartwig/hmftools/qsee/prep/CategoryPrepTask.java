@@ -22,8 +22,6 @@ public class CategoryPrepTask implements Runnable
     private final SampleType mSampleType;
     private final boolean mAllowMissingInput;
 
-    private final String mLogPrefix;
-
     private List<Feature> mOutput;
 
     @Nullable
@@ -40,8 +38,6 @@ public class CategoryPrepTask implements Runnable
         mSampleType = sampleType;
         mSampleFeatureMatrix = sampleFeatureMatrix;
         mAllowMissingInput = allowMissingInput;
-
-        mLogPrefix = logPrefix(sampleType, categoryPrep);
     }
 
     public CategoryPrepTask(CategoryPrep categoryPrep, String sampleId, SampleType sampleType, boolean allowMissingInput)
@@ -53,13 +49,6 @@ public class CategoryPrepTask implements Runnable
         mSampleType = sampleType;
         mSampleFeatureMatrix = null;
         mAllowMissingInput = allowMissingInput;
-
-        mLogPrefix = logPrefix(sampleType, categoryPrep);
-    }
-
-    public static String logPrefix(SampleType sampleType, CategoryPrep categoryPrep)
-    {
-        return String.format("sampleType(%s) category(%s) -", sampleType, categoryPrep.name());
     }
 
     private void logProgress()
@@ -78,8 +67,8 @@ public class CategoryPrepTask implements Runnable
 
             if(isSampleAtInterval || isLastSample)
             {
-                QC_LOGGER.debug("{} Progress: {}/{} - current sample: {}",
-                        mLogPrefix, mSampleIndex + 1, mTotalSampleCount, mSampleId);
+                QC_LOGGER.debug("category({}) - Progress: {}/{} - current sample: {}",
+                        mCategoryPrep.name(), mSampleIndex + 1, mTotalSampleCount, mSampleId);
             }
         }
     }
@@ -94,7 +83,7 @@ public class CategoryPrepTask implements Runnable
         }
         catch(NoSuchFileException e)
         {
-            QC_LOGGER.error("{} sample({}) missing input file(s): {}", mLogPrefix, mSampleId, e.getMessage());
+            QC_LOGGER.error("sampleType({}) category({}) - sample({}) missing input file: {}", mSampleType, mCategoryPrep.name(), mSampleId, e.getMessage());
 
             if(!mAllowMissingInput)
                 System.exit(1);
@@ -103,7 +92,7 @@ public class CategoryPrepTask implements Runnable
         }
         catch(Exception e)
         {
-            QC_LOGGER.error("{} Failed to run prep for sample({})", mLogPrefix, mSampleId, e);
+            QC_LOGGER.error("sampleType({}) category({}) - Failed to run prep for sample({})", mCategoryPrep.name(), mSampleId, e);
             System.exit(1);
         }
 

@@ -31,7 +31,7 @@ public class FeaturePrep
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.debug("sampleType({}) sample({}) - extracting category({})", sampleType, sampleId, categoryPrep.name());
+            QC_LOGGER.debug("Extracting category({})", categoryPrep.name());
 
             CategoryPrepTask task = new CategoryPrepTask(categoryPrep, sampleId, sampleType, mConfig.AllowMissingInput);
 
@@ -78,9 +78,7 @@ public class FeaturePrep
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            String logPrefix = CategoryPrepTask.logPrefix(sampleType, categoryPrep);
-
-            QC_LOGGER.info("{} Extracting cohort data", logPrefix);
+            QC_LOGGER.info("Extracting cohort data - category({})", categoryPrep.name());
 
             FeatureMatrix sampleFeatureMatrix = prepCohortCategory(categoryPrep, sampleType);
 
