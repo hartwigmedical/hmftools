@@ -97,32 +97,41 @@ public class LoadAmberData
 
     public static void processSample(final AmberSample sample, final DatabaseAccess dbAccess)
     {
-        LOGGER.info("comparing with existing samples");
-
-        final List<AmberSample> allSamples = dbAccess.readAmberSamples();
-        final List<AmberMapping> sampleMappings = new ArrayList<>();
-        for(AmberSample other : allSamples)
+        try
         {
-            if(!other.sampleId().equals(sample.sampleId()))
+            dbAccess.context().execute("LOCK TABLES amberPatient WRITE, amberSample WRITE, amberMapping WRITE");
+
+            LOGGER.info("comparing with existing samples");
+
+            final List<AmberSample> allSamples = dbAccess.readAmberSamples();
+            final List<AmberMapping> sampleMappings = new ArrayList<>();
+            for(AmberSample other : allSamples)
             {
-                final AmberMapping mapping = AmberMappingFactory.create(sample, other);
-                if(mapping.likelihood() > SAMPLE_MATCH_LIKELIHOOD)
+                if(!other.sampleId().equals(sample.sampleId()))
                 {
-                    sampleMappings.add(mapping);
+                    final AmberMapping mapping = AmberMappingFactory.create(sample, other);
+                    if(mapping.likelihood() > SAMPLE_MATCH_LIKELIHOOD)
+                    {
+                        sampleMappings.add(mapping);
+                    }
                 }
             }
+
+            LOGGER.info("sample {} matched with {} other samples", sample.sampleId(), sampleMappings.size());
+
+            final List<AmberPatient> existingPatients = dbAccess.readAmberPatients();
+            final AmberPatientFactory amberPatientFactory = new AmberPatientFactory(existingPatients, sampleMappings);
+            final AmberPatient patient = amberPatientFactory.createPatient(sample);
+
+            LOGGER.info("writing sample data");
+            dbAccess.writeAmberSample(sample);
+            dbAccess.writeAmberMapping(sample.sampleId(), sampleMappings);
+            dbAccess.writeAmberPatients(Collections.singletonList(patient));
         }
-
-        LOGGER.info("sample {} matched with {} other samples", sample.sampleId(), sampleMappings.size());
-
-        final List<AmberPatient> existingPatients = dbAccess.readAmberPatients();
-        final AmberPatientFactory amberPatientFactory = new AmberPatientFactory(existingPatients, sampleMappings);
-        final AmberPatient patient = amberPatientFactory.createPatient(sample);
-
-        LOGGER.info("writing sample data");
-        dbAccess.writeAmberSample(sample);
-        dbAccess.writeAmberMapping(sample.sampleId(), sampleMappings);
-        dbAccess.writeAmberPatients(Collections.singletonList(patient));
+        finally
+        {
+            dbAccess.context().execute("UNLOCK TABLES");
+        }
     }
 
     private static void registerConfig(final ConfigBuilder configBuilder)
