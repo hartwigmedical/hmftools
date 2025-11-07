@@ -75,9 +75,8 @@ public class PercentileTransformerTest
     public void canInterpolatePercentileToFeatureValue()
     {
         PercentileTransformer transformer = createDefaultTransformer();
-        double actualFeatureValue = transformer.percentileToFeatureValue(25);
-        double expectedFeatureValue = (4 + 8.5) / 2;
-        assertEquals(expectedFeatureValue, actualFeatureValue, 0.001);
+        assertEquals(0, transformer.percentileToFeatureValue(0), 0.001);
+        assertEquals((4 + 8.5) / 2, transformer.percentileToFeatureValue(25), 0.001);
     }
 
     @Test

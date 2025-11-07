@@ -82,7 +82,7 @@ public class PercentileTransformer
             throw new IllegalArgumentException("Data for at least percentiles 0 and 100 should be provided");
 
         PercentileTransformer transformer = new PercentileTransformer(percentiles, refValues, true);
-        transformer.dedupRefValues();
+        transformer.dedupWithRefValues();
 
         return transformer;
     }
@@ -134,7 +134,7 @@ public class PercentileTransformer
             mRefValues[i] = calcRefValueAtPercentile(mPercentiles[i], cohortValuesSorted);
         }
 
-        dedupRefValues();
+        dedupWithRefValues();
 
         mFitted = true;
     }
@@ -157,7 +157,7 @@ public class PercentileTransformer
         }
     }
 
-    private void dedupRefValues()
+    private void dedupWithRefValues()
     {
         Map<Double, List<Double>> refValuesToPctMap = new LinkedHashMap<>();
 
@@ -207,7 +207,7 @@ public class PercentileTransformer
         if(mFittedWithAllNaN)
             return Double.NaN;
 
-        return linearInterpolate2D(percentile, mPercentilesDeduped, mRefValuesDeduped);
+        return linearInterpolate2D(percentile, mPercentiles, mRefValues);
     }
 
     private static double linearInterpolate2D(double inputXValue, double[] XValues, double[] YValues)
