@@ -26,7 +26,7 @@ public class PurpleVariantFactory
     @NotNull
     private final PaveAlgo paveAlgo;
 
-    public PurpleVariantFactory(@NotNull PaveAlgo paveAlgo)
+    public PurpleVariantFactory(final PaveAlgo paveAlgo)
     {
         this.paveAlgo = paveAlgo;
     }
@@ -41,8 +41,7 @@ public class PurpleVariantFactory
         return contexts.stream().map(this::fromPurpleVariantContext).collect(Collectors.toList());
     }
 
-    @NotNull
-    public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context)
+    public PurpleVariant fromPurpleVariantContext(final PurpleVariantContext context)
     {
         List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
                 context.otherImpacts()
@@ -77,8 +76,7 @@ public class PurpleVariantFactory
                 .build();
     }
 
-    @NotNull
-    private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext)
+    private PurpleTranscriptImpact extractCanonicalImpact(final PurpleVariantContext purpleContext)
     {
         PaveEntry paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());
         List<VariantEffect> variantEffects = VariantEffect.effectsToList(purpleContext.canonicalEffect());
@@ -96,7 +94,7 @@ public class PurpleVariantFactory
                 .build();
     }
 
-    private boolean isCanonicalTranscriptReported(@NotNull PurpleVariantContext purpleContext)
+    private boolean isCanonicalTranscriptReported(final PurpleVariantContext purpleContext)
     {
         if(purpleContext.reportableTranscripts().isEmpty())
         {

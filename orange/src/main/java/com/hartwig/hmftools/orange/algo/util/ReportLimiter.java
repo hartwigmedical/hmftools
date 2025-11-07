@@ -63,7 +63,6 @@ public final class ReportLimiter
                 .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
                 .allSomaticCopyNumbers(max1(purple.allSomaticCopyNumbers()))
                 .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
-                .suspectGeneCopyNumbersWithLOH(max1(purple.suspectGeneCopyNumbersWithLOH()))
                 .allSomaticGainsDels(max1(purple.allSomaticGainsDels()))
                 .reportableSomaticGainsDels(max1(purple.reportableSomaticGainsDels()))
                 .allGermlineDeletions(max1(purple.allGermlineDeletions()))

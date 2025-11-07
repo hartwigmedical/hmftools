@@ -70,7 +70,6 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
-import com.hartwig.hmftools.orange.algo.purple.ChromosomalRearrangementsDeterminer;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.GermlineLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
@@ -209,11 +208,9 @@ public class OrangeAlgo
 
         GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
 
-        ChromosomalRearrangementsDeterminer chromosomalRearrangementsDeterminer =
-                ChromosomalRearrangementsDeterminer.createForRefGenomeVersion(config.refGenomeVersion());
-
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory,
-                germlineLOHFactory, driverGenes, linx, chromosomalRearrangementsDeterminer, chord, config.convertGermlineToSomatic());
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(
+                purpleVariantFactory, germlineGainDeletionFactory, germlineLOHFactory, driverGenes, linx, chord,
+                config.convertGermlineToSomatic());
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 

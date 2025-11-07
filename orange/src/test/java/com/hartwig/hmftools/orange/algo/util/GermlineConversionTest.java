@@ -136,7 +136,6 @@ public class GermlineConversionTest
                 .addAllSomaticGainsDels(somaticGainDel, reportableSomaticGainDel)
                 .addReportableSomaticGainsDels(reportableSomaticGainDel)
                 .addReportableGermlineFullDels(reportableGermlineFullDel)
-                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
                 .addReportableGermlineLossOfHeterozygosities(reportableGermlineLOH)
                 .addAllSomaticGeneCopyNumbers(geneCopyNumberForGermlineLOH)
                 .build();
@@ -197,7 +196,6 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addGermlineDrivers(germlineDriver)
                 .addReportableSomaticGainsDels()
-                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
                 .addReportableGermlineLossOfHeterozygosities(germlineLOH)
                 .addAllSomaticGeneCopyNumbers(geneCopyNumber)
                 .build();
@@ -235,8 +233,6 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();
         assertTrue(converted.somaticDrivers().contains(convertedDriver));
-
-        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
     }
 
     @Test
@@ -258,7 +254,6 @@ public class GermlineConversionTest
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(0, converted.somaticDrivers().size());
-        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
     }
 
     @Test

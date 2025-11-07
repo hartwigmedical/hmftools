@@ -22,9 +22,6 @@ public interface PurpleRecord
     PurpleCharacteristics characteristics();
 
     @NotNull
-    ChromosomalRearrangements chromosomalRearrangements();
-
-    @NotNull
     List<PurpleDriver> somaticDrivers();
 
     @Nullable
@@ -47,9 +44,6 @@ public interface PurpleRecord
 
     @NotNull
     List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
-
-    @NotNull
-    List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
 
     @NotNull
     List<PurpleGainDeletion> allSomaticGainsDels();

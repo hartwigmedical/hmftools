@@ -14,7 +14,6 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
-import com.hartwig.hmftools.orange.report.tables.GermlineLossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.MissedVariantLikelihoodTable;
@@ -107,14 +105,6 @@ public class GermlineFindingsChapter implements ReportChapter
         {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";
             document.add(GainDeletionTable.build(title, contentWidth(), reportableGermlineFullDels, report.isofox(), reportResources));
-        }
-
-        List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities =
-                report.purple().reportableGermlineLossOfHeterozygosities();
-        if(reportableGermlineLossOfHeterozygosities != null)
-        {
-            String title = "Potentially pathogenic germline LOH events (" + reportableGermlineLossOfHeterozygosities.size() + ")";
-            document.add(GermlineLossOfHeterozygosityTable.build(title, contentWidth(), reportableGermlineLossOfHeterozygosities, report.isofox(), reportResources));
         }
     }
 

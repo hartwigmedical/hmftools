@@ -3,18 +3,11 @@ package com.hartwig.hmftools.orange.report.chapters;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.ChromosomalRearrangements;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -24,11 +17,9 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
-import com.hartwig.hmftools.orange.report.tables.ChromosomalRearrangementsTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
-import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.SignatureAllocationTable;
 import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
@@ -96,7 +87,6 @@ public class SomaticFindingsChapter implements ReportChapter
 
         addHomozygousDisruptions(document);
         addBreakends(document);
-        addLossOfHeterozygosity(document);
 
         if(!report.tumorOnlyMode())
         {
@@ -152,19 +142,11 @@ public class SomaticFindingsChapter implements ReportChapter
     private void addSomaticAmpDels(@NotNull Document document)
     {
         String driverAmpsDelsTitle = "Driver amplifications and homozygous deletions";
-        String nearDriverGainsTitle = "Potentially interesting near-driver amplifications";
-        String suspectGainsTitle = "Other regions with amplifications";
-        String suspectDelsTitle = "Regions with deletions in genes in other autosomal regions";
-        String chromosomalRearrangementsTitle = "Potentially interesting chromosomal rearrangements";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
         {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverAmpsDelsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(nearDriverGainsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(suspectGainsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(suspectDelsTitle, contentWidth()));
-            document.add(tables.createNotAvailable(chromosomalRearrangementsTitle, contentWidth()));
         }
         else
         {
@@ -174,40 +156,7 @@ public class SomaticFindingsChapter implements ReportChapter
                     report.purple().reportableSomaticGainsDels(),
                     report.isofox(),
                     reportResources));
-
-            ChromosomalRearrangements chromosomalRearrangements = report.purple().chromosomalRearrangements();
-            document.add(ChromosomalRearrangementsTable.build(chromosomalRearrangementsTitle, contentWidth(), chromosomalRearrangements, reportResources));
         }
-    }
-
-    @NotNull
-    private static List<PurpleGainDeletion> selectGains(@NotNull List<PurpleGainDeletion> gainsDels)
-    {
-        List<PurpleGainDeletion> gains = Lists.newArrayList();
-        for(PurpleGainDeletion gainDel : gainsDels)
-        {
-            if(gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
-                    || gainDel.interpretation() == CopyNumberInterpretation.FULL_GAIN)
-            {
-                gains.add(gainDel);
-            }
-        }
-        return gains;
-    }
-
-    @NotNull
-    private static List<PurpleGainDeletion> selectDels(@NotNull List<PurpleGainDeletion> gainsDels)
-    {
-        List<PurpleGainDeletion> dels = Lists.newArrayList();
-        for(PurpleGainDeletion gainDel : gainsDels)
-        {
-            if(gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL
-                    || gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL)
-            {
-                dels.add(gainDel);
-            }
-        }
-        return dels;
     }
 
     private void addFusions(@NotNull Document document)
@@ -237,30 +186,16 @@ public class SomaticFindingsChapter implements ReportChapter
         if(virusInterpreter != null)
         {
             String driverVirusTitle = "Driver viruses";
-            String nonDriverVirusTitle = "Other viral presence";
 
             if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
             {
                 Tables tables = new Tables(reportResources);
                 document.add(tables.createNotAvailable(driverVirusTitle, contentWidth()));
-                document.add(tables.createNotAvailable(nonDriverVirusTitle, contentWidth()));
             }
             else
             {
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
                 document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
-
-                List<VirusInterpreterEntry> unreported = Lists.newArrayList();
-                for(VirusInterpreterEntry virus : virusInterpreter.allViruses())
-                {
-                    if(!virus.reported())
-                    {
-                        unreported.add(virus);
-                    }
-                }
-
-                String titleNonDrivers = nonDriverVirusTitle + " (" + unreported.size() + ")";
-                document.add(ViralPresenceTable.build(titleNonDrivers, contentWidth(), unreported, reportResources));
             }
         }
     }
@@ -303,23 +238,6 @@ public class SomaticFindingsChapter implements ReportChapter
 
             String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";
             document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, reportResources));
-        }
-    }
-
-    private void addLossOfHeterozygosity(@NotNull Document document)
-    {
-        String lohTitle = "Potentially interesting LOH events";
-
-        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
-        {
-            Tables tables = new Tables(reportResources);
-            document.add(tables.createNotAvailable(lohTitle, contentWidth()));
-        }
-        else
-        {
-            List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
-            String title = lohTitle + " (" + suspectGeneCopyNumbersWithLOH.size() + ")";
-            document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH, reportResources));
         }
     }
 

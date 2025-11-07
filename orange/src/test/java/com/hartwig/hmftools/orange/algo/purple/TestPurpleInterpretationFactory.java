@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
 
-import com.hartwig.hmftools.datamodel.purple.ChromosomalRearrangements;
 import com.hartwig.hmftools.datamodel.purple.ImmutableChromosomalRearrangements;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
@@ -33,8 +32,7 @@ public final class TestPurpleInterpretationFactory
         return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
                 .tumorStats(createMinimalTumorStatsBuilder().build())
-                .characteristics(createMinimalTestCharacteristicsData())
-                .chromosomalRearrangements(createMinimalChromosomalRearrangements());
+                .characteristics(createMinimalTestCharacteristicsData());
     }
 
     @NotNull
@@ -73,15 +71,6 @@ public final class TestPurpleInterpretationFactory
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
-                .build();
-    }
-
-    @NotNull
-    private static ChromosomalRearrangements createMinimalChromosomalRearrangements()
-    {
-        return ImmutableChromosomalRearrangements.builder()
-                .hasTrisomy1q(false)
-                .hasCodeletion1p19q(false)
                 .build();
     }
 }
