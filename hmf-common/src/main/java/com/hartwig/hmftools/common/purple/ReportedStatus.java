@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple;
 
-public enum ReportableStatus
+public enum ReportedStatus
 {
     NONE,
     CANDIDATE,

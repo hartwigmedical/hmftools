@@ -87,7 +87,8 @@ final class LossOfHeterozygositySelector
                 adjustedMaxCopyNumber, adjustedMinCopyNumber, 0,
                 geneCopyNumber.SomaticRegions, geneCopyNumber.MinRegions, geneCopyNumber.MinRegionStart,
                 geneCopyNumber.MinRegionEnd, geneCopyNumber.DepthWindowCount, geneCopyNumber.GcContent,
-                geneCopyNumber.MinRegionStartSupport, geneCopyNumber.MinRegionEndSupport, geneCopyNumber.MinRegionMethod);
+                geneCopyNumber.MinRegionStartSupport, geneCopyNumber.MinRegionEndSupport, geneCopyNumber.MinRegionMethod,
+                geneCopyNumber.RelativeMinCopyNumber);
     }
 
     private static double adjustMinCopyNumberForGermlineImpact(final GeneCopyNumber geneCopyNumber,

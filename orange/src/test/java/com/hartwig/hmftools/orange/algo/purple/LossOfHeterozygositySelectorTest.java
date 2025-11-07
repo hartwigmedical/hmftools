@@ -74,7 +74,7 @@ public class LossOfHeterozygositySelectorTest
         return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, maxCopyNumber , minCopyNumber, minMinorAlleleCopyNumber, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
     }
 
     @Test

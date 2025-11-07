@@ -231,6 +231,6 @@ public class CopyNumberDriversTest
         return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, 0 ,minCopyNumber, 0, 1, 1,
                 minRegionStart, minRegionEnd, 0, 1.0,
-                minRegionStartSupport, minRegionEndSupport, CopyNumberMethod.UNKNOWN);
+                minRegionStartSupport, minRegionEndSupport, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
     }
 }

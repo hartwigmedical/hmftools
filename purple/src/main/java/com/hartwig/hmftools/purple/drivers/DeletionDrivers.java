@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.ReportableStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -106,7 +106,7 @@ public class DeletionDrivers
             }
 
             geneCopyNumber.setDriverType(driverType);
-            geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED); // candidates not yet supported
+            geneCopyNumber.setReportedStatus(ReportedStatus.REPORTED); // candidates not yet supported
             drivers.add(createDelDriver(driverGene, driverType, geneCopyNumber));
         }
 

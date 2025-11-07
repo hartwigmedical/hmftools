@@ -25,6 +25,7 @@ public class GeneCopyNumberBuilderTest
 {
     private static final String CHROMOSOME = "1";
     private static final double EPSILON = 1E-10;
+    private static final double PLOIDY = 2;
 
     private final GeneData mGeneData = GeneTestUtils.createEnsemblGeneData(
             GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND,1001, 10000);
@@ -42,7 +43,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(1, 10000, 2));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 1,  2, 2);
     }
 
@@ -53,7 +54,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(1, 10000, 2));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransData, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 1, 2, 2);
     }
 
@@ -65,7 +66,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(1501, 10000, 3));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransData, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 2, 2, 3);
     }
 
@@ -78,7 +79,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(3001, 10000, 2));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 1,  2, 2);
     }
 
@@ -89,7 +90,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(1, 2500, -0.8));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 1, -0.8, -0.8);
     }
 
@@ -100,7 +101,7 @@ public class GeneCopyNumberBuilderTest
         copyNumbers.add(createCopyNumber(1, 2500, 0));
 
         GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(mGeneData, mTransDataSingleExon, copyNumbers);
-        GeneCopyNumber geneCopyNumber = builder.create();
+        GeneCopyNumber geneCopyNumber = builder.create(PLOIDY);
         assertCopyNumber(geneCopyNumber, 1, 0, 0);
     }
 

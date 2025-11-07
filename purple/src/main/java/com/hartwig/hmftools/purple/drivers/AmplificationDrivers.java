@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.ReportableStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 public final class AmplificationDrivers
 {
@@ -71,7 +71,7 @@ public final class AmplificationDrivers
             {
                 geneCopyNumber.setDriverType(driverType);
 
-                geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED);
+                geneCopyNumber.setReportedStatus(ReportedStatus.REPORTED);
                 result.add(createAmpDriver(geneCopyNumber, driverType));
             }
         }

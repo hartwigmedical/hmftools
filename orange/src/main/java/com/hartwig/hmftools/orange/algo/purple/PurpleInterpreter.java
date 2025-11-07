@@ -22,13 +22,11 @@ import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.ReportableStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -352,7 +350,7 @@ public class PurpleInterpreter
 
         for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
         {
-            if(geneCopyNumber.reportableStatus() != ReportableStatus.NONE)
+            if(geneCopyNumber.reportedStatus() != ReportedStatus.NONE)
             {
                 DriverType type = geneCopyNumber.driverType();
 

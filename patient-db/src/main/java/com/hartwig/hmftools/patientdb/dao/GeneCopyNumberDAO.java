@@ -67,7 +67,7 @@ public class GeneCopyNumberDAO
                     0, 0,
                     SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)),
                     SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)),
-                    CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)));
+                    CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)), 0);
 
             geneCopyNumbers.add(geneCopyNumber);
         }

@@ -73,9 +73,10 @@ public final class GeneCopyNumberFile
                 .add("minRegionEndSupport")
                 .add("minRegionMethod")
                 .add("minMinorAlleleCopyNumber")
+                .add("relativeMinCopyNumber")
                 .add("depthWindowCount")
                 .add("gcContent")
-                //.add("reportableStatus")
+                .add("reportedStatus")
                 .toString();
     }
 
@@ -98,9 +99,10 @@ public final class GeneCopyNumberFile
                 .add(String.valueOf(geneCopyNumber.MinRegionEndSupport))
                 .add(String.valueOf(geneCopyNumber.MinRegionMethod))
                 .add(FORMAT.format(geneCopyNumber.MinMinorAlleleCopyNumber))
+                .add(FORMAT.format(geneCopyNumber.RelativeMinCopyNumber))
                 .add(String.valueOf(geneCopyNumber.DepthWindowCount))
                 .add(FORMAT.format(geneCopyNumber.GcContent))
-                .add(String.valueOf(geneCopyNumber.reportableStatus()))
+                .add(String.valueOf(geneCopyNumber.reportedStatus()))
                 .add(String.valueOf(geneCopyNumber.driverType()))
                 .toString();
     }
@@ -130,8 +132,9 @@ public final class GeneCopyNumberFile
         int mmACnIndex = fieldsIndexMap.get("minMinorAlleleCopyNumber");
         int dwcIndex = fieldsIndexMap.get("depthWindowCount");
         Integer gcIndex = fieldsIndexMap.get("gcContent");
-        Integer reportableIndex = fieldsIndexMap.get("reportableStatus");
+        Integer reportedIndex = fieldsIndexMap.get("reportedStatus");
         Integer driverIndex = fieldsIndexMap.get("driverType");
+        Integer relMinCnIndex = fieldsIndexMap.get("relativeMinCopyNumber");
 
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
@@ -139,7 +142,8 @@ public final class GeneCopyNumberFile
         {
             String[] values = line.split(TSV_DELIM, -1);
 
-            double gcContent = gcIndex != null ? Double.parseDouble(values[gcIndex]) : 0; // introduced in Purple v4.2
+            double gcContent = gcIndex != null ? Double.parseDouble(values[gcIndex]) : 0; // addded in Purple v4.2
+            double relativeMinCopyNumber = relMinCnIndex != null ? Double.parseDouble(values[relMinCnIndex]) : 0; // added in Purple v4.3
 
             GeneCopyNumber geneCopyNumber = new GeneCopyNumber(
                     values[chrIndex], Integer.parseInt(values[startIndex]), Integer.parseInt(values[endIndex]),
@@ -149,12 +153,12 @@ public final class GeneCopyNumberFile
                     Integer.parseInt(values[minRegionStartIndex]), Integer.parseInt(values[minRegionEndIndex]),
                     Integer.parseInt(values[dwcIndex]), gcContent,
                     SegmentSupport.valueOf(values[minRegionStartSupIndex]), SegmentSupport.valueOf(values[minRegionEndSupIndex]),
-                    CopyNumberMethod.valueOf(values[minRegionMethodIndex]));
+                    CopyNumberMethod.valueOf(values[minRegionMethodIndex]), relativeMinCopyNumber);
 
-            // introduced in Purple v4.3
-            if(reportableIndex != null)
+            // added in Purple v4.3
+            if(reportedIndex != null)
             {
-                geneCopyNumber.setReportableStatus(ReportableStatus.valueOf(values[reportableIndex]));
+                geneCopyNumber.setReportedStatus(ReportedStatus.valueOf(values[reportedIndex]));
             }
 
             if(driverIndex != null)

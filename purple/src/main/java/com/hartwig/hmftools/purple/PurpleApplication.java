@@ -309,7 +309,7 @@ public class PurpleApplication
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
-                    mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
+                    mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers, bestFit.Fit.ploidy()));
 
             SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 

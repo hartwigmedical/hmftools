@@ -198,7 +198,7 @@ public class SvTestUtils
         return new GeneCopyNumber(chromosome, posStart, posEnd, gene, Strings.EMPTY, true,
                 Strings.EMPTY, minCopyNumber , minCopyNumber, 0, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.BAF_WEIGHTED);
+                SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.BAF_WEIGHTED, minCopyNumber / 2);
     }
 
     public static DriverCatalog createDriver(

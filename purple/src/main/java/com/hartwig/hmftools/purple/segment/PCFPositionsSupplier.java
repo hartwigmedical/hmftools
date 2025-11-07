@@ -24,7 +24,7 @@ public final class PCFPositionsSupplier
         final Multimap<Chromosome,PCFPosition> tumorBreakPoints = cobaltData.TumorSegments;
         final Multimap<Chromosome,PCFPosition> tumorBAF = amberData.TumorSegments;
 
-        PPL_LOGGER.info("merging reference and tumor ratio break points");
+        PPL_LOGGER.trace("merging reference and tumor ratio break points");
 
         Multimap<Chromosome,PCFPosition> combinedPositions = union(union(tumorBreakPoints, referenceBreakPoint), tumorBAF);
 

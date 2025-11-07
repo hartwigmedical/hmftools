@@ -154,6 +154,6 @@ public class OncoDriversTest
         return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, 0 ,0, 0, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, 0);
     }
 }
