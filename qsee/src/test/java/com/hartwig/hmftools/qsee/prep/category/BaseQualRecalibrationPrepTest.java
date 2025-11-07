@@ -47,11 +47,11 @@ public class BaseQualRecalibrationPrepTest
         Feature actualFeature;
 
         actualFeature = features.get(0);
-        assertEquals("readType=NONE;standardMutation=C>A;standardTrinucContext=CCC", actualFeature.key().name());
+        assertEquals("ReadType=NONE;StandardMutation=C>A;StandardTrinucContext=CCC", actualFeature.key().name());
         assertEquals(1.25, actualFeature.value(), 0.001);
 
         actualFeature = features.get(1);
-        assertEquals("readType=NONE;standardMutation=C>A;standardTrinucContext=ACA", actualFeature.key().name());
+        assertEquals("ReadType=NONE;StandardMutation=C>A;StandardTrinucContext=ACA", actualFeature.key().name());
         assertEquals(3.55, actualFeature.value(), 0.001);
     }
 
@@ -65,11 +65,11 @@ public class BaseQualRecalibrationPrepTest
         Feature actualFeature;
 
         actualFeature = features.get(0);
-        assertEquals("readType=DUAL;standardMutation=C>G;originalQualBin=0-19", actualFeature.key().name());
+        assertEquals("ReadType=DUAL;StandardMutation=C>G;OriginalQualBin=0-19", actualFeature.key().name());
         assertEquals(1.75, actualFeature.value(), 0.001);
 
         actualFeature = features.get(1);
-        assertEquals("readType=NONE;standardMutation=C>A;originalQualBin=30+", actualFeature.key().name());
+        assertEquals("ReadType=NONE;StandardMutation=C>A;OriginalQualBin=30+", actualFeature.key().name());
         assertEquals(2.40, actualFeature.value(), 0.001);
     }
 }
