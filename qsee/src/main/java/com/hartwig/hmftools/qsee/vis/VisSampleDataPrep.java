@@ -27,13 +27,11 @@ import com.hartwig.hmftools.qsee.cohort.PercentileTransformer;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.FeaturePrep;
 import com.hartwig.hmftools.qsee.prep.SampleFeatures;
 
 public class VisSampleDataPrep
 {
-    private final CommonPrepConfig mCommonPrepConfig;
     private final VisPrepConfig mVisPrepConfig;
 
     private static final String COL_PERCENTILE_IN_COHORT = "PercentileInCohort";
@@ -42,12 +40,11 @@ public class VisSampleDataPrep
     public VisSampleDataPrep(VisPrepConfig config)
     {
         mVisPrepConfig = config;
-        mCommonPrepConfig = mVisPrepConfig.CommonPrep;
     }
 
     private List<SampleFeatures> runFeaturePrepFor(SampleType sampleType)
     {
-        List<String> sampleIds = mCommonPrepConfig.getSampleIds(sampleType);
+        List<String> sampleIds = mVisPrepConfig.CommonPrep.getSampleIds(sampleType);
 
         boolean hasSampleType = !sampleIds.isEmpty();
         if(!hasSampleType)
@@ -57,16 +54,16 @@ public class VisSampleDataPrep
 
         if(sampleIds.size() == 1)
         {
-            SampleFeatures sampleFeatures = new FeaturePrep(mCommonPrepConfig).prepSample(sampleType, sampleIds.get(0));
+            SampleFeatures sampleFeatures = new FeaturePrep(mVisPrepConfig.CommonPrep).prepSample(sampleType, sampleIds.get(0));
             return List.of(sampleFeatures);
         }
         else
         {
-            return new FeaturePrep(mCommonPrepConfig).prepMultiSample(sampleType);
+            return new FeaturePrep(mVisPrepConfig.CommonPrep).prepMultiSample(sampleType);
         }
     }
 
-    private List<VisSampleData> getTableRows(List<SampleFeatures> multiSampleFeatures, CohortPercentiles cohortPercentiles)
+    private List<VisSampleData> getVisSampleData(List<SampleFeatures> multiSampleFeatures, CohortPercentiles cohortPercentiles)
     {
         List<VisSampleData> visSampleData = new ArrayList<>();
 
@@ -98,7 +95,7 @@ public class VisSampleDataPrep
         return visSampleData;
     }
 
-    private void writeToFile(String outputFile, List<VisSampleData> visDataEntries)
+    private void writeToFile(String outputFile, List<VisSampleData> visSampleDataEntries)
     {
         try(BufferedWriter writer = createBufferedWriter(outputFile))
         {
@@ -116,7 +113,7 @@ public class VisSampleDataPrep
             writer.write(header.toString());
             writer.newLine();
 
-            for(VisSampleData entry : visDataEntries)
+            for(VisSampleData entry : visSampleDataEntries)
             {
                 FeatureKey featureKey = entry.feature().key();
 
@@ -143,8 +140,8 @@ public class VisSampleDataPrep
 
     private boolean isSinglePatient()
     {
-        return mCommonPrepConfig.getSampleIds(SampleType.TUMOR).size() <= 1 &&
-                mCommonPrepConfig.getSampleIds(SampleType.NORMAL).size() <= 1;
+        return mVisPrepConfig.CommonPrep.getSampleIds(SampleType.TUMOR).size() <= 1 &&
+                mVisPrepConfig.CommonPrep.getSampleIds(SampleType.NORMAL).size() <= 1;
     }
 
     public void run()
@@ -160,10 +157,9 @@ public class VisSampleDataPrep
         if(!isSinglePatient())
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
-        List<VisSampleData> visDataEntries = getTableRows(multiSampleFeatures, cohortPercentiles);
-
-        String sampleId = isSinglePatient() ? mCommonPrepConfig.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
-        String outputFile = checkAddDirSeparator(mCommonPrepConfig.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+        List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
+        String sampleId = isSinglePatient() ? mVisPrepConfig.CommonPrep.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
+        String outputFile = checkAddDirSeparator(mVisPrepConfig.CommonPrep.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
         writeToFile(outputFile, visDataEntries);
     }
 

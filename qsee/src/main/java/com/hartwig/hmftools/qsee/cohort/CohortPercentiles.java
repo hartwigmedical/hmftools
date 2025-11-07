@@ -11,6 +11,8 @@ public class CohortPercentiles
 {
     private final Map<SampleType, Map<FeatureKey, FeaturePercentiles>> mCohortData = new HashMap<>();
 
+    public Map<SampleType, Map<FeatureKey, FeaturePercentiles>> getData() { return mCohortData; }
+
     public void add(FeaturePercentiles featurePercentiles)
     {
         mCohortData.computeIfAbsent(featurePercentiles.sampleType(), k -> new HashMap<>());

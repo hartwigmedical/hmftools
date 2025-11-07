@@ -85,6 +85,7 @@ public class CohortPercentilesFile
         catch(IOException e)
         {
             QC_LOGGER.error("Failed to load cohort percentiles file: {}", filename, e);
+            System.exit(1);
             return null;
         }
     }
