@@ -22,24 +22,20 @@ import org.jetbrains.annotations.Nullable;
 
 public class LinxBreakendInterpreter
 {
-    @NotNull
     private final Map<String, StructuralVariant> structuralVariantsMap;
-    @NotNull
     private final Map<Integer, LinxSvAnnotation> linxSvAnnotationsMap;
-    @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
     public LinxBreakendInterpreter(
-            @NotNull final List<StructuralVariant> structuralVariants,
-            @NotNull final List<LinxSvAnnotation> linxSvAnnotations,
-            @NotNull final EnsemblDataCache ensemblDataCache)
+            final List<StructuralVariant> structuralVariants,
+            final List<LinxSvAnnotation> linxSvAnnotations,
+            final EnsemblDataCache ensemblDataCache)
     {
         this.structuralVariantsMap = structuralVariants.stream().collect(Collectors.toMap(StructuralVariant::id, s -> s));
         this.linxSvAnnotationsMap = linxSvAnnotations.stream().collect(Collectors.toMap(LinxSvAnnotation::svId, s -> s));
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    @NotNull
     public LinxBreakend interpret(@NotNull com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
     {
         LinxSvAnnotation svAnnotation = linxSvAnnotationsMap.get(linxBreakend.svId());

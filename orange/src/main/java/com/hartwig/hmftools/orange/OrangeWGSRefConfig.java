@@ -92,9 +92,6 @@ public interface OrangeWGSRefConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
-            // String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-            // builder.sageSomaticRefSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, refSampleId)));
-
             String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
             builder.refSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, refSampleId)));
 

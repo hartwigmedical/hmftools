@@ -192,8 +192,6 @@ public class OrangeAlgo
         IsofoxData isofoxData = loadIsofoxData(config);
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(
-                driverGenes,
-                knownFusionCache,
                 purpleData.allPassingSomaticStructuralVariants(),
                 purpleData.allPassingGermlineStructuralVariants(),
                 purpleData.allInferredSomaticStructuralVariants(),

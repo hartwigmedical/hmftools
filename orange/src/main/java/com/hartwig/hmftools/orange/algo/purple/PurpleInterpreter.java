@@ -95,35 +95,11 @@ public class PurpleInterpreter
 
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
 
-        List<PurpleVariant> additionalSuspectSomaticVariants = SomaticVariantSelector.selectInterestingUnreportedVariants(
-                allSomaticVariants, reportableSomaticVariants, driverGenes);
-
-        LOGGER.info(" Found an additional {} somatic variants that are potentially interesting",
-                additionalSuspectSomaticVariants.size());
-
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
         List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
-        List<PurpleVariant> additionalSuspectGermlineVariants = GermlineVariantSelector.selectInterestingUnreportedVariants(
-                allGermlineVariants);
-
-        if(additionalSuspectGermlineVariants != null)
-        {
-            LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
-                    additionalSuspectGermlineVariants.size());
-        }
 
         List<PurpleGainDeletion> allSomaticGainsDels = extractAllGainsDels(purple.allSomaticGeneCopyNumbers());
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
-
-        List<PurpleGainDeletion> nearReportableSomaticGains = CopyNumberSelector.selectNearReportableSomaticGains(
-                purple.allSomaticGeneCopyNumbers(), purple.purityContext().bestFit().ploidy(), allSomaticGainsDels, driverGenes);
-        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
-                nearReportableSomaticGains.size());
-
-        List<PurpleGainDeletion> additionalSuspectSomaticGainsDels = CopyNumberSelector.selectInterestingUnreportedGainsDels(
-                allSomaticGainsDels, reportableSomaticGainsDels);
-        LOGGER.info(" Found an additional {} somatic gains/deletions that are potentially interesting",
-                additionalSuspectSomaticGainsDels.size());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
@@ -173,17 +149,13 @@ public class PurpleInterpreter
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
                 .allSomaticVariants(allSomaticVariants)
                 .reportableSomaticVariants(reportableSomaticVariants)
-                .additionalSuspectSomaticVariants(additionalSuspectSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
-                .additionalSuspectGermlineVariants(additionalSuspectGermlineVariants)
                 .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
                 .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
                 .suspectGeneCopyNumbersWithLOH(ConversionUtil.mapToIterable(suspectGeneCopyNumbersWithLOH, PurpleConversion::convert))
                 .allSomaticGainsDels(allSomaticGainsDels)
                 .reportableSomaticGainsDels(reportableSomaticGainsDels)
-                .nearReportableSomaticGains(nearReportableSomaticGains)
-                .additionalSuspectSomaticGainsDels(additionalSuspectSomaticGainsDels)
                 .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .allGermlineFullDels(allGermlineFullDels)
                 .reportableGermlineFullDels(reportableGermlineFullDels)

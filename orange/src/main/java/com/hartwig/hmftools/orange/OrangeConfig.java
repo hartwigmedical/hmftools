@@ -195,9 +195,6 @@ public interface OrangeConfig
     String tumorSampleBqrPlot();
 
     @NotNull
-    String reduxDirectory();
-
-    @NotNull
     String purpleDataDirectory();
 
     @NotNull
@@ -289,7 +286,6 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .reduxDirectory(reduxDir)
                 .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir()))
@@ -297,9 +293,6 @@ public interface OrangeConfig
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
-
-        //String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-        //builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
 
         builder.tumorSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, tumorSampleId)));
 

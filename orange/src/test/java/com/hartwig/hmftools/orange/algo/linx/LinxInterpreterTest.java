@@ -25,8 +25,6 @@ public class LinxInterpreterTest
     private static LinxInterpreter createTestInterpreter()
     {
         return new LinxInterpreter(
-                Lists.newArrayList(),
-                new KnownFusionCache(),
                 emptyList(),
                 emptyList(),
                 emptyList(),

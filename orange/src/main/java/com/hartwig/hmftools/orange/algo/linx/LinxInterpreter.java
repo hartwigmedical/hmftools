@@ -25,24 +25,17 @@ import org.jetbrains.annotations.Nullable;
 
 public class LinxInterpreter
 {
-    @NotNull
-    private final List<DriverGene> driverGenes;
-    @NotNull
-    private final KnownFusionCache knownFusionCache;
-    @NotNull
     private final List<StructuralVariant> allSomaticStructuralVariants;
     @Nullable
     private final List<StructuralVariant> allGermlineStructuralVariants;
-    @NotNull
+
     private final List<StructuralVariant> allInferredSomaticStructuralVariants;
     @Nullable
     private final List<StructuralVariant> allInferredGermlineStructuralVariants;
-    @NotNull
+
     private final EnsemblDataCache ensemblDataCache;
 
     public LinxInterpreter(
-            @NotNull final List<DriverGene> driverGenes,
-            @NotNull final KnownFusionCache knownFusionCache,
             @NotNull final List<StructuralVariant> allSomaticStructuralVariants,
             @Nullable final List<StructuralVariant> allGermlineStructuralVariants,
             @NotNull final List<StructuralVariant> allInferredSomaticStructuralVariants,
@@ -50,8 +43,6 @@ public class LinxInterpreter
             @NotNull final EnsemblDataCache ensemblDataCache
     )
     {
-        this.driverGenes = driverGenes;
-        this.knownFusionCache = knownFusionCache;
         this.allSomaticStructuralVariants = allSomaticStructuralVariants;
         this.allGermlineStructuralVariants = allGermlineStructuralVariants;
         this.allInferredSomaticStructuralVariants = allInferredSomaticStructuralVariants;
@@ -63,21 +54,6 @@ public class LinxInterpreter
     public LinxRecord interpret(@NotNull LinxData linx)
     {
         LOGGER.info("Analysing linx data");
-        List<LinxFusion> additionalSuspectSomaticFusions =
-                DnaFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
-        LOGGER.info(" Found an additional {} suspect somatic fusions that are potentially interesting",
-                additionalSuspectSomaticFusions.size());
-
-        List<LinxFusion> additionalViableSomaticFusions =
-                DnaFusionSelector.selectAdditionalViableSomaticFusions(linx.allSomaticFusions(), additionalSuspectSomaticFusions);
-        LOGGER.info(" Found an additional {} viable somatic fusions", additionalViableSomaticFusions.size());
-
-        List<LinxBreakend> additionalSuspectSomaticBreakends =
-                BreakendSelector.selectInterestingUnreportedBreakends(linx.allSomaticBreakends(),
-                        linx.reportableSomaticFusions(),
-                        knownFusionCache);
-        LOGGER.info(" Found an additional {} suspect somatic breakends that are potentially interesting",
-                additionalSuspectSomaticBreakends.size());
 
         LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
                 combine(allSomaticStructuralVariants, allInferredSomaticStructuralVariants),
@@ -94,11 +70,8 @@ public class LinxInterpreter
                 .allSomaticStructuralVariants(ConversionUtil.mapToIterable(linx.allSomaticStructuralVariants(), LinxConversion::convert))
                 .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
                 .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
-                .additionalSuspectSomaticFusions(ConversionUtil.mapToIterable(additionalSuspectSomaticFusions, LinxConversion::convert))
-                .additionalViableSomaticFusions(ConversionUtil.mapToIterable(additionalViableSomaticFusions, LinxConversion::convert))
                 .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), somaticBreakendInterpreter::interpret))
                 .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), somaticBreakendInterpreter::interpret))
-                .additionalSuspectSomaticBreakends(ConversionUtil.mapToIterable(additionalSuspectSomaticBreakends, somaticBreakendInterpreter::interpret))
                 .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
                 .allGermlineStructuralVariants(ConversionUtil.mapToIterable(linx.allGermlineStructuralVariants(), LinxConversion::convert))
                 .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), germlineBreakendInterpreter::interpret))

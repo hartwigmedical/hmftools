@@ -36,17 +36,11 @@ public interface PurpleRecord
     @NotNull
     List<PurpleVariant> reportableSomaticVariants();
 
-    @NotNull
-    List<PurpleVariant> additionalSuspectSomaticVariants();
-
     @Nullable
     List<PurpleVariant> allGermlineVariants();
 
     @Nullable
     List<PurpleVariant> reportableGermlineVariants();
-
-    @Nullable
-    List<PurpleVariant> additionalSuspectGermlineVariants();
 
     @NotNull
     List<PurpleCopyNumber> allSomaticCopyNumbers();
@@ -62,12 +56,6 @@ public interface PurpleRecord
 
     @NotNull
     List<PurpleGainDeletion> reportableSomaticGainsDels();
-
-    @NotNull
-    List<PurpleGainDeletion> nearReportableSomaticGains();
-
-    @NotNull
-    List<PurpleGainDeletion> additionalSuspectSomaticGainsDels();
 
     @Nullable
     List<PurpleGermlineDeletion> allGermlineDeletions();

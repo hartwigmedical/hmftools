@@ -166,7 +166,6 @@ public final class TestOrangeReportFactory
                         .build())
                 .allGermlineVariants(Lists.newArrayList())
                 .reportableGermlineVariants(Lists.newArrayList())
-                .additionalSuspectGermlineVariants(Lists.newArrayList())
                 .reportableGermlineFullDels(Lists.newArrayList())
                 .reportableGermlineLossOfHeterozygosities(Lists.newArrayList())
                 .build();

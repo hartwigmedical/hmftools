@@ -57,17 +57,6 @@ final class CopyNumberSelector
         return nearReportableSomaticGains;
     }
 
-    public static List<PurpleGainDeletion> selectInterestingUnreportedGainsDels(
-            final List<PurpleGainDeletion> allGainsDels, final List<PurpleGainDeletion> reportableGainsDels)
-    {
-        List<PurpleGainDeletion> unreportedGainDels = selectUnreportedGainsDels(allGainsDels, reportableGainsDels);
-
-        List<PurpleGainDeletion> interestingUnreportedGainsDels = Lists.newArrayList();
-        interestingUnreportedGainsDels.addAll(selectInterestingGains(unreportedGainDels));
-        interestingUnreportedGainsDels.addAll(selectInterestingDels(unreportedGainDels, reportableGainsDels));
-        return interestingUnreportedGainsDels;
-    }
-
     private static Set<String> selectAmpDriverGenes(final List<DriverGene> driverGenes)
     {
         Set<String> ampGenes = Sets.newHashSet();

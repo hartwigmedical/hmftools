@@ -113,13 +113,11 @@ public final class GermlineConversion
                 .addAllReportableSomaticVariants(additionalReportableVariants)
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
-                .additionalSuspectGermlineVariants(null)
                 .allSomaticGainsDels(mergedAllSomaticGainsDels)
                 .reportableSomaticGainsDels(mergedReportableSomaticGainsDels)
                 .allGermlineDeletions(null)
                 .allGermlineFullDels(null)
                 .reportableGermlineFullDels(null)
-                .suspectGeneCopyNumbersWithLOH(mergedSuspectGeneCopyNumbersWithLOH)
                 .allGermlineLossOfHeterozygosities(null)
                 .reportableGermlineLossOfHeterozygosities(null)
                 .build();

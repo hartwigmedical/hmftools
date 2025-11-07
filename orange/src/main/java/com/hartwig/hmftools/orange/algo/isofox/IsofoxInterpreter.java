@@ -20,15 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class IsofoxInterpreter
 {
-    @NotNull
     private final List<DriverGene> driverGenes;
-    @NotNull
     private final KnownFusionCache knownFusionCache;
-    @NotNull
     private final LinxRecord linx;
 
-    public IsofoxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache,
-            @NotNull final LinxRecord linx)
+    public IsofoxInterpreter(final List<DriverGene> driverGenes, final KnownFusionCache knownFusionCache, final LinxRecord linx)
     {
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;

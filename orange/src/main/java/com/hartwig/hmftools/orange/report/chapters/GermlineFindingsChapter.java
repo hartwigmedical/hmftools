@@ -98,15 +98,6 @@ public class GermlineFindingsChapter implements ReportChapter
             String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, reportResources));
         }
-
-        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectGermlineVariants();
-        if(drivers != null && additionalSuspectVariants != null)
-        {
-            List<VariantEntry> additionalSuspectEntries =
-                    VariantEntryFactory.create(VariantDedup.apply(additionalSuspectVariants), drivers);
-            String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectEntries.size() + ")";
-            document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectEntries, reportResources));
-        }
     }
 
     private void addGermlineDeletions(@NotNull Document document)
