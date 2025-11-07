@@ -44,9 +44,14 @@ public class CohortPercentilesTrainer
         mTrainConfig = trainConfig;
         mCommonPrepConfig = trainConfig.CommonPrep;
 
-        mPercentiles = mTrainConfig.hasPercentileIncrement()
-                ? PercentileTransformer.withIncrement(mTrainConfig.PercentileIncrement).getPercentiles()
-                : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles).getPercentiles();
+        mPercentiles = createTransformer().getPercentiles();
+    }
+
+    private PercentileTransformer createTransformer()
+    {
+        return mTrainConfig.hasPercentileIncrement()
+                ? PercentileTransformer.withIncrement(mTrainConfig.PercentileIncrement)
+                : PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles);
     }
 
     private List<FeaturePercentiles> calcPercentiles(FeatureMatrix sampleFeatureMatrix, SampleType sampleType)
@@ -55,7 +60,7 @@ public class CohortPercentilesTrainer
 
         for(int featureIndex = 0; featureIndex < sampleFeatureMatrix.numFeatures(); ++featureIndex)
         {
-            PercentileTransformer transformer = PercentileTransformer.withNumPercentiles(mTrainConfig.NumPercentiles);
+            PercentileTransformer transformer = createTransformer();
 
             double[] featureValues = sampleFeatureMatrix.getColumnValues(featureIndex);
             FeatureKey featureKey = sampleFeatureMatrix.getFeatureKeys().get(featureIndex);
