@@ -25,9 +25,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -57,7 +55,7 @@ public class ReferenceData
 
     public final EnsemblDataCache GeneTransCache;
 
-    public final DriverGenePanel DriverGenes;
+    public final DriverGeneResource DriverGenes;
     public final Map<String, List<String>> OtherReportableTranscripts;
     public final GermlineDeletionFrequency CohortGermlineDeletions;
 
@@ -143,7 +141,7 @@ public class ReferenceData
                 PPL_LOGGER.error("unable to load driver genes: {}", e.toString());
             }
 
-            DriverGenes = DriverGenePanelFactory.create(driverGenes);
+            DriverGenes = new DriverGeneResource(driverGenes);
 
             if(configBuilder.hasValue(GERMLINE_VARIANTS))
             {
@@ -162,7 +160,7 @@ public class ReferenceData
         }
         else
         {
-            DriverGenes = DriverGenePanelFactory.empty();
+            DriverGenes = new DriverGeneResource();
         }
 
         OtherReportableTranscripts = Maps.newHashMap();
@@ -203,7 +201,7 @@ public class ReferenceData
     private void loadGeneTransCache()
     {
         // load transcripts with any alts from the driver gene panel in mind
-        for(DriverGene driverGene : DriverGenes.driverGenes())
+        for(DriverGene driverGene : DriverGenes.DriverGeneList)
         {
             if(!driverGene.additionalReportedTranscripts().isEmpty())
             {
@@ -272,8 +270,7 @@ public class ReferenceData
         ChromosomeLengths = Maps.newHashMap();
         Centromeres = Maps.newHashMap();
         setChromosomeCoords();
-        DriverGenes = DriverGenePanelFactory.empty();
-
+        DriverGenes = new DriverGeneResource();
         OtherReportableTranscripts = Maps.newHashMap();
         GeneTransCache = new EnsemblDataCache("", RefGenVersion);
         SomaticHotspots = ArrayListMultimap.create();

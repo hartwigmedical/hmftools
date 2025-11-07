@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
 
@@ -21,32 +22,34 @@ import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.apache.logging.log4j.util.Strings;
 
 public class GermlineDrivers
 {
-    private final Map<String, DriverCategory> mDriverCatalogMap;
+    private final Map<String,DriverGene> mDriverGeneMap;
 
-    public GermlineDrivers(final List<DriverGene> driverGenes)
+    public GermlineDrivers(final Map<String,DriverGene> driverGenes)
     {
-        mDriverCatalogMap = driverGenes.stream()
-                .filter(DriverGene::reportGermline).collect(toMap(DriverGene::gene, DriverGene::likelihoodType));
+        mDriverGeneMap = driverGenes;
     }
 
     public List<DriverCatalog> findDrivers(final List<GermlineVariant> variants, final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
     {
-        final Set<String> genes = variants.stream().map(GermlineVariant::gene).collect(toSet());
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        Set<String> genes = variants.stream().map(GermlineVariant::gene).collect(toSet());
+
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
         for(String gene : genes)
         {
-            DriverCategory category = mDriverCatalogMap.get(gene);
-            List<GermlineVariant> geneVariants = variants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
+            DriverGene driverGene = mDriverGeneMap.get(gene);
 
-            if(category == null)
+            if(driverGene == null)
                 continue;
+
+            List<GermlineVariant> geneVariants = variants.stream().filter(x -> x.gene().equals(gene)).collect(toList());
 
             List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
@@ -57,13 +60,13 @@ public class GermlineDrivers
             {
                 if(geneCopyNumbers.size() == 1)
                 {
-                    driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
+                    driverCatalog.add(germlineDriver(driverGene, gene, geneVariants, geneCopyNumber));
                 }
                 else
                 {
                     if(geneVariants.stream().anyMatch(x -> hasTranscriptCodingEffect(x.variantImpact(), x.type(), geneCopyNumber.TransName)))
                     {
-                        driverCatalog.add(germlineDriver(category, gene, geneVariants, geneCopyNumber));
+                        driverCatalog.add(germlineDriver(driverGene, gene, geneVariants, geneCopyNumber));
                     }
                 }
             }
@@ -73,7 +76,7 @@ public class GermlineDrivers
     }
 
     private static DriverCatalog germlineDriver(
-            final DriverCategory category, final String gene,
+            final DriverGene driverGene, final String gene,
             final List<GermlineVariant> geneVariants, final GeneCopyNumber geneCopyNumber)
     {
         Map<DriverImpact,Integer> variantCounts = Maps.newHashMap();
@@ -92,6 +95,8 @@ public class GermlineDrivers
         int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
         int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
+        ReportedStatus reportedStatus = driverGene.reportGermline() ? ReportedStatus.REPORTED : ReportedStatus.NONE;
+
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber == null ? Strings.EMPTY : geneCopyNumber.ChromosomeBand)
@@ -99,7 +104,7 @@ public class GermlineDrivers
                 .transcript(geneCopyNumber != null ? geneCopyNumber.TransName : "")
                 .isCanonical(geneCopyNumber != null ? geneCopyNumber.IsCanonical : true)
                 .driver(DriverType.GERMLINE_MUTATION)
-                .category(category)
+                .category(driverGene.likelihoodType())
                 .driverLikelihood(1)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
@@ -109,7 +114,8 @@ public class GermlineDrivers
                 .biallelic(geneVariants.stream().anyMatch(GermlineVariant::biallelic))
                 .minCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber == null ? 0 : geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.GERMLINE);
+                .likelihoodMethod(LikelihoodMethod.GERMLINE)
+                .reportedStatus(reportedStatus);
 
         return builder.build();
     }

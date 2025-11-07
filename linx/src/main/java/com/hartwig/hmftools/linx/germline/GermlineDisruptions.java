@@ -48,6 +48,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -459,6 +460,7 @@ public class GermlineDisruptions
                             .chromosomeBand(gene.KaryotypeBand)
                             .likelihoodMethod(LikelihoodMethod.GERMLINE)
                             .driverLikelihood(1.0)
+                            .reportedStatus(ReportedStatus.REPORTED)
                             .missense(0)
                             .nonsense(0)
                             .splice(0)

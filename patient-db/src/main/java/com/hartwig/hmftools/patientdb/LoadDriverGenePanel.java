@@ -33,7 +33,7 @@ public class LoadDriverGenePanel
 
         LOGGER.info("Loading {} driver genes to database", driverGenes.size());
 
-        try (DatabaseAccess dbAccess = databaseAccess(configBuilder, true))
+        try(DatabaseAccess dbAccess = databaseAccess(configBuilder, true))
         {
             dbAccess.writeGenePanel(driverGenes);
             LOGGER.info("Complete");

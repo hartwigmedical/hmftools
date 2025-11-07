@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverImpact;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.driver.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -33,7 +33,7 @@ public class SomaticVariantDrivers
     private final OncoDrivers mOncoDrivers;
     private final TsgDrivers mTsgDrivers;
 
-    public SomaticVariantDrivers(final DriverGenePanel panel)
+    public SomaticVariantDrivers(final DriverGeneResource panel)
     {
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();

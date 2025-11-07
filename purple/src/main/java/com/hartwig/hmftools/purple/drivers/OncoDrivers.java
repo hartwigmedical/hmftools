@@ -19,7 +19,8 @@ import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -28,7 +29,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class OncoDrivers extends SomaticVariantDriverFinder
 {
-    public OncoDrivers(final DriverGenePanel genePanel)
+    public OncoDrivers(final DriverGeneResource genePanel)
     {
         super(genePanel, DriverCategory.ONCO);
     }
@@ -103,7 +104,8 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .reportedStatus(ReportedStatus.REPORTED);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
@@ -129,7 +131,7 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 final int sampleVariantCount =
                         impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
 
-                driverLikelihood = Math.max(driverLikelihood, DriverCatalogFactory.probabilityDriverVariant(sampleVariantCount, likelihood));
+                driverLikelihood = Math.max(driverLikelihood, DndsCalculator.probabilityDriverVariant(sampleVariantCount, likelihood));
             }
         }
 

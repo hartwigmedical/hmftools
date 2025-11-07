@@ -62,7 +62,7 @@ public class GermlineVariants
         VcfFileReader vcfReader = new VcfFileReader(germlineVcf);
 
         GermlineReportedEnrichment germlineReportedEnrichment = checkReported ?
-                new GermlineReportedEnrichment(mReferenceData.DriverGenes.driverGenes(), Collections.emptySet()) : null;
+                new GermlineReportedEnrichment(mReferenceData.DriverGenes.DriverGeneList, Collections.emptySet()) : null;
 
         for(VariantContext context : vcfReader.iterator())
         {

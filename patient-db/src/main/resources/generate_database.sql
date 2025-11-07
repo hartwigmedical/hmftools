@@ -511,6 +511,7 @@ CREATE TABLE `driverCatalog`
     `category` VARCHAR(50) NOT NULL,
     `driver` VARCHAR(50) NOT NULL,
     `likelihoodMethod` VARCHAR(50) NOT NULL,
+    `reportedStatus` VARCHAR(50) NOT NULL,
     `driverLikelihood` DOUBLE PRECISION NOT NULL,
     `missense` INT NOT NULL,
     `nonsense` INT NOT NULL,

@@ -145,7 +145,7 @@ public class OncoDriversTest
 
     private static void assertLikelihood(double expectedProbability, int sampleCount, double value)
     {
-        double expectedLikelihood = DriverCatalogFactory.probabilityDriverVariant(sampleCount, createLikelihood(expectedProbability));
+        double expectedLikelihood = DndsCalculator.probabilityDriverVariant(sampleCount, createLikelihood(expectedProbability));
         assertEquals(expectedLikelihood, value, 1e-10);
     }
 

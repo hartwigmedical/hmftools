@@ -43,6 +43,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -429,6 +430,7 @@ public class GermlineDeletions
                     .driver(DriverType.GERMLINE_DELETION)
                     .category(driverGene.likelihoodType())
                     .driverLikelihood(1)
+                    .reportedStatus(ReportedStatus.REPORTED)
                     .missense(0)
                     .nonsense(0)
                     .splice(0)

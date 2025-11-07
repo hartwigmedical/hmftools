@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestDriverDataBuilder
@@ -54,6 +55,7 @@ public class TestDriverDataBuilder
                 .driver(driver)
                 .likelihoodMethod(likelihoodMethod)
                 .driverLikelihood(likelihood)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .minCopyNumber(minCopyNumber)
                 .maxCopyNumber(maxCopyNumber)
                 .category(DriverCategory.ONCO)

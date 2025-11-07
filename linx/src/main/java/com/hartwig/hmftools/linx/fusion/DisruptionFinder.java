@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.CohortFileInterface;
@@ -847,6 +848,7 @@ public class DisruptionFinder implements CohortFileInterface
                     .chromosome(disruptionData.Gene.Chromosome)
                     .chromosomeBand(disruptionData.Gene.KaryotypeBand)
                     .likelihoodMethod(LikelihoodMethod.DISRUPTION)
+                    .reportedStatus(ReportedStatus.REPORTED)
                     .driverLikelihood(0)
                     .missense(0)
                     .nonsense(0)

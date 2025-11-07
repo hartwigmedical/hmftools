@@ -335,8 +335,9 @@ public class PurpleInterpreter
                     likelihood = type == DriverType.DEL ? 1 : 0;
                 }
 
-                DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, likelihood, geneCopyNumber);
-                allGainDels.add(driverCatalog);
+                // TODO: now in Purple, confirm no longer needed by Orange
+                // DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, likelihood, geneCopyNumber);
+                // allGainDels.add(driverCatalog);
             }
         }
 

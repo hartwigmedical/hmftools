@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.driver;
 
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +33,9 @@ public interface DriverCatalog
     @NotNull
     LikelihoodMethod likelihoodMethod();
 
+    @NotNull
+    ReportedStatus reportedStatus();
+
     double driverLikelihood();
 
     int missense();
@@ -48,4 +53,5 @@ public interface DriverCatalog
     double minCopyNumber();
 
     double maxCopyNumber();
+
 }

@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
@@ -119,6 +120,7 @@ public class DriverDataCache
                 .chromosome(gene.chromosome())
                 .chromosomeBand(gene.GeneData.KaryotypeBand)
                 .likelihoodMethod(DISRUPTION)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .driverLikelihood(1.0)
                 .missense(0)
                 .nonsense(0)

@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanelFactoryTest;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneTestFactory;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -32,12 +32,32 @@ import org.junit.Test;
 
 public class CopyNumberDriversTest
 {
-    private final DriverGenePanel genePanel = DriverGenePanelFactoryTest.testGenePanel();
+    private final String TEST_GENE_1 = "GENE1";
+    private final String TEST_GENE_2 = "GENE2";
+
+    private final DriverGeneResource mDriverGeneResource;
+
+    public CopyNumberDriversTest()
+    {
+        DriverGene driverGene1 = DriverGeneTestFactory.builder().gene(TEST_GENE_1)
+                .reportAmplification(true)
+                .reportDeletion(true)
+                .reportHetDeletion(true)
+                .build();
+
+        DriverGene driverGene2 = DriverGeneTestFactory.builder().gene(TEST_GENE_2)
+                .reportAmplification(true)
+                .reportDeletion(true)
+                .reportHetDeletion(true)
+                .build();
+
+        mDriverGeneResource = new DriverGeneResource(List.of(driverGene1, driverGene2));
+    }
 
     @Test
     public void testOncoAmplificationWithoutDnds()
     {
-        DriverGene onco = genePanel.amplificationTargets()
+        DriverGene onco = mDriverGeneResource.DriverGeneList
                 .stream()
                 .filter(x -> !x.reportSomatic() && x.likelihoodType() == DriverCategory.ONCO)
                 .findFirst()
@@ -46,17 +66,17 @@ public class CopyNumberDriversTest
         GeneCopyNumber oncoAmp = GeneCopyNumberTestFactory.createGeneCopyNumber(onco.gene(), 7, 7);
 
         List<DriverCatalog> drivers = AmplificationDrivers.findAmplifications(
-                Sets.newHashSet(PurpleQCStatus.PASS), FEMALE, genePanel, 2, Lists.newArrayList(oncoAmp), false);
+                Sets.newHashSet(PurpleQCStatus.PASS), FEMALE, mDriverGeneResource, 2, Lists.newArrayList(oncoAmp), false);
 
         assertEquals(oncoAmp.geneName(), drivers.get(0).gene());
         assertEquals(DriverCategory.ONCO, drivers.get(0).category());
 
         // test amplification on chrX for MALE
         GeneCopyNumber chrXAmp = GeneCopyNumberTestFactory.createGeneCopyNumber(
-                HumanChromosome._X.toString(), "AR", 7, 7);
+                HumanChromosome._X.toString(), TEST_GENE_1, 7, 7);
 
         drivers = AmplificationDrivers.findAmplifications(
-                Sets.newHashSet(PurpleQCStatus.PASS), MALE, genePanel, 2, Lists.newArrayList(chrXAmp), false);
+                Sets.newHashSet(PurpleQCStatus.PASS), MALE, mDriverGeneResource, 2, Lists.newArrayList(chrXAmp), false);
 
         assertEquals(chrXAmp.geneName(), drivers.get(0).gene());
         assertEquals(DriverCategory.ONCO, drivers.get(0).category());
@@ -65,7 +85,7 @@ public class CopyNumberDriversTest
     @Test
     public void testPartialAmp()
     {
-        List<DriverGene> driverGenes = Lists.newArrayList(genePanel.amplificationTargets());
+        List<DriverGene> driverGenes = mDriverGeneResource.DriverGeneList;
 
         GeneCopyNumber partialAmp = GeneCopyNumberTestFactory.createGeneCopyNumber(
                 driverGenes.get(0).gene(), 0.1, 7);
@@ -74,7 +94,7 @@ public class CopyNumberDriversTest
                 driverGenes.get(1).gene(), 7, 7);
 
         List<DriverCatalog> drivers = AmplificationDrivers.findAmplifications(
-                Sets.newHashSet(PurpleQCStatus.PASS), FEMALE, genePanel,
+                Sets.newHashSet(PurpleQCStatus.PASS), FEMALE, mDriverGeneResource,
                 2, Lists.newArrayList(partialAmp, fullAmp), false);
         assertEquals(2, drivers.size());
 
@@ -88,7 +108,7 @@ public class CopyNumberDriversTest
     @Test
     public void testAmpWithWarn()
     {
-        String gene = Lists.newArrayList(genePanel.amplificationTargets()).get(0).gene();
+        String gene = TEST_GENE_1;
 
         GeneCopyNumber ampNoSupport = createGeneCopyNumber(
                 gene, 100, 1, 10000, SegmentSupport.NONE, SegmentSupport.NONE);
@@ -103,27 +123,28 @@ public class CopyNumberDriversTest
                 gene, 100, 1, 10000, SegmentSupport.BND, SegmentSupport.BND);
 
         Set<PurpleQCStatus> warnDeletedGenes = Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES);
+
         assertEquals(1, AmplificationDrivers.findAmplifications(
-                warnDeletedGenes, FEMALE, genePanel,1, Collections.singletonList(ampNoSupport), false).size());
+                warnDeletedGenes, FEMALE, mDriverGeneResource,1, Collections.singletonList(ampNoSupport), false).size());
 
         Set<PurpleQCStatus> warnCopyNumber = Sets.newHashSet(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
         assertEquals(0, AmplificationDrivers.findAmplifications(
-                warnCopyNumber, FEMALE, genePanel,1, Collections.singletonList(ampNoSupport), false).size());
+                warnCopyNumber, FEMALE, mDriverGeneResource,1, Collections.singletonList(ampNoSupport), false).size());
 
         assertEquals(1, AmplificationDrivers.findAmplifications(
-                warnCopyNumber, FEMALE, genePanel,1, Collections.singletonList(ampStartSupport), false).size());
+                warnCopyNumber, FEMALE, mDriverGeneResource,1, Collections.singletonList(ampStartSupport), false).size());
 
         assertEquals(1, AmplificationDrivers.findAmplifications(
-                warnCopyNumber, FEMALE, genePanel,1, Collections.singletonList(ampEndSupport), false).size());
+                warnCopyNumber, FEMALE, mDriverGeneResource,1, Collections.singletonList(ampEndSupport), false).size());
 
         assertEquals(1, AmplificationDrivers.findAmplifications(
-                warnCopyNumber, FEMALE, genePanel,1, Collections.singletonList(ampBothSupport), false).size());
+                warnCopyNumber, FEMALE, mDriverGeneResource,1, Collections.singletonList(ampBothSupport), false).size());
     }
 
     @Test
     public void testDelWithWarn()
     {
-        String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0).gene();
+        String gene = TEST_GENE_1;
 
         GeneCopyNumber longDelNoSupport = createGeneCopyNumber(
                 gene, 0.01, 1, 100_000_000, SegmentSupport.NONE, SegmentSupport.NONE);
@@ -152,65 +173,65 @@ public class CopyNumberDriversTest
         Set<PurpleQCStatus> noWarn = Sets.newHashSet();
         double samplePloidy = 2;
 
-        assertEquals(1, DeletionDrivers.findDeletions(noWarn, samplePloidy, genePanel, List.of(longDelNoSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(noWarn, samplePloidy, mDriverGeneResource, List.of(longDelNoSupport), false).size());
 
         Set<PurpleQCStatus> warnDeletedGenes = Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES);
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelNoSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelNoSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelStartSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelStartSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelEndSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelEndSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelBothSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelBothSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelNoSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelNoSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelNoSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelNoSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelEndSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelEndSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelBothSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelBothSupport), false).size());
 
         // Check effect of panel mode
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelNoSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelNoSupport), true).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelStartSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelStartSupport), true).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelEndSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelEndSupport), true).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(longDelBothSupport), true).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(longDelBothSupport), true).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelNoSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelNoSupport), true).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelStartSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelStartSupport), true).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelEndSupport), true).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelEndSupport), true).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, genePanel, List.of(shortDelBothSupport), true).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnDeletedGenes, samplePloidy, mDriverGeneResource, List.of(shortDelBothSupport), true).size());
 
         Set<PurpleQCStatus> warnCopyNumber = Sets.newHashSet(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
-        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(longDelNoSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(longDelNoSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(longDelStartSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(longDelStartSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(longDelEndSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(longDelEndSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(longDelBothSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(longDelBothSupport), false).size());
 
-        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(shortDelNoSupport), false).size());
+        assertEquals(0, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(shortDelNoSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(shortDelStartSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(shortDelStartSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(shortDelEndSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(shortDelEndSupport), false).size());
 
-        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, genePanel, List.of(shortDelBothSupport), false).size());
+        assertEquals(1, DeletionDrivers.findDeletions(warnCopyNumber, samplePloidy, mDriverGeneResource, List.of(shortDelBothSupport), false).size());
     }
 
     @Test
     public void testHeterzygousDeletion()
     {
-        String gene = Lists.newArrayList(genePanel.deletionTargets()).get(0).gene();
+        String gene = TEST_GENE_1;
 
         GeneCopyNumber hetDeletion = createGeneCopyNumber(
                 gene, 1.1, 1, 100_000_000, SegmentSupport.BND, SegmentSupport.BND);
@@ -218,7 +239,7 @@ public class CopyNumberDriversTest
         Set<PurpleQCStatus> noWarn = Sets.newHashSet();
         double samplePloidy = 2;
 
-        List<DriverCatalog> drivers = DeletionDrivers.findDeletions(noWarn, samplePloidy, genePanel, List.of(hetDeletion), false);
+        List<DriverCatalog> drivers = DeletionDrivers.findDeletions(noWarn, samplePloidy, mDriverGeneResource, List.of(hetDeletion), false);
         assertEquals(1, drivers.size());
 
         assertEquals(HET_DEL, drivers.get(0).driver());

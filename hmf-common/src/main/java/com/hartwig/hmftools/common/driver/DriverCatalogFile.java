@@ -17,6 +17,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -73,6 +74,7 @@ public final class DriverCatalogFile
                 .add("isCanonical")
                 .add("driver")
                 .add("category")
+                .add("reportedStatus")
                 .add("likelihoodMethod")
                 .add("driverLikelihood")
                 .add("missense")
@@ -97,6 +99,7 @@ public final class DriverCatalogFile
                 .add(String.valueOf(driverCatalog.driver()))
                 .add(String.valueOf(driverCatalog.category()))
                 .add(String.valueOf(driverCatalog.likelihoodMethod()))
+                .add(String.valueOf(driverCatalog.reportedStatus()))
                 .add(FORMAT.format(driverCatalog.driverLikelihood()))
                 .add(String.valueOf(driverCatalog.missense()))
                 .add(String.valueOf(driverCatalog.nonsense()))
@@ -123,9 +126,13 @@ public final class DriverCatalogFile
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
+        Integer reportedIndex = fieldsIndexMap.get("reportedStatus");
+
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM, -1);
+
+            ReportedStatus reportedStatus = reportedIndex != null ? ReportedStatus.valueOf(values[reportedIndex]) : ReportedStatus.REPORTED;
 
             drivers.add(ImmutableDriverCatalog.builder()
                     .chromosome(values[fieldsIndexMap.get("chromosome")])
@@ -137,6 +144,7 @@ public final class DriverCatalogFile
                             Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
                     .driver(checkConvertType(values[fieldsIndexMap.get("driver")]))
                     .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
+                    .reportedStatus(reportedStatus)
                     .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
                     .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get("driverLikelihood")]))
                     .missense(Integer.parseInt(values[fieldsIndexMap.get("missense")]))

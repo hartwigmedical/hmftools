@@ -21,11 +21,13 @@ import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep20;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -64,7 +66,7 @@ class DriverCatalogDAO
         Timestamp timestamp = new Timestamp(new Date().getTime());
         for(List<DriverCatalog> splitRegions : Iterables.partition(driverCatalog, DB_BATCH_INSERT_SIZE))
         {
-            InsertValuesStep19 inserter = context.insertInto(DRIVERCATALOG,
+            InsertValuesStep20 inserter = context.insertInto(DRIVERCATALOG,
                     DRIVERCATALOG.SAMPLEID,
                     DRIVERCATALOG.CHROMOSOME,
                     DRIVERCATALOG.CHROMOSOMEBAND,
@@ -74,6 +76,7 @@ class DriverCatalogDAO
                     DRIVERCATALOG.DRIVER,
                     DRIVERCATALOG.CATEGORY,
                     DRIVERCATALOG.LIKELIHOODMETHOD,
+                    DRIVERCATALOG.REPORTEDSTATUS,
                     DRIVERCATALOG.DRIVERLIKELIHOOD,
                     DRIVERCATALOG.MISSENSE,
                     DRIVERCATALOG.NONSENSE,
@@ -90,7 +93,7 @@ class DriverCatalogDAO
     }
 
     private static void addRecord(
-            Timestamp timestamp, InsertValuesStep19 inserter, String sample, DriverCatalog entry)
+            Timestamp timestamp, InsertValuesStep20 inserter, String sample, DriverCatalog entry)
     {
         inserter.values(
                 sample,
@@ -102,6 +105,7 @@ class DriverCatalogDAO
                 entry.driver(),
                 entry.category(),
                 entry.likelihoodMethod(),
+                entry.reportedStatus(),
                 DatabaseUtil.decimal(entry.driverLikelihood()),
                 entry.missense(),
                 entry.nonsense(),
@@ -143,6 +147,7 @@ class DriverCatalogDAO
                     .transcript(record.getValue(DRIVERCATALOG.TRANSCRIPTID))
                     .isCanonical(record.getValue(DRIVERCATALOG.CANONICALTRANSCRIPT) != 0)
                     .likelihoodMethod(LikelihoodMethod.valueOf(record.getValue(DRIVERCATALOG.LIKELIHOODMETHOD)))
+                    .reportedStatus(ReportedStatus.valueOf(record.get(DRIVERCATALOG.REPORTEDSTATUS)))
                     .driverLikelihood(record.getValue(DRIVERCATALOG.DRIVERLIKELIHOOD))
                     .missense(record.getValue(DRIVERCATALOG.MISSENSE))
                     .nonsense(record.getValue(DRIVERCATALOG.NONSENSE))

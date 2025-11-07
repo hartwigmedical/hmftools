@@ -19,8 +19,7 @@ public class HomozygousDisruptionFactoryTest
     @Test
     public void canExtractSomaticHomozygousDisruptions() throws IOException
     {
-        List<HomozygousDisruption> homozygousDisruptions =
-                HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(SOMATIC_DRIVERS_CATALOG_TSV);
+        List<HomozygousDisruption> homozygousDisruptions = HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(SOMATIC_DRIVERS_CATALOG_TSV);
 
         assertEquals(1, homozygousDisruptions.size());
 

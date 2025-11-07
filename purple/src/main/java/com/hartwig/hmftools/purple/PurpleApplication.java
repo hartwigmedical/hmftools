@@ -363,7 +363,7 @@ public class PurpleApplication
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
 
             germlineDeletions = new GermlineDeletions(
-                    mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+                    mReferenceData.DriverGenes.DriverGeneList, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
             germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
 
@@ -466,7 +466,7 @@ public class PurpleApplication
 
         if(mConfig.runGermline())
         {
-            final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
+            GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.DriverGeneMap);
             germlineDriverCatalog.addAll(germlineDrivers.findDrivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
 
             if(germlineDeletions != null)

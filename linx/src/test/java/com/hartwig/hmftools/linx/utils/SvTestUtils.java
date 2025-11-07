@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -222,6 +223,7 @@ public class SvTestUtils
                 .chromosomeBand("")
                 .driver(type)
                 .driverLikelihood(1.0)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .likelihoodMethod(method)
                 .minCopyNumber(minCopyNumber)
                 .maxCopyNumber(minCopyNumber)

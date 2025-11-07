@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
+import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.createCopyNumberDriver;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -14,7 +12,7 @@ import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
@@ -27,20 +25,16 @@ public final class AmplificationDrivers
             "BRAF", "EGFR", "CTNNB1", "CBL", "MET", "ALK", "PDGFRA");
 
     public static List<DriverCatalog> findAmplifications(
-            final Set<PurpleQCStatus> qcStatus, final Gender gender, final DriverGenePanel panel,
+            final Set<PurpleQCStatus> qcStatus, final Gender gender, final DriverGeneResource panel,
             final double ploidy, final List<GeneCopyNumber> geneCopyNumbers, boolean isTargetRegions)
     {
         List<DriverCatalog> result = Lists.newArrayList();
-
-        Map<String,DriverGene> amplificationDriverGenes = panel.driverGenes().stream()
-                .filter(x -> x.reportAmplification())
-                .collect(Collectors.toMap(DriverGene::gene, x -> x));
 
         boolean isHighCopyNoise = qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
 
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            DriverGene driverGene = amplificationDriverGenes.get(geneCopyNumber.geneName());
+            DriverGene driverGene = panel.DriverGeneMap.get(geneCopyNumber.geneName());
 
             if(driverGene == null)
                 continue;
@@ -67,13 +61,14 @@ public final class AmplificationDrivers
                 }
             }
 
-            if(driverType != UNKNOWN)
-            {
-                geneCopyNumber.setDriverType(driverType);
+            ReportedStatus reportedStatus = driverType != UNKNOWN ? ReportedStatus.REPORTED : ReportedStatus.NONE;
 
-                geneCopyNumber.setReportedStatus(ReportedStatus.REPORTED);
-                result.add(createAmpDriver(geneCopyNumber, driverType));
-            }
+            geneCopyNumber.setDriverType(driverType);
+            geneCopyNumber.setReportedStatus(reportedStatus);
+
+            DriverCatalog driverCatalog = createCopyNumberDriver(
+                    DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, 1, geneCopyNumber, reportedStatus);
+            result.add(driverCatalog);
         }
 
         return result;
@@ -82,10 +77,5 @@ public final class AmplificationDrivers
     private static boolean supportedByOneSV(final GeneCopyNumber geneCopyNumber)
     {
         return geneCopyNumber.MinRegionStartSupport.isSV() || geneCopyNumber.MinRegionEndSupport.isSV();
-    }
-
-    private static DriverCatalog createAmpDriver(final GeneCopyNumber geneCopyNumber, final DriverType driverType)
-    {
-        return createCopyNumberDriver(DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, 1, geneCopyNumber);
     }
 }

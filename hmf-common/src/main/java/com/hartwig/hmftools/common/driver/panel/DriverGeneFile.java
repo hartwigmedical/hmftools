@@ -27,20 +27,18 @@ public final class DriverGeneFile
 
     private DriverGeneFile() {}
 
-    public static void write(@NotNull final String filename, @NotNull final List<DriverGene> driverGenes) throws IOException
+    public static void write(final String filename, final List<DriverGene> driverGenes) throws IOException
     {
         List<DriverGene> sorted = Lists.newArrayList(driverGenes);
         Files.write(new File(filename).toPath(), toLines(sorted));
     }
 
-    @NotNull
-    public static List<DriverGene> read(@NotNull final String filename) throws IOException
+    public static List<DriverGene> read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    @NotNull
-    public static List<DriverGene> fromLines(@NotNull final List<String> lines)
+    public static List<DriverGene> fromLines(final List<String> lines)
     {
         List<DriverGene> driverGenes = Lists.newArrayList();
 

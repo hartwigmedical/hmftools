@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.driver.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -22,7 +22,7 @@ public abstract class SomaticVariantDriverFinder
 {
     protected final DriverCategory mCategory;
     protected final ReportablePredicate mReportablePredicate;
-    protected final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
+    protected final Map<String,DndsDriverGeneLikelihood> mLikelihoodsByGene;
     protected final List<SomaticVariant> mReportableVariants;
 
     public static final DndsDriverGeneLikelihood NO_GENE_DNDS_LIKELIHOOD = ImmutableDndsDriverGeneLikelihood.builder()
@@ -33,11 +33,11 @@ public abstract class SomaticVariantDriverFinder
         .nonsense(ImmutableDndsDriverImpactLikelihood.builder().driversPerSample(0).passengersPerMutation(0).build())
         .build();
 
-    public SomaticVariantDriverFinder(final DriverGenePanel genePanel, final DriverCategory category)
+    public SomaticVariantDriverFinder(final DriverGeneResource genePanel, final DriverCategory category)
     {
         mCategory = category;
-        mLikelihoodsByGene = category == DriverCategory.ONCO ? genePanel.oncoLikelihood() : genePanel.tsgLikelihood();
-        mReportablePredicate = new ReportablePredicate(category, genePanel.driverGenes());
+        mLikelihoodsByGene = category == DriverCategory.ONCO ? genePanel.OncoLikelihoodMap : genePanel.TsgLikelihoodMap;
+        mReportablePredicate = new ReportablePredicate(category, genePanel.DriverGeneList);
         mReportableVariants = Lists.newArrayList();
     }
     
