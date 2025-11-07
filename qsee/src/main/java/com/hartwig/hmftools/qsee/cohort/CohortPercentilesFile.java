@@ -25,7 +25,8 @@ public class CohortPercentilesFile
 {
     public static final String COHORT_PERCENTILES_FILE_SUFFIX = "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
 
-    public static final String COL_PERCENTILE_PREFIX = "Pct_";
+    public static final String COL_PERCENTILE_PREFIX = "Pct";
+    public static final String COL_PERCENTILE_DELIM = "_";
 
     public static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.########");
     public static final DecimalFormat REF_VALUE_FORMAT  = new DecimalFormat("0.########");
@@ -53,7 +54,8 @@ public class CohortPercentilesFile
                 if(columnName.startsWith(COL_PERCENTILE_PREFIX))
                 {
                     indexesPercentile.add(entry.getValue());
-                    percentileList.add(Double.parseDouble(columnName.substring(COL_PERCENTILE_PREFIX.length())));
+                    String percentileStr = columnName.split(COL_PERCENTILE_DELIM)[1];
+                    percentileList.add(Double.parseDouble(percentileStr));
                 }
             }
 

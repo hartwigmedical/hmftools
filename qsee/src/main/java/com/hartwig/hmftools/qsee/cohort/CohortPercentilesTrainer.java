@@ -120,7 +120,7 @@ public class CohortPercentilesTrainer
             header.add(COL_SOURCE_TOOL);
             header.add(COL_FEATURE_TYPE);
             header.add(COL_FEATURE_NAME);
-            getPercentileNames().forEach(percentileName -> header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + percentileName));
+            getPercentileNames().forEach(percentileName -> header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + "_" + percentileName));
 
             writer.write(header.toString());
             writer.newLine();

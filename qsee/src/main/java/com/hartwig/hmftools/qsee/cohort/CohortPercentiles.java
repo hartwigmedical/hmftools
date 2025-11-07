@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.qsee.cohort;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,13 +9,13 @@ import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
 public class CohortPercentiles
 {
-    private final Map<SampleType, Map<FeatureKey, FeaturePercentiles>> mCohortData = new HashMap<>();
+    private final Map<SampleType, Map<FeatureKey, FeaturePercentiles>> mCohortData = new LinkedHashMap<>();
 
     public Map<SampleType, Map<FeatureKey, FeaturePercentiles>> getData() { return mCohortData; }
 
     public void add(FeaturePercentiles featurePercentiles)
     {
-        mCohortData.computeIfAbsent(featurePercentiles.sampleType(), k -> new HashMap<>());
+        mCohortData.computeIfAbsent(featurePercentiles.sampleType(), k -> new LinkedHashMap<>());
 
         mCohortData
                 .get(featurePercentiles.sampleType())

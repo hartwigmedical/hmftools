@@ -35,24 +35,24 @@ public class VisCohortPctWriter
         mConfig = config;
     }
 
-    private static List<Map<NamedPercentile, Double>> getNamedPercentiles(CohortPercentiles cohortPercentiles)
+    private static List<VisFeatureNamedPct> getNamedPercentiles(CohortPercentiles cohortPercentiles)
     {
-        List<Map<NamedPercentile, Double>> namedPercentilesList = new ArrayList<>();
+        List<VisFeatureNamedPct> cohortNamedPercentiles = new ArrayList<>();
         for(SampleType sampleType : cohortPercentiles.getData().keySet())
         {
             Map<FeatureKey, FeaturePercentiles> featurePercentilesMap = cohortPercentiles.getData().get(sampleType);
             for(FeatureKey featureKey : featurePercentilesMap.keySet())
             {
                 FeaturePercentiles featurePercentiles = featurePercentilesMap.get(featureKey);
-                Map<NamedPercentile, Double> namedPercentiles = featurePercentiles.getNamedPercentileValues();
-                namedPercentilesList.add(namedPercentiles);
+                VisFeatureNamedPct featureNamedPercentiles = new VisFeatureNamedPct(sampleType, featureKey, featurePercentiles);
+                cohortNamedPercentiles.add(featureNamedPercentiles);
             }
         }
 
-        return namedPercentilesList;
+        return cohortNamedPercentiles;
     }
 
-    private void writeToFile(String outputFile, List<Map<NamedPercentile, Double>> namedPercentilesList)
+    private void writeToFile(String outputFile, List<VisFeatureNamedPct> cohortNamedPercentiles)
     {
         try(BufferedWriter writer = createBufferedWriter(outputFile))
         {
@@ -66,19 +66,27 @@ public class VisCohortPctWriter
 
             for(NamedPercentile namedPercentile : NamedPercentile.values())
             {
-                header.add(namedPercentile.name());
+                header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + namedPercentile.simpleName());
             }
 
             writer.write(header.toString());
             writer.newLine();
 
-            for(Map<NamedPercentile, Double> pctFeatureValueMap : namedPercentilesList)
+            for(VisFeatureNamedPct namedPercentiles : cohortNamedPercentiles)
             {
                 StringJoiner line = new StringJoiner(TSV_DELIM);
-                for(NamedPercentile namedPercentile : pctFeatureValueMap.keySet())
+
+                line.add(namedPercentiles.sampleType().name());
+                line.add(namedPercentiles.featureKey().sourceTool().name());
+                line.add(namedPercentiles.featureKey().type().name());
+                line.add(namedPercentiles.featureKey().name());
+
+
+                for(NamedPercentile namedPercentile : namedPercentiles.pctRefValues().keySet())
                 {
-                    String featureValue = CohortPercentilesFile.PERCENTILE_FORMAT.format(pctFeatureValueMap.get(namedPercentile));
-                    line.add(featureValue);
+                    double featureValue = namedPercentiles.pctRefValues().get(namedPercentile);
+                    String featureValueStr = CohortPercentilesFile.REF_VALUE_FORMAT.format(featureValue);
+                    line.add(featureValueStr);
                 }
                 writer.write(line.toString());
                 writer.newLine();
@@ -95,7 +103,7 @@ public class VisCohortPctWriter
     {
         CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mConfig.CohortPercentilesFile);
 
-        List<Map<NamedPercentile, Double>> namedPercentilesList = getNamedPercentiles(cohortPercentiles);
+        List<VisFeatureNamedPct> namedPercentilesList = getNamedPercentiles(cohortPercentiles);
 
         String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) + "cohort." + QSEE_FILE_ID + ".vis.named_percentiles.tsv.gz";
         writeToFile(outputFile, namedPercentilesList);
