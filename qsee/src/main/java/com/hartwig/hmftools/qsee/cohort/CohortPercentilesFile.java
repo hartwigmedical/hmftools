@@ -9,14 +9,13 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -35,7 +34,7 @@ public class CohortPercentilesFile
     {
         try
         {
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
+            List<String> lines = FileWriterUtils.readLines(filename);
 
             String header = lines.get(0);
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
