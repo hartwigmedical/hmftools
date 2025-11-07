@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.OrangeConfig.REDUX_DIR_CFG;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
@@ -91,11 +92,14 @@ public interface OrangeWGSRefConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
-            String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-            builder.sageSomaticRefSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, refSampleId)));
+            // String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
+            // builder.sageSomaticRefSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, refSampleId)));
 
-            String refMetricsDir =
-                    pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());
+            String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
+            builder.refSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, refSampleId)));
+
+            String refMetricsDir = pathResolver.resolveMandatoryToolDirectory(
+                    REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());
             String geneCoverageFile = generateGeneCoverageFilename(refMetricsDir, refSampleId);
 
             if(Files.exists(Paths.get(geneCoverageFile)))
@@ -164,7 +168,7 @@ public interface OrangeWGSRefConfig
     String germlineGeneCoverageTsv();
 
     @Nullable
-    String sageSomaticRefSampleBQRPlot();
+    String refSampleBqrPlot();
 
     @Nullable
     String linxGermlineDataDirectory();

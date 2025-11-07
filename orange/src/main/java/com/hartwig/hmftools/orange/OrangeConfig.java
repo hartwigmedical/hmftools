@@ -80,6 +80,10 @@ public interface OrangeConfig
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
+    // TODO: add to pipeline directories for OA v3_0
+    String REDUX_DIR_CFG = "redux_dir";
+    String REDUX_DIR_DESC = "Path to Redux files";
+
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
@@ -101,6 +105,7 @@ public interface OrangeConfig
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
+        configBuilder.addPath(REDUX_DIR_CFG, true, REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
@@ -187,7 +192,10 @@ public interface OrangeConfig
     String tumorSampleFlagstatFile();
 
     @NotNull
-    String sageSomaticTumorSampleBQRPlot();
+    String tumorSampleBqrPlot();
+
+    @NotNull
+    String reduxDirectory();
 
     @NotNull
     String purpleDataDirectory();
@@ -264,6 +272,8 @@ public interface OrangeConfig
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
+        String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
+
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
@@ -279,6 +289,7 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
+                .reduxDirectory(reduxDir)
                 .purpleDataDirectory(pathResolver.resolveMandatoryToolDirectory(PURPLE_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .purplePlotDirectory(pathResolver.resolveMandatoryToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, defaultToolDirectories.purpleDir()))
                 .linxSomaticDataDirectory(pathResolver.resolveMandatoryToolDirectory(LINX_DIR_CFG, defaultToolDirectories.linxSomaticDir()))
@@ -287,8 +298,10 @@ public interface OrangeConfig
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 
-        String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-        builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
+        //String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
+        //builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
+
+        builder.tumorSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, tumorSampleId)));
 
         String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         if(lilacDir != null)
