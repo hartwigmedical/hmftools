@@ -185,20 +185,12 @@ public class PercentileTransformer
         mPercentilesDeduped = refValuesToMeanPctMap.values().stream().mapToDouble(x -> x).toArray();
     }
 
-    private void preTransformCheck(double inputValue)
+    public double featureValueToPercentile(double featureValue)
     {
         if(!mFitted)
             throw new IllegalStateException("PercentileTransformer not fitted");
 
-        if(Double.isNaN(inputValue))
-            throw new IllegalArgumentException("Input value cannot be NaN");
-    }
-
-    public double featureValueToPercentile(double featureValue)
-    {
-        preTransformCheck(featureValue);
-
-        if(mFittedWithAllNaN)
+        if(mFittedWithAllNaN || Double.isNaN(featureValue))
             return Double.NaN;
 
         return linearInterpolate2D(featureValue, mRefValuesDeduped, mPercentilesDeduped);
@@ -206,7 +198,11 @@ public class PercentileTransformer
 
     public double percentileToFeatureValue(double percentile)
     {
-        preTransformCheck(percentile);
+        if(!mFitted)
+            throw new IllegalStateException("PercentileTransformer not fitted");
+
+        if(Double.isNaN(percentile))
+            throw new IllegalArgumentException("Percentile cannot be NaN");
 
         if(mFittedWithAllNaN)
             return Double.NaN;
