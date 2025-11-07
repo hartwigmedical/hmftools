@@ -37,7 +37,7 @@ public class VisSampleDataPrep
     private final VisPrepConfig mVisPrepConfig;
 
     private static final String COL_PERCENTILE_IN_COHORT = "PercentileInCohort";
-    private static final String SAMPLE_ID_MULTI = "multi_sample";
+    private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
     public VisSampleDataPrep(VisPrepConfig config)
     {
@@ -163,7 +163,7 @@ public class VisSampleDataPrep
         List<VisSampleData> visDataEntries = getTableRows(multiSampleFeatures, cohortPercentiles);
 
         String sampleId = isSinglePatient() ? mCommonPrepConfig.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
-        String outputFile = checkAddDirSeparator(mCommonPrepConfig.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv";
+        String outputFile = checkAddDirSeparator(mCommonPrepConfig.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
         writeToFile(outputFile, visDataEntries);
     }
 
