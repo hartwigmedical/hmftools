@@ -24,22 +24,13 @@ public final class DriverCatalogFile
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
-    // backwards compatibility for v5.32 and earlier
-    private static final String OLD_SOMATIC_EXTENSION = ".driver.catalog.somatic.tsv";
-    private static final String OLD_GERMLINE_EXTENSION = ".driver.catalog.germline.tsv";
-
     private static final String SOMATIC_EXTENSION = ".purple.driver.catalog.somatic.tsv";
     private static final String GERMLINE_EXTENSION = ".purple.driver.catalog.germline.tsv";
 
     public static String generateFilename(final String basePath, final String sample, boolean isSomatic)
     {
         // backwards compatible for reading
-        String filename = basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        return basePath + File.separator + sample + (isSomatic ? OLD_SOMATIC_EXTENSION : OLD_GERMLINE_EXTENSION);
+        return basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
     }
 
     public static String generateFilenameForWriting(final String basePath, final String sample, boolean isSomatic)
