@@ -24,13 +24,15 @@ public class FeaturePrep
 
     public SampleFeatures prepSample(SampleType sampleType, String sampleId)
     {
-        QC_LOGGER.info("Extracting sample data: {}", sampleId);
+        QC_LOGGER.info("Extracting sample data - sampleType({}) sample({})", sampleType, sampleId);
 
         List<Feature> features = new ArrayList<>();
 
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
         for(CategoryPrep categoryPrep : categoryPreps)
         {
+            QC_LOGGER.debug("sampleType({}) sample({}) - extracting category({})", sampleType, sampleId, categoryPrep.name());
+
             CategoryPrepTask task = new CategoryPrepTask(categoryPrep, sampleId, sampleType, mConfig.AllowMissingInput);
 
             task.run();

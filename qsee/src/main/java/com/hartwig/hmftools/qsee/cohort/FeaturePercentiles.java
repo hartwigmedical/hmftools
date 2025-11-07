@@ -10,6 +10,8 @@ public class FeaturePercentiles
     private final double[] mPercentiles;
     private final double[] mRefValues;
 
+    private PercentileTransformer mTransformer = null;
+
     public FeaturePercentiles(SampleType sampleType, FeatureKey featureKey, double[] percentiles, double[] refValues)
     {
         mSampleType = sampleType;
@@ -22,4 +24,12 @@ public class FeaturePercentiles
     public FeatureKey featureKey() { return mFeatureKey; }
     public double[] percentiles() { return mPercentiles; }
     public double[] refValues() { return mRefValues; }
+
+    public PercentileTransformer transformer()
+    {
+        if(mTransformer == null)
+            mTransformer = PercentileTransformer.fromPrefitData(mPercentiles, mRefValues);
+
+        return mTransformer;
+    }
 }

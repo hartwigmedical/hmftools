@@ -44,6 +44,19 @@ public class CategoryPrepTask implements Runnable
         mLogPrefix = logPrefix(sampleType, categoryPrep);
     }
 
+    public CategoryPrepTask(CategoryPrep categoryPrep, String sampleId, SampleType sampleType, boolean allowMissingInput)
+    {
+        mCategoryPrep = categoryPrep;
+        mSampleId = sampleId;
+        mSampleIndex = 0;
+        mTotalSampleCount = 0;
+        mSampleType = sampleType;
+        mSampleFeatureMatrix = null;
+        mAllowMissingInput = allowMissingInput;
+
+        mLogPrefix = logPrefix(sampleType, categoryPrep);
+    }
+
     public static String logPrefix(SampleType sampleType, CategoryPrep categoryPrep)
     {
         return String.format("sampleType(%s) category(%s) -", sampleType, categoryPrep.name());
