@@ -51,7 +51,7 @@ public class DeletionDrivers
         boolean checkQcStatus = qcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)
                 || qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
 
-        Map<String,DriverGene> deletionGenes = panel.deletionTargets().stream()
+        Map<String,DriverGene> deletionGenes = panel.driverGenes().stream()
                 .filter(x -> x.reportDeletion() || x.reportHetDeletion())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
 

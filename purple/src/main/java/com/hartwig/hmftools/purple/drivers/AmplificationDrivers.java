@@ -32,7 +32,7 @@ public final class AmplificationDrivers
     {
         List<DriverCatalog> result = Lists.newArrayList();
 
-        Map<String,DriverGene> amplificationDriverGenes = panel.amplificationTargets().stream()
+        Map<String,DriverGene> amplificationDriverGenes = panel.driverGenes().stream()
                 .filter(x -> x.reportAmplification())
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
 
