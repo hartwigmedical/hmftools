@@ -151,7 +151,6 @@ public class ReportGeneratorTestApplication
                         .allSomaticCopyNumbers(Lists.newArrayList())
                         .allSomaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().allSomaticGeneCopyNumbers(),
                                 report.purple().somaticDrivers()))
-                        .allSomaticGainsDels(report.purple().reportableSomaticGainsDels())
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())

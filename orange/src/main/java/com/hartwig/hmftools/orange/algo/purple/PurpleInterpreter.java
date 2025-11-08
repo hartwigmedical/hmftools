@@ -93,7 +93,6 @@ public class PurpleInterpreter
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
         List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
 
-        List<PurpleGainDeletion> allSomaticGainsDels = extractAllGainsDels(purple.allSomaticGeneCopyNumbers());
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
@@ -144,7 +143,6 @@ public class PurpleInterpreter
                 .reportableGermlineVariants(reportableGermlineVariants)
                 .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
                 .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
-                .allSomaticGainsDels(allSomaticGainsDels)
                 .reportableSomaticGainsDels(reportableSomaticGainsDels)
                 .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .allGermlineFullDels(allGermlineFullDels)
@@ -303,45 +301,6 @@ public class PurpleInterpreter
             }
         }
         return reportable;
-    }
-
-    private static List<PurpleGainDeletion> extractAllGainsDels(final List<GeneCopyNumber> allGeneCopyNumbers)
-    {
-        List<DriverCatalog> allGainDels = Lists.newArrayList();
-
-        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
-        {
-            if(geneCopyNumber.reportedStatus() != ReportedStatus.NONE)
-            {
-                DriverType type = geneCopyNumber.driverType();
-
-                DriverCategory category;
-                LikelihoodMethod likelihoodMethod;
-                boolean biallelic;
-                double likelihood;
-
-                if(type == DriverType.AMP || type == DriverType.PARTIAL_AMP)
-                {
-                    likelihoodMethod = LikelihoodMethod.AMP;
-                    category = ONCO;
-                    biallelic = false;
-                    likelihood = 1;
-                }
-                else
-                {
-                    likelihoodMethod = LikelihoodMethod.DEL;
-                    category = TSG;
-                    biallelic = type == DriverType.DEL;
-                    likelihood = type == DriverType.DEL ? 1 : 0;
-                }
-
-                // TODO: now in Purple, confirm no longer needed by Orange
-                // DriverCatalog driverCatalog = createCopyNumberDriver(category, type, likelihoodMethod, biallelic, likelihood, geneCopyNumber);
-                // allGainDels.add(driverCatalog);
-            }
-        }
-
-        return somaticGainsDelsFromDrivers(allGainDels);
     }
 
     private static final Set<DriverType> AMP_DEL_TYPES = Sets.newHashSet(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL);

@@ -46,9 +46,6 @@ public interface PurpleRecord
     List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
 
     @NotNull
-    List<PurpleGainDeletion> allSomaticGainsDels();
-
-    @NotNull
     List<PurpleGainDeletion> reportableSomaticGainsDels();
 
     @Nullable

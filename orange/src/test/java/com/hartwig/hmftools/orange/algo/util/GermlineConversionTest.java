@@ -104,7 +104,6 @@ public class GermlineConversionTest
         PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().build();
         PurpleVariant suspectGermlineVariant = TestPurpleVariantFactory.builder().build();
 
-        PurpleGainDeletion somaticGainDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleGainDeletion reportableSomaticGainDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleLossOfHeterozygosity reportableGermlineLOH =
@@ -116,7 +115,6 @@ public class GermlineConversionTest
                         .minMinorAlleleCopyNumber(0.9)
                         .maxCopyNumber(2.0)
                         .build();
-        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE2).build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
         PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_MUTATION).build();
@@ -133,7 +131,6 @@ public class GermlineConversionTest
                 .addReportableSomaticVariants(reportableSomaticVariant)
                 .addAllGermlineVariants(germlineVariant, suspectGermlineVariant, reportableGermlineVariant)
                 .addReportableGermlineVariants(reportableGermlineVariant)
-                .addAllSomaticGainsDels(somaticGainDel, reportableSomaticGainDel)
                 .addReportableSomaticGainsDels(reportableSomaticGainDel)
                 .addReportableGermlineFullDels(reportableGermlineFullDel)
                 .addReportableGermlineLossOfHeterozygosities(reportableGermlineLOH)
@@ -155,9 +152,6 @@ public class GermlineConversionTest
         assertEquals(2, converted.reportableSomaticVariants().size());
         assertTrue(converted.reportableSomaticVariants().contains(reportableSomaticVariant));
         assertTrue(converted.reportableSomaticVariants().contains(reportableGermlineVariant));
-
-        assertEquals(3, converted.allSomaticGainsDels().size());
-        assertTrue(converted.allSomaticGainsDels().contains(reportableGermlineFullDel));
 
         assertEquals(2, converted.reportableSomaticGainsDels().size());
         assertTrue(converted.reportableSomaticGainsDels().contains(reportableSomaticGainDel));

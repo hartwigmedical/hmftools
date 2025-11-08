@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.algo.util;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,11 +79,12 @@ public final class GermlineConversion
         if(containsTumorCells)
         {
             mergedTumorStats = mergeTumorStats(purple);
-            mergedDrivers =
-                    mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers(),
-                            purple.reportableGermlineFullDels());
+
+            mergedDrivers = mergeGermlineDriversIntoSomatic(
+                    purple.somaticDrivers(), purple.germlineDrivers(), purple.reportableGermlineFullDels());
+
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
-            mergedAllSomaticGainsDels = mergeGermlineFullDels(purple.reportableGermlineFullDels(), purple.allSomaticGainsDels());
+
             mergedReportableSomaticGainsDels =
                     mergeGermlineFullDels(purple.reportableGermlineFullDels(), purple.reportableSomaticGainsDels());
         }
@@ -91,7 +93,6 @@ public final class GermlineConversion
             mergedTumorStats = purple.tumorStats();
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
-            mergedAllSomaticGainsDels = purple.allSomaticGainsDels();
             mergedReportableSomaticGainsDels = purple.reportableSomaticGainsDels();
         }
 
@@ -105,7 +106,6 @@ public final class GermlineConversion
                 .addAllReportableSomaticVariants(additionalReportableVariants)
                 .allGermlineVariants(null)
                 .reportableGermlineVariants(null)
-                .allSomaticGainsDels(mergedAllSomaticGainsDels)
                 .reportableSomaticGainsDels(mergedReportableSomaticGainsDels)
                 .allGermlineDeletions(null)
                 .allGermlineFullDels(null)

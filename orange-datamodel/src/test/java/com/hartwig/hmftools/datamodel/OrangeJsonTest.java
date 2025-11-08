@@ -213,19 +213,7 @@ public class OrangeJsonTest
         assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);
         assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
-        assertEquals(1, purple.allSomaticGainsDels().size());
-        PurpleGainDeletion gainDel = purple.allSomaticGainsDels().iterator().next();
-        assertEquals("5", gainDel.chromosome());
-        assertEquals("q2.2", gainDel.chromosomeBand());
-        assertEquals("SMAD4", gainDel.gene());
-        assertEquals("ENST00000591126", gainDel.transcript());
-        assertFalse(gainDel.isCanonical());
-        assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
-        assertEquals(0.1, gainDel.minCopies(), EPSILON);
-        assertEquals(1.2, gainDel.maxCopies(), EPSILON);
-
         assertEquals(1, purple.reportableSomaticGainsDels().size());
-        assertEquals(gainDel, purple.reportableSomaticGainsDels().iterator().next());
     }
 
     @NotNull

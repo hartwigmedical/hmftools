@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ public final class ImmuneEscapeInterpreter
     static final Set<String> EPIGENETIC_SETDB1_GENES = Sets.newHashSet("SETDB1");
 
     @NotNull
-    public static ImmuneEscapeRecord interpret(@NotNull PurpleRecord purple, @NotNull LinxRecord linx)
+    public static ImmuneEscapeRecord interpret(final PurpleRecord purple, final LinxRecord linx)
     {
         return ImmutableImmuneEscapeRecord.builder()
                 .hasHlaEscape(anyGeneWithLOH(purple, HLA_GENES) || anyGeneWithInactivation(purple, linx, HLA_GENES))
@@ -43,7 +44,7 @@ public final class ImmuneEscapeInterpreter
                 .build();
     }
 
-    private static boolean anyGeneWithLOH(@NotNull PurpleRecord purple, @NotNull Set<String> genesToCheck)
+    private static boolean anyGeneWithLOH(final PurpleRecord purple, final Set<String> genesToCheck)
     {
         for(String geneToCheck : genesToCheck)
         {
@@ -56,7 +57,7 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean hasLOH(@NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull String geneToCheck)
+    private static boolean hasLOH(final List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, final String geneToCheck)
     {
         for(PurpleGeneCopyNumber somaticGeneCopyNumber : allSomaticGeneCopyNumbers)
         {
@@ -70,13 +71,13 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean anyGeneWithInactivation(@NotNull PurpleRecord purple, @NotNull LinxRecord linx,
-            @NotNull Set<String> genesToCheck)
+    private static boolean anyGeneWithInactivation(final PurpleRecord purple, final LinxRecord linx,
+            final Set<String> genesToCheck)
     {
         for(String geneToCheck : genesToCheck)
         {
             boolean hasInactivationVariant = hasAnyInactivationVariant(purple.allSomaticVariants(), geneToCheck);
-            boolean hasGeneDeletion = isDeleted(purple.allSomaticGainsDels(), geneToCheck);
+            boolean hasGeneDeletion = isDeleted(purple.reportableSomaticGainsDels(), geneToCheck);
             boolean hasHomozygousDisruption = isHomozygouslyDisrupted(linx.somaticHomozygousDisruptions(), geneToCheck);
 
             if(hasInactivationVariant || hasGeneDeletion || hasHomozygousDisruption)
@@ -87,7 +88,7 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean hasAnyInactivationVariant(@NotNull List<PurpleVariant> allSomaticVariants, @NotNull String geneToCheck)
+    private static boolean hasAnyInactivationVariant(final List<PurpleVariant> allSomaticVariants, final String geneToCheck)
     {
         for(PurpleVariant somaticVariant : allSomaticVariants)
         {
@@ -108,7 +109,7 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isDeleted(@NotNull List<PurpleGainDeletion> allSomaticGainDels, @NotNull String geneToCheck)
+    private static boolean isDeleted(final List<PurpleGainDeletion> allSomaticGainDels, final String geneToCheck)
     {
         for(PurpleGainDeletion somaticGainDel : allSomaticGainDels)
         {
@@ -122,8 +123,8 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isHomozygouslyDisrupted(@NotNull List<LinxHomozygousDisruption> somaticHomozygousDisruptions,
-            @NotNull String geneToCheck)
+    private static boolean isHomozygouslyDisrupted(
+            final List<LinxHomozygousDisruption> somaticHomozygousDisruptions, final String geneToCheck)
     {
         for(LinxHomozygousDisruption somaticHomozygousDisruption : somaticHomozygousDisruptions)
         {
@@ -135,11 +136,11 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean anyGeneWithAmplification(@NotNull PurpleRecord purple, @NotNull Set<String> genesToCheck)
+    private static boolean anyGeneWithAmplification(final PurpleRecord purple, final Set<String> genesToCheck)
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(isAmplified(purple.allSomaticGainsDels(), geneToCheck))
+            if(isAmplified(purple.reportableSomaticGainsDels(), geneToCheck))
             {
                 return true;
             }
@@ -147,7 +148,7 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isAmplified(@NotNull List<PurpleGainDeletion> somaticGainDels, @NotNull String geneToCheck)
+    private static boolean isAmplified(final List<PurpleGainDeletion> somaticGainDels, final String geneToCheck)
     {
         for(PurpleGainDeletion somaticGainDel : somaticGainDels)
         {
