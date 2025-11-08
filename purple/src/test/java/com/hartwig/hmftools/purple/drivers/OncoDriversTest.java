@@ -10,7 +10,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;

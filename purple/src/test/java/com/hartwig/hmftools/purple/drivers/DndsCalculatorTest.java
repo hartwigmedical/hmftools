@@ -5,18 +5,10 @@ import static com.hartwig.hmftools.purple.drivers.DndsCalculator.probabilityDriv
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
-import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikelihood;
-import com.hartwig.hmftools.purple.DriverGeneResource;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 

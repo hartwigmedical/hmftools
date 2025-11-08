@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.driver.DriverType;
