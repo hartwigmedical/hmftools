@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.seqtech;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.isValidDnaBase;
@@ -30,9 +31,13 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.STRAND_BIAS_CALCS;
 import com.hartwig.hmftools.sage.common.Microhomology;
+import com.hartwig.hmftools.sage.common.ReadCigarInfo;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public final class UltimaUtils

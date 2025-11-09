@@ -4,7 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.collapseCigarOps;
+import static com.hartwig.hmftools.common.bam.ReadCigarState.moveToRefPosition;
 
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -16,6 +18,7 @@ import java.util.stream.IntStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.ReadCigarState;
 import com.hartwig.hmftools.common.utils.IntPair;
 import com.hartwig.hmftools.sage.common.ReadCigarInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -27,6 +30,146 @@ import htsjdk.samtools.CigarOperator;
 
 public class UltimaCoreExtender
 {
+    public static ReadCigarInfo extendUltimaCoreNew(
+            final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
+            final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize, final boolean inAppendMode)
+    {
+        // move to the start of the core
+        ReadCigarState lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
+        ReadCigarState upperState = new ReadCigarState(lowerState);
+
+        moveToRefPosition(lowerState, cigarElements, readCigarInfo.CorePositionStart);
+        moveToRefPosition(upperState, cigarElements, readCigarInfo.CorePositionEnd);
+
+        if(!lowerState.isValid() || lowerState.RefPosition != readCigarInfo.CorePositionStart)
+            return null;
+
+        if(!upperState.isValid() || upperState.RefPosition != readCigarInfo.CorePositionEnd)
+            return null;
+
+        findCoreExtension(readBases, refSequence, cigarElements, lowerState, false);
+        findCoreExtension(readBases, refSequence, cigarElements, upperState, true);
+
+        if(!lowerState.isValid() || !upperState.isValid())
+            return null;
+
+        int corePositionStart = lowerState.RefPosition;
+        int corePositionEnd = upperState.RefPosition;
+
+        findFlankIndex(lowerState, cigarElements, flankSize, false);
+        findFlankIndex(upperState, cigarElements, flankSize, true);
+
+        if(!lowerState.isValid() && inAppendMode)
+        {
+            lowerState.resetValid();
+            moveState(lowerState, cigarElements, true);
+        }
+
+        if(!upperState.isValid() && inAppendMode)
+        {
+            upperState.resetValid();
+            moveState(upperState, cigarElements, false);
+        }
+
+        if(!lowerState.isValid() || !upperState.isValid())
+            return null;
+
+        // positions may be an unclipped positions if the required indices fall in soft-clips
+        int flankPositionStart = lowerState.RefPosition;
+        int flankIndexStart = lowerState.ReadIndex;
+
+        int flankPositionEnd = upperState.RefPosition;
+        int flankIndexEnd = upperState.ReadIndex;
+
+        // build a new cigar between these 2 boundaries
+        List<CigarElement> newCigarElements = buildReadCigar(new ReadCigarState(lowerState), cigarElements, upperState.RefPosition);
+
+        return new ReadCigarInfo(
+                readAlignmentStart, newCigarElements, flankPositionStart, flankPositionEnd, corePositionStart, corePositionEnd,
+                flankIndexStart, flankIndexEnd);
+    }
+
+    private static void moveState(final ReadCigarState state, final List<CigarElement> cigarElements, boolean moveUp)
+    {
+        ReadCigarState.moveState(state, cigarElements, moveUp);
+
+        if(state.operator() == S)
+            state.setInvalid();
+    }
+
+    private static void findCoreExtension(
+            final byte[] readBases, final RefSequence refSequence, final List<CigarElement> cigarElements,
+            final ReadCigarState state, boolean searchUp)
+    {
+        byte readBase = readBases[state.ReadIndex];
+        byte refBase = refSequence.base(state.RefPosition);
+
+        while(true)
+        {
+            byte nextReadBase, nextRefBase;
+
+            moveState(state, cigarElements, searchUp);
+
+            if(!state.isValid())
+                return;
+
+            nextReadBase = readBases[state.ReadIndex];
+            nextRefBase = refSequence.base(state.RefPosition);
+
+            if(validExtensionPoint(readBase, nextReadBase, refBase, nextRefBase, state.operator()))
+                break;
+        }
+    }
+
+    private static boolean validExtensionPoint(byte readBase, byte nextReadBase, byte refBase, byte nextRefBase, final CigarOperator cigarType)
+    {
+        return readBase != nextReadBase && refBase != nextRefBase && nextReadBase == nextRefBase && cigarType == CigarOperator.M;
+    }
+
+    private static void findFlankIndex(
+            final ReadCigarState state, final List<CigarElement> cigarElements, final int requiredFlankLength, boolean moveUp)
+    {
+        int flankLength = 0;
+
+        while(flankLength < requiredFlankLength || state.Element.getOperator() == I)
+        {
+            moveState(state, cigarElements, moveUp);
+            ++flankLength;
+
+            if(!state.isValid())
+                break;
+        }
+    }
+
+    private static List<CigarElement> buildReadCigar(
+            final ReadCigarState state, final List<CigarElement> cigarElements, final int flankPositionEnd)
+    {
+        List<CigarElement> elements = Lists.newArrayList();
+        int cigarLength = 1;
+        CigarOperator cigarOperator = state.operator();
+
+        while(state.RefPosition < flankPositionEnd)
+        {
+            moveState(state, cigarElements, true);
+
+            if(state.operator() == cigarOperator)
+            {
+                ++cigarLength;
+            }
+            else
+            {
+                elements.add(new CigarElement(cigarLength, cigarOperator));
+                cigarLength = 1;
+                cigarOperator = state.operator();
+            }
+        }
+
+        elements.add(new CigarElement(cigarLength, cigarOperator));
+        return elements;
+    }
+
+    // OLD METHODS
+
     @VisibleForTesting
     public static final byte MISSING_BASE = -1;
     @VisibleForTesting

@@ -315,4 +315,155 @@ public class CigarUtilsTest
         assertEquals(S, cigarElements.get(0).getOperator());
         assertEquals(8, cigarElements.get(1).getLength());
     }
+
+    @Test
+    public void testReadCigarState()
+    {
+        List<CigarElement> cigarElements = Lists.newArrayList(
+                new CigarElement(2, S),
+                new CigarElement(2, M),
+                new CigarElement(1, I),
+                new CigarElement(2, M),
+                new CigarElement(1, D),
+                new CigarElement(2, M),
+                new CigarElement(2, S));
+
+        // pos 	    12   34 5 67
+        // index  0123 4 56   7890
+        // cigar  SSMM I MM D MMSS
+        ReadCigarState state = new ReadCigarState(1, 0, cigarElements.get(0), 0, 0);
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(1, state.ReadIndex);
+        assertEquals(S, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(2, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(2, state.RefPosition);
+        assertEquals(3, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(2, state.RefPosition);
+        assertEquals(4, state.ReadIndex);
+        assertEquals(I, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(3, state.RefPosition);
+        assertEquals(5, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(4, state.RefPosition);
+        assertEquals(6, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(5, state.RefPosition);
+        assertEquals(6, state.ReadIndex);
+        assertEquals(D, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(6, state.RefPosition);
+        assertEquals(7, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(7, state.RefPosition);
+        assertEquals(8, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(7, state.RefPosition);
+        assertEquals(9, state.ReadIndex);
+        assertEquals(S, state.operator());
+
+        // now back down
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(7, state.RefPosition);
+        assertEquals(8, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(6, state.RefPosition);
+        assertEquals(7, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(5, state.RefPosition);
+        assertEquals(7, state.ReadIndex);
+        assertEquals(D, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(4, state.RefPosition);
+        assertEquals(6, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(3, state.RefPosition);
+        assertEquals(5, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(3, state.RefPosition);
+        assertEquals(4, state.ReadIndex);
+        assertEquals(I, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(2, state.RefPosition);
+        assertEquals(3, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(2, state.ReadIndex);
+        assertEquals(M, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(1, state.ReadIndex);
+        assertEquals(S, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, false);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(0, state.ReadIndex);
+        assertEquals(S, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(1, state.ReadIndex);
+        assertEquals(S, state.operator());
+
+        ReadCigarState.moveState(state, cigarElements, true);
+        assertTrue(state.isValid());
+        assertEquals(1, state.RefPosition);
+        assertEquals(2, state.ReadIndex);
+        assertEquals(M, state.operator());
+    }
 }
