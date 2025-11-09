@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
-import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -179,20 +178,21 @@ public class VariantReadContextBuilder
             // long inserts with S elements won't work properly in append mode with core extension
             boolean skippableLongInsert = SageConfig.AppendMode && isLongInsert(variant);
 
-            UltimaCoreExtender.UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(
+            ReadCigarInfo newReadCigarInfo = extendUltimaCore(
                     read.getReadBases(), refSequence,
                     softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
                     readCigarInfo, mFlankSize, SageConfig.AppendMode);
 
-            if(!skippableLongInsert && (ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid()))
-                return null;
-
-            if(ultimaCoreInfo != null)
+            if(newReadCigarInfo != null || skippableLongInsert)
             {
-                readCoreStart = ultimaCoreInfo.ReadCoreStart;
-                readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
-                readCigarInfo = ultimaCoreInfo.CigarInfo;
+                readCigarInfo = newReadCigarInfo;
+                readCoreStart = readCigarInfo.FlankIndexStart + (readCigarInfo.CorePositionStart - readCigarInfo.FlankPositionStart);
+                readCoreEnd = readCigarInfo.FlankIndexEnd - (readCigarInfo.FlankPositionEnd - readCigarInfo.CorePositionEnd);
+            }
+            else
+            {
+                return null;
             }
         }
 

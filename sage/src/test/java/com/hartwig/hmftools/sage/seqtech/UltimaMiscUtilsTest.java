@@ -2,24 +2,33 @@ package com.hartwig.hmftools.sage.seqtech;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecordUnpaired;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.sage.common.TestUtils.setUltimaSequencing;
+import static com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender.extendUltimaCore;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isAdjacentToLongHomopolymer;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isMsiIndelOfType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.common.ReadCigarInfo;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
@@ -27,6 +36,7 @@ import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import org.junit.After;
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class UltimaMiscUtilsTest
@@ -110,13 +120,170 @@ public class UltimaMiscUtilsTest
     }
 
     @Test
+    public void testCoreExtensionBasic()
+    {
+        // pos / index                10             20             30        40
+        //                  0123456789012345     67890     12345678901234567890123456789
+        String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
+        String readBases = refBases.substring(0, 17) + "G" + refBases.substring(18);
+
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
+
+        int readAlignmentStart = 100;
+
+        List<CigarElement> cigarElements = Lists.newArrayList(
+                new CigarElement(39, M));
+
+        ReadCigarInfo readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, cigarElements, 106, 130, 116, 120,
+                6, 30);
+
+        ReadCigarInfo newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(123, newReadCigarInfo.CorePositionEnd);
+        assertEquals(33, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("31M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // extend further due to non-matching bases from SNVs
+        // pos / index         10             20             30        40
+        //           0123456789012345     67890     12345678901234567890123456789
+        refBases =  "AACCGGTTAACCAGGT" + "TACAT" + "TTTACCGGTTAACCGGTT";
+        readBases = "AACCGGTTAACCGTTT" + "TAGAT" + "TTAGCCGGTTAACCGGTT"; // SNV at start and longer HP, then a shorter HP and another SNV
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(1, newReadCigarInfo.FlankIndexStart);
+        assertEquals(101, newReadCigarInfo.FlankPositionStart);
+        assertEquals(111, newReadCigarInfo.CorePositionStart);
+        assertEquals(125, newReadCigarInfo.CorePositionEnd);
+        assertEquals(35, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(135, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("35M", cigarElementsToStr(newReadCigarInfo.Cigar));
+    }
+
+    @Test
+    public void testCoreExtensionIndels()
+    {
+        // pos / index                10             20             30        40
+        //                  0123456789012345     67890     12345678901234567890123456789
+        String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
+
+
+        // pos / index                10  I          20         D        30        40
+        //                  01234567890123456     78901     23     45678901234567890123456789
+        String readBases = "AACCGGTTAACCGGGTT" + "TAGAT" + "TT" + "ACCGGTTAACCGGTT"; // has inserted G before core and deleted A after core
+
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
+
+        int readAlignmentStart = 100;
+
+        List<CigarElement> cigarElements = Lists.newArrayList(
+                new CigarElement(14, M),
+                new CigarElement(1, I),
+                new CigarElement(9, M),
+                new CigarElement(1, D),
+                new CigarElement(15, M));
+
+        ReadCigarInfo readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, cigarElements, 106, 130, 116, 120,
+                6, 30);
+
+        ReadCigarInfo newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(124, newReadCigarInfo.CorePositionEnd);
+        assertEquals(34, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(134, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("11M1I9M1D11M", cigarElementsToStr(newReadCigarInfo.Cigar));
+    }
+
+    @Test
+    public void testCoreExtensionSoftClips()
+    {
+        // pos / index                10             20             30        40
+        //                  0123456789012345     67890     12345678901234567890123456789
+        String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
+        String readBases = refBases.substring(0, 17) + "G" + refBases.substring(18);
+
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
+
+        int readAlignmentStart = 108;
+
+        List<CigarElement> cigarElements = Lists.newArrayList(
+                new CigarElement(8, S),
+                new CigarElement(31, M));
+
+        ReadCigarInfo readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, cigarElements, 106, 130, 116, 120,
+                6, 30);
+
+        ReadCigarInfo newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNull(newReadCigarInfo);
+
+        // and now on the right in the core
+        readAlignmentStart = 100;
+
+        cigarElements = Lists.newArrayList(
+                new CigarElement(22, M),
+                new CigarElement(17, S));
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNull(newReadCigarInfo);
+
+        // invalid in the flanks
+        cigarElements = Lists.newArrayList(
+                new CigarElement(28, M),
+                new CigarElement(11, S));
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNull(newReadCigarInfo);
+
+        // accept truncated flank in append mode
+        cigarElements = Lists.newArrayList(
+                new CigarElement(28, M),
+                new CigarElement(11, S));
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, true);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(123, newReadCigarInfo.CorePositionEnd);
+        assertEquals(27, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(127, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("25M", cigarElementsToStr(newReadCigarInfo.Cigar));
+    }
+
+    @Test
     public void testBuildContextUltimaNoCoreExtension()
     {
         String middleRefBases = "CTCGGCCTCCCGGAGGTGCCGG";
         String middleReadBases = "CTCGGCCTCCCTGAGGTGCCGG";
         int variantMiddleIndex = 11;
-        int refPaddingSize = 1000;
-        int readPaddingSize = 100;
+        int refPaddingSize = 20;
+        int readPaddingSize = 20;
         String refPadding = "A".repeat(refPaddingSize);
         String readPadding = "A".repeat(readPaddingSize);
         String refBases = refPadding + middleRefBases + refPadding;
@@ -173,7 +340,6 @@ public class UltimaMiscUtilsTest
 
         RefSequence refSequence = new RefSequence(1, refBases.getBytes());
 
-        // SageConfig config = new SageConfig(false, SequencingType.ULTIMA);
         VariantReadContextBuilder readContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
         VariantReadContext readContext = readContextBuilder.buildContext(variant, read, varIndexInRead, refSequence);
