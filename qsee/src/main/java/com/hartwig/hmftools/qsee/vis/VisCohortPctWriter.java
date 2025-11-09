@@ -77,11 +77,11 @@ public class VisCohortPctWriter
             {
                 StringJoiner line = new StringJoiner(TSV_DELIM);
 
-                line.add(namedPercentiles.sampleType().name());
-                line.add(namedPercentiles.featureKey().sourceTool().name());
-                line.add(namedPercentiles.featureKey().type().name());
-                line.add(namedPercentiles.featureKey().name());
-
+                FeatureKey featureKey = namedPercentiles.featureKey();
+                line.add(namedPercentiles.sampleType().toString());
+                line.add(featureKey.sourceTool().toString());
+                line.add(featureKey.type().toString());
+                line.add(featureKey.name());
 
                 for(NamedPercentile namedPercentile : namedPercentiles.pctRefValues().keySet())
                 {

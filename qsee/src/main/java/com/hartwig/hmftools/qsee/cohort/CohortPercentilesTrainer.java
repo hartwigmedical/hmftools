@@ -140,9 +140,9 @@ public class CohortPercentilesTrainer
                 SampleType sampleType = featurePercentiles.sampleType();
 
                 StringJoiner line = new StringJoiner(TSV_DELIM);
-                line.add(sampleType.name());
+                line.add(sampleType.toString());
                 line.add(sourceTool.toString());
-                line.add(featureType.name());
+                line.add(featureType.toString());
                 line.add(featureKey.name());
 
                 double[] refValues = featurePercentiles.refValues();
