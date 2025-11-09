@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.qsee.cohort;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
@@ -34,19 +31,5 @@ public class FeaturePercentiles
             mTransformer = PercentileTransformer.fromPrefitData(mPercentiles, mRefValues);
 
         return mTransformer;
-    }
-
-    public Map<NamedPercentile, Double> getNamedPercentileValues()
-    {
-        Map<NamedPercentile, Double> pctFeatureValueMap = new EnumMap<>(NamedPercentile.class);
-
-        for(NamedPercentile namedPercentile : NamedPercentile.values())
-        {
-            PercentileTransformer transformer = transformer();
-            double featureValue = transformer.percentileToFeatureValue(namedPercentile.percentile());
-            pctFeatureValueMap.put(namedPercentile, featureValue);
-        }
-
-        return pctFeatureValueMap;
     }
 }
