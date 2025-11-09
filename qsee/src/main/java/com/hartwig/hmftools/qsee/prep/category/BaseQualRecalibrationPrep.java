@@ -27,7 +27,6 @@ import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
-    private final List<ExtendedBqrRecord> mExtendedBqrRecords = new ArrayList<>();
 
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
 
@@ -119,7 +118,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         throw new NoSuchFileException(String.format("BQR file not found (%s or %s) ", reduxBqrFile.getName(), sageBqrFile.getName()));
     }
 
-    private void loadSnvBqrRecords(String sampleId) throws NoSuchFileException
+    private List<ExtendedBqrRecord> loadSnvBqrRecords(String sampleId) throws NoSuchFileException
     {
         String filePath = findBackwardsCompatibleBqrFile(sampleId);
 
@@ -136,7 +135,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
 
         List<ExtendedBqrRecord> extendedBqrRecordsSorted = extendedBqrRecords.stream().sorted(comparator).toList();
 
-        mExtendedBqrRecords.addAll(extendedBqrRecordsSorted);
+        return extendedBqrRecordsSorted;
     }
 
     private static Map<FeatureKey, Double> calcMeanChangeInQualPerGroup(Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups)
@@ -222,12 +221,11 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     @Override
     public List<Feature> extractSampleData(String sampleId) throws NoSuchFileException
     {
-        loadSnvBqrRecords(sampleId);
+        List<ExtendedBqrRecord> extendedBqrRecords = loadSnvBqrRecords(sampleId);
 
         List<Feature> features = new ArrayList<>();
-
-        features.addAll(calcChangeInQualPerOriginalQual(mExtendedBqrRecords));
-        features.addAll(calcChangeInQualPerTrinucContext(mExtendedBqrRecords));
+        features.addAll(calcChangeInQualPerOriginalQual(extendedBqrRecords));
+        features.addAll(calcChangeInQualPerTrinucContext(extendedBqrRecords));
 
         return features;
     }
