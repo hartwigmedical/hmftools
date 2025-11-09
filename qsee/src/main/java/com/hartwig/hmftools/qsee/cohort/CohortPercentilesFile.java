@@ -2,15 +2,14 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
-import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +26,6 @@ public class CohortPercentilesFile
 
     public static final String COL_PERCENTILE_PREFIX = "Pct";
     public static final String COL_PERCENTILE_DELIM = "_";
-
-    public static final DecimalFormat PERCENTILE_FORMAT = new DecimalFormat("0.########");
-    public static final DecimalFormat REF_VALUE_FORMAT  = new DecimalFormat("0.########");
 
     public static CohortPercentiles read(String filename)
     {

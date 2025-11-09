@@ -24,6 +24,7 @@ import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.cohort.FeaturePercentiles;
 import com.hartwig.hmftools.qsee.cohort.PercentileTransformer;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
@@ -127,10 +128,10 @@ public class VisSampleDataPrep
                 line.add(featureKey.type().name());
                 line.add(featureKey.name());
 
-                String featureValue = CohortPercentilesFile.REF_VALUE_FORMAT.format(entry.feature().value());
+                String featureValue = QseeFileCommon.DECIMAL_FORMAT.format(entry.feature().value());
                 line.add(featureValue);
 
-                String percentileInCohort = CohortPercentilesFile.PERCENTILE_FORMAT.format(entry.percentileInCohort());
+                String percentileInCohort = QseeFileCommon.DECIMAL_FORMAT.format(entry.percentileInCohort());
                 line.add(percentileInCohort);
 
                 writer.write(line.toString());

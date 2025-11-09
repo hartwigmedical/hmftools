@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -147,7 +148,7 @@ public class CohortPercentilesTrainer
                 double[] refValues = featurePercentiles.refValues();
 
                 String refValuesStr = Arrays.stream(refValues)
-                        .mapToObj(CohortPercentilesFile.REF_VALUE_FORMAT::format)
+                        .mapToObj(QseeFileCommon.DECIMAL_FORMAT::format)
                         .collect(Collectors.joining(TSV_DELIM));
 
                 line.add(refValuesStr);
@@ -180,7 +181,7 @@ public class CohortPercentilesTrainer
 
     private List<String> getPercentileNames()
     {
-        return Arrays.stream(mPercentiles).mapToObj(CohortPercentilesFile.PERCENTILE_FORMAT::format).toList();
+        return Arrays.stream(mPercentiles).mapToObj(QseeFileCommon.DECIMAL_FORMAT::format).toList();
     }
 
     private String getPercentilesString()
@@ -190,19 +191,19 @@ public class CohortPercentilesTrainer
         if(mPercentiles.length <= SHOW_ALL_THRESHOLD)
         {
             return Arrays.stream(mPercentiles)
-                    .mapToObj(CohortPercentilesFile.PERCENTILE_FORMAT::format)
+                    .mapToObj(QseeFileCommon.DECIMAL_FORMAT::format)
                     .collect(Collectors.joining(", "));
         }
         else
         {
             return String.format(
                     "%s, %s, %s, ..., %s, %s, %s",
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[0]),
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[1]),
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[2]),
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 3]),
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
-                    CohortPercentilesFile.PERCENTILE_FORMAT.format(mPercentiles[mPercentiles.length - 1])
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[0]),
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[1]),
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[2]),
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[mPercentiles.length - 3]),
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[mPercentiles.length - 2]),
+                    QseeFileCommon.DECIMAL_FORMAT.format(mPercentiles[mPercentiles.length - 1])
             );
         }
     }

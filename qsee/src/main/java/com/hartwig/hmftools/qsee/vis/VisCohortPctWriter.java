@@ -23,6 +23,7 @@ import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.cohort.FeaturePercentiles;
 import com.hartwig.hmftools.qsee.cohort.NamedPercentile;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
@@ -85,7 +86,7 @@ public class VisCohortPctWriter
                 for(NamedPercentile namedPercentile : namedPercentiles.pctRefValues().keySet())
                 {
                     double featureValue = namedPercentiles.pctRefValues().get(namedPercentile);
-                    String featureValueStr = CohortPercentilesFile.REF_VALUE_FORMAT.format(featureValue);
+                    String featureValueStr = QseeFileCommon.DECIMAL_FORMAT.format(featureValue);
                     line.add(featureValueStr);
                 }
                 writer.write(line.toString());
