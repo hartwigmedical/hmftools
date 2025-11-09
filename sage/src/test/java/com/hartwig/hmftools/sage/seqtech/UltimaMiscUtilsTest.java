@@ -324,8 +324,8 @@ public class UltimaMiscUtilsTest
         String middleRefBases = "CTTTTTTTTTTAATTGCAA";
         String middleReadBases = "CTTTTTTTTTAATTGGCAA";
         int variantMiddleIndex = 14;
-        int refPaddingSize = 1000;
-        int readPaddingSize = 100;
+        int refPaddingSize = 20;
+        int readPaddingSize = 20;
         String refBases = "A".repeat(refPaddingSize) + middleRefBases + "T".repeat(refPaddingSize);
         String readBases = "A".repeat(readPaddingSize) + middleReadBases + "T".repeat(readPaddingSize);
 

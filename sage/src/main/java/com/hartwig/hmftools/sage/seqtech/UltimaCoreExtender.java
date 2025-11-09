@@ -55,6 +55,7 @@ public class UltimaCoreExtender
 
             if(!lowerState.isValid() && inAppendMode)
             {
+                // move to the first aligned base, ie up from the soft-clip or end of the read
                 lowerState.resetValid();
                 moveState(lowerState, cigarElements, true);
             }
@@ -64,6 +65,7 @@ public class UltimaCoreExtender
         }
         else
         {
+            // keep the existing flank position
             lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
             moveToRefPosition(lowerState, cigarElements, readCigarInfo.FlankPositionStart);
         }
@@ -99,7 +101,7 @@ public class UltimaCoreExtender
     {
         ReadCigarState.moveState(state, cigarElements, moveUp);
 
-        if(state.operator() == S)
+        if(state.operator() == S) // for this routine, the adjusted core and flanks cannot be within a soft-clip
             state.setInvalid();
     }
 
