@@ -34,6 +34,7 @@ public class VisSampleDataPrep
 {
     private final VisPrepConfig mVisPrepConfig;
 
+    private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PERCENTILE_IN_COHORT = "PercentileInCohort";
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
@@ -80,7 +81,8 @@ public class VisSampleDataPrep
 
                 FeaturePercentiles featurePercentiles = cohortPercentiles.getFeaturePercentiles(sampleFeatures.sampleType(), feature.key());
                 PercentileTransformer transformer = featurePercentiles.transformer();
-                double percentileInCohort = transformer.featureValueToPercentile(feature.value());
+                double featureValue = feature.value();
+                double percentileInCohort = transformer.featureValueToPercentile(featureValue);
 
                 VisSampleData visData = new VisSampleData(
                         sampleFeatures.sampleId(),
@@ -108,6 +110,7 @@ public class VisSampleDataPrep
             header.add(COL_SOURCE_TOOL);
             header.add(COL_FEATURE_TYPE);
             header.add(COL_FEATURE_NAME);
+            header.add(COL_FEATURE_VALUE);
             header.add(COL_PERCENTILE_IN_COHORT);
 
             writer.write(header.toString());
@@ -123,6 +126,9 @@ public class VisSampleDataPrep
                 line.add(featureKey.sourceTool().name());
                 line.add(featureKey.type().name());
                 line.add(featureKey.name());
+
+                String featureValue = CohortPercentilesFile.REF_VALUE_FORMAT.format(entry.feature().value());
+                line.add(featureValue);
 
                 String percentileInCohort = CohortPercentilesFile.PERCENTILE_FORMAT.format(entry.percentileInCohort());
                 line.add(percentileInCohort);
