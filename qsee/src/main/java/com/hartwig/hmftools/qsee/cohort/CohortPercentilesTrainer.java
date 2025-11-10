@@ -96,20 +96,35 @@ public class CohortPercentilesTrainer
         List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mCommonPrepConfig).createCategoryPreps();
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
 
+        boolean writeCohortFeatures = mTrainConfig.WriteCohortFeatures;
+        CohortFeaturesWriter cohortFeaturesWriter = null;
+        if(writeCohortFeatures)
+            cohortFeaturesWriter = new CohortFeaturesWriter(mCommonPrepConfig, sampleType);
+
         for(CategoryPrep categoryPrep : categoryPreps)
         {
-            QC_LOGGER.info("Extracting cohort data  - sampleType({}) category({})", sampleType, categoryPrep.name());
+            QC_LOGGER.info("Extracting cohort features - sampleType({}) category({})", sampleType, categoryPrep.name());
             FeaturePrep featurePrep = new FeaturePrep(mCommonPrepConfig);
+
             FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new ConcurrentHashMap<>(), sampleIds);
             featurePrep.prepCohortCategory(categoryPrep, sampleType, sampleFeatureMatrix);
 
             sampleFeatureMatrix.sortFeatureKeys();
+
+            if(writeCohortFeatures)
+            {
+                QC_LOGGER.info("Writing cohort features - sampleType({}) category({})", sampleType, categoryPrep.name());
+                cohortFeaturesWriter.writeCategory(sampleFeatureMatrix);
+            }
 
             QC_LOGGER.info("Calculating percentiles - sampleType({}) category({})", sampleType, categoryPrep.name());
             List<FeaturePercentiles> categoryPercentiles = calcPercentiles(sampleFeatureMatrix, sampleType);
 
             cohortPercentiles.addAll(categoryPercentiles);
         }
+
+        if(writeCohortFeatures)
+            cohortFeaturesWriter.close();
 
         return cohortPercentiles;
     }

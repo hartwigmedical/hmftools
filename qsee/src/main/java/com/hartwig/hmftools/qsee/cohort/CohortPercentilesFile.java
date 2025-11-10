@@ -3,6 +3,7 @@ package com.hartwig.hmftools.qsee.cohort;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
@@ -22,7 +23,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class CohortPercentilesFile
 {
-    public static final String COHORT_PERCENTILES_FILE_SUFFIX = "cohort." + QSEE_FILE_ID + ".percentiles.tsv.gz";
+    public static final String COHORT_PERCENTILES_FILE_SUFFIX = COHORT_FILE_ID + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
 
     public static final String COL_PERCENTILE_PREFIX = "Pct";
     public static final String COL_PERCENTILE_DELIM = "_";

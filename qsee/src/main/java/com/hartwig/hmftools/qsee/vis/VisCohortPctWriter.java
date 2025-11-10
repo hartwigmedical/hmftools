@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
+import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
@@ -106,7 +107,9 @@ public class VisCohortPctWriter
 
         List<VisFeatureNamedPct> namedPercentilesList = getNamedPercentiles(cohortPercentiles);
 
-        String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) + "cohort." + QSEE_FILE_ID + ".vis.named_percentiles.tsv.gz";
+        String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) +
+                COHORT_FILE_ID + "." + QSEE_FILE_ID + ".vis.named_percentiles.tsv.gz";
+
         writeToFile(outputFile, namedPercentilesList);
     }
 
