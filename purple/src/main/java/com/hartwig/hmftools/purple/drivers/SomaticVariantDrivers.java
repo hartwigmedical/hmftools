@@ -33,13 +33,13 @@ public class SomaticVariantDrivers
     private final OncoDrivers mOncoDrivers;
     private final TsgDrivers mTsgDrivers;
 
-    public SomaticVariantDrivers(final DriverGeneResource panel)
+    public SomaticVariantDrivers(final DriverGeneResource driverGeneResource)
     {
         mVariantTypeCounts = Maps.newHashMap();
         mVariantTypeCountsBiallelic = Maps.newHashMap();
 
-        mOncoDrivers = new OncoDrivers(panel);
-        mTsgDrivers = new TsgDrivers(panel);
+        mOncoDrivers = new OncoDrivers(driverGeneResource);
+        mTsgDrivers = new TsgDrivers(driverGeneResource);
     }
 
     public void overrideVariantCounts(final Map<VariantType,Integer> variantTypeCounts, final Map<VariantType,Integer> biallelicCounts)

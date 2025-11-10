@@ -77,6 +77,7 @@ public final class GeneCopyNumberFile
                 .add("depthWindowCount")
                 .add("gcContent")
                 .add("reportedStatus")
+                .add("driverType")
                 .toString();
     }
 

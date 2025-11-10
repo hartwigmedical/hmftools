@@ -59,20 +59,6 @@ public class DeletionDrivers
             if(driverGene == null)
                 continue;
 
-            DriverType driverType = DriverType.UNKNOWN;
-
-            if(driverGene.reportDeletion() && geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
-            {
-                driverType = DEL;
-            }
-            else if(driverGene.reportHetDeletion() && ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
-            {
-                double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
-
-                if(adjustedMinCopyNumber < driverGene.hetDeletionThreshold())
-                    driverType = HET_DEL;
-            }
-
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
             boolean isShort = geneCopyNumber.minRegionBases() < SHORT_DEL_LENGTH;
 
@@ -99,13 +85,38 @@ public class DeletionDrivers
                 }
             }
 
-            geneCopyNumber.setDriverType(driverType);
+            DriverType driverType = DriverType.UNKNOWN;
+            ReportedStatus reportedStatus = ReportedStatus.NONE;
 
-            ReportedStatus reportedStatus = driverType != UNKNOWN ? ReportedStatus.REPORTED : ReportedStatus.NONE;
-            geneCopyNumber.setReportedStatus(reportedStatus); // candidates not yet supported
+            if(geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
+            {
+                driverType = DEL;
+
+                if(driverGene.reportDeletion())
+                    reportedStatus = ReportedStatus.REPORTED;
+            }
+            else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
+            {
+                double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
+
+                if(adjustedMinCopyNumber < driverGene.hetDeletionThreshold())
+                {
+                    driverType = HET_DEL;
+
+                    if(driverGene.reportHetDeletion())
+                        reportedStatus = ReportedStatus.REPORTED;
+                }
+            }
+
+            if(driverType == UNKNOWN)
+                continue;
+
+            geneCopyNumber.setDriverType(driverType);
+            geneCopyNumber.setReportedStatus(reportedStatus);
 
             boolean biallelic = driverType == DEL;
             double likelihood = driverType == DEL ? 1 : 0;
+
             DriverCatalog driverCatalog = createCopyNumberDriver(
                     driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, likelihood, geneCopyNumber, reportedStatus);
 

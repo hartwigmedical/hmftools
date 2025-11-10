@@ -28,9 +28,9 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class OncoDrivers extends SomaticVariantDriverFinder
 {
-    public OncoDrivers(final DriverGeneResource genePanel)
+    public OncoDrivers(final DriverGeneResource driverGeneResource)
     {
-        super(genePanel, DriverCategory.ONCO);
+        super(driverGeneResource, DriverCategory.ONCO);
     }
     
     public List<DriverCatalog> findDrivers(
@@ -39,8 +39,8 @@ public class OncoDrivers extends SomaticVariantDriverFinder
     {
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        int sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
-        int sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
+        int sampleSnvCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
+        int sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
 
         final Map<String,List<SomaticVariant>> codingVariants = mReportableVariants.stream()
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
@@ -64,7 +64,7 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 {
                     // confirm this variant has a reportable effect against the specific transcript or the gene itself
                     DriverCatalog driverRecord = createOncoDriver(
-                            sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber);
+                            sampleSnvCount, sampleIndelCount, dndsLikelihood, geneVariants, geneCopyNumber);
                     driverCatalog.add(driverRecord);
 
                     driverSourceData.add(new DriverSourceData(driverRecord, geneVariants.get(0)));

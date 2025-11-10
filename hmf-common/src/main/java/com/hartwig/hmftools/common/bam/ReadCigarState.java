@@ -64,7 +64,7 @@ public class ReadCigarState
                 mValid ? "" : " invalid");
     }
 
-    // navigation emthods
+    // navigation methods
     public static void moveState(final ReadCigarState state, final List<CigarElement> cigarElements, boolean moveUp)
     {
         // exit on any soft-clipped bases or once at the end of the read's cigar

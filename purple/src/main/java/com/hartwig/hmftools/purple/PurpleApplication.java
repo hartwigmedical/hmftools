@@ -327,7 +327,6 @@ public class PurpleApplication
 
             FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.AllFits);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
         }
         else
@@ -395,6 +394,8 @@ public class PurpleApplication
         {
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);
         }
+
+        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
 
         if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {

@@ -53,5 +53,4 @@ public interface DriverCatalog
     double minCopyNumber();
 
     double maxCopyNumber();
-
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
 import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.createCopyNumberDriver;
 
 import java.util.List;
@@ -45,33 +46,61 @@ public final class AmplificationDrivers
             double ampCopyNumberThreshold = ploidy * driverGene.amplificationRatio();
 
             double geneCopyNummberThreshold = (gender == Gender.MALE) && HumanChromosome._X.matches(geneCopyNumber.chromosome())
-                    ? ampCopyNumberThreshold * 0.5 :  ampCopyNumberThreshold;
+                    ? ampCopyNumberThreshold * 0.5 : ampCopyNumberThreshold;
 
-            DriverType driverType = UNKNOWN;
+            boolean checkPartials = !isTargetRegions || TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName());
 
-            if(geneCopyNumber.minCopyNumber() > geneCopyNummberThreshold)
+            boolean isCandidate = false;
+            DriverType driverType = calcDriverType(geneCopyNumber, geneCopyNummberThreshold, checkPartials);
+
+            if(driverType == UNKNOWN && driverGene.reportAmplification())
             {
-                driverType = DriverType.AMP;
-            }
-            else if(!isTargetRegions || TARGET_REGIONS_PARTIAL_AMP_GENES.contains(geneCopyNumber.geneName()))
-            {
-                if(geneCopyNumber.maxCopyNumber() > geneCopyNummberThreshold)
-                {
-                    driverType = DriverType.PARTIAL_AMP;
-                }
+                double candidateAmpThreshold = geneCopyNummberThreshold * DEFAULT_DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
+                driverType = calcDriverType(geneCopyNumber, candidateAmpThreshold, checkPartials);
+                isCandidate = driverType != UNKNOWN;
             }
 
-            ReportedStatus reportedStatus = driverType != UNKNOWN ? ReportedStatus.REPORTED : ReportedStatus.NONE;
+            if(driverType == UNKNOWN)
+                continue;
+
+            ReportedStatus reportedStatus;
+
+            if(driverGene.reportAmplification())
+            {
+                reportedStatus = isCandidate ? ReportedStatus.CANDIDATE : ReportedStatus.REPORTED;
+            }
+            else
+            {
+                reportedStatus = ReportedStatus.NONE;
+            }
 
             geneCopyNumber.setDriverType(driverType);
             geneCopyNumber.setReportedStatus(reportedStatus);
+            double likelihood = isCandidate ? 0 : 1;
 
             DriverCatalog driverCatalog = createCopyNumberDriver(
-                    DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, 1, geneCopyNumber, reportedStatus);
+                    DriverCategory.ONCO, driverType, LikelihoodMethod.AMP, false, likelihood, geneCopyNumber, reportedStatus);
             result.add(driverCatalog);
         }
 
         return result;
+    }
+
+    private static DriverType calcDriverType(final GeneCopyNumber geneCopyNumber, final double geneCopyNumberThreshold, boolean checkPartials)
+    {
+        if(geneCopyNumber.minCopyNumber() > geneCopyNumberThreshold)
+        {
+            return DriverType.AMP;
+        }
+        else if(checkPartials)
+        {
+            if(geneCopyNumber.maxCopyNumber() > geneCopyNumberThreshold)
+            {
+                return DriverType.PARTIAL_AMP;
+            }
+        }
+
+        return UNKNOWN;
     }
 
     private static boolean supportedByOneSV(final GeneCopyNumber geneCopyNumber)

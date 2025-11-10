@@ -43,36 +43,24 @@ public class DriverGeneResource
             DriverGeneMap.put(driverGene.gene(), driverGene);
         }
 
+        // limit DNDS values to genes in the panel
         List<DndsDriverGeneLikelihood> tsgLikelihoods = DndsDriverGeneLikelihoodFile.fromInputStream(
                 resource("/dnds/dnds_driver_likelihood_tsg.tsv"));
 
-        TsgLikelihoodMap = tsgLikelihoods.stream().collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
+        TsgLikelihoodMap = tsgLikelihoods.stream()
+                .filter(x -> DriverGeneMap.containsKey(x.gene()))
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
 
         List<DndsDriverGeneLikelihood> oncoLikelihoods = DndsDriverGeneLikelihoodFile.fromInputStream(
                 resource("/dnds/dnds_driver_likelihood_onco.tsv"));
 
-        OncoLikelihoodMap = oncoLikelihoods.stream().collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
+        OncoLikelihoodMap = oncoLikelihoods.stream()
+                .filter(x -> DriverGeneMap.containsKey(x.gene()))
+                .collect(Collectors.toMap(DndsDriverGeneLikelihood::gene, x -> x));
     }
 
     private static InputStream resource(@NotNull final String resource)
     {
         return DriverGeneResource.class.getResourceAsStream(resource);
     }
-
-    /*
-    public Set<DriverGene> amplificationTargets()
-    {
-        return targets(DriverGene::reportAmplification);
-    }
-
-    public Set<DriverGene> deletionTargets()
-    {
-        return targets(DriverGene::reportDeletion);
-    }
-
-    private Set<DriverGene> targets(@NotNull Predicate<DriverGene> filter)
-    {
-        return driverGenes().stream().filter(filter).collect(Collectors.toSet());
-    }
-    */
 }
