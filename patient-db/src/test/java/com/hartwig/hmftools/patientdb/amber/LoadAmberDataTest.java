@@ -34,7 +34,7 @@ public class LoadAmberDataTest
     private static DatabaseAccess databaseAccess;
 
     @BeforeClass
-    public static void setup() throws SQLException
+    public static void setup()
     {
         SQL_CONTAINER.start();
         databaseAccess = databaseAccess();
@@ -92,14 +92,14 @@ public class LoadAmberDataTest
         int nSamplesPerConnection = 100;
         int nConnections = 10;
 
-        List<DatabaseAccess> connections = IntStream.range(0, nConnections).mapToObj(ignored -> databaseAccess()).toList();
+        List<DatabaseAccess> connections = IntStream.range(0, nConnections).mapToObj(ignored -> databaseAccess()).collect(Collectors.toList());
         try
         {
             // Asynchronously insert n samples per connection.
             // The insertion per connections still happens synchronously.
             List<List<AmberSample>> toInsertPerConnection = IntStream.range(0, nConnections)
-                    .mapToObj(i -> IntStream.range(0, nSamplesPerConnection).mapToObj(j -> randomAmberSampleWithId(i + "-" + j)).toList())
-                    .toList();
+                    .mapToObj(i -> IntStream.range(0, nSamplesPerConnection).mapToObj(j -> randomAmberSampleWithId(i + "-" + j)).collect(Collectors.toList()))
+                    .collect(Collectors.toList());
 
             Executor executor = Executors.newFixedThreadPool(nConnections);
 
