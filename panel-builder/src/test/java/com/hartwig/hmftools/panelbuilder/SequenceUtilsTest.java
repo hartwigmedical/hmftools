@@ -49,7 +49,7 @@ public class SequenceUtilsTest
     @Test
     public void testBuildSequenceVariant()
     {
-        SequenceDefinition def = SequenceDefinition.structuralVariant(
+        SequenceDefinition def = new SequenceDefinition(
                 new ChrBaseRegion("1", 1, 10),
                 Orientation.FORWARD,
                 "GCGCGCGCGC",

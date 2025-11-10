@@ -2,7 +2,9 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyList;
 
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.getSubregion;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -375,5 +378,58 @@ public class RegionUtilsTest
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(21, 30)));
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(1, 10)));
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(1, 9)));
+    }
+
+    @Test
+    public void testMergeOverlapAndAdjacentRegions()
+    {
+        Stream<ChrBaseRegion> regions = Stream.of(
+                // Not overlapped.
+                new ChrBaseRegion("1", 100, 150),
+                // Overlap.
+                new ChrBaseRegion("1", 200, 260),
+                new ChrBaseRegion("1", 250, 290),
+                // Regions contained within others.
+                new ChrBaseRegion("1", 300, 390),
+                new ChrBaseRegion("1", 310, 350),
+                new ChrBaseRegion("1", 320, 340),
+                new ChrBaseRegion("1", 330, 370),
+                // Adjacent without overlap.
+                new ChrBaseRegion("1", 400, 409),
+                new ChrBaseRegion("1", 410, 419),
+                // Different chromosome.
+                new ChrBaseRegion("2", 100, 190),
+                new ChrBaseRegion("2", 200, 290),
+                new ChrBaseRegion("2", 300, 390)
+        );
+        List<ChrBaseRegion> expected = List.of(
+                new ChrBaseRegion("1", 100, 150),
+                new ChrBaseRegion("1", 200, 290),
+                new ChrBaseRegion("1", 300, 390),
+                new ChrBaseRegion("1", 400, 419),
+                new ChrBaseRegion("2", 100, 190),
+                new ChrBaseRegion("2", 200, 290),
+                new ChrBaseRegion("2", 300, 390)
+        );
+        List<ChrBaseRegion> actual = mergeOverlapAndAdjacentRegions(regions);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetSubregionForward()
+    {
+        ChrBaseRegion actual = getSubregion(new ChrBaseRegion("1", 100, 200), Orientation.FORWARD, 40, 78);
+        ChrBaseRegion expected = new ChrBaseRegion("1", 140, 177);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetSubregionReverse()
+    {
+        ChrBaseRegion actual = getSubregion(new ChrBaseRegion("1", 100, 200), Orientation.REVERSE, 5, 10);
+        // 200 199 198 197 196 195 194 193 192 191 190
+        //   0   1   2   3   4   5   6   7   8   9   10
+        ChrBaseRegion expected = new ChrBaseRegion("1", 191, 195);
+        assertEquals(expected, actual);
     }
 }

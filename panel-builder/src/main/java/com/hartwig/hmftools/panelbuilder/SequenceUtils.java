@@ -107,7 +107,7 @@ public class SequenceUtils
         int postPosition = position + refLength;
         ChrBaseRegion endRegion = regionStartingAt(chromosome, postPosition, endBaseLength);
 
-        SequenceDefinition definition = SequenceDefinition.simpleVariant(startRegion, alt, endRegion);
+        SequenceDefinition definition = new SequenceDefinition(startRegion, Orientation.FORWARD, alt, endRegion, Orientation.FORWARD);
 
         if(definition.baseLength() != probeLength)
         {
@@ -178,8 +178,7 @@ public class SequenceUtils
             endOrient = Orientation.FORWARD;
         }
 
-        SequenceDefinition definition =
-                SequenceDefinition.structuralVariant(startRegion, startOrient, insertSequence, endRegion, endOrient);
+        SequenceDefinition definition = new SequenceDefinition(startRegion, startOrient, insertSequence, endRegion, endOrient);
 
         if(definition.baseLength() != probeLength)
         {

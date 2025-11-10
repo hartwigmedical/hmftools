@@ -30,6 +30,7 @@ import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
+import com.hartwig.hmftools.panelbuilder.TargetedRange;
 import com.hartwig.hmftools.panelbuilder.UserInputError;
 
 import org.apache.logging.log4j.LogManager;
@@ -268,10 +269,10 @@ public class SampleVariants
         LOGGER.trace("Generating probe for variant: {}", variant);
 
         SequenceDefinition definition = variant.generateProbe();
-
+        TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probe(definition, metadata, evalCriteria, mPanelData);
+        return mProbeGenerator.probe(definition, targetedRange, metadata, evalCriteria, mPanelData);
     }
 
     private static TargetMetadata createTargetMetadata(final Variant variant)

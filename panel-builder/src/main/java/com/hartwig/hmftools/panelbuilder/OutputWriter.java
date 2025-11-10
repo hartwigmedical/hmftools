@@ -56,6 +56,8 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_INSERT_SEQ = "InsertSequence";
     private static final String FLD_END_REGION = "EndRegion";
     private static final String FLD_SEQUENCE = "Sequence";
+    private static final String FLD_TARGETED_START = "TargetedStart";
+    private static final String FLD_TARGETED_END = "TargetedEnd";
     private static final String FLD_QUALITY_SCORE = "QualityScore";
     private static final String FLD_GC_CONTENT = "GCContent";
     private static final String FLD_TARGET_TYPE = "TargetType";
@@ -65,6 +67,7 @@ public class OutputWriter implements AutoCloseable
 
     private static final List<String> PANEL_PROBES_COLUMNS = List.of(
             FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
+            FLD_TARGETED_START, FLD_TARGETED_END,
             FLD_TARGET_TYPE, FLD_TARGET_EXTRA_INFO,
             FLD_QUALITY_SCORE, FLD_GC_CONTENT);
 
@@ -168,6 +171,7 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
+        // TODO: should write region orientation too
         SequenceDefinition definition = probe.definition();
         ChrBaseRegion start = definition.startRegion();
         ChrBaseRegion end = definition.endRegion();
@@ -175,6 +179,8 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_INSERT_SEQ, definition.insertSequence());
         row.setOrNull(FLD_END_REGION, end == null ? null : end.toString());
         row.setOrNull(FLD_SEQUENCE, probe.sequence());
+        row.set(FLD_TARGETED_START, probe.targetedRange().startOffset());
+        row.set(FLD_TARGETED_END, probe.targetedRange().endOffset());
         row.setOrNull(FLD_QUALITY_SCORE, probe.qualityScore());
         row.setOrNull(FLD_GC_CONTENT, probe.gcContent());
         row.set(FLD_TARGET_TYPE, probe.metadata().type().name());

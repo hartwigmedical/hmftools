@@ -85,7 +85,8 @@ public class CustomSvs
                 sv.endPosition().Chromosome, sv.endPosition().Position, sv.endOrientation(),
                 sv.insertSequence(),
                 PROBE_LENGTH);
-        ProbeGenerationResult result = probeGenerator.probe(definition, metadata, PROBE_CRITERIA, coverage);
+        TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
+        ProbeGenerationResult result = probeGenerator.probe(definition, targetedRange, metadata, PROBE_CRITERIA, coverage);
         return result;
     }
 }

@@ -22,13 +22,13 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 
 import org.junit.Test;
 
-public class CandidateProbeGeneratorTest
+public class ProbeGeneratorTest
 {
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "extra");
 
-    private final CandidateProbeGenerator mGenerator;
+    private final ProbeGenerator mGenerator;
 
-    public CandidateProbeGeneratorTest()
+    public ProbeGeneratorTest()
     {
         MockRefGenome refGenome = new MockRefGenome(true);
         refGenome.ChromosomeLengths = Map.of(
@@ -39,15 +39,16 @@ public class CandidateProbeGeneratorTest
         {
             refGenome.RefGenomeMap.put(entry.getKey(), MockRefGenome.generateRandomBases(entry.getValue()));
         }
-        mGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
+        // TODO: shouldn't be passing in null here, technically not allowed...
+        mGenerator = new ProbeGenerator(refGenome.chromosomeLengths(), null, null);
     }
 
     @Test
-    public void testCoverOneSubregion()
+    public void testCoverOneSubregionCandidates()
     {
         ChrBaseRegion region = new ChrBaseRegion("1", 1000, 2000);
 
-        List<Probe> actual = mGenerator.coverOneSubregion(region, METADATA).toList();
+        List<Probe> actual = mGenerator.coverOneSubregionCandidates(region, METADATA).toList();
 
         Set<ChrBaseRegion> expectedRegions = IntStream.rangeClosed(region.start(), region.end() - PROBE_LENGTH + 1)
                 .mapToObj(start -> new ChrBaseRegion(region.chromosome(), start, start + PROBE_LENGTH - 1))
@@ -73,15 +74,15 @@ public class CandidateProbeGeneratorTest
     }
 
     @Test
-    public void testCoverOneSubregionChromosomeBounds()
+    public void testCoverOneSubregionCandidatesChromosomeBounds()
     {
-        List<Probe> actual = mGenerator.coverOneSubregion(new ChrBaseRegion("1", 1, 1000), METADATA).toList();
+        List<Probe> actual = mGenerator.coverOneSubregionCandidates(new ChrBaseRegion("1", 1, 1000), METADATA).toList();
         int minStart = actual.stream().mapToInt(probe -> probe.definition().singleRegion().start()).min().orElseThrow();
         assertEquals(1, minStart);
     }
 
     @Test
-    public void testAllOverlapping()
+    public void testAllOverlappingProbes()
     {
         String chromosome = "1";
         ChrBaseRegion region = new ChrBaseRegion(chromosome, 1000, 2000);
@@ -89,7 +90,7 @@ public class CandidateProbeGeneratorTest
                 .mapToObj(start -> new ChrBaseRegion(chromosome, start, start + PROBE_LENGTH - 1))
                 .toList();
 
-        List<Probe> actual = mGenerator.allOverlapping(region, METADATA).toList();
+        List<Probe> actual = mGenerator.allOverlappingProbes(region, METADATA).toList();
         List<ChrBaseRegion> actualRegions = actual.stream().map(probe -> probe.definition().singleRegion()).toList();
 
         assertEquals(expectedRegions, actualRegions);
@@ -98,9 +99,9 @@ public class CandidateProbeGeneratorTest
     }
 
     @Test
-    public void testAllOverlappingChromosomeBounds()
+    public void testAllOverlappingProbesChromosomeBounds()
     {
-        List<Probe> actual = mGenerator.allOverlapping(new ChrBaseRegion("2", 1, 10), METADATA).toList();
+        List<Probe> actual = mGenerator.allOverlappingProbes(new ChrBaseRegion("2", 1, 10), METADATA).toList();
         assertEquals(emptyList(), actual);
     }
 
