@@ -1,10 +1,18 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.getSubregion;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -81,5 +89,48 @@ public class ProbeUtils
     public static int maxProbeEndWithoutGap(final BaseRegion region)
     {
         return maxProbeEndOverlapping(region) + 1;
+    }
+
+    public static List<ChrBaseRegion> probeTargetedRegions(final SequenceDefinition definition, final TargetedRange targetedRange)
+    {
+        // Determine subset of probe regions defined by targetedRange.
+
+        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>();
+
+        int probeLength = definition.baseLength();
+        int targetedStart = targetedRange.startOffset();
+        int targetedEnd = targetedRange.endOffset();
+
+        // Compute the intersection with the start region.
+        ChrBaseRegion startRegion = definition.startRegion();
+        if(startRegion != null)
+        {
+            int startOffset = 0;
+            int endOffset = startRegion.baseLength();
+            int intersectionStart = max(startOffset, targetedStart);
+            int intersectionEnd = min(endOffset, targetedEnd);
+            if(intersectionStart < intersectionEnd)
+            {
+                Orientation orientation = definition.startOrientation() == null ? Orientation.FORWARD : definition.startOrientation();
+                targetedRegions.add(getSubregion(startRegion, orientation, intersectionStart, intersectionEnd));
+            }
+        }
+
+        // Compute the intersection with the end region.
+        ChrBaseRegion endRegion = definition.endRegion();
+        if(endRegion != null)
+        {
+            int startOffset = probeLength - endRegion.baseLength();
+            int endOffset = probeLength;
+            int intersectionStart = max(startOffset, targetedStart) - startOffset;
+            int intersectionEnd = min(endOffset, targetedEnd) - startOffset;
+            if(intersectionStart < intersectionEnd)
+            {
+                Orientation orientation = definition.endOrientation() == null ? Orientation.FORWARD : definition.endOrientation();
+                targetedRegions.add(getSubregion(endRegion, orientation, intersectionStart, intersectionEnd));
+            }
+        }
+
+        return targetedRegions;
     }
 }

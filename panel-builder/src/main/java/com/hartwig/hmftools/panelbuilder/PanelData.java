@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -44,9 +47,8 @@ public class PanelData implements PanelCoverage
                 throw new IllegalArgumentException("Should only add accepted probes to the panel");
             }
         });
-        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} coveredTargetRegions={} rejectedRegions={}",
-                result.probes().size(), result.candidateTargetRegions().size(), result.coveredTargetRegions().size(),
-                result.rejectedRegions().size());
+        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} rejectedRegions={}",
+                result.probes().size(), result.candidateTargetRegions().size(), result.rejectedRegions().size());
         mData = mData.add(result);
     }
 
@@ -66,7 +68,16 @@ public class PanelData implements PanelCoverage
     // The target regions which the probes aim to hit. This is the intersection of the probe and its target region.
     public List<TargetRegion> coveredTargetRegions()
     {
-        return mData.coveredTargetRegions();
+        // Merge adjacent/overlapping target regions which have the same metadata.
+        // If multiple target regions with different metadata overlap, there will be overlapping output regions.
+        return mData.probes().stream()
+                .collect(Collectors.groupingBy(Probe::metadata)).entrySet().stream()
+                .flatMap(entry ->
+                        mergeOverlapAndAdjacentRegions(entry.getValue().stream()
+                                .flatMap(probe -> probeTargetedRegions(probe.definition(), probe.targetedRange()).stream()))
+                                .stream()
+                                .map(region -> new TargetRegion(region, entry.getKey())))
+                .toList();
     }
 
     public List<RejectedRegion> rejectedRegions()

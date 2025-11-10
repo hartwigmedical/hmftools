@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -148,7 +149,7 @@ public class RegionUtils
 
     public static int regionCentreStartOffset(int length)
     {
-        return -(length / 2) + (1 - length % 2);
+        return (length / 2) - (1 - length % 2);
     }
 
     public static BaseRegion regionCenteredAt(int centrePosition, int length)
@@ -159,7 +160,7 @@ public class RegionUtils
         {
             throw new IllegalArgumentException("Invalid length");
         }
-        int start = centrePosition + regionCentreStartOffset(length);
+        int start = centrePosition - regionCentreStartOffset(length);
         int end = start + length - 1;
         BaseRegion region = new BaseRegion(start, end);
         return region;
@@ -227,7 +228,7 @@ public class RegionUtils
         regions.forEach(region ->
         {
             ChrBaseRegion prev = result.isEmpty() ? null : result.get(result.size() - 1);
-            if(prev != null && region.start() <= prev.end() + 1)
+            if(prev != null && region.chromosome().equals(prev.chromosome()) && region.start() <= prev.end() + 1)
             {
                 if(region.end() > prev.end())
                 {
@@ -253,5 +254,24 @@ public class RegionUtils
     {
         Integer chromosomeLength = chromosomeLengths.get(position.Chromosome);
         return position.Position >= 1 && chromosomeLength != null && position.Position <= chromosomeLength;
+    }
+
+    // Gets subregion indexed by [start, end) taking into account orientation.
+    public static ChrBaseRegion getSubregion(final ChrBaseRegion region, final Orientation orientation, int start, int end)
+    {
+        if(!region.isValid())
+        {
+            throw new IllegalArgumentException("Invalid region");
+        }
+        if(!(start >= 0 && end <= region.baseLength()))
+        {
+            throw new IllegalArgumentException("Invalid start and end");
+        }
+
+        int length = end - start;
+        ChrBaseRegion result = orientation.isForward()
+                ? regionStartingAt(region.chromosome(), region.start() + start, length)
+                : regionEndingAt(region.chromosome(), region.end() - start, length);
+        return result;
     }
 }

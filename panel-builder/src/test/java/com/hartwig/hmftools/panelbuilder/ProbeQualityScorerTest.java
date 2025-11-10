@@ -20,6 +20,8 @@ import org.junit.Test;
 
 public class ProbeQualityScorerTest
 {
+    // Dummy data, doesn't really matter.
+    private static final TargetedRange TARGETED_RANGE = new TargetedRange(0, 1);
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "extra");
 
     private static final int BATCH_SIZE = 3;
@@ -69,14 +71,19 @@ public class ProbeQualityScorerTest
         assertEquals(emptyList(), mModelResults);
     }
 
+    private static Probe probe(final SequenceDefinition definition, final String sequence)
+    {
+        // Probe data other than the region and sequence doesn't really matter.
+        return new Probe(definition, sequence, TARGETED_RANGE, METADATA, null, null, null, 0.0);
+    }
+
     // Probe which attempts to get the quality score from the probe quality profile and succeeds.
     private void probeWithProfileResult()
     {
         mProbeCounter++;
         ChrBaseRegion region = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + 120 - 1);
         String sequence = "A".repeat(region.baseLength());
-        // Probe data other than the region and sequence doesn't really matter.
-        Probe probe = new Probe(SequenceDefinition.singleRegion(region), sequence, METADATA, null, null, null, 0.0);
+        Probe probe = probe(SequenceDefinition.singleRegion(region), sequence);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
         mProfileResults.add(Pair.of(region, OptionalDouble.of(quality)));
@@ -89,8 +96,7 @@ public class ProbeQualityScorerTest
         mProbeCounter++;
         ChrBaseRegion region = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + 120 - 1);
         String sequence = "A".repeat(region.baseLength());
-        // Probe data other than the region and sequence doesn't really matter.
-        Probe probe = new Probe(SequenceDefinition.singleRegion(region), sequence, METADATA, null, null, null, 0.0);
+        Probe probe = probe(SequenceDefinition.singleRegion(region), sequence);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
         mProfileResults.add(Pair.of(region, OptionalDouble.empty()));
@@ -108,9 +114,8 @@ public class ProbeQualityScorerTest
         ChrBaseRegion startRegion = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter);
         ChrBaseRegion endRegion = new ChrBaseRegion("2", 2000 * mProbeCounter, 2000 * mProbeCounter);
         SequenceDefinition definition =
-                SequenceDefinition.structuralVariant(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
-        // Probe data other than the region and sequence doesn't really matter.
-        Probe probe = new Probe(definition, sequence, METADATA, null, null, null, 0.0);
+                new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
+        Probe probe = probe(definition, sequence);
         double quality = 0.1 + mProbeCounter / 1e6;
         mInputProbes.add(probe);
         mModelResults.add(Pair.of(sequence, quality));

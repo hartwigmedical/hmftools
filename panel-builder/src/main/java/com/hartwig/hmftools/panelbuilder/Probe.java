@@ -6,6 +6,8 @@ public record Probe(
         SequenceDefinition definition,
         // null if the probe hasn't been evaluated yet.
         @Nullable String sequence,
+        // [start, end) range of bases in the probe sequence which are the intended target of this probe.
+        TargetedRange targetedRange,
         TargetMetadata metadata,
         // null if the probe hasn't been evaluated yet.
         @Nullable ProbeEvaluator.Criteria evalCriteria,
@@ -23,6 +25,10 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence length should match definition length");
         }
+        if(targetedRange.baseLength() > definition.baseLength())
+        {
+            throw new IllegalArgumentException("targetedRange must not be larger than the probe");
+        }
         if(rejectionReason != null && rejectionReason.isBlank())
         {
             throw new IllegalArgumentException("rejectionReason should not be blank");
@@ -37,9 +43,9 @@ public record Probe(
         }
     }
 
-    public Probe(final SequenceDefinition definition, final TargetMetadata metadata)
+    public Probe(final SequenceDefinition definition, final TargetedRange targetedRange, final TargetMetadata metadata)
     {
-        this(definition, null, metadata, null, null, null, null);
+        this(definition, null, targetedRange, metadata, null, null, null, null);
     }
 
     public boolean evaluated()
@@ -63,7 +69,7 @@ public record Probe(
         {
             throw new IllegalArgumentException("sequence already set");
         }
-        return new Probe(definition, value, metadata, evalCriteria, rejectionReason, qualityScore, gcContent);
+        return new Probe(definition, value, targetedRange, metadata, evalCriteria, rejectionReason, qualityScore, gcContent);
     }
 
     public Probe withEvalCriteria(final ProbeEvaluator.Criteria value)
@@ -72,7 +78,7 @@ public record Probe(
         {
             throw new IllegalArgumentException("evalCriteria already set");
         }
-        return new Probe(definition, sequence, metadata, value, rejectionReason, qualityScore, gcContent);
+        return new Probe(definition, sequence, targetedRange, metadata, value, rejectionReason, qualityScore, gcContent);
     }
 
     public Probe withRejectionReason(final String value)
@@ -81,7 +87,7 @@ public record Probe(
         {
             throw new IllegalArgumentException("rejectionReason already set");
         }
-        return new Probe(definition, sequence, metadata, evalCriteria, value, qualityScore, gcContent);
+        return new Probe(definition, sequence, targetedRange, metadata, evalCriteria, value, qualityScore, gcContent);
     }
 
     public Probe withQualityScore(double value)
@@ -90,7 +96,7 @@ public record Probe(
         {
             throw new IllegalArgumentException("qualityScore already set");
         }
-        return new Probe(definition, sequence, metadata, evalCriteria, rejectionReason, value, gcContent);
+        return new Probe(definition, sequence, targetedRange, metadata, evalCriteria, rejectionReason, value, gcContent);
     }
 
     public Probe withGcContent(double value)
@@ -99,6 +105,6 @@ public record Probe(
         {
             throw new IllegalArgumentException("gcContent already set");
         }
-        return new Probe(definition, sequence, metadata, evalCriteria, rejectionReason, qualityScore, value);
+        return new Probe(definition, sequence, targetedRange, metadata, evalCriteria, rejectionReason, qualityScore, value);
     }
 }

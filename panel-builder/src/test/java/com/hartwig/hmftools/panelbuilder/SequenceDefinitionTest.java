@@ -68,25 +68,9 @@ public class SequenceDefinitionTest
     }
 
     @Test
-    public void testSimpleVariant()
-    {
-        SequenceDefinition actual = SequenceDefinition.simpleVariant(REGION1, INSERT, REGION2);
-        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.FORWARD, INSERT, REGION2, Orientation.FORWARD);
-        assertEquals(expected, actual);
-        assertFalse(actual.isSingleRegion());
-        assertThrows(IllegalArgumentException.class, actual::singleRegion);
-        assertNull(actual.singleRegionOrNull());
-        assertEquals(List.of(REGION1, REGION2), actual.regions());
-        assertEquals(24, actual.baseLength());
-    }
-
-    @Test
     public void testStructuralVariant()
     {
-        SequenceDefinition actual =
-                SequenceDefinition.structuralVariant(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
-        SequenceDefinition expected = new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
-        assertEquals(expected, actual);
+        SequenceDefinition actual = new SequenceDefinition(REGION1, Orientation.REVERSE, INSERT, REGION2, Orientation.FORWARD);
         assertFalse(actual.isSingleRegion());
         assertThrows(IllegalArgumentException.class, actual::singleRegion);
         assertNull(actual.singleRegionOrNull());

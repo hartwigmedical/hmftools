@@ -18,10 +18,11 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.minProbeStartWithoutG
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionNegatedIntersection;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreStartOffset;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionNegatedIntersection;
 import static com.hartwig.hmftools.panelbuilder.Utils.outwardMovingOffsets;
 
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ import org.jetbrains.annotations.Nullable;
 // Encapsulates all functionality for creating probes.
 public class ProbeGenerator
 {
-    private final CandidateProbeGenerator mCandidateGenerator;
+    private final Map<String, Integer> mChromosomeLengths;
     private final ProbeEvaluator mProbeEvaluator;
     // Hook to catch all candidate probes for output.
     @Nullable
@@ -56,10 +57,10 @@ public class ProbeGenerator
 
     private static final Logger LOGGER = LogManager.getLogger(ProbeGenerator.class);
 
-    public ProbeGenerator(final CandidateProbeGenerator candidateGenerator, final ProbeEvaluator probeEvaluator,
+    public ProbeGenerator(final Map<String, Integer> chromosomeLengths, final ProbeEvaluator probeEvaluator,
             final @Nullable Consumer<Probe> candidateCallback)
     {
-        mCandidateGenerator = candidateGenerator;
+        mChromosomeLengths = chromosomeLengths;
         mProbeEvaluator = probeEvaluator;
         mCandidateCallback = candidateCallback;
     }
@@ -67,10 +68,9 @@ public class ProbeGenerator
     public static ProbeGenerator construct(final RefGenomeInterface refGenome, final ProbeQualityProfile probeQualityProfile,
             final ProbeQualityModel probeQualityModel, final Consumer<Probe> candidateCallback)
     {
-        CandidateProbeGenerator candidateProbeGenerator = new CandidateProbeGenerator(refGenome.chromosomeLengths());
         ProbeQualityScorer probeQualityScorer = new ProbeQualityScorer(probeQualityProfile, probeQualityModel);
         ProbeEvaluator probeEvaluator = new ProbeEvaluator(refGenome, probeQualityScorer);
-        return new ProbeGenerator(candidateProbeGenerator, probeEvaluator, candidateCallback);
+        return new ProbeGenerator(refGenome.chromosomeLengths(), probeEvaluator, candidateCallback);
     }
 
     // General purpose method for generating the best acceptable probes to cover an entire region.
@@ -107,7 +107,7 @@ public class ProbeGenerator
 
         // Add in the candidate target region that's not added by coverSubregion().
         TargetRegion candidateTargetRegion = new TargetRegion(region, metadata);
-        result = result.add(new ProbeGenerationResult(emptyList(), List.of(candidateTargetRegion), emptyList(), emptyList()));
+        result = result.add(new ProbeGenerationResult(emptyList(), List.of(candidateTargetRegion), emptyList()));
 
         return result;
     }
@@ -124,7 +124,7 @@ public class ProbeGenerator
         String chromosome = uncoveredRegion.chromosome();
 
         Stream<Probe> allPlausibleProbes = evaluateProbes(
-                mCandidateGenerator.allOverlapping(uncoveredRegion, metadata), evalCriteria)
+                allOverlappingProbes(uncoveredRegion, metadata), evalCriteria)
                 .filter(Probe::accepted);
 
         // These are the subregions in which probes can be placed.
@@ -176,16 +176,9 @@ public class ProbeGenerator
                 .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
                 .toList();
 
-        // Compute covered target regions by merging all probe regions and intersecting with the desired target region.
-        List<TargetRegion> coveredTargetRegions =
-                mergeOverlapAndAdjacentRegions(probes.stream().map(probe -> probe.definition().singleRegion()))
-                        .stream()
-                        .map(covered -> new TargetRegion(regionIntersection(covered, uncoveredRegion).orElseThrow(), metadata))
-                        .toList();
-
         // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for one
         // target region. Candidate target must be added by the caller.
-        return new ProbeGenerationResult(probes, emptyList(), coveredTargetRegions, rejectedRegions);
+        return new ProbeGenerationResult(probes, emptyList(), rejectedRegions);
     }
 
     private record CoverAcceptableSubregionResult(
@@ -426,12 +419,29 @@ public class ProbeGenerator
         return probes;
     }
 
+    // Generates all probes overlapping a region, in order from left to right.
+    // Use with care. Generally, you would want to choose probes with a more careful approach.
+    protected Stream<Probe> allOverlappingProbes(final ChrBaseRegion region, final TargetMetadata metadata)
+    {
+        int minProbeStart = max(minProbeStartOverlapping(region.baseRegion()), 1);
+        int maxProbeEnd = min(maxProbeEndOverlapping(region.baseRegion()), mChromosomeLengths.get(region.chromosome()));
+        int maxProbeStart = probeRegionEndingAt(maxProbeEnd).start();
+        return IntStream.rangeClosed(minProbeStart, maxProbeStart)
+                .mapToObj(start ->
+                {
+                    ChrBaseRegion probeRegion = probeRegionStartingAt(region.chromosome(), start);
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegion);
+                    TargetedRange targetedRange = TargetedRange.fromRegions(region, probeRegion);
+                    return new Probe(definition, targetedRange, metadata);
+                });
+    }
+
     // Generates the one best acceptable probe that is contained within the specified region.
     public ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, @Nullable final PanelCoverage coverage)
     {
         TargetRegion candidateTargetRegion = new TargetRegion(region, metadata);
-        Stream<Probe> candidates = mCandidateGenerator.coverOneSubregion(region, metadata);
+        Stream<Probe> candidates = coverOneSubregionCandidates(region, metadata);
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
@@ -441,14 +451,62 @@ public class ProbeGenerator
                     }
                     else
                     {
-                        ChrBaseRegion probeRegion = probe.definition().singleRegion();
-                        TargetRegion coveredTargetRegion =
-                                new TargetRegion(regionIntersection(candidateTargetRegion.region(), probeRegion).orElseThrow(), metadata);
-                        return new ProbeGenerationResult(
-                                List.of(probe), List.of(candidateTargetRegion), List.of(coveredTargetRegion), emptyList());
+                        return new ProbeGenerationResult(List.of(probe), List.of(candidateTargetRegion), emptyList());
                     }
                 })
                 .orElseGet(() -> ProbeGenerationResult.rejectTargets(List.of(candidateTargetRegion)));
+    }
+
+    // Generates candidate probes covering any subregion within the target region.
+    // Probes do not extend outside the target region.
+    protected Stream<Probe> coverOneSubregionCandidates(final ChrBaseRegion region, final TargetMetadata metadata)
+    {
+        if(region.baseLength() < PROBE_LENGTH)
+        {
+            // This method is designed to find probes contained within the region, which requires the region fit at least one probe.
+            throw new IllegalArgumentException("region must be larger than a probe");
+        }
+
+        BasePosition initialPosition = regionCentre(region);
+        // Stop once the probes go outside the target region.
+        int minProbeStart = region.start();
+        int maxProbeEnd = region.end();
+        return outwardMovingCenterAlignedProbes(initialPosition, minProbeStart, maxProbeEnd)
+                .map(probeRegion ->
+                {
+                    SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegion);
+                    TargetedRange targetedRange = TargetedRange.fromRegions(region, probeRegion);
+                    return new Probe(definition, targetedRange, metadata);
+                });
+    }
+
+    // Returns candidate probe regions shifting left and right with offsets: 0, 1, -1, 2, -2, 3, -3, ...
+    // Probes are aligned to their centre position.
+    // Probe bounds:
+    //   - Can't start before start of chromosome
+    //   - Can't start before `minProbeStart`
+    //   - Can't end after `maxProbeEnd`
+    //   - Can't end after end of chromosome
+    // Useful because we prefer to select probes which are closest to the target position or centre of a region.
+    private Stream<ChrBaseRegion> outwardMovingCenterAlignedProbes(final BasePosition initialPosition, int minProbeStart, int maxProbeEnd)
+    {
+        if(maxProbeEnd - minProbeStart + 1 < PROBE_LENGTH)
+        {
+            // Probably indicates a bug in the calling code.
+            throw new IllegalArgumentException("minProbeStart and maxProbeEnd forbid all possible probes");
+        }
+
+        // Must be consistent with probeRegionCenteredAt().
+        int centreOffset = regionCentreStartOffset(PROBE_LENGTH);
+
+        // minProbeStart = initialPosition + offset + centreOffset
+        int minOffset = minProbeStart - initialPosition.Position + centreOffset;
+
+        // maxProbeEnd = initialPosition + offset + centreOffset + PROBE_LENGTH - 1
+        int maxOffset = maxProbeEnd - initialPosition.Position + centreOffset - PROBE_LENGTH + 1;
+
+        return outwardMovingOffsets(minOffset, maxOffset)
+                .mapToObj(offset -> probeRegionCenteredAt(initialPosition.Chromosome, initialPosition.Position + offset));
     }
 
     // Generates the one best acceptable probe that is centered on one of the given positions.
@@ -461,7 +519,8 @@ public class ProbeGenerator
                 {
                     ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
                     SequenceDefinition definition = SequenceDefinition.singleRegion(probeRegion);
-                    Probe probe = new Probe(definition, metadata);
+                    TargetedRange targetedRange = TargetedRange.singleBase(regionCentreStartOffset(definition.baseLength()));
+                    Probe probe = new Probe(definition, targetedRange, metadata);
                     // Store the target position so it can be retrieved later once the final probe is selected.
                     // Also needed to compute the rejected regions.
                     probeToPosition.put(probeRegion, position);
@@ -488,30 +547,28 @@ public class ProbeGenerator
                     }
                     else
                     {
-                        BasePosition position = probeToPosition.get(probe.definition().singleRegion());
-                        ChrBaseRegion region = ChrBaseRegion.from(position);
-                        TargetRegion coveredTargetRegion = new TargetRegion(region, probe.metadata());
-                        return new ProbeGenerationResult(List.of(probe), candidateTargetRegions, List.of(coveredTargetRegion), emptyList());
+                        return new ProbeGenerationResult(List.of(probe), candidateTargetRegions, emptyList());
                     }
                 })
                 .orElseGet(() -> ProbeGenerationResult.rejectTargets(candidateTargetRegions));
     }
 
-    // Generates a single probe at the given region.
-    public ProbeGenerationResult probe(final ChrBaseRegion region, final TargetMetadata metadata,
+    // Generates a single probe targeting given region.
+    public ProbeGenerationResult probe(final ChrBaseRegion targetRegion, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final PanelCoverage coverage)
     {
-        if(region.baseLength() != PROBE_LENGTH)
+        if(targetRegion.baseLength() != PROBE_LENGTH)
         {
             throw new IllegalArgumentException("region length must be equal to probe length");
         }
 
-        SequenceDefinition definition = SequenceDefinition.singleRegion(region);
-        return probe(definition, metadata, evalCriteria, coverage);
+        SequenceDefinition definition = SequenceDefinition.singleRegion(targetRegion);
+        TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
+        return probe(definition, targetedRange, metadata, evalCriteria, coverage);
     }
 
-    public ProbeGenerationResult probe(final SequenceDefinition definition, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, @Nullable PanelCoverage coverage)
+    public ProbeGenerationResult probe(final SequenceDefinition definition, final TargetedRange targetedRange,
+            final TargetMetadata metadata, final ProbeEvaluator.Criteria evalCriteria, @Nullable PanelCoverage coverage)
     {
         List<TargetRegion> targetRegions = definition.regions().stream().map(region -> new TargetRegion(region, metadata)).toList();
 
@@ -521,12 +578,12 @@ public class ProbeGenerator
         }
         else
         {
-            Probe probe = new Probe(definition, metadata);
+            Probe probe = new Probe(definition, targetedRange, metadata);
             // TODO: figure out batching properly
             probe = evaluateProbes(Stream.of(probe), evalCriteria).findFirst().orElseThrow();
             if(probe.accepted())
             {
-                return new ProbeGenerationResult(List.of(probe), targetRegions, targetRegions, emptyList());
+                return new ProbeGenerationResult(List.of(probe), targetRegions, emptyList());
             }
             else
             {
