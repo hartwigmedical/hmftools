@@ -51,6 +51,7 @@ public class DuplicateFrequency
     }
 
     public static final String DUP_READ_COUNT_COLUMN = "DuplicateReadCount";
+    public static final String DUP_READ_FREQ_COLUMN = "Frequency";
     public static final String DUAL_STRAND_COUNT_COLUMN = "DualStrandFrequency";
 
     public static void write(final String filename, final List<DuplicateFrequency> frequencies, boolean includeDualStrand) throws IOException
@@ -59,7 +60,7 @@ public class DuplicateFrequency
 
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(DUP_READ_COUNT_COLUMN);
-        sj.add(COUNT_COLUMN);
+        sj.add(DUP_READ_FREQ_COLUMN);
 
         if(includeDualStrand)
             sj.add(DUAL_STRAND_COUNT_COLUMN);
@@ -96,7 +97,7 @@ public class DuplicateFrequency
         List<DuplicateFrequency> frequencies = Lists.newArrayListWithCapacity(lines.size());
 
         int dupReadIndex = fieldsIndexMap.get(DUP_READ_COUNT_COLUMN);
-        int countIndex = fieldsIndexMap.get(COUNT_COLUMN);
+        int dupReadFreqIndex = fieldsIndexMap.get(DUP_READ_FREQ_COLUMN);
         Integer dualStrandIndex = fieldsIndexMap.get(DUAL_STRAND_COUNT_COLUMN);
 
         for(String line : lines)
@@ -104,11 +105,11 @@ public class DuplicateFrequency
             String[] values = line.split(TSV_DELIM, -1);
 
             int dupReads = Integer.parseInt(values[dupReadIndex]);
-            long count = Long.parseLong(values[countIndex]);
+            long dupReadFreq = Long.parseLong(values[dupReadFreqIndex]);
 
             long dualStrand = dualStrandIndex != null ? Long.parseLong(values[dualStrandIndex]) : NO_DUAL_STRAND;
 
-            frequencies.add(new DuplicateFrequency(dupReads, count, dualStrand));
+            frequencies.add(new DuplicateFrequency(dupReads, dupReadFreq, dualStrand));
         }
 
         return frequencies;
