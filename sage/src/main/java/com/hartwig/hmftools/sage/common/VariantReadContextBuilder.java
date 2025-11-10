@@ -184,7 +184,7 @@ public class VariantReadContextBuilder
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
                     readCigarInfo, mFlankSize, SageConfig.AppendMode);
 
-            if(newReadCigarInfo != null || skippableLongInsert)
+            if(newReadCigarInfo != null)
             {
                 readCigarInfo = newReadCigarInfo;
                 readCoreStart = readCigarInfo.FlankIndexStart + (readCigarInfo.CorePositionStart - readCigarInfo.FlankPositionStart);
@@ -192,7 +192,8 @@ public class VariantReadContextBuilder
             }
             else
             {
-                return null;
+                if(!skippableLongInsert)
+                    return null;
             }
         }
 
