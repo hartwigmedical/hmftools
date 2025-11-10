@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.common;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 public class QseeFileCommon
 {
@@ -18,7 +19,7 @@ public class QseeFileCommon
 
     private static DecimalFormat createDecimalFormat()
     {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ENGLISH);
         symbols.setInfinity("Inf");
         return new DecimalFormat("0.########", symbols);
     }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.qsee.cohort;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
@@ -10,12 +11,18 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.feature.FeatureType;
@@ -27,6 +34,68 @@ public class CohortPercentilesFile
 
     public static final String COL_PERCENTILE_PREFIX = "Pct";
     public static final String COL_PERCENTILE_DELIM = "_";
+
+    public static String generateFilename(final String basePath)
+    {
+        return checkAddDirSeparator(basePath) + COHORT_PERCENTILES_FILE_SUFFIX;
+    }
+
+    public static List<String> getPercentileNames(double[] percentiles)
+    {
+        return Arrays.stream(percentiles).mapToObj(QseeFileCommon.DECIMAL_FORMAT::format).toList();
+    }
+
+    private static List<String> toLines(double[] percentiles, List<FeaturePercentiles> cohortPercentiles)
+    {
+        List<String> lines = new ArrayList<>();
+
+        StringJoiner header = new StringJoiner(TSV_DELIM);
+
+        header.add(COL_SAMPLE_TYPE);
+        header.add(COL_SOURCE_TOOL);
+        header.add(COL_FEATURE_TYPE);
+        header.add(COL_FEATURE_NAME);
+
+        List<String> percentileNames = getPercentileNames(percentiles);
+        for( String percentileName : percentileNames)
+        {
+            header.add(CohortPercentilesFile.COL_PERCENTILE_PREFIX + "_" + percentileName);
+        }
+
+        lines.add(header.toString());
+
+        for(FeaturePercentiles featurePercentiles : cohortPercentiles)
+        {
+            FeatureKey featureKey = featurePercentiles.featureKey();
+
+            FeatureType featureType = featureKey.type();
+            SourceTool sourceTool = featureKey.sourceTool();
+            SampleType sampleType = featurePercentiles.sampleType();
+
+            StringJoiner line = new StringJoiner(TSV_DELIM);
+            line.add(sampleType.toString());
+            line.add(sourceTool.toString());
+            line.add(featureType.toString());
+            line.add(featureKey.name());
+
+            double[] refValues = featurePercentiles.refValues();
+
+            String refValuesStr = Arrays.stream(refValues)
+                    .mapToObj(QseeFileCommon.DECIMAL_FORMAT::format)
+                    .collect(Collectors.joining(TSV_DELIM));
+
+            line.add(refValuesStr);
+
+            lines.add(line.toString());
+        }
+
+        return lines;
+    }
+
+    public static void write(String filename, double[] percentiles, List<FeaturePercentiles> cohortPercentiles) throws IOException
+    {
+        Files.write(new File(filename).toPath(), toLines(percentiles, cohortPercentiles));
+    }
 
     public static CohortPercentiles read(String filename)
     {
