@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.qsee.vis;
 
+import java.util.EnumMap;
 import java.util.Map;
 
 import com.hartwig.hmftools.qsee.cohort.FeaturePercentiles;
@@ -12,7 +13,7 @@ public class VisFeatureNamedPct
 {
     private final SampleType mSampleType;
     private final FeatureKey mFeatureKey;
-    private final Map<NamedPercentile, Double> mPctRefValueMap = new java.util.EnumMap<>(NamedPercentile.class);
+    private final Map<NamedPercentile, Double> mPctRefValueMap = new EnumMap<>(NamedPercentile.class);
 
     public VisFeatureNamedPct(SampleType sampleType, FeatureKey featureKey, FeaturePercentiles featurePercentiles)
     {
