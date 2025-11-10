@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -192,9 +193,7 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(refFragments);
 
-        byte medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags,
-                BASE_QUAL_PERCENTILE);
-
+        byte medianBaseQuality = isUltima() ? LOW_BASE_QUAL_THRESHOLD : mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
         if(medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
         {
             LL_LOGGER.info("lowering min base quality({}) to median({})", LOW_BASE_QUAL_THRESHOLD,

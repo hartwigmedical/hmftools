@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 
 public final class LilacConstants
 {
@@ -10,8 +11,8 @@ public final class LilacConstants
 
     public static final String APP_NAME = "Lilac";
 
-    public static final byte DEFAULT_MIN_BASE_QUAL = 30;
-    public static byte LOW_BASE_QUAL_THRESHOLD = DEFAULT_MIN_BASE_QUAL; // may be adjusted by config or dynamically from median quals
+    // may be adjusted by config or dynamically from median quals
+    public static byte LOW_BASE_QUAL_THRESHOLD = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final double MAX_LOW_BASE_PERC = 0.5;

@@ -7,6 +7,10 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
@@ -32,7 +36,6 @@ import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FRAGS_REMOVE_SGL
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_FREQUENCY_SCORE_PENALTY;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_HLA_Y_FRAGMENT_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MAX_REF_FRAGMENTS;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_DEPTH_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_EVIDENCE_SUPPORT;
@@ -51,6 +54,7 @@ import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
@@ -73,6 +77,9 @@ public class LilacConfig
     public final String OutputDir;
 
     public final GeneSelector Genes;
+
+    // global for convenience
+    public static SequencingType SEQUENCING_TYPE = ILLUMINA;
 
     public final double HlaYPercentThreshold;
 
@@ -108,7 +115,6 @@ public class LilacConfig
     public static final String GENES = "genes";
 
     // constant overrides
-    private static final String MIN_BASE_QUAL = "min_base_qual";
     private static final String MAX_REF_FRAGMENTS = "max_ref_fragments";
     private static final String MIN_EVIDENCE_FACTOR = "min_evidence_factor";
     private static final String MIN_HIGH_QUAL_EVIDENCE_FACTOR = "min_high_qual_evidence_factor";
@@ -194,8 +200,8 @@ public class LilacConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         Genes = GeneSelector.valueOf(configBuilder.getValue(GENES));
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
 
-        LilacConstants.LOW_BASE_QUAL_THRESHOLD = (byte) configBuilder.getInteger(MIN_BASE_QUAL);
         LilacConstants.MIN_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
         LilacConstants.MIN_HIGH_QUAL_EVIDENCE_FACTOR = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
         LilacConstants.MIN_EVIDENCE_SUPPORT = configBuilder.getInteger(MIN_EVIDENCE_SUPPORT);
@@ -315,7 +321,8 @@ public class LilacConfig
         registerCommonConfig(configBuilder);
 
         configBuilder.addConfigItem(GENES, false, "Gene set to use", GeneSelector.MHC_CLASS_1.name());
-        configBuilder.addInteger(MIN_BASE_QUAL, "Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
+        SequencingType.registerConfig(configBuilder);
+
         configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE_FACTOR);
         configBuilder.addInteger(MAX_REF_FRAGMENTS, "Cap ref fragments in solution search, 0 uses all", DEFAULT_MAX_REF_FRAGMENTS);
         configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
@@ -366,4 +373,8 @@ public class LilacConfig
         String[] alleles = allelesStr.split(ITEM_DELIM, -1);
         return Arrays.stream(alleles).map(HlaAllele::fromString).collect(Collectors.toList());
     }
+
+    public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
+    public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 }
