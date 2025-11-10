@@ -77,6 +77,8 @@ public final class SbxRoutines
 
     public static int SBX_CONSENSUS_MAX_DEPTH = 20;
 
+    public static final int DEFAULT_SBX_MAX_DUPLICATE_DISTANCE = 2;
+
     public static void prepProcessRead(final SAMRecord record)
     {
         try

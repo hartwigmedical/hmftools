@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_MISMAT
 import static com.hartwig.hmftools.redux.consensus.ConsensusOutcome.INDEL_SOFTCLIP;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.consumesRefOrUnclippedBases;
 import static com.hartwig.hmftools.redux.consensus.ReadValidReason.hasValidCigar;
+import static com.hartwig.hmftools.redux.consensus.SbxRoutines.DEFAULT_SBX_MAX_DUPLICATE_DISTANCE;
+import static com.hartwig.hmftools.redux.duplicate.SbxDuplicateCollapser.checkSupplementaryConsistency;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -44,6 +46,16 @@ public class SbxIndelConsensus
         {
             consensusState.setFromRead(softClipOverIndelRead, true);
             consensusState.setOutcome(INDEL_SOFTCLIP);
+            return;
+        }
+
+        // check for non-overlapping soft-clips
+        SAMRecord suppTemplateRead = checkNonOverlappingSupplementaries(reads);
+
+        if(suppTemplateRead != null)
+        {
+            consensusState.setFromRead(suppTemplateRead, true);
+            consensusState.setOutcome(INDEL_MISMATCH);
             return;
         }
 
@@ -349,6 +361,17 @@ public class SbxIndelConsensus
 
         return false;
     }
+
+    public static SAMRecord checkNonOverlappingSupplementaries(final List<SAMRecord> reads)
+    {
+        List<SAMRecord> nonConsensusReads = checkSupplementaryConsistency(reads, DEFAULT_SBX_MAX_DUPLICATE_DISTANCE);
+
+        if(nonConsensusReads == null || nonConsensusReads.isEmpty())
+            return null;
+
+        return reads.stream().filter(x -> !nonConsensusReads.contains(x)).findFirst().orElse(null);
+    }
+
 
     private static CigarOperator determineConsensusCigarOperator(
             final List<ReadParseState> readStates, boolean inAlignedBases, final CigarOperator currentOperator,
