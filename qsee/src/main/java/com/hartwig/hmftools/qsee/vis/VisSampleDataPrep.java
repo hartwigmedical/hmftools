@@ -36,7 +36,7 @@ public class VisSampleDataPrep
     private final VisPrepConfig mVisPrepConfig;
 
     private static final String COL_FEATURE_VALUE = "FeatureValue";
-    private static final String COL_PERCENTILE_IN_COHORT = "PercentileInCohort";
+    private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
     public VisSampleDataPrep(VisPrepConfig config)
