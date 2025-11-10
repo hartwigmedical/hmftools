@@ -70,8 +70,7 @@ public class BqrRegionReader implements CigarHandler
     private ConsensusType mCurrentReadType;
 
     public static final int REF_BASE_REGION_SIZE = 100000;
-    private static final int BASE_DATA_PURGE_POS_BUFFER = 10;
-    private static final int BASE_DATA_PURGE_POS_CHECK = 1000;
+    private static final int BASE_DATA_PURGE_POS_CHECK = 5000;
 
     public BqrRegionReader(final RefGenomeInterface refGenome, final BaseQualityResults results, final List<ChrBaseRegion> allRegions)
     {
@@ -202,7 +201,6 @@ public class BqrRegionReader implements CigarHandler
                     mRegion, String.format("%.1f", mPerfCounter.getLastTime()), mReadCounter);
         }
         */
-
     }
 
     public Collection<BqrKeyCounter> getQualityCounts() { return mQualityCounts; }
@@ -334,9 +332,8 @@ public class BqrRegionReader implements CigarHandler
         if(!mCurrentRefSequence.positionWithinBounds(position))
             return;
 
-        byte ref = mCurrentRefSequence.base(position);
         byte[] trinucleotideContext = mCurrentRefSequence.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, trinucleotideContext);
         bqData.setHasIndel();
     }
 
@@ -372,8 +369,6 @@ public class BqrRegionReader implements CigarHandler
                 break;
 
             int readIndex = startReadIndex + i;
-
-            byte ref = mCurrentRefSequence.base(position);
 
             /*
             if(readIndex >= record.getReadBases().length)
@@ -418,7 +413,7 @@ public class BqrRegionReader implements CigarHandler
                 }
             }
 
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, trinucleotideContext);
             baseQualityData.processReadBase(consensusType, alt, quality, readPosStrand);
         }
 
@@ -439,6 +434,8 @@ public class BqrRegionReader implements CigarHandler
 
     private void purgeBaseDataList(int currentReadStartPos)
     {
+        int maxPurgePosition = currentReadStartPos - BASE_DATA_PURGE_POS_CHECK / 2;
+
         for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
         {
             int position = mCurrentRefSequence.position(mPurgeIndex);
@@ -450,7 +447,7 @@ public class BqrRegionReader implements CigarHandler
                 System.exit(1);
             }
 
-            if(position >= currentReadStartPos - BASE_DATA_PURGE_POS_BUFFER)
+            if(position >= maxPurgePosition)
                 break;
 
             BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
@@ -466,7 +463,7 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @VisibleForTesting
-    public BaseQualityData getOrCreateBaseQualData(int position, final byte ref, final byte[] trinucleotideContext)
+    public BaseQualityData getOrCreateBaseQualData(int position, final byte[] trinucleotideContext)
     {
         int posIndex = mCurrentRefSequence.index(position);
         BaseQualityData baseQualityData = mBaseQualityData[posIndex];

@@ -51,7 +51,7 @@ public class BaseQualityRecalibrationTest
         BqrKey key2 = createKey('A', 'A', 20, ConsensusType.NONE);
         BqrKey key3 = createKey('A', 'G', 15, ConsensusType.NONE); // a repeated alt
 
-        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext);
+        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.TrinucleotideContext);
 
         bqData1.processReadBase(ConsensusType.NONE, key1.Alt, key1.Quality, true);
 
@@ -68,7 +68,7 @@ public class BaseQualityRecalibrationTest
         // repeated alt at different locations
         int pos2 = 150;
         BqrKey key4 = createKey('C', 'G', 25, ConsensusType.NONE); // another repeated alt
-        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext);
+        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.TrinucleotideContext);
 
         for(int i = 0; i < 4; ++i)
         {
@@ -77,7 +77,7 @@ public class BaseQualityRecalibrationTest
 
         int pos3 = 200;
         BqrKey key5 = createKey('A', 'G', 20, ConsensusType.NONE); // an alt but not repeated
-        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext);
+        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.TrinucleotideContext);
 
         bqData3.processReadBase(ConsensusType.NONE, key5.Alt, key5.Quality, true);
 
@@ -165,7 +165,7 @@ public class BaseQualityRecalibrationTest
             final BqrRegionReader bqrCounter, int position, char ref, char alt, final ConsensusType readType, byte quality)
     {
         byte[] context = new byte[] { DNA_BASE_BYTES[0], (byte)ref, DNA_BASE_BYTES[0]};
-        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, (byte)ref, context);
+        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, context);
         baseQualityData.processReadBase(readType, (byte)alt, quality, true);
     }
 
@@ -188,7 +188,7 @@ public class BaseQualityRecalibrationTest
         byte ref = DNA_BASE_BYTES[1];
         byte alt = DNA_BASE_BYTES[2];
         byte[] tnContext = new byte[] { DNA_BASE_BYTES[0], ref, DNA_BASE_BYTES[0]};
-        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, ref, tnContext);
+        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, tnContext);
 
         // both read types pass the VAF / AD tests
 
@@ -228,7 +228,7 @@ public class BaseQualityRecalibrationTest
         // the standard read types will exceed the VAF tests but the dual will not, and so both are dropped
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 1, 10), REF_GENOME);
 
-        baseQualityData = bqrCounter.getOrCreateBaseQualData(position, ref, tnContext);
+        baseQualityData = bqrCounter.getOrCreateBaseQualData(position, tnContext);
 
         addReadCounts(baseQualityData, ConsensusType.NONE, ref, baseQual, posStrand, 100);
         addReadCounts(baseQualityData, ConsensusType.DUAL, ref, baseQual, posStrand, 100);
@@ -247,7 +247,7 @@ public class BaseQualityRecalibrationTest
         // the dual will fail and the standard will pass
         bqrCounter.initialise(new ChrBaseRegion(CHR_1, 1, 10), REF_GENOME);
 
-        baseQualityData = bqrCounter.getOrCreateBaseQualData(position, ref, tnContext);
+        baseQualityData = bqrCounter.getOrCreateBaseQualData(position, tnContext);
 
         addReadCounts(baseQualityData, ConsensusType.NONE, ref, baseQual, posStrand, 100);
         addReadCounts(baseQualityData, ConsensusType.DUAL, ref, baseQual, posStrand, 100);
@@ -277,7 +277,7 @@ public class BaseQualityRecalibrationTest
         byte ref = DNA_BASE_BYTES[1];
         byte alt = DNA_BASE_BYTES[2];
         byte[] tnContext = new byte[] { DNA_BASE_BYTES[0], ref, DNA_BASE_BYTES[0] };
-        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, ref, tnContext);
+        BaseQualityData baseQualityData = bqrCounter.getOrCreateBaseQualData(position, tnContext);
 
         addReadCounts(baseQualityData, ConsensusType.NONE, ref, baseQual, true, 50);
         addReadCounts(baseQualityData, ConsensusType.NONE, ref, baseQual, false, 50);
@@ -289,7 +289,7 @@ public class BaseQualityRecalibrationTest
         byte refReversed = Nucleotides.swapDnaBase(ref);
         byte altReversed = Nucleotides.swapDnaBase(alt);
 
-        BaseQualityData baseQualityDataRev = bqrCounter.getOrCreateBaseQualData(position + 4, refReversed, tnContextReversed);
+        BaseQualityData baseQualityDataRev = bqrCounter.getOrCreateBaseQualData(position + 4, tnContextReversed);
 
         addReadCounts(baseQualityDataRev, ConsensusType.NONE, refReversed, baseQual, true, 50);
         addReadCounts(baseQualityDataRev, ConsensusType.NONE, refReversed, baseQual, false, 50);
