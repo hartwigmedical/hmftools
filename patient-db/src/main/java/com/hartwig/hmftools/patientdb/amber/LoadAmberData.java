@@ -99,6 +99,7 @@ public class LoadAmberData
     {
         try
         {
+            LOGGER.info("acquiring Amber table locks for sample {}", sample.sampleId());
             dbAccess.context().execute("LOCK TABLES amberPatient WRITE, amberSample WRITE, amberMapping WRITE");
 
             LOGGER.info("comparing with existing samples");
@@ -130,7 +131,9 @@ public class LoadAmberData
         }
         finally
         {
+            LOGGER.info("releasing Amber table locks for sample {}", sample.sampleId());
             dbAccess.context().execute("UNLOCK TABLES");
+            LOGGER.info("Amber table locks released");
         }
     }
 
