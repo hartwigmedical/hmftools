@@ -11,9 +11,8 @@ import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SAMPLE_TYPE;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_SOURCE_TOOL;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.QSEE_FILE_ID;
 
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,7 +93,16 @@ public class CohortPercentilesFile
 
     public static void write(String filename, double[] percentiles, List<FeaturePercentiles> cohortPercentiles) throws IOException
     {
-        Files.write(new File(filename).toPath(), toLines(percentiles, cohortPercentiles));
+        BufferedWriter writer = FileWriterUtils.createBufferedWriter(filename);
+
+        List<String> lines = toLines(percentiles, cohortPercentiles);
+        for(String line : lines)
+        {
+            writer.write(line);
+            writer.newLine();
+        }
+
+        writer.close();
     }
 
     public static CohortPercentiles read(String filename)
