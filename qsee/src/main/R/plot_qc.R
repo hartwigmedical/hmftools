@@ -11,24 +11,26 @@ library(svglite)
 ## Config
 ################################
 
-# args <- commandArgs(TRUE)
-# 
-# TUMOR_ID <- args[1]
-# NORMAL_ID <- args[2]
-# SAMPLE_FEATURES_FILE <- args[3]
-# COHORT_NAMED_PCT_FILE <- args[4]
-# OUTPUT_PATH <- args[5]
-# GLOBAL_LOG_LEVEL <- args[6]
+args <- commandArgs(TRUE)
 
-TUMOR_ID <- "H00000098"
-NORMAL_ID <- "H00000098-ref"
-SAMPLE_FEATURES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/H00000098.qsee.vis.features.tsv.gz"
-COHORT_PERCENTILES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/COHORT.qsee.percentiles.tsv.gz"
-OUTPUT_PATH <- sprintf("/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/%s.qsee.vis.report.pdf", TUMOR_ID)
-GLOBAL_LOG_LEVEL <- "DEBUG"
+TUMOR_ID <- args[1]
+NORMAL_ID <- args[2]
+SAMPLE_FEATURES_FILE <- args[3]
+COHORT_PERCENTILES_FILE <- args[4]
+OUTPUT_PATH <- args[5]
+GLOBAL_LOG_LEVEL <- args[6]
+
+if(FALSE){
+    TUMOR_ID <- "H00000098"
+    NORMAL_ID <- "H00000098-ref"
+    SAMPLE_FEATURES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/H00000098.qsee.vis.features.tsv.gz"
+    COHORT_PERCENTILES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/COHORT.qsee.percentiles.tsv.gz"
+    OUTPUT_PATH <- sprintf("/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/%s.qsee.vis.report.pdf", TUMOR_ID)
+    GLOBAL_LOG_LEVEL <- "DEBUG"
+}
 
 ################################
-## Helper functions
+## Logging
 ################################
 
 GLOBAL_LOG_LEVEL <- toupper(GLOBAL_LOG_LEVEL)
@@ -42,18 +44,31 @@ LOG_LEVEL <- list(
    FATAL = list(name = "FATAL", severity = 6)
 )
 
-logMessage <- function(log_level, string){
-   
+log_message <- function(log_level, fmt, ...){
+
    current_time <- format(Sys.time(), "%H:%H:%OS3")
-   
-   log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, string)
-   
+
+   log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, sprintf(fmt, ...))
+
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
-   
+
    if(log_level$severity >= LOG_LEVEL[[GLOBAL_LOG_LEVEL]]$severity)
       message(log_message)
 }
+
+LOGGER <- list(
+    trace = function(fmt, ...){ log_message(LOG_LEVEL$TRACE, fmt, ...) },
+    debug = function(fmt, ...){ log_message(LOG_LEVEL$DEBUG, fmt, ...) },
+    info  = function(fmt, ...){ log_message(LOG_LEVEL$INFO , fmt, ...) },
+    warn  = function(fmt, ...){ log_message(LOG_LEVEL$WARN , fmt, ...) },
+    error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
+    fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
+)
+
+################################
+## Helper functions
+################################
 
 preordered_factor <- function(x){ factor(x, unique(x)) }
 
@@ -143,7 +158,7 @@ NAMED_PERCENTILES <- list(
 
 load_cohort_percentiles <- function(cohort_percentiles_file){
    
-   logMessage(LOG_LEVEL$INFO, paste0("Loading cohort percentiles from: ", COHORT_PERCENTILES_FILE))
+   LOGGER$info("Loading cohort percentiles from: %s", COHORT_PERCENTILES_FILE)
    
    PERCENTILE_PREFIX <- "Pct"
    
@@ -160,7 +175,7 @@ load_cohort_percentiles <- function(cohort_percentiles_file){
       } else { 
          ## Linear interpolation
          
-         logMessage(LOG_LEVEL$DEBUG, sprintf("Interpolating percentile(%s) as it was not found in the cohort percentiles file", target_percentile))
+         LOGGER$debug("Interpolating percentile(%s) as it was not found in the cohort percentiles file", target_percentile)
          
          lower_index <- abs(target_percentile - percentiles) %>% which.min()
          upper_index <- lower_index + 1
@@ -190,7 +205,7 @@ load_cohort_percentiles <- function(cohort_percentiles_file){
 }
 
 load_sample_features <- function(sample_features_file){
-   logMessage(LOG_LEVEL$INFO, paste0("Loading sample features from: ", SAMPLE_FEATURES_FILE))
+   LOGGER$info("Loading sample features from: %s", SAMPLE_FEATURES_FILE)
    return(read.delim(SAMPLE_FEATURES_FILE))
 }
 
@@ -209,7 +224,7 @@ draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
       normal_id = NORMAL_ID
    }
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$SUMMARY_TABLE$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$SUMMARY_TABLE$name)
    
    ## Get cohort data ================================
    sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name & SampleId %in% c(tumor_id, normal_id))
@@ -523,7 +538,7 @@ plot_distribution <- function(plot_data, invert_normal = FALSE, show_median = FA
 
 plot_coverage_distribution <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$COVERAGE_DISTRIBUTION$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = ReadDepth)
@@ -534,7 +549,7 @@ plot_coverage_distribution <- function(){
 
 plot_frag_length_distribution <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = FragLength)
@@ -545,7 +560,7 @@ plot_frag_length_distribution <- function(){
 
 plot_gc_bias <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$GC_BIAS$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$GC_BIAS$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$GC_BIAS$name)
    plot_data <- plot_data %>% rename(AxisX = GCBucket)
@@ -628,7 +643,7 @@ plot_dotplot <- function(plot_data, point_size = 1, linerange_size = 0.3, hlines
 
 plot_duplicate_freq <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$DUPLICATE_FREQ$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$DUPLICATE_FREQ$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$DUPLICATE_FREQ$name)
    plot_data <- preordered_factors(plot_data)
@@ -646,7 +661,7 @@ plot_duplicate_freq <- function(){
 
 plot_missed_variant_likelihood <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
    
@@ -679,7 +694,7 @@ plot_missed_variant_likelihood <- function(){
 
 plot_bqr_by_orig_qual <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$BQR_BY_ORIG_QUAL$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
    
@@ -713,7 +728,7 @@ plot_bqr_by_orig_qual <- function(){
 
 plot_bqr_by_snv96_context <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
 
@@ -747,7 +762,7 @@ plot_bqr_by_snv96_context <- function(){
 
 plot_ms_indel_error_rates <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MS_INDEL_ERROR_RATES$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
    
@@ -773,7 +788,7 @@ plot_ms_indel_error_rates <- function(){
 
 plot_msi_indel_error_bias <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
    
@@ -818,7 +833,7 @@ plot_msi_indel_error_bias <- function(){
 
 plot_discordant_read_stats <- function(){
    
-   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$DISCORDANT_READ_STATS$name))
+   LOGGER$debug("Plotting: %s", FEATURE_TYPE$DISCORDANT_READ_STATS$name)
    
    return(ggplot() + theme_bw())
    
@@ -871,7 +886,7 @@ plot_discordant_read_stats <- function(){
 
 create_report <- function(){
 
-   logMessage(LOG_LEVEL$INFO, "Creating plots per feature type")
+   LOGGER$info("Creating plots per feature type")
    plots <- list()
    
    plots[[FEATURE_TYPE$SUMMARY_TABLE$name]] <- draw_summary_table() %>% gt_grob() %>% wrap_elements(full = .)
@@ -892,7 +907,7 @@ create_report <- function(){
    
    plots_combined <- 
       patchwork::wrap_plots(
-         PLOTS, guides="collect", ncol = 2,
+         plots, guides="collect", ncol = 2,
          design = "
          AAAABB
          AAAACC
@@ -909,13 +924,14 @@ create_report <- function(){
          legend.direction = "vertical"
       )
    
-   logMessage(LOG_LEVEL$INFO, paste0("Writing report to: ", OUTPUT_PATH))
+   LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
       filename = OUTPUT_PATH, plot = plots_combined, 
       device = "pdf", width = 14, height = 17, units = "in"
    )
-   
 }
+
+create_report()
 
 
 
