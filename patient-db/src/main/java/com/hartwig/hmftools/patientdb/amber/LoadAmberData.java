@@ -133,7 +133,6 @@ public class LoadAmberData
         {
             LOGGER.info("releasing Amber table locks for sample {}", sample.sampleId());
             dbAccess.context().execute("UNLOCK TABLES");
-            LOGGER.info("Amber table locks released");
         }
     }
 
