@@ -331,11 +331,11 @@ Exceptions:
 
 Main outputs:
 
-| File                    | Description                                                                                                                                            |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| panel_probes.tsv        | Full information for each probe in the panel.                                                                                                          |
-| panel_probes.fasta      | Base sequences of probes in the panel.                                                                                                                 |
-| rejected_regions.tsv    | Full information for each rejected region not covered by probes. Includes variant probes but only the parts which correspond to the reference genome.  |
+| File               | Description                                                   |
+|--------------------|---------------------------------------------------------------|
+| panel_probes.tsv   | Full information for each probe in the panel.                 |
+| panel_probes.fasta | Base sequences of probes in the panel.                        |
+| rejections.tsv     | Full information for each uncovered region or rejected probe. |
 
 Informational/visualisation/debugging outputs:
 
@@ -343,7 +343,7 @@ Informational/visualisation/debugging outputs:
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | panel_probes.bed         | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
 | targeted_regions.bed     | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
-| rejected_regions.bed     | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
+| rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                                                  |                                                                                                
 | gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
 | sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested.                              |
 | candidate_regions.bed.gz | All regions evaluated for suitability.                                                                                                                 |

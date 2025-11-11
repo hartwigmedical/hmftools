@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 
 import java.util.List;
@@ -13,7 +12,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// Holds the panel output data, including probes, target regions, and rejected regions.
+// Holds the panel output data, including probes, target regions, and rejected features.
 // It's a mutable data structure because it's also used during probe generation to check which regions are already covered.
 public class PanelData implements PanelCoverage
 {
@@ -41,8 +40,8 @@ public class PanelData implements PanelCoverage
                 throw new IllegalArgumentException("Should only add accepted probes to the panel");
             }
         });
-        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} rejectedRegions={}",
-                result.probes().size(), result.candidateTargetRegions().size(), result.rejectedRegions().size());
+        LOGGER.debug("Adding to panel: probes={} candidateTargetRegions={} rejectedFeatures={}",
+                result.probes().size(), result.candidateTargetRegions().size(), result.rejectedFeatures().size());
         mData = mData.add(result);
     }
 
@@ -74,8 +73,8 @@ public class PanelData implements PanelCoverage
                 .toList();
     }
 
-    public List<RejectedRegion> rejectedRegions()
+    public List<RejectedFeature> rejectedFeatures()
     {
-        return mData.rejectedRegions();
+        return mData.rejectedFeatures();
     }
 }

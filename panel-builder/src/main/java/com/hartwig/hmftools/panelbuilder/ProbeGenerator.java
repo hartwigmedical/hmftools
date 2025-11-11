@@ -261,13 +261,13 @@ public class ProbeGenerator
         // they will likely still be captured during sequencing).
         Stream<BaseRegion> probeRegions = probes.stream().map(probe -> probe.definition().singleRegion().baseRegion());
         Stream<BaseRegion> unrejectedRegions = Stream.concat(probeRegions, permittedUncoveredRegions.stream());
-        List<RejectedRegion> rejectedRegions = regionNegatedIntersection(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
-                .map(uncovered -> new RejectedRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
+        List<RejectedFeature> rejectedFeatures = regionNegatedIntersection(uncoveredRegion.baseRegion(), unrejectedRegions).stream()
+                .map(uncovered -> RejectedFeature.fromRegion(ChrBaseRegion.from(chromosome, uncovered), metadata))
                 .toList();
 
         // Candidate target is not added here because it would be added multiple times if there are multiple calls to this function for one
         // target region. Candidate target must be added by the caller.
-        return new ProbeGenerationResult(probes, emptyList(), rejectedRegions);
+        return new ProbeGenerationResult(probes, emptyList(), rejectedFeatures);
     }
 
     private record CoverAcceptableSubregionResult(
@@ -650,17 +650,15 @@ public class ProbeGenerator
         List<Probe> candidateProbes = new ArrayList<>();
         for(ProbeGenerationSpec.SingleProbe spec : specs)
         {
+            Probe probe = new Probe(spec.sequenceDefinition(), spec.targetedRange(), spec.metadata())
+                    .withEvaluationCriteria(spec.evalCriteria());
             // Check if the region was already covered by probes in the panel before this batch.
-            if(existingCoverage.isCovered(spec.sequenceDefinition(), spec.targetedRange()))
+            if(existingCoverage.isCovered(probe.definition(), probe.targetedRange()))
             {
-                List<TargetRegion> targetRegions =
-                        spec.sequenceDefinition().regions().stream().map(region -> new TargetRegion(region, spec.metadata())).toList();
-                result = result.add(ProbeGenerationResult.alreadyCoveredTargets(targetRegions));
+                result = result.add(ProbeGenerationResult.alreadyCoveredProbe(probe));
             }
             else
             {
-                Probe probe = new Probe(spec.sequenceDefinition(), spec.targetedRange(), spec.metadata())
-                        .withEvaluationCriteria(spec.evalCriteria());
                 candidateProbes.add(probe);
             }
         }
@@ -669,11 +667,10 @@ public class ProbeGenerator
         result = result.add(evaluatedProbes.map(probe ->
         {
             List<ChrBaseRegion> probeRegions = probe.definition().regions();
-            List<TargetRegion> targetRegions = probeRegions.stream().map(region -> new TargetRegion(region, probe.metadata())).toList();
             // Check if the region was already covered by probes added inside this batch.
             if(batchCoverage.isCovered(probe.definition(), probe.targetedRange()))
             {
-                return ProbeGenerationResult.alreadyCoveredTargets(targetRegions);
+                return ProbeGenerationResult.alreadyCoveredProbe(probe);
             }
             else
             {
@@ -681,11 +678,11 @@ public class ProbeGenerator
                 {
                     // Add generated probe regions to the coverage check for future probe generation within this batch.
                     batchCoverage.addCoveredRegions(probeRegions);
-                    return new ProbeGenerationResult(List.of(probe), targetRegions, emptyList());
+                    return ProbeGenerationResult.acceptProbe(probe);
                 }
                 else
                 {
-                    return ProbeGenerationResult.rejectTargets(targetRegions);
+                    return ProbeGenerationResult.rejectProbe(probe);
                 }
             }
         }).reduce(new ProbeGenerationResult(), ProbeGenerationResult::add));
@@ -706,7 +703,7 @@ public class ProbeGenerator
         return evaluateProbes(probes.map(probe -> probe.withEvaluationCriteria(criteria)));
     }
 
-    // Probes must have eval criteria already set.
+    // Probes must have the evaluation criteria already set.
     private Stream<Probe> evaluateProbes(Stream<Probe> probes)
     {
         return mProbeEvaluator.evaluateProbes(probes).map(this::logCandidateProbe);

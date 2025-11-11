@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.GENE_STATS
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROBES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_TARGETED_REGIONS_FILE_NAME;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_FEATURES_FILE_STEM;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANT_INFO_FILE_NAME;
 
 import java.io.BufferedWriter;
@@ -39,8 +39,8 @@ public class OutputWriter implements AutoCloseable
     private final BufferedWriter mPanelProbesBedWriter;
     private final BufferedWriter mPanelProbesFastaWriter;
     private final BufferedWriter mProbeTargetedRegionsBedWriter;
-    private final DelimFileWriter<RejectedRegion> mRejectedRegionsTsvWriter;
-    private final BufferedWriter mRejectedRegionsBedWriter;
+    private final DelimFileWriter<RejectedFeature> mRejectedFeaturesTsvWriter;
+    private final BufferedWriter mRejectedFeaturesBedWriter;
     private final BufferedWriter mCandidateTargetRegionsBedWriter;
     @Nullable
     private final DelimFileWriter<Probe> mCandidateProbesTsvWriter;
@@ -64,11 +64,10 @@ public class OutputWriter implements AutoCloseable
         GCContent
     }
 
-    private enum RejectedRegionsColumns
+    private enum RejectedFeaturesColumns
     {
-        Chromosome,
-        PositionStart,
-        PositionEnd,
+        Region,
+        Sequence,
         TargetType,
         TargetExtra
     }
@@ -117,8 +116,8 @@ public class OutputWriter implements AutoCloseable
         String panelProbesBedFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + BED_EXTENSION);
         String panelProbesFastaFile = outputFilePath.apply(PANEL_PROBES_FILE_STEM + FASTA_EXTENSION);
         String probeTargetedRegionsBedFile = outputFilePath.apply(PROBE_TARGETED_REGIONS_FILE_NAME);
-        String rejectedRegionsTsvFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + TSV_EXTENSION);
-        String rejectedRegionsBedFile = outputFilePath.apply(REJECTED_REGIONS_FILE_STEM + BED_EXTENSION);
+        String rejectedFeaturesTsvFile = outputFilePath.apply(REJECTED_FEATURES_FILE_STEM + TSV_EXTENSION);
+        String rejectedFeaturesBedFile = outputFilePath.apply(REJECTED_FEATURES_FILE_STEM + BED_EXTENSION);
         String candidateTargetRegionsBedFile = outputFilePath.apply(CANDIDATE_TARGET_REGIONS_FILE_NAME);
         String candidateProbesTsvFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
         String geneStatsTsvFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
@@ -131,9 +130,9 @@ public class OutputWriter implements AutoCloseable
 
         mProbeTargetedRegionsBedWriter = createBufferedWriter(probeTargetedRegionsBedFile);
 
-        mRejectedRegionsTsvWriter =
-                new DelimFileWriter<>(rejectedRegionsTsvFile, RejectedRegionsColumns.values(), OutputWriter::writeRejectedRegionsTsvRow);
-        mRejectedRegionsBedWriter = createBufferedWriter(rejectedRegionsBedFile);
+        mRejectedFeaturesTsvWriter =
+                new DelimFileWriter<>(rejectedFeaturesTsvFile, RejectedFeaturesColumns.values(), OutputWriter::writeRejectedFeaturesTsvRow);
+        mRejectedFeaturesBedWriter = createBufferedWriter(rejectedFeaturesBedFile);
 
         mCandidateTargetRegionsBedWriter = createBufferedWriter(candidateTargetRegionsBedFile);
 
@@ -239,32 +238,36 @@ public class OutputWriter implements AutoCloseable
         writeTargetRegionBedRow(region, mProbeTargetedRegionsBedWriter);
     }
 
-    public void writeRejectedRegions(List<RejectedRegion> regions) throws IOException
+    public void writeRejectedFeatures(List<RejectedFeature> rejectedFeatures) throws IOException
     {
-        LOGGER.debug("Writing {} rejected regions to file", regions.size());
+        LOGGER.debug("Writing {} rejected features to file", rejectedFeatures.size());
 
         // Must be sorted for BED files since some tools expect sorted order.
-        regions = regions.stream().sorted(Comparator.comparing(RejectedRegion::region)).toList();
+        rejectedFeatures = rejectedFeatures.stream()
+                .sorted(Comparator.comparing(RejectedFeature::region, Comparator.nullsLast(Comparator.naturalOrder()))).toList();
 
-        for(RejectedRegion region : regions)
+        for(RejectedFeature rejectedFeature : rejectedFeatures)
         {
-            mRejectedRegionsTsvWriter.writeRow(region);
-            writeRejectedRegionsBedRow(region);
+            mRejectedFeaturesTsvWriter.writeRow(rejectedFeature);
+            if(rejectedFeature.region() != null)
+            {
+                writeRejectedFeaturesBedRow(rejectedFeature);
+            }
         }
     }
 
-    private static void writeRejectedRegionsTsvRow(final RejectedRegion region, DelimFileWriter.Row row)
+    private static void writeRejectedFeaturesTsvRow(final RejectedFeature rejectedFeature, DelimFileWriter.Row row)
     {
-        row.set(RejectedRegionsColumns.Chromosome, region.region().chromosome());
-        row.set(RejectedRegionsColumns.PositionStart, region.region().start());
-        row.set(RejectedRegionsColumns.PositionEnd, region.region().end());
-        row.set(RejectedRegionsColumns.TargetType, region.metadata().type().name());
-        row.set(RejectedRegionsColumns.TargetExtra, region.metadata().extraInfo());
+        row.set(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
+        row.set(RejectedFeaturesColumns.Sequence, rejectedFeature.probe() == null ? null : rejectedFeature.probe().sequence());
+        row.set(RejectedFeaturesColumns.TargetType, rejectedFeature.metadata().type().name());
+        row.set(RejectedFeaturesColumns.TargetExtra, rejectedFeature.metadata().extraInfo());
     }
 
-    private void writeRejectedRegionsBedRow(final RejectedRegion region) throws IOException
+    private void writeRejectedFeaturesBedRow(final RejectedFeature rejectedFeature) throws IOException
     {
-        mRejectedRegionsBedWriter.write(formatBedRow(region.region(), targetMetadataToBedName(region.metadata())));
+        mRejectedFeaturesBedWriter.write(
+                formatBedRow(requireNonNull(rejectedFeature.region()), targetMetadataToBedName(rejectedFeature.metadata())));
     }
 
     public void writeCandidateTargetRegions(List<TargetRegion> regions) throws IOException
@@ -397,8 +400,8 @@ public class OutputWriter implements AutoCloseable
 
         mProbeTargetedRegionsBedWriter.close();
 
-        mRejectedRegionsTsvWriter.close();
-        mRejectedRegionsBedWriter.close();
+        mRejectedFeaturesTsvWriter.close();
+        mRejectedFeaturesBedWriter.close();
 
         mCandidateTargetRegionsBedWriter.close();
 

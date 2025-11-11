@@ -29,12 +29,12 @@ public class ProbeGenerationResultTest
         ProbeGenerationResult result1 = new ProbeGenerationResult(
                 List.of(probe(new ChrBaseRegion("1", 10, 20), new TargetMetadata(TargetMetadata.Type.GENE, "1"))),
                 List.of(new TargetRegion(new ChrBaseRegion("2", 20, 30), new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "2"))),
-                List.of(new RejectedRegion(new ChrBaseRegion("4", 40, 50), new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "4")))
+                List.of(RejectedFeature.fromRegion(new ChrBaseRegion("4", 40, 50), new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "4")))
         );
         ProbeGenerationResult result2 = new ProbeGenerationResult(
                 List.of(probe(new ChrBaseRegion("5", 50, 60), new TargetMetadata(TargetMetadata.Type.CN_BACKBONE, "5"))),
                 List.of(new TargetRegion(new ChrBaseRegion("6", 60, 70), new TargetMetadata(TargetMetadata.Type.GENE, "6"))),
-                List.of(new RejectedRegion(new ChrBaseRegion("8", 80, 90), new TargetMetadata(TargetMetadata.Type.CN_BACKBONE, "8")))
+                List.of(RejectedFeature.fromRegion(new ChrBaseRegion("8", 80, 90), new TargetMetadata(TargetMetadata.Type.CN_BACKBONE, "8")))
         );
         ProbeGenerationResult expected = new ProbeGenerationResult(
                 List.of(
@@ -46,8 +46,8 @@ public class ProbeGenerationResultTest
                         new TargetRegion(new ChrBaseRegion("6", 60, 70), new TargetMetadata(TargetMetadata.Type.GENE, "6"))
                 ),
                 List.of(
-                        new RejectedRegion(new ChrBaseRegion("4", 40, 50), new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "4")),
-                        new RejectedRegion(new ChrBaseRegion("8", 80, 90), new TargetMetadata(TargetMetadata.Type.CN_BACKBONE, "8"))
+                        RejectedFeature.fromRegion(new ChrBaseRegion("4", 40, 50), new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "4")),
+                        RejectedFeature.fromRegion(new ChrBaseRegion("8", 80, 90), new TargetMetadata(TargetMetadata.Type.CN_BACKBONE, "8"))
                 )
         );
         ProbeGenerationResult actual = result1.add(result2);
@@ -81,7 +81,7 @@ public class ProbeGenerationResultTest
         ProbeGenerationResult expected = new ProbeGenerationResult(
                 emptyList(),
                 List.of(target),
-                List.of(new RejectedRegion(target.region(), metadata))
+                List.of(RejectedFeature.fromRegion(target.region(), metadata))
         );
         assertEquals(expected, actual);
     }
