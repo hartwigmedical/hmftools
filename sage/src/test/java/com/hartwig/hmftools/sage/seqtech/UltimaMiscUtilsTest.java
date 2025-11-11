@@ -178,7 +178,6 @@ public class UltimaMiscUtilsTest
         //                  0123456789012345     67890     12345678901234567890123456789
         String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
 
-
         // pos / index                10  I          20         D        30        40
         //                  01234567890123456     78901     23     45678901234567890123456789
         String readBases = "AACCGGTTAACCGGGTT" + "TAGAT" + "TT" + "ACCGGTTAACCGGTT"; // has inserted G before core and deleted A after core
@@ -209,6 +208,53 @@ public class UltimaMiscUtilsTest
         assertEquals(34, newReadCigarInfo.FlankIndexEnd);
         assertEquals(134, newReadCigarInfo.FlankPositionEnd);
         assertEquals("11M1I9M1D11M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // a deleted base immediately before and after the core
+
+        // pos / index         10             20
+        //           012345678901234567     89012     34567890123456
+        refBases =  "AACCGGTTAACCGGGAAA" + "TACAT" + "AACCGGTTAACCGGTT";
+
+        //                     10     D      20        D      30
+        // pos       012345678901234567    89012       34567890123456789
+        //                     10             20             30
+        // index     01234567890123456     78901       23456789012345678
+        readBases = "AACCGGTTAACCGGGAA" + "TAGAT" +   "ACCGGTTAACCGGTT";
+        // flank            FFFFFFFFFF                 FFFFFFFFFF
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        readAlignmentStart = 100;
+
+        cigarElements = Lists.newArrayList(
+                new CigarElement(17, M),
+                new CigarElement(1, D),
+                new CigarElement(5, M),
+                new CigarElement(1, D),
+                new CigarElement(15, M));
+
+        List<CigarElement> readCigar = List.of(
+                new CigarElement(10, M),
+                new CigarElement(1, D),
+                new CigarElement(5, M),
+                new CigarElement(1, D),
+                new CigarElement(10, M));
+
+        readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, readCigar, 107, 131, 118, 122,
+                7, 31);
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(7, newReadCigarInfo.FlankIndexStart);
+        assertEquals(107, newReadCigarInfo.FlankPositionStart);
+        assertEquals(118, newReadCigarInfo.CorePositionStart);
+        assertEquals(122, newReadCigarInfo.CorePositionEnd);
+        assertEquals(31, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(131, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("10M1D5M1D10M", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test
@@ -234,10 +280,21 @@ public class UltimaMiscUtilsTest
         ReadCigarInfo newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
-        assertNull(newReadCigarInfo);
+        assertNotNull(newReadCigarInfo);
+        assertEquals(6, newReadCigarInfo.FlankIndexStart);
+        assertEquals(106, newReadCigarInfo.FlankPositionStart);
+        assertEquals(116, newReadCigarInfo.CorePositionStart);
+        assertEquals(123, newReadCigarInfo.CorePositionEnd);
+        assertEquals(33, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("2S26M", cigarElementsToStr(newReadCigarInfo.Cigar));
 
         // and now on the right in the core
         readAlignmentStart = 100;
+
+        readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, cigarElements, 106, 130, 116, 120,
+                6, 30);
 
         cigarElements = Lists.newArrayList(
                 new CigarElement(22, M),
@@ -246,22 +303,19 @@ public class UltimaMiscUtilsTest
         newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
-        assertNull(newReadCigarInfo);
-
-        // invalid in the flanks
-        cigarElements = Lists.newArrayList(
-                new CigarElement(28, M),
-                new CigarElement(11, S));
-
-        newReadCigarInfo = extendUltimaCore(
-                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
-
-        assertNull(newReadCigarInfo);
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(120, newReadCigarInfo.CorePositionEnd);
+        assertEquals(30, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(130, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("19M9S", cigarElementsToStr(newReadCigarInfo.Cigar));
 
         // accept truncated flank in append mode
         cigarElements = Lists.newArrayList(
-                new CigarElement(28, M),
-                new CigarElement(11, S));
+                new CigarElement(31, M),
+                new CigarElement(8, S));
 
         newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, true);
@@ -271,9 +325,9 @@ public class UltimaMiscUtilsTest
         assertEquals(103, newReadCigarInfo.FlankPositionStart);
         assertEquals(113, newReadCigarInfo.CorePositionStart);
         assertEquals(123, newReadCigarInfo.CorePositionEnd);
-        assertEquals(27, newReadCigarInfo.FlankIndexEnd);
-        assertEquals(127, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("25M", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertEquals(30, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(130, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("28M", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test
@@ -321,7 +375,8 @@ public class UltimaMiscUtilsTest
     @Test
     public void testBuildContextUltimaWithExtension()
     {
-        String middleRefBases = "CTTTTTTTTTTAATTGCAA";
+        //                        0123456789012345678
+        String middleRefBases =  "CTTTTTTTTTTAATTGCAA";
         String middleReadBases = "CTTTTTTTTTAATTGGCAA";
         int variantMiddleIndex = 14;
         int refPaddingSize = 20;
@@ -343,17 +398,12 @@ public class UltimaMiscUtilsTest
         VariantReadContextBuilder readContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
         VariantReadContext readContext = readContextBuilder.buildContext(variant, read, varIndexInRead, refSequence);
-        int expectedCoreLength = 17;
+        int expectedCoreLength = 8;
 
         assertNotNull(readContext);
-        assertEquals(DEFAULT_FLANK_LENGTH, readContext.CoreIndexStart);
-        assertEquals(DEFAULT_FLANK_LENGTH + expectedCoreLength - 1, readContext.CoreIndexEnd);
-        assertEquals(variant.Position - 14, readContext.CorePositionStart);
-        assertEquals(variant.Position + 2, readContext.CorePositionEnd);
-        assertEquals("CTTTTTTTTTTAATTGC", readContext.refBases());
-        assertEquals("CTTTTTTTTTAATTGGC", readContext.coreStr());
-        assertEquals(
-                readBases.substring(varIndexInRead - 14 - DEFAULT_FLANK_LENGTH, varIndexInRead + 3 + DEFAULT_FLANK_LENGTH),
-                readContext.readBases());
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(17, readContext.CoreIndexEnd);
+        assertEquals("TAATTGGC", readContext.coreStr());
+        assertEquals("TTAATTGC", readContext.refBases());
     }
 }

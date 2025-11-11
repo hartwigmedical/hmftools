@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
@@ -120,15 +121,31 @@ public class ReadCigarState
 
     public static void moveToRefPosition(final ReadCigarState state, final List<CigarElement> cigarElements, final int targetRefPosition)
     {
+        boolean moveUp = state.RefPosition < targetRefPosition;
+
         while(state.RefPosition != targetRefPosition)
         {
-            moveState(state, cigarElements, state.RefPosition < targetRefPosition);
+            moveState(state, cigarElements, moveUp);
 
             if(!state.mValid)
                 break;
         }
 
         if(state.RefPosition != targetRefPosition)
+            state.setInvalid();
+    }
+
+    public static void moveToIndex(final ReadCigarState state, final List<CigarElement> cigarElements, final int targetIndex)
+    {
+        while(state.ReadIndex != targetIndex)
+        {
+            moveState(state, cigarElements, state.ReadIndex < targetIndex);
+
+            if(!state.mValid)
+                break;
+        }
+
+        if(state.ReadIndex != targetIndex)
             state.setInvalid();
     }
 }

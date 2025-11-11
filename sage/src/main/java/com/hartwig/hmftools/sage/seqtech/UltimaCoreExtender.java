@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.seqtech;
 
+import static com.hartwig.hmftools.common.bam.ReadCigarState.moveToIndex;
 import static com.hartwig.hmftools.common.bam.ReadCigarState.moveToRefPosition;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -21,25 +23,6 @@ public class UltimaCoreExtender
             final byte[] readBases, final RefSequence refSequence, final int readAlignmentStart,
             final List<CigarElement> cigarElements, final ReadCigarInfo readCigarInfo, final int flankSize, final boolean inAppendMode)
     {
-        // move to the start of the core
-        ReadCigarState lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
-        ReadCigarState upperState = new ReadCigarState(lowerState);
-
-        moveToRefPosition(lowerState, cigarElements, readCigarInfo.CorePositionStart);
-        moveToRefPosition(upperState, cigarElements, readCigarInfo.CorePositionEnd);
-
-        if(!lowerState.isValid() || !upperState.isValid())
-            return null;
-
-        boolean extendedStart = findCoreExtension(readBases, refSequence, cigarElements, lowerState, false);
-        boolean extendedEnd = findCoreExtension(readBases, refSequence, cigarElements, upperState, true);
-
-        if(!extendedStart && !extendedEnd)
-            return readCigarInfo;
-
-        if(!lowerState.isValid() || !upperState.isValid())
-            return null;
-
         int corePositionStart = readCigarInfo.CorePositionStart;
         int corePositionEnd = readCigarInfo.CorePositionEnd;
         int flankPositionStart = readCigarInfo.FlankPositionStart;
@@ -47,59 +30,105 @@ public class UltimaCoreExtender
         int flankPositionEnd = readCigarInfo.FlankPositionEnd;
         int flankIndexEnd = readCigarInfo.FlankIndexEnd;
 
-        if(extendedStart)
+        // move to the start of the core
+        ReadCigarState lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
+        ReadCigarState upperState = new ReadCigarState(lowerState);
+
+        int readAlignmentEnd = readAlignmentStart + cigarElements.stream()
+                .filter(x -> x.getOperator().consumesReferenceBases()).mapToInt(x -> x.getLength()).sum() - 1;
+
+        boolean extendedStart = false;
+        boolean extendedEnd = false;
+
+        boolean lowerInSoftClip = readCigarInfo.FlankPositionStart < readAlignmentStart;
+        boolean upperInSoftClip = readCigarInfo.FlankPositionEnd > readAlignmentEnd;
+
+        if(!lowerInSoftClip)
         {
-            corePositionStart = lowerState.RefPosition;
+            moveToRefPosition(lowerState, cigarElements, readCigarInfo.CorePositionStart);
 
-            findFlankIndex(lowerState, cigarElements, flankSize, false);
+            if(lowerState.isValid())
+                extendedStart = findCoreExtension(readBases, refSequence, cigarElements, lowerState, false);
 
-            if(!lowerState.isValid() && inAppendMode)
+            if(extendedStart)
             {
-                // move to the first aligned base, ie up from the soft-clip or end of the read
-                lowerState.resetValid();
-                moveState(lowerState, cigarElements, true);
-            }
+                corePositionStart = lowerState.RefPosition;
 
-            flankPositionStart = lowerState.RefPosition;
-            flankIndexStart = lowerState.ReadIndex;
+                findFlankIndex(lowerState, cigarElements, flankSize, false);
+
+                if(!lowerState.isValid() && inAppendMode)
+                {
+                    // move to the first aligned base, ie up from the soft-clip or end of the read
+                    lowerState.resetValid();
+                    moveState(lowerState, cigarElements, true, true);
+                }
+
+                flankPositionStart = lowerState.RefPosition;
+                flankIndexStart = lowerState.ReadIndex;
+            }
+            else
+            {
+                // keep the existing flank position
+                lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
+                moveToRefPosition(lowerState, cigarElements, readCigarInfo.FlankPositionStart);
+            }
         }
         else
         {
-            // keep the existing flank position
-            lowerState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
-            moveToRefPosition(lowerState, cigarElements, readCigarInfo.FlankPositionStart);
+            // move to the existing flank start
+            moveToIndex(lowerState, cigarElements, readCigarInfo.FlankIndexStart);
         }
 
-        if(extendedEnd)
+        if(!upperInSoftClip)
         {
-            corePositionEnd = upperState.RefPosition;
+            moveToRefPosition(upperState, cigarElements, readCigarInfo.CorePositionEnd);
 
-            findFlankIndex(upperState, cigarElements, flankSize, true);
+            if(upperState.isValid())
+                extendedEnd = findCoreExtension(readBases, refSequence, cigarElements, upperState, true);
 
-            if(!upperState.isValid() && inAppendMode)
+            if(extendedEnd)
             {
-                upperState.resetValid();
-                moveState(upperState, cigarElements, false);
-            }
+                corePositionEnd = upperState.RefPosition;
 
-            flankPositionEnd = upperState.RefPosition;
-            flankIndexEnd = upperState.ReadIndex;
+                findFlankIndex(upperState, cigarElements, flankSize, true);
+
+                if(!upperState.isValid() && inAppendMode)
+                {
+                    upperState.resetValid();
+                    moveState(upperState, cigarElements, false, true);
+                }
+
+                flankPositionEnd = upperState.RefPosition;
+                flankIndexEnd = upperState.ReadIndex;
+            }
         }
+        else
+        {
+            moveToIndex(upperState, cigarElements, readCigarInfo.FlankIndexEnd);
+        }
+
+        if(!extendedStart && !extendedEnd)
+            return readCigarInfo;
 
         if(!lowerState.isValid() || !upperState.isValid())
             return null;
 
         // build a new cigar between the 2 flank boundaries
-        List<CigarElement> newCigarElements = buildReadCigar(new ReadCigarState(lowerState), cigarElements, upperState.RefPosition);
+        List<CigarElement> newCigarElements = buildReadCigar(new ReadCigarState(lowerState), cigarElements, upperState.ReadIndex);
 
         return new ReadCigarInfo(
                 readAlignmentStart, newCigarElements, flankPositionStart, flankPositionEnd, corePositionStart, corePositionEnd,
                 flankIndexStart, flankIndexEnd);
     }
 
-    private static void moveState(final ReadCigarState state, final List<CigarElement> cigarElements, boolean moveUp)
+    private static void moveState(final ReadCigarState state, final List<CigarElement> cigarElements, boolean moveUp, boolean skipDeletes)
     {
         ReadCigarState.moveState(state, cigarElements, moveUp);
+
+        while(skipDeletes && state.operator() == D)
+        {
+            ReadCigarState.moveState(state, cigarElements, moveUp);
+        }
 
         if(state.operator() == S) // for this routine, the adjusted core and flanks cannot be within a soft-clip
             state.setInvalid();
@@ -110,35 +139,55 @@ public class UltimaCoreExtender
             final ReadCigarState state, boolean searchUp)
     {
         byte readBase = readBases[state.ReadIndex];
-        byte refBase = refSequence.base(state.RefPosition);
+        int refPosition = state.RefPosition;
+        byte refBase = refSequence.base(refPosition);
 
-        boolean requiresExtension = false;
+        boolean hpStarted = false;
+        boolean hpEnded = false;
 
         while(true)
         {
             byte nextReadBase, nextRefBase;
 
-            moveState(state, cigarElements, searchUp);
+            moveState(state, cigarElements, searchUp, true);
+            refPosition += searchUp ? 1 : -1;
 
             if(!state.isValid())
                 break;
 
             nextReadBase = readBases[state.ReadIndex];
-            nextRefBase = refSequence.base(state.RefPosition);
+            nextRefBase = refSequence.base(refPosition);
 
-            if(validExtensionPoint(readBase, nextReadBase, refBase, nextRefBase, state.operator()))
-                break;
+            if(!hpStarted)
+            {
+                if(readBase == nextReadBase || refBase == nextRefBase)
+                    hpStarted = true;
+                else
+                    break;
+            }
+            else
+            {
+                if(!hpEnded)
+                    hpEnded = readBase != nextReadBase && refBase != nextRefBase;
 
-            requiresExtension = true;
+                if(hpEnded)
+                {
+                    if(nextReadBase == nextRefBase && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
+                        break;
+                }
+            }
         }
 
-        return requiresExtension;
+        return hpStarted;
     }
 
-    private static boolean validExtensionPoint(byte readBase, byte nextReadBase, byte refBase, byte nextRefBase, final CigarOperator cigarType)
+    /*
+    private static boolean validExtensionPoint(
+            byte readBase, byte nextReadBase, byte refBase, byte nextRefBase, final CigarOperator cigarType)
     {
         return readBase != nextReadBase && refBase != nextRefBase && nextReadBase == nextRefBase && cigarType == CigarOperator.M;
     }
+    */
 
     private static void findFlankIndex(
             final ReadCigarState state, final List<CigarElement> cigarElements, final int requiredFlankLength, boolean moveUp)
@@ -147,7 +196,7 @@ public class UltimaCoreExtender
 
         while(flankLength < requiredFlankLength || state.Element.getOperator() == I)
         {
-            moveState(state, cigarElements, moveUp);
+            moveState(state, cigarElements, moveUp, true);
             ++flankLength;
 
             if(!state.isValid())
@@ -156,15 +205,15 @@ public class UltimaCoreExtender
     }
 
     private static List<CigarElement> buildReadCigar(
-            final ReadCigarState state, final List<CigarElement> cigarElements, final int flankPositionEnd)
+            final ReadCigarState state, final List<CigarElement> cigarElements, final int flankIndexEnd)
     {
         List<CigarElement> elements = Lists.newArrayList();
         int cigarLength = 1;
         CigarOperator cigarOperator = state.operator();
 
-        while(state.RefPosition < flankPositionEnd)
+        while(state.ReadIndex < flankIndexEnd)
         {
-            moveState(state, cigarElements, true);
+            moveState(state, cigarElements, true, false);
 
             if(state.operator() == cigarOperator)
             {

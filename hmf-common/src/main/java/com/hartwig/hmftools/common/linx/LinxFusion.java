@@ -94,9 +94,6 @@ public abstract class LinxFusion
         {
             String[] values = line.split(TSV_DELIM);
 
-            String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
-                    values[fieldsIndexMap.get("reportableReasons")] : "";
-
             fusions.add(ImmutableLinxFusion.builder()
                     .fivePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("fivePrimeBreakendId")]))
                     .threePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("threePrimeBreakendId")]))
