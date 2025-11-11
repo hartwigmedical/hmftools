@@ -43,6 +43,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 | sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
 | custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
 | custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| threads            | Integer | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
 | output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
 | verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
 | log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
