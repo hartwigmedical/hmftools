@@ -122,6 +122,19 @@ public class ProbeQualityScorerTest
         mExpectedProbes.add(probe.withQualityScore(quality));
     }
 
+    private void probeRejected()
+    {
+        mProbeCounter++;
+        // Probe data doesn't really matter as long as it's unique.
+        ChrBaseRegion region = new ChrBaseRegion("1", 1000 * mProbeCounter, 1000 * mProbeCounter + 120 - 1);
+        String sequence = "A".repeat(region.baseLength());
+        Probe probe = probe(SequenceDefinition.singleRegion(region), sequence)
+                .withEvaluationCriteria(new ProbeEvaluator.Criteria(1.0, 0.5, 0.1))
+                .withEvaluationResult(EvaluationResult.reject("rejected"));
+        mInputProbes.add(probe);
+        mExpectedProbes.add(probe);
+    }
+
     @Test
     public void testEmptyStream()
     {
@@ -186,6 +199,15 @@ public class ProbeQualityScorerTest
     }
 
     @Test
+    public void testAlreadyRejected()
+    {
+        probeRejected();
+        probeRejected();
+        probeRejected();
+        probeRejected();
+    }
+
+    @Test
     public void testMixed()
     {
         // Interleaved sequence of probes with various quality score calculation pathways.
@@ -199,6 +221,16 @@ public class ProbeQualityScorerTest
         probeWithNoProfileResult();
         probeWithProfileResult();
         probeWithModelResult();
+        probeRejected();
+        probeRejected();
+        probeWithProfileResult();
+        probeRejected();
+        probeWithModelResult();
+        probeWithModelResult();
+        probeRejected();
+        probeRejected();
+        probeWithProfileResult();
+        probeRejected();
     }
 
     @Test
@@ -208,7 +240,7 @@ public class ProbeQualityScorerTest
         Random random = new Random(42);
         for(int i = 0; i < 10000; ++i)
         {
-            int r = random.nextInt(3);
+            int r = random.nextInt(4);
             switch(r)
             {
                 case 0:
@@ -219,6 +251,9 @@ public class ProbeQualityScorerTest
                     break;
                 case 2:
                     probeWithModelResult();
+                    break;
+                case 3:
+                    probeRejected();
                     break;
                 default:
                     throw new RuntimeException();

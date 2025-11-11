@@ -19,8 +19,8 @@ public class ProbeGenerationResultTest
         String sequence = MockRefGenome.generateRandomBases(region.baseLength());
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         return new Probe(definition, sequence, targetedRange, metadata, null, null, 0.0, 0.0)
-                .withEvalCriteria(new ProbeEvaluator.Criteria(1.0, 0.5, 0.1))
-                .withRejectionReason(null);
+                .withEvaluationCriteria(new ProbeEvaluator.Criteria(1.0, 0.5, 0.1))
+                .withEvaluationResult(EvaluationResult.accept());
     }
 
     @Test

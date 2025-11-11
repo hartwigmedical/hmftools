@@ -656,7 +656,7 @@ public class ProbeGenerator
             else
             {
                 Probe probe = new Probe(spec.sequenceDefinition(), spec.targetedRange(), spec.metadata())
-                        .withEvalCriteria(spec.evalCriteria());
+                        .withEvaluationCriteria(spec.evalCriteria());
                 candidateProbes.add(probe);
             }
         }
@@ -691,7 +691,7 @@ public class ProbeGenerator
 
     private Stream<Probe> evaluateProbes(Stream<Probe> probes, final ProbeEvaluator.Criteria criteria)
     {
-        return evaluateProbes(probes.map(probe -> probe.withEvalCriteria(criteria)));
+        return evaluateProbes(probes.map(probe -> probe.withEvaluationCriteria(criteria)));
     }
 
     // Probes must have eval criteria already set.

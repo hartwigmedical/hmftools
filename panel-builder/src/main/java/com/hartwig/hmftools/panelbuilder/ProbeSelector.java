@@ -37,7 +37,7 @@ public class ProbeSelector
             double optimalGcTolerance = bestGcStrategy.gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,
-                    probe -> abs(requireNonNull(probe.gcContent()) - requireNonNull(probe.evalCriteria()).gcContentTarget()),
+                    probe -> abs(requireNonNull(probe.gcContent()) - requireNonNull(probe.evaluationCriteria()).gcContentTarget()),
                     distance -> Doubles.lessOrEqual(distance, optimalGcTolerance),
                     false);
         }

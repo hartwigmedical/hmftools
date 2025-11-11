@@ -98,11 +98,11 @@ public class ProbeQualityModel
             return batches
                     .flatMap(batch ->
                     {
-                        LOGGER.trace("Running BWA-MEM alignment");
+                        LOGGER.trace("Running BWA-MEM alignment on {} queries", batch.size());
                         List<List<BwaMemAlignment>> batchAlignments = mAligner.alignSeqs(batch);
                         if(batchAlignments.size() != batch.size())
                         {
-                            // Presumably this shouldn't occur, but we'll check to give a nicer error just in case.
+                            // Presumably, this shouldn't occur, but we'll check to give a nicer error just in case.
                             throw new RuntimeException("Alignment failed");
                         }
                         return batchAlignments.stream();

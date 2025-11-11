@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.panelbuilder.EvaluationResult;
 import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
@@ -77,7 +78,7 @@ public class SampleVariants
         variants.addAll(SomaticSv.load(config.sampleId(), config.purpleDir(), config.linxDir()));
         variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
-        Map<Variant, FilterResult> variantFilters = new HashMap<>();
+        Map<Variant, EvaluationResult> variantFilters = new HashMap<>();
         ProbeGenerationResult result = generateProbes(variants, config.maxProbes(), probeGenerator, panelData, variantFilters);
 
         List<VariantInfo> variantInfos = createVariantInfos(variants, variantFilters);
@@ -102,7 +103,7 @@ public class SampleVariants
     }
 
     public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage, Map<Variant, FilterResult> variantFilters)
+            final PanelCoverage coverage, Map<Variant, EvaluationResult> variantFilters)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
         Map<String, Integer> geneDisruptions = new HashMap<>();
@@ -147,7 +148,7 @@ public class SampleVariants
     }
 
     private static List<Variant> selectDriverVariants(final List<Variant> variants, Map<String, Integer> geneDisruptions,
-            Map<Variant, FilterResult> variantFilters, int maxCount)
+            Map<Variant, EvaluationResult> variantFilters, int maxCount)
     {
         LOGGER.debug("Selecting up to {} driver variants", maxCount);
 
@@ -168,7 +169,7 @@ public class SampleVariants
                 break;
             }
 
-            FilterResult filterResult = driverFilters(variant, geneDisruptions);
+            EvaluationResult filterResult = driverFilters(variant, geneDisruptions);
             variantFilters.put(variant, filterResult);
             filterResult.unwrap(
                     () ->
@@ -182,7 +183,7 @@ public class SampleVariants
         return selectedVariants;
     }
 
-    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, FilterResult> variantFilters,
+    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, EvaluationResult> variantFilters,
             int maxCount)
     {
         LOGGER.debug("Selecting up to {} nondriver variants", maxCount);
@@ -205,7 +206,7 @@ public class SampleVariants
                 break;
             }
 
-            FilterResult filterResult = nondriverFilters(variant);
+            EvaluationResult filterResult = nondriverFilters(variant);
             variantFilters.put(variant, filterResult);
             filterResult.unwrap(
                     () -> selectedVariants.add(variant),
@@ -215,9 +216,9 @@ public class SampleVariants
         return selectedVariants;
     }
 
-    private static FilterResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
+    private static EvaluationResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
     {
-        List<Supplier<FilterResult>> filters = new ArrayList<>();
+        List<Supplier<EvaluationResult>> filters = new ArrayList<>();
 
         if(variant instanceof SomaticSv sv)
         {
@@ -230,7 +231,7 @@ public class SampleVariants
 
         filters.add(() -> geneDisruptionFilter(variant, geneDisruptions));
 
-        return FilterResult.applyFilters(filters);
+        return EvaluationResult.applyEvaluations(filters);
     }
 
     private static class NondriverVariantComparator implements Comparator<SomaticMutation>
@@ -251,9 +252,9 @@ public class SampleVariants
         }
     }
 
-    private static FilterResult nondriverFilters(final SomaticMutation variant)
+    private static EvaluationResult nondriverFilters(final SomaticMutation variant)
     {
-        return FilterResult.applyFilters(List.of(
+        return EvaluationResult.applyEvaluations(List.of(
                 () -> vafFilter(variant.vaf()),
                 () -> tumorFragmentsFilter(variant.tumorFragments()),
                 () -> indelLengthFilter(variant.indelLength()),
@@ -261,40 +262,40 @@ public class SampleVariants
                 () -> germlineStatusFilter(variant.germlineStatus())));
     }
 
-    private static FilterResult vafFilter(double vaf)
+    private static EvaluationResult vafFilter(double vaf)
     {
-        return FilterResult.condition(vaf >= SAMPLE_VAF_MIN, "VAF");
+        return EvaluationResult.condition(vaf >= SAMPLE_VAF_MIN, "VAF");
     }
 
-    private static FilterResult tumorFragmentsFilter(int tumorFragments)
+    private static EvaluationResult tumorFragmentsFilter(int tumorFragments)
     {
-        return FilterResult.condition(tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN, "tumor fragments");
+        return EvaluationResult.condition(tumorFragments >= SAMPLE_FRAGMENT_COUNT_MIN, "tumor fragments");
     }
 
-    private static FilterResult indelLengthFilter(int indelLength)
+    private static EvaluationResult indelLengthFilter(int indelLength)
     {
-        return FilterResult.condition(indelLength <= SAMPLE_INDEL_LENGTH_MAX, "indel length");
+        return EvaluationResult.condition(indelLength <= SAMPLE_INDEL_LENGTH_MAX, "indel length");
     }
 
-    private static FilterResult repeatCountFilter(int repeatCount)
+    private static EvaluationResult repeatCountFilter(int repeatCount)
     {
-        return FilterResult.condition(repeatCount <= SAMPLE_REPEAT_COUNT_MAX, "repeat count");
+        return EvaluationResult.condition(repeatCount <= SAMPLE_REPEAT_COUNT_MAX, "repeat count");
     }
 
-    private static FilterResult germlineStatusFilter(final GermlineStatus germlineStatus)
+    private static EvaluationResult germlineStatusFilter(final GermlineStatus germlineStatus)
     {
-        return FilterResult.condition(germlineStatus == GermlineStatus.DIPLOID, "germline status");
+        return EvaluationResult.condition(germlineStatus == GermlineStatus.DIPLOID, "germline status");
     }
 
-    private static FilterResult geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
+    private static EvaluationResult geneDisruptionFilter(final Variant variant, final Map<String, Integer> geneDisruptions)
     {
         if(variant instanceof SomaticSv sv)
         {
             boolean pass = sv.disruptedGenes().stream()
                     .allMatch(gene -> geneDisruptions.getOrDefault(gene, 0) + 1 <= SAMPLE_SV_BREAKENDS_PER_GENE_MAX);
-            return FilterResult.condition(pass, "gene disruptions");
+            return EvaluationResult.condition(pass, "gene disruptions");
         }
-        return FilterResult.pass();
+        return EvaluationResult.accept();
     }
 
     private static void registerDisruptedGenes(final Variant variant, Map<String, Integer> geneDisruptions)
@@ -321,14 +322,14 @@ public class SampleVariants
         return new TargetMetadata(variant.targetType(), variant.toString());
     }
 
-    private static List<VariantInfo> createVariantInfos(final List<Variant> variants, final Map<Variant, FilterResult> variantFilters)
+    private static List<VariantInfo> createVariantInfos(final List<Variant> variants, final Map<Variant, EvaluationResult> variantFilters)
     {
         return variants.stream()
                 .map(variant ->
                 {
-                    FilterResult filterResult = variantFilters.get(variant);
+                    EvaluationResult filterResult = variantFilters.get(variant);
                     // If we didn't even attempt to filter the variant, it must have been because we encountered the probe limit first.
-                    String filterReason = filterResult == null ? "max probe count" : filterResult.failReason();
+                    String filterReason = filterResult == null ? "max probe count" : filterResult.rejectionReason();
                     return new VariantInfo(variant.toString(), filterReason);
                 })
                 .toList();

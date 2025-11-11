@@ -32,8 +32,8 @@ public class ProbeQualityScorer
     // Buffer at most this many probes total.
     private final int mMaxBufferSize;
 
-    private static final int DEFAULT_MODEL_BATCH_SIZE = 1000;
-    private static final int DEFAULT_MAX_BUFFER_SIZE = 10000;
+    private static final int DEFAULT_MODEL_BATCH_SIZE = 5000;
+    private static final int DEFAULT_MAX_BUFFER_SIZE = 50000;
 
     protected ProbeQualityScorer(final Function<ChrBaseRegion, OptionalDouble> computeQualityProfile,
             final Function<List<String>, List<Double>> computeQualityModel, int modelBatchSize, int maxBufferSize)
@@ -80,21 +80,25 @@ public class ProbeQualityScorer
                 return mBatchIterator.next();
             }
 
-            // If the next probe's quality score can be computed with the probe quality profile, then yield it immediately.
-            // This will be the case most of the time.
-            Probe probe;
-            if(mSourceIterator.hasNext())
-            {
-                probe = mSourceIterator.next();
-                OptionalDouble qualityScore = tryComputeQualityScoreFromProfile(probe);
-                if(qualityScore.isPresent())
-                {
-                    return probe.withQualityScore(qualityScore.getAsDouble());
-                }
-            }
-            else
+            if(!mSourceIterator.hasNext())
             {
                 return null;
+            }
+
+            Probe probe = mSourceIterator.next();
+
+            // No need to compute quality scores for probes which are already rejected, since the quality score won't be checked.
+            if(probe.rejected())
+            {
+                return probe;
+            }
+
+            // If the next probe's quality score can be computed with the probe quality profile, then yield it immediately.
+            // This will be the case most of the time.
+            OptionalDouble qualityScore = tryComputeQualityScoreFromProfile(probe);
+            if(qualityScore.isPresent())
+            {
+                return probe.withQualityScore(qualityScore.getAsDouble());
             }
 
             // If we got here, then the probe needs the probe quality model, in which case we consume probes until the batch is large enough
@@ -105,19 +109,22 @@ public class ProbeQualityScorer
             while(mSourceIterator.hasNext() && modelBatchSize < mModelBatchSize && buffer.size() < mMaxBufferSize)
             {
                 probe = mSourceIterator.next();
-                OptionalDouble qualityScore = tryComputeQualityScoreFromProfile(probe);
-                if(qualityScore.isPresent())
+                if(!probe.rejected())
                 {
-                    probe = probe.withQualityScore(qualityScore.getAsDouble());
-                }
-                else
-                {
-                    modelBatchSize++;
+                    qualityScore = tryComputeQualityScoreFromProfile(probe);
+                    if(qualityScore.isPresent())
+                    {
+                        probe = probe.withQualityScore(qualityScore.getAsDouble());
+                    }
+                    else
+                    {
+                        modelBatchSize++;
+                    }
                 }
                 buffer.add(probe);
             }
-            // Compute the quality scores using the probe quality model and save them for subsequent invocations of the stream.
-            List<Probe> resultBatch = computeQualityScoresFromModel(buffer);
+            // Compute the quality scores using the probe quality model and save them for future invocations of the stream.
+            List<Probe> resultBatch = annotateQualityScoresWithModel(buffer);
             mBatchIterator = resultBatch.iterator();
             return mBatchIterator.next();
         }
@@ -151,12 +158,13 @@ public class ProbeQualityScorer
 
     private static boolean canUseProfile(final SequenceDefinition sequenceDefinition)
     {
-        // If the sequence is very close to the ref genome then there's no need to use the probe quality model.
+        // If the sequence is very close to the ref genome, then there's no need to use the probe quality model.
         // We assume a small perturbation of the ref sequence will not produce a large change in quality score.
         return sequenceIndelSize(sequenceDefinition).orElse(Integer.MAX_VALUE) <= PROBE_QUALITY_PROFILE_MAX_REF_DIFF;
     }
 
-    private List<Probe> computeQualityScoresFromModel(final List<Probe> probes)
+    // Where necessary, set quality scores as computed by the probe quality model.
+    private List<Probe> annotateQualityScoresWithModel(final List<Probe> probes)
     {
         ArrayList<Probe> result = new ArrayList<>(probes.size());
         ArrayList<String> sequences = new ArrayList<>();
@@ -164,7 +172,7 @@ public class ProbeQualityScorer
         for(int i = 0; i < probes.size(); ++i)
         {
             Probe probe = probes.get(i);
-            if(probe.qualityScore() == null)
+            if(!probe.rejected() && probe.qualityScore() == null)
             {
                 sequences.add(requireNonNull(probe.sequence()));
                 indices.add(i);
