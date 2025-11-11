@@ -3,7 +3,6 @@ package com.hartwig.hmftools.panelbuilder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -45,9 +44,8 @@ public class ProbeEvaluatorTest
         String sequence = "ACGTACGTAC";
         double qualityScore = 1.0;
         double gcContent = 0.5;
-        Probe probe = probe(sequence, qualityScore, gcContent);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
-        assertNotSame(probe, evalProbe);
+        Probe probe = probe(sequence, qualityScore, gcContent).withEvalCriteria(CRITERIA);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertEquals(qualityScore, evalProbe.qualityScore(), EPSILON);
@@ -62,9 +60,8 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectSequence()
     {
         String sequence = "AAANNNAAAA";
-        Probe probe = probe(sequence, 1.0, 0.5);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
-        assertNotSame(probe, evalProbe);
+        Probe probe = probe(sequence, 1.0, 0.5).withEvalCriteria(CRITERIA);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertEquals(sequence, evalProbe.sequence());
@@ -77,9 +74,8 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = probe("AAAAAAAAAA", 1.0, 0.0);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
-        assertNotSame(probe, evalProbe);
+        Probe probe = probe("AAAAAAAAAA", 1.0, 0.0).withEvalCriteria(CRITERIA);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertEquals(0, evalProbe.gcContent(), EPSILON);
@@ -92,9 +88,8 @@ public class ProbeEvaluatorTest
     @Test
     public void testEvaluateProbesRejectQuality()
     {
-        Probe probe = probe("ACGTACGTAC", 0.1, 0.5);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe, CRITERIA);
-        assertNotSame(probe, evalProbe);
+        Probe probe = probe("ACGTACGTAC", 0.1, 0.5).withEvalCriteria(CRITERIA);
+        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
         assertEquals(probe.metadata(), evalProbe.metadata());
         assertEquals(CRITERIA, evalProbe.evalCriteria());
         assertEquals(0.1, evalProbe.qualityScore(), EPSILON);
