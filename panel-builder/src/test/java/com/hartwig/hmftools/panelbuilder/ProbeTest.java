@@ -32,14 +32,14 @@ public class ProbeTest
         probe = probe.withGcContent(gcContent);
         assertEquals(gcContent, probe.gcContent(), 0);
 
-        probe = probe.withEvalCriteria(EVAL_CRITERIA);
-        assertEquals(EVAL_CRITERIA, probe.evalCriteria());
+        probe = probe.withEvaluationCriteria(EVAL_CRITERIA);
+        assertEquals(EVAL_CRITERIA, probe.evaluationCriteria());
 
-        String rejectionReason = "rejected";
-        probe = probe.withRejectionReason(rejectionReason);
-        assertEquals(rejectionReason, probe.rejectionReason());
+        EvaluationResult evaluationResult = EvaluationResult.reject("rejected");
+        probe = probe.withEvaluationResult(evaluationResult);
+        assertEquals(evaluationResult, probe.evaluationResult());
 
-        assertEquals(new Probe(DEFINITION, SEQUENCE, TARGETED_RANGE, METADATA, EVAL_CRITERIA, rejectionReason, qualityScore, gcContent), probe);
+        assertEquals(new Probe(DEFINITION, SEQUENCE, TARGETED_RANGE, METADATA, EVAL_CRITERIA, evaluationResult, qualityScore, gcContent), probe);
     }
 
     @Test
@@ -51,7 +51,8 @@ public class ProbeTest
         assertFalse(probe.accepted());
         assertFalse(probe.rejected());
 
-        probe = probe.withEvalCriteria(EVAL_CRITERIA);
+        probe = probe.withEvaluationCriteria(EVAL_CRITERIA);
+        probe = probe.withEvaluationResult(EvaluationResult.accept());
         assertTrue(probe.evaluated());
         assertTrue(probe.accepted());
         assertFalse(probe.rejected());
@@ -66,8 +67,8 @@ public class ProbeTest
         assertFalse(probe.accepted());
         assertFalse(probe.rejected());
 
-        probe = probe.withEvalCriteria(EVAL_CRITERIA);
-        probe = probe.withRejectionReason("QS");
+        probe = probe.withEvaluationCriteria(EVAL_CRITERIA);
+        probe = probe.withEvaluationResult(EvaluationResult.reject("QS"));
         assertTrue(probe.evaluated());
         assertFalse(probe.accepted());
         assertTrue(probe.rejected());

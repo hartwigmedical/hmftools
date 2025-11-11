@@ -2,9 +2,10 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -20,6 +21,9 @@ public class ProbeEvaluatorTest
     private static final TargetMetadata METADATA = new TargetMetadata(TargetMetadata.Type.CUSTOM_REGION, "test");
 
     private static final double EPSILON = 1e-6;
+
+    // Attributes are pre-set in test cases, so no need for these functions to modify the probe. Simplifies the test setup.
+    private final ProbeEvaluator mEvaluator = new ProbeEvaluator(Function.identity(), Function.identity(), Function.identity());
 
     private static Probe probe(final String sequence, Double qualityScore, Double gcContent)
     {
@@ -44,14 +48,14 @@ public class ProbeEvaluatorTest
         String sequence = "ACGTACGTAC";
         double qualityScore = 1.0;
         double gcContent = 0.5;
-        Probe probe = probe(sequence, qualityScore, gcContent).withEvalCriteria(CRITERIA);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
+        Probe probe = probe(sequence, qualityScore, gcContent).withEvaluationCriteria(CRITERIA);
+        Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
-        assertEquals(CRITERIA, evalProbe.evalCriteria());
+        assertEquals(CRITERIA, evalProbe.evaluationCriteria());
         assertEquals(qualityScore, evalProbe.qualityScore(), EPSILON);
         assertEquals(sequence, evalProbe.sequence());
         assertEquals(gcContent, evalProbe.gcContent(), EPSILON);
-        assertNull(evalProbe.rejectionReason());
+        assertEquals(EvaluationResult.accept(), evalProbe.evaluationResult());
         assertTrue(evalProbe.accepted());
         assertFalse(evalProbe.rejected());
     }
@@ -60,43 +64,42 @@ public class ProbeEvaluatorTest
     public void testEvaluateProbesRejectSequence()
     {
         String sequence = "AAANNNAAAA";
-        Probe probe = probe(sequence, 1.0, 0.5).withEvalCriteria(CRITERIA);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
+        Probe probe = probe(sequence, 1.0, 0.5).withEvaluationCriteria(CRITERIA);
+        Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
-        assertEquals(CRITERIA, evalProbe.evalCriteria());
+        assertEquals(CRITERIA, evalProbe.evaluationCriteria());
         assertEquals(sequence, evalProbe.sequence());
-        assertNotNull(evalProbe.rejectionReason());
         assertTrue(evalProbe.rejected());
         assertFalse(evalProbe.accepted());
-        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("seq"));
+        assertEquals(EvaluationResult.reject("sequence"), evalProbe.evaluationResult());
     }
 
     @Test
     public void testEvaluateProbesRejectGc()
     {
-        Probe probe = probe("AAAAAAAAAA", 1.0, 0.0).withEvalCriteria(CRITERIA);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
+        double gcContent = 0.0;
+        Probe probe = probe("AAAAAAAAAA", 1.0, gcContent).withEvaluationCriteria(CRITERIA);
+        Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
-        assertEquals(CRITERIA, evalProbe.evalCriteria());
-        assertEquals(0, evalProbe.gcContent(), EPSILON);
-        assertNotNull(evalProbe.rejectionReason());
+        assertEquals(CRITERIA, evalProbe.evaluationCriteria());
+        assertEquals(gcContent, evalProbe.gcContent(), EPSILON);
         assertTrue(evalProbe.rejected());
         assertFalse(evalProbe.accepted());
-        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("gc"));
+        assertEquals(EvaluationResult.reject("GC"), evalProbe.evaluationResult());
     }
 
     @Test
     public void testEvaluateProbesRejectQuality()
     {
-        Probe probe = probe("ACGTACGTAC", 0.1, 0.5).withEvalCriteria(CRITERIA);
-        Probe evalProbe = ProbeEvaluator.evaluateProbe(probe);
+        double qualityScore = 0.1;
+        Probe probe = probe("ACGTACGTAC", qualityScore, 0.5).withEvaluationCriteria(CRITERIA);
+        Probe evalProbe = mEvaluator.evaluateProbes(Stream.of(probe)).findFirst().orElseThrow();
         assertEquals(probe.metadata(), evalProbe.metadata());
-        assertEquals(CRITERIA, evalProbe.evalCriteria());
-        assertEquals(0.1, evalProbe.qualityScore(), EPSILON);
-        assertNotNull(evalProbe.rejectionReason());
+        assertEquals(CRITERIA, evalProbe.evaluationCriteria());
+        assertEquals(qualityScore, evalProbe.qualityScore(), EPSILON);
         assertTrue(evalProbe.rejected());
         assertFalse(evalProbe.accepted());
-        assertTrue(evalProbe.rejectionReason().toLowerCase().contains("qs"));
+        assertEquals(EvaluationResult.reject("QS"), evalProbe.evaluationResult());
     }
 
     // TODO: test annotating attributes

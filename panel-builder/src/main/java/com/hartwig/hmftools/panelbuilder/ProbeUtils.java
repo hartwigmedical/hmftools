@@ -91,11 +91,18 @@ public class ProbeUtils
         return maxProbeEndOverlapping(region) + 1;
     }
 
+    public static List<TargetRegion> probeTargetRegions(final Probe probe)
+    {
+        return probe.definition().regions().stream()
+                .map(region -> new TargetRegion(region, probe.metadata()))
+                .toList();
+    }
+
     public static List<ChrBaseRegion> probeTargetedRegions(final SequenceDefinition definition, final TargetedRange targetedRange)
     {
         // Determine subset of probe regions defined by targetedRange.
 
-        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>();
+        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>(2);
 
         int probeLength = definition.baseLength();
         int targetedStart = targetedRange.startOffset();

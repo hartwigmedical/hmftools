@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.mappability.ProbeQualityProfile.CFG_PROBE_QUALITY_FILE;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
@@ -35,6 +37,7 @@ public record PanelBuilderConfig(
         @Nullable String customRegionsFile,
         @Nullable String customSvsFile,
         @Nullable SampleVariantsConfig sampleVariants,
+        int threads,
         @Nullable String outputId,
         String outputDir,
         boolean verboseOutput
@@ -76,6 +79,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
                 configBuilder.getValue(CFG_CUSTOM_SVS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
+                parseThreads(configBuilder),
                 configBuilder.getValue(OUTPUT_ID),
                 parseOutputDir(configBuilder),
                 configBuilder.hasFlag(CFG_VERBOSE_OUTPUT)
@@ -99,6 +103,8 @@ public record PanelBuilderConfig(
         configBuilder.addPath(CFG_CUSTOM_SVS_FILE, false, DESC_CUSTOM_SV_FILE);
 
         SampleVariantsConfig.registerConfig(configBuilder);
+
+        addThreadOptions(configBuilder);
 
         configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
         addOutputId(configBuilder);

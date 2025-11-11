@@ -22,6 +22,8 @@ public final class FileDelimiters
     public static final String CRAM_EXTENSION = ".cram";
     public static final String CRAM_INDEX_EXTENSION = ".crai";
 
+    public static final String BED_EXTENSION = ".bed";
+
     public static String inferFileDelimiter(final String filename)
     {
         return filename.endsWith(CSV_EXTENSION) || filename.endsWith(CSV_ZIP_EXTENSION) ? CSV_DELIM : TSV_DELIM;

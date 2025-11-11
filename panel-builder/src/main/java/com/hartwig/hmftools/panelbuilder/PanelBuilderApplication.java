@@ -53,7 +53,7 @@ public class PanelBuilderApplication
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());
-        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), 1);
+        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
         ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
@@ -87,7 +87,7 @@ public class PanelBuilderApplication
         mOutputWriter.writePanelProbes(mPanelData.probes());
         mOutputWriter.writeProbeTargetedRegions(mPanelData.coveredTargetRegions());
         mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
-        mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
+        mOutputWriter.writeRejectedFeatures(mPanelData.rejectedFeatures());
         if(genesExtraOutput != null)
         {
             mOutputWriter.writeGeneStats(genesExtraOutput.geneStats());

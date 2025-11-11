@@ -43,6 +43,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 | sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
 | custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
 | custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| threads            | Integer | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
 | output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
 | verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
 | log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
@@ -331,22 +332,22 @@ Exceptions:
 
 Main outputs:
 
-| File                    | Description                                                                                                                                            |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| panel_probes.tsv        | Full information for each probe in the panel.                                                                                                          |
-| panel_probes.fasta      | Base sequences of probes in the panel.                                                                                                                 |
-| rejected_regions.tsv    | Full information for each rejected region not covered by probes. Includes variant probes but only the parts which correspond to the reference genome.  |
+| File               | Description                                                   |
+|--------------------|---------------------------------------------------------------|
+| panel_probes.tsv   | Full information for each probe in the panel.                 |
+| panel_probes.fasta | Base sequences of probes in the panel.                        |
+| rejections.tsv     | Full information for each uncovered region or rejected probe. |
 
 Informational/visualisation/debugging outputs:
 
-| File                    | Description                                                                                                                                            |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| panel_probes.bed        | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
-| targeted_regions.bed    | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
-| rejected_regions.bed    | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
-| gene_stats.tsv          | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
-| sample_variant_info.tsv | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested.                              |
-| candidate_regions.bed   | All regions evaluated for suitability.                                                                                                                 |
-| candidate_probes.tsv.gz | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                                                  |
+| File                     | Description                                                                                                                                            |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| panel_probes.bed         | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
+| targeted_regions.bed     | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
+| rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                                                  |                                                                                                
+| gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
+| sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested.                              |
+| candidate_regions.bed.gz | All regions evaluated for suitability.                                                                                                                 |
+| candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                                                  |
 
 All output files will be prefixed by `output_id` if specified.

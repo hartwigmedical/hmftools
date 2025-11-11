@@ -98,12 +98,15 @@ public class PanelBuilderConstants
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
     public static final String PROBE_TARGETED_REGIONS_FILE_NAME = "targeted_regions.bed";
-    public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
-    public static final String CANDIDATE_TARGET_REGIONS_FILE_NAME = "candidate_regions.bed";
-    // This output can get very large (multiple GB) so write it in compressed format.
+    public static final String REJECTED_FEATURES_FILE_STEM = "rejections";
+    // This output can get somewhat large (hundreds of MB) due to the copy number backbone, so write it in compressed format.
+    public static final String CANDIDATE_TARGET_REGIONS_FILE_NAME = "candidate_regions.bed.gz";
+    // This output can get very large (multiple GB), so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
     public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
+
+    public static final String FASTA_EXTENSION = ".fasta";
 
     static
     {

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import java.util.stream.Stream;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+
+import java.util.List;
 
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -33,7 +35,7 @@ public sealed interface ProbeGenerationSpec
 
     // Generate the one best acceptable probe centered on one of the given positions.
     record CoverOnePosition(
-            Stream<BasePosition> positions,
+            List<BasePosition> positions,
             TargetMetadata metadata,
             ProbeEvaluator.Criteria evalCriteria,
             ProbeSelector.Strategy selectStrategy
@@ -49,5 +51,12 @@ public sealed interface ProbeGenerationSpec
             ProbeEvaluator.Criteria evalCriteria
     ) implements ProbeGenerationSpec
     {
+        public SingleProbe
+        {
+            if(sequenceDefinition.baseLength() != PROBE_LENGTH)
+            {
+                throw new IllegalArgumentException("region length must be equal to probe length");
+            }
+        }
     }
 }
