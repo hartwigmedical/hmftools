@@ -106,6 +106,8 @@ public class PanelBuilderConstants
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
     public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
 
+    public static final String FASTA_EXTENSION = ".fasta";
+
     static
     {
         if(!(PROBE_LENGTH >= 50))
