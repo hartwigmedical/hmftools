@@ -1,24 +1,9 @@
 package com.hartwig.hmftools.common.segmentation;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 class Stats
 {
-    static DescriptiveStatistics ds(double[] array)
-    {
-        DescriptiveStatistics ds = new DescriptiveStatistics();
-        for(double value : array)
-        {
-            ds.addValue(value);
-        }
-        return ds;
-    }
-
-    static double mean(double[] array)
-    {
-        return ds(array).getMean();
-    }
-
     /**
      * Computes the median absolute deviation of an array of doubles.
      * Copied from the R code: <a href="https://search.r-project.org/R/refmans/stats/html/mad.html">...</a>
@@ -38,13 +23,12 @@ class Stats
      */
     static double medianAbsoluteDeviation(double[] array)
     {
-        DescriptiveStatistics ds = ds(array);
-        double median = ds.getPercentile(50.0);
-        DescriptiveStatistics diffsDS = new DescriptiveStatistics();
-        for(double value : array)
+        double median = Doubles.median(array);
+        double[] absoluteDeviations = new double[array.length];
+        for(int i = 0; i < array.length; i++)
         {
-            diffsDS.addValue(Math.abs(value - median));
+            absoluteDeviations[i] = Math.abs(array[i] - median);
         }
-        return diffsDS.getPercentile(50.0) * 1.4826;
+        return Doubles.median(absoluteDeviations) * 1.4826;
     }
 }

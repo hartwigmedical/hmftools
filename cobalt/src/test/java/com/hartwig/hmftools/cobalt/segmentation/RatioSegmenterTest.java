@@ -73,7 +73,7 @@ public class RatioSegmenterTest
     @Before
     public void setup()
     {
-        executor = Executors.newFixedThreadPool(12);
+        executor = Executors.newFixedThreadPool(4);
     }
 
     @After
@@ -82,7 +82,7 @@ public class RatioSegmenterTest
         executor.shutdown();
     }
 
-//    @Test
+    //    @Test
     public void coloTest() throws Exception
     {
         ratios.clear();
@@ -96,10 +96,10 @@ public class RatioSegmenterTest
             ratios.put(ratio.chr(), ratio);
         });
         System.out.println("Read " + ratios.size() + " ratios.");
-        File resultsDir = new File("/Users/timlavers/work/junk");
+        File resultsDir = new File("/Users/timlavers/work/batches/2025/11/12/1/iterate");
         Stopwatch stopwatch = Stopwatch.createUnstarted();
         DescriptiveStatistics statistics = new DescriptiveStatistics();
-        for (int i=0; i<3; i++)
+        for(int i = 0; i < 3; i++)
         {
             System.out.println("Run " + i);
             File outputFile = new File(resultsDir, "colo." + i + ".pcf");
