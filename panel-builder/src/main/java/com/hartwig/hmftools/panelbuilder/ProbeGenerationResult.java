@@ -17,7 +17,7 @@ public record ProbeGenerationResult(
 {
     public ProbeGenerationResult
     {
-        if(probes.stream().anyMatch(probe -> !probe.accepted()))
+        if(!probes.stream().allMatch(Probe::accepted))
         {
             throw new IllegalArgumentException("Should only add accepted probes to result");
         }

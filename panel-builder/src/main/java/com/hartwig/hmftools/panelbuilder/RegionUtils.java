@@ -259,7 +259,7 @@ public class RegionUtils
     // Gets subregion indexed by [start, end) taking into account orientation.
     public static ChrBaseRegion getSubregion(final ChrBaseRegion region, final Orientation orientation, int start, int end)
     {
-        if(!region.isValid())
+        if(!region.hasValidPositions())
         {
             throw new IllegalArgumentException("Invalid region");
         }

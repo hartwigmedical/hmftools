@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
@@ -30,8 +31,11 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -104,25 +108,14 @@ public class Genes
                 .flatMap(Optional::stream)
                 .toList();
 
-        // When generating probes, don't check probe overlap. This is because:
-        //   - Gene probes are generated first, so nothing is covered beforehand, and
+        // When generating probes, don't check probe overlap between genes. This is because:
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
         //   - Within one gene, multiple transcripts are merged beforehand to avoid subregion overlap.
 
         LOGGER.debug("Generating probes");
-        ProbeGenerationResult result = new ProbeGenerationResult();
-        List<GeneStats> geneStats = new ArrayList<>();
-        for(GeneTranscriptData gene : geneTranscriptDatas)
-        {
-            List<GeneRegion> geneRegions = createGeneRegions(gene);
+        ProbeGenerationResult result = generateProbes(geneTranscriptDatas, probeGenerator, panelData);
 
-            ProbeGenerationResult geneResult = geneRegions.stream()
-                    .map(geneRegion -> generateProbes(geneRegion, probeGenerator))
-                    .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
-            result = result.add(geneResult);
-
-            geneStats.add(new GeneStats(gene.gene().GeneName, geneResult.probes().size()));
-        }
+        List<GeneStats> geneStats = computeGeneStats(result, geneTranscriptDatas);
         ExtraOutput extraOutput = new ExtraOutput(geneStats);
 
         panelData.addResult(result);
@@ -269,6 +262,14 @@ public class Genes
         {
             this(gene, type, ChrBaseRegion.from(gene.gene().Chromosome, region));
         }
+    }
+
+    private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
+            final PanelCoverage coverage)
+    {
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream()
+                .flatMap(gene -> createGeneRegions(gene).stream().map(Genes::createProbeGenerationSpec));
+        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
     }
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)
@@ -452,7 +453,7 @@ public class Genes
         return mergedExons;
     }
 
-    private static ProbeGenerationResult generateProbes(final GeneRegion geneRegion, final ProbeGenerator probeGenerator)
+    private static ProbeGenerationSpec createProbeGenerationSpec(final GeneRegion geneRegion)
     {
         LOGGER.trace("Generating probes for {}", geneRegion);
 
@@ -461,9 +462,9 @@ public class Genes
         return switch(geneRegion.type())
         {
             case CODING, UTR, PROMOTER ->
-                    probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
+                    new ProbeGenerationSpec.CoverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT);
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-                    probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT, null);
+                    new ProbeGenerationSpec.CoverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
         };
     }
 
@@ -474,7 +475,8 @@ public class Genes
         // If there are multiple transcripts, merge their names, since the region is determined based on one or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
-        return new TargetMetadata(TARGET_TYPE, extraInfo);
+        // Store the gene region as extra data so it can be recovered later to generate summary statistics.
+        return new TargetMetadata(TARGET_TYPE, extraInfo, geneRegion);
     }
 
     private static String transcriptDataName(final TranscriptData transcriptData)
@@ -487,5 +489,24 @@ public class Genes
         {
             return transcriptData.TransName;
         }
+    }
+
+    private static List<GeneStats> computeGeneStats(final ProbeGenerationResult result, List<GeneTranscriptData> genes)
+    {
+        Map<String, Integer> geneProbeCounts = new HashMap<>();
+        for(GeneTranscriptData gene : genes)
+        {
+            geneProbeCounts.put(gene.gene.GeneName, 0);
+        }
+        for(Probe probe : result.probes())
+        {
+            GeneRegion geneRegion = (GeneRegion) requireNonNull(probe.metadata().extraData());
+            geneProbeCounts.merge(geneRegion.gene().gene().GeneName, 1, Integer::sum);
+        }
+        return geneProbeCounts.entrySet().stream()
+                // Sort by gene name to ensure deterministic output.
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new GeneStats(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }

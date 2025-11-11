@@ -50,10 +50,13 @@ public class ProbeEvaluator
         return probes.map(probe -> evaluateProbe(probe, criteria));
     }
 
-    protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
+    protected static Probe evaluateProbe(final Probe probe, final Criteria criteria)
     {
-        probe = probe.withEvalCriteria(criteria);
+        return evaluateProbe(probe.withEvalCriteria(criteria));
+    }
 
+    private static Probe evaluateProbe(Probe probe)
+    {
         probe = evaluateSequence(probe);
         if(probe.rejected())
         {

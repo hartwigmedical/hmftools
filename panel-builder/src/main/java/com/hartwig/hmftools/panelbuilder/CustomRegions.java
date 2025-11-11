@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.isRegionValid;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,12 +34,10 @@ public class CustomRegions
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);
 
-        ProbeGenerationResult result = customRegions.stream()
-                .map(region -> generateProbes(region, probeGenerator, panelData))
-                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        ProbeGenerationResult result = generateProbes(customRegions, probeGenerator, panelData);
         // Mostly safe to generate the probes at once and then add to the result afterward,
-        // since we already checked that the custom region don't overlap, and assume any overlap from the probe generation is minimal.
-        // Potentially there could be small overlap if two custom regions were right next to each other.
+        // since we already checked that the custom regions don't overlap and assume any overlap from the probe generation is minimal.
+        // Potentially, there could be a small overlap if two custom regions were right next to each other.
         panelData.addResult(result);
 
         LOGGER.info("Done generating custom region probes");
@@ -71,12 +70,17 @@ public class CustomRegions
         }
     }
 
-    private static ProbeGenerationResult generateProbes(final CustomRegion region, final ProbeGenerator probeGenerator,
+    private static ProbeGenerationResult generateProbes(final List<CustomRegion> customRegions, final ProbeGenerator probeGenerator,
             final PanelCoverage coverage)
+    {
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = customRegions.stream().map(CustomRegions::createProbeGenerationSpec);
+        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
+    }
+
+    private static ProbeGenerationSpec createProbeGenerationSpec(final CustomRegion region)
     {
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, region.extraInfo());
-        ProbeGenerationResult result = probeGenerator.coverRegion(region.region(), metadata, PROBE_CRITERIA, PROBE_SELECT, coverage);
-        return result;
+        return new ProbeGenerationSpec.CoverRegion(region.region(), metadata, PROBE_CRITERIA, PROBE_SELECT);
     }
 }

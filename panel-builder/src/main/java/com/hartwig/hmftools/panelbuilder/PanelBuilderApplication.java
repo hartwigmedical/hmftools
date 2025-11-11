@@ -192,7 +192,7 @@ public class PanelBuilderApplication
         }
         else
         {
-            new SampleVariants(mConfig.sampleVariants(), mProbeGenerator, mPanelData).generateProbes();
+            SampleVariants.generateProbes(mConfig.sampleVariants(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }

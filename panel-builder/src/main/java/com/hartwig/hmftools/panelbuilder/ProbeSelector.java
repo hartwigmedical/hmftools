@@ -23,7 +23,7 @@ public class ProbeSelector
         }
         else if(strategy instanceof Strategy.MaxQuality maxQualityStrategy)
         {
-            // Early stopping if "optimal" quality score is found.
+            // Early stopping if the "optimal" quality score is found.
             double optimalQuality = maxQualityStrategy.optimalQuality();
             return getBestScoringElement(
                     acceptableProbes,
@@ -33,7 +33,7 @@ public class ProbeSelector
         }
         else if(strategy instanceof Strategy.BestGc bestGcStrategy)
         {
-            // Early stopping if "optimal" GC content is found.
+            // Early stopping if the "optimal" GC content is found.
             double optimalGcTolerance = bestGcStrategy.gcToleranceOptimal();
             return getBestScoringElement(
                     acceptableProbes,

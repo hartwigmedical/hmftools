@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
@@ -21,12 +19,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.panelbuilder.PanelCoverage;
 import com.hartwig.hmftools.panelbuilder.PanelData;
 import com.hartwig.hmftools.panelbuilder.ProbeEvaluator;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerationResult;
+import com.hartwig.hmftools.panelbuilder.ProbeGenerationSpec;
 import com.hartwig.hmftools.panelbuilder.ProbeGenerator;
 import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
@@ -42,10 +44,6 @@ import org.apache.logging.log4j.Logger;
 // Each variant gets 1 probe which consists of the alt sequence.
 public class SampleVariants
 {
-    private final SampleVariantsConfig mConfig;
-    private final ProbeGenerator mProbeGenerator;
-    private final PanelData mPanelData;
-
     private static final ProbeEvaluator.Criteria NONDRIVER_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
             SAMPLE_NONDRIVER_QUALITY_MIN, SAMPLE_NONDRIVER_GC_TARGET, SAMPLE_NONDRIVER_GC_TOLERANCE);
     private static final ProbeEvaluator.Criteria DRIVER_PROBE_CRITERIA = new ProbeEvaluator.Criteria(
@@ -53,28 +51,21 @@ public class SampleVariants
 
     private static final Logger LOGGER = LogManager.getLogger(SampleVariants.class);
 
-    public SampleVariants(final SampleVariantsConfig config, final ProbeGenerator probeGenerator, PanelData panelData)
-    {
-        mConfig = config;
-        mProbeGenerator = probeGenerator;
-        mPanelData = panelData;
-    }
-
-    public void generateProbes()
+    public static void generateProbes(final SampleVariantsConfig config, final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating sample variant probes");
 
         List<Variant> variants = new ArrayList<>();
 
-        checkSampleDirectories(mConfig.purpleDir(), mConfig.linxDir(), mConfig.linxGermlineDir());
-        variants.addAll(SomaticMutation.load(mConfig.sampleId(), mConfig.purpleDir()));
-        variants.addAll(GermlineMutation.load(mConfig.sampleId(), mConfig.purpleDir()));
-        variants.addAll(SomaticSv.load(mConfig.sampleId(), mConfig.purpleDir(), mConfig.linxDir()));
-        variants.addAll(GermlineSv.load(mConfig.sampleId(), mConfig.linxGermlineDir()));
+        checkSampleDirectories(config.purpleDir(), config.linxDir(), config.linxGermlineDir());
+        variants.addAll(SomaticMutation.load(config.sampleId(), config.purpleDir()));
+        variants.addAll(GermlineMutation.load(config.sampleId(), config.purpleDir()));
+        variants.addAll(SomaticSv.load(config.sampleId(), config.purpleDir(), config.linxDir()));
+        variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
-        ProbeGenerationResult result = generateProbes(variants);
+        ProbeGenerationResult result = generateProbes(variants, config.maxProbes(), probeGenerator, panelData);
 
-        mPanelData.addResult(result);
+        panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
     }
@@ -90,88 +81,119 @@ public class SampleVariants
         }
     }
 
-    public ProbeGenerationResult generateProbes(List<Variant> variants)
+    public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, final ProbeGenerator probeGenerator,
+            final PanelCoverage coverage)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
-
         Map<String, Integer> geneDisruptions = new HashMap<>();
-
-        result = result.add(generateDriverProbes(variants, geneDisruptions, mConfig.maxProbes() - result.probes().size()));
-        result = result.add(generateNondriverProbes(variants, mConfig.maxProbes() - result.probes().size()));
-
+        Map<Variant, FilterResult> variantStatuses = new HashMap<>();
+        result = result.add(
+                generateProbes(
+                        remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantStatuses, remainingProbes),
+                        maxProbes - result.probes().size(), probeGenerator, coverage));
+        result = result.add(
+                generateProbes(
+                        remainingProbes -> selectNondriverVariants(variants, variantStatuses, remainingProbes),
+                        maxProbes - result.probes().size(), probeGenerator, coverage));
         return result;
     }
 
-    private ProbeGenerationResult generateDriverProbes(final List<Variant> variants, Map<String, Integer> geneDisruptions, int maxProbes)
+    private static ProbeGenerationResult generateProbes(final Function<Integer, List<Variant>> variantSelector, int maxProbes,
+            final ProbeGenerator probeGenerator, final PanelCoverage coverage)
     {
-        LOGGER.debug("Selecting up to {} driver variants", max(0, maxProbes));
+        // Want to create exactly maxProbes probes if there are enough variants, but since probe evaluation is done in batches and can
+        // reject probes, we need to iteratively generate until the quota is filled.
 
         ProbeGenerationResult result = new ProbeGenerationResult();
-        for(Variant variant : variants)
+        while(true)
         {
-            if(result.probes().size() >= maxProbes)
+            int remainingProbes = maxProbes - result.probes().size();
+            if(remainingProbes <= 0)
             {
-                // We assume that there will be enough probes to cover all the driver variants.
-                // If not, then we randomly(?) discarded some drivers, which may be important to handle.
-                // Potentially there should be a variant prioritisation scheme to avoid this scenario.
-                LOGGER.warn("Filled sample variant probe quota without including all driver variants!");
                 // Filled the probe quota.
                 break;
             }
-            if(!variant.isDriver())
+
+            List<Variant> variants = variantSelector.apply(remainingProbes);
+            if(variants.isEmpty())
             {
-                continue;
+                // Can generate more probes, but there are no more candidate variants available to select.
+                break;
             }
 
-            FilterResult filterResult = driverFilters(variant, geneDisruptions);
-            if(filterResult.passed())
-            {
-                ProbeGenerationResult probeGenResult = generateProbe(variant);
-                result = result.add(probeGenResult);
-                registerDisruptedGenes(variant, geneDisruptions);
-            }
-            else
-            {
-                LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, filterResult.failReason());
-            }
+            Stream<ProbeGenerationSpec> probeGenerationSpecs = variants.stream().map(SampleVariants::createProbeGenerationSpec);
+            result = result.add(probeGenerator.generateBatch(probeGenerationSpecs, coverage));
         }
         return result;
     }
 
-    private ProbeGenerationResult generateNondriverProbes(final List<Variant> variants, int maxProbes)
+    private static List<Variant> selectDriverVariants(final List<Variant> variants, Map<String, Integer> geneDisruptions,
+            Map<Variant, FilterResult> variantStatuses, int maxCount)
     {
-        LOGGER.debug("Selecting up to {} nondriver variants", max(0, maxProbes));
+        LOGGER.debug("Selecting up to {} driver variants", maxCount);
+
+        List<Variant> candidateVariants = variants.stream()
+                .filter(variant -> !variantStatuses.containsKey(variant))
+                .filter(Variant::isDriver)
+                .toList();
+
+        List<Variant> selectedVariants = new ArrayList<>();
+        for(Variant variant : candidateVariants)
+        {
+            if(selectedVariants.size() >= maxCount)
+            {
+                // We assume that there will be enough probes to cover all the driver variants.
+                // If not, then we randomly(?) discarded some drivers, which may be important to handle.
+                // Potentially, there should be a variant prioritisation scheme to avoid this scenario.
+                LOGGER.warn("Filled sample variant probe quota without including all driver variants!");
+                break;
+            }
+
+            FilterResult filterResult = driverFilters(variant, geneDisruptions);
+            variantStatuses.put(variant, filterResult);
+            filterResult.unwrap(
+                    () ->
+                    {
+                        registerDisruptedGenes(variant, geneDisruptions);
+                        selectedVariants.add(variant);
+                    },
+                    failReason -> LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, failReason)
+            );
+        }
+        return selectedVariants;
+    }
+
+    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, FilterResult> variantStatuses,
+            int maxCount)
+    {
+        LOGGER.debug("Selecting up to {} nondriver variants", maxCount);
 
         // For nondrivers, we are only interested in somatic SNV/INDEL.
         // Also, some variants are prioritised over others.
-        List<SomaticMutation> nondriverVariants = variants.stream()
+        List<SomaticMutation> candidateVariants = variants.stream()
+                .filter(variant -> !variantStatuses.containsKey(variant))
                 .filter(variant -> variant instanceof SomaticMutation)
-                .map(variant -> (SomaticMutation) variant)
                 .filter(variant -> !variant.isDriver())
+                .map(variant -> (SomaticMutation) variant)
                 .sorted(new NondriverVariantComparator())
                 .toList();
 
-        ProbeGenerationResult result = new ProbeGenerationResult();
-        for(SomaticMutation variant : nondriverVariants)
+        List<Variant> selectedVariants = new ArrayList<>();
+        for(SomaticMutation variant : candidateVariants)
         {
-            if(result.probes().size() >= maxProbes)
+            if(selectedVariants.size() >= maxCount)
             {
-                // Filled the probe quota.
                 break;
             }
 
             FilterResult filterResult = nondriverFilters(variant);
-            if(filterResult.passed())
-            {
-                ProbeGenerationResult probeGenResult = generateProbe(variant);
-                result = result.add(probeGenResult);
-            }
-            else
-            {
-                LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, filterResult.failReason());
-            }
+            variantStatuses.put(variant, filterResult);
+            filterResult.unwrap(
+                    () -> selectedVariants.add(variant),
+                    failReason -> LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, failReason)
+            );
         }
-        return result;
+        return selectedVariants;
     }
 
     private static FilterResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
@@ -264,7 +286,7 @@ public class SampleVariants
         }
     }
 
-    private ProbeGenerationResult generateProbe(final Variant variant)
+    private static ProbeGenerationSpec createProbeGenerationSpec(final Variant variant)
     {
         LOGGER.trace("Generating probe for variant: {}", variant);
 
@@ -272,7 +294,7 @@ public class SampleVariants
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
         TargetMetadata metadata = createTargetMetadata(variant);
         ProbeEvaluator.Criteria evalCriteria = variant.isDriver() ? DRIVER_PROBE_CRITERIA : NONDRIVER_PROBE_CRITERIA;
-        return mProbeGenerator.probe(definition, targetedRange, metadata, evalCriteria, mPanelData);
+        return new ProbeGenerationSpec.SingleProbe(definition, targetedRange, metadata, evalCriteria);
     }
 
     private static TargetMetadata createTargetMetadata(final Variant variant)

@@ -1,11 +1,20 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import org.jetbrains.annotations.Nullable;
+
 // Metadata information about a region that we want to cover with probes.
 public record TargetMetadata(
         Type type,
-        String extraInfo
+        String extraInfo,
+        // TODO: make this a proper interface
+        @Nullable Object extraData
 )
 {
+    public TargetMetadata(final Type type, final String extraInfo)
+    {
+        this(type, extraInfo, null);
+    }
+
     public enum Type
     {
         GENE,
