@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PANEL_PROB
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_TARGETED_REGIONS_FILE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.REJECTED_REGIONS_FILE_STEM;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_VARIANT_INFO_FILE_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.util.function.Function;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
+import com.hartwig.hmftools.panelbuilder.samplevariants.SampleVariants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,12 +48,14 @@ public class OutputWriter implements AutoCloseable
     @Nullable
     private final ArrayList<Probe> mCandidateProbesBuffer;
     private final DelimFileWriter<Genes.GeneStats> mGeneStatsTsvWriter;
+    private final DelimFileWriter<SampleVariants.VariantInfo> mSampleVariantInfoTsvWriter;
     private int mProbeId = 0;
 
     private static final String TSV_EXT = ".tsv";
     private static final String BED_EXT = ".bed";
     private static final String FASTA_EXT = ".fasta";
 
+    // TODO: switch to enum columns
     private static final String FLD_START_REGION = "StartRegion";
     private static final String FLD_INSERT_SEQ = "InsertSequence";
     private static final String FLD_END_REGION = "EndRegion";
@@ -64,6 +68,8 @@ public class OutputWriter implements AutoCloseable
     private static final String FLD_TARGET_EXTRA_INFO = "TargetExtra";
     private static final String FLD_EVAL_CRITERIA = "EvalCriteria";
     private static final String FLD_PROBE_COUNT = "ProbeCount";
+    private static final String FLD_VARIANT = "Variant";
+    private static final String FLD_FILTER_REASON = "FilterReason";
 
     private static final List<String> PANEL_PROBES_COLUMNS = List.of(
             FLD_START_REGION, FLD_INSERT_SEQ, FLD_END_REGION, FLD_SEQUENCE,
@@ -84,6 +90,11 @@ public class OutputWriter implements AutoCloseable
     private static final List<String> GENE_STATS_COLUMNS = List.of(
             FLD_GENE_NAME,
             FLD_PROBE_COUNT
+    );
+
+    private static final List<String> SAMPLE_VARIANT_INFO_COLUMNS = List.of(
+            FLD_VARIANT,
+            FLD_FILTER_REASON
     );
 
     private static final int CANDIDATE_PROBES_BUFFER_SIZE = 1_000_000;
@@ -110,6 +121,7 @@ public class OutputWriter implements AutoCloseable
         String candidateTargetRegionsBedFile = outputFilePath.apply(CANDIDATE_TARGET_REGIONS_FILE_NAME);
         String candidateProbesTsvFile = outputFilePath.apply(CANDIDATE_PROBES_FILE_NAME);
         String geneStatsTsvFile = outputFilePath.apply(GENE_STATS_FILE_NAME);
+        String sampleVariantInfoTsvFile = outputFilePath.apply(SAMPLE_VARIANT_INFO_FILE_NAME);
 
         mPanelProbesTsvWriter = new DelimFileWriter<>(panelProbesTsvFile, PANEL_PROBES_COLUMNS, OutputWriter::writePanelProbesTsvRow);
         mPanelProbesBedWriter = createBufferedWriter(panelProbesBedFile);
@@ -136,6 +148,9 @@ public class OutputWriter implements AutoCloseable
         }
 
         mGeneStatsTsvWriter = new DelimFileWriter<>(geneStatsTsvFile, GENE_STATS_COLUMNS, OutputWriter::writeGeneStatsRow);
+
+        mSampleVariantInfoTsvWriter =
+                new DelimFileWriter<>(sampleVariantInfoTsvFile, SAMPLE_VARIANT_INFO_COLUMNS, OutputWriter::writeSampleVariantInfoRow);
     }
 
     public void writePanelProbes(List<Probe> probes) throws IOException
@@ -358,6 +373,17 @@ public class OutputWriter implements AutoCloseable
         row.set(FLD_PROBE_COUNT, stats.probeCount());
     }
 
+    public void writeSampleVariantInfos(final List<SampleVariants.VariantInfo> variantInfos)
+    {
+        variantInfos.forEach(mSampleVariantInfoTsvWriter::writeRow);
+    }
+
+    private static void writeSampleVariantInfoRow(final SampleVariants.VariantInfo variantInfo, DelimFileWriter.Row row)
+    {
+        row.set(FLD_VARIANT, variantInfo.variant());
+        row.set(FLD_FILTER_REASON, variantInfo.filterReason());
+    }
+
     @Override
     public void close() throws IOException
     {
@@ -381,5 +407,7 @@ public class OutputWriter implements AutoCloseable
         }
 
         mGeneStatsTsvWriter.close();
+
+        mSampleVariantInfoTsvWriter.close();
     }
 }

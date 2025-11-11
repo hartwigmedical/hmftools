@@ -10,4 +10,6 @@ public interface Variant
     boolean isDriver();
 
     TargetMetadata.Type targetType();
+
+    String toString();
 }

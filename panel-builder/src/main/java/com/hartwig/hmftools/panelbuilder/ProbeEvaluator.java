@@ -41,19 +41,18 @@ public class ProbeEvaluator
         );
     }
 
-    public Stream<Probe> evaluateProbes(Stream<Probe> probes, final Criteria criteria)
+    // Probes must have evaluation criteria already set.
+    public Stream<Probe> evaluateProbes(Stream<Probe> probes)
     {
         // TODO? maybe can avoid computing attributes if rejected by another criteria
         probes = mAnnotateSequence.apply(probes);
         probes = mAnnotateGcContent.apply(probes);
         probes = mAnnotateQualityScore.apply(probes);
-        return probes.map(probe -> evaluateProbe(probe, criteria));
+        return probes.map(ProbeEvaluator::evaluateProbe);
     }
 
-    protected static Probe evaluateProbe(Probe probe, final Criteria criteria)
+    protected static Probe evaluateProbe(Probe probe)
     {
-        probe = probe.withEvalCriteria(criteria);
-
         probe = evaluateSequence(probe);
         if(probe.rejected())
         {

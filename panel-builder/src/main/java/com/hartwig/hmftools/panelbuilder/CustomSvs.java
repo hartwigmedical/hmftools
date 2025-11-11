@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,9 +36,7 @@ public class CustomSvs
         checkSvPositions(customSvs, chromosomeLengths);
         checkNoDuplicates(customSvs);
 
-        ProbeGenerationResult result = customSvs.stream()
-                .map(customSv -> generateProbes(customSv, probeGenerator, panelData))
-                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+        ProbeGenerationResult result = generateProbes(customSvs, probeGenerator, panelData);
         // TODO: should try to check overlaps better?
         // Generate all the probes at once and then add to the result because it's too hard to check overlap in advance, and it's unlikely
         // the user accidentally specified overlapping SVs.
@@ -63,31 +62,36 @@ public class CustomSvs
     {
         LOGGER.debug("Checking custom structural variants for duplicates");
         List<CustomSv> duplicated = customSvs.stream()
-                .filter(sv ->
-                        customSvs.stream().anyMatch(sv2 -> sv != sv2
-                                && sv.startPosition() == sv2.startPosition() && sv.startOrientation() == sv2.startOrientation()
-                                && sv.endPosition() == sv2.endPosition() && sv.endOrientation() == sv2.endOrientation())
+                .filter(sv1 ->
+                        customSvs.stream().anyMatch(sv2 -> sv1 != sv2
+                                && sv1.startPosition() == sv2.startPosition() && sv1.startOrientation() == sv2.startOrientation()
+                                && sv1.endPosition() == sv2.endPosition() && sv1.endOrientation() == sv2.endOrientation())
                 ).toList();
         if(!duplicated.isEmpty())
         {
-            duplicated.forEach(sv -> LOGGER.error("Duplicate custom structural variant: {}", sv));
+            duplicated.forEach(customSv -> LOGGER.error("Duplicate custom structural variant: {}", customSv));
             throw new UserInputError("Duplicate custom structural variants");
         }
     }
 
-    private static ProbeGenerationResult generateProbes(final CustomSv sv, final ProbeGenerator probeGenerator,
+    private static ProbeGenerationResult generateProbes(final List<CustomSv> customSvs, final ProbeGenerator probeGenerator,
             final PanelCoverage coverage)
     {
-        LOGGER.debug("Generating probes for {}", sv);
-        TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, sv.extraInfo());
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = customSvs.stream().map(CustomSvs::createProbeGenerationSpec);
+        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
+    }
+
+    private static ProbeGenerationSpec createProbeGenerationSpec(final CustomSv customSv)
+    {
+        LOGGER.debug("Generating probes for {}", customSv);
+        TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, customSv.extraInfo());
         SequenceDefinition definition = buildSvProbe(
-                sv.startPosition().Chromosome, sv.startPosition().Position, sv.startOrientation(),
-                sv.endPosition().Chromosome, sv.endPosition().Position, sv.endOrientation(),
-                sv.insertSequence(),
+                customSv.startPosition().Chromosome, customSv.startPosition().Position, customSv.startOrientation(),
+                customSv.endPosition().Chromosome, customSv.endPosition().Position, customSv.endOrientation(),
+                customSv.insertSequence(),
                 PROBE_LENGTH);
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
-        ProbeGenerationResult result = probeGenerator.probe(definition, targetedRange, metadata, PROBE_CRITERIA, coverage);
-        return result;
+        return new ProbeGenerationSpec.SingleProbe(definition, targetedRange, metadata, PROBE_CRITERIA);
     }
 }
 
