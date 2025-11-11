@@ -2,6 +2,7 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.VARIANT_NOVEL_SEQUENCE_BASES_MIN;
 import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
 
 import java.util.stream.Stream;
@@ -12,7 +13,10 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public interface PanelCoverage
 {
     // Checks if a region is fully covered by probes in the panel.
-    boolean isCovered(final ChrBaseRegion region);
+    default boolean isCovered(final ChrBaseRegion region)
+    {
+        return isFullyOverlappedBy(region, coveredRegions());
+    }
 
     // Checks if a probe sequence is fully covered by probes in the panel.
     default boolean isCovered(final SequenceDefinition sequenceDefinition, final TargetedRange targetedRange)

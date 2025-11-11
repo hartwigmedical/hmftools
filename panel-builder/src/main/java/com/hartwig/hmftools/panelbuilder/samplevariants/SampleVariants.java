@@ -142,6 +142,7 @@ public class SampleVariants
             }
 
             Stream<ProbeGenerationSpec> probeGenerationSpecs = variants.stream().map(SampleVariants::createProbeGenerationSpec);
+            // TODO? this won't check probe overlap between batches. maybe ok for variants?
             result = result.add(probeGenerator.generateBatch(probeGenerationSpecs, coverage));
         }
         return result;

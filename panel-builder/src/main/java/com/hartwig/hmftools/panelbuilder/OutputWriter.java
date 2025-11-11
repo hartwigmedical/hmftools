@@ -188,7 +188,7 @@ public class OutputWriter implements AutoCloseable
 
     private static void writePanelProbesTsvRow(final Probe probe, DelimFileWriter.Row row)
     {
-        // TODO: should write region orientation too
+        // TODO? write region orientation too
         SequenceDefinition definition = probe.definition();
         ChrBaseRegion start = definition.startRegion();
         ChrBaseRegion end = definition.endRegion();

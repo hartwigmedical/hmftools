@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 public record TargetMetadata(
         Type type,
         String extraInfo,
-        // TODO: make this a proper interface
+        // TODO? make this a proper interface
         @Nullable Object extraData
 )
 {

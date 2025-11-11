@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.BasePosition;
@@ -49,5 +51,12 @@ public sealed interface ProbeGenerationSpec
             ProbeEvaluator.Criteria evalCriteria
     ) implements ProbeGenerationSpec
     {
+        public SingleProbe
+        {
+            if(sequenceDefinition.baseLength() != PROBE_LENGTH)
+            {
+                throw new IllegalArgumentException("region length must be equal to probe length");
+            }
+        }
     }
 }

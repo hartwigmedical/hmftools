@@ -96,10 +96,7 @@ public record SequenceDefinition(
         {
             length += startRegion.baseLength();
         }
-        if(insertSequence != null)
-        {
-            length += insertSequence.length();
-        }
+        length += insertSequence.length();
         if(endRegion != null)
         {
             length += endRegion.baseLength();

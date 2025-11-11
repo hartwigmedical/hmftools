@@ -27,12 +27,6 @@ public class PanelData implements PanelCoverage
     }
 
     @Override
-    public boolean isCovered(final ChrBaseRegion region)
-    {
-        return isFullyOverlappedBy(region, coveredRegions());
-    }
-
-    @Override
     public Stream<ChrBaseRegion> coveredRegions()
     {
         return mData.probes().stream().flatMap(probe -> probe.definition().regions().stream());
