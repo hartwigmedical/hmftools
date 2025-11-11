@@ -103,6 +103,7 @@ public class PanelBuilderConstants
     // This output can get very large (multiple GB) so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
+    public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
 
     static
     {

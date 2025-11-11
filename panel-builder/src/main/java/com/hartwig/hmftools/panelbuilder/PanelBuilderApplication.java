@@ -76,21 +76,25 @@ public class PanelBuilderApplication
         mPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
-        Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
+        Genes.ExtraOutput genesExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCustomSvProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
-        generateSampleVariantProbes();
+        SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
         mOutputWriter.writeProbeTargetedRegions(mPanelData.coveredTargetRegions());
         mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
         mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
-        if(geneExtraOutput != null)
+        if(genesExtraOutput != null)
         {
-            mOutputWriter.writeGeneStats(geneExtraOutput.geneStats());
+            mOutputWriter.writeGeneStats(genesExtraOutput.geneStats());
+        }
+        if(sampleVariantsExtraOutput != null)
+        {
+            mOutputWriter.writeSampleVariantInfos(sampleVariantsExtraOutput.variantInfos());
         }
         mOutputWriter.close();
         mOutputWriter = null;
@@ -184,16 +188,19 @@ public class PanelBuilderApplication
         }
     }
 
-    private void generateSampleVariantProbes()
+    @Nullable
+    private SampleVariants.ExtraOutput generateSampleVariantProbes()
     {
         if(mConfig.sampleVariants() == null)
         {
             LOGGER.info("Sample data not provided; skipping sample variants probes");
+            return null;
         }
         else
         {
-            SampleVariants.generateProbes(mConfig.sampleVariants(), mProbeGenerator, mPanelData);
+            SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mConfig.sampleVariants(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
+            return extraOutput;
         }
     }
 

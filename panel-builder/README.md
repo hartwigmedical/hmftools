@@ -345,6 +345,7 @@ Informational/visualisation/debugging outputs:
 | targeted_regions.bed    | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
 | rejected_regions.bed    | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
 | gene_stats.tsv          | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
+| sample_variant_info.tsv | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested.                              |
 | candidate_regions.bed   | All regions evaluated for suitability.                                                                                                                 |
 | candidate_probes.tsv.gz | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                                                  |
 

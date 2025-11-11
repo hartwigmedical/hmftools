@@ -37,6 +37,7 @@ import com.hartwig.hmftools.panelbuilder.UserInputError;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 // Probes covering variants found in sample data.
 // Inputs Linx and Purple data from a previous pipeline run.
@@ -51,7 +52,20 @@ public class SampleVariants
 
     private static final Logger LOGGER = LogManager.getLogger(SampleVariants.class);
 
-    public static void generateProbes(final SampleVariantsConfig config, final ProbeGenerator probeGenerator, PanelData panelData)
+    public record ExtraOutput(
+            List<VariantInfo> variantInfos
+    )
+    {
+    }
+
+    public record VariantInfo(
+            String variant,
+            @Nullable String filterReason
+    )
+    {
+    }
+
+    public static ExtraOutput generateProbes(final SampleVariantsConfig config, final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating sample variant probes");
 
@@ -63,11 +77,17 @@ public class SampleVariants
         variants.addAll(SomaticSv.load(config.sampleId(), config.purpleDir(), config.linxDir()));
         variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
-        ProbeGenerationResult result = generateProbes(variants, config.maxProbes(), probeGenerator, panelData);
+        Map<Variant, FilterResult> variantFilters = new HashMap<>();
+        ProbeGenerationResult result = generateProbes(variants, config.maxProbes(), probeGenerator, panelData, variantFilters);
+
+        List<VariantInfo> variantInfos = createVariantInfos(variants, variantFilters);
+        ExtraOutput extraOutput = new ExtraOutput(variantInfos);
 
         panelData.addResult(result);
 
         LOGGER.info("Done generating sample variant probes");
+
+        return extraOutput;
     }
 
     private static void checkSampleDirectories(final String purpleDir, final String linxDir, final String linxGermlineDir)
@@ -82,18 +102,17 @@ public class SampleVariants
     }
 
     public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage)
+            final PanelCoverage coverage, Map<Variant, FilterResult> variantFilters)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
         Map<String, Integer> geneDisruptions = new HashMap<>();
-        Map<Variant, FilterResult> variantStatuses = new HashMap<>();
         result = result.add(
                 generateProbes(
-                        remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantStatuses, remainingProbes),
+                        remainingProbes -> selectDriverVariants(variants, geneDisruptions, variantFilters, remainingProbes),
                         maxProbes - result.probes().size(), probeGenerator, coverage));
         result = result.add(
                 generateProbes(
-                        remainingProbes -> selectNondriverVariants(variants, variantStatuses, remainingProbes),
+                        remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes),
                         maxProbes - result.probes().size(), probeGenerator, coverage));
         return result;
     }
@@ -128,12 +147,12 @@ public class SampleVariants
     }
 
     private static List<Variant> selectDriverVariants(final List<Variant> variants, Map<String, Integer> geneDisruptions,
-            Map<Variant, FilterResult> variantStatuses, int maxCount)
+            Map<Variant, FilterResult> variantFilters, int maxCount)
     {
         LOGGER.debug("Selecting up to {} driver variants", maxCount);
 
         List<Variant> candidateVariants = variants.stream()
-                .filter(variant -> !variantStatuses.containsKey(variant))
+                .filter(variant -> !variantFilters.containsKey(variant))
                 .filter(Variant::isDriver)
                 .toList();
 
@@ -150,7 +169,7 @@ public class SampleVariants
             }
 
             FilterResult filterResult = driverFilters(variant, geneDisruptions);
-            variantStatuses.put(variant, filterResult);
+            variantFilters.put(variant, filterResult);
             filterResult.unwrap(
                     () ->
                     {
@@ -163,7 +182,7 @@ public class SampleVariants
         return selectedVariants;
     }
 
-    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, FilterResult> variantStatuses,
+    private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, FilterResult> variantFilters,
             int maxCount)
     {
         LOGGER.debug("Selecting up to {} nondriver variants", maxCount);
@@ -171,7 +190,7 @@ public class SampleVariants
         // For nondrivers, we are only interested in somatic SNV/INDEL.
         // Also, some variants are prioritised over others.
         List<SomaticMutation> candidateVariants = variants.stream()
-                .filter(variant -> !variantStatuses.containsKey(variant))
+                .filter(variant -> !variantFilters.containsKey(variant))
                 .filter(variant -> variant instanceof SomaticMutation)
                 .filter(variant -> !variant.isDriver())
                 .map(variant -> (SomaticMutation) variant)
@@ -187,7 +206,7 @@ public class SampleVariants
             }
 
             FilterResult filterResult = nondriverFilters(variant);
-            variantStatuses.put(variant, filterResult);
+            variantFilters.put(variant, filterResult);
             filterResult.unwrap(
                     () -> selectedVariants.add(variant),
                     failReason -> LOGGER.trace("Variant failed filter: {{}} reason=\"{}\"", variant, failReason)
@@ -300,5 +319,18 @@ public class SampleVariants
     private static TargetMetadata createTargetMetadata(final Variant variant)
     {
         return new TargetMetadata(variant.targetType(), variant.toString());
+    }
+
+    private static List<VariantInfo> createVariantInfos(final List<Variant> variants, final Map<Variant, FilterResult> variantFilters)
+    {
+        return variants.stream()
+                .map(variant ->
+                {
+                    FilterResult filterResult = variantFilters.get(variant);
+                    // If we didn't even attempt to filter the variant, it must have been because we encountered the probe limit first.
+                    String filterReason = filterResult == null ? "max probe count" : filterResult.failReason();
+                    return new VariantInfo(variant.toString(), filterReason);
+                })
+                .toList();
     }
 }
