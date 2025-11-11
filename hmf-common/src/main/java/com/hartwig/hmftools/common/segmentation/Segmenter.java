@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.segmentation;
 
+import static java.util.Collections.singletonList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,22 +32,13 @@ public class Segmenter
         List<Integer> leastCostSegmentEndpoints = new ArrayList<>(); // there's only one possible segment of length 1
         segmentPenalty = new Gamma(y, gamma, normalise).getSegmentPenalty();
 
-        // Precompute cumulative sums for efficient partial sum calculation.
-        double[] cumulativeSums = new double[y.length];
-        if (y.length > 0) {
-            cumulativeSums[0] = y[0];
-            for (int i = 1; i < y.length; i++) {
-                cumulativeSums[i] = cumulativeSums[i - 1] + y[i];
-            }
-        }
-
+        double[] cumulativeSums = precomputeCumulativeSums();
         for(int end = 0; end < y.length; end++)
         {
             double minCost = Double.MAX_VALUE;
             int endOfPreviousSegmentForLeastCost = 0;
             for(int start = 0; start <= end; start++)
             {
-                // Calculate partial sum efficiently using precomputed cumulative sums
                 double partialSum = start == 0 ? cumulativeSums[end] : cumulativeSums[end] - cumulativeSums[start - 1];
                 double segmentCost = 1 * partialSum * partialSum / ((start - end - 1.0f));
                 double cost = leastCostEndingJustBefore.get(start) + segmentPenalty + segmentCost;
@@ -66,9 +59,7 @@ public class Segmenter
             lastSegmentEndpoint = leastCostSegmentEndpoints.get(lastSegmentEndpoint);
         }
         Collections.reverse(segmentEndpoints);
-        leastCostSegmentation = segmentEndpoints.isEmpty() ?
-                new Segmentation(Collections.singletonList(y)) :
-                segmentBy(segmentEndpoints);
+        leastCostSegmentation = segmentEndpoints.isEmpty() ? new Segmentation(singletonList(y)) : segmentBy(segmentEndpoints);
     }
 
     public Segmenter(double[] y)
@@ -122,5 +113,19 @@ public class Segmenter
             }
         }
         return true;
+    }
+
+    private double[] precomputeCumulativeSums()
+    {
+        double[] cumulativeSums = new double[y.length];
+        if(y.length > 0)
+        {
+            cumulativeSums[0] = y[0];
+            for(int i = 1; i < y.length; i++)
+            {
+                cumulativeSums[i] = cumulativeSums[i - 1] + y[i];
+            }
+        }
+        return cumulativeSums;
     }
 }

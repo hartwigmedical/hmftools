@@ -111,6 +111,49 @@ given by R are incorrect (have a look at the data).
     }
 
     @Test
+    public void chr2q()
+    {
+        // Chr2.q is the longest chromosome arm in the human genome.
+        // There are about 135,000 points in the input file.
+        // This data is from COLO829T.
+        String filename = "chr2q.ratios.tsv";
+        /*
+        R output:
+        segmentPenalty: 0.7133056 (we get 0.71212)
+
+Note the usual spurious segment at the start...
+$Lengde
+ [1]    1 5975    1 1032    1 1559 1163    5 2016    1 3103 3638 3227    1
+[15] 4620    2  978    2 3534    2 2112 7969 3058   14 9943 2263    1 9790
+[29]    2 2557    2 6674   11 3625 5057 3734 3900    1 5275 1130 7354    2
+[43] 3973 1736    2 2015    3 2618 2394 2029    1  864   18 2378  108    3
+[57] 3169 6964    1 1225
+
+$sta
+ [1]      1      2   5977   5978   7010   7011   8570   9733   9738  11754
+[11]  11755  14858  18496  21723  21724  26344  26346  27324  27326  30860
+[21]  30862  32974  40943  44001  44015  53958  56221  56222  66012  66014
+[31]  68571  68573  75247  75258  78883  83940  87674  91574  91575  96850
+[41]  97980 105334 105336 109309 111045 111047 113062 113065 115683 118077
+[51] 120106 120107 120971 120989 123367 123475 123478 126647 133611 133612         */
+
+        PiecewiseConstantFit calculated = pcfForFile(filename, 100.0, true, "logRatio");
+        assertEquals(59, calculated.lengths().length);
+        assertEquals(5976, calculated.lengths()[0]);
+        assertEquals(1, calculated.lengths()[1]);
+        assertEquals(1032, calculated.lengths()[2]);
+        assertEquals(1, calculated.lengths()[3]);
+        assertEquals(1559, calculated.lengths()[4]);
+
+        assertEquals(59, calculated.startPositions().length);
+        assertEquals(0, calculated.startPositions()[0]);
+        assertEquals(5976, calculated.startPositions()[1]);
+        assertEquals(5977, calculated.startPositions()[2]);
+        assertEquals(7009, calculated.startPositions()[3]);
+        assertEquals(7010, calculated.startPositions()[4]);
+    }
+
+    @Test
     public void chr10p()
     {
         String filename = "chr10p.ratios.tsv";

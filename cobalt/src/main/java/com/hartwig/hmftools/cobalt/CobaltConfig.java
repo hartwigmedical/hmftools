@@ -59,6 +59,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,6 +81,7 @@ public class CobaltConfig
     public static final String GC_RATIO_MAX = "gc_ratio_max";
 
     private static final String SKIP_PCF_CALC = "skip_pcf_calc";
+    public static final String USE_NEW_SEGMENTER = "use_new_segmenter";
 
     public final String ReferenceId;
     public final String ReferenceBamPath;
@@ -100,6 +102,7 @@ public class CobaltConfig
     public final ValidationStringency BamStringency;
     public final boolean IncludeDuplicates;
     public final boolean SkipPcfCalc;
+    public final boolean UseNewSegmenter;
 
     public final String TumorOnlyDiploidBed;
     public final String TargetRegionNormFile;
@@ -138,6 +141,7 @@ public class CobaltConfig
         Threads = parseThreads(configBuilder);
 
         SkipPcfCalc = configBuilder.hasFlag(SKIP_PCF_CALC);
+        UseNewSegmenter = configBuilder.hasFlag(USE_NEW_SEGMENTER);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -165,6 +169,7 @@ public class CobaltConfig
         configBuilder.addInteger(PCF_GAMMA, "Gamma value for copy number PCF", DEFAULT_PCF_GAMMA);
         configBuilder.addFlag(INCLUDE_DUPLICATES, "Include duplicate reads in depth counts");
         configBuilder.addFlag(SKIP_PCF_CALC, "Skip final PCF output");
+        configBuilder.addFlag(USE_NEW_SEGMENTER, "Use native segmenter");
 
         addSpecificChromosomesRegionsConfig(configBuilder);
 
@@ -288,6 +293,16 @@ public class CobaltConfig
     public String cobaltRatiosFileName()
     {
         return CobaltRatioFile.generateFilename(OutputDir, TumorId != null ? TumorId : ReferenceId);
+    }
+
+    public String tumorPcfFileName()
+    {
+        return PCFFile.generateCobaltPcfFilename(OutputDir, TumorId);
+    }
+
+    public String referencePcfFileName()
+    {
+        return PCFFile.generateCobaltPcfFilename(OutputDir, ReferenceId);
     }
 
     public String medianRatiosFileName()

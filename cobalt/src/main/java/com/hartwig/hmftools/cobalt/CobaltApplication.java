@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.calculations.CobaltCalculator;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
+import com.hartwig.hmftools.cobalt.segmentation.RatioSegmenter;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -88,7 +89,7 @@ public class CobaltApplication
 
             if(!mConfig.SkipPcfCalc)
             {
-                applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.cobaltRatiosFileName(), mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+                writePcf(results, executorService);
             }
 
             final VersionInfo version = fromAppName(APP_NAME);
@@ -105,6 +106,25 @@ public class CobaltApplication
         }
 
         CB_LOGGER.info("Cobalt complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void writePcf(final ListMultimap<Chromosome, CobaltRatio> results, final ExecutorService executorService) throws Exception
+    {
+        if(mConfig.UseNewSegmenter)
+        {
+            if(mConfig.TumorId != null)
+            {
+                RatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
+            }
+            if(mConfig.ReferenceId != null)
+            {
+                RatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
+            }
+        }
+        else
+        {
+            applyRatioSegmentation(executorService, mConfig.OutputDir, mConfig.cobaltRatiosFileName(), mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+        }
     }
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException

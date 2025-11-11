@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.e2e;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.USE_NEW_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._15;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._16;
@@ -19,6 +20,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -42,6 +45,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
@@ -56,6 +60,7 @@ public class ProcessBamTest
 {
     private File tempDir;
     private String sample;
+    private String referenceSample;
     private int regionOffset;
     private File tumorBamFile;
     private File referenceBamFile;
@@ -65,16 +70,19 @@ public class ProcessBamTest
     private File outputDir;
     private Map<Chromosome, List<CobaltRatio>> tumorRatioResults;
     private List<MedianRatio> medianRatioResults;
+    private List<MedianRatio> referenceMedianRatioResults;
 
     @Before
     public void setup() throws Exception
     {
         sample = null;
+        referenceSample = null;
         regionOffset = 0;
         tumorBamFile = null;
         referenceBamFile = null;
         tumorRatioResults = null;
         medianRatioResults = null;
+        referenceMedianRatioResults = null;
         tempDir = Files.createTempDirectory("pbt").toFile();
         outputDir = new File(tempDir, "output");
         diploidBedFile = null;
@@ -199,11 +207,13 @@ public class ProcessBamTest
         assertEquals(-1.0, ratios.get(2).tumorGcContent(), 0.01);
 
         // Check the median ratios file.
-        assertEquals(1, medianRatioResults.size());
-        assertEquals("chr1", medianRatioResults.get(0).Chromosome);
+        assertNull(medianRatioResults);
         double expectedMedianRatio = 100.0 / 33.333; // Smoothed median gc for bucket is 100/3
-        assertEquals(expectedMedianRatio, medianRatioResults.get(0).MedianRatio, 0.0001);
-        assertEquals(1, medianRatioResults.get(0).Count);
+
+        assertEquals(1, referenceMedianRatioResults.size());
+        assertEquals("chr1", referenceMedianRatioResults.get(0).Chromosome);
+        assertEquals(expectedMedianRatio, referenceMedianRatioResults.get(0).MedianRatio, 0.0001);
+        assertEquals(1, referenceMedianRatioResults.get(0).Count);
     }
 
     @Test
@@ -246,11 +256,13 @@ public class ProcessBamTest
         assertEquals(0.5, ratios.get(2).tumorGcContent(), 0.01);
 
         // Check the median ratios file.
-        assertEquals(1, medianRatioResults.size());
-        assertEquals("chr1", medianRatioResults.get(0).Chromosome);
+        assertNull(medianRatioResults);
         double expectedMedianRatio = 100.0 / 33.333; // Smoothed median gc for bucket is 100/3
-        assertEquals(expectedMedianRatio, medianRatioResults.get(0).MedianRatio, 0.0001);
-        assertEquals(1, medianRatioResults.get(0).Count);
+
+        assertEquals(1, referenceMedianRatioResults.size());
+        assertEquals("chr1", referenceMedianRatioResults.get(0).Chromosome);
+        assertEquals(expectedMedianRatio, referenceMedianRatioResults.get(0).MedianRatio, 0.0001);
+        assertEquals(1, referenceMedianRatioResults.get(0).Count);
     }
 
     @Test
@@ -669,7 +681,6 @@ public class ProcessBamTest
         String segmentsFile = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
 
         ListMultimap<Chromosome, PCFPosition> pcfData = PCFFile.readPositions(1000, PCFSource.TUMOR_BAF, segmentsFile);
-        System.out.println(pcfData);
         assertEquals(2, pcfData.keySet().size());
         List<PCFPosition> chr1Positions = pcfData.asMap().get(_1).stream().toList();
         // The R program that does segmentation puts a spurious 1-window segment
@@ -681,6 +692,78 @@ public class ProcessBamTest
         assertEquals(41001, chr1Positions.get(3).Position);
         assertEquals(71001, chr1Positions.get(4).Position);
         assertEquals(101001, chr1Positions.get(5).Position);
+    }
+
+    @Test
+    public void segmentationNew() throws Exception
+    {
+        sample = "multiple_segments";
+        tumorBamFile = getBam(sample);
+        regionOffset = 0;
+
+        createStandardMultiChromosomeGCFile(100_000, _1, _2);
+        createStandardMultipleChromosomePanelFile(100_000, 1.0001, _1, _2);
+        runCobalt(false, true);
+
+        String segmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(segmentsFileName);
+        assertEquals(6, regions.size());
+        List<ChrBaseRegion> chr1Regions = regions.get(_1);
+        assertEquals(1, chr1Regions.get(0).start());
+        assertEquals("1", chr1Regions.get(0).chromosome());
+        assertEquals(41000, chr1Regions.get(0).end());
+        assertEquals("1", chr1Regions.get(1).chromosome());
+        assertEquals(41001, chr1Regions.get(1).start());
+        assertEquals(71000, chr1Regions.get(1).end());
+        assertEquals("1", chr1Regions.get(2).chromosome());
+        assertEquals(71001, chr1Regions.get(2).start());
+        assertEquals(101000, chr1Regions.get(2).end());
+        assertEquals("2", regions.get(_2).get(0).chromosome());
+        assertEquals(1, regions.get(_2).get(0).start());
+        assertEquals(41000, regions.get(_2).get(0).end());
+    }
+
+    @Test
+    public void segmentationTumorGermline() throws Exception
+    {
+        setupForSingleWindowBamTumorAndGermline();
+        runCobalt(false, true);
+
+        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
+        assertEquals(1, regions.size());
+
+        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        ListMultimap<Chromosome, ChrBaseRegion> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
+        assertEquals(1, referenceRegions.size());
+    }
+
+    @Test
+    public void segmentationTumorOnly() throws Exception
+    {
+        setupForSingleWindowBamTumorOnly();
+        runCobalt(false, true);
+
+        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
+        assertEquals(1, regions.size());
+
+        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        assertFalse(new File(referenceSegmentsFileName).exists());
+    }
+
+    @Test
+    public void segmentationGermlineOnly() throws Exception
+    {
+        setupForSingleWindowBamGermlineOnly();
+        runCobalt(false, true);
+
+        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        assertFalse(new File(tumorSegmentsFileName).exists());
+
+        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        ListMultimap<Chromosome, ChrBaseRegion> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
+        assertEquals(1, referenceRegions.size());
     }
 
     @Test
@@ -1038,6 +1121,7 @@ public class ProcessBamTest
     {
         setupForSingleWindowBamTumorAndGermline();
         referenceBamFile = null;
+        referenceSample = null;
     }
 
     private void setupForSingleWindowBamGermlineOnly() throws IOException
@@ -1049,6 +1133,7 @@ public class ProcessBamTest
     private void setupForSingleWindowBamTumorAndGermline() throws IOException
     {
         sample = "one_window";
+        referenceSample = sample + "_reference";
         referenceBamFile = getBam(sample);
         tumorBamFile = getBam(sample);
         regionOffset = 0;
@@ -1125,10 +1210,19 @@ public class ProcessBamTest
 
     private void runCobalt(boolean targeted) throws Exception
     {
+        runCobalt(targeted, false);
+    }
+
+    private void runCobalt(boolean targeted, boolean useNewSegmenter) throws Exception
+    {
         int argCount = 12;
         if(targeted)
         {
             argCount += 2;
+        }
+        if (useNewSegmenter)
+        {
+            argCount += 1;
         }
         if(tumorBamFile != null && referenceBamFile != null)
         {
@@ -1158,7 +1252,7 @@ public class ProcessBamTest
         if(referenceBamFile != null)
         {
             args[index++] = String.format("-%s", REFERENCE);
-            args[index++] = String.format("%s", sample);
+            args[index++] = String.format("%s", referenceSample);
             args[index++] = String.format("-%s", REFERENCE_BAM);
             args[index++] = String.format("%s", referenceBamFile.getAbsolutePath());
         }
@@ -1166,6 +1260,10 @@ public class ProcessBamTest
         {
             args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
             args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
+        }
+        if(useNewSegmenter)
+        {
+            args[index++] = String.format("-%s", USE_NEW_SEGMENTER);
         }
         if(diploidBedFile != null)
         {
@@ -1175,7 +1273,15 @@ public class ProcessBamTest
 
         CobaltApplication.main(args);
 
-        File ratioFile = new File(outputDir, sample + ".cobalt.ratio.tsv.gz");
+        File ratioFile;
+        if (tumorBamFile != null)
+        {
+            ratioFile = new File(outputDir, sample + ".cobalt.ratio.tsv.gz");
+        }
+        else
+        {
+            ratioFile = new File(outputDir, referenceSample + ".cobalt.ratio.tsv.gz");
+        }
         assertTrue(ratioFile.exists());
         assertTrue(ratioFile.isFile());
         RawCobaltRatioFile rawResultsFile = new RawCobaltRatioFile(ratioFile.getAbsolutePath());
@@ -1201,6 +1307,11 @@ public class ProcessBamTest
         if(medianRatiosFile.exists())
         {
             medianRatioResults = CobaltMedianRatioFile.read(medianRatiosFile.getAbsolutePath());
+        }
+        File referenceMedianRatiosFile = new File(CobaltMedianRatioFile.generateFilename(outputDir.getAbsolutePath(), referenceSample));
+        if(referenceMedianRatiosFile.exists())
+        {
+            referenceMedianRatioResults = CobaltMedianRatioFile.read(referenceMedianRatiosFile.getAbsolutePath());
         }
     }
 }

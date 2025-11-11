@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.Window;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.util.Strings;
@@ -34,11 +35,18 @@ public final class PCFFile
 {
     private static final String HEADER_PREFIX = "sampleID";
     private static final String RATIO_EXTENSION = ".cobalt.ratio.pcf";
+    private static final String COBALT_PCF_EXTENSION = ".cobalt.pcf.tsv";
     private static final String BAF_EXTENSION = ".amber.baf.pcf";
 
     private static final int COL_CHROMOSOME = 1;
     private static final int COL_POS_START = 3;
     private static final int COL_POS_END = 4;
+
+    @NotNull
+    public static String generateCobaltPcfFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + COBALT_PCF_EXTENSION;
+    }
 
     @NotNull
     public static String generateRatioFilename(final String basePath, final String sample)
@@ -52,24 +60,43 @@ public final class PCFFile
         return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
     }
 
+    public static ListMultimap<Chromosome, ChrBaseRegion> readCobaltPcfFile(String path)
+    {
+        ListMultimap<Chromosome, ChrBaseRegion> result = ArrayListMultimap.create();
+        try(DelimFileReader dfr = new DelimFileReader(path))
+        {
+            dfr.stream().forEach(row ->
+            {
+                final String chrName = row.get(0);
+                Chromosome chromosome = HumanChromosome.fromString(chrName);
+                int start = row.getInt(1);
+                int end = row.getInt(2);
+                result.put(chromosome, new ChrBaseRegion(chrName, start, end));
+            });
+        }
+        return result;
+    }
+
     public static void write(String filename, GenomeIntervals data)
     {
         List<ChrBaseRegion> ratios = data.regionsList();
         List<String> columns = List.of("sampleID", "chrom", "arm", "start.pos", "end.pos", "n.probes", "mean");
         DelimFileWriter.write(filename, columns, ratios,
-                           (ratio, row) -> {
-                row.set(columns.get(0), "unused");
-                row.set(columns.get(1), ratio.chromosome());
-                row.set(columns.get(2), "unused");
-                row.set(columns.get(3), ratio.start());
-                row.set(columns.get(4), ratio.end());
-                row.set(columns.get(5), -1);
-                row.set(columns.get(6), -1);
-        });
+                (ratio, row) ->
+                {
+                    row.set(columns.get(0), "unused");
+                    row.set(columns.get(1), ratio.chromosome());
+                    row.set(columns.get(2), "unused");
+                    row.set(columns.get(3), ratio.start());
+                    row.set(columns.get(4), ratio.end());
+                    row.set(columns.get(5), -1);
+                    row.set(columns.get(6), -1);
+                });
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, final PCFSource source, final String filename) throws IOException
+    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, final PCFSource source, final String filename)
+            throws IOException
     {
         ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
@@ -133,14 +160,16 @@ public final class PCFFile
         return result;
     }
 
-    public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
+    public static Map<String, List<BaseRegion>> loadChrBaseRegions(final String filename)
     {
         if(filename == null)
+        {
             return Collections.emptyMap();
+        }
 
         try
         {
-            Map<String,List<BaseRegion>> regionsMap = Maps.newHashMap();
+            Map<String, List<BaseRegion>> regionsMap = Maps.newHashMap();
 
             List<BaseRegion> regions = null;
             String currentChromosome = "";
@@ -179,7 +208,7 @@ public final class PCFFile
         }
     }
 
-    public static Multimap<String,GenomeRegion> read(int windowSize, final String filename) throws IOException
+    public static Multimap<String, GenomeRegion> read(int windowSize, final String filename) throws IOException
     {
         return fromLines(windowSize, Files.readAllLines(new File(filename).toPath()));
     }
