@@ -3,7 +3,6 @@ package com.hartwig.hmftools.qsee.vis;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COHORT_FILE_ID;
 import static com.hartwig.hmftools.qsee.common.QseeFileCommon.COL_FEATURE_NAME;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentiles;
 import com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile;
 import com.hartwig.hmftools.qsee.cohort.FeaturePercentiles;
@@ -28,21 +26,28 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 
-public class VisCohortPctWriter
+public class VisCohortNamedPctWriter
 {
-    private final VisPrepConfig mConfig;
+    private final CohortPercentiles mCohortPercentiles;
+    private final String mOutputDir;
 
-    public VisCohortPctWriter(VisPrepConfig config)
+    public VisCohortNamedPctWriter(CohortPercentiles cohortPercentiles, String outputDir)
     {
-        mConfig = config;
+        mCohortPercentiles = cohortPercentiles;
+        mOutputDir = outputDir;
     }
 
-    private static List<VisFeatureNamedPct> getNamedPercentiles(CohortPercentiles cohortPercentiles)
+    public static String generateFilename(String basePath)
+    {
+        return checkAddDirSeparator(basePath) + COHORT_FILE_ID + "." + QSEE_FILE_ID + ".vis.named_percentiles.tsv.gz";
+    }
+
+    private List<VisFeatureNamedPct> getNamedPercentiles()
     {
         List<VisFeatureNamedPct> cohortNamedPercentiles = new ArrayList<>();
-        for(SampleType sampleType : cohortPercentiles.getData().keySet())
+        for(SampleType sampleType : mCohortPercentiles.getData().keySet())
         {
-            Map<FeatureKey, FeaturePercentiles> featurePercentilesMap = cohortPercentiles.getData().get(sampleType);
+            Map<FeatureKey, FeaturePercentiles> featurePercentilesMap = mCohortPercentiles.getData().get(sampleType);
             for(FeatureKey featureKey : featurePercentilesMap.keySet())
             {
                 FeaturePercentiles featurePercentiles = featurePercentilesMap.get(featureKey);
@@ -58,7 +63,7 @@ public class VisCohortPctWriter
     {
         try(BufferedWriter writer = createBufferedWriter(outputFile))
         {
-            QC_LOGGER.info("Writing cohort named percentiles data to: {}", outputFile);
+            QC_LOGGER.info("Writing cohort named percentiles to: {}", outputFile);
 
             StringJoiner header = new StringJoiner(TSV_DELIM);
             header.add(COL_SAMPLE_TYPE);
@@ -103,23 +108,8 @@ public class VisCohortPctWriter
 
     public void run()
     {
-        CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mConfig.CohortPercentilesFile);
-
-        List<VisFeatureNamedPct> namedPercentilesList = getNamedPercentiles(cohortPercentiles);
-
-        String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) +
-                COHORT_FILE_ID + "." + QSEE_FILE_ID + ".vis.named_percentiles.tsv.gz";
-
+        List<VisFeatureNamedPct> namedPercentilesList = getNamedPercentiles();
+        String outputFile = generateFilename(mOutputDir);
         writeToFile(outputFile, namedPercentilesList);
-    }
-
-    public static void main(String[] args)
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        VisPrepConfig.registerConfig(configBuilder);
-        configBuilder.checkAndParseCommandLine(args);
-
-        VisPrepConfig config = new VisPrepConfig(configBuilder);
-        new VisCohortPctWriter(config).run();
     }
 }

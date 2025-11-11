@@ -157,6 +157,8 @@ public class VisSampleDataPrep
 
         CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mVisPrepConfig.CohortPercentilesFile);
 
+        new VisCohortNamedPctWriter(cohortPercentiles, mVisPrepConfig.CommonPrep.OutputDir).run();
+
         List<SampleFeatures> multiSampleFeatures = new ArrayList<>();
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.TUMOR));
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.NORMAL));

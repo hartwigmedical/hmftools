@@ -130,7 +130,7 @@ public class CommonPrepConfig
 
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);
 
-        configBuilder.addPath(OUTPUT_DIR, false, OUTPUT_DIR_DESC);
+        configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
         ConfigUtils.addLoggingOptions(configBuilder);
