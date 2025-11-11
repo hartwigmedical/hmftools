@@ -73,6 +73,16 @@ public class CategoryPrepTask implements Runnable
         }
     }
 
+    public static void missingInputFilesError(
+            boolean allowMissingInput, CategoryPrep categoryPrep, SampleType sampleType, String sampleId, String missingFilePath)
+    {
+        QC_LOGGER.error("sampleType({}) category({}) - sample({}) missing input file(s): {}",
+                sampleType, categoryPrep.name(), sampleId, missingFilePath);
+
+        if(!allowMissingInput)
+            System.exit(1);
+    }
+
     @Override
     public void run()
     {
@@ -83,10 +93,7 @@ public class CategoryPrepTask implements Runnable
         }
         catch(NoSuchFileException e)
         {
-            QC_LOGGER.error("sampleType({}) category({}) - sample({}) missing input file: {}", mSampleType, mCategoryPrep.name(), mSampleId, e.getMessage());
-
-            if(!mAllowMissingInput)
-                System.exit(1);
+            missingInputFilesError(mAllowMissingInput, mCategoryPrep, mSampleType, mSampleId, e.getMessage());
 
             mOutput = new ArrayList<>();
         }

@@ -115,7 +115,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         if(sageBqrFile.isFile())
             return sageBqrFile.getAbsolutePath();
 
-        throw new NoSuchFileException(String.format("BQR file not found (%s or %s) ", reduxBqrFile.getName(), sageBqrFile.getName()));
+        throw new NoSuchFileException(reduxBqrFile.getName() + " or " + sageBqrFile.getName());
     }
 
     private List<ExtendedBqrRecord> loadSnvBqrRecords(String sampleId) throws NoSuchFileException
