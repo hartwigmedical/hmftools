@@ -593,11 +593,11 @@ public class ProbeGenerator
     }
 
     // Generates the one best acceptable probe that is centered on one of the given positions.
-    private ProbeGenerationResult coverOnePosition(Stream<BasePosition> positions, final TargetMetadata metadata,
+    private ProbeGenerationResult coverOnePosition(List<BasePosition> positions, final TargetMetadata metadata,
             final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, final PanelCoverage coverage)
     {
         Map<ChrBaseRegion, BasePosition> probeToPosition = new HashMap<>();
-        Stream<Probe> candidateProbes = positions
+        List<Probe> candidateProbes = positions.stream()
                 .map(position ->
                 {
                     ChrBaseRegion probeRegion = probeRegionCenteredAt(position);
@@ -608,10 +608,11 @@ public class ProbeGenerator
                     // Also needed to compute the rejected regions.
                     probeToPosition.put(probeRegion, position);
                     return probe;
-                });
+                })
+                .toList();
 
         // This must be executed before reading probeToPosition otherwise the stream won't have been enumerated yet.
-        Optional<Probe> bestCandidate = selectBestCandidate(candidateProbes, evalCriteria, selectStrategy);
+        Optional<Probe> bestCandidate = selectBestCandidate(candidateProbes.stream(), evalCriteria, selectStrategy);
 
         // Always include the full list of candidate positions in the result.
         // Perhaps surprising, but it's consistent with coverOneSubregion().
