@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.VARIANT_NOVEL_SEQUENCE_BASES_MIN;
+import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeTargetedRegions;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.sequenceIndelSize;
 
 import java.util.stream.Stream;
@@ -14,11 +15,11 @@ public interface PanelCoverage
     boolean isCovered(final ChrBaseRegion region);
 
     // Checks if a probe sequence is fully covered by probes in the panel.
-    default boolean isCovered(final SequenceDefinition sequenceDefinition)
+    default boolean isCovered(final SequenceDefinition sequenceDefinition, final TargetedRange targetedRange)
     {
         if(needsCoverageCheck(sequenceDefinition))
         {
-            return sequenceDefinition.regions().stream().allMatch(this::isCovered);
+            return probeTargetedRegions(sequenceDefinition, targetedRange).stream().allMatch(this::isCovered);
         }
         else
         {

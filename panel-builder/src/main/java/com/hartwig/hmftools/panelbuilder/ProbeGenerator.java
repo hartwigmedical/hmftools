@@ -164,24 +164,17 @@ public class ProbeGenerator
     //   - Probes may overlap and extend outside the target region.
     //   - Probes are shifted slightly to optimise for the selection criteria.
     private ProbeGenerationResult coverRegion(final ChrBaseRegion region, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect, @Nullable final PanelCoverage coverage)
+            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy localSelect, final PanelCoverage coverage)
     {
         List<ChrBaseRegion> subregions;
-        if(coverage == null)
+        // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
+        subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
+                .stream()
+                .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
+                .toList();
+        if(subregions.size() > 1)
         {
-            subregions = List.of(region);
-        }
-        else
-        {
-            // Split the region into uncovered subregions to avoid overlap with regions already covered by probes.
-            subregions = regionNegatedIntersection(region.baseRegion(), coverage.coveredRegions().map(ChrBaseRegion::baseRegion))
-                    .stream()
-                    .map(baseRegion -> ChrBaseRegion.from(region.chromosome(), baseRegion))
-                    .toList();
-            if(subregions.size() > 1)
-            {
-                subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));
-            }
+            subregions.forEach(subregion -> LOGGER.debug("Split region into uncovered subregion: {}", subregion));
         }
 
         ProbeGenerationResult result = subregions.stream()
@@ -521,14 +514,14 @@ public class ProbeGenerator
 
     // Generates the one best acceptable probe that is contained within the specified region.
     private ProbeGenerationResult coverOneSubregion(final ChrBaseRegion region, final TargetMetadata metadata,
-            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, @Nullable final PanelCoverage coverage)
+            final ProbeEvaluator.Criteria evalCriteria, final ProbeSelector.Strategy selectStrategy, final PanelCoverage coverage)
     {
         TargetRegion candidateTargetRegion = new TargetRegion(region, metadata);
         Stream<Probe> candidates = coverOneSubregionCandidates(region, metadata);
         return selectBestCandidate(candidates, evalCriteria, selectStrategy)
                 .map(probe ->
                 {
-                    if(coverage != null && coverage.isCovered(probe.definition()))
+                    if(coverage.isCovered(probe.definition(), probe.targetedRange()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(List.of(candidateTargetRegion));
                     }
@@ -624,8 +617,7 @@ public class ProbeGenerator
         return bestCandidate
                 .map(probe ->
                 {
-                    // TODO: this checks if the whole probe is covered but we are only interested in the centre position
-                    if(coverage.isCovered(probe.definition()))
+                    if(coverage.isCovered(probe.definition(), probe.targetedRange()))
                     {
                         return ProbeGenerationResult.alreadyCoveredTargets(candidateTargetRegions);
                     }
@@ -648,7 +640,7 @@ public class ProbeGenerator
             {
                 throw new IllegalArgumentException("region length must be equal to probe length");
             }
-            if(coverage.isCovered(spec.sequenceDefinition()))
+            if(coverage.isCovered(spec.sequenceDefinition(), spec.targetedRange()))
             {
                 List<TargetRegion> targetRegions =
                         spec.sequenceDefinition().regions().stream().map(region -> new TargetRegion(region, spec.metadata())).toList();

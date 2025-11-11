@@ -95,7 +95,7 @@ public class ProbeUtils
     {
         // Determine subset of probe regions defined by targetedRange.
 
-        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>();
+        ArrayList<ChrBaseRegion> targetedRegions = new ArrayList<>(2);
 
         int probeLength = definition.baseLength();
         int targetedStart = targetedRange.startOffset();
