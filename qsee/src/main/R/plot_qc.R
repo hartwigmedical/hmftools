@@ -23,12 +23,9 @@ library(svglite)
 TUMOR_ID <- "H00000098"
 NORMAL_ID <- "H00000098-ref"
 SAMPLE_FEATURES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/H00000098.qsee.vis.features.tsv.gz"
-COHORT_NAMED_PERCENTILES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/COHORT.qsee.vis.named_percentiles.tsv.gz"
+COHORT_PERCENTILES_FILE <- "/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/COHORT.qsee.percentiles.tsv.gz"
 OUTPUT_PATH <- sprintf("/Users/lnguyen/Hartwig/experiments/wigits_qc/analysis/20250805_oa_run_hmf_samples/qsee_output/%s.qsee.vis.report.pdf", TUMOR_ID)
 GLOBAL_LOG_LEVEL <- "DEBUG"
-
-SAMPLE_DATA <- read.delim(SAMPLE_FEATURES_FILE)
-COHORT_DATA <- read.delim(COHORT_NAMED_PERCENTILES_FILE)
 
 ################################
 ## Helper functions
@@ -49,7 +46,7 @@ logMessage <- function(log_level, string){
    
    current_time <- format(Sys.time(), "%H:%H:%OS3")
    
-   log_message <- sprintf("%s [R] [%5s] %s", current_time, log_level$name, string)
+   log_message <- sprintf("%s [R] [%-5s] %s", current_time, log_level$name, string)
    
    if(log_level$severity >= LOG_LEVEL[[LOG_LEVEL$ERROR$name]]$severity)
       stop(log_message)
@@ -132,6 +129,70 @@ FEATURE_TYPE <- list(
    MS_INDEL_ERROR_BIAS        = list(name = "MS_INDEL_ERROR_BIAS")
 )
 
+NAMED_PERCENTILES <- list(
+   MIN   = list(name = "Min"  , percentile = 5.0),
+   LOWER = list(name = "Lower", percentile = 25.0),
+   MID   = list(name = "Mid"  , percentile = 50.0),
+   UPPER = list(name = "Upper", percentile = 75.0),
+   MAX   = list(name = "Max"  , percentile = 95.0)
+)
+
+################################
+## Load data
+################################
+
+load_cohort_percentiles <- function(cohort_percentiles_file){
+   
+   PERCENTILE_PREFIX <- "Pct"
+   
+   cohort_percentiles <- read.delim(cohort_percentiles_file)
+   
+   pct_ref_values <- cohort_percentiles %>% select(starts_with(PERCENTILE_PREFIX))
+   colnames(pct_ref_values) <- sub(paste0(PERCENTILE_PREFIX, "_"), "", colnames(pct_ref_values))
+   percentiles <- as.numeric(colnames(pct_ref_values))
+
+   get_pct_ref_values <- function(target_percentile){
+
+      if(target_percentile %in% percentiles){
+         output <- pct_ref_values[[as.character(target_percentile)]]
+      } else { 
+         ## Linear interpolation
+         
+         logMessage(LOG_LEVEL$DEBUG, sprintf("Interpolating percentile(%s) as it was not found in the cohort percentiles file", target_percentile))
+         
+         lower_index <- abs(target_percentile - percentiles) %>% which.min()
+         upper_index <- lower_index + 1
+         
+         lower_percentile <- percentiles[lower_index]
+         upper_percentile <- percentiles[upper_index]
+         
+         lower_ref_values <- pct_ref_values[[as.character(lower_percentile)]]
+         upper_ref_values <- pct_ref_values[[as.character(upper_percentile)]]
+         
+         fraction <- target_percentile - lower_percentile
+         output <- lower_ref_values + fraction * (upper_ref_values - lower_ref_values)
+      }
+      
+      return(output)
+   }
+   
+   cohort_named_percentiles <- cohort_percentiles %>% select(!starts_with(PERCENTILE_PREFIX))
+   
+   for(named_percentile in NAMED_PERCENTILES){
+      percentile_colname <- paste0(PERCENTILE_PREFIX, named_percentile$name)
+      ref_values <- get_pct_ref_values(named_percentile$percentile)
+      cohort_named_percentiles[[percentile_colname]] <- ref_values
+   }
+   
+   return(cohort_named_percentiles)
+}
+
+logMessage(LOG_LEVEL$INFO, paste0("Loading cohort percentiles from: ", COHORT_PERCENTILES_FILE))
+COHORT_DATA <- load_cohort_percentiles(COHORT_PERCENTILES_FILE)
+
+logMessage(LOG_LEVEL$INFO, paste0("Loading sample features from: ", SAMPLE_FEATURES_FILE))
+SAMPLE_DATA <- read.delim(SAMPLE_FEATURES_FILE)
+
 ################################
 ## Summary table
 ################################
@@ -190,7 +251,7 @@ draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
    table_data_wide <- table_data_long %>% 
       select(FeatureGroup, Metric, SampleType, FeatureValueMarkdown) %>%
       mutate(
-         SampleType = to_upper_camel_case(SampleType),
+         SampleType = sapply(SampleType, function(x){ SAMPLE_TYPE[[x]]$human_readable_name }),
       ) %>%
       pivot_wider(
          names_from = SampleType,
