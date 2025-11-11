@@ -174,21 +174,33 @@ public class SvVarData
     {
         if(isSglBreakend())
         {
-            return format("id(%s) pos(%s:%d:%d)",
-                    id(), mChr[SE_START], orientation(true), position(true));
+            return format("id(%s) pos(%s)", id(), coordsStr(mChr[SE_START], position(true), orientation(true)));
         }
         else
         {
-            return format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
-                    id(), mChr[SE_START], orientation(true), position(true),
-                    mChr[SE_END], orientation(false), position(false));
+            return format("id(%s) pos(%s -> %s)",
+                    id(), coordsStr(mChr[SE_START], position(true), orientation(true)),
+                    coordsStr(mChr[SE_END], position(false), orientation(false)));
         }
     }
 
     public String posId(boolean useStart)
     {
-        return format("%s: %s %s:%d:%d",
-                id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
+        return format("%s: %s %s",
+                id(), useStart ? "start" :"end", coordsStr(mChr[seIndex(useStart)], position(useStart), orientation(useStart)));
+    }
+
+    public String coordsStr(boolean useStart)
+    {
+        if(isSglBreakend() && !useStart)
+            return "";
+
+        return coordsStr(chromosome(useStart), position(useStart), orientation(useStart));
+    }
+
+    public static String coordsStr(final String chromosome, final int position, final byte orientation)
+    {
+        return format("%s:%d:%d", chromosome, position, orientation);
     }
 
     public ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }

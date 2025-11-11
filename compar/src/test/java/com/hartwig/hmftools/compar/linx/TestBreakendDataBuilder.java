@@ -56,6 +56,8 @@ public class TestBreakendDataBuilder
                 .nextSpliceExonRank(nextSpliceExonRank)
                 .id(-1)
                 .svId(-1)
+                .vcfId("")
+                .coords("")
                 .isStart(true)
                 .gene("")
                 .geneOrientation("")

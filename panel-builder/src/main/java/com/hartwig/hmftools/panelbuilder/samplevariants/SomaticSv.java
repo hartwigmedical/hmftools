@@ -261,7 +261,7 @@ public class SomaticSv implements Variant
             }
 
             LinxSvAnnotation annotation = annotations.stream().
-                    filter(a -> a.vcfId().equals(variant.id()))
+                    filter(a -> a.vcfIdStart().equals(variant.id()))
                     .findFirst()
                     .orElse(null);
             if(annotation == null)

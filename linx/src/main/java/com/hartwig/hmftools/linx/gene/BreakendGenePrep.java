@@ -99,8 +99,8 @@ public final class BreakendGenePrep
     }
 
     public static List<BreakendGeneData> findGeneAnnotationsBySv(
-            final EnsemblDataCache ensemblDataCache, int svId, boolean isStart, final String chromosome, int position, byte orientation,
-            int upstreamDistance)
+            final EnsemblDataCache ensemblDataCache, int svId, boolean isStart,
+            final String chromosome, int position, byte orientation, int upstreamDistance)
     {
         List<BreakendGeneData> geneAnnotations = Lists.newArrayList();
 

@@ -22,6 +22,8 @@ public abstract class LinxBreakend
 {
     public abstract int id();
     public abstract int svId();
+    public abstract String vcfId();
+    public abstract String coords();
     public abstract boolean isStart();
     public abstract String gene();
     public abstract String transcriptId();
@@ -83,9 +85,8 @@ public abstract class LinxBreakend
 
         List<LinxBreakend> breakends = Lists.newArrayList();
 
-        // backwards compatibility on old column name
-        Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
-                fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
+        Integer vcfIdIndex = fieldsIndexMap.get("vcfId");
+        Integer coordsIndex = fieldsIndexMap.get("coords");
 
         for(String line : lines)
         {
@@ -94,6 +95,8 @@ public abstract class LinxBreakend
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
                     .svId(Integer.parseInt(values[fieldsIndexMap.get("svId")]))
+                    .vcfId(vcfIdIndex != null ? values[vcfIdIndex] : "")
+                    .coords(coordsIndex != null ? values[coordsIndex] : "")
                     .isStart(Boolean.parseBoolean(values[fieldsIndexMap.get("isStart")]))
                     .gene(values[fieldsIndexMap.get("gene")])
                     .transcriptId(values[fieldsIndexMap.get("transcriptId")])
@@ -103,7 +106,7 @@ public abstract class LinxBreakend
                     .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
                     .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
                     .regionType(TranscriptRegionType.valueOf(values[fieldsIndexMap.get("regionType")]))
-                    .codingType(TranscriptCodingType.valueOf(values[codingTypeIndex]))
+                    .codingType(TranscriptCodingType.valueOf(values[fieldsIndexMap.get("codingType")]))
                     .biotype(values[fieldsIndexMap.get("biotype")])
                     .exonicBasePhase(Integer.parseInt(values[fieldsIndexMap.get("exonicBasePhase")]))
                     .nextSpliceExonRank(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonRank")]))
@@ -123,6 +126,8 @@ public abstract class LinxBreakend
         return new StringJoiner(TSV_DELIM)
                 .add("id")
                 .add("svId")
+                .add("vcfId")
+                .add("coords")
                 .add("isStart")
                 .add("gene")
                 .add("transcriptId")
@@ -149,6 +154,8 @@ public abstract class LinxBreakend
         return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
+                .add(breakend.vcfId())
+                .add(breakend.coords())
                 .add(String.valueOf(breakend.isStart()))
                 .add(String.valueOf(breakend.gene()))
                 .add(String.valueOf(breakend.transcriptId()))

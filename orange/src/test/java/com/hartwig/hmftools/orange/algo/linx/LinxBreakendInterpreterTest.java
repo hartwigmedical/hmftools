@@ -140,7 +140,8 @@ public class LinxBreakendInterpreterTest
     {
         return LinxTestFactory.svAnnotationBuilder()
                 .svId(1)
-                .vcfId(VCF_ID)
+                .vcfIdStart(VCF_ID)
+                .vcfIdEnd(VCF_ID)
                 .junctionCopyNumberMin(1.0D)
                 .junctionCopyNumberMax(2.0D)
                 .build();

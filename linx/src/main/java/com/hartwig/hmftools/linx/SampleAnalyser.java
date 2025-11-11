@@ -523,8 +523,11 @@ public class SampleAnalyser implements Callable<Void>
                 continue;
 
             linxSvData.add(ImmutableLinxSvAnnotation.builder()
-                    .vcfId(var.getSvData().vcfIdStart())
+                    .vcfIdStart(var.getSvData().vcfIdStart())
+                    .vcfIdEnd(var.getSvData().vcfIdEnd())
                     .svId(var.id())
+                    .coordsStart(var.coordsStr(true))
+                    .coordsEnd(var.coordsStr(false))
                     .clusterId(cluster.id())
                     .clusterReason(var.getClusterReason())
                     .fragileSiteStart(var.isFragileSite(true))

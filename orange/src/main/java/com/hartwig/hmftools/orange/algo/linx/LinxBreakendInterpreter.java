@@ -44,7 +44,7 @@ public class LinxBreakendInterpreter
             LOGGER.warn("No linx sv annotation found for breakend {}", linxBreakend.id());
         }
 
-        StructuralVariant structuralVariant = svAnnotation != null ? structuralVariantsMap.get(svAnnotation.vcfId()) : null;
+        StructuralVariant structuralVariant = svAnnotation != null ? structuralVariantsMap.get(svAnnotation.vcfIdStart()) : null;
         if(structuralVariant == null)
         {
             LOGGER.warn("No structural variant found for breakend {}", linxBreakend.id());

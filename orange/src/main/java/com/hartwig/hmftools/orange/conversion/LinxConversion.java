@@ -36,7 +36,7 @@ public final class LinxConversion
     public static LinxSvAnnotation convert(@NotNull com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
     {
         return ImmutableLinxSvAnnotation.builder()
-                .vcfId(linxSvAnnotation.vcfId())
+                .vcfId(linxSvAnnotation.vcfIdStart())
                 .svId(linxSvAnnotation.svId())
                 .clusterId(linxSvAnnotation.clusterId())
                 .clusterReason(linxSvAnnotation.clusterReason())

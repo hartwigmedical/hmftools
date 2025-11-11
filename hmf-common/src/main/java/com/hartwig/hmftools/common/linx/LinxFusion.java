@@ -27,6 +27,10 @@ public abstract class LinxFusion
     public abstract String reportableReasons();
     public abstract FusionPhasedType phased();
     public abstract FusionLikelihoodType likelihood();
+    public abstract String fivePrimeVcfId();
+    public abstract String threePrimeVcfId();
+    public abstract String fivePrimeCoords();
+    public abstract String threePrimeCoords();
     public abstract int chainLength();
     public abstract int chainLinks();
     public abstract boolean chainTerminated();
@@ -80,6 +84,12 @@ public abstract class LinxFusion
 
         List<LinxFusion> fusions = Lists.newArrayList();
 
+        Integer reportReasonIndex = fieldsIndexMap.get("reportableReasons");
+        Integer fiveVcfIdIndex = fieldsIndexMap.get("fivePrimeVcfId");
+        Integer threeVcfIdIndex = fieldsIndexMap.get("threePrimeVcfId");
+        Integer fiveCoordsIndex = fieldsIndexMap.get("fivePrimeCoords");
+        Integer threeCoordsIndex = fieldsIndexMap.get("threePrimeCoords");
+
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM);
@@ -93,9 +103,13 @@ public abstract class LinxFusion
                     .name(values[fieldsIndexMap.get("name")])
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
                     .reportedType(values[fieldsIndexMap.get("reportedType")])
-                    .reportableReasons(reportableReasons)
+                    .reportableReasons(reportReasonIndex != null ? values[reportReasonIndex] : "")
                     .phased(FusionPhasedType.valueOf(values[fieldsIndexMap.get("phased")]))
                     .likelihood(FusionLikelihoodType.valueOf(values[fieldsIndexMap.get("likelihood")]))
+                    .fivePrimeVcfId(fiveVcfIdIndex != null ? values[fiveVcfIdIndex] : "")
+                    .threePrimeVcfId(threeVcfIdIndex != null ? values[threeVcfIdIndex] : "")
+                    .fivePrimeCoords(fiveCoordsIndex != null ? values[fiveCoordsIndex] : "")
+                    .threePrimeCoords(threeCoordsIndex != null ? values[threeCoordsIndex] : "")
                     .chainLength(Integer.parseInt(values[fieldsIndexMap.get("chainLength")]))
                     .chainLinks(Integer.parseInt(values[fieldsIndexMap.get("chainLinks")]))
                     .chainTerminated(Boolean.parseBoolean(values[fieldsIndexMap.get("chainTerminated")]))
@@ -116,7 +130,6 @@ public abstract class LinxFusion
         }
 
         return fusions;
-
     }
 
     private static String header()
@@ -130,6 +143,10 @@ public abstract class LinxFusion
                 .add("reportableReasons")
                 .add("phased")
                 .add("likelihood")
+                .add("fivePrimeVcfId")
+                .add("threePrimeVcfId")
+                .add("fivePrimeCoords")
+                .add("threePrimeCoords")
                 .add("chainLength")
                 .add("chainLinks")
                 .add("chainTerminated")
@@ -160,6 +177,10 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.reportableReasons()))
                 .add(String.valueOf(fusion.phased()))
                 .add(String.valueOf(fusion.likelihood()))
+                .add(fusion.fivePrimeVcfId())
+                .add(fusion.threePrimeVcfId())
+                .add(fusion.fivePrimeCoords())
+                .add(fusion.threePrimeCoords())
                 .add(String.valueOf(fusion.chainLength()))
                 .add(String.valueOf(fusion.chainLinks()))
                 .add(String.valueOf(fusion.chainTerminated()))

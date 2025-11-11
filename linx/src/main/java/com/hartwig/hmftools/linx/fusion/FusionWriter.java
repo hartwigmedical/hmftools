@@ -54,10 +54,14 @@ public class FusionWriter implements CohortFileInterface
         {
             transIdMap.put(transcript, breakendId);
 
+            BreakendGeneData geneData = transcript.breakendGeneData();
+
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
-                    .svId(transcript.breakendGeneData().varId())
-                    .isStart(transcript.breakendGeneData().isStart())
+                    .svId(geneData.varId())
+                    .vcfId(geneData.vcfId())
+                    .coords(geneData.coordsStr())
+                    .isStart(geneData.isStart())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
@@ -82,6 +86,9 @@ public class FusionWriter implements CohortFileInterface
 
         for(final GeneFusion geneFusion : geneFusions)
         {
+            BreakendGeneData upGeneData = geneFusion.upstreamTrans().breakendGeneData();
+            BreakendGeneData downGeneData = geneFusion.downstreamTrans().breakendGeneData();
+
             int upBreakendId = transIdMap.get(geneFusion.upstreamTrans());
             int downBreakendId = transIdMap.get(geneFusion.downstreamTrans());
 
@@ -94,6 +101,10 @@ public class FusionWriter implements CohortFileInterface
                     .reportableReasons(geneFusion.reportableReasonsStr())
                     .phased(geneFusion.phaseType())
                     .likelihood(geneFusion.likelihoodType())
+                    .fivePrimeVcfId(upGeneData.vcfId())
+                    .threePrimeVcfId(downGeneData.vcfId())
+                    .fivePrimeCoords(upGeneData.coordsStr())
+                    .threePrimeCoords(downGeneData.coordsStr())
                     .chainLength(geneFusion.getChainLength())
                     .chainLinks(geneFusion.getChainLinks())
                     .chainTerminated(geneFusion.isTerminated())

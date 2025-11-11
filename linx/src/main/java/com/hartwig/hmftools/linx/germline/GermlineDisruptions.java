@@ -401,6 +401,8 @@ public class GermlineDisruptions
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
                         .id(breakendId++)
                         .svId(var.id())
+                        .vcfId(var.getSvData().vcfIdStart())
+                        .coords(var.coordsStr(disruptionData.IsStart))
                         .isStart(disruptionData.IsStart)
                         .gene(gene.GeneName)
                         .geneOrientation(isUpstream ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
@@ -412,7 +414,7 @@ public class GermlineDisruptions
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
                         .totalExonCount(transcript.exons().size());
 
-                final BreakendGeneData breakendGene = var.getGenesList(disruptionData.IsStart).stream()
+                BreakendGeneData breakendGene = var.getGenesList(disruptionData.IsStart).stream()
                         .filter(x -> x.geneName().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
 
                 if(breakendGene != null && breakendGene.canonical() != null)
