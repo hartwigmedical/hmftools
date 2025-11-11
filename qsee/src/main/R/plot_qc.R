@@ -130,7 +130,7 @@ FEATURE_TYPE <- list(
 )
 
 NAMED_PERCENTILES <- list(
-   MIN   = list(name = "Min"  , percentile = 5.0),
+   MIN   = list(name = "Min"  , percentile =  5.0),
    LOWER = list(name = "Lower", percentile = 25.0),
    MID   = list(name = "Mid"  , percentile = 50.0),
    UPPER = list(name = "Upper", percentile = 75.0),
@@ -142,6 +142,8 @@ NAMED_PERCENTILES <- list(
 ################################
 
 load_cohort_percentiles <- function(cohort_percentiles_file){
+   
+   logMessage(LOG_LEVEL$INFO, paste0("Loading cohort percentiles from: ", COHORT_PERCENTILES_FILE))
    
    PERCENTILE_PREFIX <- "Pct"
    
@@ -187,11 +189,14 @@ load_cohort_percentiles <- function(cohort_percentiles_file){
    return(cohort_named_percentiles)
 }
 
-logMessage(LOG_LEVEL$INFO, paste0("Loading cohort percentiles from: ", COHORT_PERCENTILES_FILE))
-COHORT_DATA <- load_cohort_percentiles(COHORT_PERCENTILES_FILE)
+load_sample_features <- function(sample_features_file){
+   logMessage(LOG_LEVEL$INFO, paste0("Loading sample features from: ", SAMPLE_FEATURES_FILE))
+   return(read.delim(SAMPLE_FEATURES_FILE))
+}
 
-logMessage(LOG_LEVEL$INFO, paste0("Loading sample features from: ", SAMPLE_FEATURES_FILE))
-SAMPLE_DATA <- read.delim(SAMPLE_FEATURES_FILE)
+
+COHORT_DATA <- load_cohort_percentiles(COHORT_PERCENTILES_FILE)
+SAMPLE_DATA <- load_sample_features(SAMPLE_FEATURES_FILE)
 
 ################################
 ## Summary table
@@ -203,6 +208,8 @@ draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
       tumor_id = TUMOR_ID
       normal_id = NORMAL_ID
    }
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$SUMMARY_TABLE$name))
    
    ## Get cohort data ================================
    sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name & SampleId %in% c(tumor_id, normal_id))
@@ -387,22 +394,21 @@ gt_grob <- function(gt_object, ...){
 
 get_prelim_plot_data <- function(feature_type, tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
    
-   if(FALSE){
-      feature_type="COVERAGE_DISTRIBUTION"
-   }
-   
+   ## Select rows
    cohort_data <- COHORT_DATA %>% filter(FeatureType == feature_type)
    sample_data <- SAMPLE_DATA %>% filter(FeatureType == feature_type & SampleId %in% c(tumor_id, normal_id))
    
+   ## Assign groupings
    cohort_data$GroupType <- GROUP_TYPE$COHORT$name
    sample_data$GroupType <- GROUP_TYPE$SAMPLE$name
    
    cohort_data$SampleGroup <- paste0(cohort_data$SampleType, "_", cohort_data$GroupType)
    sample_data$SampleGroup <- paste0(sample_data$SampleType, "_", sample_data$GroupType)
    
+   ## Merge cohort and sample data into one data frame
    sample_data <- sample_data %>% rename(PctMid = FeatureValue)
+   
    sample_data <- sapply(colnames(cohort_data), function(column){
-      
       if(!(column %in% colnames(sample_data))){
          return(NA)
       } else {
@@ -413,6 +419,7 @@ get_prelim_plot_data <- function(feature_type, tumor_id = TUMOR_ID, normal_id = 
    plot_data <- rbind(cohort_data, sample_data)
    plot_data <- plot_data %>% select(SampleGroup, GroupType, SampleType, everything())
    
+   ## Split feature names into columns
    has_multiplex_feature_names <- grepl(".+=.+", plot_data$FeatureName[1])
    if(has_multiplex_feature_names){
       plot_data <- data.frame(plot_data, strings_to_df(plot_data$FeatureName))
@@ -515,6 +522,9 @@ plot_distribution <- function(plot_data, invert_normal = FALSE, show_median = FA
 }
 
 plot_coverage_distribution <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$COVERAGE_DISTRIBUTION$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = ReadDepth)
    
@@ -523,6 +533,9 @@ plot_coverage_distribution <- function(){
 }
 
 plot_frag_length_distribution <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = FragLength)
    
@@ -531,6 +544,9 @@ plot_frag_length_distribution <- function(){
 }
 
 plot_gc_bias <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$GC_BIAS$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$GC_BIAS$name)
    plot_data <- plot_data %>% rename(AxisX = GCBucket)
    
@@ -612,6 +628,8 @@ plot_dotplot <- function(plot_data, point_size = 1, linerange_size = 0.3, hlines
 
 plot_duplicate_freq <- function(){
    
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$DUPLICATE_FREQ$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$DUPLICATE_FREQ$name)
    plot_data <- preordered_factors(plot_data)
    plot_data <- plot_data %>% rename(AxisX = ReadCount)
@@ -627,6 +645,8 @@ plot_duplicate_freq <- function(){
 }
 
 plot_missed_variant_likelihood <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name))
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
    
@@ -658,6 +678,8 @@ plot_missed_variant_likelihood <- function(){
 }
 
 plot_bqr_by_orig_qual <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$BQR_BY_ORIG_QUAL$name))
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
    
@@ -691,6 +713,8 @@ plot_bqr_by_orig_qual <- function(){
 
 plot_bqr_by_snv96_context <- function(){
    
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
 
    plot_data <- plot_data %>% rename(
@@ -723,6 +747,8 @@ plot_bqr_by_snv96_context <- function(){
 
 plot_ms_indel_error_rates <- function(){
    
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MS_INDEL_ERROR_RATES$name))
+   
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
    
    plot_data <- plot_data %>% rename(
@@ -746,6 +772,8 @@ plot_ms_indel_error_rates <- function(){
 }
 
 plot_msi_indel_error_bias <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name))
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
    
@@ -789,6 +817,8 @@ plot_msi_indel_error_bias <- function(){
 ## =============================
 
 plot_discordant_read_stats <- function(){
+   
+   logMessage(LOG_LEVEL$DEBUG, paste0("Plotting: ", FEATURE_TYPE$DISCORDANT_READ_STATS$name))
    
    return(ggplot() + theme_bw())
    
@@ -839,47 +869,53 @@ plot_discordant_read_stats <- function(){
 ## Combine plots
 ################################
 
-PLOTS <- list()
+create_report <- function(){
 
-PLOTS[[FEATURE_TYPE$SUMMARY_TABLE$name]] <- draw_summary_table() %>% gt_grob() %>% wrap_elements(full = .)
-
-PLOTS[[FEATURE_TYPE$COVERAGE_DISTRIBUTION$name]] <- plot_coverage_distribution()
-PLOTS[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name]] <- plot_frag_length_distribution()
-PLOTS[[FEATURE_TYPE$GC_BIAS$name]] <- plot_gc_bias()
-PLOTS[[FEATURE_TYPE$DISCORDANT_READ_STATS$name]] <- plot_discordant_read_stats()
-
-PLOTS[[FEATURE_TYPE$DUPLICATE_FREQ$name]] <- plot_duplicate_freq()
-PLOTS[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name]] <- plot_missed_variant_likelihood()
-
-PLOTS[[FEATURE_TYPE$BQR_BY_ORIG_QUAL$name]] <- plot_bqr_by_orig_qual()
-PLOTS[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name]] <- plot_bqr_by_snv96_context()
-
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_RATES$name]] <- plot_ms_indel_error_rates()
-PLOTS[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name]] <- plot_msi_indel_error_bias()
-
-p_combined <- 
-   patchwork::wrap_plots(
-      PLOTS, guides="collect", ncol = 2,
-      design = "
-      AAAABB
-      AAAACC
-      AAAADD
-      AAAAEE
-      FFFGGG
-      HHHIII
-      JJJKKK
-      "
-   ) & 
-   theme(
-      plot.margin = unit(c(t=18, r=12, b=0, l=12), "pt"),
-      legend.position = "bottom",
-      legend.direction = "vertical"
+   logMessage(LOG_LEVEL$INFO, "Creating plots per feature type")
+   plots <- list()
+   
+   plots[[FEATURE_TYPE$SUMMARY_TABLE$name]] <- draw_summary_table() %>% gt_grob() %>% wrap_elements(full = .)
+   
+   plots[[FEATURE_TYPE$COVERAGE_DISTRIBUTION$name]] <- plot_coverage_distribution()
+   plots[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name]] <- plot_frag_length_distribution()
+   plots[[FEATURE_TYPE$GC_BIAS$name]] <- plot_gc_bias()
+   plots[[FEATURE_TYPE$DISCORDANT_READ_STATS$name]] <- plot_discordant_read_stats()
+   
+   plots[[FEATURE_TYPE$DUPLICATE_FREQ$name]] <- plot_duplicate_freq()
+   plots[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name]] <- plot_missed_variant_likelihood()
+   
+   plots[[FEATURE_TYPE$BQR_BY_ORIG_QUAL$name]] <- plot_bqr_by_orig_qual()
+   plots[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name]] <- plot_bqr_by_snv96_context()
+   
+   plots[[FEATURE_TYPE$MS_INDEL_ERROR_RATES$name]] <- plot_ms_indel_error_rates()
+   plots[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name]] <- plot_msi_indel_error_bias()
+   
+   plots_combined <- 
+      patchwork::wrap_plots(
+         PLOTS, guides="collect", ncol = 2,
+         design = "
+         AAAABB
+         AAAACC
+         AAAADD
+         AAAAEE
+         FFFGGG
+         HHHIII
+         JJJKKK
+         "
+      ) & 
+      theme(
+         plot.margin = unit(c(t=18, r=12, b=0, l=12), "pt"),
+         legend.position = "bottom",
+         legend.direction = "vertical"
+      )
+   
+   logMessage(LOG_LEVEL$INFO, paste0("Writing report to: ", OUTPUT_PATH))
+   ggsave(
+      filename = OUTPUT_PATH, plot = plots_combined, 
+      device = "pdf", width = 14, height = 17, units = "in"
    )
-
-ggsave(
-   filename = OUTPUT_PATH, plot = p_combined, 
-   device = "pdf", width = 14, height = 17, units = "in"
-)
+   
+}
 
 
 
