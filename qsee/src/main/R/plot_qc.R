@@ -1,20 +1,26 @@
-library(ggplot2)
+suppressPackageStartupMessages(library(dplyr))
+
+## Pre-processing
 library(dplyr)
 library(tidyr)
+
+## Plotting
+library(ggplot2)
 library(ggh4x)
 library(patchwork)
 
-library(gt)
+## html/svg/png conversion
 library(svglite)
+library(gt)
 
 ################################
 ## Config
 ################################
 
-args <- commandArgs(TRUE)
+args <- commandArgs(trailingOnly = TRUE)
 
 TUMOR_ID <- args[1]
-NORMAL_ID <- args[2]
+NORMAL_ID <- ifelse(args[2] == "NA", NA, args[2])
 SAMPLE_FEATURES_FILE <- args[3]
 COHORT_PERCENTILES_FILE <- args[4]
 OUTPUT_PATH <- args[5]
@@ -65,6 +71,14 @@ LOGGER <- list(
     error = function(fmt, ...){ log_message(LOG_LEVEL$ERROR, fmt, ...) },
     fatal = function(fmt, ...){ log_message(LOG_LEVEL$FATAL, fmt, ...) }
 )
+
+LOGGER$debug("Running script with args:")
+LOGGER$debug(" tumor_id: %s", TUMOR_ID)
+LOGGER$debug(" normal_id: %s", NORMAL_ID)
+LOGGER$debug(" sample_features_file: %s", SAMPLE_FEATURES_FILE)
+LOGGER$debug(" cohort_percentiles_file:%s", COHORT_PERCENTILES_FILE)
+LOGGER$debug(" output_path: %s", OUTPUT_PATH)
+LOGGER$debug(" log_level: %s", GLOBAL_LOG_LEVEL)
 
 ################################
 ## Helper functions
@@ -131,7 +145,7 @@ SAMPLE_GROUP <- list(
 )
 
 FEATURE_TYPE <- list(
-   ## Comments:
+   ## Notes:
    ## - Plot functions are defined later
    ## - The order of feature types defined here determines the plot order
    SUMMARY_TABLE              = list(name = "SUMMARY_TABLE", plot_func = NULL),
@@ -159,13 +173,13 @@ NAMED_PERCENTILES <- list(
 ## Load data
 ################################
 
-load_cohort_percentiles <- function(cohort_percentiles_file){
+load_cohort_percentiles <- function(){
    
    LOGGER$info("Loading cohort percentiles from: %s", COHORT_PERCENTILES_FILE)
    
    PERCENTILE_PREFIX <- "Pct"
    
-   cohort_percentiles <- read.delim(cohort_percentiles_file)
+   cohort_percentiles <- read.delim(COHORT_PERCENTILES_FILE)
    
    pct_ref_values <- cohort_percentiles %>% select(starts_with(PERCENTILE_PREFIX))
    colnames(pct_ref_values) <- sub(paste0(PERCENTILE_PREFIX, "_"), "", colnames(pct_ref_values))
@@ -207,28 +221,26 @@ load_cohort_percentiles <- function(cohort_percentiles_file){
    return(cohort_named_percentiles)
 }
 
-load_sample_features <- function(sample_features_file){
+load_sample_features <- function(){
    LOGGER$info("Loading sample features from: %s", SAMPLE_FEATURES_FILE)
-   return(read.delim(SAMPLE_FEATURES_FILE))
+   
+   sample_features <- read.delim(SAMPLE_FEATURES_FILE)
+   sample_features <- sample_features %>% filter(SampleId %in% c(TUMOR_ID, NORMAL_ID))
+   
+   return(sample_features)
 }
 
-
-COHORT_DATA <- load_cohort_percentiles(COHORT_PERCENTILES_FILE)
-SAMPLE_DATA <- load_sample_features(SAMPLE_FEATURES_FILE)
+COHORT_DATA <- load_cohort_percentiles()
+SAMPLE_DATA <- load_sample_features()
 
 ################################
 ## Summary table
 ################################
 
-draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
-   
-   if(FALSE){
-      tumor_id = TUMOR_ID
-      normal_id = NORMAL_ID
-   }
+draw_summary_table <- function(){
    
    ## Get cohort data ================================
-   sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name & SampleId %in% c(tumor_id, normal_id))
+   sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
    cohort_data <- COHORT_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name)
    
    rownames(sample_data) <- sample_data %>% select(SampleType, FeatureName) %>% df_to_strings()
@@ -349,7 +361,7 @@ draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
       
       ## Header
       tab_header(
-         title = tumor_id, 
+         title = TUMOR_ID,
          #subtitle = paste0(names(sample_qc), ": ", sample_qc) %>% paste(collapse = "<br>") %>% md()
       ) %>%
       
@@ -412,11 +424,11 @@ FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(){
 ## Plot functions
 ################################
 
-get_prelim_plot_data <- function(feature_type, tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
+get_prelim_plot_data <- function(feature_type){
    
    ## Select rows
    cohort_data <- COHORT_DATA %>% filter(FeatureType == feature_type)
-   sample_data <- SAMPLE_DATA %>% filter(FeatureType == feature_type & SampleId %in% c(tumor_id, normal_id))
+   sample_data <- SAMPLE_DATA %>% filter(FeatureType == feature_type)
    
    ## Assign groupings
    cohort_data$GroupType <- GROUP_TYPE$COHORT$name
@@ -815,7 +827,7 @@ FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
 }
 
 ## =============================
-## Discordant read stats 
+## Box plots
 ## =============================
 
 FEATURE_TYPE$DISCORDANT_READ_STATS$plot_func <- function(){

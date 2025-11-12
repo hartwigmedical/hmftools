@@ -3,21 +3,26 @@ package com.hartwig.hmftools.qsee.plot;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE_DESC;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 
 public class QseePlotConfig
 {
     public final String SampleFeaturesFile;
 
-    public final String TumorId;
-    public final String ReferenceId;
+    public final List<String> TumorIds;
+    public final List<String> ReferenceIds;
 
     public final String CohortPercentilesFile;
     public final String OutputPath;
@@ -32,8 +37,9 @@ public class QseePlotConfig
     {
         SampleFeaturesFile = configBuilder.getValue(SAMPLE_FEATURES_FILE);
 
-        TumorId = configBuilder.getValue(TUMOR);
-        ReferenceId = configBuilder.getValue(REFERENCE);
+        SampleIdsLoader sampleIdsLoader = new SampleIdsLoader().fromConfig(configBuilder);
+        TumorIds = sampleIdsLoader.tumorIds();
+        ReferenceIds = sampleIdsLoader.referenceIds();
 
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE);
         OutputPath = configBuilder.getValue(OUTPUT_FILE);
@@ -43,8 +49,9 @@ public class QseePlotConfig
     {
         configBuilder.addPath(SAMPLE_FEATURES_FILE, true, SAMPLE_FEATURES_FILE_DESC);
 
-        configBuilder.addConfigItem(TUMOR, true, TUMOR_DESC);
-        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
+        configBuilder.addConfigItem(TUMOR, false, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
+        configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addPath(COHORT_PERCENTILES_FILE, true, COHORT_PERCENTILES_FILE_DESC);
         configBuilder.addConfigItem(OUTPUT_FILE, true, OUTPUT_FILE_DESC);
