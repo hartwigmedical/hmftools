@@ -14,12 +14,15 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTO
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
+import static com.hartwig.hmftools.lilac.LilacConstants.V37_HLA_REGION;
+import static com.hartwig.hmftools.lilac.LilacConstants.V38_HLA_REGION;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_H;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -35,6 +38,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -48,10 +52,15 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class ReferenceData
 {
     private final String mResourceDir;
     private final LilacConfig mConfig;
+
+    private static String HLA_REF_BASES = null;
+    private static int HLA_REF_START = 0;
 
     public static GeneCache GENE_CACHE = null;
 
@@ -105,6 +114,32 @@ public class ReferenceData
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
+        if(!"".equals(mConfig.RefGenome))
+        {
+            IndexedFastaSequenceFile refFastaSeqFile = null;
+            try
+            {
+                refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenome));
+            }
+            catch(FileNotFoundException e)
+            {
+                LL_LOGGER.error("Failed to load ref genome: {}", mConfig.RefGenome);
+                System.exit(1);
+            }
+
+            RefGenomeSource refGenome = new RefGenomeSource(refFastaSeqFile);
+            if(config.RefGenVersion.is38())
+            {
+                HLA_REF_START = V38_HLA_REGION.start();
+                HLA_REF_BASES = refGenome.getBaseString(V38_HLA_REGION.Chromosome, V38_HLA_REGION.start(), V38_HLA_REGION.end());
+            }
+            else
+            {
+                HLA_REF_START = V37_HLA_REGION.start();
+                HLA_REF_BASES = refGenome.getBaseString(V37_HLA_REGION.Chromosome, V37_HLA_REGION.start(), V37_HLA_REGION.end());
+            }
+        }
+
         GENE_CACHE = new GeneCache(hlaTranscriptMap);
 
         if(config.Genes.coversMhcClass1())
@@ -139,6 +174,11 @@ public class ReferenceData
 
         CommonAlleles = Lists.newArrayList();
         KnownStopLossIndelAlleles = Maps.newHashMap();
+    }
+
+    public static String refBases(int startPos, int endPos)
+    {
+        return HLA_REF_BASES.substring(startPos - HLA_REF_START, endPos - HLA_REF_START + 1);
     }
 
     private static Map<HlaGene, TranscriptData> trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
