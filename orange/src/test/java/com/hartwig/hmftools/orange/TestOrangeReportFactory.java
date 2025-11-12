@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.finding.ImmutableFindingRecord;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
@@ -82,7 +84,8 @@ public final class TestOrangeReportFactory
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
-                .plots(createMinimalOrangePlots());
+                .plots(createMinimalOrangePlots())
+                .findings(createMinimalFindingData());
     }
 
     @NotNull
@@ -338,5 +341,11 @@ public final class TestOrangeReportFactory
     private static Set<PeachGenotype> createTestPeachData()
     {
         return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").allele("allele").build()));
+    }
+
+    @NotNull
+    private static FindingRecord createMinimalFindingData()
+    {
+        return ImmutableFindingRecord.builder().build();
     }
 }

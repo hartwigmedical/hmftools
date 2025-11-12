@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.datamodel.finding.PurpleQCInterpretation;
+import com.hartwig.hmftools.datamodel.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;

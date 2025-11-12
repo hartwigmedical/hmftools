@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
@@ -16,19 +17,25 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ReportLimiter
 {
     public static OrangeRecord limitAllListsToMaxOne(final OrangeRecord report)
     {
+        PurpleRecord purple = limitPurpleDataToOne(report.purple());
+        LinxRecord linx = limitLinxDataToOne(report.linx());
+
         return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
-                .purple(limitPurpleDataToOne(report.purple()))
-                .linx(limitLinxDataToOne(report.linx()))
+                .purple(purple)
+                .linx(linx)
                 .isofox(limitIsofoxDataToOne(report.isofox()))
+                .findings(FindingFactory.create(purple, linx, report.virusInterpreter(), report.cuppa()))
                 .build();
     }
 

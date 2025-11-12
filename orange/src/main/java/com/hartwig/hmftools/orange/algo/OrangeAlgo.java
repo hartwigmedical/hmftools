@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -43,8 +44,10 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -97,6 +100,7 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
+import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -186,9 +190,9 @@ public class OrangeAlgo
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config, mDriverGenes);
-        ChordData chord = loadChordAnalysis(config);
+        ChordData chordData = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
-        VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
+        VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
@@ -214,6 +218,9 @@ public class OrangeAlgo
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
 
+        com.hartwig.hmftools.datamodel.virus.VirusInterpreterData virusInterpreter = virusInterpreterData != null ? VirusInterpreter.interpret(virusInterpreterData) : null;
+        ChordRecord chord = chordData != null ? OrangeConversion.convert(chordData) : null;
+
         IsofoxRecord isofox = null;
         if(isofoxData != null)
         {
@@ -237,6 +244,8 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
+        FindingRecord finding = FindingFactory.create(purple, linx, virusInterpreter, cuppa);
+
         boolean hasRefSample = config.wgsRefConfig() != null && config.wgsRefConfig().referenceSampleId() != null;
 
         OrangeRecord report = ImmutableOrangeRecord.builder()
@@ -255,13 +264,14 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
-                .chord(chord != null ? OrangeConversion.convert(chord) : null)
+                .virusInterpreter(virusInterpreter)
+                .chord(chord)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, mEtiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
+                .findings(finding)
                 .build();
 
         verifyPlots(report.plots(), linxData);
@@ -569,7 +579,7 @@ public class OrangeAlgo
         }
 
         String chordPredictionTxt = config.wgsRefConfig().chordPredictionTxt();
-        if(chordPredictionTxt == null)
+        if(Strings.isNullOrEmpty(chordPredictionTxt))
         {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
             return null;

@@ -8,12 +8,11 @@ import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.datamodel.finding.BreakendEntry;
-import com.hartwig.hmftools.datamodel.finding.BreakendEntryFactory;
 import com.hartwig.hmftools.datamodel.finding.SmallVariant;
-import com.hartwig.hmftools.datamodel.finding.SmallVariantFactory;
-import com.hartwig.hmftools.datamodel.finding.PurpleQCInterpretation;
-import com.hartwig.hmftools.datamodel.finding.VariantDedup;
+import com.hartwig.hmftools.datamodel.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntry;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntryFactory;
+import com.hartwig.hmftools.orange.report.finding.SmallVariantFactory;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
@@ -113,7 +112,7 @@ public class SomaticFindingsChapter implements ReportChapter
             List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
             List<SmallVariant> reportableVariants =
-                    SmallVariantFactory.create(VariantDedup.apply(report.purple().driverSomaticVariants()), somaticDrivers);
+                    SmallVariantFactory.create(report.purple().driverSomaticVariants(), somaticDrivers);
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
             document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
         }
