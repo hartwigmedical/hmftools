@@ -31,8 +31,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.isofox.IsofoxDataLoader;
-import com.hartwig.hmftools.common.linx.LinxData;
-import com.hartwig.hmftools.common.linx.LinxDataLoader;
+import com.hartwig.hmftools.orange.algo.linx.LinxData;
+import com.hartwig.hmftools.orange.algo.linx.LinxDataLoader;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
@@ -456,9 +456,10 @@ public class OrangeAlgo
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
         String linxGermlineDataDirectory = config.wgsRefConfig() != null ? config.wgsRefConfig().linxGermlineDataDirectory() : null;
-        LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
-        LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
+        LinxData linx = LinxDataLoader.load(config);
+
+        LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticSvAnnotations().size());
         LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
         LOGGER.info(" Loaded {} somatic fusions (of which {} are reportable)",
                 linx.allSomaticFusions().size(),
@@ -471,7 +472,7 @@ public class OrangeAlgo
         if(linxGermlineDataDirectory != null)
         {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
-            LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
+            LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineSvAnnotations().size());
             LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
                     linx.allGermlineBreakends().size(),
                     linx.reportableGermlineBreakends().size());

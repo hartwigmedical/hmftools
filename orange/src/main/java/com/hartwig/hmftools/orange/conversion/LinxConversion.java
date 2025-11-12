@@ -18,6 +18,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
+import com.hartwig.hmftools.orange.algo.linx.HomozygousDisruption;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -105,7 +106,7 @@ public final class LinxConversion
     }
 
     @NotNull
-    public static LinxHomozygousDisruption convert(@NotNull com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
+    public static LinxHomozygousDisruption convert(@NotNull HomozygousDisruption homozygousDisruption)
     {
         return ImmutableLinxHomozygousDisruption.builder()
                 .gene(homozygousDisruption.gene())

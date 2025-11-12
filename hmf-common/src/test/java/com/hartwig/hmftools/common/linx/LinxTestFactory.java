@@ -106,15 +106,4 @@ public final class LinxTestFactory
                 .exonUp(0)
                 .exonDown(0);
     }
-
-    @NotNull
-    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
-    {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .transcript(Strings.EMPTY)
-                .isCanonical(false);
-    }
 }

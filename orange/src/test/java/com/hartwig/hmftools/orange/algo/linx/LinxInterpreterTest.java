@@ -1,12 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
-import static java.util.Collections.emptyList;
-
 import static org.junit.Assert.assertNotNull;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.jetbrains.annotations.NotNull;

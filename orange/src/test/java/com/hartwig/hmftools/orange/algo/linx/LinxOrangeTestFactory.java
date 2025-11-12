@@ -53,11 +53,4 @@ public final class LinxOrangeTestFactory
                 .exonDown(0)
                 .junctionCopyNumber(0D);
     }
-
-    @NotNull
-    public static ImmutableLinxHomozygousDisruption.Builder homozygousDisruptionBuilder()
-    {
-        return ImmutableLinxHomozygousDisruption.builder()
-                .from(LinxConversion.convert(LinxTestFactory.homozygousDisruptionBuilder().build()));
-    }
 }

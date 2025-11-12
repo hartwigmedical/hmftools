@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,10 +16,8 @@ import org.jetbrains.annotations.NotNull;
 //  remove when available via shared code.
 public final class LinxReportableClusters
 {
-    @NotNull
     public static Set<Integer> findVisualizedClusters(@NotNull LinxData linx)
     {
-
         Set<Integer> clusterIds = new HashSet<>(linx.fusionClusterIds());
 
         List<LinxBreakend> breakends = linx.reportableSomaticBreakends();

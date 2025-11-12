@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
+import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -268,7 +270,7 @@ public class WildTypeAlgoTest
 
     private static LinxHomozygousDisruption createHomDisruption(final String gene)
     {
-        return LinxOrangeTestFactory.homozygousDisruptionBuilder().gene(gene).build();
+        return linxHomozygousDisruptionBuilder().gene(gene).build();
     }
 
     public static LinxBreakend createBreakend(final String gene)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.homozygousDisruptionBuilder;
+import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
 import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -718,7 +720,7 @@ public class GermlineConversionTest
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
         LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
-        LinxHomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
+        LinxHomozygousDisruption germlineHomozygousDisruption = linxHomozygousDisruptionBuilder().build();
 
         LinxRecord linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)

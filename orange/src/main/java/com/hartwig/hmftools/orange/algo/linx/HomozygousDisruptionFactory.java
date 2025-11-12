@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.linx;
+package com.hartwig.hmftools.orange.algo.linx;
 
 import java.io.IOException;
 import java.util.List;

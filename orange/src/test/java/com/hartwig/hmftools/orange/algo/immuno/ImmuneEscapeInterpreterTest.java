@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
+import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -58,7 +60,7 @@ public class ImmuneEscapeInterpreterTest
                 .build();
 
         LinxRecord linx = TestLinxInterpretationFactory.builder()
-                .addSomaticHomozygousDisruptions(LinxOrangeTestFactory.homozygousDisruptionBuilder()
+                .addSomaticHomozygousDisruptions(linxHomozygousDisruptionBuilder()
                         .gene("IFNGR2")
                         .isCanonical(true)
                         .build())
@@ -258,7 +260,7 @@ public class ImmuneEscapeInterpreterTest
     private static LinxRecord withHomozygousDisruption(@NotNull String gene)
     {
         return TestLinxInterpretationFactory.builder()
-                .addSomaticHomozygousDisruptions(LinxOrangeTestFactory.homozygousDisruptionBuilder()
+                .addSomaticHomozygousDisruptions(linxHomozygousDisruptionBuilder()
                         .gene(gene)
                         .isCanonical(true)
                         .build())

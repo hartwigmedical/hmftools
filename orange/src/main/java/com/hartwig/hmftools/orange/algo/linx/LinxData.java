@@ -1,8 +1,14 @@
-package com.hartwig.hmftools.common.linx;
+package com.hartwig.hmftools.orange.algo.linx;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxData
 {
     @NotNull
-    List<LinxSvAnnotation> allSomaticStructuralVariants();
+    List<LinxSvAnnotation> allSomaticSvAnnotations();
 
     @NotNull
     List<LinxDriver> somaticDrivers();
@@ -34,7 +40,7 @@ public interface LinxData
     List<HomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    List<LinxSvAnnotation> allGermlineStructuralVariants();
+    List<LinxSvAnnotation> allGermlineSvAnnotations();
 
     @Nullable
     List<LinxBreakend> allGermlineBreakends();

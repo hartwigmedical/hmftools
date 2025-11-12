@@ -9,10 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.linx.DriverEventType;
-import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 
