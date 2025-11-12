@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE;
 import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE_DESC;
 
@@ -25,13 +28,10 @@ public class QseePlotConfig
     public final List<String> ReferenceIds;
 
     public final String CohortPercentilesFile;
-    public final String OutputPath;
+    public final String OutputDir;
 
     public static final String SAMPLE_FEATURES_FILE = "sample_features_file";
     public static final String SAMPLE_FEATURES_FILE_DESC = "Path to the sample features file";
-
-    public static final String OUTPUT_FILE = "output_file";
-    public static final String OUTPUT_FILE_DESC = "Path to write the output PDF file";
 
     public QseePlotConfig(final ConfigBuilder configBuilder)
     {
@@ -42,7 +42,7 @@ public class QseePlotConfig
         ReferenceIds = sampleIdsLoader.referenceIds();
 
         CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE);
-        OutputPath = configBuilder.getValue(OUTPUT_FILE);
+        OutputDir = parseOutputDir(configBuilder);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -54,7 +54,7 @@ public class QseePlotConfig
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addPath(COHORT_PERCENTILES_FILE, true, COHORT_PERCENTILES_FILE_DESC);
-        configBuilder.addConfigItem(OUTPUT_FILE, true, OUTPUT_FILE_DESC);
+        configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
         ConfigUtils.addLoggingOptions(configBuilder);

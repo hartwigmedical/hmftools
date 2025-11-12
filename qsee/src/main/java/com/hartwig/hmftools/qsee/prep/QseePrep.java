@@ -143,10 +143,18 @@ public class QseePrep
         }
     }
 
-    private boolean isSinglePatient()
+    public static String formOutputFilename(String basePath, String sampleId)
     {
-        return mConfig.CommonPrep.getSampleIds(SampleType.TUMOR).size() <= 1 &&
-                mConfig.CommonPrep.getSampleIds(SampleType.NORMAL).size() <= 1;
+        return checkAddDirSeparator(basePath) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+    }
+
+    public static String formOutputFilename(CommonPrepConfig config)
+    {
+        String sampleId = config.isSinglePatient() ?
+                config.getSampleIds(SampleType.TUMOR).get(0) :
+                SAMPLE_ID_MULTI;
+
+        return formOutputFilename(config.OutputDir, sampleId);
     }
 
     public void run()
@@ -159,12 +167,11 @@ public class QseePrep
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.TUMOR));
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.NORMAL));
 
-        if(!isSinglePatient())
+        if(!mConfig.CommonPrep.isSinglePatient())
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
-        String sampleId = isSinglePatient() ? mConfig.CommonPrep.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
-        String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+        String outputFile = formOutputFilename(mConfig.CommonPrep);
         writeToFile(outputFile, visDataEntries);
     }
 
@@ -172,11 +179,9 @@ public class QseePrep
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         QseePrepConfig.registerConfig(configBuilder);
-
         configBuilder.checkAndParseCommandLine(args);
 
         QseePrepConfig config = new QseePrepConfig(configBuilder);
-
         new QseePrep(config).run();
     }
 }

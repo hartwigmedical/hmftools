@@ -123,6 +123,8 @@ public class CommonPrepConfig
         return sampleType == SampleType.TUMOR ? TumorIds : ReferenceIds;
     }
 
+    public boolean isSinglePatient() { return TumorIds.size() <= 1 && ReferenceIds.size() <= 1; }
+
     public String getAmberDir(final String sampleId) { return convertWildcardSamplePath(AmberDir, sampleId); }
     public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
     public String getEsveeDir(final String sampleId) { return convertWildcardSamplePath(EsveeDir, sampleId); }
