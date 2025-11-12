@@ -174,52 +174,50 @@ public class UltimaMiscUtilsTest
     @Test
     public void testCoreExtensionIndels()
     {
-        // pos / index                10             20             30        40
-        //                  0123456789012345     67890     12345678901234567890123456789
-        String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
+        // ref pos                    10                       20                      30        40
+        //                  012345678901     I     2345     67890     12     3     45678901234567890123456789
+        String refBases =  "AACCGGTTAACC" +  "" + "GGTT" + "TACAT" + "TT" + "A" + "ACCGGTTAACCGGTT";
 
-        // pos / index                10  I          20         D        30        40
-        //                  01234567890123456     78901     23     45678901234567890123456789
-        String readBases = "AACCGGTTAACCGGGTT" + "TAGAT" + "TT" + "ACCGGTTAACCGGTT"; // has inserted G before core and deleted A after core
+        // read index                 10                       20                        30        40
+        //                  012345678901     2     3456     78901     23     D     45678901234567890123456789
+        String readBases = "AACCGGTTAACC" + "G" + "GGTT" + "TAGAT" + "TT" +  "" + "ACCGGTTAACCGGTT"; // has inserted G before core and deleted A after core
 
         RefSequence refSequence = new RefSequence(100, refBases.getBytes());
 
         int readAlignmentStart = 100;
 
         List<CigarElement> cigarElements = Lists.newArrayList(
-                new CigarElement(14, M),
+                new CigarElement(12, M),
                 new CigarElement(1, I),
-                new CigarElement(9, M),
+                new CigarElement(11, M),
                 new CigarElement(1, D),
                 new CigarElement(15, M));
 
         ReadCigarInfo readCigarInfo = new ReadCigarInfo(
-                readAlignmentStart, cigarElements, 106, 130, 116, 120,
-                6, 30);
+                readAlignmentStart, cigarElements, 107, 130, 116, 120,
+                17, 30);
 
         ReadCigarInfo newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
         assertNotNull(newReadCigarInfo);
-        assertEquals(3, newReadCigarInfo.FlankIndexStart);
-        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(4, newReadCigarInfo.FlankIndexStart);
+        assertEquals(104, newReadCigarInfo.FlankPositionStart);
         assertEquals(113, newReadCigarInfo.CorePositionStart);
         assertEquals(124, newReadCigarInfo.CorePositionEnd);
         assertEquals(34, newReadCigarInfo.FlankIndexEnd);
         assertEquals(134, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("11M1I9M1D11M", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertEquals("8M1I11M1D11M", cigarElementsToStr(newReadCigarInfo.Cigar));
 
         // a deleted base immediately before and after the core
 
-        // pos / index         10             20
-        //           012345678901234567     89012     34567890123456
-        refBases =  "AACCGGTTAACCGGGAAA" + "TACAT" + "AACCGGTTAACCGGTT";
+        // pos                 10                       20                  30
+        //           012345678901234     5     67     89012     3     456789012345678
+        refBases =  "AACCGGTTAACCGGG" + "A" + "AA" + "TAGAT" + "A" + "ACCGGTTAACCGGTT";
 
-        //                     10     D      20        D      30
-        // pos       012345678901234567    89012       34567890123456789
-        //                     10             20             30
-        // index     01234567890123456     78901       23456789012345678
-        readBases = "AACCGGTTAACCGGGAA" + "TAGAT" +   "ACCGGTTAACCGGTT";
+        //                     10                        20                   30
+        // index     012345678901234     D     56     78901           234567890123456
+        readBases = "AACCGGTTAACCGGG" +  "" + "AA" + "TAGAT" +  "" + "ACCGGTTAACCGGTT";
         // flank            FFFFFFFFFF                 FFFFFFFFFF
 
         refSequence = new RefSequence(100, refBases.getBytes());
@@ -227,21 +225,21 @@ public class UltimaMiscUtilsTest
         readAlignmentStart = 100;
 
         cigarElements = Lists.newArrayList(
-                new CigarElement(17, M),
+                new CigarElement(15, M),
                 new CigarElement(1, D),
-                new CigarElement(5, M),
+                new CigarElement(7, M),
                 new CigarElement(1, D),
                 new CigarElement(15, M));
 
         List<CigarElement> readCigar = List.of(
-                new CigarElement(10, M),
+                new CigarElement(8, M),
                 new CigarElement(1, D),
-                new CigarElement(5, M),
+                new CigarElement(7, M),
                 new CigarElement(1, D),
                 new CigarElement(10, M));
 
         readCigarInfo = new ReadCigarInfo(
-                readAlignmentStart, readCigar, 107, 131, 118, 122,
+                readAlignmentStart, readCigar, 107, 133, 118, 122,
                 7, 31);
 
         newReadCigarInfo = extendUltimaCore(
@@ -253,17 +251,17 @@ public class UltimaMiscUtilsTest
         assertEquals(118, newReadCigarInfo.CorePositionStart);
         assertEquals(122, newReadCigarInfo.CorePositionEnd);
         assertEquals(31, newReadCigarInfo.FlankIndexEnd);
-        assertEquals(131, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("10M1D5M1D10M", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("8M1D7M1D10M", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test
     public void testCoreExtensionSoftClips()
     {
-        // pos / index                10             20             30        40
-        //                  0123456789012345     67890     12345678901234567890123456789
+        // pos / index                10             20             30
+        //                  0123456789012345     67890     123456789012345678
         String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
-        String readBases = refBases.substring(0, 17) + "G" + refBases.substring(18);
+        String readBases = refBases.substring(0, 18) + "G" + refBases.substring(19);
 
         RefSequence refSequence = new RefSequence(100, refBases.getBytes());
 
@@ -312,7 +310,7 @@ public class UltimaMiscUtilsTest
         assertEquals(130, newReadCigarInfo.FlankPositionEnd);
         assertEquals("19M9S", cigarElementsToStr(newReadCigarInfo.Cigar));
 
-        // accept truncated flank in append mode
+        // accept truncated flank in append mode if we extend from M into S
         cigarElements = Lists.newArrayList(
                 new CigarElement(31, M),
                 new CigarElement(8, S));
@@ -328,6 +326,11 @@ public class UltimaMiscUtilsTest
         assertEquals(30, newReadCigarInfo.FlankIndexEnd);
         assertEquals(130, newReadCigarInfo.FlankPositionEnd);
         assertEquals("28M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // otherwise reject read context
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+        assertNull(newReadCigarInfo);
     }
 
     @Test
