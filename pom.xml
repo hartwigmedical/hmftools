@@ -36,6 +36,7 @@
         <module>pave</module>
         <module>pave-reverse</module>
         <module>peach</module>
+        <module>qsee</module>
         <module>redux</module>
         <module>sage</module>
         <module>sigs</module>
@@ -88,6 +89,7 @@
         <pave.version>1.8.1</pave.version>
         <peach.version>2.0</peach.version>
         <purple.version>4.3</purple.version>
+        <qsee.version>0.1</qsee.version>
         <redux.version>2.0</redux.version>
         <sage.version>5.0</sage.version>
         <sigs.version>1.2.1</sigs.version>
