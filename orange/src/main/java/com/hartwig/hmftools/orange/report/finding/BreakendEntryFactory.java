@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.orange.report.finding;
 
 import java.util.ArrayList;
 import java.util.List;
