@@ -20,7 +20,7 @@ public enum SummaryTableFeature
     CONSANGUINITY           (SummaryTableGroup.GENERAL, "Consanguinity prop.", SourceTool.AMBER),
 
     TMB_SMALL_VARIANTS      (SummaryTableGroup.TMB, "Small variants per MB", SourceTool.PURPLE),
-    TMB_MS_INDELS           (SummaryTableGroup.TMB, "MS indels per per MB", SourceTool.PURPLE),
+    TMB_MS_INDELS           (SummaryTableGroup.TMB, "Microsatellite indels per MB", SourceTool.PURPLE),
     TMB_STRUCTURAL_VARIANTS (SummaryTableGroup.TMB, "Structural variants", SourceTool.PURPLE),
 
     MEAN_COVERAGE           (SummaryTableGroup.COVERAGE, "Mean coverage", SourceTool.BAM_METRICS),
