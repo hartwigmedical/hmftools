@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -16,11 +17,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.datamodel.finding.BreakendEntry;
-import com.hartwig.hmftools.datamodel.finding.BreakendEntryFactory;
-import com.hartwig.hmftools.datamodel.finding.SmallVariant;
-import com.hartwig.hmftools.datamodel.finding.SmallVariantFactory;
-import com.hartwig.hmftools.datamodel.finding.VariantDedup;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntry;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntryFactory;
+import com.hartwig.hmftools.orange.report.finding.SmallVariantFactory;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -92,7 +91,7 @@ public class GermlineFindingsChapter implements ReportChapter
         List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
         if(drivers != null && reportableVariants != null)
         {
-            List<SmallVariant> reportableEntries = SmallVariantFactory.create(VariantDedup.apply(reportableVariants), drivers);
+            List<SmallVariant> reportableEntries = SmallVariantFactory.create(reportableVariants, drivers);
             String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, reportResources));
         }

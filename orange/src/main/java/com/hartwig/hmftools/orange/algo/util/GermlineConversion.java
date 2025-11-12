@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
@@ -35,13 +36,14 @@ import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
-import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.TumorStats;
+import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,20 +53,18 @@ public final class GermlineConversion
     @NotNull
     public static OrangeRecord convertGermlineToSomatic(final OrangeRecord report)
     {
-        boolean containsTumorCells = containsTumorCells(report.purple().fit());
+        boolean containsTumorCells = report.purple().fit().containsTumorCells();
+
+        PurpleRecord purple = convertPurpleGermline(containsTumorCells, report.purple());
+        LinxRecord linx = convertLinxGermline(containsTumorCells, report.linx());
 
         return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(null)
-                .purple(convertPurpleGermline(containsTumorCells, report.purple()))
-                .linx(convertLinxGermline(containsTumorCells, report.linx()))
+                .purple(purple)
+                .linx(linx)
+                .findings(FindingFactory.create(purple, linx, report.virusInterpreter(), report.cuppa()))
                 .build();
-    }
-
-    private static boolean containsTumorCells(final PurpleFit purpleFit)
-    {
-        return purpleFit.fittedPurityMethod() != PurpleFittedPurityMethod.NO_TUMOR
-                && !purpleFit.qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
     }
 
     @NotNull

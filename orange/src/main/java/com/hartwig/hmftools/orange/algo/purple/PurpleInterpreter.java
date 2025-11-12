@@ -84,7 +84,6 @@ public class PurpleInterpreter
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
 
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
 
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
