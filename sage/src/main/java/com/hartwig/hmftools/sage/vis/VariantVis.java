@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -24,7 +25,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
@@ -629,14 +629,7 @@ public class VariantVis
         return renderBases(mContextViewModel, false, true);
     }
 
-    private int getReadNM(final SAMRecord read)
-    {
-        String chromosome = read.getReferenceName();
-        int chromosomeLength = mRefGenCoords.length(chromosome);
-        ChrBaseRegion chrRegion = new ChrBaseRegion(chromosome, 1, chromosomeLength);
-        RefSequence refSequence = new RefSequence(chrRegion, mRefGenome);
-        return rawNM(read, refSequence);
-    }
+    private int getReadNM(final SAMRecord read) { return getNumEvents(read); }
 
     private DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
     {
