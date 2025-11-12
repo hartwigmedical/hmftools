@@ -341,10 +341,7 @@ draw_summary_table <- function(){
    
    table_data_wide %>%
       
-      gt(
-         groupname_col = "FeatureGroup", row_group_as_column = TRUE,
-         rowname_col = "Metric",
-      ) %>%
+      gt(groupname_col = "FeatureGroup", rowname_col = "Metric") %>%
       
       ## Data values
       fmt_markdown(columns = sample_type_columns) %>%
@@ -357,7 +354,7 @@ draw_summary_table <- function(){
       sub_missing(columns = sample_type_columns, missing_text = "-") %>%
       
       cols_align(columns = sample_type_columns, align = "center") %>%
-      cols_align(columns = Metric, align = "right") %>%
+      cols_align(columns = Metric, align = "left") %>%
       
       ## Header
       tab_header(
@@ -374,19 +371,19 @@ draw_summary_table <- function(){
       tab_style(
          style = cell_text(weight = "bold"),
          locations = list(
-            cells_title(groups = "title"), 
-            cells_column_labels()
+            cells_title(groups = "title"),
+            cells_column_labels(),
+            cells_row_groups()
          )
       ) %>%
       
       ## Cell borders
       tab_options(
-         table_body.hlines.style = "none",
          table.border.top.style = "none",
-         column_labels.border.top.style = "none",
          table.border.bottom.style = "none",
-         table_body.border.bottom.style = "none"
-         
+         table_body.border.bottom.style = "none",
+         table_body.hlines.style = "none",
+         column_labels.border.top.style = "none"
       ) %>%
       
       tab_style(
@@ -896,13 +893,13 @@ create_report <- function(){
       patchwork::wrap_plots(
          plots, guides="collect", ncol = 2,
          design = "
-         AAAABB
-         AAAACC
-         AAAADD
-         AAAAEE
-         FFFGGG
-         HHHIII
-         JJJKKK
+         AABB
+         AACC
+         AADD
+         AAEE
+         FFGG
+         HHII
+         JJKK
          "
       ) & 
       theme(
@@ -914,7 +911,7 @@ create_report <- function(){
    LOGGER$info("Writing report to: %s", OUTPUT_PATH)
    ggsave(
       filename = OUTPUT_PATH, plot = plots_combined, 
-      device = "pdf", width = 14, height = 17, units = "in"
+      device = "pdf", width = 14, height = 18, units = "in"
    )
 }
 
