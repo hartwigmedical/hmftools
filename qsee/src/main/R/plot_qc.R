@@ -145,9 +145,7 @@ SAMPLE_GROUP <- list(
 )
 
 FEATURE_TYPE <- list(
-   ## Notes:
-   ## - Plot functions are defined later
-   ## - The order of feature types defined here determines the plot order
+   ## Plot functions are defined later
    SUMMARY_TABLE              = list(name = "SUMMARY_TABLE", plot_func = NULL),
    COVERAGE_DISTRIBUTION      = list(name = "COVERAGE_DISTRIBUTION", plot_func = NULL),
    FRAG_LENGTH_DISTRIBUTION   = list(name = "FRAG_LENGTH_DISTRIBUTION", plot_func = NULL),
@@ -364,7 +362,7 @@ draw_summary_table <- function(){
       
       tab_options(
          heading.align = "left",
-         heading.title.font.size = 24,
+         heading.title.font.size = 20,
          heading.subtitle.font.size = 16,
       ) %>%
       
@@ -383,7 +381,8 @@ draw_summary_table <- function(){
          table.border.bottom.style = "none",
          table_body.border.bottom.style = "none",
          table_body.hlines.style = "none",
-         column_labels.border.top.style = "none"
+         column_labels.border.top.style = "none",
+         data_row.padding = px(4)
       ) %>%
       
       tab_style(
@@ -574,7 +573,7 @@ FEATURE_TYPE$GC_BIAS$plot_func <- function(){
    plot_data <- plot_data %>% rename(AxisX = GCBucket)
    
    p <- plot_distribution(plot_data, show_cohort_lines = FALSE)
-   p + labs(title = "Read depth", x = "GC percentage", y = "Read depth")
+   p + labs(title = "GC bias", x = "GC percentage", y = "Read depth")
 }
 
 ## =============================
@@ -883,25 +882,31 @@ create_report <- function(){
    LOGGER$info("Creating plots per feature type")
 
    plots <- list()
+   plot_letters <- list()
 
-   for(feature_type in FEATURE_TYPE){
+   for(i in 1:length(FEATURE_TYPE)){
+
+      feature_type <- FEATURE_TYPE[[i]]
+
       LOGGER$debug("Plotting: %s", feature_type$name)
       plots[[feature_type$name]] <- feature_type$plot_func()
+      map[[feature_type$name]] <- LETTERS[[i]]
    }
-   
+
+   design <- paste(
+      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$COVERAGE_DISTRIBUTION$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$GC_BIAS$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$SUMMARY_TABLE$name]]       , plot_letters[[FEATURE_TYPE$DISCORDANT_READ_STATS$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$DUPLICATE_FREQ$name]]      , plot_letters[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$BQR_BY_ORIG_QUAL$name]]    , plot_letters[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name]]),
+      paste0(plot_letters[[FEATURE_TYPE$MS_INDEL_ERROR_RATES$name]], plot_letters[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name]]),
+
+      sep = "\n"
+   )
+
    plots_combined <- 
-      patchwork::wrap_plots(
-         plots, guides="collect", ncol = 2,
-         design = "
-         AABB
-         AACC
-         AADD
-         AAEE
-         FFGG
-         HHII
-         JJKK
-         "
-      ) & 
+      patchwork::wrap_plots(plots, guides="collect", ncol = 2, design = design) &
       theme(
          plot.margin = unit(c(t=18, r=12, b=0, l=12), "pt"),
          legend.position = "bottom",
