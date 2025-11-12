@@ -25,7 +25,7 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CategoryPrepTask;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
-import com.hartwig.hmftools.qsee.table.SummaryTableFeature;
+import com.hartwig.hmftools.qsee.prep.table.SummaryTableFeature;
 
 public class SummaryTablePrep implements CategoryPrep
 {

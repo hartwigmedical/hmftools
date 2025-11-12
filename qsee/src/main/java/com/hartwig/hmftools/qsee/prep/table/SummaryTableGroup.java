@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.table;
+package com.hartwig.hmftools.qsee.prep.table;
 
 enum SummaryTableGroup
 {
