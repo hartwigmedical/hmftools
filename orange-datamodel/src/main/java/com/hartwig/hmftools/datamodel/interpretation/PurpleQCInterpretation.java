@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.datamodel.interpretation;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
