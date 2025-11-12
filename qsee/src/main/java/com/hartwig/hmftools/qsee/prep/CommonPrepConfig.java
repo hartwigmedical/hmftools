@@ -27,20 +27,11 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_METRIC
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
@@ -48,6 +39,7 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
+import com.hartwig.hmftools.qsee.common.SampleIdsLoader;
 import com.hartwig.hmftools.qsee.common.SampleType;
 
 public class CommonPrepConfig
@@ -77,19 +69,9 @@ public class CommonPrepConfig
 
     public CommonPrepConfig(final ConfigBuilder configBuilder)
     {
-        checkSampleIdsProvided(configBuilder);
-        TumorIds = new ArrayList<>();
-        ReferenceIds = new ArrayList<>();
-
-        if(configBuilder.hasValue(SAMPLE_ID_FILE))
-        {
-            loadSampleIdsFile(configBuilder, TumorIds, ReferenceIds);
-        }
-        else
-        {
-            loadSampleIdsString(configBuilder, TUMOR, TumorIds);
-            loadSampleIdsString(configBuilder, REFERENCE, ReferenceIds);
-        }
+        SampleIdsLoader sampleIdsLoader = new SampleIdsLoader().fromConfig(configBuilder);
+        TumorIds = sampleIdsLoader.tumorIds();
+        ReferenceIds = sampleIdsLoader.referenceIds();
 
         AmberDir = configBuilder.getValue(AMBER_DIR_CFG);
         CobaltDir = configBuilder.getValue(COBALT_DIR_CFG);
@@ -134,69 +116,6 @@ public class CommonPrepConfig
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
         ConfigUtils.addLoggingOptions(configBuilder);
-    }
-
-    private static void checkSampleIdsProvided(final ConfigBuilder configBuilder)
-    {
-        if(!configBuilder.hasValue(SAMPLE_ID_FILE) && !configBuilder.hasValue(TUMOR) && !configBuilder.hasValue(REFERENCE))
-        {
-            QC_LOGGER.error("Sample IDs must be provided to 1) -{} or to 2) -{} and/or -{}", SAMPLE_ID_FILE, TUMOR, REFERENCE);
-            System.exit(1);
-        }
-    }
-
-    private static void loadSampleIdsString(final ConfigBuilder configBuilder, final String configValue, final List<String> sampleIds)
-    {
-        String sampleIdsString = configBuilder.getValue(configValue);
-
-        if(sampleIdsString == null)
-            return;
-
-        List<String> sampleIdsList = List.of(sampleIdsString.split(","));
-
-        sampleIds.addAll(sampleIdsList);
-    }
-
-    private static void loadSampleIdsFile(final ConfigBuilder configBuilder, final List<String> tumorIds, final List<String> referenceIds)
-    {
-        try
-        {
-            String FLD_TUMOR_ID = "TumorId";
-            String FLD_REFERENCE_ID = "ReferenceId";
-
-            List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(SAMPLE_ID_FILE)));
-
-            String header = lines.get(0);
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-            Integer tumorIdIndex = fieldsIndexMap.get(FLD_TUMOR_ID);
-            Integer referenceIdIndex = fieldsIndexMap.get(FLD_REFERENCE_ID);
-
-            lines.remove(0);
-
-            if(lines.isEmpty())
-            {
-                QC_LOGGER.error("No sample IDs found in sample IDs file");
-                System.exit(1);
-            }
-
-            for(String line : lines)
-            {
-                String[] values = line.split(TSV_DELIM, -1);
-
-                if(tumorIdIndex != null)
-                    tumorIds.add(values[tumorIdIndex]);
-
-                if(referenceIdIndex != null)
-                    referenceIds.add(values[referenceIdIndex]);
-            }
-
-            QC_LOGGER.debug("Loaded {} tumor and {} reference sample IDs from file", tumorIds.size(), referenceIds.size());
-        }
-        catch(IOException e)
-        {
-            QC_LOGGER.error("Failed to load sample ids file:", e);
-            System.exit(1);
-        }
     }
 
     public List<String> getSampleIds(SampleType sampleType)
