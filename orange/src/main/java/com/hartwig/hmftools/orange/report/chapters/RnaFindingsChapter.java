@@ -14,7 +14,7 @@ import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.datamodel.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
 import com.hartwig.hmftools.orange.report.tables.RnaFusionTable;

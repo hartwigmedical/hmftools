@@ -91,7 +91,6 @@ public final class PurpleDataLoader
 
         List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
                 .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
-        List<PurpleVariantContext> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
         StructuralVariants somaticStructuralVariants = loadStructuralVariants(somaticStructuralVariantVcf);
 
         List<GeneCopyNumber> allSomaticGeneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
@@ -100,9 +99,7 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> germlineDrivers = null;
         List<PurpleVariantContext> allGermlineVariants = null;
-        List<PurpleVariantContext> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
-        List<GermlineDeletion> reportableGermlineDeletions = null;
         StructuralVariants germlineStructuralVariants = new StructuralVariants(null, null);
         if(referenceSample != null)
         {
@@ -110,10 +107,8 @@ public final class PurpleDataLoader
 
             allGermlineVariants = new PurpleVariantContextLoader().fromVCFFile(tumorSample, referenceSample, rnaSample,
                     germlineVariantVcf);
-            reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 
             allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
-            reportableGermlineDeletions = selectReportedDeletions(allGermlineDeletions);
 
             germlineStructuralVariants = loadStructuralVariants(germlineStructuralVariantVcf);
         }
@@ -123,9 +118,7 @@ public final class PurpleDataLoader
                 .somaticDrivers(somaticDrivers)
                 .germlineDrivers(germlineDrivers)
                 .allSomaticVariants(allSomaticVariants)
-                .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
-                .reportableGermlineVariants(reportableGermlineVariants)
                 .allPassingSomaticStructuralVariants(somaticStructuralVariants.allPassingStructuralVariants)
                 .allPassingGermlineStructuralVariants(germlineStructuralVariants.allPassingStructuralVariants)
                 .allInferredSomaticStructuralVariants(somaticStructuralVariants.allInferredStructuralVariants)
@@ -133,23 +126,8 @@ public final class PurpleDataLoader
                 .allSomaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .allSomaticGeneCopyNumbers(allSomaticGeneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
-                .reportableGermlineDeletions(reportableGermlineDeletions)
                 .segments(segments)
                 .build();
-    }
-
-    @NotNull
-    private static List<PurpleVariantContext> selectReportedVariants(@NotNull List<PurpleVariantContext> allVariants)
-    {
-        List<PurpleVariantContext> reported = Lists.newArrayList();
-        for(PurpleVariantContext variant : allVariants)
-        {
-            if(variant.reported())
-            {
-                reported.add(variant);
-            }
-        }
-        return reported;
     }
 
     @NotNull
@@ -165,20 +143,6 @@ public final class PurpleDataLoader
         }
 
         return pass;
-    }
-
-    @NotNull
-    private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
-    {
-        List<GermlineDeletion> reported = Lists.newArrayList();
-        for(GermlineDeletion deletion : allGermlineDeletions)
-        {
-            if(deletion.Reported)
-            {
-                reported.add(deletion);
-            }
-        }
-        return reported;
     }
 
     private static class StructuralVariants

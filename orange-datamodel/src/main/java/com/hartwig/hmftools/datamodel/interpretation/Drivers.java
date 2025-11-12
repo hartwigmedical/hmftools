@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.orange.report.interpretation;
+package com.hartwig.hmftools.datamodel.interpretation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 
@@ -14,12 +13,12 @@ import org.jetbrains.annotations.Nullable;
 public final class Drivers
 {
     private static final Set<PurpleDriverType> MUTATION_DRIVER_TYPES =
-            Sets.newHashSet(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);
+            Set.of(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);
 
     @NotNull
     public static List<PurpleDriver> nonCanonicalMutationEntries(@NotNull List<PurpleDriver> drivers)
     {
-        List<PurpleDriver> nonCanonicalVariantEntries = Lists.newArrayList();
+        List<PurpleDriver> nonCanonicalVariantEntries = new ArrayList<>();
         for(PurpleDriver driver : drivers)
         {
             if(MUTATION_DRIVER_TYPES.contains(driver.type()) && !driver.isCanonical())

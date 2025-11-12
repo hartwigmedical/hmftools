@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.algo.purple;
+package com.hartwig.hmftools.datamodel.finding;
 
 import org.jetbrains.annotations.NotNull;
 

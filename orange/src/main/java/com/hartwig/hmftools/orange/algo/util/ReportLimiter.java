@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
@@ -16,6 +17,8 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.orange.report.finding.FindingFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,12 +27,16 @@ public final class ReportLimiter
     @NotNull
     public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report)
     {
+        PurpleRecord purple = limitPurpleDataToOne(report.purple());
+        LinxRecord linx = limitLinxDataToOne(report.linx());
+
         return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
-                .purple(limitPurpleDataToOne(report.purple()))
-                .linx(limitLinxDataToOne(report.linx()))
+                .purple(purple)
+                .linx(linx)
                 .isofox(limitIsofoxDataToOne(report.isofox()))
+                .findings(FindingFactory.create(purple, linx, report.virusInterpreter(), report.cuppa()))
                 .build();
     }
 
@@ -58,9 +65,7 @@ public final class ReportLimiter
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
                 .allSomaticVariants(max1(purple.allSomaticVariants()))
-                .reportableSomaticVariants(max1(purple.reportableSomaticVariants()))
                 .allGermlineVariants(max1(purple.allGermlineVariants()))
-                .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
                 .allSomaticCopyNumbers(max1(purple.allSomaticCopyNumbers()))
                 .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
                 .reportableSomaticGainsDels(max1(purple.reportableSomaticGainsDels()))
@@ -88,13 +93,10 @@ public final class ReportLimiter
                 .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
                         filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
-                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .allSomaticBreakends(filteredAllSomaticBreakends)
-                .reportableSomaticBreakends(filteredReportableSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
                 .allGermlineBreakends(filteredAllGermlineBreakends)
-                .reportableGermlineBreakends(filteredReportableGermlineBreakends)
                 .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }

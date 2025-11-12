@@ -69,13 +69,10 @@ public class LinxInterpreter
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDrivers(), LinxConversion::convert))
                 .allSomaticStructuralVariants(ConversionUtil.mapToIterable(linx.allSomaticStructuralVariants(), LinxConversion::convert))
                 .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
-                .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportableSomaticFusions(), LinxConversion::convert))
                 .allSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), somaticBreakendInterpreter::interpret))
-                .reportableSomaticBreakends(ConversionUtil.mapToIterable(linx.reportableSomaticBreakends(), somaticBreakendInterpreter::interpret))
                 .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))
                 .allGermlineStructuralVariants(ConversionUtil.mapToIterable(linx.allGermlineStructuralVariants(), LinxConversion::convert))
                 .allGermlineBreakends(ConversionUtil.mapToIterable(linx.allGermlineBreakends(), germlineBreakendInterpreter::interpret))
-                .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), germlineBreakendInterpreter::interpret))
                 .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
     }

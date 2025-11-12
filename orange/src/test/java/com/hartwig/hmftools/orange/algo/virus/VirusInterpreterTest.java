@@ -60,7 +60,7 @@ public class VirusInterpreterTest
             @NotNull VirusInterpreterData converted)
     {
         assertEqualsValue(input.allViruses(), converted.allViruses());
-        assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
+        assertEqualsValue(input.allViruses().stream().filter(AnnotatedVirus::reported).toList(), converted.reportableViruses());
     }
 
     private static void assertEqualsValue(@NotNull List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input,

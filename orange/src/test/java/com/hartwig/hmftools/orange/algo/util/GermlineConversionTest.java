@@ -19,6 +19,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -60,13 +61,11 @@ public class GermlineConversionTest
                 .purple(TestPurpleInterpretationFactory.builder()
                         .germlineDrivers(Lists.newArrayList())
                         .allGermlineVariants(Lists.newArrayList())
-                        .reportableGermlineVariants(Lists.newArrayList())
                         .reportableGermlineFullDels(Lists.newArrayList())
                         .build())
                 .linx(TestLinxInterpretationFactory.builder()
                         .allGermlineStructuralVariants(Lists.newArrayList())
                         .allGermlineBreakends(Lists.newArrayList())
-                        .reportableGermlineBreakends(Lists.newArrayList())
                         .germlineHomozygousDisruptions(Lists.newArrayList())
                         .build())
                 .build();
@@ -98,10 +97,14 @@ public class GermlineConversionTest
     public void canConvertPurple()
     {
         PurpleVariant somaticVariant = TestPurpleVariantFactory.builder().build();
-        PurpleVariant reportableSomaticVariant = TestPurpleVariantFactory.builder().build();
+        PurpleVariant reportableSomaticVariant = TestPurpleVariantFactory.builder()
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().reported(true).build())
+                .build();
         PurpleVariant suspectSomaticVariant = TestPurpleVariantFactory.builder().build();
         PurpleVariant germlineVariant = TestPurpleVariantFactory.builder().build();
-        PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().build();
+        PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder()
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().reported(true).build())
+                .build();
         PurpleVariant suspectGermlineVariant = TestPurpleVariantFactory.builder().build();
 
         PurpleGainDeletion reportableSomaticGainDel = TestPurpleGainDeletionFactory.builder().build();
@@ -128,9 +131,7 @@ public class GermlineConversionTest
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineMutationDriver, germlineHomozygousDeletionDriver, germlineHeterozygousDeletionDriver)
                 .addAllSomaticVariants(somaticVariant, suspectSomaticVariant, reportableSomaticVariant)
-                .addReportableSomaticVariants(reportableSomaticVariant)
                 .addAllGermlineVariants(germlineVariant, suspectGermlineVariant, reportableGermlineVariant)
-                .addReportableGermlineVariants(reportableGermlineVariant)
                 .addReportableSomaticGainsDels(reportableSomaticGainDel)
                 .addReportableGermlineFullDels(reportableGermlineFullDel)
                 .addReportableGermlineLossOfHeterozygosities(reportableGermlineLOH)
@@ -710,23 +711,21 @@ public class GermlineConversionTest
         LinxSvAnnotation somaticStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
         LinxSvAnnotation somaticStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
         LinxBreakend somaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableSomaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
+        LinxBreakend reportableSomaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reported(true).build();
 
         LinxSvAnnotation germlineStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
         LinxSvAnnotation germlineStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
         LinxSvAnnotation germlineStructuralVariant3 = LinxOrangeTestFactory.svAnnotationBuilder().svId(3).clusterId(6).build();
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
+        LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reported(true).build();
 
         LinxHomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
 
         LinxRecord linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)
                 .addAllSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
-                .addReportableSomaticBreakends(reportableSomaticBreakend)
                 .addAllGermlineStructuralVariants(germlineStructuralVariant1, germlineStructuralVariant2, germlineStructuralVariant3)
                 .addAllGermlineBreakends(germlineBreakend, reportableGermlineBreakend)
-                .addReportableGermlineBreakends(reportableGermlineBreakend)
                 .addGermlineHomozygousDisruptions(germlineHomozygousDisruption)
                 .build();
 
@@ -762,12 +761,18 @@ public class GermlineConversionTest
     @Test
     public void canMergeTumorStats()
     {
-        PurpleVariant somaticVariant = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
-        PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant somaticVariant = TestPurpleVariantFactory.builder()
+                .hotspot(HotspotType.HOTSPOT)
+                .build();
+
+        PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder()
+                .hotspot(HotspotType.HOTSPOT)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().reported(true).build())
+                .build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .addAllSomaticVariants(somaticVariant)
-                .addReportableGermlineVariants(reportableGermlineVariant)
+                .addAllGermlineVariants(reportableGermlineVariant)
                 .tumorStats(createMinimalTumorStatsBuilder().hotspotMutationCount(1).build())
                 .build();
 

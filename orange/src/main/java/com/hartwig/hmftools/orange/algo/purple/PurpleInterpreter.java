@@ -84,7 +84,6 @@ public class PurpleInterpreter
         List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
 
         List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
 
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
@@ -131,9 +130,7 @@ public class PurpleInterpreter
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
                 .allSomaticVariants(allSomaticVariants)
-                .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
-                .reportableGermlineVariants(reportableGermlineVariants)
                 .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
                 .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
                 .reportableSomaticGainsDels(reportableSomaticGainsDels)

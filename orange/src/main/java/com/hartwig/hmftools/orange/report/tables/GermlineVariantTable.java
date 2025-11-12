@@ -6,8 +6,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
-import com.hartwig.hmftools.orange.report.interpretation.Variants;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.datamodel.finding.Variants;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 public final class GermlineVariantTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants,
+    public static Table build(@NotNull String title, float width, @NotNull List<SmallVariant> variants,
             @NotNull ReportResources reportResources)
     {
         if(variants.isEmpty())
@@ -33,13 +33,13 @@ public final class GermlineVariantTable
                         cells.createHeader("RNA Depth"), cells.createHeader("Biallelic"), cells.createHeader("Hotspot"),
                         cells.createHeader("Genotype") });
 
-        for(VariantEntry variant : Variants.sort(variants))
+        for(SmallVariant variant : Variants.sort(variants))
         {
-            table.addCell(cells.createContent(Variants.variantField(variant)));
+            table.addCell(cells.createContent(Variants.variantField(variant, true)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.minorAlleleCopyNumber())));
-            table.addCell(cells.createContent(Variants.rnaDepthField(variant)));
+            table.addCell(cells.createContent(Variants.rnaDepthField(variant, ReportResources.NOT_AVAILABLE)));
             table.addCell(cells.createContent(variant.biallelic() ? "Yes" : "No"));
             table.addCell(cells.createContent(Variants.hotspotField(variant)));
             table.addCell(cells.createContent(simplifiedDisplay(variant.genotypeStatus())));

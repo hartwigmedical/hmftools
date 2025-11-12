@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -30,13 +31,21 @@ public interface PurpleData
     List<PurpleVariantContext> allSomaticVariants();
 
     @NotNull
-    List<PurpleVariantContext> reportableSomaticVariants();
+    default List<PurpleVariantContext> reportableSomaticVariants()
+    {
+        return allSomaticVariants().stream().filter(PurpleVariantContext::reported).toList();
+    }
 
     @Nullable
     List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
-    List<PurpleVariantContext> reportableGermlineVariants();
+    default List<PurpleVariantContext> reportableGermlineVariants()
+    {
+        return Optional.ofNullable(allGermlineVariants())
+                .map(o -> o.stream().filter(PurpleVariantContext::reported).toList())
+                .orElse(null);
+    }
 
     @NotNull
     List<StructuralVariant> allPassingSomaticStructuralVariants();
@@ -60,7 +69,12 @@ public interface PurpleData
     List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable
-    List<GermlineDeletion> reportableGermlineDeletions();
+    default List<GermlineDeletion> reportableGermlineDeletions()
+    {
+        return Optional.ofNullable(allGermlineDeletions())
+                .map(o -> o.stream().filter(germlineDeletion -> germlineDeletion.Reported).toList())
+                .orElse(null);
+    }
 
     @NotNull
     List<Segment> segments();

@@ -285,7 +285,6 @@ public class PurpleInterpreterTest
                 .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
                 .allPassingGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineDeletions(allGermlineDeletions)
-                .reportableGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported).collect(Collectors.toList()))
                 .build();
     }
 
