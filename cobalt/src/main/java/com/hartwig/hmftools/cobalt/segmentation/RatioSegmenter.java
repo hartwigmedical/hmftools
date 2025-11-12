@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.cobalt.segmentation;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+
+import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -12,10 +15,12 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
+import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.segmentation.PiecewiseConstantFit;
 import com.hartwig.hmftools.common.segmentation.Segmenter;
+import com.hartwig.hmftools.common.utils.pcf.CobaltSegment;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
@@ -23,7 +28,6 @@ import org.apache.commons.math3.util.FastMath;
 public abstract class RatioSegmenter
 {
     private final ListMultimap<ChrArm, CobaltRatio> ArmToRatios = ArrayListMultimap.create();
-    private final ConcurrentHashMap<ChrArm, Integer> ArmToIndexOfStart = new ConcurrentHashMap<>();
     private final double mGamma;
 
     public static void writeTumorSegments(ListMultimap<Chromosome, CobaltRatio> ratios,
@@ -55,8 +59,8 @@ public abstract class RatioSegmenter
         ChrArmLocator locator = ChrArmLocator.defaultLocator(genomeVersion);
         RatioSegmenter segmenter =
                 isForTumor ? new TumorRatioSegmenter(ratios, locator, gamma) : new ReferenceRatioSegmenter(ratios, locator, gamma);
-        Map<ChrArm, PiecewiseConstantFit> segmentsByChrArm = segmenter.getSegmentation(executor);
-        SegmentsFile.write(segmentsByChrArm, segmenter.startPositions(), outputPath);
+        Map<ChrArm, CobaltSegments> segmentsByChrArm = segmenter.getSegmentation(executor);
+        write(segmentsByChrArm, outputPath);
     }
 
     RatioSegmenter(ListMultimap<Chromosome, CobaltRatio> ratios, ChrArmLocator chrArmLocator, double gamma)
@@ -76,20 +80,48 @@ public abstract class RatioSegmenter
         mGamma = gamma;
     }
 
-    Map<ChrArm, PiecewiseConstantFit> getSegmentation(ExecutorService executor) throws Exception
+    private static void write(Map<ChrArm, CobaltSegments> data, String filename) throws IOException
     {
-        final HashMap<ChrArm, PiecewiseConstantFit> result = new HashMap<>();
-        List<Future<Pair<ChrArm, PiecewiseConstantFit>>> futures = Lists.newArrayList();
+        List<ChrArm> armsInOrder = data.keySet().stream().sorted().toList();
+        try(Writer writer = createBufferedWriter(filename))
+        {
+            String header = "Chromosome\tStart\tEnd\tMeanRatio\n";
+            writer.write(header);
+            for(ChrArm chrArm : armsInOrder)
+            {
+                CobaltSegments pcf = data.get(chrArm);
+                String chromosome = chrArm.chromosome().shortName();
+                for(CobaltSegment interval : pcf.Segments)
+                {
+                    int start = interval.start();
+                    int end = interval.end();
+                    writer.append(chromosome);
+                    writer.append('\t');
+                    writer.append(String.valueOf(start));
+                    writer.append('\t');
+                    writer.append(String.valueOf(end));
+                    writer.append('\t');
+                    writer.append(CobaltRatioFile.FORMAT.format(interval.MeanRatio));
+                    writer.append('\n');
+                }
+            }
+        }
+    }
+
+    private Map<ChrArm, CobaltSegments> getSegmentation(ExecutorService executor) throws Exception
+    {
+        final HashMap<ChrArm, CobaltSegments> result = new HashMap<>();
+        List<Future<Pair<ChrArm, CobaltSegments>>> futures = Lists.newArrayList();
 
         ArmToRatios.keySet().forEach(chr ->
         {
-            Callable<Pair<ChrArm, PiecewiseConstantFit>> task = () -> calculateSegmentsForChromosome(ArmToRatios.get(chr), chr);
+            Callable<Pair<ChrArm, CobaltSegments>> task = () -> calculateSegmentsForChromosome(ArmToRatios.get(chr), chr);
             futures.add(executor.submit(task));
         });
 
-        for(Future<Pair<ChrArm, PiecewiseConstantFit>> future : futures)
+        for(Future<Pair<ChrArm, CobaltSegments>> future : futures)
         {
-            Pair<ChrArm, PiecewiseConstantFit> chrPCF = future.get();
+            Pair<ChrArm, CobaltSegments> chrPCF = future.get();
             if(chrPCF != null)
             {
                 result.put(chrPCF.getLeft(), chrPCF.getRight());
@@ -98,29 +130,27 @@ public abstract class RatioSegmenter
         return result;
     }
 
-    Map<ChrArm, Integer> startPositions()
-    {
-        return ArmToIndexOfStart;
-    }
-
     abstract double value(CobaltRatio ratio);
 
-    private Pair<ChrArm, PiecewiseConstantFit> calculateSegmentsForChromosome(List<CobaltRatio> ratios, ChrArm arm)
+    private Pair<ChrArm, CobaltSegments> calculateSegmentsForChromosome(List<CobaltRatio> ratios, ChrArm arm)
     {
         if(ratios.isEmpty())
         {
             return null;
         }
-        ArmToIndexOfStart.put(arm, ratios.get(0).position());
-        double[] d = new double[ratios.size()];
+        double[] valuesForSegmentation = new double[ratios.size()];
+        double[] rawValues = new double[ratios.size()];
         for(int i = 0; i < ratios.size(); i++)
         {
             CobaltRatio ratio = ratios.get(i);
-            d[i] = FastMath.log(2, value(ratio));
+            final double v = value(ratio);
+            rawValues[i] = v;
+            valuesForSegmentation[i] = FastMath.log(2, v);
         }
-        Segmenter segmenter = new Segmenter(d, mGamma, true);
+        Segmenter segmenter = new Segmenter(valuesForSegmentation, mGamma, true);
         PiecewiseConstantFit fit = segmenter.pcf();
-        return Pair.of(arm, fit);
+        CobaltSegments segments = new CobaltSegments(arm, ratios, rawValues, fit);
+        return Pair.of(arm, segments);
     }
 }
 
