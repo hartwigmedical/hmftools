@@ -1,8 +1,12 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.finding;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.finding.ImmutableSmallVariant;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.datamodel.interpretation.Drivers;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -56,17 +60,15 @@ public final class SmallVariantFactory
         }
 
         return ImmutableSmallVariant.builder()
+                .findingKey(FindingKeys.findingKey(variant, transcriptImpact))
+                .isReportable(variant.reported())
+                .isCandidate(false)
                 .purpleVariant(variant)
                 .driver(driver)
                 .transcriptImpact(transcriptImpact)
                 .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))
-                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : null)
+                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : DriverInterpretation.LOW)
                 .build();
-    }
-
-    private static String findingKey()
-    {
-
     }
 
     @NotNull

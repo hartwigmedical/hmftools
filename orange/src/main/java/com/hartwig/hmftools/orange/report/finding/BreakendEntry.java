@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.finding;
 
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
