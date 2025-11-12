@@ -131,17 +131,20 @@ SAMPLE_GROUP <- list(
 )
 
 FEATURE_TYPE <- list(
-   SUMMARY_TABLE              = list(name = "SUMMARY_TABLE"),
-   COVERAGE_DISTRIBUTION      = list(name = "COVERAGE_DISTRIBUTION"),
-   FRAG_LENGTH_DISTRIBUTION   = list(name = "FRAG_LENGTH_DISTRIBUTION"),
-   MISSED_VARIANT_LIKELIHOOD  = list(name = "MISSED_VARIANT_LIKELIHOOD"),
-   DUPLICATE_FREQ             = list(name = "DUPLICATE_FREQ"),
-   GC_BIAS                    = list(name = "GC_BIAS"),
-   DISCORDANT_READ_STATS      = list(name = "DISCORDANT_READ_STATS"),
-   BQR_BY_SNV96_CONTEXT       = list(name = "BQR_PER_SNV96_CONTEXT"),
-   BQR_BY_ORIG_QUAL           = list(name = "BQR_PER_ORIG_QUAL"),
-   MS_INDEL_ERROR_RATES       = list(name = "MS_INDEL_ERROR_RATES"),
-   MS_INDEL_ERROR_BIAS        = list(name = "MS_INDEL_ERROR_BIAS")
+   ## Comments:
+   ## - Plot functions are defined later
+   ## - The order of feature types defined here determines the plot order
+   SUMMARY_TABLE              = list(name = "SUMMARY_TABLE", plot_func = NULL),
+   COVERAGE_DISTRIBUTION      = list(name = "COVERAGE_DISTRIBUTION", plot_func = NULL),
+   FRAG_LENGTH_DISTRIBUTION   = list(name = "FRAG_LENGTH_DISTRIBUTION", plot_func = NULL),
+   MISSED_VARIANT_LIKELIHOOD  = list(name = "MISSED_VARIANT_LIKELIHOOD", plot_func = NULL),
+   DUPLICATE_FREQ             = list(name = "DUPLICATE_FREQ", plot_func = NULL),
+   GC_BIAS                    = list(name = "GC_BIAS", plot_func = NULL),
+   DISCORDANT_READ_STATS      = list(name = "DISCORDANT_READ_STATS", plot_func = NULL),
+   BQR_BY_SNV96_CONTEXT       = list(name = "BQR_PER_SNV96_CONTEXT", plot_func = NULL),
+   BQR_BY_ORIG_QUAL           = list(name = "BQR_PER_ORIG_QUAL", plot_func = NULL),
+   MS_INDEL_ERROR_RATES       = list(name = "MS_INDEL_ERROR_RATES", plot_func = NULL),
+   MS_INDEL_ERROR_BIAS        = list(name = "MS_INDEL_ERROR_BIAS", plot_func = NULL)
 )
 
 NAMED_PERCENTILES <- list(
@@ -223,8 +226,6 @@ draw_summary_table <- function(tumor_id = TUMOR_ID, normal_id = NORMAL_ID){
       tumor_id = TUMOR_ID
       normal_id = NORMAL_ID
    }
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$SUMMARY_TABLE$name)
    
    ## Get cohort data ================================
    sample_data <- SAMPLE_DATA %>% filter(FeatureType == FEATURE_TYPE$SUMMARY_TABLE$name & SampleId %in% c(tumor_id, normal_id))
@@ -402,6 +403,10 @@ gt_grob <- function(gt_object, ...){
    grid::rasterGrob(in_png)
 }
 
+FEATURE_TYPE$SUMMARY_TABLE$plot_func <- function(){
+   draw_summary_table() %>% gt_grob() %>% wrap_elements(full = .)
+}
+
 
 ################################
 ## Plot functions
@@ -536,9 +541,7 @@ plot_distribution <- function(plot_data, invert_normal = FALSE, show_median = FA
    return(p)
 }
 
-plot_coverage_distribution <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
+FEATURE_TYPE$COVERAGE_DISTRIBUTION$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$COVERAGE_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = ReadDepth)
@@ -547,9 +550,7 @@ plot_coverage_distribution <- function(){
    p + labs(title = "Coverage", x = "Coverage", y = "Prop. of bases")
 }
 
-plot_frag_length_distribution <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
+FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name)
    plot_data <- plot_data %>% rename(AxisX = FragLength)
@@ -558,9 +559,7 @@ plot_frag_length_distribution <- function(){
    p + labs(title = "Fragment length", x = "Fragment length", y = "Prop. of fragments")
 }
 
-plot_gc_bias <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$GC_BIAS$name)
+FEATURE_TYPE$GC_BIAS$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$GC_BIAS$name)
    plot_data <- plot_data %>% rename(AxisX = GCBucket)
@@ -641,9 +640,7 @@ plot_dotplot <- function(plot_data, point_size = 1, linerange_size = 0.3, hlines
    return(p)
 }
 
-plot_duplicate_freq <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$DUPLICATE_FREQ$name)
+FEATURE_TYPE$DUPLICATE_FREQ$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$DUPLICATE_FREQ$name)
    plot_data <- preordered_factors(plot_data)
@@ -659,9 +656,7 @@ plot_duplicate_freq <- function(){
       )
 }
 
-plot_missed_variant_likelihood <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
+FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name)
    
@@ -692,9 +687,7 @@ plot_missed_variant_likelihood <- function(){
       )
 }
 
-plot_bqr_by_orig_qual <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
+FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_ORIG_QUAL$name)
    
@@ -726,9 +719,7 @@ plot_bqr_by_orig_qual <- function(){
       )
 }
 
-plot_bqr_by_snv96_context <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
+FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name)
 
@@ -760,9 +751,7 @@ plot_bqr_by_snv96_context <- function(){
       )
 }
 
-plot_ms_indel_error_rates <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
+FEATURE_TYPE$MS_INDEL_ERROR_RATES$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_RATES$name)
    
@@ -786,9 +775,7 @@ plot_ms_indel_error_rates <- function(){
       )
 }
 
-plot_msi_indel_error_bias <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
+FEATURE_TYPE$MS_INDEL_ERROR_BIAS$plot_func <- function(){
    
    plot_data <- get_prelim_plot_data(feature_type = FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name)
    
@@ -831,9 +818,7 @@ plot_msi_indel_error_bias <- function(){
 ## Discordant read stats 
 ## =============================
 
-plot_discordant_read_stats <- function(){
-   
-   LOGGER$debug("Plotting: %s", FEATURE_TYPE$DISCORDANT_READ_STATS$name)
+FEATURE_TYPE$DISCORDANT_READ_STATS$plot_func <- function(){
    
    return(ggplot() + theme_bw())
    
@@ -887,23 +872,13 @@ plot_discordant_read_stats <- function(){
 create_report <- function(){
 
    LOGGER$info("Creating plots per feature type")
+
    plots <- list()
-   
-   plots[[FEATURE_TYPE$SUMMARY_TABLE$name]] <- draw_summary_table() %>% gt_grob() %>% wrap_elements(full = .)
-   
-   plots[[FEATURE_TYPE$COVERAGE_DISTRIBUTION$name]] <- plot_coverage_distribution()
-   plots[[FEATURE_TYPE$FRAG_LENGTH_DISTRIBUTION$name]] <- plot_frag_length_distribution()
-   plots[[FEATURE_TYPE$GC_BIAS$name]] <- plot_gc_bias()
-   plots[[FEATURE_TYPE$DISCORDANT_READ_STATS$name]] <- plot_discordant_read_stats()
-   
-   plots[[FEATURE_TYPE$DUPLICATE_FREQ$name]] <- plot_duplicate_freq()
-   plots[[FEATURE_TYPE$MISSED_VARIANT_LIKELIHOOD$name]] <- plot_missed_variant_likelihood()
-   
-   plots[[FEATURE_TYPE$BQR_BY_ORIG_QUAL$name]] <- plot_bqr_by_orig_qual()
-   plots[[FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$name]] <- plot_bqr_by_snv96_context()
-   
-   plots[[FEATURE_TYPE$MS_INDEL_ERROR_RATES$name]] <- plot_ms_indel_error_rates()
-   plots[[FEATURE_TYPE$MS_INDEL_ERROR_BIAS$name]] <- plot_msi_indel_error_bias()
+
+   for(feature_type in FEATURE_TYPE){
+      LOGGER$debug("Plotting: %s", feature_type$name)
+      plots[[feature_type$name]] <- feature_type$plot_func()
+   }
    
    plots_combined <- 
       patchwork::wrap_plots(
