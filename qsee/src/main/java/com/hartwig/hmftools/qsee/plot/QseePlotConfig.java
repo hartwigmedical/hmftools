@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.vis;
+package com.hartwig.hmftools.qsee.plot;
 
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;

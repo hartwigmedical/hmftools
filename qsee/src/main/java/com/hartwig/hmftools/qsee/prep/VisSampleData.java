@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.vis;
+package com.hartwig.hmftools.qsee.prep;
 
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;

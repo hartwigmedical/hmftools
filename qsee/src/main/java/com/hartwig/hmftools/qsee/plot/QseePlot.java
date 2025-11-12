@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.vis;
+package com.hartwig.hmftools.qsee.plot;
 
 import static com.hartwig.hmftools.qsee.common.QseeConstants.APP_NAME;
 import static com.hartwig.hmftools.qsee.common.QseeConstants.QC_LOGGER;

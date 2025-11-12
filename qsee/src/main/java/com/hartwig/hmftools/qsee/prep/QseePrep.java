@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.qsee.vis;
+package com.hartwig.hmftools.qsee.prep;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -28,25 +28,23 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
-import com.hartwig.hmftools.qsee.prep.FeaturePrep;
-import com.hartwig.hmftools.qsee.prep.SampleFeatures;
 
-public class VisSampleDataPrep
+public class QseePrep
 {
-    private final VisPrepConfig mVisPrepConfig;
+    private final QseePrepConfig mConfig;
 
     private static final String COL_FEATURE_VALUE = "FeatureValue";
     private static final String COL_PERCENTILE_IN_COHORT = "PctInCohort";
     private static final String SAMPLE_ID_MULTI = "MULTI_SAMPLE";
 
-    public VisSampleDataPrep(VisPrepConfig config)
+    public QseePrep(QseePrepConfig config)
     {
-        mVisPrepConfig = config;
+        mConfig = config;
     }
 
     private List<SampleFeatures> runFeaturePrepFor(SampleType sampleType)
     {
-        List<String> sampleIds = mVisPrepConfig.CommonPrep.getSampleIds(sampleType);
+        List<String> sampleIds = mConfig.CommonPrep.getSampleIds(sampleType);
 
         boolean hasSampleType = !sampleIds.isEmpty();
         if(!hasSampleType)
@@ -56,12 +54,12 @@ public class VisSampleDataPrep
 
         if(sampleIds.size() == 1)
         {
-            SampleFeatures sampleFeatures = new FeaturePrep(mVisPrepConfig.CommonPrep).prepSample(sampleType, sampleIds.get(0));
+            SampleFeatures sampleFeatures = new FeaturePrep(mConfig.CommonPrep).prepSample(sampleType, sampleIds.get(0));
             return List.of(sampleFeatures);
         }
         else
         {
-            return new FeaturePrep(mVisPrepConfig.CommonPrep).prepMultiSample(sampleType);
+            return new FeaturePrep(mConfig.CommonPrep).prepMultiSample(sampleType);
         }
     }
 
@@ -147,15 +145,15 @@ public class VisSampleDataPrep
 
     private boolean isSinglePatient()
     {
-        return mVisPrepConfig.CommonPrep.getSampleIds(SampleType.TUMOR).size() <= 1 &&
-                mVisPrepConfig.CommonPrep.getSampleIds(SampleType.NORMAL).size() <= 1;
+        return mConfig.CommonPrep.getSampleIds(SampleType.TUMOR).size() <= 1 &&
+                mConfig.CommonPrep.getSampleIds(SampleType.NORMAL).size() <= 1;
     }
 
     public void run()
     {
         QC_LOGGER.info("Running {}", this.getClass().getSimpleName());
 
-        CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mVisPrepConfig.CohortPercentilesFile);
+        CohortPercentiles cohortPercentiles = CohortPercentilesFile.read(mConfig.CohortPercentilesFile);
 
         List<SampleFeatures> multiSampleFeatures = new ArrayList<>();
         multiSampleFeatures.addAll(runFeaturePrepFor(SampleType.TUMOR));
@@ -165,20 +163,20 @@ public class VisSampleDataPrep
             multiSampleFeatures.sort(Comparator.comparing(SampleFeatures::sampleId));
 
         List<VisSampleData> visDataEntries = getVisSampleData(multiSampleFeatures, cohortPercentiles);
-        String sampleId = isSinglePatient() ? mVisPrepConfig.CommonPrep.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
-        String outputFile = checkAddDirSeparator(mVisPrepConfig.CommonPrep.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
+        String sampleId = isSinglePatient() ? mConfig.CommonPrep.getSampleIds(SampleType.TUMOR).get(0) : SAMPLE_ID_MULTI;
+        String outputFile = checkAddDirSeparator(mConfig.CommonPrep.OutputDir) + sampleId + "." + QSEE_FILE_ID + ".vis.features.tsv.gz";
         writeToFile(outputFile, visDataEntries);
     }
 
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        VisPrepConfig.registerConfig(configBuilder);
+        QseePrepConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
-        VisPrepConfig config = new VisPrepConfig(configBuilder);
+        QseePrepConfig config = new QseePrepConfig(configBuilder);
 
-        new VisSampleDataPrep(config).run();
+        new QseePrep(config).run();
     }
 }
