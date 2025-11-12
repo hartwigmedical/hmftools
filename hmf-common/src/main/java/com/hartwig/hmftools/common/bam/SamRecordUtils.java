@@ -259,6 +259,12 @@ public final class SamRecordUtils
         return format("%s1%s2", firstStr, secondStr);
     }
 
+    public static int getNumEvents(final SAMRecord record)
+    {
+        Integer numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        return numEvents != null ? numEvents : 0;
+    }
+
     public static String readToString(final SAMRecord read)
     {
         if(read.getReadPairedFlag())

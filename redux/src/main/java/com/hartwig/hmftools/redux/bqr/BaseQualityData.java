@@ -23,14 +23,20 @@ public class BaseQualityData
     public final byte[] TrinucleotideContext;
 
     private final Map<ConsensusType,List<AltQualityCount>> mAltQualityCountsMap;
-    private boolean mHasIndel;
+    private boolean mHasHighQualIndel;
+    private boolean mHasMediumQualIndel;
+    private int mIndelCount;
+    private int mAlignedCount;
     private int mFilteredAltCount;
 
     public BaseQualityData(final byte[] trinucleotideContext)
     {
         TrinucleotideContext = new byte[] { trinucleotideContext[0], trinucleotideContext[1], trinucleotideContext[2] };
 
-        mHasIndel = false;
+        mHasHighQualIndel = false;
+        mHasMediumQualIndel = false;
+        mIndelCount = 0;
+        mAlignedCount = 0;
         mAltQualityCountsMap = Maps.newHashMap();
         mFilteredAltCount = 0;
     }
@@ -59,9 +65,22 @@ public class BaseQualityData
         altQualityCounts.add(new AltQualityCount(alt, quality, posStrand));
     }
 
-    public void setHasIndel() { mHasIndel = true; }
-    public boolean hasIndel() { return mHasIndel; }
+    public boolean hasHighQualIndel() { return mHasHighQualIndel; }
+    public void setHasHighQualIndel() { mHasHighQualIndel = true; }
+    public boolean hasMediumQualIndel() { return mHasMediumQualIndel; }
+    public void setHasMediumQualIndel() { mHasMediumQualIndel = true; }
+
     public int filteredAltCount() { return mFilteredAltCount; }
+
+    public int indelCount() { return mIndelCount; }
+    public void addIndelCount() { ++mIndelCount; }
+    public void addAlignedCount() { ++mAlignedCount; }
+
+    public double indelVaf()
+    {
+        double denom = mIndelCount + mAlignedCount;
+        return denom > 0 ? mIndelCount / denom : 0;
+    }
 
     public Map<BqrKey,Integer> formKeyCounts()
     {

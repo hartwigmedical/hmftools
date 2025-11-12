@@ -641,11 +641,14 @@ public final class SbxRoutines
 
         Map<Integer,Byte> duplexMismatchRefBase = null; // ref base at all mis-match indices/locations
 
+        boolean hasNumEventsAttribute = record.hasAttribute(NUM_MUTATONS_ATTRIBUTE);
+
         if(!record.getReadUnmappedFlag())
         {
             int refPos = record.getAlignmentStart();
             int readIndex = 0;
             byte[] readBases = record.getReadBases();
+            int numEvents = 0;
             int nmDiff = 0;
             int alignmentScoreDiff = 0;
 
@@ -670,6 +673,9 @@ public final class SbxRoutines
                     if(element.getOperator().consumesReferenceBases())
                         refPos += element.getLength();
 
+                    if(!hasNumEventsAttribute && element.getOperator().isIndel())
+                        numEvents += element.getLength();
+
                     continue;
                 }
 
@@ -677,6 +683,17 @@ public final class SbxRoutines
                 {
                     if(readIndex >= newBaseQuals.length)
                         break;
+
+                    byte refBase = -1;
+                    byte readBase = readBases[readIndex];
+
+                    if(!hasNumEventsAttribute)
+                    {
+                        refBase = refGenome.getBase(chromosome, refPos);
+
+                        if(refBase != readBase)
+                            ++numEvents;
+                    }
 
                     if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
                         continue;
@@ -687,11 +704,11 @@ public final class SbxRoutines
                     if(duplexMismatchRefBase == null)
                         duplexMismatchRefBase = Maps.newHashMap();
 
-                    byte refBase = refGenome.getBase(chromosome, refPos);
+                    if(refBase < 0)
+                        refBase = refGenome.getBase(chromosome, refPos);
 
                     duplexMismatchRefBase.put(readIndex, refBase);
 
-                    byte readBase = readBases[readIndex];
                     if(refBase == readBase)
                         continue;
 
@@ -701,11 +718,19 @@ public final class SbxRoutines
                 }
             }
 
-            Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-            if(oldNumMutations != null && nmDiff != 0)
+            if(hasNumEventsAttribute)
             {
-                int newNumMutations = oldNumMutations + nmDiff;
-                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+                numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+                if(nmDiff != 0)
+                {
+                    int newNumMutations = max(numEvents + nmDiff, 0);
+                    record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+                }
+            }
+            else
+            {
+                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, numEvents);
             }
 
             Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);

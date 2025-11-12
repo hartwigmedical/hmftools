@@ -8,13 +8,19 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0ValueAtIndex;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_INDEL_LOW_QUAL_VAF;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_INDEL_MED_QUAL_VAF;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_NUM_EVENTS_THRESHOLD;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_CONSENSUS_TYPES;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_POSITIONS;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_QUAL;
@@ -234,7 +240,12 @@ public class BqrRegionReader implements CigarHandler
         if(bqData == null)
             return;
 
-        if(bqData.hasIndel())
+        if(bqData.hasHighQualIndel())
+            return;
+
+        double indelVafThreshold = bqData.hasMediumQualIndel() ? BQR_INDEL_MED_QUAL_VAF : BQR_INDEL_LOW_QUAL_VAF;
+
+        if(bqData.indelVaf() > indelVafThreshold)
             return;
 
         Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts();
@@ -259,6 +270,11 @@ public class BqrRegionReader implements CigarHandler
             return;
 
         if(record.getMappingQuality() < BQR_MIN_MAP_QUAL)
+            return;
+
+        int numEvents = getNumEvents(record);
+
+        if((double)numEvents / record.getReadLength() > BQR_NUM_EVENTS_THRESHOLD)
             return;
 
         setShortFragmentBoundaries(record);
@@ -315,26 +331,57 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @Override
-    public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
+    public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex, final int refPos)
     {
+        int minQual = record.getBaseQualities()[readIndex + 1];
+
+        // checking if any inserted base is low qual
+        for(int i = 1; i < element.getLength(); ++i)
+        {
+            minQual = min(minQual, record.getBaseQualities()[readIndex + i + 1]);
+        }
+
         // note: ref position here is the last base of the previous aligned element - likewise for deletes
-        markIndelPosition(refPos);
+        markIndelPosition(refPos, (byte)minQual);
     }
 
     @Override
-    public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
+    public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex, final int refPos)
     {
-        markIndelPosition(refPos);
+        int minQual = record.getBaseQualities()[readIndex + 1];
+
+        if(isUltima())  // checking if low qual complete HP deletion implied by bases adjacent to delete
+        {
+            for(int i = 0; i <= 1; ++i)
+            {
+                minQual = min(minQual, extractT0ValueAtIndex(record, readIndex + i));
+            }
+        }
+        markIndelPosition(refPos, (byte)minQual);
     }
 
-    private void markIndelPosition(int position)
+    private void markIndelPosition(int position, byte minQual)
     {
         if(!mCurrentRefSequence.positionWithinBounds(position))
             return;
 
         byte[] trinucleotideContext = mCurrentRefSequence.trinucleotideContext(position);
         BaseQualityData bqData = getOrCreateBaseQualData(position, trinucleotideContext);
-        bqData.setHasIndel();
+        bqData.addIndelCount();
+
+        boolean isHighQual = true;
+        boolean isMediumQual = false;
+
+        if(isSbx() || isUltima())
+        {
+            isHighQual = BaseQualAdjustment.isHighBaseQual(minQual, SEQUENCING_TYPE);
+            isMediumQual = BaseQualAdjustment.isMediumBaseQual(minQual, SEQUENCING_TYPE);
+        }
+
+        if(isHighQual)
+            bqData.setHasHighQualIndel();
+        else if(isMediumQual)
+            bqData.setHasMediumQualIndel();
     }
 
     @Override
@@ -385,12 +432,6 @@ public class BqrRegionReader implements CigarHandler
 
             byte quality = record.getBaseQualities()[readIndex];
 
-            if(BaseQualAdjustment.isUncertainBaseQual(quality))
-                continue;
-
-            if(isUltima() && belowMaxUltimaQual(record, readIndex, t0Values))
-                continue;
-
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
             readUsed = true;
 
@@ -414,6 +455,14 @@ public class BqrRegionReader implements CigarHandler
             }
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, trinucleotideContext);
+            baseQualityData.addAlignedCount();
+
+            if(BaseQualAdjustment.isUncertainBaseQual(quality))
+                continue;
+
+            if(isUltima() && belowMaxUltimaQual(record, readIndex, t0Values))
+                continue;
+
             baseQualityData.processReadBase(consensusType, alt, quality, readPosStrand);
         }
 
