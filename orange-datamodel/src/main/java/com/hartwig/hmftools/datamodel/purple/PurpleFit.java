@@ -31,7 +31,6 @@ public interface PurpleFit
     @Gson.Ignore
     default boolean containsTumorCells()
     {
-        return fittedPurityMethod() != PurpleFittedPurityMethod.NO_TUMOR
-                && !qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
+        return !qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
     }
 }
