@@ -4,12 +4,16 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class LilacConstants
 {
     private LilacConstants() {}
 
     public static final String APP_NAME = "Lilac";
+
+    public static final ChrBaseRegion V37_HLA_REGION = new ChrBaseRegion("6", 29908037, 33055978);
+    public static final ChrBaseRegion V38_HLA_REGION = new ChrBaseRegion("chr6", 29940260, 33090696);
 
     // may be adjusted by config or dynamically from median quals
     public static byte LOW_BASE_QUAL_THRESHOLD = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
