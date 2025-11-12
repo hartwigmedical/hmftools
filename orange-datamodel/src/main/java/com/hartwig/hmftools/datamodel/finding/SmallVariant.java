@@ -4,53 +4,142 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
+import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class SmallVariant
+public interface SmallVariant extends Driver
 {
     @NotNull
-    public abstract String gene();
+    PurpleVariant purpleVariant();
 
-    public abstract boolean isCanonical();
-
-    @Nullable
-    public abstract Integer affectedCodon();
+    @Nullable PurpleDriver driver();
 
     @NotNull
-    public abstract String impact();
+    PurpleTranscriptImpact transcriptImpact();
 
-    public abstract double variantCopyNumber();
-
-    public abstract double totalCopyNumber();
-
-    public abstract double minorAlleleCopyNumber();
-
-    public abstract boolean biallelic();
-
-    @Nullable
-    public abstract Double biallelicProbability();
-
+    @Value.Derived
     @NotNull
-    public abstract HotspotType hotspot();
+    default String gene()
+    {
+        return purpleVariant().gene();
+    }
 
-    @Nullable
-    public abstract Double driverLikelihood();
-
-    public abstract double clonalLikelihood();
-
-    @Nullable
-    public abstract List<Integer> localPhaseSets();
-
-    @Nullable
-    public abstract PurpleAllelicDepth rnaDepth();
-
+    @Value.Derived
     @NotNull
-    public abstract PurpleGenotypeStatus genotypeStatus();
+    default String chromosome()
+    {
+        return purpleVariant().chromosome();
+    }
 
+    @Value.Derived
+    default int position()
+    {
+        return purpleVariant().position();
+    }
+
+    @Value.Derived
+    default boolean reported()
+    {
+        return purpleVariant().reported();
+    }
+
+    boolean isCanonical();
+
+    @Value.Derived
+    @Nullable
+    default Integer affectedCodon()
+    {
+        return transcriptImpact().affectedCodon();
+    }
+
+    @Value.Derived
+    default double variantCopyNumber()
+    {
+        PurpleVariant v = purpleVariant();
+        return v.adjustedCopyNumber() * Math.max(0, Math.min(1, v.adjustedVAF()));
+    }
+
+    @Value.Derived
+    default double totalCopyNumber()
+    {
+        return purpleVariant().adjustedCopyNumber();
+    }
+
+    @Value.Derived
+    default double minorAlleleCopyNumber()
+    {
+        return purpleVariant().minorAlleleCopyNumber();
+    }
+
+    @Value.Derived
+    default boolean biallelic()
+    {
+        return purpleVariant().biallelic();
+    }
+
+    @Value.Derived
+    @Nullable
+    default Double biallelicProbability()
+    {
+        return purpleVariant().biallelicProbability();
+    }
+
+    @Value.Derived
+    @NotNull
+    default HotspotType hotspot()
+    {
+        return purpleVariant().hotspot();
+    }
+
+    @Value.Derived
+    @Nullable
+    default Double driverLikelihood()
+    {
+        PurpleDriver driver = driver();
+        return driver != null ? driver.driverLikelihood() : null;
+    }
+
+    @Value.Derived
+    default double clonalLikelihood()
+    {
+        return 1 - purpleVariant().subclonalLikelihood();
+    }
+
+    @Value.Derived
+    @Nullable
+    default List<Integer> localPhaseSets()
+    {
+        return purpleVariant().localPhaseSets();
+    }
+
+    @Value.Derived
+    @NotNull
+    default PurpleAllelicDepth tumorDepth()
+    {
+        return purpleVariant().tumorDepth();
+    }
+
+    @Value.Derived
+    @Nullable
+    default PurpleAllelicDepth rnaDepth()
+    {
+        return purpleVariant().rnaDepth();
+    }
+
+    @Value.Derived
+    @NotNull
+    default PurpleGenotypeStatus genotypeStatus()
+    {
+        return purpleVariant().genotypeStatus();
+    }
 }
