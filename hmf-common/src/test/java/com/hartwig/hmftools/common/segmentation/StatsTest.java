@@ -15,11 +15,4 @@ public class StatsTest extends SegmentationTestBase
         assertEquals(2.9652, Stats.medianAbsoluteDeviation(d(1, 3, 5)), DELTA);
         assertEquals(3.7064, Stats.medianAbsoluteDeviation(d(1, 3, 5, 2, 8, 7)), DELTA);
     }
-
-    @Test
-    public void meanTest()
-    {
-        assertEquals(1, Stats.mean(d(1)), DELTA);
-        assertEquals(1.5, Stats.mean(d(1, 2)), DELTA);
-    }
 }

@@ -26,37 +26,48 @@ public class Segmenter
         // and s in [0, ..., e]. For any such pair, the least cost is:
         // leastCost(s,e) = leastCostOfSegmentingTo(s-1) + segmentPenalty + intervalCost(s,e)
         // The least cost segmentation corresponds to the leastCostOfSegmentingTo(y.size - 1)
-        List<Double> leastCostEndingJustBefore = new ArrayList<>(y.length);
-        leastCostEndingJustBefore.add(0, 0.0);
+        double[] leastCostEndingJustBefore = new double[y.length + 1];
+        leastCostEndingJustBefore[0] = 0.0;
         // We record the segment endpoints so that we can recover the least cost segmentation itself.
-        List<Integer> leastCostSegmentEndpoints = new ArrayList<>(); // there's only one possible segment of length 1
+        int[] leastCostSegmentEndpoints = new int[y.length]; // there's only one possible segment of length 1
         segmentPenalty = new Gamma(y, gamma, normalise).getSegmentPenalty();
 
         double[] cumulativeSums = precomputeCumulativeSums();
+        double[] cumulativeSquaredSums = precomputeCumulativeSquaredSums();
+
         for(int end = 0; end < y.length; end++)
         {
             double minCost = Double.MAX_VALUE;
             int endOfPreviousSegmentForLeastCost = 0;
+
             for(int start = 0; start <= end; start++)
             {
-                double partialSum = start == 0 ? cumulativeSums[end] : cumulativeSums[end] - cumulativeSums[start - 1];
-                double segmentCost = 1 * partialSum * partialSum / ((start - end - 1.0f));
-                double cost = leastCostEndingJustBefore.get(start) + segmentPenalty + segmentCost;
+                // Calculate segment cost using precomputed squared sums
+                double sumSquared = start == 0
+                        ? cumulativeSums[end] * cumulativeSums[end]
+                        : (cumulativeSums[end] - cumulativeSums[start - 1]) * (cumulativeSums[end] - cumulativeSums[start - 1]);
+                double sumOfSquares = start == 0 ?
+                        cumulativeSquaredSums[end] :
+                        cumulativeSquaredSums[end] - cumulativeSquaredSums[start - 1];
+                int segmentLength = end - start + 1;
+                double segmentCost = sumOfSquares - (sumSquared / segmentLength);
+
+                double cost = leastCostEndingJustBefore[start] + segmentPenalty + segmentCost;
                 if(cost < minCost)
                 {
                     minCost = cost;
                     endOfPreviousSegmentForLeastCost = start - 1;
                 }
             }
-            leastCostEndingJustBefore.add(end + 1, minCost);
-            leastCostSegmentEndpoints.add(endOfPreviousSegmentForLeastCost);
+            leastCostEndingJustBefore[end + 1] = minCost;
+            leastCostSegmentEndpoints[end] = endOfPreviousSegmentForLeastCost;
         }
         List<Integer> segmentEndpoints = new ArrayList<>();
         int lastSegmentEndpoint = y.length - 1;
         while(lastSegmentEndpoint >= 0)
         {
             segmentEndpoints.add(lastSegmentEndpoint);
-            lastSegmentEndpoint = leastCostSegmentEndpoints.get(lastSegmentEndpoint);
+            lastSegmentEndpoint = leastCostSegmentEndpoints[lastSegmentEndpoint];
         }
         Collections.reverse(segmentEndpoints);
         leastCostSegmentation = segmentEndpoints.isEmpty() ? new Segmentation(singletonList(y)) : segmentBy(segmentEndpoints);
@@ -105,12 +116,16 @@ public class Segmenter
         {
             return true;
         }
-        for(int i = list.size() - 2; i >= 1; i--)
+
+        int prev = list.get(0);
+        for(int i = 1; i < list.size(); i++)
         {
-            if(list.get(i) <= list.get(i - 1))
+            int current = list.get(i);
+            if(current <= prev)
             {
                 return false;
             }
+            prev = current;
         }
         return true;
     }
@@ -127,5 +142,19 @@ public class Segmenter
             }
         }
         return cumulativeSums;
+    }
+
+    private double[] precomputeCumulativeSquaredSums()
+    {
+        double[] cumulativeSquaredSums = new double[y.length];
+        if(y.length > 0)
+        {
+            cumulativeSquaredSums[0] = y[0] * y[0];
+            for(int i = 1; i < y.length; i++)
+            {
+                cumulativeSquaredSums[i] = cumulativeSquaredSums[i - 1] + (y[i] * y[i]);
+            }
+        }
+        return cumulativeSquaredSums;
     }
 }

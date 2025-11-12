@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualIndices;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
@@ -177,8 +179,15 @@ public class BamRecordReader implements BamReader
         // filter any read with 50% + bases classified as low qual or any invalid base
         int baseLength = read.getReadBases().length;
         int qualCountThreshold = (int) floor(baseLength * MAX_LOW_BASE_PERC) + 1;
-        int lowQualCount = 0;
 
+        int lowQualCount;
+        if(isUltima())
+        {
+            lowQualCount = extractLowQualIndices(read).size();
+            return lowQualCount >= qualCountThreshold;
+        }
+
+        lowQualCount = 0;
         for(int i = 0; i < baseLength; ++i)
         {
             if(belowMinQual(read.getBaseQualities()[i]))
@@ -286,12 +295,15 @@ public class BamRecordReader implements BamReader
 
     private boolean bothEndsInRangeOfCodingTranscripts(final SAMRecord record)
     {
-        if(!record.getMateReferenceName().equals(HLA_CHR))
-            return false;
-
         // this check allows records to span across HLA genes, since a read may be mismapped
         boolean readInRange = mGeneCodingRegions.values().stream()
                 .anyMatch(x -> x.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE));
+
+        if(!record.getReadPairedFlag())
+            return readInRange;
+
+        if(!record.getMateReferenceName().equals(HLA_CHR))
+            return false;
 
         boolean mateInRange = mGeneCodingRegions.values().stream()
                 .anyMatch(x -> x.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE));

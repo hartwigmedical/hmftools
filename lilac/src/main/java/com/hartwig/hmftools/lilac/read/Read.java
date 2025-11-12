@@ -9,12 +9,20 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPositio
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualIndices;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
+import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -23,9 +31,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Read
 {
@@ -86,13 +91,21 @@ public class Read
 
     public void populateCodingRegion(final char[] readBases, final byte[] readQuals, boolean reverseCompliment)
     {
+        Set<Integer> ultimaLowQualIndices = isUltima() ? Sets.newHashSet(extractLowQualIndices(mRecord)) : null;
         if(reverseCompliment)
         {
             int index = readBases.length - 1;
             for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = Nucleotides.swapDnaBase(mRecord.getReadString().charAt(i));
-                readQuals[index] = mRecord.getBaseQualities()[i];
+                byte qual;
+                if(ultimaLowQualIndices == null)
+                    qual = mRecord.getBaseQualities()[i];
+                else
+                    qual = ultimaLowQualIndices.contains(i) ? (byte) (LOW_BASE_QUAL_THRESHOLD - 1) : LOW_BASE_QUAL_THRESHOLD;
+
+
+                readQuals[index] = qual;
                 --index;
             }
 
@@ -103,7 +116,13 @@ public class Read
             for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = mRecord.getReadString().charAt(i);
-                readQuals[index] = mRecord.getBaseQualities()[i];
+                byte qual;
+                if(ultimaLowQualIndices == null)
+                    qual = mRecord.getBaseQualities()[i];
+                else
+                    qual = ultimaLowQualIndices.contains(i) ? (byte) (LOW_BASE_QUAL_THRESHOLD - 1) : LOW_BASE_QUAL_THRESHOLD;
+
+                readQuals[index] = qual;
                 ++index;
             }
         }
@@ -140,7 +159,7 @@ public class Read
         int softClipEnd = scLengthRight;
 
         // ignore soft-clip positions on the 3' end which run past the mate's 5' end for overlapping fragments
-        if(abs(record.getInferredInsertSize()) <= record.getReadBases().length)
+        if(record.getReadPairedFlag() && abs(record.getInferredInsertSize()) <= record.getReadBases().length)
         {
             if(record.getReadNegativeStrandFlag())
                 softClipStart = 0;
@@ -269,9 +288,11 @@ public class Read
         double currentScore = 0;
         int lastLowestScoreIndex = -1;
 
+        Set<Integer> ultimaLowQualIndices = isUltima() ? Sets.newHashSet(extractLowQualIndices(record)) : null;
         while(baseIndex >= 0 && baseIndex < record.getReadBases().length)
         {
-            if(belowMinQual(record.getBaseQualities()[baseIndex]))
+            boolean isLowQual = ultimaLowQualIndices != null ? ultimaLowQualIndices.contains(baseIndex) : belowMinQual(record.getBaseQualities()[baseIndex]);
+            if(isLowQual)
             {
                 currentScore -= LOW_QUAL_SCORE;
 

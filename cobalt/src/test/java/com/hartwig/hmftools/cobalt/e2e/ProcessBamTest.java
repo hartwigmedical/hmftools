@@ -45,7 +45,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.pcf.CobaltSegment;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
@@ -706,9 +706,9 @@ public class ProcessBamTest
         runCobalt(false, true);
 
         String segmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
-        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(segmentsFileName);
+        ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(segmentsFileName);
         assertEquals(6, regions.size());
-        List<ChrBaseRegion> chr1Regions = regions.get(_1);
+        List<CobaltSegment> chr1Regions = regions.get(_1);
         assertEquals(1, chr1Regions.get(0).start());
         assertEquals("1", chr1Regions.get(0).chromosome());
         assertEquals(41000, chr1Regions.get(0).end());
@@ -730,11 +730,11 @@ public class ProcessBamTest
         runCobalt(false, true);
 
         String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
-        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
+        ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
         assertEquals(1, regions.size());
 
         String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
-        ListMultimap<Chromosome, ChrBaseRegion> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
+        ListMultimap<Chromosome, CobaltSegment> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
         assertEquals(1, referenceRegions.size());
     }
 
@@ -745,7 +745,7 @@ public class ProcessBamTest
         runCobalt(false, true);
 
         String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
-        ListMultimap<Chromosome, ChrBaseRegion> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
+        ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
         assertEquals(1, regions.size());
 
         String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
@@ -762,7 +762,7 @@ public class ProcessBamTest
         assertFalse(new File(tumorSegmentsFileName).exists());
 
         String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
-        ListMultimap<Chromosome, ChrBaseRegion> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
+        ListMultimap<Chromosome, CobaltSegment> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
         assertEquals(1, referenceRegions.size());
     }
 
@@ -1220,7 +1220,7 @@ public class ProcessBamTest
         {
             argCount += 2;
         }
-        if (useNewSegmenter)
+        if(useNewSegmenter)
         {
             argCount += 1;
         }
@@ -1274,7 +1274,7 @@ public class ProcessBamTest
         CobaltApplication.main(args);
 
         File ratioFile;
-        if (tumorBamFile != null)
+        if(tumorBamFile != null)
         {
             ratioFile = new File(outputDir, sample + ".cobalt.ratio.tsv.gz");
         }

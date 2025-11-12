@@ -3,9 +3,9 @@ package com.hartwig.hmftools.lilac.fragment;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLISECOND;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
@@ -124,7 +124,7 @@ public class FragmentsTest
                 TEST_READ_ID, CHR_1, 100, TEST_READ_BASES.substring(0, 50), "50M", CHR_1, 300,
                 false, false, null);
 
-        byte lowBaseQual = DEFAULT_MIN_BASE_QUAL - 1;
+        byte lowBaseQual = LOW_BASE_QUAL_THRESHOLD - 1;
         setBaseQualities(record, 40, 49, lowBaseQual);
 
         Read read = createRead(codingRegion, record, true, false);
@@ -174,7 +174,7 @@ public class FragmentsTest
 
         // repeat on the negative strand
         record.setReadNegativeStrandFlag(true);
-        setBaseQualities(record, 0, 49, DEFAULT_MIN_BASE_QUAL); // reset
+        setBaseQualities(record, 0, 49, LOW_BASE_QUAL_THRESHOLD); // reset
 
         setBaseQualities(record, 0, 9, lowBaseQual);
 

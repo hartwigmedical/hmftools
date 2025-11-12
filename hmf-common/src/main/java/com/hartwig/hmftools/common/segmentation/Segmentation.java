@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.segmentation;
 import java.util.Arrays;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.Doubles;
+
 class Segmentation
 {
     private final List<double[]> segments;
@@ -43,7 +45,7 @@ class Segmentation
             lengths[index] = segment.length;
             starts[index] = cursor;
             cursor += segment.length;
-            means[index] = round(Stats.mean(segment));
+            means[index] = round(Doubles.mean(segment));
         }
         return new PiecewiseConstantFit(lengths, starts, means);
     }
@@ -115,13 +117,26 @@ class Segmentation
 
     private double segmentCost(double[] segment)
     {
-        double mean = Stats.mean(segment);
+        if(segment.length == 0)
+        {
+            return 0.0;
+        }
+
+        // Calculate mean and sum of squares in a single pass
         double sum = 0.0;
+        double sumSquared = 0.0;
+
         for(double value : segment)
         {
-            sum += Math.pow(value - mean, 2);
+            sum += value;
+            sumSquared += value * value;
         }
-        return sum;
+
+        double mean = sum / segment.length;
+
+        // sum((x - mean)²) = sum(x²) - 2*mean*sum(x) + n*mean²
+        // Simplified to: sum(x²) - n*mean²
+        return sumSquared - segment.length * mean * mean;
     }
 
     private double round(double value)

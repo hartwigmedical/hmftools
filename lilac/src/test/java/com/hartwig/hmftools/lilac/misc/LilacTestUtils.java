@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.misc;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 
 import java.util.Collection;
@@ -61,7 +61,7 @@ public final class LilacTestUtils
     {
         List<Integer> loci = formRange(locusStart, locusEnd);
         List<String> sequences = buildTargetSequences(sequence, loci);
-        List<Byte> qualities = loci.stream().map(x -> DEFAULT_MIN_BASE_QUAL).collect(Collectors.toList());
+        List<Byte> qualities = loci.stream().map(x -> LOW_BASE_QUAL_THRESHOLD).collect(Collectors.toList());
 
         return new Fragment(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
     }
