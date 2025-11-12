@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
@@ -200,7 +201,7 @@ public class SvVarData
 
     public static String coordsStr(final String chromosome, final int position, final byte orientation)
     {
-        return format("%s:%d:%d", chromosome, position, orientation);
+        return LinxBreakend.coordsStr(chromosome, position, orientation);
     }
 
     public ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }

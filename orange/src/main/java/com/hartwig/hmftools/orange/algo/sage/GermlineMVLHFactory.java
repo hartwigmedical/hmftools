@@ -17,44 +17,27 @@ public final class GermlineMVLHFactory
 {
     public static Map<String, Double> loadGermlineMVLHPerGene(
             final String sageGermlineGeneCoverageTsv,
-            final List<DriverGene> driverGenes) throws IOException
+            final Map<String,DriverGene> driverGenes) throws IOException
     {
         List<GeneDepth> geneDepths = GeneDepthFile.read(sageGermlineGeneCoverageTsv);
         return parseMVLHPerGene(geneDepths, driverGenes);
     }
 
     @VisibleForTesting
-    static Map<String, Double> parseMVLHPerGene(final List<GeneDepth> geneDepths, final List<DriverGene> driverGenes)
+    static Map<String, Double> parseMVLHPerGene(final List<GeneDepth> geneDepths, final Map<String,DriverGene> driverGenes)
     {
         Map<String, Double> mvlhPerGene = Maps.newTreeMap();
 
         for(GeneDepth geneDepth : geneDepths)
         {
-            DriverGene matchingDriverGene = findMatchingDriverGene(geneDepth.Gene, driverGenes);
-            if(matchingDriverGene != null && hasReliableMVLH(matchingDriverGene))
+            DriverGene driverGene = driverGenes.get(geneDepth.Gene);
+
+            if(driverGene != null && hasReliableMVLH(driverGene))
             {
                 mvlhPerGene.put(geneDepth.Gene, geneDepth.MissedVariantLikelihood);
             }
         }
         return mvlhPerGene;
-    }
-
-    @Nullable
-    private static DriverGene findMatchingDriverGene(final String geneName, final List<DriverGene> driverGenes)
-    {
-        List<DriverGene> matchingDriverGenes = driverGenes.stream().filter(d -> d.gene().equals(geneName)).collect(Collectors.toList());
-        if(matchingDriverGenes.size() == 1)
-        {
-            return matchingDriverGenes.get(0);
-        }
-        else if(matchingDriverGenes.isEmpty())
-        {
-            return null;
-        }
-        else
-        {
-            throw new IllegalStateException("More than one driver gene found with name " + geneName);
-        }
     }
 
     private static boolean hasReliableMVLH(final DriverGene driverGene)

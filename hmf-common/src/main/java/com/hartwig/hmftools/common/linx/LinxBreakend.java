@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -13,7 +15,6 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;
 
@@ -49,6 +50,8 @@ public abstract class LinxBreakend
     public static final String BREAKEND_ORIENTATION_UPSTREAM = "Upstream";
     public static final String BREAKEND_ORIENTATION_DOWNSTREAM = "Downstream";
 
+    public static final String BREAKEND_COORD_DELIM = ":";
+
     public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
@@ -67,6 +70,29 @@ public abstract class LinxBreakend
     public static void write(final String filename, List<LinxBreakend> breakends) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(breakends));
+    }
+
+    public static String coordsStr(final String chromosome, final int position, final byte orientation)
+    {
+        return new StringJoiner(BREAKEND_COORD_DELIM)
+                .add(chromosome)
+                .add(String.valueOf(position))
+                .add(String.valueOf(orientation)).toString();
+    }
+
+    public static String chromosomeFromCoords(final String coordStr)
+    {
+        return coordStr.split(BREAKEND_COORD_DELIM, 3)[0];
+    }
+
+    public static Integer positionFromCoords(final String coordStr)
+    {
+        return Integer.parseInt(coordStr.split(BREAKEND_COORD_DELIM, 3)[1]);
+    }
+
+    public static byte orientationFromCoords(final String coordStr)
+    {
+        return Byte.parseByte(coordStr.split(BREAKEND_COORD_DELIM, 3)[2]);
     }
 
     private static List<String> toLines(final List<LinxBreakend> breakends)

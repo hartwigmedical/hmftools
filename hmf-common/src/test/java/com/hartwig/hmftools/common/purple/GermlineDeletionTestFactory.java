@@ -57,6 +57,6 @@ public final class GermlineDeletionTestFactory
                 tumorCopyNumber,
                 Strings.EMPTY,
                 0,
-                reported);
+                reported ? ReportedStatus.REPORTED : ReportedStatus.NONE);
     }
 }

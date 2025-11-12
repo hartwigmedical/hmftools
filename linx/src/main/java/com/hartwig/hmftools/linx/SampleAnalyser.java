@@ -528,6 +528,7 @@ public class SampleAnalyser implements Callable<Void>
                     .svId(var.id())
                     .coordsStart(var.coordsStr(true))
                     .coordsEnd(var.coordsStr(false))
+                    .type(var.type())
                     .clusterId(cluster.id())
                     .clusterReason(var.getClusterReason())
                     .fragileSiteStart(var.isFragileSite(true))

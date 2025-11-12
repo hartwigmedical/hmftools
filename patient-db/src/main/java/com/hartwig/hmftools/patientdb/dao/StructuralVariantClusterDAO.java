@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -237,6 +238,7 @@ class StructuralVariantClusterDAO
                     .vcfIdEnd("")
                     .coordsStart("")
                     .coordsEnd("")
+                    .type(StructuralVariantType.BND)
                     .clusterId(record.getValue(SVANNOTATION.CLUSTERID))
                     .clusterReason(record.getValue(SVANNOTATION.CLUSTERREASON))
                     .fragileSiteStart(record.getValue(SVANNOTATION.FRAGILESITESTART) == 1)

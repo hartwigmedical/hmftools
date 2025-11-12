@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -282,10 +283,10 @@ public class PurpleInterpreterTest
     {
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
-                .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
+                .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
                 .allPassingGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineDeletions(allGermlineDeletions)
-                .reportableGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported).collect(Collectors.toList()))
+                .panelGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
                 .build();
     }
 

@@ -21,8 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class ReportLimiter
 {
-    @NotNull
-    public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report)
+    public static OrangeRecord limitAllListsToMaxOne(final OrangeRecord report)
     {
         return ImmutableOrangeRecord.builder()
                 .from(report)
@@ -50,8 +49,7 @@ public final class ReportLimiter
         return filtered;
     }
 
-    @NotNull
-    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple)
+    private static PurpleRecord limitPurpleDataToOne(final PurpleRecord purple)
     {
         return ImmutablePurpleRecord.builder()
                 .from(purple)
@@ -72,8 +70,7 @@ public final class ReportLimiter
                 .build();
     }
 
-    @NotNull
-    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx)
+    private static LinxRecord limitLinxDataToOne(final LinxRecord linx)
     {
         List<LinxBreakend> filteredAllSomaticBreakends = max1(linx.allSomaticBreakends());
         List<LinxBreakend> filteredReportableSomaticBreakends = max1(linx.reportableSomaticBreakends());

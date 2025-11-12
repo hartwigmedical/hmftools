@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -119,7 +120,7 @@ public final class PurpleConversion
                 .tumorCopyNumber(germlineDeletion.TumorCopyNumber)
                 .filter(germlineDeletion.Filter)
                 .cohortFrequency(germlineDeletion.CohortFrequency)
-                .reported(germlineDeletion.Reported)
+                .reported(germlineDeletion.Reported == ReportedStatus.REPORTED)
                 .build();
     }
 

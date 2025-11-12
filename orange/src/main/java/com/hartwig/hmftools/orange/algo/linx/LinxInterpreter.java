@@ -8,62 +8,36 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
-import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LinxInterpreter
 {
-    private final List<StructuralVariant> allSomaticStructuralVariants;
-    @Nullable
-    private final List<StructuralVariant> allGermlineStructuralVariants;
+    private final EnsemblDataCache mEnsemblDataCache;
 
-    private final List<StructuralVariant> allInferredSomaticStructuralVariants;
-    @Nullable
-    private final List<StructuralVariant> allInferredGermlineStructuralVariants;
-
-    private final EnsemblDataCache ensemblDataCache;
-
-    public LinxInterpreter(
-            @NotNull final List<StructuralVariant> allSomaticStructuralVariants,
-            @Nullable final List<StructuralVariant> allGermlineStructuralVariants,
-            @NotNull final List<StructuralVariant> allInferredSomaticStructuralVariants,
-            @Nullable final List<StructuralVariant> allInferredGermlineStructuralVariants,
-            @NotNull final EnsemblDataCache ensemblDataCache
-    )
+    public LinxInterpreter(final EnsemblDataCache ensemblDataCache)
     {
-        this.allSomaticStructuralVariants = allSomaticStructuralVariants;
-        this.allGermlineStructuralVariants = allGermlineStructuralVariants;
-        this.allInferredSomaticStructuralVariants = allInferredSomaticStructuralVariants;
-        this.allInferredGermlineStructuralVariants = allInferredGermlineStructuralVariants;
-        this.ensemblDataCache = ensemblDataCache;
+        mEnsemblDataCache = ensemblDataCache;
     }
 
-    @NotNull
-    public LinxRecord interpret(@NotNull LinxData linx)
+    public LinxRecord interpret(final LinxData linx)
     {
         LOGGER.info("Analysing linx data");
 
         LinxBreakendInterpreter somaticBreakendInterpreter = new LinxBreakendInterpreter(
-                combine(allSomaticStructuralVariants, allInferredSomaticStructuralVariants),
                 linx.allSomaticStructuralVariants(),
-                ensemblDataCache);
+                mEnsemblDataCache);
 
         LinxBreakendInterpreter germlineBreakendInterpreter = new LinxBreakendInterpreter(
-                combine(allGermlineStructuralVariants, allInferredGermlineStructuralVariants),
                 Objects.requireNonNullElse(linx.allGermlineStructuralVariants(), List.of()),
-                ensemblDataCache);
+                mEnsemblDataCache);
 
         return ImmutableLinxRecord.builder()
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDrivers(), LinxConversion::convert))
@@ -78,14 +52,5 @@ public class LinxInterpreter
                 .reportableGermlineBreakends(ConversionUtil.mapToIterable(linx.reportableGermlineBreakends(), germlineBreakendInterpreter::interpret))
                 .germlineHomozygousDisruptions(ConversionUtil.mapToIterable(linx.germlineHomozygousDisruptions(), LinxConversion::convert))
                 .build();
-    }
-
-    @NotNull
-    private List<StructuralVariant> combine(@Nullable List<StructuralVariant> svList1, @Nullable List<StructuralVariant> svList2)
-    {
-        return Stream.concat(
-                        Optional.ofNullable(svList1).orElse(List.of()).stream(),
-                        Optional.ofNullable(svList2).orElse(List.of()).stream())
-                .collect(Collectors.toList());
     }
 }

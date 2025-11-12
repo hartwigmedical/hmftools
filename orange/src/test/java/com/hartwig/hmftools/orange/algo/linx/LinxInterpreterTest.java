@@ -24,12 +24,6 @@ public class LinxInterpreterTest
     @NotNull
     private static LinxInterpreter createTestInterpreter()
     {
-        return new LinxInterpreter(
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                TestEnsemblDataCacheFactory.loadTestCache()
-        );
+        return new LinxInterpreter(TestEnsemblDataCacheFactory.loadTestCache());
     }
 }

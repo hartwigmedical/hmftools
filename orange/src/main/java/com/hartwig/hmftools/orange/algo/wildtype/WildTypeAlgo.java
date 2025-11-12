@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -14,25 +15,24 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.wildtype.ImmutableWildTypeGene;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class WildTypeAlgo
 {
-    public static boolean wildTypeCallingAllowed(@NotNull Set<PurpleQCStatus> purpleQCStatus)
+    public static boolean wildTypeCallingAllowed(final Set<PurpleQCStatus> purpleQCStatus)
     {
         return !purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.WARN_LOW_PURITY);
     }
 
-    @NotNull
-    public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<DriverGene> driverGenes,
-            @NotNull List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
-            @NotNull List<PurpleGainDeletion> reportableSomaticGainsDels, @NotNull List<LinxFusion> reportableFusions,
-            @NotNull List<LinxHomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends)
+    public static List<WildTypeGene> determineWildTypeGenes(
+            final Map<String,DriverGene> driverGenes,
+            final List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
+            final List<PurpleGainDeletion> reportableSomaticGainsDels, final List<LinxFusion> reportableFusions,
+            final List<LinxHomozygousDisruption> homozygousDisruptions, final List<LinxBreakend> reportableBreakends)
     {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
-        for(DriverGene driverGene : driverGenes)
+        for(DriverGene driverGene : driverGenes.values())
         {
             boolean hasSomaticVariant = false;
             for(PurpleVariant somaticVariant : reportableSomaticVariants)

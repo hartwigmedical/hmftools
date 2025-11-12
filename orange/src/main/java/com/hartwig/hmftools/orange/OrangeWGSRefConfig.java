@@ -66,8 +66,8 @@ public interface OrangeWGSRefConfig
     }
 
     @NotNull
-    static OrangeWGSRefConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver,
-            @NotNull PipelineToolDirectories defaultToolDirectories)
+    static OrangeWGSRefConfig createConfig(
+            final ConfigBuilder configBuilder, final PathResolver pathResolver, final PipelineToolDirectories defaultToolDirectories)
     {
         ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);

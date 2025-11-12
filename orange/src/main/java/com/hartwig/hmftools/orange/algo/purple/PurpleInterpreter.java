@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -49,42 +50,43 @@ import org.jetbrains.annotations.Nullable;
 public class PurpleInterpreter
 {
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
-    private final PurpleVariantFactory purpleVariantFactory;
-    private final GermlineGainDeletionFactory germlineGainDelFactory;
-    private final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory;
-    private final List<DriverGene> driverGenes;
-    private final LinxRecord linx;
+    private final PurpleVariantFactory mPurpleVariantFactory;
+    private final GermlineGainDeletionFactory mGermlineGainDelFactory;
+    private final GermlineLossOfHeterozygosityFactory mGermlineLossOfHeterozygosityFactory;
+    private final List<DriverGene> mDriverGenes;
+    private final LinxRecord mLinx;
 
     @Nullable
-    private final ChordData chord;
-    boolean convertGermlineToSomatic;
+    private final ChordData mChordData;
+    private final boolean mConvertGermlineToSomatic;
 
-    public PurpleInterpreter(final PurpleVariantFactory purpleVariantFactory,
+    public PurpleInterpreter(
+            final PurpleVariantFactory purpleVariantFactory,
             final GermlineGainDeletionFactory germlineGainDeletionFactory,
             final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
             final List<DriverGene> driverGenes, final LinxRecord linx,
             @Nullable final ChordData chord,
             boolean convertGermlineToSomatic)
     {
-        this.purpleVariantFactory = purpleVariantFactory;
-        this.germlineGainDelFactory = germlineGainDeletionFactory;
-        this.germlineLossOfHeterozygosityFactory = germlineLossOfHeterozygosityFactory;
-        this.driverGenes = driverGenes;
-        this.linx = linx;
-        this.chord = chord;
-        this.convertGermlineToSomatic = convertGermlineToSomatic;
+        mPurpleVariantFactory = purpleVariantFactory;
+        mGermlineGainDelFactory = germlineGainDeletionFactory;
+        mGermlineLossOfHeterozygosityFactory = germlineLossOfHeterozygosityFactory;
+        mDriverGenes = driverGenes;
+        mLinx = linx;
+        mChordData = chord;
+        mConvertGermlineToSomatic = convertGermlineToSomatic;
     }
 
     public PurpleRecord interpret(final PurpleData purple)
     {
         LOGGER.info("Analysing purple data");
 
-        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
+        List<PurpleVariant> allSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
 
-        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
+        List<PurpleVariant> reportableSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.panelSomaticVariants());
 
-        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
+        List<PurpleVariant> reportableGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.panelGermlineVariants());
 
         List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
@@ -97,8 +99,8 @@ public class PurpleInterpreter
 
         if(allGermlineDeletions != null)
         {
-            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(),
-                    purple.allPassingGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
+            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions, mLinx.reportableGermlineBreakends(),
+                    purple.allPassingGermlineStructuralVariants(), mLinx.allGermlineStructuralVariants(), mDriverGenes);
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
             List<GermlineDeletion> mergedGermlineDeletions = Lists.newArrayList();
@@ -106,7 +108,7 @@ public class PurpleInterpreter
             mergedGermlineDeletions.addAll(impliedDeletions);
 
             Map<PurpleGainDeletion, Boolean> fullDelToReportability =
-                    germlineGainDelFactory.getReportabilityMap(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
+                    mGermlineGainDelFactory.getReportabilityMap(mergedGermlineDeletions, purple.somaticGeneCopyNumbers());
 
             allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
             reportableGermlineFullDels = selectReportablegainDels(fullDelToReportability);
@@ -115,7 +117,7 @@ public class PurpleInterpreter
                     allGermlineFullDels.size(), reportableGermlineFullDels.size());
 
             Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability =
-                    germlineLossOfHeterozygosityFactory.getReportabilityMap(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
+                    mGermlineLossOfHeterozygosityFactory.getReportabilityMap(mergedGermlineDeletions, purple.somaticGeneCopyNumbers());
 
             allGermlineLossOfHeterozygosities = Lists.newArrayList(lossOfHeterozygosityToReportability.keySet());
             reportableGermlineLossOfHeterozygosities = selectReportableLossOfHeterozygosities(lossOfHeterozygosityToReportability);
@@ -134,8 +136,8 @@ public class PurpleInterpreter
                 .reportableSomaticVariants(reportableSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
                 .reportableGermlineVariants(reportableGermlineVariants)
-                .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticCopyNumbers(), PurpleConversion::convert))
-                .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.allSomaticGeneCopyNumbers(), PurpleConversion::convert))
+                .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
+                .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
                 .reportableSomaticGainsDels(reportableSomaticGainsDels)
                 .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .allGermlineFullDels(allGermlineFullDels)
@@ -187,7 +189,7 @@ public class PurpleInterpreter
                 impliedDeletions.add(new GermlineDeletion(first.gene(), first.chromosome(), first.chromosomeBand(),
                         Math.min(sv.start().position(), sv.end().position()), Math.max(sv.start().position(), sv.end().position()),
                         0, 0, 0, GermlineDetectionMethod.SEGMENT, GermlineStatus.HET_DELETION, tumorStatus, 1D,
-                        tumorCopyNumber, Strings.EMPTY, 0, true));
+                        tumorCopyNumber, Strings.EMPTY, 0, ReportedStatus.REPORTED));
             }
         }
         return impliedDeletions;

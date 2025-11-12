@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -38,8 +39,7 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleVariantContextLoader
 {
-    @NotNull
-    private final CompoundFilter filter;
+    private final CompoundFilter mFilter;
 
     public static PurpleVariantContextLoader withPassingOnlyFilter()
     {
@@ -48,20 +48,21 @@ public class PurpleVariantContextLoader
 
     public PurpleVariantContextLoader(final VariantContextFilter... filters)
     {
-        filter = new CompoundFilter(true);
-        filter.addAll(Arrays.asList(filters));
-        filter.add(new HumanChromosomeFilter());
-        filter.add(new NTFilter());
+        mFilter = new CompoundFilter(true);
+        mFilter.addAll(Arrays.asList(filters));
+        mFilter.add(new HumanChromosomeFilter());
+        mFilter.add(new NTFilter());
     }
 
-    @NotNull
-    public List<PurpleVariantContext> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
+    public List<PurpleVariantContext> fromVCFFile(
+            final String tumor, @Nullable final String reference, @Nullable final String rna,
             final String vcfFile) throws IOException
     {
         List<PurpleVariantContext> result = new ArrayList<>();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
-        final VCFHeader header = (VCFHeader) reader.getHeader();
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        final VCFHeader header = vcfFileReader.vcfHeader();
 
         if(!sampleInFile(tumor, header))
         {
@@ -83,9 +84,9 @@ public class PurpleVariantContextLoader
             throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
         }
 
-        for(VariantContext variantContext : reader.iterator())
+        for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            if(filter.test(variantContext))
+            if(mFilter.test(variantContext))
             {
                 PurpleVariantContext purpleVariantContext = createPurpleVariantContext(variantContext, tumor, reference, rna);
                 result.add(purpleVariantContext);
@@ -94,9 +95,8 @@ public class PurpleVariantContextLoader
         return result;
     }
 
-    @NotNull
-    public PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, String sample, @Nullable String reference,
-            @Nullable String rna)
+    public PurpleVariantContext createPurpleVariantContext(
+            final VariantContext variantContext, final String sample, @Nullable String reference, @Nullable String rna)
     {
         if(!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample)))
         {
@@ -118,12 +118,13 @@ public class PurpleVariantContextLoader
         return createPurpleVariantContext(variantContext, tumorDepth, reference, rna);
     }
 
-    @NotNull
-    private PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth,
-            @Nullable String reference, @Nullable String rna)
+    private PurpleVariantContext createPurpleVariantContext(
+            final VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference, @Nullable String rna)
     {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
+
         final VariantImpact variantImpact = contextDecorator.variantImpact();
+
         final List<VariantTranscriptImpact> allImpacts = VariantTranscriptImpact.fromVariantContext(variantContext)
                 .stream()
                 .map(VariantTranscriptImpactCleaner::cleanFields)
@@ -171,9 +172,8 @@ public class PurpleVariantContextLoader
                 .build();
     }
 
-    @NotNull
-    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts,
-            String canonicalTranscript)
+    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(
+            final List<VariantTranscriptImpact> impacts, String canonicalTranscript)
     {
         return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
     }
@@ -187,8 +187,7 @@ public class PurpleVariantContextLoader
                 .orElse(null);
     }
 
-    @NotNull
-    private static List<String> extractReportableTranscripts(@NotNull VariantContext context)
+    private static List<String> extractReportableTranscripts(final VariantContext context)
     {
         return context.hasAttribute(REPORTABLE_TRANSCRIPTS)
                 ? Arrays.asList(context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "")

@@ -17,51 +17,42 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PurpleData
 {
-    @NotNull
     PurityContext purityContext();
 
-    @NotNull
     List<DriverCatalog> somaticDrivers();
 
     @Nullable
     List<DriverCatalog> germlineDrivers();
 
-    @NotNull
     List<PurpleVariantContext> allSomaticVariants();
 
-    @NotNull
-    List<PurpleVariantContext> reportableSomaticVariants();
+    List<PurpleVariantContext> panelSomaticVariants();
 
     @Nullable
     List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
-    List<PurpleVariantContext> reportableGermlineVariants();
+    List<PurpleVariantContext> panelGermlineVariants();
 
-    @NotNull
     List<StructuralVariant> allPassingSomaticStructuralVariants();
 
     @Nullable
     List<StructuralVariant> allPassingGermlineStructuralVariants();
 
-    @NotNull
     List<StructuralVariant> allInferredSomaticStructuralVariants();
 
     @Nullable
     List<StructuralVariant> allInferredGermlineStructuralVariants();
 
-    @NotNull
-    List<PurpleCopyNumber> allSomaticCopyNumbers();
+    List<PurpleCopyNumber> somaticCopyNumbers();
 
-    @NotNull
-    List<GeneCopyNumber> allSomaticGeneCopyNumbers();
+    List<GeneCopyNumber> somaticGeneCopyNumbers();
 
     @Nullable
     List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable
-    List<GermlineDeletion> reportableGermlineDeletions();
+    List<GermlineDeletion> panelGermlineDeletions();
 
-    @NotNull
     List<Segment> segments();
 }

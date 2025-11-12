@@ -31,13 +31,13 @@ public final class GermlineDeletion
     public final double TumorCopyNumber;
     public final String Filter;
     public final int CohortFrequency;
-    public final boolean Reported;
+    public final ReportedStatus Reported;
 
     public GermlineDeletion(
             final String geneName, final String chromosome, final String chromosomeBand, final int regionStart, final int regionEnd,
             final int depthWindowCount, final int exonStart, final int exonEnd, final GermlineDetectionMethod detectionMethod,
             final GermlineStatus normalStatus, final GermlineStatus tumorStatus, final double germlineCopyNumber, final double tumorCopyNumber,
-            final String filter, final int cohortFrequency, final boolean reported)
+            final String filter, final int cohortFrequency, final ReportedStatus reportedStatus)
     {
         GeneName = geneName;
         Chromosome = chromosome;
@@ -54,24 +54,22 @@ public final class GermlineDeletion
         GermlineCopyNumber = germlineCopyNumber;
         Filter = filter;
         CohortFrequency = cohortFrequency;
-        Reported = reported;
+        Reported = reportedStatus;
     }
 
     private static final String EXTENSION = ".purple.germline.deletion.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
-    public static List<GermlineDeletion> read(@NotNull final String fileName) throws IOException
+    public static List<GermlineDeletion> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull List<GermlineDeletion> deletions) throws IOException
+    public static void write(final String fileName, List<GermlineDeletion> deletions) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(deletions));
     }
@@ -102,7 +100,7 @@ public final class GermlineDeletion
                 .add("tumorCopyNumber")
                 .add("filter")
                 .add("cohortFrequency")
-                .add("reported")
+                .add("reportedStatus")
                 .toString();
     }
 
@@ -135,9 +133,23 @@ public final class GermlineDeletion
 
         List<GermlineDeletion> deletions = Lists.newArrayList();
 
+        Integer reportedStatusIndex = fieldsIndexMap.get("reportedStatus");
+        Integer reportedIndex = fieldsIndexMap.get("reported");
+
         for(final String line : lines)
         {
             String[] values = line.split(TSV_DELIM, -1);
+
+            ReportedStatus reportedStatus;
+
+            if(reportedStatusIndex != null)
+            {
+                reportedStatus = ReportedStatus.valueOf(values[reportedStatusIndex]);
+            }
+            else
+            {
+                reportedStatus = Boolean.parseBoolean(values[reportedIndex]) ? ReportedStatus.REPORTED : ReportedStatus.NONE;
+            }
 
             deletions.add(new GermlineDeletion(
                     values[fieldsIndexMap.get("gene")],
@@ -153,7 +165,7 @@ public final class GermlineDeletion
                     Double.parseDouble(values[fieldsIndexMap.get("tumorCopyNumber")]),
                     values[fieldsIndexMap.get("filter")],
                     Integer.parseInt(values[fieldsIndexMap.get("cohortFrequency")]),
-                    Boolean.parseBoolean(values[fieldsIndexMap.get("reported")])));
+                    reportedStatus));
         }
 
         return deletions;

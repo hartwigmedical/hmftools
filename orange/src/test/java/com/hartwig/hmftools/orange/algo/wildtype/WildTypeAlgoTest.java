@@ -5,10 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -31,7 +33,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeSomatic()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BRCA2"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BRCA2"));
 
         PurpleVariant variantSomatic =
                 TestPurpleVariantFactory.builder().gene("BRCA2").chromosome("1").position(56412).ref("A").alt("C").build();
@@ -56,7 +58,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeGermline()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BRCA1"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BRCA1"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         PurpleVariant variantGermline =
@@ -81,7 +83,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeCNV()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("APC", "KRAS"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("APC", "KRAS"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
@@ -105,7 +107,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeFusion5prime()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BAG4"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BAG4"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
@@ -128,7 +130,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeFusion3prime()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BAG4"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("BAG4"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
@@ -151,7 +153,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeHomozygousDisruption()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("NRAS"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("NRAS"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
@@ -175,7 +177,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildTypeGeneDisruption()
     {
-        List<DriverGene> driverGenes = createDriverMap(Lists.newArrayList("MYC"));
+        Map<String,DriverGene> driverGenes = createDriverMap(Lists.newArrayList("MYC"));
 
         List<PurpleVariant> reportableSomaticVariants = Lists.newArrayList();
         List<PurpleVariant> reportableGermlineVariants = null;
@@ -199,7 +201,7 @@ public class WildTypeAlgoTest
     @Test
     public void canDetermineWildType()
     {
-        List<DriverGene> driverGenes =
+        Map<String,DriverGene> driverGenes =
                 createDriverMap(Lists.newArrayList("BRCA1", "BRCA2", "APC", "KRAS", "BAG4", "FGFR1", "NRAS", "EGFR", "MYC"));
 
         PurpleVariant variantSomatic =
@@ -253,31 +255,28 @@ public class WildTypeAlgoTest
         assertFalse(WildTypeAlgo.wildTypeCallingAllowed(purpleQCStatusSetWarnPurity));
     }
 
-    @NotNull
-    private static List<DriverGene> createDriverMap(@NotNull List<String> genes)
+    private static Map<String,DriverGene> createDriverMap(final List<String> genes)
     {
-        List<DriverGene> driverGeneList = Lists.newArrayList();
+        Map<String,DriverGene> driverGeneList = Maps.newHashMap();
+
         for(String gene : genes)
         {
-            driverGeneList.add(DriverGeneTestFactory.builder().gene(gene).build());
+            driverGeneList.put(gene, DriverGeneTestFactory.builder().gene(gene).build());
         }
         return driverGeneList;
     }
 
-    @NotNull
-    private static LinxHomozygousDisruption createHomDisruption(@NotNull String gene)
+    private static LinxHomozygousDisruption createHomDisruption(final String gene)
     {
         return LinxOrangeTestFactory.homozygousDisruptionBuilder().gene(gene).build();
     }
 
-    @NotNull
-    public static LinxBreakend createBreakend(@NotNull String gene)
+    public static LinxBreakend createBreakend(final String gene)
     {
         return LinxOrangeTestFactory.breakendBuilder().gene(gene).isCanonical(true).build();
     }
 
-    @NotNull
-    private static LinxFusion createFusion(@NotNull String geneStart, @NotNull String geneEnd)
+    private static LinxFusion createFusion(final String geneStart, final String geneEnd)
     {
         return LinxOrangeTestFactory.fusionBuilder().geneStart(geneStart).geneEnd(geneEnd).reported(true).build();
     }

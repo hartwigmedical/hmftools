@@ -87,9 +87,10 @@ public interface OrangeConfig
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
+    String INCLUDE_NON_PANEL_GENES = "include_non_panel_genes";
     String ADD_DISCLAIMER = "add_disclaimer";
 
-    static void registerConfig(@NotNull ConfigBuilder configBuilder)
+    static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
@@ -130,6 +131,7 @@ public interface OrangeConfig
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
+        configBuilder.addFlag(INCLUDE_NON_PANEL_GENES, "Include events on genes outside gene panel");
         configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
         addLoggingOptions(configBuilder);
 
@@ -215,14 +217,12 @@ public interface OrangeConfig
     boolean convertGermlineToSomatic();
 
     boolean limitJsonOutput();
+    boolean includeNonGenePanelEvents();
 
     boolean addDisclaimer();
 
-    @NotNull
-    static OrangeConfig createConfig(@NotNull ConfigBuilder configBuilder)
+    static OrangeConfig createConfig(final ConfigBuilder configBuilder)
     {
-        setLogLevel(configBuilder);
-
         if(LOGGER.isDebugEnabled())
         {
             LOGGER.debug("Switched root level logging to DEBUG");
@@ -232,6 +232,13 @@ public interface OrangeConfig
         if(addDisclaimer)
         {
             LOGGER.info("Disclaimer will be included in footer.");
+        }
+
+        boolean includeNonPanelGenes = configBuilder.hasFlag(INCLUDE_NON_PANEL_GENES);
+
+        if(includeNonPanelGenes)
+        {
+            LOGGER.info("JSON including non-gene-panel events");
         }
 
         boolean limitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
@@ -292,6 +299,7 @@ public interface OrangeConfig
                 .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir())))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
+                .includeNonGenePanelEvents(includeNonPanelGenes)
                 .addDisclaimer(addDisclaimer);
 
         builder.tumorSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, tumorSampleId)));
@@ -315,14 +323,12 @@ public interface OrangeConfig
         return builder.build();
     }
 
-    @NotNull
-    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)
+    static Iterable<String> toStringSet(final String paramValue, final String separator)
     {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
-    @NotNull
-    private static LocalDate interpretSamplingDateParam(@NotNull String samplingDateString)
+    private static LocalDate interpretSamplingDateParam(final String samplingDateString)
     {
         String format = "yyMMdd";
 
@@ -340,8 +346,7 @@ public interface OrangeConfig
         return samplingDate;
     }
 
-    @NotNull
-    private static ExperimentType determineExperimentType(@NotNull String experimentTypeString)
+    private static ExperimentType determineExperimentType(final String experimentTypeString)
     {
         switch(experimentTypeString)
         {
@@ -354,8 +359,7 @@ public interface OrangeConfig
         }
     }
 
-    @NotNull
-    private static String parseMandatoryOutputDir(@NotNull ConfigBuilder configBuilder)
+    private static String parseMandatoryOutputDir(final ConfigBuilder configBuilder)
     {
         String dir = parseOutputDir(configBuilder);
         if(dir == null)
@@ -365,8 +369,7 @@ public interface OrangeConfig
         return mandatoryPath(dir);
     }
 
-    @NotNull
-    private static PipelineToolDirectories resolveDefaultPipelineDirectories(final @NotNull ConfigBuilder configBuilder)
+    private static PipelineToolDirectories resolveDefaultPipelineDirectories(final ConfigBuilder configBuilder)
     {
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 

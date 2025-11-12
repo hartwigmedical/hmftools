@@ -362,7 +362,7 @@ public class PurpleApplication
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
 
             germlineDeletions = new GermlineDeletions(
-                    mReferenceData.DriverGenes.DriverGeneList, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+                    mReferenceData.DriverGenes.DriverGeneMap, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
             germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
 
