@@ -705,7 +705,7 @@ public class ProcessBamTest
         createStandardMultipleChromosomePanelFile(100_000, 1.0001, _1, _2);
         runCobalt(false, true);
 
-        String segmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        String segmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(segmentsFileName);
         assertEquals(6, regions.size());
         List<CobaltSegment> chr1Regions = regions.get(_1);
@@ -729,11 +729,11 @@ public class ProcessBamTest
         setupForSingleWindowBamTumorAndGermline();
         runCobalt(false, true);
 
-        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
         assertEquals(1, regions.size());
 
-        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        String referenceSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), referenceSample);
         ListMultimap<Chromosome, CobaltSegment> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
         assertEquals(1, referenceRegions.size());
     }
@@ -744,11 +744,11 @@ public class ProcessBamTest
         setupForSingleWindowBamTumorOnly();
         runCobalt(false, true);
 
-        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         ListMultimap<Chromosome, CobaltSegment> regions = PCFFile.readCobaltPcfFile(tumorSegmentsFileName);
         assertEquals(1, regions.size());
 
-        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        String referenceSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), referenceSample);
         assertFalse(new File(referenceSegmentsFileName).exists());
     }
 
@@ -758,10 +758,10 @@ public class ProcessBamTest
         setupForSingleWindowBamGermlineOnly();
         runCobalt(false, true);
 
-        String tumorSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), sample);
+        String tumorSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), sample);
         assertFalse(new File(tumorSegmentsFileName).exists());
 
-        String referenceSegmentsFileName = PCFFile.generateCobaltPcfFilename(outputDir.getAbsolutePath(), referenceSample);
+        String referenceSegmentsFileName = PCFFile.generateRatioFilename(outputDir.getAbsolutePath(), referenceSample);
         ListMultimap<Chromosome, CobaltSegment> referenceRegions = PCFFile.readCobaltPcfFile(referenceSegmentsFileName);
         assertEquals(1, referenceRegions.size());
     }

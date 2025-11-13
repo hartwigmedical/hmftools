@@ -49,7 +49,7 @@ public class RatioSegmenterTest
     @Before
     public void setup()
     {
-        executor = Executors.newFixedThreadPool(4);
+        executor = Executors.newFixedThreadPool(8);
     }
 
     @After
@@ -58,11 +58,11 @@ public class RatioSegmenterTest
         executor.shutdown();
     }
 
-    //        @Test
+//            @Test
     public void coloTest() throws Exception
     {
         ratios.clear();
-        File rawCobaltRatiosFile = new File("/Users/timlavers/work/junk/cobalt/colo829/COLO829v003T.cobalt.ratio.tsv.gz");
+        File rawCobaltRatiosFile = new File("/Users/timlavers/work/batches/2025/11/13/1/cobalt/COLO829v003T.cobalt.ratio.tsv.gz");
         RawCobaltRatioFile rawResultsFile = new RawCobaltRatioFile(rawCobaltRatiosFile.getAbsolutePath());
         List<RawCobaltRatio> rawRatios = rawResultsFile.read();
 
@@ -71,14 +71,14 @@ public class RatioSegmenterTest
             CobaltRatio ratio = rawCobaltRatio.toCobaltRatio();
             ratios.put(ratio.chr(), ratio);
         });
-        System.out.println("Read " + ratios.size() + " ratios.");
+        rawRatios.clear();
         File resultsDir = new File("/Users/timlavers/work/batches/2025/11/12/1/iterate");
         Stopwatch stopwatch = Stopwatch.createUnstarted();
         DescriptiveStatistics statistics = new DescriptiveStatistics();
-        for(int i = 0; i < 3; i++)
+        for(int i = 0; i < 1; i++)
         {
             System.out.println("Run " + i);
-            File outputFile = new File(resultsDir, "colo." + i + ".pcf");
+            File outputFile = new File(resultsDir, "colo8." + i + ".pcf");
             stopwatch.start();
             RatioSegmenter.writeTumorSegments(ratios, 100.0, V38, executor, outputFile.getAbsolutePath());
             stopwatch.stop();
@@ -189,6 +189,39 @@ public class RatioSegmenterTest
     }
 
     @Test
+    public void handleZeroes() throws Exception
+    {
+        ratios.clear();
+
+        ratios.put(_1, crDirect(_1, 1, 0.5));
+        ratios.put(_1, crDirect(_1, 1001, -1.0));
+        ratios.put(_1, crDirect(_1, 2001, -1.0));
+        ratios.put(_1, crDirect(_1, 3001, 0.51));
+        ratios.put(_1, crDirect(_1, 4001, 0.49));
+        ratios.put(_1, crDirect(_1, 5001, -1.0));
+        ratios.put(_1, crDirect(_1, 6001, -1.0));
+        ratios.put(_1, crDirect(_1, 10001, 100.09));
+        ratios.put(_1, crDirect(_1, 11001, 120.0));
+        ratios.put(_1, crDirect(_1, 12001, -1.0));
+        ratios.put(_1, crDirect(_1, 13001, 119.92));
+        ratios.put(_1, crDirect(_1, 14001, -1.0));
+        ratios.put(_1, crDirect(_1, 15001, 0.02));
+        ratios.put(_1, crDirect(_1, 16001, 0.0));
+        ratios.put(_1, crDirect(_1, 17001, 0.0));
+
+        File tempDir = Files.createTempDirectory("rst").toFile();
+        File outputFile = new File(tempDir, "rst.pcf");
+        Assert.assertFalse(outputFile.exists());
+        RatioSegmenter.writeTumorSegments(ratios, 100.0, V38, executor, outputFile.getAbsolutePath());
+
+        ListMultimap<Chromosome, CobaltSegment> pcfData = PCFFile.readCobaltPcfFile(outputFile.getAbsolutePath());
+        assertEquals(1, pcfData.keySet().size());
+        List<CobaltSegment> regions1 = pcfData.get(_1);
+        assertEquals(4, regions1.size());
+        assertEquals(0.0, regions1.get(3).MeanRatio, 0.0001);
+    }
+
+    @Test
     public void referenceSegmenterTest()
     {
         RatioSegmenter segmenter = new ReferenceRatioSegmenter(ratios, locator, 50.0);
@@ -214,6 +247,11 @@ public class RatioSegmenterTest
         // The RatioSegmenter uses the log of the values.
         // So that we know how the segmentation works out, we will anti-log them first.
         double v = value >= 0 ? Math.pow(2, value) : -1.0;
+        return new CobaltRatio(chromosome.shortName(), start, v, v, v, v, v, v, v);
+    }
+
+    private static CobaltRatio crDirect(HumanChromosome chromosome, int start, double v)
+    {
         return new CobaltRatio(chromosome.shortName(), start, v, v, v, v, v, v, v);
     }
 }

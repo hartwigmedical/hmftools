@@ -24,7 +24,7 @@ class Gamma
                 diffs[i] = y[i] - runningMedians[i];
             }
             double SD = Stats.medianAbsoluteDeviation(diffs);
-            segmentPenalty = SD * SD * gamma;
+            segmentPenalty = SD == 0 ? 0.01 * gamma : SD * SD * gamma;
         }
         else
         {

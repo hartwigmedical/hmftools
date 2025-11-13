@@ -9,11 +9,19 @@ import org.junit.Test;
 public class GammaTest extends SegmentationTestBase
 {
     @Test
+    public void minimumCost()
+    {
+        double[] doubles = d(1, 2, 3, 4);
+        Gamma gamma = new Gamma(doubles, 28.0, true);
+        assertEquals(0.01 * 28.0, gamma.getSegmentPenalty(), 0.0001);
+    }
+
+    @Test
     public void compareWithR()
     {
         assertEquals(0.2361, gammaForFile("ratios1.tsv"), 0.0001);
         assertEquals(0.3325, gammaForFile("ratios4.tsv"), 0.0001);
-        assertEquals(0.0, gammaForFile("ratios5.csv"), 0.0001);
+        assertEquals(0.5, gammaForFile("ratios5.csv"), 0.0001);
         assertEquals(0.3099, gammaForFile("ratios_chr13_1.tsv"), 0.0001);
     }
 

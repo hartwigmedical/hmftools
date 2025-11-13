@@ -70,7 +70,7 @@ public abstract class RatioSegmenter
             List<CobaltRatio> ratiosForChromosome = ratios.get(chromosome);
             ratiosForChromosome.forEach(cobaltRatio ->
             {
-                if(value(cobaltRatio) > 0.0)
+                if(value(cobaltRatio) >= 0.0)
                 {
                     ArmToRatios.put(chrArmLocator.map(cobaltRatio), cobaltRatio);
                 }
@@ -145,7 +145,15 @@ public abstract class RatioSegmenter
             CobaltRatio ratio = ratios.get(i);
             final double v = value(ratio);
             rawValues[i] = v;
-            valuesForSegmentation[i] = FastMath.log(2, v);
+            // Our R script that called copynumber put 0.001 as a floor for the ratios and converted
+            // them to log_2 values. Note that negative ratio values have already been filtered out.
+            if(v < 0.001)
+            {
+                valuesForSegmentation[i] = -9.965784;
+            }
+            else {
+                valuesForSegmentation[i] = (float)FastMath.log(2, v);
+            }
         }
         Segmenter segmenter = new Segmenter(valuesForSegmentation, mGamma, true);
         PiecewiseConstantFit fit = segmenter.pcf();

@@ -35,18 +35,11 @@ public final class PCFFile
 {
     private static final String HEADER_PREFIX = "sampleID";
     private static final String RATIO_EXTENSION = ".cobalt.ratio.pcf";
-    private static final String COBALT_PCF_EXTENSION = ".cobalt.pcf.tsv";
     private static final String BAF_EXTENSION = ".amber.baf.pcf";
 
     private static final int COL_CHROMOSOME = 1;
     private static final int COL_POS_START = 3;
     private static final int COL_POS_END = 4;
-
-    @NotNull
-    public static String generateCobaltPcfFilename(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + COBALT_PCF_EXTENSION;
-    }
 
     @NotNull
     public static String generateRatioFilename(final String basePath, final String sample)
@@ -108,47 +101,52 @@ public final class PCFFile
         int minPosition = 1;
         List<PCFPosition> chromosomeResult = Lists.newArrayList();
 
-        for(String line : Files.readAllLines(new File(filename).toPath()))
+        final List<String> lines = Files.readAllLines(new File(filename).toPath());
+        boolean inOldFormat = lines.get(0).startsWith(HEADER_PREFIX);
+        int chrIndex = inOldFormat ? COL_CHROMOSOME : 0;
+        int posStartIndex = inOldFormat ? COL_POS_START : 1;
+        int posEndIndex = inOldFormat ? COL_POS_END : 2;
+        for(int i = 1; i < lines.size(); i++)
         {
-            if(!line.startsWith(HEADER_PREFIX))
+            String line = lines.get(i);
+            String[] values = line.split(TSV_DELIM);
+            String chromosomeName = values[chrIndex];
+            if(HumanChromosome.contains(chromosomeName))
             {
-                String[] values = line.split(TSV_DELIM);
-                String chromosomeName = values[COL_CHROMOSOME];
-                if(HumanChromosome.contains(chromosomeName))
+                if(!chromosomeName.equals(prevChromosome))
                 {
-                    if(!chromosomeName.equals(prevChromosome))
-                    {
-                        if(pcfPosition != null)
-                        {
-                            chromosomeResult.add(pcfPosition);
-                            result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
-                        }
-                        chromosomeResult.clear();
-                        pcfPosition = null;
-                        minPosition = 1;
-                        prevChromosome = chromosomeName;
-                    }
-
-                    int start = window.start(Integer.parseInt(values[COL_POS_START]));
-                    int end = window.start(Integer.parseInt(values[COL_POS_END])) + windowSize;
                     if(pcfPosition != null)
                     {
-                        pcfPosition.setMaxPosition(start);
                         chromosomeResult.add(pcfPosition);
+                        result.putAll(HumanChromosome.fromString(prevChromosome), mergePositions(chromosomeResult));
                     }
-
-                    pcfPosition = new PCFPosition(source, chromosomeName, start);
-                    pcfPosition.setMinPosition(minPosition);
-                    pcfPosition.setMaxPosition(start);
-
-                    chromosomeResult.add(pcfPosition);
-
-                    minPosition = end;
-
-                    pcfPosition = new PCFPosition(source, chromosomeName, end);
-                    pcfPosition.setMinPosition(end);
-                    pcfPosition.setMaxPosition(end);
+                    chromosomeResult.clear();
+                    pcfPosition = null;
+                    minPosition = 1;
+                    prevChromosome = chromosomeName;
                 }
+
+                int rawStart = Integer.parseInt(values[posStartIndex]);
+                int rawEnd = Integer.parseInt(values[posEndIndex]);
+                int start = inOldFormat ? window.start(rawStart) : rawStart;
+                int end = inOldFormat ? window.start(rawEnd) + windowSize : rawEnd + 1;
+                if(pcfPosition != null)
+                {
+                    pcfPosition.setMaxPosition(start);
+                    chromosomeResult.add(pcfPosition);
+                }
+
+                pcfPosition = new PCFPosition(source, chromosomeName, start);
+                pcfPosition.setMinPosition(minPosition);
+                pcfPosition.setMaxPosition(start);
+
+                chromosomeResult.add(pcfPosition);
+
+                minPosition = end;
+
+                pcfPosition = new PCFPosition(source, chromosomeName, end);
+                pcfPosition.setMinPosition(end);
+                pcfPosition.setMaxPosition(end);
             }
         }
 

@@ -297,12 +297,12 @@ public class CobaltConfig
 
     public String tumorPcfFileName()
     {
-        return PCFFile.generateCobaltPcfFilename(OutputDir, TumorId);
+        return PCFFile.generateRatioFilename(OutputDir, TumorId);
     }
 
     public String referencePcfFileName()
     {
-        return PCFFile.generateCobaltPcfFilename(OutputDir, ReferenceId);
+        return PCFFile.generateRatioFilename(OutputDir, ReferenceId);
     }
 
     public String medianRatiosFileName()

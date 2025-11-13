@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.common.segmentation;
 
+import static java.util.Arrays.asList;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class SegmenterTest extends SegmentationTestBase
@@ -40,24 +44,33 @@ public class SegmenterTest extends SegmentationTestBase
     {
         assertEquals(
                 segmentation(d(2), d(3), d(1), d(12), d(13), d(11)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(java.util.Arrays.asList(0, 1, 2, 3, 4, 5))
+                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(asList(0, 1, 2, 3, 4, 5))
         );
         assertEquals(
                 segmentation(d(2), d(3), d(1), d(12), d(13, 11)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(java.util.Arrays.asList(0, 1, 2, 3, 5))
+                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(asList(0, 1, 2, 3, 5))
         );
         assertEquals(
                 segmentation(d(2), d(3, 1, 12), d(13, 11)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(java.util.Arrays.asList(0, 3, 5))
+                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(asList(0, 3, 5))
         );
         assertEquals(
                 segmentation(d(2), d(3, 1, 12, 13, 11)),
-                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(java.util.Arrays.asList(0, 5))
+                new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(asList(0, 5))
         );
         assertEquals(
                 segmentation(d(2, 3, 1, 12, 13, 11)),
                 new Segmenter(d(2, 3, 1, 12, 13, 11)).segmentBy(List.of(5))
         );
+    }
+
+    @Test
+    public void setMinimumCost()
+    {
+        final Segmenter segmenter = new Segmenter(d(0.3, 1.5, 1.8, 2.4), 50.0, true);
+        final PiecewiseConstantFit pcf = segmenter.pcf();
+        assertEquals(new PiecewiseConstantFit(new int[] { 1, 3 }, new int[] { 0,1 }, new double[]{0.3, 1.9}), pcf);
+        Assert.assertEquals(0.5, segmenter.segmentPenalty, 0.0001);
     }
 
     @Test
