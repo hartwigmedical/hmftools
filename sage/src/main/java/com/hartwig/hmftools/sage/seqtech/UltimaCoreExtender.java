@@ -147,6 +147,7 @@ public class UltimaCoreExtender
         int refPosition = state.RefPosition;
         byte refBase = refSequence.base(refPosition);
 
+        boolean checkHomopolymers = true;
         boolean requiredExtension = false;
 
         while(true)
@@ -167,17 +168,25 @@ public class UltimaCoreExtender
 
             byte nextRefBase = refSequence.base(refPosition);
 
-            boolean hasHomopolymer = (readBase == nextReadBase) || (refBase == nextRefBase);
+            boolean hasHomopolymer = false;
+
+            if(checkHomopolymers)
+            {
+                hasHomopolymer = (readBase == nextReadBase) || (refBase == nextRefBase);
+
+                if(!hasHomopolymer)
+                    checkHomopolymers = false;
+            }
+
             boolean nextBasesMatch = nextReadBase == nextRefBase;
 
-            if(!requiredExtension && !hasHomopolymer && nextBasesMatch) // immediate exit if no extension was required
-                return false;
-
-            if(hasHomopolymer)
+            if(!requiredExtension && !hasHomopolymer && readBase == refBase)
             {
-                requiredExtension = true;
+                // immediate exit if no extension was required
+                return false;
             }
-            else
+
+            if(!hasHomopolymer)
             {
                 if(nextBasesMatch && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
                     break;
@@ -185,6 +194,8 @@ public class UltimaCoreExtender
 
             readBase = nextReadBase;
             refBase = nextRefBase;
+
+            requiredExtension = true;
         }
 
         return requiredExtension;

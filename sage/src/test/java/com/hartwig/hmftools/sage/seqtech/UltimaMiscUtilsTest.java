@@ -267,7 +267,7 @@ public class UltimaMiscUtilsTest
         // pos / index         10             20             30        40
         //           0123456789012345     67890     12345678901234567890123456789
         refBases =  "AACCGGTTAACCGATC" + "ACTCA" + "CTAGACGGTTAACCGGTT";
-        readBases = "AACCGGTTAACCGATT" + "ACTCA" + "TTAGACGGTTAACCGGTT";
+        readBases = "AACCGGTTAACCGATT" + "GCTCG" + "TTAGACGGTTAACCGGTT";
         //                 FFFFFFFFFF               FFFFFFFFFF
 
         refSequence = new RefSequence(100, refBases.getBytes());
@@ -276,13 +276,13 @@ public class UltimaMiscUtilsTest
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
         assertNotNull(newReadCigarInfo);
-        assertEquals(3, newReadCigarInfo.FlankIndexStart);
-        assertEquals(103, newReadCigarInfo.FlankPositionStart);
-        assertEquals(113, newReadCigarInfo.CorePositionStart);
-        assertEquals(123, newReadCigarInfo.CorePositionEnd);
-        assertEquals(33, newReadCigarInfo.FlankIndexEnd);
-        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("31M", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertEquals(4, newReadCigarInfo.FlankIndexStart);
+        assertEquals(104, newReadCigarInfo.FlankPositionStart);
+        assertEquals(114, newReadCigarInfo.CorePositionStart);
+        assertEquals(122, newReadCigarInfo.CorePositionEnd);
+        assertEquals(32, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(132, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("29M", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test
