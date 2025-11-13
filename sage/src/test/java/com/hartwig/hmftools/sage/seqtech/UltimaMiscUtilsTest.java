@@ -33,7 +33,9 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.CigarElement;
@@ -48,76 +50,6 @@ public class UltimaMiscUtilsTest
 
     @After
     public void resetSequencingType() { setIlluminaSequencing(); }
-
-    @Test
-    public void testIsMsiIndelTypes()
-    {
-        // not an indel
-        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "C");
-        assertFalse(isMsiIndelOfType(variant, null));
-
-        // no repeat units
-        variant = new SimpleVariant(CHR_1, 100, "A", "AA");
-        List<String> units = Lists.newArrayList();
-        assertFalse(isMsiIndelOfType(variant, units));
-
-        // single unit but not MSI
-        variant = new SimpleVariant(CHR_1, 100, "A", "AAB");
-        units = Lists.newArrayList("A");
-        assertFalse(isMsiIndelOfType(variant, units));
-
-        // MSI repeat
-        variant = new SimpleVariant(CHR_1, 100, "A", "AABABAB");
-        units = Lists.newArrayList("AB");
-        assertTrue(isMsiIndelOfType(variant, units));
-    }
-
-    @Test
-    public void testIsAdjacentToLongHomopolymers()
-    {
-        int longLength = 10;
-        String readBases = "A".repeat(2*longLength - 1);
-        SAMRecord read = createRead(readBases);
-
-        // not long enough
-        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
-
-        readBases = "A".repeat(longLength) + "C" + "T".repeat(longLength - 1);
-        read = createRead(readBases);
-
-        // on left
-        assertTrue(isAdjacentToLongHomopolymer(read, longLength, longLength));
-
-        readBases = "T".repeat(longLength - 1) + "C" + "A".repeat(longLength);
-        read = createRead(readBases);
-
-        // on right
-        assertTrue(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
-
-        readBases = "C" + "A".repeat(2*longLength - 1);
-        read = createRead(readBases);
-
-        // not on left
-        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
-
-        readBases = "A".repeat(2*longLength - 1) + "C";
-        read = createRead(readBases);
-
-        // not on right
-        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
-
-        readBases = "N".repeat(2*longLength);
-        read = createRead(readBases);
-
-        // invalid bases
-        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
-    }
-
-    private static SAMRecord createRead(final String readBases)
-    {
-        String cigar = format("%dM", readBases.length());
-        return buildSamRecord(100, cigar, readBases);
-    }
 
     @Test
     public void testCoreExtensionBasic()
@@ -218,7 +150,7 @@ public class UltimaMiscUtilsTest
         //                     10                        20                   30
         // index     012345678901234     D     56     78901           234567890123456
         readBases = "AACCGGTTAACCGGG" +  "" + "AA" + "TAGAT" +  "" + "ACCGGTTAACCGGTT";
-        // flank            FFFFFFFFFF                 FFFFFFFFFF
+        // flank          FFFFFFFFFF                                  FFFFFFFFFF
 
         refSequence = new RefSequence(100, refBases.getBytes());
 
@@ -253,6 +185,104 @@ public class UltimaMiscUtilsTest
         assertEquals(31, newReadCigarInfo.FlankIndexEnd);
         assertEquals(133, newReadCigarInfo.FlankPositionEnd);
         assertEquals("8M1D7M1D10M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // an inserted base immediately before and after the core
+
+        // pos                 10                  20        30
+        //           012345678901234     56789     0123456789012345678
+        refBases =  "AACCGGTTAACCAGG" + "ATCTA" + "TCCGGTTAACCGGTT";
+
+        //                     10                               20        30
+        // pos       012345678901234           56789            01234567890123456
+        //                     10                  20                   30
+        // index     012345678901234     5     67890      1     234567890123456
+        readBases = "AACCGGTTAACCAGG" + "T" + "ATCTA" +  "T" + "TCCGGTTAACCGGTT";
+        // flank          FFFFFFFFFF                            FFFFFFFFFF
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        readAlignmentStart = 100;
+
+        cigarElements = Lists.newArrayList(
+                new CigarElement(15, M),
+                new CigarElement(1, I),
+                new CigarElement(5, M),
+                new CigarElement(1, I),
+                new CigarElement(15, M));
+
+        readCigar = List.of(
+                new CigarElement(11, M),
+                new CigarElement(1, I),
+                new CigarElement(5, M),
+                new CigarElement(1, I),
+                new CigarElement(11, M));
+
+        readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, readCigar, 105, 129, 115, 119,
+                5, 31);
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertTrue(checkEqual(readCigarInfo, newReadCigarInfo));
+    }
+
+    @Test
+    public void testCoreExtensionMiscExamples()
+    {
+        // test 1: HP starts on ref but switches to read then ref again
+
+        // pos / index                10             20             30        40
+        //                  0123456789012345     67890     12345678901234567890123456789
+        String refBases =  "AACCGGTTAACCGGTA" + "ACTCA" + "ATAAACGGTTAACCGGTT";
+        String readBases = "AACCGGTTAACCGTTT" + "ACTCA" + "TTTACCGGTTAACCGGTT";
+        //                        FFFFFFFFFF               FFFFFFFFFF
+
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
+
+        int readAlignmentStart = 100;
+
+        List<CigarElement> cigarElements = Lists.newArrayList(new CigarElement(39, M));
+        List<CigarElement> readCigarElements = Lists.newArrayList(new CigarElement(25, M));
+
+        ReadCigarInfo readCigarInfo = new ReadCigarInfo(
+                readAlignmentStart, readCigarElements, 106, 130, 116, 120,
+                6, 30);
+
+        ReadCigarInfo newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(1, newReadCigarInfo.FlankIndexStart);
+        assertEquals(101, newReadCigarInfo.FlankPositionStart);
+        assertEquals(111, newReadCigarInfo.CorePositionStart);
+        assertEquals(127, newReadCigarInfo.CorePositionEnd);
+        assertEquals(37, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(137, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("37M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // test 2: no HP, but next bases don't match and so require extension
+
+        // pos / index         10             20             30        40
+        //           0123456789012345     67890     12345678901234567890123456789
+        refBases =  "AACCGGTTAACCGATC" + "ACTCA" + "CTAGACGGTTAACCGGTT";
+        readBases = "AACCGGTTAACCGATT" + "ACTCA" + "TTAGACGGTTAACCGGTT";
+        //                 FFFFFFFFFF               FFFFFFFFFF
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(123, newReadCigarInfo.CorePositionEnd);
+        assertEquals(33, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("31M", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test
@@ -405,8 +435,86 @@ public class UltimaMiscUtilsTest
 
         assertNotNull(readContext);
         assertEquals(10, readContext.CoreIndexStart);
-        assertEquals(17, readContext.CoreIndexEnd);
-        assertEquals("TAATTGGC", readContext.coreStr());
-        assertEquals("TTAATTGC", readContext.refBases());
+        assertEquals(26, readContext.CoreIndexEnd);
+        assertEquals("CTTTTTTTTTAATTGGC", readContext.coreStr());
+        assertEquals("CTTTTTTTTTTAATTGC", readContext.refBases());
     }
+
+    private static boolean checkEqual(final ReadCigarInfo first, final ReadCigarInfo second)
+    {
+        return first.FlankIndexStart == second.FlankIndexStart && first.FlankIndexEnd == second.FlankIndexEnd
+                && first.CorePositionStart == second.CorePositionStart && first.CorePositionEnd == second.CorePositionEnd
+                && first.FlankPositionStart == second.FlankPositionStart && first.FlankPositionEnd == second.FlankPositionEnd;
+    }
+
+    @Test
+    public void testIsMsiIndelTypes()
+    {
+        // not an indel
+        SimpleVariant variant = new SimpleVariant(CHR_1, 100, "A", "C");
+        assertFalse(isMsiIndelOfType(variant, null));
+
+        // no repeat units
+        variant = new SimpleVariant(CHR_1, 100, "A", "AA");
+        List<String> units = Lists.newArrayList();
+        assertFalse(isMsiIndelOfType(variant, units));
+
+        // single unit but not MSI
+        variant = new SimpleVariant(CHR_1, 100, "A", "AAB");
+        units = Lists.newArrayList("A");
+        assertFalse(isMsiIndelOfType(variant, units));
+
+        // MSI repeat
+        variant = new SimpleVariant(CHR_1, 100, "A", "AABABAB");
+        units = Lists.newArrayList("AB");
+        assertTrue(isMsiIndelOfType(variant, units));
+    }
+
+    @Test
+    public void testIsAdjacentToLongHomopolymers()
+    {
+        int longLength = 10;
+        String readBases = "A".repeat(2*longLength - 1);
+        SAMRecord read = createRead(readBases);
+
+        // not long enough
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "A".repeat(longLength) + "C" + "T".repeat(longLength - 1);
+        read = createRead(readBases);
+
+        // on left
+        assertTrue(isAdjacentToLongHomopolymer(read, longLength, longLength));
+
+        readBases = "T".repeat(longLength - 1) + "C" + "A".repeat(longLength);
+        read = createRead(readBases);
+
+        // on right
+        assertTrue(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "C" + "A".repeat(2*longLength - 1);
+        read = createRead(readBases);
+
+        // not on left
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
+
+        readBases = "A".repeat(2*longLength - 1) + "C";
+        read = createRead(readBases);
+
+        // not on right
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength - 1, longLength));
+
+        readBases = "N".repeat(2*longLength);
+        read = createRead(readBases);
+
+        // invalid bases
+        assertFalse(isAdjacentToLongHomopolymer(read, longLength, longLength));
+    }
+
+    private static SAMRecord createRead(final String readBases)
+    {
+        String cigar = format("%dM", readBases.length());
+        return buildSamRecord(100, cigar, readBases);
+    }
+
 }

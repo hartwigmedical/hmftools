@@ -101,6 +101,10 @@ public class UltimaCoreExtender
                 flankPositionEnd = upperState.RefPosition;
                 flankIndexEnd = upperState.ReadIndex;
             }
+            else
+            {
+                moveToRefPosition(upperState, cigarElements, readCigarInfo.FlankPositionEnd);
+            }
         }
         else
         {
@@ -138,60 +142,60 @@ public class UltimaCoreExtender
             final byte[] readBases, final RefSequence refSequence, final List<CigarElement> cigarElements,
             final ReadCigarState state, boolean searchUp)
     {
+        // extend the core while any homopolymer exists in either ref or base, then exit when the ref matches the base at an M element
         byte readBase = readBases[state.ReadIndex];
         int refPosition = state.RefPosition;
         byte refBase = refSequence.base(refPosition);
 
-        boolean hpStarted = false;
-        boolean hpEnded = false;
+        boolean requiredExtension = false;
 
         while(true)
         {
-            byte nextReadBase, nextRefBase;
-
             moveState(state, cigarElements, searchUp, true);
             refPosition += searchUp ? 1 : -1;
 
             if(!state.isValid())
                 break;
 
-            nextReadBase = readBases[state.ReadIndex];
-            nextRefBase = refSequence.base(refPosition);
+            byte nextReadBase = readBases[state.ReadIndex];
 
-            if(!hpStarted)
+            if(!refSequence.containsPosition(refPosition))
             {
-                if(readBase == nextReadBase || refBase == nextRefBase)
-                    hpStarted = true;
-                else
-                    break;
+                state.setInvalid();
+                return false;
+            }
+
+            byte nextRefBase = refSequence.base(refPosition);
+
+            boolean hasHomopolymer = (readBase == nextReadBase) || (refBase == nextRefBase);
+            boolean nextBasesMatch = nextReadBase == nextRefBase;
+
+            if(!requiredExtension && !hasHomopolymer && nextBasesMatch) // immediate exit if no extension was required
+                return false;
+
+            if(hasHomopolymer)
+            {
+                requiredExtension = true;
             }
             else
             {
-                if(!hpEnded)
-                    hpEnded = readBase != nextReadBase && refBase != nextRefBase;
-
-                if(hpEnded)
-                {
-                    if(nextReadBase == nextRefBase && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
-                        break;
-                }
+                if(nextBasesMatch && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
+                    break;
             }
+
+            readBase = nextReadBase;
+            refBase = nextRefBase;
         }
 
-        return hpStarted;
+        return requiredExtension;
     }
-
-    /*
-    private static boolean validExtensionPoint(
-            byte readBase, byte nextReadBase, byte refBase, byte nextRefBase, final CigarOperator cigarType)
-    {
-        return readBase != nextReadBase && refBase != nextRefBase && nextReadBase == nextRefBase && cigarType == CigarOperator.M;
-    }
-    */
 
     private static void findFlankIndex(
             final ReadCigarState state, final List<CigarElement> cigarElements, final int requiredFlankLength, boolean moveUp)
     {
+        if(state.operator() == S)
+            return;
+
         int flankLength = 0;
 
         while(flankLength < requiredFlankLength || state.Element.getOperator() == I)
