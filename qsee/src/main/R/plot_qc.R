@@ -721,7 +721,7 @@ FEATURE_TYPE$BQR_BY_ORIG_QUAL$plot_func <- function(){
       ) +
       
       theme(
-         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+         axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
          axis.text.y.right = element_blank(),
          axis.ticks.y.right = element_blank(),
       )
@@ -747,7 +747,7 @@ FEATURE_TYPE$BQR_BY_SNV96_CONTEXT$plot_func <- function(){
       ) +
       
       labs(
-         title = "BQR by SNV96 context (qual. 30+)", 
+         title = paste0("BQR by SNV96 context, base quality: ", plot_data$OriginalQualBin[1]),
          x = "Mutation context", 
          y = "Phred score adjustment"
       ) +
@@ -890,7 +890,7 @@ create_report <- function(){
 
       LOGGER$debug("Plotting: %s", feature_type$name)
       plots[[feature_type$name]] <- feature_type$plot_func()
-      map[[feature_type$name]] <- LETTERS[[i]]
+      plot_letters[[feature_type$name]] <- LETTERS[[i]]
    }
 
    design <- paste(
