@@ -645,7 +645,11 @@ public final class SbxRoutines
 
         if(!record.getReadUnmappedFlag())
         {
-            int refPos = record.getAlignmentStart();
+            int readPositionStart = record.getAlignmentStart();
+            int refPos = readPositionStart;
+
+            byte[] refBases = refGenome.getBases(record.getContig(), readPositionStart, record.getAlignmentEnd());
+
             int readIndex = 0;
             byte[] readBases = record.getReadBases();
             int numEvents = 0;
@@ -689,7 +693,7 @@ public final class SbxRoutines
 
                     if(!hasNumEventsAttribute)
                     {
-                        refBase = refGenome.getBase(chromosome, refPos);
+                        refBase = refBases[refPos - readPositionStart];
 
                         if(refBase != readBase)
                             ++numEvents;
@@ -705,7 +709,7 @@ public final class SbxRoutines
                         duplexMismatchRefBase = Maps.newHashMap();
 
                     if(refBase < 0)
-                        refBase = refGenome.getBase(chromosome, refPos);
+                        refBase = refBases[refPos - readPositionStart];
 
                     duplexMismatchRefBase.put(readIndex, refBase);
 
