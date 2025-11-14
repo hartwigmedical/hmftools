@@ -22,6 +22,11 @@ import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
+import org.checkerframework.checker.units.qual.A;
+
+import htsjdk.samtools.CigarOperator;
+
 public class Alignment
 {
     private final AssemblyConfig mConfig;

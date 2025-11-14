@@ -3,7 +3,7 @@ package com.hartwig.hmftools.bamtools.remapper;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 
 import htsjdk.samtools.SAMFlag;
 
