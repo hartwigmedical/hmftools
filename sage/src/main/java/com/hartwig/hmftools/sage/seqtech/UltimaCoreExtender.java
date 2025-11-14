@@ -190,9 +190,8 @@ public class UltimaCoreExtender
                 return false;
             }
 
-            byte nextRefBase = refSequence.base(refPosition);
-
             boolean hasHomopolymer = false;
+            byte nextRefBase = refSequence.base(refPosition);
 
             if(checkHomopolymers)
             {
@@ -208,10 +207,11 @@ public class UltimaCoreExtender
                 return false;
             }
 
+            requiredExtension = true;
+
             if(!hasHomopolymer)
             {
-                refSequence.base(state.RefPosition);
-
+                nextRefBase = refSequence.base(state.RefPosition);
                 boolean nextBasesMatch = nextReadBase == nextRefBase;
 
                 if(nextBasesMatch && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
@@ -220,8 +220,6 @@ public class UltimaCoreExtender
 
             readBase = nextReadBase;
             refBase = nextRefBase;
-
-            requiredExtension = true;
         }
 
         return requiredExtension;
