@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
@@ -84,7 +85,7 @@ public class LinxBreakendInterpreterTest
     {
         return LinxTestFactory.breakendBuilder()
                 .id(id)
-                .reportedDisruption(true)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .gene(GENE)
                 .isStart(isStart)
                 .svId(1)

@@ -139,7 +139,7 @@ public class RnaFindingsChapter implements ReportChapter
         }
         else
         {
-            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
+            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.somaticGeneCopyNumbers();
 
             List<GeneExpression> reportableHighExpression = isofox.reportableHighExpression();
             String titleHighExpression = highExpressionTitle + " (" + reportableHighExpression.size() + ")";

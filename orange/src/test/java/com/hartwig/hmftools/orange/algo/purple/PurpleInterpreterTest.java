@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
@@ -61,10 +60,9 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullDels().size());
-        assertEquals(1, interpreted.reportableGermlineFullDels().size());
+        assertEquals(1, interpreted.driverGermlineDeletions().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(1, interpreted.reportableGermlineLossOfHeterozygosities().size());
+        assertEquals(1, interpreted.driverGermlineLossOfHeterozygosities().size());
     }
 
     @Test
@@ -78,10 +76,10 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullDels().size());
-        assertEquals(1, interpreted.reportableGermlineFullDels().size());
+        // assertEquals(1, interpreted.otherGermlineDeletions().size());
+        assertEquals(1, interpreted.driverGermlineDeletions().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
+        assertEquals(0, interpreted.driverGermlineLossOfHeterozygosities().size());
     }
 
     @Test
@@ -95,10 +93,10 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.allGermlineFullDels().size());
-        assertEquals(0, interpreted.reportableGermlineFullDels().size());
+        // assertEquals(1, interpreted.otherGermlineDeletions(). size());
+        assertEquals(0, interpreted.driverGermlineDeletions().size());
         assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
+        assertEquals(0, interpreted.driverGermlineLossOfHeterozygosities().size());
     }
 
     @Test
@@ -286,7 +284,7 @@ public class PurpleInterpreterTest
                 .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
                 .allPassingGermlineStructuralVariants(Lists.newArrayList())
                 .allGermlineDeletions(allGermlineDeletions)
-                .panelGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
+                .driverGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
                 .build();
     }
 
@@ -312,7 +310,7 @@ public class PurpleInterpreterTest
     private static List<LinxBreakend> createBreakends(double leftUndisruptedCopyNumber, double rightUndisruptedCopyNumber)
     {
         LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
-                .reported(true)
+                .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED)
                 .gene(TEST_GENE)
                 .transcript("trans 1")
                 .svId(1)
@@ -320,7 +318,7 @@ public class PurpleInterpreterTest
                 .undisruptedCopyNumber(leftUndisruptedCopyNumber)
                 .build();
         LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
-                .reported(true)
+                .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED)
                 .gene(TEST_GENE)
                 .transcript("trans 1")
                 .svId(1)

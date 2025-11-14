@@ -28,38 +28,35 @@ public interface PurpleRecord
     List<PurpleDriver> germlineDrivers();
 
     @NotNull
-    List<PurpleVariant> allSomaticVariants();
+    List<PurpleVariant> driverSomaticVariants();
 
     @NotNull
-    List<PurpleVariant> reportableSomaticVariants();
+    List<PurpleVariant> otherSomaticVariants();
 
     @Nullable
-    List<PurpleVariant> allGermlineVariants();
+    List<PurpleVariant> driverGermlineVariants();
 
     @Nullable
-    List<PurpleVariant> reportableGermlineVariants();
+    List<PurpleVariant> otherGermlineVariants();
 
     @NotNull
-    List<PurpleCopyNumber> allSomaticCopyNumbers();
+    List<PurpleCopyNumber> somaticCopyNumbers();
 
     @NotNull
-    List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
+    List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
 
     @NotNull
-    List<PurpleGainDeletion> reportableSomaticGainsDels();
+    List<PurpleGainDeletion> driverSomaticGainsDels();
 
     @Nullable
-    List<PurpleGermlineDeletion> allGermlineDeletions();
+    List<PurpleGermlineDeletion> otherGermlineDeletions();
 
     @Nullable
-    List<PurpleGainDeletion> allGermlineFullDels();
+    List<PurpleGainDeletion> driverGermlineDeletions();
 
     @Nullable
-    List<PurpleGainDeletion> reportableGermlineFullDels();
+    List<PurpleLossOfHeterozygosity> driverGermlineLossOfHeterozygosities();
 
     @Nullable
     List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities();
-
-    @Nullable
-    List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
 }

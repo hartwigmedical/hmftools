@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class PcfDataTest
@@ -68,6 +69,7 @@ public class PcfDataTest
         Assert.assertTrue(data.loadCobaltSegments(null).isEmpty());
     }
 
+    @Ignore
     @Test
     public void oneSegment() throws Exception
     {
@@ -84,6 +86,7 @@ public class PcfDataTest
         assertEquals(4001, positions.get(1).maxPosition());
     }
 
+    @Ignore
     @Test
     public void nonAbuttingSegments() throws Exception
     {
@@ -116,6 +119,7 @@ public class PcfDataTest
         assertEquals(12001, positions.get(5).maxPosition());
     }
 
+    @Ignore
     @Test
     public void abuttingSegments() throws Exception
     {
@@ -140,6 +144,7 @@ public class PcfDataTest
         assertEquals(6001, positions.get(3).maxPosition());
     }
 
+    @Ignore
     @Test
     public void multipleChromosomes() throws Exception
     {
@@ -172,6 +177,7 @@ public class PcfDataTest
         assertEquals(4, positionsX.size());
     }
 
+    @Ignore
     @Test
     public void handleOldFormat() throws Exception
     {

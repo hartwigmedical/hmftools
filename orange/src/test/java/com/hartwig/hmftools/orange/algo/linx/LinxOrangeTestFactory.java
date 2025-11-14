@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
@@ -42,7 +42,7 @@ public final class LinxOrangeTestFactory
                 .isCanonical(true)
                 .geneOrientation(Strings.EMPTY)
                 .disruptive(false)
-                .reported(false)
+                .reportedStatus(ReportedStatus.NONE)
                 .undisruptedCopyNumber(0D)
                 .type(LinxBreakendType.BND)
                 .regionType(TranscriptRegionType.UNKNOWN)

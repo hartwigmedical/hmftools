@@ -203,11 +203,11 @@ public class TumorStatsFactoryTest
     {
         return createMinimalTestPurpleDataBuilder()
                 .allSomaticVariants(somaticVariants)
-                .panelSomaticVariants(somaticVariants.stream().
+                .driverSomaticVariants(somaticVariants.stream().
                         filter(PurpleVariantContext::reported)
                         .collect(Collectors.toList()))
                 .allGermlineVariants(germlineVariants)
-                .panelGermlineVariants(germlineVariants.stream()
+                .driverGermlineVariants(germlineVariants.stream()
                         .filter(PurpleVariantContext::reported)
                         .collect(Collectors.toList()))
                 .build();

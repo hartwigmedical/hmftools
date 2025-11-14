@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +81,7 @@ public class BreakendSelectorTest
                 .transcriptId(transcript)
                 .geneOrientation(geneOrientation)
                 .nextSpliceExonRank(exon)
-                .reportedDisruption(false)
+                .reportedStatus(ReportedStatus.NONE)
                 .disruptive(true)
                 .build();
     }

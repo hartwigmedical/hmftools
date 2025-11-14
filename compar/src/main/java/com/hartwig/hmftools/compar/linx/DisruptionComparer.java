@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
@@ -119,7 +120,7 @@ public class DisruptionComparer implements ItemComparer
             {
                 breakends.remove(breakend);
 
-                if(matchLevel == MatchLevel.REPORTABLE && !breakend.reportedDisruption())
+                if(matchLevel == MatchLevel.REPORTABLE && breakend.reportedStatus() != ReportedStatus.REPORTED)
                     continue;
 
                 List<BreakendData> geneBreakends = geneBreakendMap.get(breakend.gene());

@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
@@ -67,7 +68,7 @@ public class FusionWriter implements CohortFileInterface
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
-                    .reportedDisruption(transcript.reportableDisruption())
+                    .reportedStatus(transcript.reportableDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NONE)
                     .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .regionType(transcript.regionType())
                     .codingType(transcript.codingType())

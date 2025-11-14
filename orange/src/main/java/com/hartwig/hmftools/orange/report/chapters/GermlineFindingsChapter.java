@@ -89,7 +89,7 @@ public class GermlineFindingsChapter implements ReportChapter
     {
         List<PurpleDriver> drivers = report.purple().germlineDrivers();
 
-        List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
+        List<PurpleVariant> reportableVariants = report.purple().driverGermlineVariants();
         if(drivers != null && reportableVariants != null)
         {
             List<VariantEntry> reportableEntries = VariantEntryFactory.create(VariantDedup.apply(reportableVariants), drivers);
@@ -100,7 +100,7 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineDeletions(@NotNull Document document)
     {
-        List<PurpleGainDeletion> reportableGermlineFullDels = report.purple().reportableGermlineFullDels();
+        List<PurpleGainDeletion> reportableGermlineFullDels = report.purple().driverGermlineDeletions();
         if(reportableGermlineFullDels != null)
         {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";
@@ -121,7 +121,7 @@ public class GermlineFindingsChapter implements ReportChapter
     private void addGermlineBreakends(@NotNull Document document)
     {
         List<LinxSvAnnotation> allGermlineStructuralVariants = report.linx().allGermlineStructuralVariants();
-        List<LinxBreakend> reportableGermlineBreakends = report.linx().reportableGermlineBreakends();
+        List<LinxBreakend> reportableGermlineBreakends = report.linx().driverGermlineBreakends();
 
         if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null)
         {

@@ -79,6 +79,6 @@ public class BreakendData
 
     public String fullStr()
     {
-        return format("%s reported(%s) transcript(%s)", svInfoStr(), Breakend.reportedDisruption(), transcriptStr());
+        return format("%s reported(%s) transcript(%s)", svInfoStr(), Breakend.reportedStatus(), transcriptStr());
     }
 }

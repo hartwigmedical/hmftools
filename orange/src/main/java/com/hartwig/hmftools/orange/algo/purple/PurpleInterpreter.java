@@ -83,23 +83,23 @@ public class PurpleInterpreter
 
         List<PurpleVariant> allSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
 
-        List<PurpleVariant> reportableSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.panelSomaticVariants());
+        List<PurpleVariant> driverSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverSomaticVariants());
 
         List<PurpleVariant> allGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.panelGermlineVariants());
+        List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverGermlineVariants());
 
-        List<PurpleGainDeletion> reportableSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
+        List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
 
         List<PurpleGainDeletion> allGermlineFullDels = null;
-        List<PurpleGainDeletion> reportableGermlineFullDels = null;
+        List<PurpleGainDeletion> driverGermlineDeletions = null;
         List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities = null;
         List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
 
         if(allGermlineDeletions != null)
         {
-            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions, mLinx.reportableGermlineBreakends(),
+            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions, mLinx.driverGermlineBreakends(),
                     purple.allPassingGermlineStructuralVariants(), mLinx.allGermlineStructuralVariants(), mDriverGenes);
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
@@ -111,10 +111,10 @@ public class PurpleInterpreter
                     mGermlineGainDelFactory.getReportabilityMap(mergedGermlineDeletions, purple.somaticGeneCopyNumbers());
 
             allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
-            reportableGermlineFullDels = selectReportablegainDels(fullDelToReportability);
+            driverGermlineDeletions = selectReportablegainDels(fullDelToReportability);
 
             LOGGER.info(" Resolved {} germline deletions of which {} are reportable",
-                    allGermlineFullDels.size(), reportableGermlineFullDels.size());
+                    allGermlineFullDels.size(), driverGermlineDeletions.size());
 
             Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability =
                     mGermlineLossOfHeterozygosityFactory.getReportabilityMap(mergedGermlineDeletions, purple.somaticGeneCopyNumbers());
@@ -132,18 +132,17 @@ public class PurpleInterpreter
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
-                .allSomaticVariants(allSomaticVariants)
-                .reportableSomaticVariants(reportableSomaticVariants)
-                .allGermlineVariants(allGermlineVariants)
-                .reportableGermlineVariants(reportableGermlineVariants)
-                .allSomaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
-                .allSomaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
-                .reportableSomaticGainsDels(reportableSomaticGainsDels)
-                .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
-                .allGermlineFullDels(allGermlineFullDels)
-                .reportableGermlineFullDels(reportableGermlineFullDels)
+                .otherSomaticVariants(allSomaticVariants)
+                .driverSomaticVariants(driverSomaticVariants)
+                .otherGermlineVariants(allGermlineVariants)
+                .driverGermlineVariants(driverGermlineVariants)
+                .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
+                .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
+                .driverSomaticGainsDels(driverSomaticGainsDels)
+                .otherGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
+                .driverGermlineDeletions(driverGermlineDeletions)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
-                .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
+                .driverGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
                 .build();
     }
 
@@ -164,7 +163,8 @@ public class PurpleInterpreter
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
-            boolean bothReported = first.reported() && second.reported();
+            boolean bothReported = first.reportedStatus() == com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED
+                    && second.reportedStatus() == com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED;
             boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
             boolean sameTranscript = first.transcript().equals(second.transcript());

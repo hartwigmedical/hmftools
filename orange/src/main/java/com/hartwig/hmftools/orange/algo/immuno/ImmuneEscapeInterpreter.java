@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +47,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(hasLOH(purple.allSomaticGeneCopyNumbers(), geneToCheck))
+            if(hasLOH(purple.somaticGeneCopyNumbers(), geneToCheck))
             {
                 return true;
             }
@@ -76,8 +75,8 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            boolean hasInactivationVariant = hasAnyInactivationVariant(purple.allSomaticVariants(), geneToCheck);
-            boolean hasGeneDeletion = isDeleted(purple.reportableSomaticGainsDels(), geneToCheck);
+            boolean hasInactivationVariant = hasAnyInactivationVariant(purple.otherSomaticVariants(), geneToCheck);
+            boolean hasGeneDeletion = isDeleted(purple.driverSomaticGainsDels(), geneToCheck);
             boolean hasHomozygousDisruption = isHomozygouslyDisrupted(linx.somaticHomozygousDisruptions(), geneToCheck);
 
             if(hasInactivationVariant || hasGeneDeletion || hasHomozygousDisruption)
@@ -140,7 +139,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(isAmplified(purple.reportableSomaticGainsDels(), geneToCheck))
+            if(isAmplified(purple.driverSomaticGainsDels(), geneToCheck))
             {
                 return true;
             }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

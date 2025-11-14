@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
 public class TestGermlineDeletionDataBuilder
@@ -56,7 +57,7 @@ public class TestGermlineDeletionDataBuilder
                         tumorCopyNumber,
                         "",
                         -1,
-                        reported
+                        reported ? ReportedStatus.REPORTED : ReportedStatus.NONE
                 ),
                 comparisonChromosome
         );

@@ -147,27 +147,27 @@ public final class TestOrangeReportFactory
     {
         return ImmutablePurpleRecord.builder()
                 .from(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addDriverSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("ARID1A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
                                 .build())
                         .build())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addDriverSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
                                 .build())
                         .build())
-                .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
+                .addDriverSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").build())
                         .addLocalPhaseSets(42256)
                         .build())
-                .allGermlineVariants(Lists.newArrayList())
-                .reportableGermlineVariants(Lists.newArrayList())
-                .reportableGermlineFullDels(Lists.newArrayList())
-                .reportableGermlineLossOfHeterozygosities(Lists.newArrayList())
+                .otherGermlineVariants(Lists.newArrayList())
+                .driverGermlineVariants(Lists.newArrayList())
+                .driverGermlineDeletions(Lists.newArrayList())
+                .driverGermlineLossOfHeterozygosities(Lists.newArrayList())
                 .build();
     }
 
@@ -186,8 +186,8 @@ public final class TestOrangeReportFactory
                 .addReportableSomaticFusions(fusion)
                 .addReportableSomaticFusions(fusion)
                 .allGermlineStructuralVariants(Lists.newArrayList())
-                .allGermlineBreakends(Lists.newArrayList())
-                .reportableGermlineBreakends(Lists.newArrayList())
+                .otherGermlineBreakends(Lists.newArrayList())
+                .driverGermlineBreakends(Lists.newArrayList())
                 .build();
     }
 

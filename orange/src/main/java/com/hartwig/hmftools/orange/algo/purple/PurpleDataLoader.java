@@ -166,9 +166,9 @@ public final class PurpleDataLoader
                 .somaticDrivers(somaticDrivers)
                 .germlineDrivers(germlineDrivers)
                 .allSomaticVariants(allSomaticVariants)
-                .panelSomaticVariants(panelSomaticVariants)
+                .driverSomaticVariants(panelSomaticVariants)
                 .allGermlineVariants(allGermlineVariants)
-                .panelGermlineVariants(panelGermlineVariants)
+                .driverGermlineVariants(panelGermlineVariants)
                 .allPassingSomaticStructuralVariants(somaticPassingSVs)
                 .allPassingGermlineStructuralVariants(germlinePassingSVs)
                 .allInferredSomaticStructuralVariants(somaticInferredSVs)
@@ -176,7 +176,7 @@ public final class PurpleDataLoader
                 .somaticCopyNumbers(PurpleCopyNumberFile.read(copyNumberTsv))
                 .somaticGeneCopyNumbers(geneCopyNumbers)
                 .allGermlineDeletions(allGermlineDeletions)
-                .panelGermlineDeletions(panelGermlineDeletions)
+                .driverGermlineDeletions(panelGermlineDeletions)
                 .segments(segments)
                 .build();
     }

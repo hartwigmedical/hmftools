@@ -410,7 +410,7 @@ public class GermlineDisruptions
                         .canonical(transcript.IsCanonical)
                         .biotype(transcript.BioType)
                         .disruptive(false)
-                        .reportedDisruption(reportable)
+                        .reportedStatus(reportable ? ReportedStatus.REPORTED : ReportedStatus.NONE)
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
                         .totalExonCount(transcript.exons().size());
 

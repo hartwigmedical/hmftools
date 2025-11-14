@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ final class BreakendSelector
         List<LinxBreakend> interestingUnreportedBreakends = Lists.newArrayList();
         for(LinxBreakend breakend : allBreakends)
         {
-            if(!breakend.reportedDisruption() && breakend.disruptive())
+            if(breakend.reportedStatus() != REPORTED && breakend.disruptive())
             {
                 if(isUnreportedBreakInPromiscuousExonRange(knownFusionCache, reportableFusions, breakend))
                 {

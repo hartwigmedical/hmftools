@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -58,7 +59,7 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.CANONICALTRANSCRIPT,
                 SVBREAKEND.GENEORIENTATION,
                 SVBREAKEND.DISRUPTIVE,
-                SVBREAKEND.REPORTEDDISRUPTION,
+                SVBREAKEND.REPORTEDSTATUS,
                 SVBREAKEND.UNDISRUPTEDCOPYNUMBER,
                 SVBREAKEND.REGIONTYPE,
                 SVBREAKEND.CODINGCONTEXT,
@@ -98,7 +99,7 @@ public class StructuralVariantFusionDAO
                     breakend.canonical(),
                     breakend.geneOrientation(),
                     breakend.disruptive(),
-                    breakend.reportedDisruption(),
+                    breakend.reportedStatus().toString(),
                     DatabaseUtil.decimal(breakend.undisruptedCopyNumber()),
                     breakend.regionType(),
                     breakend.codingType(),
@@ -257,7 +258,7 @@ public class StructuralVariantFusionDAO
                     .canonical(record.getValue(SVBREAKEND.CANONICALTRANSCRIPT) == 1)
                     .geneOrientation(record.getValue(SVBREAKEND.GENEORIENTATION))
                     .disruptive(record.getValue(SVBREAKEND.DISRUPTIVE) == 1)
-                    .reportedDisruption(record.getValue(SVBREAKEND.REPORTEDDISRUPTION) == 1)
+                    .reportedStatus(ReportedStatus.valueOf(record.getValue(SVBREAKEND.REPORTEDSTATUS)))
                     .undisruptedCopyNumber(record.getValue(SVBREAKEND.UNDISRUPTEDCOPYNUMBER))
                     .regionType(TranscriptRegionType.valueOf(record.getValue(SVBREAKEND.REGIONTYPE)))
                     .codingType(TranscriptCodingType.valueOf(record.getValue(SVBREAKEND.CODINGCONTEXT)))

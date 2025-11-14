@@ -298,7 +298,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
+        return variantDriverString(report.purple().driverSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
@@ -309,7 +309,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
+        List<PurpleVariant> reportableGermlineVariants = report.purple().driverGermlineVariants();
         List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if(reportableGermlineVariants != null && germlineDrivers != null)
         {
@@ -350,7 +350,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return copyNumberDriverString(report.purple().reportableSomaticGainsDels());
+        return copyNumberDriverString(report.purple().driverSomaticGainsDels());
     }
 
     @NotNull
@@ -361,7 +361,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainDeletion> germlineGainsDels = report.purple().reportableGermlineFullDels();
+        List<PurpleGainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
         if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;

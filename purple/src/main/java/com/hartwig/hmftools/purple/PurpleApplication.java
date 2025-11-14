@@ -94,8 +94,6 @@ public class PurpleApplication
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
 
-    private static final String VERSION = "version";
-
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
         mPurpleVersion = fromAppName(APP_NAME);

@@ -16,7 +16,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import com.google.common.collect.Lists;
-import org.jetbrains.annotations.NotNull;
+
 import org.jetbrains.annotations.Nullable;
 
 public final class ReportLimiter
@@ -55,27 +55,26 @@ public final class ReportLimiter
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
-                .allSomaticVariants(max1(purple.allSomaticVariants()))
-                .reportableSomaticVariants(max1(purple.reportableSomaticVariants()))
-                .allGermlineVariants(max1(purple.allGermlineVariants()))
-                .reportableGermlineVariants(max1(purple.reportableGermlineVariants()))
-                .allSomaticCopyNumbers(max1(purple.allSomaticCopyNumbers()))
-                .allSomaticGeneCopyNumbers(max1(purple.allSomaticGeneCopyNumbers()))
-                .reportableSomaticGainsDels(max1(purple.reportableSomaticGainsDels()))
-                .allGermlineDeletions(max1(purple.allGermlineDeletions()))
-                .allGermlineFullDels(max1(purple.allGermlineFullDels()))
-                .reportableGermlineFullDels(max1(purple.reportableGermlineFullDels()))
+                .otherSomaticVariants(max1(purple.otherSomaticVariants()))
+                .driverSomaticVariants(max1(purple.driverSomaticVariants()))
+                .otherGermlineVariants(max1(purple.otherGermlineVariants()))
+                .driverGermlineVariants(max1(purple.driverGermlineVariants()))
+                .somaticCopyNumbers(max1(purple.somaticCopyNumbers()))
+                .somaticGeneCopyNumbers(max1(purple.somaticGeneCopyNumbers()))
+                .driverSomaticGainsDels(max1(purple.driverSomaticGainsDels()))
+                .otherGermlineDeletions(max1(purple.otherGermlineDeletions()))
+                .driverGermlineDeletions(max1(purple.driverGermlineDeletions()))
                 .allGermlineLossOfHeterozygosities(max1(purple.allGermlineLossOfHeterozygosities()))
-                .reportableGermlineLossOfHeterozygosities(max1(purple.reportableGermlineLossOfHeterozygosities()))
+                .driverGermlineLossOfHeterozygosities(max1(purple.driverGermlineLossOfHeterozygosities()))
                 .build();
     }
 
     private static LinxRecord limitLinxDataToOne(final LinxRecord linx)
     {
-        List<LinxBreakend> filteredAllSomaticBreakends = max1(linx.allSomaticBreakends());
-        List<LinxBreakend> filteredReportableSomaticBreakends = max1(linx.reportableSomaticBreakends());
-        List<LinxBreakend> filteredAllGermlineBreakends = max1(linx.allGermlineBreakends());
-        List<LinxBreakend> filteredReportableGermlineBreakends = max1(linx.reportableGermlineBreakends());
+        List<LinxBreakend> filteredAllSomaticBreakends = max1(linx.otherSomaticBreakends());
+        List<LinxBreakend> filteredReportableSomaticBreakends = max1(linx.driverSomaticBreakends());
+        List<LinxBreakend> filteredAllGermlineBreakends = max1(linx.otherGermlineBreakends());
+        List<LinxBreakend> filteredReportableGermlineBreakends = max1(linx.driverGermlineBreakends());
 
         return ImmutableLinxRecord.builder()
                 .from(linx)
@@ -86,12 +85,12 @@ public final class ReportLimiter
                         filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
                 .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
-                .allSomaticBreakends(filteredAllSomaticBreakends)
-                .reportableSomaticBreakends(filteredReportableSomaticBreakends)
+                .otherSomaticBreakends(filteredAllSomaticBreakends)
+                .driverSomaticBreakends(filteredReportableSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
                 .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
-                .allGermlineBreakends(filteredAllGermlineBreakends)
-                .reportableGermlineBreakends(filteredReportableGermlineBreakends)
+                .otherGermlineBreakends(filteredAllGermlineBreakends)
+                .driverGermlineBreakends(filteredReportableGermlineBreakends)
                 .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }

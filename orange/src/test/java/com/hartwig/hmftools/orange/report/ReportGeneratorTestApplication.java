@@ -146,21 +146,21 @@ public class ReportGeneratorTestApplication
                 .from(report)
                 .purple(ImmutablePurpleRecord.builder()
                         .from(report.purple())
-                        .allSomaticVariants(report.purple().reportableSomaticVariants())
-                        .allGermlineVariants(report.purple().reportableGermlineVariants())
-                        .allSomaticCopyNumbers(Lists.newArrayList())
-                        .allSomaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().allSomaticGeneCopyNumbers(),
+                        .otherSomaticVariants(report.purple().driverSomaticVariants())
+                        .otherGermlineVariants(report.purple().driverGermlineVariants())
+                        .somaticCopyNumbers(Lists.newArrayList())
+                        .somaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().somaticGeneCopyNumbers(),
                                 report.purple().somaticDrivers()))
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())
                         .allSomaticStructuralVariants(retainReportableStructuralVariants(report.linx().allSomaticStructuralVariants(),
-                                report.linx().reportableSomaticBreakends()))
+                                report.linx().driverSomaticBreakends()))
                         .allSomaticFusions(report.linx().reportableSomaticFusions())
-                        .allSomaticBreakends(report.linx().reportableSomaticBreakends())
+                        .otherSomaticBreakends(report.linx().driverSomaticBreakends())
                         .allGermlineStructuralVariants(retainReportableStructuralVariants(report.linx().allGermlineStructuralVariants(),
-                                report.linx().reportableGermlineBreakends()))
-                        .allGermlineBreakends(report.linx().reportableGermlineBreakends())
+                                report.linx().driverGermlineBreakends()))
+                        .otherGermlineBreakends(report.linx().driverGermlineBreakends())
                         .build());
 
         if(report.isofox() != null)

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.util;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,19 +80,19 @@ public final class GermlineConversion
             mergedTumorStats = mergeTumorStats(purple);
 
             mergedDrivers = mergeGermlineDriversIntoSomatic(
-                    purple.somaticDrivers(), purple.germlineDrivers(), purple.reportableGermlineFullDels());
+                    purple.somaticDrivers(), purple.germlineDrivers(), purple.driverGermlineDeletions());
 
-            additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
+            additionalReportableVariants = toSomaticVariants(purple.driverGermlineVariants());
 
             mergedReportableSomaticGainsDels =
-                    mergeGermlineFullDels(purple.reportableGermlineFullDels(), purple.reportableSomaticGainsDels());
+                    mergeGermlineFullDels(purple.driverGermlineDeletions(), purple.driverSomaticGainsDels());
         }
         else
         {
             mergedTumorStats = purple.tumorStats();
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
-            mergedReportableSomaticGainsDels = purple.reportableSomaticGainsDels();
+            mergedReportableSomaticGainsDels = purple.driverSomaticGainsDels();
         }
 
         return ImmutablePurpleRecord.builder()
@@ -102,16 +101,15 @@ public final class GermlineConversion
                 .tumorStats(mergedTumorStats)
                 .somaticDrivers(mergedDrivers)
                 .germlineDrivers(null)
-                .addAllAllSomaticVariants(additionalReportableVariants)
-                .addAllReportableSomaticVariants(additionalReportableVariants)
-                .allGermlineVariants(null)
-                .reportableGermlineVariants(null)
-                .reportableSomaticGainsDels(mergedReportableSomaticGainsDels)
-                .allGermlineDeletions(null)
-                .allGermlineFullDels(null)
-                .reportableGermlineFullDels(null)
+                .addAllOtherSomaticVariants(additionalReportableVariants)
+                .addAllDriverSomaticVariants(additionalReportableVariants)
+                .otherGermlineVariants(null)
+                .driverGermlineVariants(null)
+                .driverSomaticGainsDels(mergedReportableSomaticGainsDels)
+                .otherGermlineDeletions(null)
+                .driverGermlineDeletions(null)
                 .allGermlineLossOfHeterozygosities(null)
-                .reportableGermlineLossOfHeterozygosities(null)
+                .driverGermlineLossOfHeterozygosities(null)
                 .build();
     }
 
@@ -120,7 +118,7 @@ public final class GermlineConversion
         return ImmutableTumorStats.builder()
                 .from(purple.tumorStats())
                 .hotspotMutationCount(
-                        germlineHotspotCount(purple.reportableGermlineVariants()) + purple.tumorStats().hotspotMutationCount())
+                        germlineHotspotCount(purple.driverGermlineVariants()) + purple.tumorStats().hotspotMutationCount())
                 .build();
     }
 
@@ -390,22 +388,22 @@ public final class GermlineConversion
             Map<Integer, Integer> svIdMapping = buildSvIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
             Map<Integer, Integer> clusterIdMapping =
                     buildClusterIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
-            Map<Integer, Integer> breakendIdMapping = buildBreakendIdMapping(linx.allSomaticBreakends(), linx.allGermlineBreakends());
+            Map<Integer, Integer> breakendIdMapping = buildBreakendIdMapping(linx.otherSomaticBreakends(), linx.otherGermlineBreakends());
 
             additionalStructuralVariants = toSomaticStructuralVariants(linx.allGermlineStructuralVariants(), svIdMapping, clusterIdMapping);
-            additionalReportableBreakends = toSomaticBreakends(linx.reportableGermlineBreakends(), breakendIdMapping, svIdMapping);
+            additionalReportableBreakends = toSomaticBreakends(linx.driverGermlineBreakends(), breakendIdMapping, svIdMapping);
             additionalHomozygousDisruptions = toSomaticHomozygousDisruptions(linx.germlineHomozygousDisruptions());
         }
 
         return ImmutableLinxRecord.builder()
                 .from(linx)
                 .addAllAllSomaticStructuralVariants(additionalStructuralVariants)
-                .addAllAllSomaticBreakends(additionalReportableBreakends)
-                .addAllReportableSomaticBreakends(additionalReportableBreakends)
+                .addAllOtherSomaticBreakends(additionalReportableBreakends)
+                .addAllDriverSomaticBreakends(additionalReportableBreakends)
                 .addAllSomaticHomozygousDisruptions(additionalHomozygousDisruptions)
                 .allGermlineStructuralVariants(null)
-                .allGermlineBreakends(null)
-                .reportableGermlineBreakends(null)
+                .otherGermlineBreakends(null)
+                .driverGermlineBreakends(null)
                 .germlineHomozygousDisruptions(null)
                 .build();
     }

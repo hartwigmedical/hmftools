@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.linx;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -93,7 +94,7 @@ public final class LinxTestFactory
                 .canonical(true)
                 .geneOrientation(Strings.EMPTY)
                 .disruptive(false)
-                .reportedDisruption(false)
+                .reportedStatus(ReportedStatus.NONE)
                 .undisruptedCopyNumber(0D)
                 .regionType(TranscriptRegionType.UNKNOWN)
                 .codingType(TranscriptCodingType.UNKNOWN)

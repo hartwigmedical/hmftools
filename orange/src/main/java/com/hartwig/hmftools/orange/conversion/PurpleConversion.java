@@ -75,6 +75,7 @@ public final class PurpleConversion
                 .driverLikelihood(catalog.driverLikelihood())
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())
+                .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.valueOf(catalog.reportedStatus().name()))
                 .build();
     }
 

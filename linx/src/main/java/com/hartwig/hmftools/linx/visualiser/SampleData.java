@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
@@ -318,10 +319,10 @@ public class SampleData
             try
             {
                 // reportable disruptions
-                final List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
+                List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
 
-                final List<Integer> svIds = breakends.stream()
-                        .filter(x -> x.reportedDisruption()).map(x -> x.svId()).collect(toList());
+                List<Integer> svIds = breakends.stream()
+                        .filter(x -> x.reportedStatus() == ReportedStatus.REPORTED).map(x -> x.svId()).collect(toList());
 
                 for(Integer svId : svIds)
                 {
@@ -330,7 +331,7 @@ public class SampleData
                          clusterIds.add(svData.ClusterId);
                 }
 
-                final List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
+                List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
                 drivers.stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
             }
             catch(Exception e)

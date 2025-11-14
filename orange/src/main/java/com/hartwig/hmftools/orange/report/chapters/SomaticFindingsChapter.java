@@ -2,12 +2,10 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -115,7 +113,7 @@ public class SomaticFindingsChapter implements ReportChapter
             List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
             List<VariantEntry> reportableVariants =
-                    VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
+                    VariantEntryFactory.create(VariantDedup.apply(report.purple().driverSomaticVariants()), somaticDrivers);
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
             document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
         }
@@ -150,10 +148,10 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().reportableSomaticGainsDels().size() + ")";
+            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().driverSomaticGainsDels().size() + ")";
             document.add(GainDeletionTable.build(titleDrivers,
                     contentWidth(),
-                    report.purple().reportableSomaticGainsDels(),
+                    report.purple().driverSomaticGainsDels(),
                     report.isofox(),
                     reportResources));
         }
@@ -232,7 +230,8 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(),
+            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(
+                    report.linx().driverSomaticBreakends(),
                     report.linx().allSomaticStructuralVariants(),
                     report.linx().somaticDrivers());
 

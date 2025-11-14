@@ -26,13 +26,13 @@ public interface PurpleData
 
     List<PurpleVariantContext> allSomaticVariants();
 
-    List<PurpleVariantContext> panelSomaticVariants();
+    List<PurpleVariantContext> driverSomaticVariants();
 
     @Nullable
     List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
-    List<PurpleVariantContext> panelGermlineVariants();
+    List<PurpleVariantContext> driverGermlineVariants();
 
     List<StructuralVariant> allPassingSomaticStructuralVariants();
 
@@ -52,7 +52,7 @@ public interface PurpleData
     List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable
-    List<GermlineDeletion> panelGermlineDeletions();
+    List<GermlineDeletion> driverGermlineDeletions();
 
     List<Segment> segments();
 }

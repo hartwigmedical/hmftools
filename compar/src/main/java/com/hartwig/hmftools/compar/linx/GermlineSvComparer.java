@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
@@ -81,7 +82,7 @@ public class GermlineSvComparer implements ItemComparer
 
             for(LinxBreakend breakend : LinxBreakend.read(germlineBreakendFile))
             {
-                if(reportedOnly && !breakend.reportedDisruption())
+                if(reportedOnly && breakend.reportedStatus() != ReportedStatus.REPORTED)
                     continue;
 
                 if(germlineSvs == null)

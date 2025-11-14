@@ -36,23 +36,23 @@ public class ImmuneEscapeInterpreterTest
     public void canDetectFullSpectrumOnRealData()
     {
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
-                .addAllSomaticVariants(TestPurpleVariantFactory.builder()
+                .addOtherSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("HLA-C")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.MISSENSE).build())
                         .biallelic(true)
                         .subclonalLikelihood(0D)
                         .build())
-                .addReportableSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
                         .gene("TABBP")
                         .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .isCanonical(false)
                         .build())
-                .addReportableSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
                         .gene("CD274")
                         .interpretation(CopyNumberInterpretation.PARTIAL_GAIN)
                         .isCanonical(true)
                         .build())
-                .addReportableSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
                         .gene("SETDB1")
                         .interpretation(CopyNumberInterpretation.FULL_GAIN)
                         .isCanonical(true)
@@ -191,7 +191,7 @@ public class ImmuneEscapeInterpreterTest
     @NotNull
     private static PurpleRecord withLOH(@NotNull String gene)
     {
-        return TestPurpleInterpretationFactory.builder().addAllSomaticGeneCopyNumbers(
+        return TestPurpleInterpretationFactory.builder().addSomaticGeneCopyNumbers(
                         TestPurpleGeneCopyNumberFactory.builder()
                                 .gene(gene).minMinorAlleleCopyNumber(0D).minCopyNumber(1D).build())
                 .build();
@@ -200,7 +200,7 @@ public class ImmuneEscapeInterpreterTest
     @NotNull
     private static PurpleRecord withoutLOH(@NotNull String gene)
     {
-        return TestPurpleInterpretationFactory.builder().addAllSomaticGeneCopyNumbers(
+        return TestPurpleInterpretationFactory.builder().addSomaticGeneCopyNumbers(
                         TestPurpleGeneCopyNumberFactory.builder()
                                 .gene(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build())
                 .build();
@@ -222,7 +222,7 @@ public class ImmuneEscapeInterpreterTest
     private static PurpleRecord withVariant(@NotNull String gene, @NotNull PurpleCodingEffect codingEffect,
             boolean biallelic, double subclonalLikelihood)
     {
-        return TestPurpleInterpretationFactory.builder().addAllSomaticVariants(
+        return TestPurpleInterpretationFactory.builder().addOtherSomaticVariants(
                         TestPurpleVariantFactory.builder()
                                 .gene(gene)
                                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(codingEffect).build())
@@ -236,7 +236,7 @@ public class ImmuneEscapeInterpreterTest
     private static PurpleRecord withDeletion(@NotNull String gene)
     {
         return TestPurpleInterpretationFactory.builder()
-                .addReportableSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
                         .gene(gene)
                         .isCanonical(true)
                         .interpretation(CopyNumberInterpretation.FULL_DEL)
@@ -248,7 +248,7 @@ public class ImmuneEscapeInterpreterTest
     private static PurpleRecord withAmplification(@NotNull String gene)
     {
         return TestPurpleInterpretationFactory.builder()
-                .addReportableSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
                         .gene(gene)
                         .isCanonical(true)
                         .interpretation(CopyNumberInterpretation.FULL_GAIN)

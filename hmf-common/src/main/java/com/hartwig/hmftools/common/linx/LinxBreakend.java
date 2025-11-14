@@ -15,6 +15,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.immutables.value.Value;
 
@@ -31,7 +32,7 @@ public abstract class LinxBreakend
     public abstract boolean canonical();
     public abstract String geneOrientation();
     public abstract boolean disruptive();
-    public abstract boolean reportedDisruption();
+    public abstract ReportedStatus reportedStatus();
     public abstract double undisruptedCopyNumber();
     public abstract TranscriptRegionType regionType();
     public abstract TranscriptCodingType codingType();
@@ -113,10 +114,19 @@ public abstract class LinxBreakend
 
         Integer vcfIdIndex = fieldsIndexMap.get("vcfId");
         Integer coordsIndex = fieldsIndexMap.get("coords");
+        Integer reportedIndex = fieldsIndexMap.get("reportedDisruption");
+        Integer reportedStatusIndex = fieldsIndexMap.get("reportedStatus");
 
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM);
+
+            ReportedStatus reportedStatus;
+
+            if(reportedStatusIndex != null)
+                reportedStatus = ReportedStatus.valueOf(values[reportedStatusIndex]);
+            else
+                reportedStatus = Boolean.parseBoolean(values[reportedIndex]) ? ReportedStatus.REPORTED : ReportedStatus.NONE;
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
@@ -129,7 +139,7 @@ public abstract class LinxBreakend
                     .canonical(Boolean.parseBoolean(values[fieldsIndexMap.get("canonical")]))
                     .geneOrientation(values[fieldsIndexMap.get("geneOrientation")])
                     .disruptive(Boolean.parseBoolean(values[fieldsIndexMap.get("disruptive")]))
-                    .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
+                    .reportedStatus(reportedStatus)
                     .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
                     .regionType(TranscriptRegionType.valueOf(values[fieldsIndexMap.get("regionType")]))
                     .codingType(TranscriptCodingType.valueOf(values[fieldsIndexMap.get("codingType")]))
@@ -160,7 +170,7 @@ public abstract class LinxBreakend
                 .add("canonical")
                 .add("geneOrientation")
                 .add("disruptive")
-                .add("reportedDisruption")
+                .add("reportedStatus")
                 .add("undisruptedCopyNumber")
                 .add("regionType")
                 .add("codingType")
@@ -188,7 +198,7 @@ public abstract class LinxBreakend
                 .add(String.valueOf(breakend.canonical()))
                 .add(String.valueOf(breakend.geneOrientation()))
                 .add(String.valueOf(breakend.disruptive()))
-                .add(String.valueOf(breakend.reportedDisruption()))
+                .add(String.valueOf(breakend.reportedStatus()))
                 .add(String.format("%.4f", breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
                 .add(String.valueOf(breakend.codingType()))

@@ -10,7 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
@@ -51,7 +51,7 @@ public class LinxBreakendInterpreter
                 .geneOrientation(linxBreakend.geneOrientation())
                 .isCanonical(linxBreakend.canonical())
                 .disruptive(linxBreakend.disruptive())
-                .reported(linxBreakend.reportedDisruption())
+                .reportedStatus(ReportedStatus.valueOf(linxBreakend.reportedStatus().name()))
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
                 .type(svAnnotation != null ? LinxBreakendType.valueOf(svAnnotation.type().name()) : LinxBreakendType.BND)
                 .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))

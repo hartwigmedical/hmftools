@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.orange.OrangeConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -74,8 +75,7 @@ public final class LinxDataLoader
             boolean includeNonGenePanelEvents)
             throws IOException
     {
-        List<LinxSvAnnotation> allSomaticStructuralVariants = includeNonGenePanelEvents ?
-                LinxSvAnnotation.read(somaticStructuralVariantTsv) : Collections.emptyList();
+        List<LinxSvAnnotation> allSomaticStructuralVariants = LinxSvAnnotation.read(somaticStructuralVariantTsv);
 
         List<LinxDriver> allSomaticDrivers = LinxDriver.read(somaticDriverTsv);
 
@@ -89,7 +89,11 @@ public final class LinxDataLoader
         List<LinxBreakend> reportableSomaticBreakends = selectReportableBreakends(allSomaticBreakends);
 
         if(!includeNonGenePanelEvents)
+        {
             allSomaticBreakends.clear();
+
+            // TODO: can now clear any SV annotations not required by reportable breakends or fusions
+        }
 
         List<HomozygousDisruption> somaticHomozygousDisruptions = HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(
                 somaticDriverCatalogTsv);
@@ -134,9 +138,9 @@ public final class LinxDataLoader
                 .allSomaticSvAnnotations(allSomaticStructuralVariants)
                 .somaticDrivers(allSomaticDrivers)
                 .allSomaticFusions(allSomaticFusions)
-                .reportableSomaticFusions(reportableSomaticFusions)
+                .reportedSomaticFusions(reportableSomaticFusions)
                 .allSomaticBreakends(allSomaticBreakends)
-                .reportableSomaticBreakends(reportableSomaticBreakends)
+                .driverSomaticBreakends(reportableSomaticBreakends)
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .fusionClusterIds(fusionClusterIds)
                 .svIdToClusterId(svIdToClusterId)
@@ -144,9 +148,9 @@ public final class LinxDataLoader
                 .clusterIdToExonCount(clusterIdToExonCount)
                 .allGermlineSvAnnotations(allGermlineStructuralVariants)
                 .allGermlineBreakends(allGermlineBreakends)
-                .reportableGermlineBreakends(reportableGermlineBreakends)
+                .driverGermlineBreakends(reportableGermlineBreakends)
                 .allGermlineDisruptions(allGermlineDisruptions)
-                .reportableGermlineDisruptions(reportableGermlineDisruptions)
+                .driverGermlineDisruptions(reportableGermlineDisruptions)
                 .germlineHomozygousDisruptions(germlineHomozygousDisruptions)
                 .build();
     }
@@ -169,7 +173,7 @@ public final class LinxDataLoader
         List<LinxBreakend> reportableBreakends = new ArrayList<>();
         for(LinxBreakend breakend : breakends)
         {
-            if(breakend.reportedDisruption())
+            if(breakend.reportedStatus() == ReportedStatus.REPORTED)
             {
                 reportableBreakends.add(breakend);
             }
