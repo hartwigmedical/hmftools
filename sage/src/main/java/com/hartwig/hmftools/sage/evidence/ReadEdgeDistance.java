@@ -47,12 +47,14 @@ public class ReadEdgeDistance
     public double maxAltDistanceFromEdge() { return mMaxDistanceFromEdgeAlt; }
     public double maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
 
-    public double avgDistanceFromEdge() { return caldAdjustedAvgEdge(mTotalDistanceFromEdge); }
-    public double avgAltDistanceFromEdge() { return caldAdjustedAvgEdge(mTotalDistanceFromEdgeAlt); }
+    public double avgDistanceFromEdge() { return calcAdjustedAvgEdge(false); }
+    public double avgAltDistanceFromEdge() { return calcAdjustedAvgEdge(true); }
 
-    private double caldAdjustedAvgEdge(double totalDistanceFromEdge)
+    private double calcAdjustedAvgEdge(boolean useAlt)
     {
-        double average = mUpdatesAlt > 0 ? mTotalDistanceFromEdgeAlt / mUpdatesAlt : 0;
+        double totalDistance = useAlt ? mTotalDistanceFromEdgeAlt : mTotalDistanceFromEdge;
+        int updates = useAlt ? mUpdatesAlt : mUpdates;
+        double average = updates > 0 ? totalDistance / updates : 0;
         return average <= 0.5 ? average : 1 - average;
     }
 

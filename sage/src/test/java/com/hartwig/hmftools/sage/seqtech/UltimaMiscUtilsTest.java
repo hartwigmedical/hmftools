@@ -33,9 +33,7 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
-import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.CigarElement;
@@ -283,11 +281,28 @@ public class UltimaMiscUtilsTest
         assertEquals(32, newReadCigarInfo.FlankIndexEnd);
         assertEquals(132, newReadCigarInfo.FlankPositionEnd);
         assertEquals("29M", cigarElementsToStr(newReadCigarInfo.Cigar));
+
+        // test 3: no HP and core end bases match
+        // pos / index         10             20             30        40
+        //           0123456789012345     67890     12345678901234567890123456789
+        refBases =  "AACCGGTTAACCGATC" + "ACTCA" + "CTAGACGGTTAACCGGTT";
+        readBases = "AACCGGTTAACCGATT" + "ACGCA" + "TTAGACGGTTAACCGGTT";
+        //                 FFFFFFFFFF               FFFFFFFFFF
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertTrue(checkEqual(readCigarInfo, newReadCigarInfo));
     }
 
     @Test
     public void testCoreExtensionSoftClips()
     {
+        // test 1: left flank is in soft-clip and requires extension, making it invalid
+
         // pos / index                10             20             30
         //                  0123456789012345     67890     123456789012345678
         String refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "TTAACCGGTTAACCGGTT";
@@ -308,16 +323,9 @@ public class UltimaMiscUtilsTest
         ReadCigarInfo newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
-        assertNotNull(newReadCigarInfo);
-        assertEquals(6, newReadCigarInfo.FlankIndexStart);
-        assertEquals(106, newReadCigarInfo.FlankPositionStart);
-        assertEquals(116, newReadCigarInfo.CorePositionStart);
-        assertEquals(123, newReadCigarInfo.CorePositionEnd);
-        assertEquals(33, newReadCigarInfo.FlankIndexEnd);
-        assertEquals(133, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("2S26M", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertNull(newReadCigarInfo);
 
-        // and now on the right in the core
+        // test 2: and now on the right in the core
         readAlignmentStart = 100;
 
         readCigarInfo = new ReadCigarInfo(
@@ -331,16 +339,9 @@ public class UltimaMiscUtilsTest
         newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
 
-        assertNotNull(newReadCigarInfo);
-        assertEquals(3, newReadCigarInfo.FlankIndexStart);
-        assertEquals(103, newReadCigarInfo.FlankPositionStart);
-        assertEquals(113, newReadCigarInfo.CorePositionStart);
-        assertEquals(120, newReadCigarInfo.CorePositionEnd);
-        assertEquals(30, newReadCigarInfo.FlankIndexEnd);
-        assertEquals(130, newReadCigarInfo.FlankPositionEnd);
-        assertEquals("19M9S", cigarElementsToStr(newReadCigarInfo.Cigar));
+        assertNull(newReadCigarInfo);
 
-        // accept truncated flank in append mode if we extend from M into S
+        // test 3: accept truncated flank in append mode if we extend from M into S
         cigarElements = Lists.newArrayList(
                 new CigarElement(31, M),
                 new CigarElement(8, S));
@@ -357,10 +358,33 @@ public class UltimaMiscUtilsTest
         assertEquals(130, newReadCigarInfo.FlankPositionEnd);
         assertEquals("28M", cigarElementsToStr(newReadCigarInfo.Cigar));
 
-        // otherwise reject read context
+        // test 4: otherwise reject read context
         newReadCigarInfo = extendUltimaCore(
                 readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
         assertNull(newReadCigarInfo);
+
+
+        // test 5: if core starts in soft-clip but does not require extension, still check/extend the other side
+        refBases =  "AACCGGTTAACCGGTT" + "TACAT" + "ATAACCGGTTAACCGGTT";
+        readBases = refBases.substring(0, 18) + "G" + refBases.substring(19);
+
+        refSequence = new RefSequence(100, refBases.getBytes());
+
+        cigarElements = Lists.newArrayList(
+                new CigarElement(29, M),
+                new CigarElement(10, S));
+
+        newReadCigarInfo = extendUltimaCore(
+                readBases.getBytes(), refSequence, readAlignmentStart, cigarElements, readCigarInfo, DEFAULT_FLANK_LENGTH, false);
+
+        assertNotNull(newReadCigarInfo);
+        assertEquals(3, newReadCigarInfo.FlankIndexStart);
+        assertEquals(103, newReadCigarInfo.FlankPositionStart);
+        assertEquals(113, newReadCigarInfo.CorePositionStart);
+        assertEquals(120, newReadCigarInfo.CorePositionEnd);
+        assertEquals(30, newReadCigarInfo.FlankIndexEnd);
+        assertEquals(130, newReadCigarInfo.FlankPositionEnd);
+        assertEquals("26M2S", cigarElementsToStr(newReadCigarInfo.Cigar));
     }
 
     @Test

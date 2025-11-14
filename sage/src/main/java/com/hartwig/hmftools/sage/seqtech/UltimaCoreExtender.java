@@ -43,10 +43,11 @@ public class UltimaCoreExtender
         boolean lowerInSoftClip = readCigarInfo.FlankPositionStart < readAlignmentStart;
         boolean upperInSoftClip = readCigarInfo.FlankPositionEnd > readAlignmentEnd;
 
+        moveToRefPosition(lowerState, cigarElements, readCigarInfo.CorePositionStart);
+        moveToRefPosition(upperState, cigarElements, readCigarInfo.CorePositionEnd);
+
         if(!lowerInSoftClip)
         {
-            moveToRefPosition(lowerState, cigarElements, readCigarInfo.CorePositionStart);
-
             if(lowerState.isValid())
                 extendedStart = findCoreExtension(readBases, refSequence, cigarElements, lowerState, false);
 
@@ -75,14 +76,16 @@ public class UltimaCoreExtender
         }
         else
         {
+            // check whether extension would be required and return an invalid context if so
+            if(requiresCoreExtension(readBases, refSequence, cigarElements, lowerState, false))
+                return null;
+
             // move to the existing flank start
             moveToIndex(lowerState, cigarElements, readCigarInfo.FlankIndexStart);
         }
 
         if(!upperInSoftClip)
         {
-            moveToRefPosition(upperState, cigarElements, readCigarInfo.CorePositionEnd);
-
             if(upperState.isValid())
                 extendedEnd = findCoreExtension(readBases, refSequence, cigarElements, upperState, true);
 
@@ -103,11 +106,15 @@ public class UltimaCoreExtender
             }
             else
             {
+                upperState = ReadCigarState.initialise(readAlignmentStart, cigarElements);
                 moveToRefPosition(upperState, cigarElements, readCigarInfo.FlankPositionEnd);
             }
         }
         else
         {
+            if(requiresCoreExtension(readBases, refSequence, cigarElements, upperState, true))
+                return null;
+
             moveToIndex(upperState, cigarElements, readCigarInfo.FlankIndexEnd);
         }
 
@@ -136,6 +143,23 @@ public class UltimaCoreExtender
 
         if(state.operator() == S) // for this routine, the adjusted core and flanks cannot be within a soft-clip
             state.setInvalid();
+    }
+
+    private static boolean requiresCoreExtension(
+            final byte[] readBases, final RefSequence refSequence, final List<CigarElement> cigarElements,
+            final ReadCigarState state, boolean searchUp)
+    {
+        byte readBase = readBases[state.ReadIndex];
+        int refPosition = state.RefPosition;
+        byte refBase = refSequence.base(state.RefPosition);
+
+        moveState(state, cigarElements, searchUp, true);
+
+        byte nextReadBase = readBases[state.ReadIndex];
+        refPosition += searchUp ? 1 : -1;
+        byte nextRefBase = refSequence.base(refPosition);
+
+        return (readBase != refBase || readBase == nextReadBase || refBase == nextRefBase);
     }
 
     private static boolean findCoreExtension(
@@ -178,8 +202,6 @@ public class UltimaCoreExtender
                     checkHomopolymers = false;
             }
 
-            boolean nextBasesMatch = nextReadBase == nextRefBase;
-
             if(!requiredExtension && !hasHomopolymer && readBase == refBase)
             {
                 // immediate exit if no extension was required
@@ -188,6 +210,10 @@ public class UltimaCoreExtender
 
             if(!hasHomopolymer)
             {
+                refSequence.base(state.RefPosition);
+
+                boolean nextBasesMatch = nextReadBase == nextRefBase;
+
                 if(nextBasesMatch && (state.operator() == CigarOperator.M || state.operator() == CigarOperator.S))
                     break;
             }

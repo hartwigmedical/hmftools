@@ -127,7 +127,7 @@ public class ReadCigarState
         {
             moveState(state, cigarElements, moveUp);
 
-            if(!state.mValid)
+            if(!state.isValid())
                 break;
         }
 
@@ -141,7 +141,7 @@ public class ReadCigarState
         {
             moveState(state, cigarElements, state.ReadIndex < targetIndex);
 
-            if(!state.mValid)
+            if(!state.isValid())
                 break;
         }
 

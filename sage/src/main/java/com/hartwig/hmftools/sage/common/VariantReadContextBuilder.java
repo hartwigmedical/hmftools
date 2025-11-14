@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -187,8 +188,14 @@ public class VariantReadContextBuilder
             if(newReadCigarInfo != null)
             {
                 readCigarInfo = newReadCigarInfo;
-                readCoreStart = readCigarInfo.FlankIndexStart + (readCigarInfo.CorePositionStart - readCigarInfo.FlankPositionStart);
-                readCoreEnd = readCigarInfo.FlankIndexEnd - (readCigarInfo.FlankPositionEnd - readCigarInfo.CorePositionEnd);
+
+                int maxPosStart = max(readCigarInfo.FlankPositionStart, readCigarInfo.ReadAlignmentStart);
+
+                readCoreStart = readCigarInfo.FlankIndexStart + CigarUtils.getReadIndexFromPosition(
+                        maxPosStart, readCigarInfo.Cigar, readCigarInfo.CorePositionStart, false, true);
+
+                readCoreEnd = readCigarInfo.FlankIndexStart + CigarUtils.getReadIndexFromPosition(
+                        maxPosStart, readCigarInfo.Cigar, readCigarInfo.CorePositionEnd, false, true);
             }
             else
             {
