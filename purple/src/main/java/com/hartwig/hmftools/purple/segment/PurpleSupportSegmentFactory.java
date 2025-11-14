@@ -123,7 +123,6 @@ public class PurpleSupportSegmentFactory
                 GenomePosition firstRatioBreak = pcfPositions.get(0);
 
                 segment.setEnd(firstRatioBreak.position() - 1);
-                segment.setMaxStart(min(segment.maxStart(), segment.end()));
 
                 result.add(segment);
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position(), pcfPositions);

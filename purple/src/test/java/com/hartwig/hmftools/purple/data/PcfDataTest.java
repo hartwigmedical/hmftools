@@ -68,7 +68,6 @@ public class PcfDataTest
         Assert.assertTrue(data.loadCobaltSegments(null, PCFSource.REFERENCE_RATIO).isEmpty());
     }
 
-    @Ignore
     @Test
     public void oneSegment() throws Exception
     {
