@@ -2,9 +2,7 @@ package com.hartwig.hmftools.purple.data;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -27,10 +26,10 @@ public class PcfDataTest
     public void comparison() throws Exception
     {
         String baselineDir = "/Users/timlavers/work/junk/";
-        ListMultimap<Chromosome, PCFPosition> baseline = new PcfData(baselineDir).loadCobaltSegments("COLO829v003T");
+        ListMultimap<Chromosome, PCFPosition> baseline = new PcfData(baselineDir).loadCobaltSegments("COLO829v003T", PCFSource.TUMOR_RATIO);
 
         String newVersionDir = "/Users/timlavers/work/batches/2025/11/13/1/cobalt/";
-        ListMultimap<Chromosome, PCFPosition> newVersion = new PcfData(newVersionDir).loadCobaltSegments("COLO829v003T");
+        ListMultimap<Chromosome, PCFPosition> newVersion = new PcfData(newVersionDir).loadCobaltSegments("COLO829v003T", PCFSource.TUMOR_RATIO);
 
         var chr1Baseline = baseline.get(HumanChromosome._1);
         var newChr1Baseline = newVersion.get(HumanChromosome._1);
@@ -66,14 +65,14 @@ public class PcfDataTest
     @Test
     public void returnEmptyForNull() throws Exception
     {
-        Assert.assertTrue(data.loadCobaltSegments(null).isEmpty());
+        Assert.assertTrue(data.loadCobaltSegments(null, PCFSource.REFERENCE_RATIO).isEmpty());
     }
 
     @Ignore
     @Test
     public void oneSegment() throws Exception
     {
-        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s1");
+        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s1", PCFSource.REFERENCE_RATIO);
         assertEquals(1, loaded.keySet().size());
         List<PCFPosition> positions = loaded.get(HumanChromosome._1);
         assertEquals(2, positions.size());
@@ -84,13 +83,13 @@ public class PcfDataTest
         assertEquals(4001, positions.get(1).position());
         assertEquals(4001, positions.get(1).minPosition());
         assertEquals(4001, positions.get(1).maxPosition());
+        assertEquals(PCFSource.REFERENCE_RATIO, positions.get(0).Source);
     }
 
-    @Ignore
     @Test
     public void nonAbuttingSegments() throws Exception
     {
-        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s2");
+        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s2", PCFSource.REFERENCE_RATIO);
         assertEquals(1, loaded.keySet().size());
         List<PCFPosition> positions = loaded.get(HumanChromosome._1);
         assertEquals(6, positions.size());
@@ -119,11 +118,10 @@ public class PcfDataTest
         assertEquals(12001, positions.get(5).maxPosition());
     }
 
-    @Ignore
     @Test
     public void abuttingSegments() throws Exception
     {
-        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s3");
+        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s3", PCFSource.REFERENCE_RATIO);
         assertEquals(1, loaded.keySet().size());
         List<PCFPosition> positions = loaded.get(HumanChromosome._1);
         assertEquals(4, positions.size());
@@ -144,11 +142,10 @@ public class PcfDataTest
         assertEquals(6001, positions.get(3).maxPosition());
     }
 
-    @Ignore
     @Test
     public void multipleChromosomes() throws Exception
     {
-        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s4");
+        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s4", PCFSource.REFERENCE_RATIO);
         assertEquals(5, loaded.keySet().size());
         List<PCFPosition> positions1 = loaded.get(HumanChromosome._1);
 
@@ -177,11 +174,10 @@ public class PcfDataTest
         assertEquals(4, positionsX.size());
     }
 
-    @Ignore
     @Test
     public void handleOldFormat() throws Exception
     {
-        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s5");
+        ListMultimap<Chromosome, PCFPosition> loaded = data.loadCobaltSegments("s5",  PCFSource.TUMOR_RATIO);
         assertEquals(2, loaded.keySet().size());
         List<PCFPosition> positions1 = loaded.get(HumanChromosome._1);
 
@@ -189,11 +185,12 @@ public class PcfDataTest
         assertEquals(820001, positions1.get(0).position());
         assertEquals(1, positions1.get(0).minPosition());
         assertEquals(820001, positions1.get(0).maxPosition());
+        assertEquals(PCFSource.TUMOR_RATIO, positions1.get(0).Source);
     }
 
     @Test(expected = org.apache.commons.cli.ParseException.class)
     public void handleMissingFile() throws Exception
     {
-        data.loadCobaltSegments("missing");
+        data.loadCobaltSegments("missing", PCFSource.TUMOR_RATIO);
     }
 }

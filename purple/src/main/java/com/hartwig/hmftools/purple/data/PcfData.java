@@ -27,7 +27,7 @@ public class PcfData
         Preconditions.checkArgument(Directory.isDirectory(), "Not a directory: " + directory);
     }
 
-    public ListMultimap<Chromosome, PCFPosition> loadCobaltSegments(String sample) throws IOException, ParseException
+    public ListMultimap<Chromosome, PCFPosition> loadCobaltSegments(String sample, PCFSource source) throws IOException, ParseException
     {
         if (sample == null)
         {
@@ -40,6 +40,6 @@ public class PcfData
         }
 
         PPL_LOGGER.info("reading Cobalt segments from {}", pcfFileName);
-        return PCFFile.readPositions(PurpleConstants.WINDOW_SIZE, PCFSource.TUMOR_RATIO, pcfFileName);
+        return PCFFile.readPositions(PurpleConstants.WINDOW_SIZE, source, pcfFileName);
     }
 }

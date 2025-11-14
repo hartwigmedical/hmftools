@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.purple.data.PcfData;
 
 import org.apache.commons.cli.ParseException;
@@ -42,8 +43,8 @@ public class CobaltData
             throws ParseException, IOException
     {
         PcfData pcfData = new PcfData(cobaltDirectory);
-        TumorSegments = pcfData.loadCobaltSegments(tumorId);
-        ReferenceSegments = pcfData.loadCobaltSegments(referenceId);
+        TumorSegments = pcfData.loadCobaltSegments(tumorId, PCFSource.TUMOR_RATIO);
+        ReferenceSegments = pcfData.loadCobaltSegments(referenceId, PCFSource.REFERENCE_RATIO);
 
         String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
         if(!new File(cobaltFilename).exists())
