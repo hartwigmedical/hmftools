@@ -5,6 +5,9 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
+import static com.hartwig.hmftools.pave.FilterType.ALL;
+import static com.hartwig.hmftools.pave.FilterType.PANEL;
+import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
@@ -144,9 +147,19 @@ public class ChromosomeTask implements Callable<Void>
 
         VariantData variant = VariantData.fromContext(variantContext);
 
-        if(!mConfig.ProcessNonPass)
+        boolean isPass = variantContext.getFilters().isEmpty() || variantContext.getFilters().contains(PASS_FILTER);
+
+        if(mConfig.Filter == PASS)
         {
-            if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
+            if(!isPass)
+                return;
+        }
+        else if(mConfig.Filter == PANEL)
+        {
+            VariantTier tier = VariantTier.fromContext(variantContext);
+
+            // anything in the panel or passing variants
+            if(tier != VariantTier.HOTSPOT && tier != VariantTier.PANEL && !isPass)
                 return;
         }
 
