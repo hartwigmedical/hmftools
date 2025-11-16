@@ -149,17 +149,29 @@ public class UltimaCoreExtender
             final byte[] readBases, final RefSequence refSequence, final List<CigarElement> cigarElements,
             final ReadCigarState state, boolean searchUp)
     {
+        if(!state.isValid()) // if unclear return an invalid state
+            return true;
+
+        if(state.ReadIndex < 0 || state.ReadIndex >= readBases.length)
+            return true;
+
         byte readBase = readBases[state.ReadIndex];
         int refPosition = state.RefPosition;
         byte refBase = refSequence.base(state.RefPosition);
 
+        if(readBase != refBase)
+            return true;
+
         moveState(state, cigarElements, searchUp, true);
+
+        if(state.ReadIndex < 0 || state.ReadIndex >= readBases.length)
+            return true;
 
         byte nextReadBase = readBases[state.ReadIndex];
         refPosition += searchUp ? 1 : -1;
         byte nextRefBase = refSequence.base(refPosition);
 
-        return (readBase != refBase || readBase == nextReadBase || refBase == nextRefBase);
+        return (readBase == nextReadBase || refBase == nextRefBase);
     }
 
     private static boolean findCoreExtension(
