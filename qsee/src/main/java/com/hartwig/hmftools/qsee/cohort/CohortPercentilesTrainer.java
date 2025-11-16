@@ -17,7 +17,6 @@ import com.hartwig.hmftools.qsee.common.QseeFileCommon;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
-import com.hartwig.hmftools.qsee.prep.CategoryPrepFactory;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
 import com.hartwig.hmftools.qsee.prep.FeaturePrep;
 
@@ -82,7 +81,7 @@ public class CohortPercentilesTrainer
             return new ArrayList<>();
         }
 
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mCommonPrepConfig).createCategoryPreps();
+        List<CategoryPrep> categoryPreps = FeaturePrep.createCategoryPreps(mCommonPrepConfig);
         List<FeaturePercentiles> cohortPercentiles = new ArrayList<>();
 
         boolean writeCohortFeatures = mTrainConfig.WriteCohortFeatures;

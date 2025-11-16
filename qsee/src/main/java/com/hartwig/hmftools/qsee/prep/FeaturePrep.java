@@ -12,6 +12,14 @@ import com.hartwig.hmftools.qsee.cohort.FeatureMatrix;
 import com.hartwig.hmftools.qsee.common.SampleType;
 import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.FeatureKey;
+import com.hartwig.hmftools.qsee.prep.category.BaseQualRecalibrationPrep;
+import com.hartwig.hmftools.qsee.prep.category.CoverageDistributionPrep;
+import com.hartwig.hmftools.qsee.prep.category.DuplicateFreqPrep;
+import com.hartwig.hmftools.qsee.prep.category.FragLengthDistributionPrep;
+import com.hartwig.hmftools.qsee.prep.category.GcBiasPrep;
+import com.hartwig.hmftools.qsee.prep.category.MissedGeneVariantPrep;
+import com.hartwig.hmftools.qsee.prep.category.MsIndelErrorPrep;
+import com.hartwig.hmftools.qsee.prep.category.SummaryTablePrep;
 
 public class FeaturePrep
 {
@@ -22,13 +30,27 @@ public class FeaturePrep
         mConfig = config;
     }
 
+    public static List<CategoryPrep> createCategoryPreps(CommonPrepConfig config)
+    {
+        return List.of(
+                new SummaryTablePrep(config),
+                new CoverageDistributionPrep(config),
+                new FragLengthDistributionPrep(config),
+                new MissedGeneVariantPrep(config),
+                new DuplicateFreqPrep(config),
+                new GcBiasPrep(config),
+                new BaseQualRecalibrationPrep(config),
+                new MsIndelErrorPrep(config)
+        );
+    }
+
     public SampleFeatures prepSample(SampleType sampleType, String sampleId)
     {
         QC_LOGGER.info("Extracting sample data - sampleType({}) sample({})", sampleType, sampleId);
 
         List<Feature> features = new ArrayList<>();
 
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
+        List<CategoryPrep> categoryPreps = createCategoryPreps(mConfig);
         for(CategoryPrep categoryPrep : categoryPreps)
         {
             QC_LOGGER.debug("Extracting category({})", categoryPrep.name());
@@ -52,7 +74,7 @@ public class FeaturePrep
         List<String> sampleIds = mConfig.getSampleIds(sampleType);
 
         FeatureMatrix sampleFeatureMatrix = new FeatureMatrix(new HashMap<>(), mConfig.getSampleIds(sampleType));
-        List<CategoryPrep> categoryPreps = new CategoryPrepFactory(mConfig).createCategoryPreps();
+        List<CategoryPrep> categoryPreps = createCategoryPreps(mConfig);
         for(CategoryPrep categoryPrep : categoryPreps)
         {
             QC_LOGGER.info("Extracting category({})", categoryPrep.name());
