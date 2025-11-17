@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.qsee.prep.category;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
-import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
 
 import java.io.File;
@@ -13,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.bam.ConsensusType;
 import com.hartwig.hmftools.common.redux.BqrFile;
 import com.hartwig.hmftools.common.redux.BqrRecord;
 
@@ -23,84 +20,29 @@ import com.hartwig.hmftools.qsee.feature.Feature;
 import com.hartwig.hmftools.qsee.feature.SourceTool;
 import com.hartwig.hmftools.qsee.prep.CategoryPrep;
 import com.hartwig.hmftools.qsee.prep.CommonPrepConfig;
+import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBin;
+import com.hartwig.hmftools.qsee.prep.bqr.BaseQualBinner;
+import com.hartwig.hmftools.qsee.prep.bqr.ExtendedBqrRecord;
 
 public class BaseQualRecalibrationPrep implements CategoryPrep
 {
     private final CommonPrepConfig mConfig;
+    private final BaseQualBinner mBaseQualBinner;
 
     private static final SourceTool SOURCE_TOOL = SourceTool.REDUX;
-
-    private static final int HI_QUAL_THRESHOLD = 30;
 
     private static final String FIELD_READ_TYPE = "ReadType";
     private static final String FIELD_STANDARD_MUTATION = "StandardMutation";
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "StandardTrinucContext";
-    private static final String FIELD_ORIGINAL_QUAL = "OriginalQualBin";
+    private static final String FIELD_ORIGINAL_QUAL_BIN = "OriginalQualBin";
 
     public BaseQualRecalibrationPrep(CommonPrepConfig config)
     {
         mConfig = config;
+        mBaseQualBinner = new BaseQualBinner(config.SEQUENCING_TYPE);
     }
 
     public SourceTool sourceTool() { return SOURCE_TOOL; }
-
-    @VisibleForTesting
-    static class ExtendedBqrRecord
-    {
-        private final ConsensusType ReadType;
-        private final String StandardMutation;
-        private final String StandardTrinucContext;
-        private final byte OriginalQuality;
-        private final double RecalibratedQuality;
-        private final int Count;
-
-        public ExtendedBqrRecord(ConsensusType readType, char refBase, char altBase, String trinucContext, int count, byte originalQual, double recalibratedQual)
-        {
-            ReadType = readType;
-            OriginalQuality = originalQual;
-            RecalibratedQuality = recalibratedQual;
-            Count = count;
-
-            char standardRefBase = refBase;
-            char standardAltBase = altBase;
-            if(refBase == 'G' || refBase == 'A')
-            {
-                standardRefBase = swapDnaBase(refBase);
-                standardAltBase = swapDnaBase(altBase);
-            }
-
-            String standardMutation = String.format("%s>%s", standardRefBase, standardAltBase);
-
-            String standardTrinucContext = (refBase == standardRefBase)
-                    ? trinucContext
-                    : reverseComplementBases(trinucContext);
-
-            StandardMutation = standardMutation;
-            StandardTrinucContext = standardTrinucContext;
-        }
-
-        private ExtendedBqrRecord(BqrRecord bqrRecord)
-        {
-            this(bqrRecord.Key.ReadType,
-                    (char) bqrRecord.Key.Ref,
-                    (char) bqrRecord.Key.Alt,
-                    new String(bqrRecord.Key.TrinucleotideContext),
-                    bqrRecord.Count,
-                    bqrRecord.Key.Quality,
-                    bqrRecord.RecalibratedQuality);
-        }
-
-        private String getOriginalQualBin()
-        {
-            if(OriginalQuality < 20) {
-                return "0-19";
-            } else if(OriginalQuality < 30) {
-                return "20-29";
-            } else {
-                return "30+";
-            }
-        }
-    }
 
     private String findBackwardsCompatibleBqrFile(String sampleId) throws NoSuchFileException
     {
@@ -123,10 +65,8 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         String filePath = findBackwardsCompatibleBqrFile(sampleId);
 
         List<BqrRecord> bqrRecords = BqrFile.read(filePath);
-
         List<BqrRecord> bqrRecordsFiltered = bqrRecords.stream().filter(x -> x.Key.Ref != x.Key.Alt).toList();
-
-        List<ExtendedBqrRecord> extendedBqrRecords = bqrRecordsFiltered.stream().map(ExtendedBqrRecord::new).toList();
+        List<ExtendedBqrRecord> extendedBqrRecords = bqrRecordsFiltered.stream().map(ExtendedBqrRecord::from).toList();
 
         // Sort here to control the eventual order in which features are plotted in R
         Comparator<ExtendedBqrRecord> comparator = Comparator.comparing((ExtendedBqrRecord x) -> x.ReadType)
@@ -165,10 +105,12 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords)
+    static List<Feature> calcChangeInQualPerTrinucContext(List<ExtendedBqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
+        byte hiQualThreshold = baseQualBinner.binRanges().get(BaseQualBin.HIGH).lowerBound();
+
         bqrRecords = bqrRecords.stream()
-                .filter(x -> x.OriginalQuality >= HI_QUAL_THRESHOLD)
+                .filter(x -> x.OriginalQuality >= hiQualThreshold)
                 .toList();
 
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
@@ -177,7 +119,8 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
             String featureName = FeatureKey.formMultiFieldName(
                     FIELD_READ_TYPE, bqrRecord.ReadType.toString(),
                     FIELD_STANDARD_MUTATION, bqrRecord.StandardMutation,
-                    FIELD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext
+                    FIELD_STANDARD_TRINUC_CONTEXT, bqrRecord.StandardTrinucContext,
+                    FIELD_ORIGINAL_QUAL_BIN, baseQualBinner.binNameFrom(bqrRecord.OriginalQuality)
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_SNV96_CONTEXT, SOURCE_TOOL);
@@ -194,7 +137,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     }
 
     @VisibleForTesting
-    static List<Feature> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords)
+    static List<Feature> calcChangeInQualPerOriginalQual(List<ExtendedBqrRecord> bqrRecords, BaseQualBinner baseQualBinner)
     {
         Map<FeatureKey, List<ExtendedBqrRecord>> bqrRecordGroups = new LinkedHashMap<>();
         for(ExtendedBqrRecord bqrRecord : bqrRecords)
@@ -202,7 +145,7 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
             String featureName = FeatureKey.formMultiFieldName(
                     FIELD_READ_TYPE, bqrRecord.ReadType.toString(),
                     FIELD_STANDARD_MUTATION, bqrRecord.StandardMutation,
-                    FIELD_ORIGINAL_QUAL, bqrRecord.getOriginalQualBin()
+                    FIELD_ORIGINAL_QUAL_BIN, baseQualBinner.binNameFrom(bqrRecord.OriginalQuality)
             );
 
             FeatureKey key = new FeatureKey(featureName, FeatureType.BQR_PER_ORIG_QUAL, SOURCE_TOOL);
@@ -224,10 +167,9 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         List<ExtendedBqrRecord> extendedBqrRecords = loadSnvBqrRecords(sampleId);
 
         List<Feature> features = new ArrayList<>();
-        features.addAll(calcChangeInQualPerOriginalQual(extendedBqrRecords));
-        features.addAll(calcChangeInQualPerTrinucContext(extendedBqrRecords));
+        features.addAll(calcChangeInQualPerOriginalQual(extendedBqrRecords, mBaseQualBinner));
+        features.addAll(calcChangeInQualPerTrinucContext(extendedBqrRecords, mBaseQualBinner));
 
         return features;
     }
-
 }

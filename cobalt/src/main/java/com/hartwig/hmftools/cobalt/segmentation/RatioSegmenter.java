@@ -60,7 +60,7 @@ public abstract class RatioSegmenter
         RatioSegmenter segmenter =
                 isForTumor ? new TumorRatioSegmenter(ratios, locator, gamma) : new ReferenceRatioSegmenter(ratios, locator, gamma);
         Map<ChrArm, CobaltSegments> segmentsByChrArm = segmenter.getSegmentation(executor);
-        write(segmentsByChrArm, outputPath);
+        write(genomeVersion, segmentsByChrArm, outputPath);
     }
 
     RatioSegmenter(ListMultimap<Chromosome, CobaltRatio> ratios, ChrArmLocator chrArmLocator, double gamma)
@@ -80,7 +80,7 @@ public abstract class RatioSegmenter
         mGamma = gamma;
     }
 
-    private static void write(Map<ChrArm, CobaltSegments> data, String filename) throws IOException
+    private static void write(RefGenomeVersion genomeVersion, Map<ChrArm, CobaltSegments> data, String filename) throws IOException
     {
         List<ChrArm> armsInOrder = data.keySet().stream().sorted().toList();
         try(Writer writer = createBufferedWriter(filename))
@@ -90,7 +90,7 @@ public abstract class RatioSegmenter
             for(ChrArm chrArm : armsInOrder)
             {
                 CobaltSegments pcf = data.get(chrArm);
-                String chromosome = chrArm.chromosome().shortName();
+                String chromosome = genomeVersion.versionedChromosome(chrArm.chromosome());
                 for(CobaltSegment interval : pcf.Segments)
                 {
                     int start = interval.start();

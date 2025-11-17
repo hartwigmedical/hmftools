@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
@@ -13,20 +14,27 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidInd
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Codons;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.utils.SuffixTree;
 import com.hartwig.hmftools.lilac.ReferenceData;
 import com.hartwig.hmftools.lilac.evidence.Nucleotide;
 import com.hartwig.hmftools.lilac.hla.HlaGene;
+import com.hartwig.hmftools.lilac.read.Indel;
 import com.hartwig.hmftools.lilac.read.Read;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -68,7 +76,7 @@ public class NucleotideFragmentFactory
 
         read.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
 
-        if(read.containsIndel() || read.containsSoftClip())
+        if(read.containsValidIndel() || read.containsSoftClip())
         {
             List<Integer> aminoAcidIndices = calcAminoAcidIndices(samCodingStartLoci, samCodingEndLoci);
             int firstAAIndex = aminoAcidIndices.get(0);
@@ -86,8 +94,8 @@ public class NucleotideFragmentFactory
 
             if(!aminoAcids.isEmpty())
             {
-                int matchRangeAllowedStart = firstAAIndex - read.SoftClippedStart / 3 - read.maxIndelSize();
-                int matchRangeAllowedEnd = firstAAIndex + read.maxIndelSize() + read.SoftClippedEnd / 3;
+                int matchRangeAllowedStart = firstAAIndex - read.SoftClippedStart / 3 - read.maxValidIndelSize();
+                int matchRangeAllowedEnd = firstAAIndex + read.maxValidIndelSize() + read.SoftClippedEnd / 3;
 
                 Fragment matchedFragment = checkMatchedInsertDeleteSequence(
                         read, geneName, aminoAcids, matchRangeAllowedStart, matchRangeAllowedEnd, mInsertSuffixTrees);
@@ -102,7 +110,7 @@ public class NucleotideFragmentFactory
                     return matchedFragment;
             }
 
-            if(read.containsIndel())
+            if(read.containsValidIndel())
                 return null;
         }
 
@@ -112,11 +120,66 @@ public class NucleotideFragmentFactory
         int rangeLength = samCodingEndLoci - samCodingStartLoci + 1;
         List<Nucleotide> nucleotides = Lists.newArrayListWithCapacity(rangeLength);
 
-        for(int i = 0; i < rangeLength; ++i)
+        Queue<Indel> indelQueue = new PriorityQueue<>(Comparator.comparingInt((Indel x) -> x.ReadIndex));
+        indelQueue.addAll(read.getIgnoredIndels());
+
+        final int inc = reverseStrand ? -1 : 1;
+        final int iStart = reverseStrand ? readLength - 1 : 0;
+        int samCodingLoci = reverseStrand ? samCodingEndLoci : samCodingStartLoci;
+        int readIndex = read.ReadIndexStart;
+        for(int i = iStart; i >= 0 && i < readLength;)
         {
+            if(!indelQueue.isEmpty() && indelQueue.peek().ReadIndex < readIndex)
+                indelQueue.poll();
+
+            Indel currentIndel = null;
+            if(!indelQueue.isEmpty() && indelQueue.peek().ReadIndex == readIndex)
+                currentIndel = indelQueue.poll();
+
+            if(currentIndel == null)
+            {
+                nucleotides.add(new Nucleotide(
+                        samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+
+                samCodingLoci += inc;
+                readIndex++;
+                i += inc;
+                continue;
+            }
+
+            if(currentIndel.IsInsert)
+            {
+                nucleotides.add(new Nucleotide(
+                        samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+
+                samCodingLoci += inc;
+                readIndex += 1 + currentIndel.Length;
+                i += inc * (1 + currentIndel.Length);
+                continue;
+            }
+
+            // currentIndel is del
             nucleotides.add(new Nucleotide(
-                    samCodingStartLoci + i, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+                    samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+            samCodingLoci += inc;
+            readIndex++;
+            i += inc;
+
+            for(int j = 1; j < currentIndel.Ref.length(); j++)
+            {
+                char base = currentIndel.Ref.charAt(j);
+                if(reverseStrand)
+                    base = Nucleotides.swapDnaBase(base);
+
+                nucleotides.add(new Nucleotide(
+                        samCodingLoci, LOW_BASE_QUAL_THRESHOLD, String.valueOf(base)));
+
+                samCodingLoci += inc;
+            }
         }
+
+        if(reverseStrand)
+            Collections.reverse(nucleotides);
 
         return new Fragment(read, geneName, Sets.newHashSet(geneName), nucleotides);
     }

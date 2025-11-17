@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRI
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.THREADS_DESC;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
@@ -36,6 +37,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
@@ -58,6 +60,7 @@ public class CommonPrepConfig
 
     public final List<DriverGene> DriverGenes;
 
+    public final SequencingType SEQUENCING_TYPE;
     public final boolean AllowMissingInput;
 
     public final String OutputDir;
@@ -84,6 +87,7 @@ public class CommonPrepConfig
 
         DriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
 
+        SEQUENCING_TYPE = SequencingType.valueOf(configBuilder.getValue(SEQUENCING_TYPE_CFG));
         AllowMissingInput = configBuilder.hasFlag(ALLOW_MISSING_INPUT);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -108,6 +112,7 @@ public class CommonPrepConfig
         configBuilder.addPath(TUMOR_METRICS_DIR_CFG, false, TUMOR_METRICS_DIR_DESC);
         configBuilder.addPath(REF_METRICS_DIR_CFG, false, REF_METRICS_DIR_DESC);
 
+        SequencingType.registerConfig(configBuilder);
         configBuilder.addPath(DRIVER_GENE_PANEL, false, DRIVER_GENE_PANEL_DESC);
 
         configBuilder.addFlag(ALLOW_MISSING_INPUT, ALLOW_MISSING_INPUT_DESC);

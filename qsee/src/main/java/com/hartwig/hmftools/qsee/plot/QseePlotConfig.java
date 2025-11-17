@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE;
-import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesConfig.COHORT_PERCENTILES_FILE_DESC;
+import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG;
+import static com.hartwig.hmftools.qsee.cohort.CohortPercentilesFile.COHORT_PERCENTILES_FILE_CFG_DESC;
 
 import java.util.List;
 
@@ -41,7 +41,7 @@ public class QseePlotConfig
         TumorIds = sampleIdsLoader.tumorIds();
         ReferenceIds = sampleIdsLoader.referenceIds();
 
-        CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE);
+        CohortPercentilesFile = configBuilder.getValue(COHORT_PERCENTILES_FILE_CFG);
         OutputDir = parseOutputDir(configBuilder);
     }
 
@@ -53,7 +53,7 @@ public class QseePlotConfig
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
-        configBuilder.addPath(COHORT_PERCENTILES_FILE, true, COHORT_PERCENTILES_FILE_DESC);
+        configBuilder.addPath(COHORT_PERCENTILES_FILE_CFG, true, COHORT_PERCENTILES_FILE_CFG_DESC);
         configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
 
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");

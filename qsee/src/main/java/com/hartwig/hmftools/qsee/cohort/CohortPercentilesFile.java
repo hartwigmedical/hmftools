@@ -29,6 +29,9 @@ import com.hartwig.hmftools.qsee.feature.SourceTool;
 
 public class CohortPercentilesFile
 {
+    public static final String COHORT_PERCENTILES_FILE_CFG = "cohort_percentiles_file";
+    public static final String COHORT_PERCENTILES_FILE_CFG_DESC = "Path to the cohort percentiles file";
+
     public static final String COHORT_PERCENTILES_FILE_SUFFIX = COHORT_FILE_ID + "." + QSEE_FILE_ID + ".percentiles.tsv.gz";
 
     public static final String COL_PERCENTILE_PREFIX = "Pct";

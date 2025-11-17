@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualIndices;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
@@ -133,7 +133,7 @@ public class BamRecordReader implements BamReader
 
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(
-		geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+                geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
         List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
 
         List<Read> reads = Lists.newArrayList();
@@ -183,7 +183,7 @@ public class BamRecordReader implements BamReader
         int lowQualCount;
         if(isUltima())
         {
-            lowQualCount = extractLowQualIndices(read).size();
+            lowQualCount = extractLowQualCount(read);
             return lowQualCount >= qualCountThreshold;
         }
 
@@ -240,15 +240,15 @@ public class BamRecordReader implements BamReader
                     mergeFragments(existingFragment, fragment);
                 }
 
-                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
                     addKnownIndelFragment(existingFragment);
 
                 continue;
             }
 
-            if(read.containsIndel())
+            if(read.containsValidIndel())
             {
-                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
                     LL_LOGGER.trace("missing known indel fragment: {} {}", read.Id, read.readInfo());
                 }
@@ -257,7 +257,7 @@ public class BamRecordReader implements BamReader
                 mDiscardIndelReadIds.add(read.Id);
             }
 
-            for(Indel indel : read.getIndels())
+            for(Indel indel : read.getValidIndels())
             {
                 if(INDEL_PON.contains(indel))
                 {
@@ -377,7 +377,7 @@ public class BamRecordReader implements BamReader
             Read codingRecord = Read.createRead(matchedCodingRegion, record, true, true);
 
             Fragment fragment = mFragmentFactory.createAlignmentFragments(
-		    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
+                    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
             if(fragment != null)
                 fragments.add(fragment);
@@ -431,7 +431,7 @@ public class BamRecordReader implements BamReader
         if(variant.Alt.length() != variant.Ref.length())
         {
             Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
-            return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
+            return record.getValidIndels().stream().anyMatch(x -> x.match(expectedIndel));
         }
 
         for(int i = 0; i < variant.Alt.length(); ++i)
