@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 
 import org.immutables.gson.Gson;

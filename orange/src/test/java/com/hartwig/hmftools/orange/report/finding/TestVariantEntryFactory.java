@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.orange.report.finding;
 
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.finding.ImmutableSmallVariant;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
@@ -20,8 +20,7 @@ public final class TestVariantEntryFactory
 
         return ImmutableSmallVariant.builder()
                 .findingKey("finding")
-                .isReportable(true)
-                .isCandidate(false)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.HIGH)
                 .purpleVariant(variant)
                 .driver(PurpleDriverTestFactory.builder().build())

@@ -6,12 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
-import com.hartwig.hmftools.datamodel.finding.ImmutableSmallVariant;
 import com.hartwig.hmftools.datamodel.finding.Variants;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 import com.hartwig.hmftools.datamodel.finding.SmallVariant;

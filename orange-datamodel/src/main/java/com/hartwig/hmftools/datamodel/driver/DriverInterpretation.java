@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.datamodel.finding;
+package com.hartwig.hmftools.datamodel.driver;
 
 import org.jetbrains.annotations.NotNull;
 

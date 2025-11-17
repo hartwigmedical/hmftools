@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 
 import org.junit.Test;
 

@@ -2,6 +2,9 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.driver.Driver;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -13,71 +16,65 @@ import org.jetbrains.annotations.Nullable;
 public interface FindingRecord
 {
     @NotNull
-    List<SmallVariant> allSomaticVariants();
+    List<SmallVariant> driverSomaticSmallVariants();
 
-    @Gson.Ignore
     @NotNull
-    default List<SmallVariant> reportableSomaticVariants()
+    default List<SmallVariant> driverSomaticSmallVariants(ReportedStatus reportedStatus)
     {
-        return filterReported(allSomaticVariants());
+        return filterReported(driverSomaticSmallVariants(), reportedStatus);
     }
 
     @Nullable
-    List<SmallVariant> allGermlineVariants();
+    List<SmallVariant> driverGermlineSmallVariants();
 
-    @Gson.Ignore
     @Nullable
-    default List<SmallVariant> reportableGermlineVariants()
+    default List<SmallVariant> driverGermlineSmallVariants(ReportedStatus reportedStatus)
     {
-        return filterReported(allGermlineVariants());
+        return filterReported(driverGermlineSmallVariants(), reportedStatus);
     }
 
     @NotNull
-    List<CopyNumber> allSomaticCopyNumbers();
+    List<CopyNumber> driverSomaticCopyNumbers();
 
-    @Gson.Ignore
     @NotNull
-    default List<CopyNumber> reportableSomaticCopyNumbers()
+    default List<CopyNumber> driverSomaticCopyNumbers(ReportedStatus reportedStatus)
     {
-        return filterReported(allSomaticCopyNumbers());
+        return filterReported(driverSomaticCopyNumbers(), reportedStatus);
     }
 
     @Nullable
-    List<Fusion> allSomaticFusions();
+    List<Fusion> driverSomaticFusions();
 
-    @Gson.Ignore
     @Nullable
-    default List<Fusion> reportableSomaticFusions()
+    default List<Fusion> driverSomaticFusions(ReportedStatus reportedStatus)
     {
-        return filterReported(allSomaticFusions());
+        return filterReported(driverSomaticFusions(), reportedStatus);
     }
 
     @Nullable
-    List<Disruption> allSomaticDisruptions();
+    List<Disruption> driverSomaticDisruptions();
 
-    @Gson.Ignore
     @Nullable
-    default List<Disruption> reportableSomaticDisruptions()
+    default List<Disruption> driverSomaticDisruptions(ReportedStatus reportedStatus)
     {
-        return filterReported(allSomaticDisruptions());
+        return filterReported(driverSomaticDisruptions(), reportedStatus);
     }
 
     @Nullable
-    List<Virus> allViruses();
+    List<Virus> driverViruses();
 
-    @Gson.Ignore
     @Nullable
-    default List<Virus> reportableViruses()
+    default List<Virus> driverViruses(ReportedStatus reportedStatus)
     {
-        return filterReported(allViruses());
+        return filterReported(driverViruses(), reportedStatus);
     }
 
     @Nullable
     PredictedTumorOrigin predictedTumorOrigin();
 
-    private static <T extends Driver> List<T> filterReported(List<T> drivers)
+    private static <T extends Driver> List<T> filterReported(List<T> drivers, ReportedStatus reportedStatus)
     {
         if (drivers == null) { return null; }
-        return drivers.stream().filter(Driver::isReportable).toList();
+        return drivers.stream().filter(o -> o.reportedStatus() == reportedStatus).toList();
     }
 }

@@ -4,5 +4,5 @@ public enum ReportedStatus
 {
     NONE,
     NOT_REPORTED,
-    REPORTED;
+    REPORTED
 }
