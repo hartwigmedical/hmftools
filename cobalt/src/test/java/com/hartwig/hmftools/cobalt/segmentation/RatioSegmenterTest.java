@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.cobalt.segmentation.Arm.Q;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._X;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import static org.junit.Assert.assertEquals;
@@ -15,18 +17,14 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.cobalt.utils.RawCobaltRatio;
-import com.hartwig.hmftools.cobalt.utils.RawCobaltRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.pcf.CobaltSegment;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,10 +40,6 @@ public class RatioSegmenterTest
         return new ChrArm(cobaltRatio.chr(), arm);
     };
 
-    public RatioSegmenterTest()
-    {
-    }
-
     @Before
     public void setup()
     {
@@ -56,37 +50,6 @@ public class RatioSegmenterTest
     public void cleanup()
     {
         executor.shutdown();
-    }
-
-//            @Test
-    public void coloTest() throws Exception
-    {
-        ratios.clear();
-        File rawCobaltRatiosFile = new File("/Users/timlavers/work/batches/2025/11/13/1/cobalt/COLO829v003T.cobalt.ratio.tsv.gz");
-        RawCobaltRatioFile rawResultsFile = new RawCobaltRatioFile(rawCobaltRatiosFile.getAbsolutePath());
-        List<RawCobaltRatio> rawRatios = rawResultsFile.read();
-
-        rawRatios.forEach(rawCobaltRatio ->
-        {
-            CobaltRatio ratio = rawCobaltRatio.toCobaltRatio();
-            ratios.put(ratio.chr(), ratio);
-        });
-        rawRatios.clear();
-        File resultsDir = new File("/Users/timlavers/work/batches/2025/11/12/1/iterate");
-        Stopwatch stopwatch = Stopwatch.createUnstarted();
-        DescriptiveStatistics statistics = new DescriptiveStatistics();
-        for(int i = 0; i < 1; i++)
-        {
-            System.out.println("Run " + i);
-            File outputFile = new File(resultsDir, "colo8." + i + ".pcf");
-            stopwatch.start();
-            RatioSegmenter.writeTumorSegments(ratios, 100.0, V38, executor, outputFile.getAbsolutePath());
-            stopwatch.stop();
-            statistics.addValue(stopwatch.elapsed().toMillis());
-            stopwatch.reset();
-        }
-        System.out.println("Average: " + statistics.getMean());
-        System.out.println("Stats: " + statistics);
     }
 
     @Test
@@ -219,6 +182,39 @@ public class RatioSegmenterTest
         List<CobaltSegment> regions1 = pcfData.get(_1);
         assertEquals(4, regions1.size());
         assertEquals(0.0, regions1.get(3).MeanRatio, 0.0001);
+    }
+
+    @Test
+    public void chromosomeLabels() throws Exception
+    {
+        ratios.clear();
+        List<HumanChromosome> chromosomes = List.of(_1, _2, _X);
+        chromosomes.forEach(chromosome ->
+        {
+            ratios.put(chromosome, cr(chromosome, 1, 0.5));
+            ratios.put(chromosome, cr(chromosome, 1001, 0.51));
+            ratios.put(chromosome, cr(chromosome, 2001, 0.49));
+        });
+        File tempDir = Files.createTempDirectory("rst").toFile();
+        File outputFile = new File(tempDir, "rst.38.pcf");
+        Assert.assertFalse(outputFile.exists());
+        RatioSegmenter.writeTumorSegments(ratios, 100.0, V38, executor, outputFile.getAbsolutePath());
+
+        ListMultimap<Chromosome, CobaltSegment> pcfData = PCFFile.readCobaltPcfFile(outputFile.getAbsolutePath());
+        assertEquals(3, pcfData.keySet().size());
+        assertEquals(V38.versionedChromosome("1"), pcfData.get(_1).get(0).chromosome());
+        assertEquals(V38.versionedChromosome("2"), pcfData.get(_2).get(0).chromosome());
+        assertEquals(V38.versionedChromosome("X"), pcfData.get(_X).get(0).chromosome());
+
+        File outputFile37 = new File(tempDir, "rst.37.pcf");
+        Assert.assertFalse(outputFile37.exists());
+        RatioSegmenter.writeTumorSegments(ratios, 100.0, V37, executor, outputFile.getAbsolutePath());
+
+        ListMultimap<Chromosome, CobaltSegment> pcfData37 = PCFFile.readCobaltPcfFile(outputFile.getAbsolutePath());
+        assertEquals(3, pcfData37.keySet().size());
+        assertEquals(V37.versionedChromosome("1"), pcfData37.get(_1).get(0).chromosome());
+        assertEquals(V37.versionedChromosome("2"), pcfData37.get(_2).get(0).chromosome());
+        assertEquals(V37.versionedChromosome("X"), pcfData37.get(_X).get(0).chromosome());
     }
 
     @Test
