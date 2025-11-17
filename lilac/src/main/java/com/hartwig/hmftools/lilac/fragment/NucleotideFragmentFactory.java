@@ -2,14 +2,14 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
+import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.DEL_STR;
@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -43,11 +42,9 @@ public class NucleotideFragmentFactory
     private final ReferenceData mReferenceData;
     private final LinkedHashMap<HlaSequenceLoci, SuffixTree> mInsertSuffixTrees;
     private final LinkedHashMap<HlaSequenceLoci, SuffixTree> mDeleteSuffixTrees;
-    private final byte mMinBaseQuality;
 
     public NucleotideFragmentFactory(final ReferenceData referenceData)
     {
-        mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
         mReferenceData = referenceData;
 
         mInsertSuffixTrees = Maps.newLinkedHashMap();
@@ -72,9 +69,10 @@ public class NucleotideFragmentFactory
 
         int readLength = read.ReadIndexEnd - read.ReadIndexStart + 1;
         final char[] codingRegionReadBases = new char[readLength];
+        final boolean[] codingRegionIsLowQuals = new boolean[readLength];
         final byte[] codingRegionQualities = new byte[readLength];
 
-        read.populateCodingRegion(codingRegionReadBases, codingRegionQualities, reverseStrand);
+        read.populateCodingRegion(codingRegionReadBases, codingRegionIsLowQuals, codingRegionQualities, reverseStrand);
 
         if(read.containsValidIndel() || read.containsSoftClip())
         {
@@ -139,7 +137,7 @@ public class NucleotideFragmentFactory
             if(currentIndel == null)
             {
                 nucleotides.add(new Nucleotide(
-                        samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+                        samCodingLoci, codingRegionIsLowQuals[i], codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
 
                 samCodingLoci += inc;
                 readIndex++;
@@ -150,7 +148,7 @@ public class NucleotideFragmentFactory
             if(currentIndel.IsInsert)
             {
                 nucleotides.add(new Nucleotide(
-                        samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+                        samCodingLoci, codingRegionIsLowQuals[i], codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
 
                 samCodingLoci += inc;
                 readIndex += 1 + currentIndel.Length;
@@ -160,7 +158,7 @@ public class NucleotideFragmentFactory
 
             // currentIndel is del
             nucleotides.add(new Nucleotide(
-                    samCodingLoci, codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
+                    samCodingLoci, codingRegionIsLowQuals[i], codingRegionQualities[i], String.valueOf(codingRegionReadBases[i])));
             samCodingLoci += inc;
             readIndex++;
             i += inc;
@@ -171,8 +169,7 @@ public class NucleotideFragmentFactory
                 if(reverseStrand)
                     base = Nucleotides.swapDnaBase(base);
 
-                nucleotides.add(new Nucleotide(
-                        samCodingLoci, LOW_BASE_QUAL_THRESHOLD, String.valueOf(base)));
+                nucleotides.add(Nucleotide.createHighQual(samCodingLoci, String.valueOf(base)));
 
                 samCodingLoci += inc;
             }
@@ -234,9 +231,8 @@ public class NucleotideFragmentFactory
                 .map(NucleotideFragmentFactory::createNucleotidesFromAminoAcid)
                 .forEach(nucleotides::addAll);
 
-        List<Byte> qualities = nucleotideLoci.stream().map(x -> mMinBaseQuality).collect(Collectors.toList());
-
-        return new Fragment(record, geneName, Sets.newHashSet(geneName), nucleotideLoci, qualities, nucleotides);
+        List<Boolean> isLowQuals = nucleotideLoci.stream().map(x -> false).toList();
+        return Fragment.createFromIsLowQuals(record, geneName, Sets.newHashSet(geneName), nucleotideLoci, isLowQuals, nucleotides);
     }
 
     private static int endLoci(int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
@@ -281,34 +277,37 @@ public class NucleotideFragmentFactory
         return FragmentUtils.mergeFragmentsById(fragments).get(0);
     }
 
-    public byte calculatePercentileBaseQuality(final Iterable<Fragment> fragments, double percentile)
+    public static byte calculatePercentileBaseQuality(final Iterable<Fragment> fragments, double percentile)
     {
         // calculates the nth percentile base quality for each fragment's nucleotides
-        int maxBaseQual = mMinBaseQuality * 2;
-        int[] baseQualFrequeny = new int[maxBaseQual + 1];
+        int maxBaseQual = LOW_BASE_QUAL_THRESHOLD * 2;
+        int[] baseQualFrequency = new int[maxBaseQual + 1];
         long totalBases = 0;
 
         for(Fragment fragment : fragments)
         {
             for(byte baseQual : Nucleotide.qualities(fragment.rawNucleotidesByLoci().values()))
             {
+                if(baseQual == MISSING_BASE_QUAL)
+                    continue;
+
                 ++totalBases;
-                ++baseQualFrequeny[min(baseQual, maxBaseQual)];
+                ++baseQualFrequency[min(baseQual, maxBaseQual)];
             }
         }
 
         long percentileEntry = round(totalBases * percentile);
         long cumulativeTotal = 0;
 
-        for(int i = 0; i < baseQualFrequeny.length; ++i)
+        for(int i = 0; i < baseQualFrequency.length; ++i)
         {
-            cumulativeTotal += baseQualFrequeny[i];
+            cumulativeTotal += baseQualFrequency[i];
 
             if(cumulativeTotal >= percentileEntry)
                 return (byte) i;
         }
 
-        return mMinBaseQuality;
+        return LOW_BASE_QUAL_THRESHOLD;
     }
 
     public static Map<HlaGene, int[]> calculateGeneCoverage(final Iterable<Fragment> fragments)

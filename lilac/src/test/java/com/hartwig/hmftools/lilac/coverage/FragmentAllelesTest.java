@@ -56,7 +56,7 @@ public class FragmentAllelesTest
         List<Set<String>> refNucleotides = Lists.newArrayList();
 
         // basic match
-        Fragment frag1 = new Fragment(createReadRecord("01"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag1 = Fragment.createFromQuals(createReadRecord("01"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
         frag1.setAminoAcids(Lists.newArrayList(
                 new AminoAcid(0, "A"),
                 new AminoAcid(2, "C"),
@@ -79,7 +79,7 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq2 = new HlaSequenceLoci(allele2, Lists.newArrayList("A", "B", "C", "D"));
         sequences = Lists.newArrayList(seq2);
 
-        Fragment frag2 = new Fragment(createReadRecord("02"), HLA_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag2 = Fragment.createFromQuals(createReadRecord("02"), HLA_B, bGenes, emptyLoci, emptyQuals, emptyNucs);
         frag2.setAminoAcids(Lists.newArrayList(
                 new AminoAcid(0, "L"),
                 new AminoAcid(1, "B"),
@@ -98,7 +98,7 @@ public class FragmentAllelesTest
         HlaSequenceLoci seq3 = new HlaSequenceLoci(allele3, Lists.newArrayList("*", "B", "C", "*"));
         sequences = Lists.newArrayList(seq3);
 
-        Fragment frag3 = new Fragment(createReadRecord("03"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
+        Fragment frag3 = Fragment.createFromQuals(createReadRecord("03"), HLA_A, aGenes, emptyLoci, emptyQuals, emptyNucs);
         frag3.setAminoAcids(Lists.newArrayList(
                 new AminoAcid(0, "A"),
                 new AminoAcid(1, "B"),
@@ -152,7 +152,7 @@ public class FragmentAllelesTest
         nucQuals.set(1, (byte) 2);
         nucQuals.set(4, (byte) 2);
         nucQuals.set(11, (byte) 2);
-        Fragment frag1 = new Fragment(createReadRecord("01"), HLA_A, aGenes, nucLoci, nucQuals, nucleotides);
+        Fragment frag1 = Fragment.createFromQuals(createReadRecord("01"), HLA_A, aGenes, nucLoci, nucQuals, nucleotides);
 
         assertTrue(frag1.validate());
 

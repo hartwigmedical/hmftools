@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 import java.util.Set;
@@ -12,10 +11,6 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 
 public class LilacUtils
 {
-    public static boolean aboveMinQual(byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
-    public static boolean aboveMinQual(int qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
-    public static boolean belowMinQual(byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
-
     public static int calcNucelotideLocus(final List<TranscriptData> transcripts, int position)
     {
         for(TranscriptData transData : transcripts)

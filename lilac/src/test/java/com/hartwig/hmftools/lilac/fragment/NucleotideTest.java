@@ -72,8 +72,8 @@ public class NucleotideTest
         LilacConstants.MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
 
         List<Nucleotide> fragmentNucleotides = Lists.newArrayList(
-                new Nucleotide(0, (byte) 40, "A"),
-                new Nucleotide(1, (byte) 40, "T"));
+                Nucleotide.create(0, (byte) 40, "A"),
+                Nucleotide.create(1, (byte) 40, "T"));
         final NavigableMap<Integer, Nucleotide> fragmentNucleotidesByLoci = Maps.newTreeMap();
         fragmentNucleotides.forEach(x -> fragmentNucleotidesByLoci.put(x.locus(), x));
 
@@ -111,8 +111,8 @@ public class NucleotideTest
         LilacConstants.MIN_DEPTH_FILTER = DEFAULT_MIN_DEPTH_FILTER;
 
         List<Nucleotide> fragmentNucleotides = Lists.newArrayList(
-                new Nucleotide(0, (byte) 40, "A"),
-                new Nucleotide(1, (byte) 40, "T"));
+                Nucleotide.create(0, (byte) 40, "A"),
+                Nucleotide.create(1, (byte) 40, "T"));
         final NavigableMap<Integer, Nucleotide> fragmentNucleotidesByLoci = Maps.newTreeMap();
         fragmentNucleotides.forEach(x -> fragmentNucleotidesByLoci.put(x.locus(), x));
 
@@ -166,6 +166,6 @@ public class NucleotideTest
             nucleotides.add("G");
         }
 
-        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, nucleotides);
+        return Fragment.createFromQuals(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, nucleotides);
     }
 }

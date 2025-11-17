@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.read;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
-import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
@@ -190,7 +190,7 @@ public class BamRecordReader implements BamReader
         lowQualCount = 0;
         for(int i = 0; i < baseLength; ++i)
         {
-            if(belowMinQual(read.getBaseQualities()[i]))
+            if(isLowBaseQual(read.getBaseQualities()[i]))
             {
                 ++lowQualCount;
 

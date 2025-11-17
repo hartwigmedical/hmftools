@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.lilac.fragment;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 
 import java.util.List;
@@ -12,12 +11,10 @@ import com.hartwig.hmftools.lilac.seq.SequenceCount;
 
 public class NucleotideSpliceEnrichment
 {
-    private final byte mMinBaseQuality;
     private final Set<Integer> mAminoAcidBoundary;
 
         public NucleotideSpliceEnrichment(final Set<Integer> aminoAcidBoundary)
     {
-        mMinBaseQuality = LOW_BASE_QUAL_THRESHOLD;
         mAminoAcidBoundary = aminoAcidBoundary;
     }
 
@@ -74,12 +71,12 @@ public class NucleotideSpliceEnrichment
 
     private void addStart(final Fragment fragment, int index, final SequenceCount nucleotideCounts)
     {
-        fragment.addNucleotide(index, nucleotideCounts.getMinEvidenceSequences(index).get(0), mMinBaseQuality);
+        fragment.addHighQualNucleotide(index, nucleotideCounts.getMinEvidenceSequences(index).get(0));
     }
 
     private void addEnd(final Fragment fragment, int index, final SequenceCount nucleotideCounts)
     {
-        fragment.addNucleotide(index + 1, nucleotideCounts.getMinEvidenceSequences(index + 1).get(0), mMinBaseQuality);
-        fragment.addNucleotide(index + 2, nucleotideCounts.getMinEvidenceSequences(index + 2).get(0), mMinBaseQuality);
+        fragment.addHighQualNucleotide(index + 1, nucleotideCounts.getMinEvidenceSequences(index + 1).get(0));
+        fragment.addHighQualNucleotide(index + 2, nucleotideCounts.getMinEvidenceSequences(index + 2).get(0));
     }
 }

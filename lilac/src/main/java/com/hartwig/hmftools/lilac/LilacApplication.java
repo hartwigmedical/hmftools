@@ -4,12 +4,12 @@ import static java.lang.Math.floor;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
+import static com.hartwig.hmftools.lilac.LilacConfig.isIllumina;
 import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
-import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_FACTOR;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
@@ -193,13 +193,12 @@ public class LilacApplication
 
         mRefNucleotideFrags.addAll(refFragments);
 
-        byte medianBaseQuality = isUltima() ? LOW_BASE_QUAL_THRESHOLD : mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
-        if(medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
-        {
-            LL_LOGGER.info("lowering min base quality({}) to median({})", LOW_BASE_QUAL_THRESHOLD,
-                    medianBaseQuality);
-            LOW_BASE_QUAL_THRESHOLD = medianBaseQuality;
-        }
+        Integer medianBaseQuality = null;
+        if(isIllumina())
+            medianBaseQuality = (int) NucleotideFragmentFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
+
+        if(medianBaseQuality != null && medianBaseQuality < LOW_BASE_QUAL_THRESHOLD)
+            LL_LOGGER.info("the median base quality ({}) is below the low qual threshold ({})", medianBaseQuality, LOW_BASE_QUAL_THRESHOLD);
 
         final Map<HlaGene, int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
         if(!hasSufficientGeneDepth(geneBaseDepth))

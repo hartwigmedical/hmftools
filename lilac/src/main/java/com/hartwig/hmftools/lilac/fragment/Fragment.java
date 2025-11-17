@@ -2,7 +2,6 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacUtils.aboveMinQual;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 
@@ -41,12 +40,21 @@ public class Fragment
 
     private FragmentScope mScope;
 
-    public Fragment(final Read read, final HlaGene readGene, final Set<HlaGene> genes, final List<Integer> nucleotideLoci,
+    public static Fragment createFromQuals(final Read read, final HlaGene readGene, final Set<HlaGene> genes, final List<Integer> nucleotideLoci,
             final List<Byte> nucleotidesQualities, final List<String> nucleotidesBases)
     {
-        this(read, readGene, genes,
+        return new Fragment(read, readGene, genes,
                 IntStream.range(0, nucleotideLoci.size())
-                        .mapToObj(i -> new Nucleotide(nucleotideLoci.get(i), nucleotidesQualities.get(i), nucleotidesBases.get(i)))
+                        .mapToObj(i -> Nucleotide.create(nucleotideLoci.get(i), nucleotidesQualities.get(i), nucleotidesBases.get(i)))
+                        .toList());
+    }
+
+    public static Fragment createFromIsLowQuals(final Read read, final HlaGene readGene, final Set<HlaGene> genes,
+            final List<Integer> nucleotideLoci, final List<Boolean> isLowQuals, final List<String> nucleotidesBases)
+    {
+        return new Fragment(read, readGene, genes,
+                IntStream.range(0, nucleotideLoci.size())
+                        .mapToObj(i -> Nucleotide.create(nucleotideLoci.get(i), isLowQuals.get(i), nucleotidesBases.get(i)))
                         .toList());
     }
 
@@ -117,7 +125,13 @@ public class Fragment
 
     public void addNucleotide(int locus, final String bases, byte quality)
     {
-        Nucleotide nucleotide = new Nucleotide(locus, quality, bases);
+        Nucleotide nucleotide = Nucleotide.create(locus, quality, bases);
+        addNucleotide(nucleotide);
+    }
+
+    public void addHighQualNucleotide(int locus, final String bases)
+    {
+        Nucleotide nucleotide = Nucleotide.createHighQual(locus, bases);
         addNucleotide(nucleotide);
     }
 
@@ -172,7 +186,7 @@ public class Fragment
         List<Integer> lociToRemove = Lists.newArrayList();
         for(Map.Entry<Integer, Nucleotide> entry : mNucleotidesByLoci.entrySet())
         {
-            if(!aboveMinQual(entry.getValue().qual()))
+            if(entry.getValue().isLowQual())
                 lociToRemove.add(entry.getKey());
         }
 
