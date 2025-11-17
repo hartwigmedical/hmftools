@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 import static com.hartwig.hmftools.lilac.ReferenceData.refBases;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,7 +94,7 @@ public class Read
         return mValidIndels.stream().mapToInt(x -> abs(x.Length)).max().orElse(0);
     }
 
-    public final boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
+    public boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
 
     public boolean containsValidIndel() { return !mValidIndels.isEmpty(); }
 
@@ -111,7 +112,6 @@ public class Read
                     qual = mRecord.getBaseQualities()[i];
                 else
                     qual = ultimaLowQualIndices.contains(i) ? (byte) (LOW_BASE_QUAL_THRESHOLD - 1) : LOW_BASE_QUAL_THRESHOLD;
-
 
                 readQuals[index] = qual;
                 --index;
@@ -143,7 +143,7 @@ public class Read
 
         return mRecord.getAlignmentBlocks().stream()
                 .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
-                .filter(x -> outerRegion.overlaps(x))
+                .filter(outerRegion::overlaps)
                 .map(x -> new BaseRegion(max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
                 .map(x -> createRead(x, mRecord, false, false))
                 .collect(Collectors.toList());
@@ -329,7 +329,9 @@ public class Read
         Set<Integer> ultimaLowQualIndices = isUltima() ? Sets.newHashSet(extractLowQualIndices(record)) : null;
         while(baseIndex >= 0 && baseIndex < record.getReadBases().length)
         {
-            boolean isLowQual = ultimaLowQualIndices != null ? ultimaLowQualIndices.contains(baseIndex) : belowMinQual(record.getBaseQualities()[baseIndex]);
+            boolean isLowQual = ultimaLowQualIndices != null
+                    ? ultimaLowQualIndices.contains(baseIndex)
+                    : belowMinQual(record.getBaseQualities()[baseIndex]);
             if(isLowQual)
             {
                 currentScore -= LOW_QUAL_SCORE;
@@ -357,5 +359,5 @@ public class Read
         return fromStart ? lastLowestScoreIndex + 1 : record.getReadBases().length - lastLowestScoreIndex;
     }
 
-    protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
+    private static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
 }

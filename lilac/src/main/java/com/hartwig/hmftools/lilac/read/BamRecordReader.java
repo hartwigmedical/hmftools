@@ -133,7 +133,7 @@ public class BamRecordReader implements BamReader
 
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(
-		geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+                geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
         List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
 
         List<Read> reads = Lists.newArrayList();
@@ -377,7 +377,7 @@ public class BamRecordReader implements BamReader
             Read codingRecord = Read.createRead(matchedCodingRegion, record, true, true);
 
             Fragment fragment = mFragmentFactory.createAlignmentFragments(
-		    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
+                    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
             if(fragment != null)
                 fragments.add(fragment);

@@ -63,7 +63,7 @@ public class Indel
     @Override
     public int hashCode() { return Objects.hash(toString(), Ignore); }
 
-    public final boolean match(final Indel other)
+    public boolean match(final Indel other)
     {
         if(equals(other))
             return true;
@@ -86,8 +86,7 @@ public class Indel
         if(Alt.length() > Ref.length())
         {
             // check the insert
-            if(!Alt.substring(1).equals(other.Alt.substring(1)))
-                return false;
+            return Alt.substring(1).equals(other.Alt.substring(1));
         }
 
         return true;
