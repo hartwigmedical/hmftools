@@ -67,7 +67,9 @@ public class OutputWriter implements AutoCloseable
     private enum RejectedFeaturesColumns
     {
         Region,
-        Sequence,
+        ProbeSequence,
+        ProbeQualityScore,
+        ProbeGCContent,
         TargetType,
         TargetExtra
     }
@@ -258,8 +260,10 @@ public class OutputWriter implements AutoCloseable
 
     private static void writeRejectedFeaturesTsvRow(final RejectedFeature rejectedFeature, DelimFileWriter.Row row)
     {
-        row.set(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
-        row.set(RejectedFeaturesColumns.Sequence, rejectedFeature.probe() == null ? null : rejectedFeature.probe().sequence());
+        row.setOrNull(RejectedFeaturesColumns.Region, rejectedFeature.region() == null ? null : rejectedFeature.region().toString());
+        row.setOrNull(RejectedFeaturesColumns.ProbeSequence, rejectedFeature.probe() == null ? null : rejectedFeature.probe().sequence());
+        row.setOrNull(RejectedFeaturesColumns.ProbeQualityScore, rejectedFeature.probe() == null ? null : rejectedFeature.probe().qualityScore());
+        row.setOrNull(RejectedFeaturesColumns.ProbeGCContent, rejectedFeature.probe() == null ? null : rejectedFeature.probe().gcContent());
         row.set(RejectedFeaturesColumns.TargetType, rejectedFeature.metadata().type().name());
         row.set(RejectedFeaturesColumns.TargetExtra, rejectedFeature.metadata().extraInfo());
     }
