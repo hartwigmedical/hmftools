@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
+import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
@@ -160,7 +163,6 @@ public class VariantFilters
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
             Set<SoftFilter> tumorFilters = Sets.newHashSet();
-
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
             if(!mIsGermline)
@@ -279,7 +281,7 @@ public class VariantFilters
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return (tier == HOTSPOT || tier == PANEL)
+        return (tier == HOTSPOT || tier == PANEL || isIllumina())
                 && primaryTumor.isIndel() && !primaryTumor.useMsiErrorRate()
                 && primaryTumor.jitter().lengthened() + primaryTumor.jitter().shortened() == 0
                 && (double)primaryTumor.nonAltNmCountTotal() / (primaryTumor.depth() - primaryTumor.altSupport()) < 0.75;
@@ -414,6 +416,11 @@ public class VariantFilters
         if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc && !primaryTumor.isLongIndel())
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
+        }
+
+        if(avgAltEdgeDistance >= (isIllumina() ? AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD : AVG_READ_EDGE_DISTANCE_THRESHOLD))
+        {
+            edgeDistancePenalty = 0;
         }
 
         double repeatPenalty = 0;

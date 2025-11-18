@@ -39,7 +39,7 @@ public final class LilacQC
     public final double ScoreMargin;
     public final String NextSolutionInfo;
     public final HlaAllele HlaYAllele;
-    public final int MedianBaseQual;
+    public final Integer MedianBaseQual;
 
     public final AminoAcidQC AminoAcidQC;
     public final BamQC BamQC;
@@ -48,9 +48,9 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, int medianBaseQual, final HlaAllele hlaYAllele,
-            final AminoAcidQC aminoAcidQC, final BamQC bamQC,
-            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+            final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, final Integer medianBaseQual,
+            final HlaAllele hlaYAllele, final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
+	    final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
         mGenes = genes;
 
@@ -97,7 +97,7 @@ public final class LilacQC
 
         columns.add(String.format("%.3f", ScoreMargin));
         columns.add(NextSolutionInfo);
-        columns.add(String.valueOf(MedianBaseQual));
+        columns.add(MedianBaseQual != null ? String.valueOf(MedianBaseQual) : "-");
         columns.add(HlaYAllele != null ? HlaYAllele.toString() : "NONE");
         columns.addAll(BamQC.body());
         columns.addAll(CoverageQC.body());
@@ -193,7 +193,7 @@ public final class LilacQC
             return;
         }
 
-        if(MedianBaseQual < WARN_LOW_BASE_QUAL_THRESHOLD)
+        if(MedianBaseQual != null && MedianBaseQual < WARN_LOW_BASE_QUAL_THRESHOLD)
         {
             Status.add(WARN_LOW_BASE_QUAL);
         }

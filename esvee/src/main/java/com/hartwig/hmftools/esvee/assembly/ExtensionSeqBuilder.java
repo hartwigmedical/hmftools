@@ -164,6 +164,7 @@ public class ExtensionSeqBuilder
         int repeatIndexStart = -1;
         int repeatSkipCount = 0;
 
+        // TODO: check how this needs to work for reads with shorter DELs
         if(mJunction.indelCoords() != null && read.indelCoords() != null
         && mJunction.indelCoords().isDelete() && read.indelCoords().isDelete())
         {
@@ -177,14 +178,11 @@ public class ExtensionSeqBuilder
             }
         }
 
-
         final byte[] extensionBases = mSequenceBuilder.bases();
-        final byte[] extensionQuals = mSequenceBuilder.baseQuals();
 
         while(extensionIndex >= 0 && extensionIndex < extensionBases.length)
         {
             byte consensusBase = extensionBases[extensionIndex];
-            byte consensusQual = extensionQuals[extensionIndex];
 
             byte base = readParseState.currentBase();
             byte qual = readParseState.currentQual();
@@ -198,7 +196,7 @@ public class ExtensionSeqBuilder
             else
             {
                 // evaluate difference and decide how to proceed
-                assessReadMismatch(readParseState, extensionIndex, consensusBase, consensusQual);
+                assessReadMismatch(readParseState, extensionIndex);
 
                 if(readParseState.mismatched())
                     return readParseState;
@@ -219,7 +217,7 @@ public class ExtensionSeqBuilder
         return readParseState;
     }
 
-    private void assessReadMismatch(final ReadParseState read, int extensionIndex, byte consensusBase, byte consensusQual)
+    private void assessReadMismatch(final ReadParseState read, int extensionIndex)
     {
         SequenceDiffInfo seqDiffInfo = SequenceDiffInfo.UNSET;
 

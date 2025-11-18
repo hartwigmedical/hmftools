@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.driver.panel;
 
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToList;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +14,7 @@ import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 public class ReportablePredicate
@@ -44,9 +47,9 @@ public class ReportablePredicate
 
     public boolean isReportable(
             final String gene, final VariantType type, boolean isHotspot,
-            final CodingEffect codingEffect, final String effects)
+            final CodingEffect codingEffect, final String effectsStr)
     {
-        final DriverGene driverGene = mDriverGeneMap.get(gene);
+        DriverGene driverGene = mDriverGeneMap.get(gene);
 
         if(driverGene == null)
             return false;
@@ -54,29 +57,29 @@ public class ReportablePredicate
         if(isHotspot && driverGene.reportSomaticHotspot())
             return true;
 
-        DriverImpact impact = DriverImpact.select(type, codingEffect);
+        // rather than take the top driver impact and check its reportability only, check if any present impact is reportable
+        // to avoid not reporting a variant with a lower reportable effect with a higher non-reportable one
 
-        // splice ranks above missense so if a gene is reportable for missense but not splice, ensure this is handled
-        boolean hasMissense = effects.contains(MISSENSE.effect());
+        List<VariantEffect> variantEffects = effectsToList(effectsStr);
 
-        if(hasMissense && driverGene.reportMissenseAndInframe())
-            return true;
-
-        switch(impact)
+        if(driverGene.reportMissenseAndInframe())
         {
-            case NONSENSE:
-            case FRAMESHIFT:
-                return driverGene.reportNonsenseAndFrameshift();
-
-            case SPLICE:
-                return driverGene.reportSplice();
-
-            case MISSENSE:
-            case INFRAME:
-                return driverGene.reportMissenseAndInframe();
-
-            default:
-                return false;
+            if(variantEffects.stream().anyMatch(x -> CodingEffect.effect(x) == CodingEffect.MISSENSE))
+                return true;
         }
+
+        if(driverGene.reportSplice())
+        {
+            if(variantEffects.stream().anyMatch(x -> CodingEffect.effect(x) == CodingEffect.SPLICE))
+                return true;
+        }
+
+        if(driverGene.reportNonsenseAndFrameshift())
+        {
+            if(variantEffects.stream().anyMatch(x -> CodingEffect.effect(x) == CodingEffect.NONSENSE_OR_FRAMESHIFT))
+                return true;
+        }
+
+        return false;
     }
 }

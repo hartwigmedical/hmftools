@@ -66,7 +66,7 @@ public class GermlineDisruptions
 {
     private final EnsemblDataCache mGeneTransCache;
     private final List<GeneData> mDriverGeneDataList;
-    private final List<DriverGene> mDriverGenes;
+    private final Map<String,DriverGene> mDriverGenes;
     private final List<SvDisruptionData> mDisruptions;
 
     private final Set<SvVarData> mReportableSgls;
@@ -83,15 +83,12 @@ public class GermlineDisruptions
     {
         mGeneTransCache = geneTransCache;
 
-        mDriverGenes = Lists.newArrayList();
+        mDriverGenes = config.DriverGenes;
         mDriverGeneDataList = Lists.newArrayList();
 
-        for(DriverGene driverGene : config.DriverGenes)
+        for(String geneName : config.DriverGenes.keySet())
         {
-            if(driverGene.reportGermlineDisruption() != NONE)
-                mDriverGenes.add(driverGene);
-
-            GeneData geneData = geneTransCache.getGeneDataByName(driverGene.gene());
+            GeneData geneData = geneTransCache.getGeneDataByName(geneName);
 
             if(geneData != null)
                 mDriverGeneDataList.add(geneData);
@@ -389,6 +386,28 @@ public class GermlineDisruptions
 
                 // DELs and DUPs which straddle driver genes are not reportable
                 boolean reportable = !mDisruptions.contains(disruptionData) && isReportable(disruptionData);
+                ReportedStatus reportedStatus = ReportedStatus.NONE;
+
+                if(reportable)
+                {
+                    DriverGene driverGene = mDriverGenes.get(disruptionData.Gene.GeneName);
+
+                    if(driverGene != null)
+                    {
+                        if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
+                        {
+                            reportable = false;
+                        }
+                        else if(driverGene.reportGermlineDisruption() == NONE)
+                        {
+                            reportedStatus = ReportedStatus.NOT_REPORTED;
+                        }
+                        else
+                        {
+                            reportedStatus = ReportedStatus.REPORTED;
+                        }
+                    }
+                }
 
                 if(disruptionData.isPseudogeneDeletion())
                 {
@@ -410,7 +429,7 @@ public class GermlineDisruptions
                         .canonical(transcript.IsCanonical)
                         .biotype(transcript.BioType)
                         .disruptive(false)
-                        .reportedStatus(reportable ? ReportedStatus.REPORTED : ReportedStatus.NONE)
+                        .reportedStatus(reportedStatus)
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
                         .totalExonCount(transcript.exons().size());
 
@@ -449,8 +468,7 @@ public class GermlineDisruptions
                 // add at most one driver record per gene
                 if(reportable && drivers.stream().noneMatch(x -> x.gene().equals(gene.GeneName)))
                 {
-                    DriverGene driverGene = mDriverGenes.stream()
-                            .filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+                    DriverGene driverGene = mDriverGenes.get(disruptionData.Gene.GeneName);
 
                     drivers.add(ImmutableDriverCatalog.builder()
                             .driver(driverType)
@@ -512,14 +530,6 @@ public class GermlineDisruptions
         boolean isDelOrDup = var.type() == DEL || var.type() == DUP;
 
         if(disruptionData.CodingType == UTR_3P && !isDelOrDup)
-            return false;
-
-        DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
-
-        if(driverGene == null)
-            return false;
-
-        if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
             return false;
 
         if(disruptionData.isPseudogeneDeletion())

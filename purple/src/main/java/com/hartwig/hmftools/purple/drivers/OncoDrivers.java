@@ -123,12 +123,12 @@ public class OncoDrivers extends SomaticVariantDriverFinder
             for(SomaticVariant variant : geneVariants)
             {
                 CodingEffect codingEffect = getWorstReportableCodingEffect(variant.variantImpact());
-                final DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
+                DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
 
-                final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
+                DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
 
-                final int sampleVariantCount =
-                        impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
+                int sampleVariantCount = (impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME)
+                        ? sampleIndelCount : sampleSNVCount;
 
                 driverLikelihood = Math.max(driverLikelihood, DndsCalculator.probabilityDriverVariant(sampleVariantCount, likelihood));
             }

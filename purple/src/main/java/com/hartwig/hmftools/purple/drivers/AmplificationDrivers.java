@@ -53,7 +53,7 @@ public final class AmplificationDrivers
             boolean isCandidate = false;
             DriverType driverType = calcDriverType(geneCopyNumber, geneCopyNummberThreshold, checkPartials);
 
-            if(driverType == UNKNOWN && driverGene.reportAmplification())
+            if(driverType == UNKNOWN)
             {
                 double candidateAmpThreshold = geneCopyNummberThreshold * DEFAULT_DRIVER_AMPLIFICATION_CANDIDATE_PLOIDY_RATIO;
                 driverType = calcDriverType(geneCopyNumber, candidateAmpThreshold, checkPartials);
@@ -63,16 +63,7 @@ public final class AmplificationDrivers
             if(driverType == UNKNOWN)
                 continue;
 
-            ReportedStatus reportedStatus;
-
-            if(driverGene.reportAmplification())
-            {
-                reportedStatus = isCandidate ? ReportedStatus.CANDIDATE : ReportedStatus.REPORTED;
-            }
-            else
-            {
-                reportedStatus = ReportedStatus.NONE;
-            }
+            ReportedStatus reportedStatus = driverGene.reportAmplification() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
             geneCopyNumber.setDriverType(driverType);
             geneCopyNumber.setReportedStatus(reportedStatus);

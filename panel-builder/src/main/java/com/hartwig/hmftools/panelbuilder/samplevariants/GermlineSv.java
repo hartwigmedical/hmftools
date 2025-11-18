@@ -3,6 +3,7 @@ package com.hartwig.hmftools.panelbuilder.samplevariants;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
 
@@ -43,7 +44,7 @@ public class GermlineSv implements Variant
     @Override
     public boolean isDriver()
     {
-        return mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption);
+        return mBreakends.stream().anyMatch(x -> x.reportedStatus() == REPORTED);
     }
 
     @Override

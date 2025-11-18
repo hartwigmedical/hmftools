@@ -67,7 +67,7 @@ public class ResultsWriter
     {
         SUMMARY,
         FRAGMENTS,
-        REF_COUNTS;
+        REF_COUNTS
     }
 
     public ResultsWriter(final LilacConfig config, final ConfigBuilder configBuilder)
@@ -204,7 +204,7 @@ public class ResultsWriter
         CoverageQC coverageQC = new CoverageQC(countsByGene, 0, 0, 0, 0, 0, 0, 0);
 
         LilacQC summaryMetrics = new LilacQC(
-                mConfig.Genes, 0, "", 0, null,
+                mConfig.Genes, 0, "", null, null,
                 aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
 
         SolutionSummary solutionSummary = new SolutionSummary(

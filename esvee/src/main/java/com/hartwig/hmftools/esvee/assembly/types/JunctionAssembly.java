@@ -27,7 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.assembly.RefReadParseState;
+import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
@@ -337,11 +337,11 @@ public class JunctionAssembly
         for(int i = 0; i < mSupport.size(); ++i)
         {
             SupportRead read = mSupport.get(i);
-            RefReadParseState readState = refBaseSeqBuilder.reads().get(i);
+            ReadParseState readState = refBaseSeqBuilder.reads().get(i);
 
-            if(readState.isValid() && !readState.exceedsMaxMismatches())
+            if(readState.isValid() && !readState.mismatched())
             {
-                read.setReferenceMismatches(readState.mismatches());
+                read.setReferenceMismatches(readState.mismatchCount(true));
                 checkAddRefSideSoftClip(read.cachedRead());
             }
         }

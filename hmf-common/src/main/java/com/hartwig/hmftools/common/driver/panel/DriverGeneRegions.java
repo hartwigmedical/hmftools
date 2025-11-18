@@ -23,13 +23,6 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 
 public final class DriverGeneRegions
 {
-    public static List<String> loadActionableGenes(final List<DriverGene> driverGenes)
-    {
-        return driverGenes.stream()
-                .filter(x -> x.reportSomatic() || x.reportGermline() || x.reportPGX())
-                .map(x -> x.gene()).collect(Collectors.toList());
-    }
-
     public static Map<String,List<GeneRegion>> buildDriverGeneRegions(
             final EnsemblDataCache ensemblDataCache, final List<String> driverGenes)
     {

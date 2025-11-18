@@ -20,6 +20,7 @@ import static junit.framework.TestCase.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -54,7 +55,7 @@ public class HomDisruptionsTest
         List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
-        tester.Config.DriverGenes.add(createDriverGene(geneName));
+        tester.Config.DriverGenes.put(geneName, createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -127,7 +128,7 @@ public class HomDisruptionsTest
         List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
-        tester.Config.DriverGenes.add(createDriverGene(geneName));
+        tester.Config.DriverGenes.put(geneName, createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
@@ -228,7 +229,7 @@ public class HomDisruptionsTest
         List<GeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
 
-        tester.Config.DriverGenes.add(createDriverGene(geneName));
+        tester.Config.DriverGenes.put(geneName, createDriverGene(geneName));
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 

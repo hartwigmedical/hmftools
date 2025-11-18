@@ -198,16 +198,16 @@ public class IndelDeduper
                     continue;
 
                 markAsDedup(variant.Variant);
+
+                if(!indel.Variant.isPassing())
+                {
+                    indel.Variant.filters().forEach(x->variant.Variant.filters().add(x));
+                }
             }
             else if(indel.Variant.isPassing() && recoverFilteredVariant(variant.Variant, nonDedupedVariants))
             {
                 variant.Variant.filters().clear();
             }
-            if(!indel.Variant.isPassing())
-            {
-                indel.Variant.filters().forEach(x->variant.Variant.filters().add(x));
-            }
-
         }
     }
 

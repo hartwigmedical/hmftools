@@ -56,7 +56,7 @@ public class SageConstants
 
     public static final double MSI_JITTER_MIN_RATIO = 2;
     public static final double MSI_JITTER_MIN_RATIO_HOTSPOT = 1.5;
-    public static final double MSI_JITTER_RATIO_HOTSPOT_VAF = 0.025;
+    public static final double MSI_JITTER_RATIO_HOTSPOT_VAF = 0.03;
 
     public static final int INDEL_UNCERTAIN_BASE_REPEAT_MIN = 3;
 
@@ -124,6 +124,9 @@ public class SageConstants
 
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;
+
+    public static final double AVG_READ_EDGE_DISTANCE_THRESHOLD = 0.25;
+    public static final double AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD = 0.15;
 
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;

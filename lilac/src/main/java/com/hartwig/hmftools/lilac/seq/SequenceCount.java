@@ -59,8 +59,7 @@ public final class SequenceCount
             {
                 int locus = nucleotide.locus();
                 String bases = nucleotide.bases();
-                seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create());
-                seqCountsByLoci.get(locus).add(bases);
+                seqCountsByLoci.computeIfAbsent(locus, k -> HashMultiset.create()).add(bases);
             }
         }
 

@@ -214,7 +214,7 @@ public class FusionDisruptionAnalyser
 
         final List<LinxBreakend> breakends = Lists.newArrayList();
         final List<LinxFusion> fusions = Lists.newArrayList();
-        convertBreakendsAndFusions(mUniqueFusions, transcripts, fusions, breakends);
+        convertBreakendsAndFusions(mUniqueFusions, mConfig.DriverGenes, transcripts, fusions, breakends);
 
         if(mConfig.isSingleSample())
         {
