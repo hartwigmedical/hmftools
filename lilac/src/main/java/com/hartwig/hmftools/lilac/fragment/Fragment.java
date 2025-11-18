@@ -40,8 +40,8 @@ public class Fragment
 
     private FragmentScope mScope;
 
-    public static Fragment createFromQuals(final Read read, final HlaGene readGene, final Set<HlaGene> genes, final List<Integer> nucleotideLoci,
-            final List<Byte> nucleotidesQualities, final List<String> nucleotidesBases)
+    public static Fragment createFromQuals(final Read read, final HlaGene readGene, final Set<HlaGene> genes,
+            final List<Integer> nucleotideLoci, final List<Byte> nucleotidesQualities, final List<String> nucleotidesBases)
     {
         return new Fragment(read, readGene, genes,
                 IntStream.range(0, nucleotideLoci.size())

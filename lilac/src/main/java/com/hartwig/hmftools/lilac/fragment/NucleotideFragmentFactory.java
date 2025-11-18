@@ -125,7 +125,7 @@ public class NucleotideFragmentFactory
         final int iStart = reverseStrand ? readLength - 1 : 0;
         int samCodingLoci = reverseStrand ? samCodingEndLoci : samCodingStartLoci;
         int readIndex = read.ReadIndexStart;
-        for(int i = iStart; i >= 0 && i < readLength;)
+        for(int i = iStart; i >= 0 && i < readLength; )
         {
             if(!indelQueue.isEmpty() && indelQueue.peek().ReadIndex < readIndex)
                 indelQueue.poll();
@@ -217,7 +217,7 @@ public class NucleotideFragmentFactory
         return null;
     }
 
-    private Fragment createIndelFragment(
+    private static Fragment createIndelFragment(
             final Read record, final HlaGene geneName, final int startLoci, final String bamSequence, final HlaSequenceLoci hlaSequence)
     {
         int endLoci = endLoci(startLoci, bamSequence, hlaSequence);

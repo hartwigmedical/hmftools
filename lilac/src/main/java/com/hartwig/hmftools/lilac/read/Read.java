@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.lilac.ReferenceData.refBases;
 import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public class Read
     private final int mTrimmedBases;
 
     public Read(
-            final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
+            final String id, int softClippedStart, int softClippedEnd, final Collection<Indel> indels, int positionStart,
             int positionEnd, int readIndexStart, int readIndexEnd, final SAMRecord record, int trimmedBases)
     {
         Id = id;

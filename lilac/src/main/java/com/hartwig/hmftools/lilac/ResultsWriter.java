@@ -67,7 +67,7 @@ public class ResultsWriter
     {
         SUMMARY,
         FRAGMENTS,
-        REF_COUNTS;
+        REF_COUNTS
     }
 
     public ResultsWriter(final LilacConfig config, final ConfigBuilder configBuilder)

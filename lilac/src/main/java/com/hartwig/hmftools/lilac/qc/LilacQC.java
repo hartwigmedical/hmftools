@@ -48,9 +48,9 @@ public final class LilacQC
     public final SomaticVariantQC SomaticVariantQC;
 
     public LilacQC(
-            final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, final Integer medianBaseQual, final HlaAllele hlaYAllele,
-            final AminoAcidQC aminoAcidQC, final BamQC bamQC,
-            final CoverageQC coverageQC, final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
+            final GeneSelector genes, double scoreMargin, final String nextSolutionInfo, final Integer medianBaseQual,
+            final HlaAllele hlaYAllele, final AminoAcidQC aminoAcidQC, final BamQC bamQC, final CoverageQC coverageQC,
+	    final HaplotypeQC haplotypeQC, final SomaticVariantQC somaticVariantQC)
     {
         mGenes = genes;
 

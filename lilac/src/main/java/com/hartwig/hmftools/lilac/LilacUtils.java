@@ -3,15 +3,18 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
-public class LilacUtils
+public final class LilacUtils
 {
-    public static int calcNucelotideLocus(final List<TranscriptData> transcripts, int position)
+    private LilacUtils() {}
+
+    public static int calcNucelotideLocus(final Iterable<TranscriptData> transcripts, int position)
     {
         for(TranscriptData transData : transcripts)
         {
@@ -36,12 +39,12 @@ public class LilacUtils
 
     }
 
-    public static int listMin(final List<Integer> list)
+    public static int listMin(final Collection<Integer> list)
     {
         return list.stream().mapToInt(x -> x).min().orElse(0);
     }
 
-    public static int listMax(final List<Integer> list)
+    public static int listMax(final Collection<Integer> list)
     {
         return list.stream().mapToInt(x -> x).max().orElse(0);
     }
@@ -51,7 +54,7 @@ public class LilacUtils
         if(list1.size() != list2.size())
             return false;
 
-        return !list1.stream().noneMatch(x -> list2.contains(x));
+        return list1.stream().anyMatch(list2::contains);
     }
 
 }
