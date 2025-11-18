@@ -38,6 +38,14 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
     private static final String FIELD_STANDARD_TRINUC_CONTEXT = "StandardTrinucContext";
     private static final String FIELD_ORIGINAL_QUAL_BIN = "OriginalQualBin";
 
+    /*
+    Add a pseudocount to 'count' to avoid divide by zero errors when calculating weighted mean of change in qual.
+
+    The pseudocount is set to a higher value than 1 so that when counts are e.g. [1, 2, 0, 0], the effective weight
+    of low counts (e.g. 1 and 2) is reduced. We want to reduce skewed weighted means due to sparse data.
+     */
+    private static final int PSEUDOCOUNT = 5;
+
     public BaseQualRecalibrationPrep(CommonPrepConfig config)
     {
         mConfig = config;
@@ -164,13 +172,14 @@ public class BaseQualRecalibrationPrep implements CategoryPrep
         {
             List<BqrRecord> bqrRecordsInGroup = bqrRecordGroups.get(key);
 
-            double totalCountInGroup = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count).sum();
+            double totalCountInGroup = bqrRecordsInGroup.stream().mapToDouble(x -> x.Count + PSEUDOCOUNT).sum();
 
             double weightedMeanedChangeInQual = 0;
             for(BqrRecord bqrRecordInGroup : bqrRecordsInGroup)
             {
                 double changeInQual = bqrRecordInGroup.RecalibratedQuality - bqrRecordInGroup.Key.Quality;
-                double weight = bqrRecordInGroup.Count / totalCountInGroup;
+                double count = bqrRecordInGroup.Count + PSEUDOCOUNT;
+                double weight = count / totalCountInGroup;
                 double weightedChangeInQual = changeInQual * weight;
 
                 weightedMeanedChangeInQual += weightedChangeInQual;
