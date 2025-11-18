@@ -125,6 +125,9 @@ public class SageConstants
     public static final int READ_EDGE_PENALTY_0 = 15;
     public static final int READ_EDGE_PENALTY_1 = 5;
 
+    public static final double AVG_READ_EDGE_DISTANCE_THRESHOLD = 0.25;
+    public static final double AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD = 0.15;
+
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 0;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7.0 * DEFAULT_READ_LENGTH; // since now scaled
