@@ -63,14 +63,6 @@ public class VisProteinDomain implements GenomeRegion
         return Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_FIVE_PRIME_UTR) || Info.equals(PD_NON_CODING) ? PROTEIN_DOMAIN_UTR : Info;
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_protein_domain.tsv";
-    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_protein_domain.tsv";
-
-    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
-    {
-        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
-    }
-
     public static List<VisProteinDomain> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));

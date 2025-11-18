@@ -252,6 +252,11 @@ public class SvVarData
 
     public double jcn() { return mJcn; }
 
+    public int getImpliedJcn()
+    {
+        return max(getMaxAssembledBreakend(), (int) getRoundedJcn(true));
+    }
+
     public double copyNumberChange(boolean isStart)
     {
         if(mDbLink[seIndex(isStart)] != null && mDbLink[seIndex(isStart)].length() == 0)
@@ -277,7 +282,7 @@ public class SvVarData
         return max(getAssembledLinkedPairs(true).size(), getAssembledLinkedPairs(false).size());
     }
 
-    public int getImpliedJcn()
+    public int getyImpliedJcn()
     {
         return max(getMaxAssembledBreakend(), (int) getRoundedJcn(true));
     }

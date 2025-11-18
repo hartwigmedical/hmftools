@@ -94,14 +94,6 @@ public class VisSegment implements GenomeRegion
         return newSegment;
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_segments.tsv";
-    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_segments.tsv";
-
-    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
-    {
-        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
-    }
-
     public static List<VisSegment> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));

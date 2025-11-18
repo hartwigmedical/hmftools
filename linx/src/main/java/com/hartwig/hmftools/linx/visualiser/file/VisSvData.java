@@ -103,14 +103,6 @@ public class VisSvData
         return HumanChromosome.contains(ChrEnd);
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
-    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_sv_data.tsv";
-
-    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
-    {
-        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
-    }
-
     public static List<VisSvData> read(final String filePath) throws IOException
     {
         return fromLines(Files. readAllLines(new File(filePath).toPath()));
