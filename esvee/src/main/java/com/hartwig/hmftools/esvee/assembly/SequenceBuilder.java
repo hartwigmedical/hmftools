@@ -818,7 +818,7 @@ public class SequenceBuilder
             seqDiffInfo.MismatchPenalty = calcMismatchPenalty(seqDiffInfo, consensusRepeat);
             read.addMismatchInfo(seqDiffInfo);
 
-            if(exceedsReadMismatches(read))
+            if(checkReadMismatches(read))
             {
                 read.markMismatched();
                 return;
@@ -853,12 +853,17 @@ public class SequenceBuilder
         read.addBaseMatches(repeatedMatches, highQualRepeatBases);
     }
 
-    private boolean exceedsReadMismatches(final ReadParseState read)
+    private boolean checkReadMismatches(final ReadParseState read)
     {
         if(mDisableMismatchPenalty)
             return false;
 
         // CHECK and compare with AssemblyUtils.mismatchesPerComparisonLength
+        return exceedsReadMismatches(read);
+    }
+
+    public static boolean exceedsReadMismatches(final ReadParseState read)
+    {
         double mismatches = read.mismatchPenalty();
         double permittedPenalty = permittedReadMismatches(read.overlapBaseCount());
         return mismatches > permittedPenalty;
@@ -878,7 +883,7 @@ public class SequenceBuilder
         return READ_MISMATCH_PENALTY_PENALTY_LONG;
     }
 
-    private double calcMismatchPenalty(final SequenceDiffInfo seqDiffInfo, @Nullable final RepeatInfo consensusRepeat)
+    public static double calcMismatchPenalty(final SequenceDiffInfo seqDiffInfo, @Nullable final RepeatInfo consensusRepeat)
     {
         if(seqDiffInfo.Type == MATCH)
             return 0;

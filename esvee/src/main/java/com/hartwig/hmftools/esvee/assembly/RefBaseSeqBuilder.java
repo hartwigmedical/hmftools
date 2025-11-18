@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_REF_READ_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.exceedsReadMismatches;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -24,7 +27,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -37,9 +39,9 @@ import htsjdk.samtools.CigarOperator;
 public class RefBaseSeqBuilder
 {
     private final JunctionAssembly mAssembly;
-    private final List<RefReadParseState> mReads;
+    private final List<ReadParseState> mReads;
 
-    private final boolean mIsForward;
+    private final boolean mIsForwardJunction;
     private final int mJunctionPosition;
 
     private byte[] mBases; // starts with the junction ref base
@@ -50,7 +52,7 @@ public class RefBaseSeqBuilder
     public RefBaseSeqBuilder(final JunctionAssembly assembly)
     {
         mAssembly = assembly;
-        mIsForward = mAssembly.junction().isForward();
+        mIsForwardJunction = mAssembly.junction().isForward();
         mJunctionPosition = mAssembly.junction().Position;
         mRefBasePosition = mJunctionPosition;
 
@@ -74,7 +76,7 @@ public class RefBaseSeqBuilder
             }
             else
             {
-                if(mIsForward)
+                if(mIsForwardJunction)
                 {
                     // junction reads must overlap the junction by 3+ bases to extend the ref sequence
                     hasValidJunctionOverlap = mAssembly.discordantOnly() || read.isRightClipped();
@@ -87,9 +89,9 @@ public class RefBaseSeqBuilder
                 }
             }
 
-            int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForward);
+            int readRefBaseLength = readRefBaseLength(read, readJunctionIndex, mIsForwardJunction);
 
-            RefReadParseState readState = new RefReadParseState(mIsForward, read, readJunctionIndex, readRefBaseLength);
+            ReadParseState readState = new ReadParseState(!mIsForwardJunction, read, readJunctionIndex, true);
 
             if(hasValidJunctionOverlap)
                 maxReadBaseLength = max(maxReadBaseLength, readRefBaseLength);
@@ -117,6 +119,7 @@ public class RefBaseSeqBuilder
     public List<CigarElement> cigarElements() { return mCigarElements; }
     public String cigarStr() { return CigarUtils.cigarElementsToStr(mCigarElements); }
 
+    @VisibleForTesting
     public static int readRefBaseLength(final Read read, int readJunctionIndex, boolean isForwardJunction)
     {
         // work out the aligned length including deletes and adding inserts
@@ -130,11 +133,11 @@ public class RefBaseSeqBuilder
         return alignedLength + insertLength;
     }
 
-    public List<RefReadParseState> reads() { return mReads; }
+    public List<ReadParseState> reads() { return mReads; }
 
     private void buildSequence()
     {
-        int currentIndex = mIsForward ? mBases.length - 1 : 0;
+        int currentIndex = mIsForwardJunction ? mBases.length - 1 : 0;
         int refPosition = mJunctionPosition;
 
         // set the junction read base as established from the initial split reads
@@ -144,12 +147,12 @@ public class RefBaseSeqBuilder
         CigarOperator currentElementType = M;
         int currentElementLength = 0;
 
-        List<RefReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
+        List<ReadParseState> activeReads = mReads.stream().filter(x -> x.isValid()).collect(Collectors.toList());
 
         while(!activeReads.isEmpty())
         {
             if(currentElementType == M || currentElementType == I)
-                currentIndex += mIsForward ? -1 : 1;
+                currentIndex += mIsForwardJunction ? -1 : 1;
 
             ++currentElementLength;
 
@@ -184,13 +187,13 @@ public class RefBaseSeqBuilder
 
             if(currentElementType == D)
             {
-                refPosition += mIsForward ? -1 : 1;
-                markReadBaseMatches(activeReads, currentElementType, NO_BASE, NO_BASE);
+                refPosition += mIsForwardJunction ? -1 : 1;
+                markReadBaseMatches(activeReads, currentElementType, currentIndex, NO_BASE);
                 continue;
             }
 
             // now establish the consensus base
-            for(RefReadParseState read : activeReads)
+            for(ReadParseState read : activeReads)
             {
                 if(read.operator() != currentElementType)
                     continue;
@@ -263,10 +266,10 @@ public class RefBaseSeqBuilder
             mBaseQuals[currentIndex] = (byte)consensusMaxQual;
 
             // mark active reads as matching or not
-            markReadBaseMatches(activeReads, currentElementType, consensusBase, consensusMaxQual);
+            markReadBaseMatches(activeReads, currentElementType, currentIndex, consensusBase);
 
             if(currentElementType == M || currentElementType == D)
-                refPosition += mIsForward ? -1 : 1;
+                refPosition += mIsForwardJunction ? -1 : 1;
         }
 
         // add the last, current element
@@ -279,12 +282,12 @@ public class RefBaseSeqBuilder
         {
             int outerRefPosition = -1;
 
-            for(RefReadParseState read : mReads)
+            for(ReadParseState read : mReads)
             {
                 if(!read.isValid())
                     continue;
 
-                if(mIsForward)
+                if(mIsForwardJunction)
                 {
                     if(outerRefPosition < 0 || read.refPosition() < outerRefPosition)
                         outerRefPosition = read.refPosition();
@@ -298,17 +301,17 @@ public class RefBaseSeqBuilder
             mRefBasePosition = outerRefPosition;
         }
 
-        if(mIsForward)
+        if(mIsForwardJunction)
             Collections.reverse(mCigarElements);
     }
 
-    private static CigarOperator findNextOperator(final List<RefReadParseState> reads)
+    private static CigarOperator findNextOperator(final List<ReadParseState> reads)
     {
         int inserts = 0;
         int deletes = 0;
         int aligned = 0;
 
-        for(RefReadParseState read : reads)
+        for(ReadParseState read : reads)
         {
             if(read.operator() == M)
                 ++aligned;
@@ -324,7 +327,7 @@ public class RefBaseSeqBuilder
         return inserts >= deletes ? I : D;
     }
 
-    private static void progressReadState(final List<RefReadParseState> reads, final CigarOperator currentElementType)
+    private static void progressReadState(final List<ReadParseState> reads, final CigarOperator currentElementType)
     {
         // move to the next position or index if during an insert
         boolean allowNonIndelMatch = false;
@@ -333,7 +336,7 @@ public class RefBaseSeqBuilder
         {
             int indelCount = 0;
 
-            for(RefReadParseState read : reads)
+            for(ReadParseState read : reads)
             {
                 if(read.operator() == I && read.elementLength() >= MIN_INDEL_SUPPORT_LENGTH)
                 {
@@ -351,7 +354,7 @@ public class RefBaseSeqBuilder
         int index = 0;
         while(index < reads.size())
         {
-            RefReadParseState read = reads.get(index);
+            ReadParseState read = reads.get(index);
 
             if(currentElementType == M || currentElementType == D)
             {
@@ -372,7 +375,10 @@ public class RefBaseSeqBuilder
                 }
             }
 
-            if(read.exhausted() || read.exceedsMaxMismatches())
+            if(exceedsReadMismatches(read))
+                read.markMismatched();
+
+            if(read.exhausted() || read.mismatched())
                 reads.remove(index);
             else
                 ++index;
@@ -380,49 +386,45 @@ public class RefBaseSeqBuilder
     }
 
     private static void markReadBaseMatches(
-            final List<RefReadParseState> reads, final CigarOperator currentElementType, final byte consensusBase, final byte consensusQual)
+            final List<ReadParseState> reads, final CigarOperator currentElementType,
+            final int currentIndex, final byte consensusBase)
     {
-        for(RefReadParseState read : reads)
+        for(ReadParseState read : reads)
         {
             if(currentElementType == D)
             {
                 if(read.operator() != currentElementType)
-                    read.addIndelMismatch();
+                {
+                    SequenceDiffType type = read.operator() == M ? BASE : INSERT;
+                    read.addMismatch(currentIndex, type);
+                }
 
                 continue;
             }
 
             boolean aboveMinQual = aboveMinQual(read.currentQual());
-            boolean consensusAboveMinQual = aboveMinQual(consensusQual);
             boolean operatorMismatch = read.operator() != currentElementType;
 
             if(operatorMismatch && read.operator() == D)
             {
-                read.addIndelMismatch();
+                read.addMismatch(currentIndex, SequenceDiffType.DELETE);
                 continue;
             }
 
             if(read.currentBase() != consensusBase)
             {
-                if(aboveMinQual && consensusAboveMinQual)
-                {
-                    if(operatorMismatch)
-                        read.addIndelMismatch();
-                    else
-                        read.addMismatch();
-                }
+                read.addMismatch(currentIndex, BASE);
             }
             else
             {
-                if(aboveMinQual)
-                    read.addHighQualMatch();
+                read.addBaseMatch(aboveMinQual);
             }
         }
     }
 
     private void trimFinalSequence()
     {
-        int currentIndex = mIsForward ? mBases.length - 1 : 0;
+        int currentIndex = mIsForwardJunction ? mBases.length - 1 : 0;
         int validLength = 0;
 
         while(currentIndex >= 0 && currentIndex < mBases.length)
@@ -431,14 +433,14 @@ public class RefBaseSeqBuilder
                 break;
 
             ++validLength;
-            currentIndex += mIsForward ? -1 : 1;
+            currentIndex += mIsForwardJunction ? -1 : 1;
         }
 
         if(validLength == mBases.length)
             return;
 
         int reduction = mBases.length - validLength;
-        int startIndex = mIsForward ? reduction : 0;
+        int startIndex = mIsForwardJunction ? reduction : 0;
         int endIndex = startIndex + validLength - 1;
         mBases = subsetArray(mBases, startIndex, endIndex);
         mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);

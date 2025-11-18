@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.calcMismatchPenalty;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
@@ -11,6 +12,9 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 
+import static htsjdk.samtools.CigarOperator.H;
+import static htsjdk.samtools.CigarOperator.I;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -18,6 +22,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 
 public class ReadParseState
 {
@@ -28,8 +35,18 @@ public class ReadParseState
     private int mReadIndex;
 
     private boolean mExhausted;
-    private boolean mMismatched;
+    private boolean mValid;
 
+    // ref and cigar position tracking - optional
+    private int mRefPosition;
+    private final int mElementCount;
+    private final List<CigarElement> mElements;
+    private int mCigarIndex; // index of the current element amongst the CIGAR
+    private CigarElement mElement;
+    private int mElementIndex; // index within the current CIGAR element
+
+    // track agreement and mismatches vs consensus sequence
+    private boolean mMismatched;
     public int mBaseMatches;
     public int mHighQualMatches;
     private List<SequenceDiffInfo> mMismatches;
@@ -38,13 +55,35 @@ public class ReadParseState
 
     public ReadParseState(final boolean moveForward, final Read read, final int startIndex)
     {
+        this(moveForward, read, startIndex, false);
+    }
+
+    public ReadParseState(final boolean moveForward, final Read read, final int startIndex, boolean trackCigar)
+    {
         mRead = read;
         mBaseLength = mRead.basesLength();
         mMoveForward = moveForward;
         mStartIndex = startIndex;
 
         mExhausted = false;
+        mValid = true;
         mReadIndex = 0;
+
+        mRefPosition = 0;
+        mCigarIndex = 0;
+        mElement = null;
+        mElementIndex = 0;
+
+        if(trackCigar)
+        {
+            mElements = mRead.cigarElements();
+            mElementCount = mElements.size();
+        }
+        else
+        {
+            mElements = null;
+            mElementCount = 0;
+        }
 
         // move to the required index
         resetIndex();
@@ -61,9 +100,11 @@ public class ReadParseState
         return mRead;
     }
 
-    // public boolean isValid() { return mMismatched; }
     public boolean mismatched() { return mMismatched; }
     public void markMismatched() { mMismatched = true; }
+
+    public boolean isValid() { return mValid; }
+    public void markInvalid() { mValid = true; }
 
     public boolean exhausted() { return mExhausted; }
 
@@ -72,6 +113,10 @@ public class ReadParseState
 
     public byte currentBase() { return mRead.getBases()[mReadIndex]; }
     public byte currentQual() { return mRead.getBaseQuality()[mReadIndex]; }
+
+    public int refPosition() { return mRefPosition; }
+    public CigarOperator operator() { return mElement != null ? mElement.getOperator() : null; }
+    public int elementLength() { return mElement != null ? mElement.getLength() : 0; }
 
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
 
@@ -96,8 +141,6 @@ public class ReadParseState
         }
     }
 
-    public void moveNext() { moveNextBases(1); }
-
     public void moveNextBases(int baseCount)
     {
         if(mExhausted)
@@ -105,16 +148,129 @@ public class ReadParseState
 
         for(int i = 0; i < baseCount; ++i)
         {
-            if(mMoveForward)
-                ++mReadIndex;
-            else
-                --mReadIndex;
+            moveNext();
+        }
+    }
 
-            if(mReadIndex < 0 || mReadIndex >= mBaseLength)
+    public void moveNext()
+    {
+        if(mExhausted)
+            return;
+
+        if(mElements != null)
+            moveNextCigarAware();
+        else
+            moveNextReadIndex();
+    }
+
+    private void moveNextReadIndex()
+    {
+        if(mMoveForward)
+            ++mReadIndex;
+        else
+            --mReadIndex;
+
+        if(mReadIndex < 0 || mReadIndex >= mBaseLength)
+        {
+            mExhausted = true;
+        }
+    }
+
+    private void moveNextCigarAware()
+    {
+        if(mMoveForward)
+        {
+            ++mElementIndex;
+
+            if(mElementIndex >= mElement.getLength())
             {
-                mExhausted = true;
-                break;
+                // determine whether to move index and position base on previous element
+                boolean wasClipping = mElement.getOperator().isClipping();
+
+                ++mCigarIndex;
+
+                if(mCigarIndex >= mElementCount)
+                {
+                    mExhausted = true;
+                    return;
+                }
+
+                mElementIndex = 0;
+                mElement = mElements.get(mCigarIndex);
+
+                if(mCigarIndex > 0 && mElement.getOperator().isClipping()) // stop at a soft-clip
+                {
+                    mExhausted = true;
+                }
+                else
+                {
+                    if(!wasClipping && mElement.getOperator() != I)
+                        ++mRefPosition;
+
+                    if(mElement.getOperator().consumesReadBases())
+                        ++mReadIndex;
+                }
             }
+            else
+            {
+                if(mElement.getOperator().consumesReferenceBases())
+                    ++mRefPosition;
+
+                if(mElement.getOperator().consumesReadBases())
+                    ++mReadIndex;
+            }
+        }
+        else
+        {
+            --mElementIndex;
+
+            if(mElementIndex < 0 || mElement.getOperator() == H)
+            {
+                boolean wasClipping = mElement.getOperator().isClipping();
+
+                --mCigarIndex;
+
+                if(mCigarIndex < 0)
+                {
+                    mExhausted = true;
+                    return;
+                }
+
+                mElement = mElements.get(mCigarIndex);
+                mElementIndex = mElement.getLength() - 1;
+
+                if(mCigarIndex < mElementCount - 1 && mElement.getOperator().isClipping())
+                {
+                    mExhausted = true;
+                }
+                else
+                {
+                    if(!wasClipping && mElement.getOperator() != I)
+                        --mRefPosition;
+
+                    if(mElement.getOperator().consumesReadBases())
+                        --mReadIndex;
+                }
+            }
+            else
+            {
+                if(mElement.getOperator().consumesReferenceBases())
+                    --mRefPosition;
+
+                if(mElement.getOperator().consumesReadBases())
+                    --mReadIndex;
+            }
+        }
+
+        if(mReadIndex < 0 || mReadIndex >= mRead.getBases().length)
+            mExhausted = true;
+    }
+
+    public void skipInsert()
+    {
+        while(!exhausted() && operator() == I)
+        {
+            moveNext();
         }
     }
 
@@ -129,6 +285,26 @@ public class ReadParseState
         else
         {
             mReadIndex = mBaseLength - 1;
+        }
+
+        if(mElements != null)
+        {
+            if(mMoveForward)
+            {
+                mRefPosition = mRead.alignmentStart();
+                mCigarIndex = 0;
+                mElement = mElements.get(mCigarIndex);
+                mElementIndex = 0;
+            }
+            else
+            {
+                mRefPosition = mRead.alignmentEnd();
+                mCigarIndex = mElementCount - 1;
+                mElement = mElements.get(mCigarIndex);
+                mElementIndex = mElement.getLength() - 1;
+            }
+
+            checkSkipHardClips();
         }
 
         if(mStartIndex >= 0)
@@ -149,7 +325,6 @@ public class ReadParseState
     }
 
     public byte[] getNextBases(int baseCount) { return getAdjacentBases(baseCount, mMoveForward); }
-
     public byte[] getPreviousBases(int baseCount) { return getAdjacentBases(baseCount, !mMoveForward); }
     public byte getPreviousBase()  { return getAdjacentBase(false); }
     public byte getNextBase() { return getAdjacentBase(true); }
@@ -284,6 +459,16 @@ public class ReadParseState
         mMismatches.add(seqDiffInfo);
     }
 
+    public void addMismatch(int consensusIndex, final SequenceDiffType type)
+    {
+        SequenceDiffInfo seqDiffInfo = type == BASE ?
+                SequenceDiffInfo.fromSnv(this, consensusIndex) :
+                new SequenceDiffInfo( readIndex(), consensusIndex, "", type, qualType(readIndex()));
+
+        seqDiffInfo.MismatchPenalty = calcMismatchPenalty(seqDiffInfo, null);
+        addMismatchInfo(seqDiffInfo);
+    }
+
     public void resetMatches()
     {
         mHighQualMatches = 0;
@@ -303,8 +488,17 @@ public class ReadParseState
 
     public String toString()
     {
-        return format("%s: index(%d/%d) state(%s) hqMatch(%d) mismatch(%.1f)",
-                mRead.id(), mReadIndex, mBaseLength - 1, mMismatched ? "mismatched" : (mExhausted ? "exhausted" : "active"),
+        String cigarInfo = "";
+
+        if(mElements != null)
+        {
+            cigarInfo = format(" refPos(%d) element(%d/%s %d/%d) ",
+                    mRefPosition, mElementIndex + 1, mElement.toString(), mCigarIndex + 1, mElementCount);
+        }
+
+        return format("%s: index(%d/%d)%sstate(%s) match(HQ=%d MM=%.1f)",
+                mRead.id(), mReadIndex, mBaseLength - 1, cigarInfo != null ? cigarInfo : " ",
+                mMismatched ? "mismatched" : (mExhausted ? "exhausted" : "active"),
                 mHighQualMatches, mismatchPenalty());
     }
 
@@ -314,4 +508,39 @@ public class ReadParseState
         resetIndex();
         resetMatches();
     }
+
+    public void checkSkipHardClips()
+    {
+        // skips hard-clips if present
+        if(mElement.getOperator() != H)
+            return;
+
+        if(mMoveForward)
+        {
+            ++mCigarIndex;
+
+            if(mCigarIndex >= mElementCount)
+            {
+                mExhausted = true;
+                return;
+            }
+
+            mElementIndex = 0;
+            mElement = mElements.get(mCigarIndex);
+        }
+        else
+        {
+            --mCigarIndex;
+
+            if(mCigarIndex < 0)
+            {
+                mExhausted = true;
+                return;
+            }
+
+            mElement = mElements.get(mCigarIndex);
+            mElementIndex = mElement.getLength() - 1;
+        }
+    }
+
 }
