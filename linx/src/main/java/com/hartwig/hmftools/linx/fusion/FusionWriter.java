@@ -23,6 +23,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
@@ -45,7 +46,7 @@ public class FusionWriter implements CohortFileInterface
     }
 
     public static void convertBreakendsAndFusions(
-            final List<GeneFusion> geneFusions, final List<BreakendTransData> transcripts,
+            final List<GeneFusion> geneFusions, final Map<String, DriverGene> driverGenes, final List<BreakendTransData> transcripts,
             final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         int breakendId = 0;
@@ -56,6 +57,14 @@ public class FusionWriter implements CohortFileInterface
             transIdMap.put(transcript, breakendId);
 
             BreakendGeneData geneData = transcript.breakendGeneData();
+
+            DriverGene driverGene = driverGenes.get(geneData.GeneData.GeneName);
+            ReportedStatus reportedStatus = ReportedStatus.NONE;
+
+            if(driverGene != null && transcript.reportableDisruption())
+            {
+                reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+            }
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
@@ -68,7 +77,7 @@ public class FusionWriter implements CohortFileInterface
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
-                    .reportedStatus(transcript.reportableDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NONE)
+                    .reportedStatus(reportedStatus)
                     .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .regionType(transcript.regionType())
                     .codingType(transcript.codingType())

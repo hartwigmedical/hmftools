@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCop
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -32,7 +33,7 @@ public class DriverDataCache
 {
     public final EnsemblDataCache GeneTransCache;
     public final CnDataLoader CopyNumberData;
-    private final List<DriverGene> mDriverGenes;
+    private final Map<String,DriverGene> mDriverGenes;
 
     private final List<DriverCatalog> mDriverCatalog;
     private final List<DriverGeneData> mDriverGeneDataList;
@@ -44,7 +45,7 @@ public class DriverDataCache
     private boolean mIsMale;
 
     public DriverDataCache(
-            final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache, final List<DriverGene> driverGenes)
+            final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache, final Map<String,DriverGene> driverGenes)
     {
         CopyNumberData = cnDataLoader;
         GeneTransCache = mGeneTransCache;
@@ -105,22 +106,27 @@ public class DriverDataCache
         mIsMale = isMale;
     }
 
-    public DriverGeneData createDriverData(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
+    public DriverGeneData createDisruptionDriver(final BreakendGeneData gene, final TranscriptData transData, final DriverType driverType)
     {
         GeneCopyNumber gcnData = findGeneCopyNumber(gene.geneName());
 
-        DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(gene.geneName())).findFirst().orElse(null);
+        DriverGene driverGene = mDriverGenes.get(gene.geneName());
+
+        if(driverGene == null)
+            return null;
+
+        ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(driverType)
-                .category(driverGene != null ? driverGene.likelihoodType() : TSG)
+                .category(driverGene.likelihoodType())
                 .gene(gene.geneName())
                 .transcript(transData.TransName)
                 .isCanonical(transData.IsCanonical)
                 .chromosome(gene.chromosome())
                 .chromosomeBand(gene.GeneData.KaryotypeBand)
                 .likelihoodMethod(DISRUPTION)
-                .reportedStatus(ReportedStatus.REPORTED)
+                .reportedStatus(reportedStatus)
                 .driverLikelihood(1.0)
                 .missense(0)
                 .nonsense(0)

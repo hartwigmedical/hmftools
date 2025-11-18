@@ -3,6 +3,6 @@ package com.hartwig.hmftools.common.purple;
 public enum ReportedStatus
 {
     NONE,
-    CANDIDATE,
+    NOT_REPORTED,
     REPORTED;
 }

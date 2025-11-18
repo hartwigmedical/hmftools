@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_DESC;
+import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.driverGenesToMap;
 import static com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig.loadDriverGenes;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
@@ -32,8 +33,10 @@ import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DI
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
@@ -65,7 +68,7 @@ public class LinxConfig
 
     private final List<String> mSampleIds;
 
-    public final List<DriverGene> DriverGenes;
+    public final Map<String,DriverGene> DriverGenes;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
 
     public final boolean RunFusions;
@@ -159,7 +162,7 @@ public class LinxConfig
 
         AnnotationExtensions = AnnotationExtension.fromConfig(configBuilder.getValue(ANNOTATION_EXTENSIONS, ""));
 
-        DriverGenes = loadDriverGenes(configBuilder);
+        DriverGenes = driverGenesToMap(loadDriverGenes(configBuilder));
         RunDrivers = !DriverGenes.isEmpty();
         FailOnMissing = configBuilder.hasFlag(FAIL_ON_MISSING_SAMPLE);
 
@@ -246,7 +249,7 @@ public class LinxConfig
         LogVerbose = false;
         Output = new LinxOutput();
         ChainingSvLimit = 0;
-        DriverGenes = Lists.newArrayList();
+        DriverGenes = Maps.newHashMap();
         RestrictedGeneIds = Lists.newArrayList();
         RunDrivers = true;
         RunFusions = true;
