@@ -15,17 +15,23 @@ public class BaseQualBinner
         mBinRanges = getBinRanges();
     }
 
-    public String binNameFrom(byte qual)
+    public BaseQualBin binFrom(byte qual)
     {
         for(BaseQualBin bin : mBinRanges.keySet())
         {
             BaseQualBinRange range = mBinRanges.get(bin);
             if(qual >= range.lowerBound() && qual <= range.upperBound())
             {
-                return range.toString();
+                return bin;
             }
         }
         throw new RuntimeException("No bin found for base quality: " + qual);
+    }
+
+    public String binRangeStringFrom(byte qual)
+    {
+        BaseQualBin bin = binFrom(qual);
+        return mBinRanges.get(bin).toString();
     }
 
     public SequencingType sequencingType() { return mSequencingType; }
