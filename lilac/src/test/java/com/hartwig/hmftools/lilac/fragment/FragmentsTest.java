@@ -276,7 +276,8 @@ public class FragmentsTest
         List<Byte> qualities = Lists.newArrayList((byte) 37, (byte) 25, (byte) 37, (byte) 37, (byte) 37, (byte) 25);
         List<String> nucleotides = Lists.newArrayList("A", "G", "T", "C", "A", "G");
 
-        Fragment fragment = new Fragment(createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
+        Fragment fragment = Fragment.createFromQuals(
+		createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
 
         fragment.removeLowQualBases();
 
@@ -300,11 +301,11 @@ public class FragmentsTest
     {
         String readId = "01";
         Read read = createReadRecord(readId);
-        Fragment frag1 = new Fragment(
+        Fragment frag1 = Fragment.createFromQuals(
                 read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
-        Fragment frag2 = new Fragment(
+        Fragment frag2 = Fragment.createFromQuals(
                 read, HLA_B, Sets.newHashSet(HLA_B),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
@@ -316,7 +317,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.nucleotidesByLoci().size());
         assertEquals(1, mergedFrag.nucleotidesByLoci().size());
 
-        frag2 = new Fragment(
+        frag2 = Fragment.createFromQuals(
                 read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30, (byte) 30),
@@ -331,7 +332,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.nucleotidesByLoci().size());
         assertEquals(4, mergedFrag.nucleotidesByLoci().size());
 
-        frag2 = new Fragment(
+        frag2 = Fragment.createFromQuals(
                 read, HLA_C, Sets.newHashSet(HLA_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30),

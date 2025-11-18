@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -53,7 +52,7 @@ public final class LilacTestUtils
 
     public static Fragment createFragment(final String id)
     {
-        return new Fragment(
+        return Fragment.createFromQuals(
                 createReadRecord(id), HlaGene.NONE, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 
@@ -61,9 +60,9 @@ public final class LilacTestUtils
     {
         List<Integer> loci = formRange(locusStart, locusEnd);
         List<String> sequences = buildTargetSequences(sequence, loci);
-        List<Byte> qualities = loci.stream().map(x -> LOW_BASE_QUAL_THRESHOLD).collect(Collectors.toList());
+        List<Byte> qualities = loci.stream().map(x -> LOW_BASE_QUAL_THRESHOLD).toList();
 
-        return new Fragment(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
+        return Fragment.createFromQuals(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
     }
 
     public static String buildTargetSequence(final String sequence, final Collection<Integer> indices)
