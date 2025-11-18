@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
-import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.loadActionableGenes;
 import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -10,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -132,10 +132,10 @@ public class ReferenceData
         {
             if(DriverGenes != null)
             {
-                List<String> driverGeneNames = loadActionableGenes(DriverGenes);
+                List<String> driverGeneNames = DriverGenes.stream().map(x -> x.gene()).collect(Collectors.toList());
 
                 Map<String,List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
-                        GeneDataCache, driverGeneNames, true, true);
+                        GeneDataCache, driverGeneNames, false, true);
 
                 for(Map.Entry<String,List<BaseRegion>> entry : driverGeneRegions.entrySet())
                 {
