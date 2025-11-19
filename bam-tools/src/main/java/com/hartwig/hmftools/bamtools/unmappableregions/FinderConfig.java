@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-public class UnmappableRegionsConfig
+public class FinderConfig
 {
     public final String RefGenome;
     public final boolean IncludeAllChromosomes;
@@ -19,7 +19,7 @@ public class UnmappableRegionsConfig
     private static final String OUTPUT_BED = "output_bed";
     private static final String OUTPUT_BED_DESC = "Output BED file";
 
-    public UnmappableRegionsConfig(final ConfigBuilder configBuilder)
+    public FinderConfig(final ConfigBuilder configBuilder)
     {
         RefGenome = configBuilder.getValue(REF_GENOME);
         IncludeAllChromosomes = configBuilder.hasFlag(INCLUDE_ALL_CHROMOSOMES);

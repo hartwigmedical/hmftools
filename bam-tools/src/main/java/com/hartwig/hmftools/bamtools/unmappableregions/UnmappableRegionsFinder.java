@@ -22,18 +22,18 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class UnmappableRegionsFinder
 {
-    private final UnmappableRegionsConfig mConfig;
+    private final FinderConfig mConfig;
 
     private final RefGenomeSource mRefGenomeSource;
     private final List<GenomeRegion> mUnmappableRegions = new ArrayList<>();
 
-    private static final byte UNKNOWN_BASE = 'N';
+    private static final byte HARD_MASK_BASE = 'N';
 
-    private static final String COL_CHROM = "chrom";
-    private static final String COL_START = "start";
-    private static final String COL_END = "end";
+    private static final String COL_CHROM = "Chromosome";
+    private static final String COL_START = "Start";
+    private static final String COL_END = "End";
 
-    public UnmappableRegionsFinder(UnmappableRegionsConfig config)
+    public UnmappableRegionsFinder(FinderConfig config)
     {
         mConfig = config;
 
@@ -57,13 +57,13 @@ public class UnmappableRegionsFinder
         {
             byte base = mRefGenomeSource.getBases(chromosome, position, position)[0];
 
-            if(base == UNKNOWN_BASE)
+            if(base == HARD_MASK_BASE)
             {
                 currentUnmappedLength++;
             }
             else if(currentUnmappedLength > 0)
             {
-                int unmappableStart = position - currentUnmappedLength;
+                int unmappableStart = position - currentUnmappedLength - 1;
                 int unmappableEnd = position - 1;
 
                 GenomeRegion unmappableRegion = createUnmappableRegion(chromosome, unmappableStart, unmappableEnd);
@@ -73,11 +73,11 @@ public class UnmappableRegionsFinder
             }
         }
 
-        // Handle chromosome ending with Ns
+        // Handle chromosome end
         if(currentUnmappedLength > 0)
         {
             int unmappableEnd = chromosomeLength;
-            int unmappableStart = unmappableEnd - currentUnmappedLength + 1;
+            int unmappableStart = unmappableEnd - currentUnmappedLength;
 
             GenomeRegion unmappableRegion = createUnmappableRegion(chromosome, unmappableStart, unmappableEnd);
             mUnmappableRegions.add(unmappableRegion);
@@ -149,10 +149,10 @@ public class UnmappableRegionsFinder
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        UnmappableRegionsConfig.registerConfig(configBuilder);
+        FinderConfig.registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        UnmappableRegionsConfig config = new UnmappableRegionsConfig(configBuilder);
+        FinderConfig config = new FinderConfig(configBuilder);
         new UnmappableRegionsFinder(config).run();
     }
 }
