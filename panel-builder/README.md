@@ -203,8 +203,13 @@ This allows capturing of the full V+D+J sequence present in the sample.
 ### Sample Variants
 
 If provided, Linx and Purple output can be used to generate probes covering variants identified in a sample.
-The number of variant probes is controlled by the `sample_probes` argument.
-Variants are selected with a priority scheme, with drivers having the highest priority, and then nondrivers filling the remaining probe quota.
+
+Since there may be many variants in a sample, only a subset of variants is selected.
+Variants are selected to fill a maximum number of probes, controlled by the `sample_probes` argument.
+
+1. Variants are filtered based on the criteria in the table below. Only variants which pass the filters are selected for probe generation.
+2. The selected variants are prioritised. Drivers are given the highest priority, followed by nondrivers.
+3. Generate probes from the selected variants, in order of priority, until the maximum number of accepted probes is reached, or there are no more selected variants. Note that a variant may be selected but its probe rejected.
 
 Methodology per variant category:
 
