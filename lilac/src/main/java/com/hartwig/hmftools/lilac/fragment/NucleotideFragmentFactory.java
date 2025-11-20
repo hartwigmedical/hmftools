@@ -165,6 +165,9 @@ public class NucleotideFragmentFactory
 
             for(int j = 1; j < currentIndel.Ref.length(); j++)
             {
+                if(samCodingLoci < samCodingStartLoci || samCodingLoci > samCodingEndLoci)
+                    break;
+
                 char base = currentIndel.Ref.charAt(j);
                 if(reverseStrand)
                     base = Nucleotides.swapDnaBase(base);
