@@ -1,16 +1,18 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.orange.algo.util.DriverUtils.convertReportedStatus;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
-import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
@@ -72,6 +74,8 @@ public final class PurpleConversion
                 .gene(catalog.gene())
                 .transcript(catalog.transcript())
                 .type(PurpleDriverType.valueOf(catalog.driver().name()))
+                .reportedStatus(convertReportedStatus(catalog.reportedStatus()))
+                .driverInterpretation(DriverInterpretation.interpret(catalog.driverLikelihood()))
                 .driverLikelihood(catalog.driverLikelihood())
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())
@@ -121,7 +125,8 @@ public final class PurpleConversion
                 .tumorCopyNumber(germlineDeletion.TumorCopyNumber)
                 .filter(germlineDeletion.Filter)
                 .cohortFrequency(germlineDeletion.CohortFrequency)
-                .reported(germlineDeletion.Reported == ReportedStatus.REPORTED)
+                .reportedStatus(convertReportedStatus(germlineDeletion.Reported))
+                .driverInterpretation(DriverInterpretation.HIGH) // Might require fixing
                 .build();
     }
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -58,13 +59,16 @@ public interface PurpleRecord
     List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
 
     @NotNull
-    List<PurpleGainDeletion> driverSomaticGainsDels();
+    List<GainDeletion> driverSomaticGainsDels();
+
+    @NotNull
+    List<GainDeletion> otherSomaticGainsDels();
 
     @Nullable
     List<PurpleGermlineDeletion> otherGermlineDeletions();
 
     @Nullable
-    List<PurpleGainDeletion> driverGermlineDeletions();
+    List<GainDeletion> driverGermlineDeletions();
 
     @Nullable
     List<PurpleLossOfHeterozygosity> driverGermlineLossOfHeterozygosities();

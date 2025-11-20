@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.util.DriverUtils.convertReportedStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -13,14 +14,16 @@ import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -28,6 +31,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
+import com.hartwig.hmftools.orange.report.finding.FindingKeys;
 
 public class PurpleInterpreter
 {
@@ -56,18 +60,18 @@ public class PurpleInterpreter
         List<PurpleVariant> allGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
         List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverGermlineVariants());
 
-        List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
+        List<GainDeletion> driverSomaticGainDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
 
-        List<PurpleGainDeletion> allGermlineFullDels = null;
-        List<PurpleGainDeletion> driverGermlineDeletions = null;
+        List<GainDeletion> allGermlineFullDels = null;
+        List<GainDeletion> driverGermlineDeletions = null;
         List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities = null;
         List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
 
         if(allGermlineDeletions != null)
         {
-            Map<PurpleGainDeletion, Boolean> fullDelToReportability = mGermlineGainDelFactory.getReportabilityMap(
+            Map<GainDeletion, Boolean> fullDelToReportability = mGermlineGainDelFactory.getReportabilityMap(
                     allGermlineDeletions, purple.somaticGeneCopyNumbers());
 
             allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
@@ -92,13 +96,14 @@ public class PurpleInterpreter
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
-                .otherSomaticVariants(allSomaticVariants)
                 .driverSomaticVariants(driverSomaticVariants)
+                .otherSomaticVariants(allSomaticVariants)
+                .driverGermlineVariants(driverGermlineVariants)
                 .otherGermlineVariants(allGermlineVariants)
                 .driverGermlineVariants(driverGermlineVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
-                .driverSomaticGainsDels(driverSomaticGainsDels)
+                .driverSomaticGainsDels(driverSomaticGainDels)
                 .otherGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .driverGermlineDeletions(driverGermlineDeletions)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
@@ -106,12 +111,12 @@ public class PurpleInterpreter
                 .build();
     }
 
-    private static List<PurpleGainDeletion> selectReportablegainDels(final Map<PurpleGainDeletion, Boolean> fullDelToReportability)
+    private static List<GainDeletion> selectReportablegainDels(final Map<GainDeletion, Boolean> fullDelToReportability)
     {
-        List<PurpleGainDeletion> reportable = Lists.newArrayList();
-        for(Map.Entry<PurpleGainDeletion, Boolean> entry : fullDelToReportability.entrySet())
+        List<GainDeletion> reportable = Lists.newArrayList();
+        for(Map.Entry<GainDeletion, Boolean> entry : fullDelToReportability.entrySet())
         {
-            PurpleGainDeletion gainDel = entry.getKey();
+            GainDeletion gainDel = entry.getKey();
             boolean reported = entry.getValue();
             if(reported)
             {
@@ -139,9 +144,9 @@ public class PurpleInterpreter
 
     private static final Set<DriverType> AMP_DEL_TYPES = Sets.newHashSet(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL);
 
-    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
+    private static List<GainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
-        List<PurpleGainDeletion> gainsDels = Lists.newArrayList();
+        List<GainDeletion> gainsDels = Lists.newArrayList();
 
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
         for(DriverCatalogKey key : geneDriverMap.keySet())
@@ -156,15 +161,21 @@ public class PurpleInterpreter
         return gainsDels;
     }
 
-    private static PurpleGainDeletion toGainDel(final DriverCatalog driver)
+    private static GainDeletion toGainDel(final DriverCatalog driver)
     {
-        return ImmutablePurpleGainDeletion.builder()
+        CopyNumberInterpretation copyNumberInterpretation = CopyNumberInterpretationUtil.fromCNADriver(driver);
+
+        // TODO: transcript fix
+        return ImmutableGainDeletion.builder()
+                .findingKey(FindingKeys.findingKey(driver.gene(), copyNumberInterpretation, driver.isCanonical()))
+                .reportedStatus(convertReportedStatus(driver.reportedStatus()))
+                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
                 .gene(driver.gene())
                 .transcript(driver.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(CopyNumberInterpretationUtil.fromCNADriver(driver))
+                .interpretation(copyNumberInterpretation)
                 .minCopies(Math.max(0, driver.minCopyNumber()))
                 .maxCopies(Math.max(0, driver.maxCopyNumber()))
                 .build();

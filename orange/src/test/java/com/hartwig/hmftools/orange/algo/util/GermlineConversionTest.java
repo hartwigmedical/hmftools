@@ -12,6 +12,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -20,11 +22,9 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
@@ -35,7 +35,7 @@ import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainDeletionFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleLossOfHeterozygosityFactory;
@@ -109,8 +109,8 @@ public class GermlineConversionTest
                 .build();
         PurpleVariant suspectGermlineVariant = TestPurpleVariantFactory.builder().build();
 
-        PurpleGainDeletion reportableSomaticGainDel = TestPurpleGainDeletionFactory.builder().build();
-        PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder().build();
+        GainDeletion reportableSomaticGainDel = TestGainDeletionFactory.builder().build();
+        GainDeletion reportableGermlineFullDel = TestGainDeletionFactory.builder().build();
         PurpleLossOfHeterozygosity reportableGermlineLOH =
                 TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).maxCopies(2.0).build();
         PurpleGeneCopyNumber geneCopyNumberForGermlineLOH =
@@ -207,7 +207,7 @@ public class GermlineConversionTest
     @Test
     public void doesNotConvertGermlineLOHIfAlsoGermlineFullLoss()
     {
-        PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).build();
+        GainDeletion reportableGermlineFullDel = TestGainDeletionFactory.builder().gene(TEST_GENE1).build();
 
         PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
         PurpleGeneCopyNumber geneCopyNumber =
@@ -285,7 +285,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion somaticDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -298,7 +298,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion germlineDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -333,7 +333,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion somaticDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -346,7 +346,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion germlineDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -381,7 +381,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion somaticDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -394,7 +394,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion germlineDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -429,7 +429,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion somaticDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.FULL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -442,7 +442,7 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel = TestPurpleGainDeletionFactory.builder()
+        GainDeletion germlineDel = TestGainDeletionFactory.builder()
                 .gene(TEST_GENE1)
                 .interpretation(CopyNumberInterpretation.PARTIAL_DEL)
                 .transcript(TEST_TRANSCRIPT1)
@@ -479,8 +479,8 @@ public class GermlineConversionTest
                 .transcript(TEST_TRANSCRIPT1)
                 .isCanonical(false)
                 .build();
-        PurpleGainDeletion somaticDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.1).maxCopies(1.0).build();
+        GainDeletion somaticDel =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.1).maxCopies(1.0).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
@@ -490,8 +490,8 @@ public class GermlineConversionTest
                 .isCanonical(true)
                 .build();
 
-        PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT2).minCopies(0.2).maxCopies(0.9).build();
+        GainDeletion germlineDel =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT2).minCopies(0.2).maxCopies(0.9).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -517,16 +517,16 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.AMP)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticAmp =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(20.).maxCopies(25.).build();
+        GainDeletion somaticAmp =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(20.).maxCopies(25.).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.9).build();
+        GainDeletion germlineDel =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.9).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -550,16 +550,16 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.AMP)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion somaticPartialAmp =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(2.0).maxCopies(25.).build();
+        GainDeletion somaticPartialAmp =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(2.0).maxCopies(25.).build();
 
         PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .gene(TEST_GENE1)
                 .build();
-        PurpleGainDeletion germlineDel =
-                TestPurpleGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.3).build();
+        GainDeletion germlineDel =
+                TestGainDeletionFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.3).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -670,8 +670,8 @@ public class GermlineConversionTest
                 .transcript("transcript 2")
                 .type(PurpleDriverType.GERMLINE_DELETION)
                 .build();
-        PurpleGainDeletion fullgermlineDelForDriver2 =
-                TestPurpleGainDeletionFactory.builder().gene("gene 2").interpretation(CopyNumberInterpretation.FULL_DEL).build();
+        GainDeletion fullgermlineDelForDriver2 =
+                TestGainDeletionFactory.builder().gene("gene 2").interpretation(CopyNumberInterpretation.FULL_DEL).build();
 
         PurpleDriver germlineDriver3 = PurpleDriverTestFactory.builder()
                 .gene("gene 3")
@@ -715,13 +715,13 @@ public class GermlineConversionTest
         LinxSvAnnotation somaticStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
         LinxSvAnnotation somaticStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
         LinxBreakend somaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableSomaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reported(true).build();
+        LinxBreakend reportableSomaticBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reportedStatus(ReportedStatus.REPORTED).build();
 
         LinxSvAnnotation germlineStructuralVariant1 = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(5).build();
         LinxSvAnnotation germlineStructuralVariant2 = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).clusterId(6).build();
         LinxSvAnnotation germlineStructuralVariant3 = LinxOrangeTestFactory.svAnnotationBuilder().svId(3).clusterId(6).build();
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
-        LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reported(true).build();
+        LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).reportedStatus(ReportedStatus.REPORTED).build();
 
         LinxHomozygousDisruption germlineHomozygousDisruption = linxHomozygousDisruptionBuilder().build();
 

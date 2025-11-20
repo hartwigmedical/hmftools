@@ -13,7 +13,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
@@ -27,7 +30,6 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
@@ -35,14 +37,12 @@ import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
-import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.TumorStats;
 import com.hartwig.hmftools.orange.report.finding.FindingFactory;
+import com.hartwig.hmftools.orange.report.finding.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,8 +73,8 @@ public final class GermlineConversion
         TumorStats mergedTumorStats;
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
-        List<PurpleGainDeletion> mergedAllSomaticGainsDels;
-        List<PurpleGainDeletion> mergedReportableSomaticGainsDels;
+        List<GainDeletion> mergedAllSomaticGainsDels;
+        List<GainDeletion> mergedReportableSomaticGainsDels;
         if(containsTumorCells)
         {
             mergedTumorStats = mergeTumorStats(purple);
@@ -144,7 +144,7 @@ public final class GermlineConversion
 
     @VisibleForTesting
     static List<PurpleDriver> mergeGermlineDriversIntoSomatic(final List<PurpleDriver> somaticDrivers,
-            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<PurpleGainDeletion> reportableGermlineFullDels)
+            @Nullable List<PurpleDriver> germlineDrivers, @Nullable List<GainDeletion> reportableGermlineFullDels)
     {
         List<PurpleDriver> merged = Lists.newArrayList();
         for(PurpleDriver somaticDriver : somaticDrivers)
@@ -193,21 +193,21 @@ public final class GermlineConversion
                 .collect(Collectors.toList()) : Lists.newArrayList();
     }
 
-    private static List<PurpleGainDeletion> mergeGermlineFullDels(@Nullable List<PurpleGainDeletion> reportableGermlineFullDels,
-            final List<PurpleGainDeletion> somaticGainDels)
+    private static List<GainDeletion> mergeGermlineFullDels(@Nullable List<GainDeletion> reportableGermlineFullDels,
+            final List<GainDeletion> somaticGainDels)
     {
         if(reportableGermlineFullDels == null)
         {
             return somaticGainDels;
         }
 
-        List<PurpleGainDeletion> mergedGainDels = Lists.newArrayList();
-        for(PurpleGainDeletion somaticGainDel : somaticGainDels)
+        List<GainDeletion> mergedGainDels = Lists.newArrayList();
+        for(GainDeletion somaticGainDel : somaticGainDels)
         {
             mergedGainDels.add(getGermlineCorrectedGainDel(somaticGainDel, reportableGermlineFullDels));
         }
 
-        for(PurpleGainDeletion germlineDel : reportableGermlineFullDels)
+        for(GainDeletion germlineDel : reportableGermlineFullDels)
         {
             boolean hasMatchingSomaticDel = somaticGainDels.stream().anyMatch(s -> delsMatch(germlineDel, s));
             if(!hasMatchingSomaticDel)
@@ -219,15 +219,15 @@ public final class GermlineConversion
         return mergedGainDels;
     }
 
-    private static PurpleGainDeletion getGermlineCorrectedGainDel(final PurpleGainDeletion somaticGainDel,
-            final List<PurpleGainDeletion> reportableGermlineFullDels)
+    private static GainDeletion getGermlineCorrectedGainDel(final GainDeletion somaticGainDel,
+            final List<GainDeletion> reportableGermlineFullDels)
     {
         if(!isDel(somaticGainDel))
         {
             return somaticGainDel;
         }
 
-        List<PurpleGainDeletion> matchingGermlineDels =
+        List<GainDeletion> matchingGermlineDels =
                 reportableGermlineFullDels.stream().filter(l -> delsMatch(l, somaticGainDel)).collect(Collectors.toList());
         if(matchingGermlineDels.isEmpty())
         {
@@ -245,13 +245,13 @@ public final class GermlineConversion
         }
     }
 
-    private static boolean delsMatch(final PurpleGainDeletion germlineDel, final PurpleGainDeletion somaticGainDel)
+    private static boolean delsMatch(final GainDeletion germlineDel, final GainDeletion somaticGainDel)
     {
         return isDel(somaticGainDel) && germlineDel.gene().equals(somaticGainDel.gene()) && germlineDel.transcript()
                 .equals(somaticGainDel.transcript());
     }
 
-    private static PurpleGainDeletion mergeDels(final PurpleGainDeletion somaticDel, final PurpleGainDeletion germlineDel)
+    private static GainDeletion mergeDels(final GainDeletion somaticDel, final GainDeletion germlineDel)
     {
         double minCopies = Math.min(somaticDel.minCopies(), germlineDel.minCopies());
 
@@ -274,7 +274,13 @@ public final class GermlineConversion
             maxCopies = germlineDel.maxCopies();
         }
 
-        return ImmutablePurpleGainDeletion.builder()
+        ReportedStatus reportedStatus = DriverUtils.maxReportedStatus(somaticDel.reportedStatus(), germlineDel.reportedStatus());
+        DriverInterpretation driverInterpretation = DriverUtils.maxDriverInterpretation(somaticDel.driverInterpretation(), germlineDel.driverInterpretation());
+
+        return ImmutableGainDeletion.builder()
+                .findingKey(FindingKeys.findingKey(somaticDel.gene(), interpretation, somaticDel.isCanonical()))
+                .reportedStatus(reportedStatus)
+                .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)
                 .chromosome(somaticDel.chromosome())
                 .chromosomeBand(somaticDel.chromosomeBand())
@@ -286,17 +292,17 @@ public final class GermlineConversion
                 .build();
     }
 
-    private static boolean isDel(final PurpleGainDeletion gainDel)
+    private static boolean isDel(final GainDeletion gainDel)
     {
         return isFullDel(gainDel) || isPartialDel(gainDel);
     }
 
-    private static boolean isFullDel(final PurpleGainDeletion gainDel)
+    private static boolean isFullDel(final GainDeletion gainDel)
     {
         return gainDel.interpretation() == CopyNumberInterpretation.FULL_DEL;
     }
 
-    private static boolean isPartialDel(final PurpleGainDeletion gainDel)
+    private static boolean isPartialDel(final GainDeletion gainDel)
     {
         return gainDel.interpretation() == CopyNumberInterpretation.PARTIAL_DEL;
     }

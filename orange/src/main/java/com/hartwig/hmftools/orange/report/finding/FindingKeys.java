@@ -3,13 +3,12 @@ package com.hartwig.hmftools.orange.report.finding;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.finding.Disruption;
-import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
@@ -21,16 +20,17 @@ import org.jetbrains.annotations.Nullable;
 
 public class FindingKeys {
 
-    public static String findingKey(@NotNull PurpleVariant variant, @NotNull PurpleTranscriptImpact transcriptImpact) {
-        return String.format("smallVariant[%s %s]", variant.gene(), impact(transcriptImpact));
+    public static String findingKey(@NotNull PurpleVariant variant, @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
+    {
+        return String.format("smallVariant[%s %s]", geneLabel(variant.gene(), isCanonical), impact(transcriptImpact));
     }
 
-    public static String findingKey(PurpleGainDeletion gainDeletion) {
-        return String.format("copyNumber[%s %s]", gainDeletion.gene(), gainDeletion.interpretation().name());
+    public static String findingKey(String gene, CopyNumberInterpretation copyNumberInterpretation, boolean isCanonical) {
+        return String.format("gainDeletion[%s %s]", geneLabel(gene, isCanonical), copyNumberInterpretation.name());
     }
 
     public static String findingKey(LinxBreakend breakend) {
-        return String.format("disruption[%s]", breakend.gene());
+        return String.format("disruption[%s]", geneLabel(breakend.gene(), breakend.isCanonical()));
     }
 
     public static String findingKey(LinxFusion fusion) {
@@ -62,6 +62,10 @@ public class FindingKeys {
 
     public static String findingKey(@NotNull CuppaPrediction cuppaPrediction) {
         return String.format("predictedTumorOrigin[%s]", cuppaPrediction.cancerType());
+    }
+
+    private static String geneLabel(String gene, boolean isCanonical) {
+        return String.format("%s%s", gene, isCanonical ? "" : " (alt)");
     }
 
     private static String impact(@NotNull PurpleTranscriptImpact transcriptImpact) {

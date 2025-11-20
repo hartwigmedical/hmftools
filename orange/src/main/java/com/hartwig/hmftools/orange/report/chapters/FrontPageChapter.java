@@ -17,6 +17,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.interpretation.Drivers;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
@@ -26,13 +27,12 @@ import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -361,7 +361,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
+        List<GainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
         if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -370,7 +370,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String copyNumberDriverString(@NotNull List<PurpleGainDeletion> gainsDels)
+    private static String copyNumberDriverString(@NotNull List<GainDeletion> gainsDels)
     {
         if(gainsDels.isEmpty())
         {
@@ -378,7 +378,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(PurpleGainDeletion gainDel : gainsDels)
+        for(GainDeletion gainDel : gainsDels)
         {
             genes.add(gainDel.gene());
         }
