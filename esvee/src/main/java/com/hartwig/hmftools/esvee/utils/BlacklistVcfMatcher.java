@@ -37,7 +37,6 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
 import org.jetbrains.annotations.NotNull;
 

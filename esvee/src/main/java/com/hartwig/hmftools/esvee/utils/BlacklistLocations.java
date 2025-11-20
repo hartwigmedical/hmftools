@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep;
+package com.hartwig.hmftools.esvee.utils;
 
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
