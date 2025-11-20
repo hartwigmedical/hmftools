@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
@@ -165,6 +166,10 @@ public class NucleotideFragmentFactory
 
             for(int j = 1; j < currentIndel.Ref.length(); j++)
             {
+                // TODO:
+//                if(samCodingLoci < samCodingStartLoci || samCodingLoci > samCodingEndLoci)
+//                    break;
+
                 char base = currentIndel.Ref.charAt(j);
                 if(reverseStrand)
                     base = Nucleotides.swapDnaBase(base);
