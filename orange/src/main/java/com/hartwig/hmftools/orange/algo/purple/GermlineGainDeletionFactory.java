@@ -70,11 +70,8 @@ public class GermlineGainDeletionFactory
         );
 
         // TODOHWL: double check this
-        DriverInterpretation driverInterpretation = switch (reportedStatus)
-        {
-            case NONE, CANDIDATE -> DriverInterpretation.LOW;
-            case REPORTED -> DriverInterpretation.HIGH;
-        };
+        DriverInterpretation driverInterpretation = reportedStatus == com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED ?
+                DriverInterpretation.HIGH : DriverInterpretation.LOW;
 
         return ImmutableGainDeletion.builder()
                 .findingKey(FindingKeys.findingKey(geneName, interpretation, true))

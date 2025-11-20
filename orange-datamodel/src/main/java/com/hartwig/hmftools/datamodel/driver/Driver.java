@@ -10,13 +10,14 @@ public interface Driver extends Finding
 
     @NotNull DriverInterpretation driverInterpretation();
 
-    default boolean isReported()
+    default boolean isReportable()
     {
-        return reportedStatus() == ReportedStatus.REPORTED;
+        return reportedStatus() == ReportedStatus.REPORTED &&
+                (driverInterpretation() == DriverInterpretation.HIGH || driverInterpretation() == DriverInterpretation.MEDIUM);
     }
 
     default boolean isCandidate()
     {
-        return reportedStatus() == ReportedStatus.CANDIDATE;
+        return reportedStatus() == ReportedStatus.REPORTED && driverInterpretation() == DriverInterpretation.LOW;
     }
 }

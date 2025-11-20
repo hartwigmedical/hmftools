@@ -14,8 +14,8 @@ public class DriverUtils
     {
         return switch (reportedStatus)
         {
-            case NONE -> ReportedStatus.NONE;
-            case CANDIDATE -> ReportedStatus.CANDIDATE;
+            case NONE -> ReportedStatus.NON_DRIVER_GENE;
+            case NOT_REPORTED -> ReportedStatus.NOT_REPORTED;
             case REPORTED -> ReportedStatus.REPORTED;
         };
     }
@@ -27,7 +27,7 @@ public class DriverUtils
 
     public static ReportedStatus maxReportedStatus(@NotNull Collection<ReportedStatus> reportedStatuses)
     {
-        ReportedStatus maxStatus = ReportedStatus.NONE;
+        ReportedStatus maxStatus = ReportedStatus.NON_DRIVER_GENE;
 
         for(ReportedStatus reportedStatus : reportedStatuses)
         {
@@ -35,9 +35,9 @@ public class DriverUtils
             {
                 return ReportedStatus.REPORTED;
             }
-            else if(reportedStatus == ReportedStatus.CANDIDATE)
+            else if(reportedStatus == ReportedStatus.NOT_REPORTED)
             {
-                maxStatus = ReportedStatus.CANDIDATE;
+                maxStatus = ReportedStatus.NOT_REPORTED;
             }
         }
         return maxStatus;

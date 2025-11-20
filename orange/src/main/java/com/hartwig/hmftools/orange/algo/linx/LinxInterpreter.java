@@ -36,7 +36,6 @@ public class LinxInterpreter
                 .somaticDrivers(ConversionUtil.mapToIterable(linx.somaticDrivers(), LinxConversion::convert))
                 .allSomaticStructuralVariants(ConversionUtil.mapToIterable(linx.allSomaticSvAnnotations(), LinxConversion::convert))
                 .allSomaticFusions(ConversionUtil.mapToIterable(linx.allSomaticFusions(), LinxConversion::convert))
-                .reportableSomaticFusions(ConversionUtil.mapToIterable(linx.reportedSomaticFusions(), LinxConversion::convert))
                 .otherSomaticBreakends(ConversionUtil.mapToIterable(linx.allSomaticBreakends(), somaticBreakendInterpreter::interpret))
                 .driverSomaticBreakends(ConversionUtil.mapToIterable(linx.driverSomaticBreakends(), somaticBreakendInterpreter::interpret))
                 .somaticHomozygousDisruptions(ConversionUtil.mapToIterable(linx.somaticHomozygousDisruptions(), LinxConversion::convert))

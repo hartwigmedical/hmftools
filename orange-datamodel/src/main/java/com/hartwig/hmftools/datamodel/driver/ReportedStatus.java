@@ -2,7 +2,7 @@ package com.hartwig.hmftools.datamodel.driver;
 
 public enum ReportedStatus
 {
-    NONE,
+    REPORTED,
     NOT_REPORTED,
-    REPORTED
+    NON_DRIVER_GENE
 }

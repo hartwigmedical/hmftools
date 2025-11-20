@@ -42,7 +42,7 @@ public final class LinxOrangeTestFactory
                 .isCanonical(true)
                 .geneOrientation(Strings.EMPTY)
                 .disruptive(false)
-                .reportedStatus(ReportedStatus.NONE)
+                .reportedStatus(ReportedStatus.NOT_REPORTED)
                 .undisruptedCopyNumber(0D)
                 .type(LinxBreakendType.BND)
                 .regionType(TranscriptRegionType.UNKNOWN)
