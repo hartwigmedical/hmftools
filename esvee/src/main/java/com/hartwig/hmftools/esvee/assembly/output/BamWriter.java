@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.common.FileCommon.writeSortedBam;
+import static com.hartwig.hmftools.esvee.common.WriteType.ASSEMBLY_BAM;
 
 import java.io.File;
 import java.util.Set;
@@ -23,6 +23,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
@@ -48,7 +49,7 @@ public class BamWriter
         mValid = true;
         mUnsortedBam = null;
 
-        if(config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
+        if(config.WriteTypes.contains(ASSEMBLY_BAM))
             mWriter = initialiseBamWriter(config);
         else
             mWriter = null;

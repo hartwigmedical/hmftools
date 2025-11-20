@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -33,6 +32,9 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.esvee.common.WriteType.PREP_BAM;
+import static com.hartwig.hmftools.esvee.common.WriteType.PREP_READ;
+import static com.hartwig.hmftools.esvee.common.WriteType.registerWriteTypes;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
@@ -41,12 +43,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_DISC_STATS_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_BAM;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_READ;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.parseConfigStr;
 
 import java.util.Collections;
 import java.util.List;
@@ -60,8 +56,8 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.esvee.common.WriteType;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
-import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 import htsjdk.samtools.ValidationStringency;
 
@@ -164,7 +160,7 @@ public class PrepConfig
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
         setSequencingType(configBuilder);
 
-        WriteTypes = Sets.newHashSet(parseConfigStr(configBuilder.getValue(WRITE_TYPES)));
+        WriteTypes = WriteType.parsePrepTypes(configBuilder.getValue(WRITE_TYPES));
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
@@ -215,39 +211,7 @@ public class PrepConfig
 
     public String formFilename(final WriteType writeType, final String sampleId)
     {
-        String fileExtension = "";
-
-        switch(writeType)
-        {
-            case PREP_READ:
-                fileExtension = "read" + TSV_EXTENSION;
-                break;
-
-            case UNSORTED_BAM:
-                fileExtension = "unsorted.bam";
-                break;
-
-            case PREP_BAM:
-                fileExtension = "bam";
-                break;
-
-            case CACHE_BAM:
-                fileExtension = "cache";
-                break;
-
-            case PREP_JUNCTION:
-                fileExtension = PREP_JUNCTION_FILE_ID;
-                break;
-
-            case FRAGMENT_LENGTH_DIST:
-                fileExtension = PREP_FRAG_LENGTH_FILE_ID;
-                break;
-
-            case DISCORDANT_STATS:
-                fileExtension = PREP_DISC_STATS_FILE_ID;
-                break;
-        }
-
+        String fileExtension = writeType.fileId();
         return formOutputFile(OutputDir, sampleId, PREP_FILE_ID, fileExtension, OutputId);
     }
 
@@ -306,8 +270,7 @@ public class PrepConfig
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         registerCommonConfig(configBuilder);
-
-        configBuilder.addConfigItem(WRITE_TYPES, enumValueSelectionAsStr(WriteType.values(), "Write types"));
+        registerWriteTypes(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);

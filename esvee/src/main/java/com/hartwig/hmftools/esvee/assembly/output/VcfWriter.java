@@ -90,6 +90,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.common.FilterType;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Allele;
