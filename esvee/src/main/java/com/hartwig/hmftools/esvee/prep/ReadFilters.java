@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
@@ -60,6 +62,9 @@ public class ReadFilters
         if(!hasLineTail && filterLowQualRead(record))
             return true;
 
+        if(!record.getReadPairedFlag())
+            return false;
+
         // ignore local, non-chimeric, locally-aligned reads
         if(record.getSupplementaryAlignmentFlag() || record.getCigar().getCigarElements().size() > 1)
             return false;
@@ -89,6 +94,9 @@ public class ReadFilters
 
     public static boolean filterLowQualRead(final SAMRecord read, double maxPermittedLowPercent)
     {
+        if(isSbx() || isUltima())
+            return false;
+
         // filter any read with 50% + bases classified as low qual or any invalid base
         int baseLength = read.getReadBases().length;
         int qualCountThreshold = (int)floor(baseLength * maxPermittedLowPercent) + 1;
@@ -151,7 +159,7 @@ public class ReadFilters
         if(read.record().getMappingQuality() < mConfig.MinMapQuality)
             read.addFilter(ReadFilterType.MIN_MAP_QUAL);
 
-        if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
+        if(record.getReadPairedFlag() && !mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(inferredInsertSizeAbs(record) - alignedBases);
 
