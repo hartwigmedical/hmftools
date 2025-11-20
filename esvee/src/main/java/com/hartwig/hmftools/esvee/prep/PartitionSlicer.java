@@ -72,7 +72,7 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, mConfig.Blacklist);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots);
 
         mSamReaders = samReaders;
         mBamSlicer = bamSlicer;

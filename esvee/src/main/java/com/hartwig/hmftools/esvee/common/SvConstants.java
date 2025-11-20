@@ -25,8 +25,9 @@ public final class SvConstants
         return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
     }
 
-    // sequencing type
+    // sequencing type - set in config
     public static SequencingType SEQUENCING_TYPE = SequencingType.ILLUMINA;
+
     public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
     public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }

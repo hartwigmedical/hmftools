@@ -56,9 +56,7 @@ public class JunctionTracker
     private final ChrBaseRegion mRegion;
     private final PrepConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
-    private final List<BaseRegion> mBlacklistRegions;
     private final List<KnownHotspot> mKnownHotspots;
-    private final BlacklistLocations mBlacklist;
     private final DepthTracker mDepthTracker;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
@@ -90,8 +88,7 @@ public class JunctionTracker
     };
 
     public JunctionTracker(
-            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker,
-            final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker, final HotspotCache hotspotCache)
     {
         mRegion = region;
         mConfig = config;
@@ -101,18 +98,6 @@ public class JunctionTracker
         mKnownHotspots = hotspotCache.findRegionHotspots(region);
 
         mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
-
-        mBlacklist = blacklist;
-        mBlacklistRegions = Lists.newArrayList();
-
-        List<BaseRegion> chrRegions = blacklist.getRegions(mRegion.Chromosome);
-
-        if(chrRegions != null)
-        {
-            // extract the blacklist regions just for this partition
-            chrRegions.stream().filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
-                    .forEach(x -> mBlacklistRegions.add(x));
-        }
 
         mReadGroupMap = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
@@ -190,7 +175,7 @@ public class JunctionTracker
         if(!read.hasMate() && !read.hasSuppAlignment())
         {
             // handle unpaired reads similarly to simple groups
-            if(read.readType() == NO_SUPPORT || readInBlacklist(read))
+            if(read.readType() == NO_SUPPORT)
                 return;
         }
 
@@ -210,10 +195,6 @@ public class JunctionTracker
         if(readGroup.isSimpleComplete()) // purge irrelevant groups
         {
             if(readGroup.allNoSupport())
-            {
-                mReadGroupMap.remove(readGroup.id());
-            }
-            else if(groupInBlacklist(readGroup))
             {
                 mReadGroupMap.remove(readGroup.id());
             }
@@ -298,30 +279,13 @@ public class JunctionTracker
         {
             supportedJunctions.clear();
 
-            boolean hasBlacklistedRead = false;
-
             for(PrepRead read : readGroup.reads())
             {
-                // supporting reads cannot fall in blacklist regions, despite allowing junctions in them
-                if(readInBlacklist(read))
-                {
-                    hasBlacklistedRead = true;
-                    continue;
-                }
-                else if(readMateInBlacklist(read))
-                {
-                    hasBlacklistedRead = true;
-                }
-
                 if(hasJunctions)
                 {
                     // allow reads that match a junction to be considered for support (eg exact) for other junctions
                     if(read.readType() == ReadType.CANDIDATE_SUPPORT || read.readType() == ReadType.JUNCTION)
                         checkJunctionSupport(readGroup, read, supportedJunctions);
-                }
-                else if(hasBlacklistedRead)
-                {
-                    break;
                 }
             }
 
@@ -349,9 +313,6 @@ public class JunctionTracker
                 // will be passed onto the spanning cache if not assigned to a unfiltered junction
                 mRemoteCandidateReadGroups.add(readGroup);
             }
-
-            if(hasBlacklistedRead)
-                continue;
 
             boolean isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
 
@@ -426,10 +387,6 @@ public class JunctionTracker
 
                 int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
-                // junctions cannot fall in blacklist regions
-                if(positionInBlacklist(position))
-                    continue;
-
                 if(!mRegion.containsPosition(position))
                 {
                     if(mConfig.TrackRemotes)
@@ -465,36 +422,9 @@ public class JunctionTracker
         }
     }
 
-    private boolean groupInBlacklist(final ReadGroup readGroup)
-    {
-        // test whether every read is in a blacklist region
-        return readGroup.reads().stream().allMatch(x -> readInBlacklist(x));
-    }
-
-    private boolean readInBlacklist(final PrepRead read)
-    {
-        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.AlignmentStart, read.AlignmentEnd));
-    }
-
-    private boolean readMateInBlacklist(final PrepRead read)
-    {
-        if(!read.hasMate())
-            return false;
-
-        return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + mConfig.readLength());
-    }
-
-    private boolean positionInBlacklist(int junctionPosition)
-    {
-        return mBlacklistRegions.stream().anyMatch(x -> x.containsPosition(junctionPosition));
-    }
-
     private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final IndelCoords indelCoords)
     {
         if(indelCoords.Length < mFilterConfig.MinIndelLength)
-            return;
-
-        if(positionInBlacklist(indelCoords.PosStart) || positionInBlacklist(indelCoords.PosEnd))
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads

@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseBamFiles;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleIds;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
@@ -73,7 +74,6 @@ public class PrepConfig
 
     public final ReadFilters ReadFiltering;
     public final HotspotCache Hotspots;
-    public final BlacklistLocations Blacklist;
 
     public final int PartitionSize;
     public final ValidationStringency BamStringency;
@@ -107,8 +107,6 @@ public class PrepConfig
     public static final String BAM_FILE = "bam_file";
     public static final String BAM_FILE_DESC = "BAM file paths separated by ','";
     public static final String SAMPLE_ID_DESC = "List of samples separated by ','";
-
-    public static final String BLACKLIST_BED = "blacklist_bed";
 
     private static final String WRITE_TYPES = "write_types";
 
@@ -160,11 +158,11 @@ public class PrepConfig
                 OutputDir, OutputId != null ? format("outputId(%s)", OutputId) : "");
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
-        Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
+        setSequencingType(configBuilder);
 
         WriteTypes = Sets.newHashSet(parseConfigStr(configBuilder.getValue(WRITE_TYPES)));
 
@@ -198,7 +196,7 @@ public class PrepConfig
         if(!mIsValid)
             return false;
 
-        if(!Hotspots.isValid() || !Blacklist.isValid())
+        if(!Hotspots.isValid())
             return false;
 
         return true;
@@ -267,7 +265,6 @@ public class PrepConfig
         RefGenVersion = V37;
 
         Hotspots = new HotspotCache(null);
-        Blacklist = new BlacklistLocations(null);
 
         PartitionSize = partitionSize;
 
@@ -305,7 +302,6 @@ public class PrepConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
-        configBuilder.addPath(BLACKLIST_BED, false, "Blacklist regions BED file");
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 

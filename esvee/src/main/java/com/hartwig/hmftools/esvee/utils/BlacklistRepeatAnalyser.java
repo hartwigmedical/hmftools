@@ -37,7 +37,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.BLACKLIST_BED;
 import static com.hartwig.hmftools.esvee.prep.PrepConfig.PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 
@@ -101,6 +100,8 @@ public class BlacklistRepeatAnalyser
     private final int mPartitionSize;
     private final int mThreads;
     private final SpecificRegions mSpecificChrRegions;
+
+    public static final String BLACKLIST_BED = "blacklist_bed";
 
     private static final String OUTPUT_FILE = "output_file";
     private static final String MIN_DOMINANT_PERC = "min_dominant_perc";

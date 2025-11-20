@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
@@ -60,7 +59,7 @@ public class JunctionsTest
         mDepthTracker = new DepthTracker(new BaseRegion(mPartitionRegion.start(), mPartitionRegion.end()), DEPTH_WINDOW_SIZE);
 
         mJunctionTracker = new JunctionTracker(
-                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
+                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE);
     }
 
     private void addRead(final PrepRead read, final ReadType readType)
@@ -323,36 +322,6 @@ public class JunctionsTest
         assertNotNull(junctionData);
         assertEquals(FORWARD, junctionData.Orient);
         assertEquals(2, junctionData.junctionFragmentCount());
-    }
-
-    @Test
-    public void testBlacklistRegions()
-    {
-        BLACKLIST_LOCATIONS.addRegion(CHR_1, new BaseRegion(500, 1500));
-
-        JunctionTracker junctionTracker = new JunctionTracker(
-                mPartitionRegion, new PrepConfig(1000), mDepthTracker, HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
-
-        PrepRead read1 = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
-
-        PrepRead read2 = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
-
-        read1.setReadType(JUNCTION);
-        read2.setReadType(JUNCTION);
-        junctionTracker.processRead(read1);
-        junctionTracker.processRead(read2);
-
-        PrepRead suppRead1 = PrepRead.from(createSamRecord(
-                READ_ID_GENERATOR.nextId(), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
-
-        suppRead1.setReadType(CANDIDATE_SUPPORT);
-        junctionTracker.processRead(suppRead1);
-
-        junctionTracker.assignJunctionFragmentsAndSupport();
-
-        assertTrue(junctionTracker.junctions().isEmpty());
     }
 
     @Test
