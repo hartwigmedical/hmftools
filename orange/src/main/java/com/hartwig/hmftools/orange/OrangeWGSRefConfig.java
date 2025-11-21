@@ -92,7 +92,7 @@ public interface OrangeWGSRefConfig
             builder.referenceSampleId(refSampleId);
 
             String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-            builder.sageSomaticRefSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, refSampleId)));
+            builder.sageSomaticRefSampleBQRPlot(mandatoryPath(BqrFile.generateBqrPlotFilename(sageSomaticDir, refSampleId, true)));
 
             String refMetricsDir =
                     pathResolver.resolveMandatoryToolDirectory(REF_METRICS_DIR_CFG, defaultToolDirectories.germlineMetricsDir());

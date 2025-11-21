@@ -288,7 +288,7 @@ public interface OrangeConfig
                 .addDisclaimer(addDisclaimer);
 
         String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-        builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
+        builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateBqrPlotFilename(sageSomaticDir, tumorSampleId, true)));
 
         String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         if(lilacDir != null)

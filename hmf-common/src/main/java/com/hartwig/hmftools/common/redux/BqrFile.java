@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.common.redux;
 
 import static com.hartwig.hmftools.common.redux.ReduxCommon.REDUX_FILE_ID;
+import static com.hartwig.hmftools.common.sage.SageCommon.SAGE_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getColumnIndex;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,12 @@ public final class BqrFile
     public static String generateFilename(String basePath, String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
+    }
+
+    public static String generateBqrPlotFilename(String basePath, String sample, boolean backwardsCompatible)
+    {
+        String toolFileId = !backwardsCompatible ? REDUX_FILE_ID : SAGE_FILE_ID;
+        return checkAddDirSeparator(basePath) + sample + toolFileId + ".bqr.png";
     }
 
     public static void write(final String filename, final List<BqrRecord> counts) throws IOException
