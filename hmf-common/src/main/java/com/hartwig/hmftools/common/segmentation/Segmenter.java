@@ -18,9 +18,20 @@ public class Segmenter
     final Segmentation leastCostSegmentation;
     public final double segmentPenalty;
 
+    public Segmenter(double[] y)
+    {
+        this(y, 50.0, false);
+    }
+
     public Segmenter(double[] y, double gamma, boolean normalise)
     {
+        this(y, new GammaPenaltyCalculator(gamma, normalise));
+    }
+
+    public Segmenter(double[] y, PenaltyCalculator penaltyCalculator)
+    {
         this.y = y;
+        segmentPenalty = penaltyCalculator.getPenalty(y);
 
         // Here we calculate leastCost(s,e) for each e in [0, ..., y.size - 1]
         // and s in [0, ..., e]. For any such pair, the least cost is:
@@ -30,7 +41,6 @@ public class Segmenter
         leastCostEndingJustBefore[0] = 0.0;
         // We record the segment endpoints so that we can recover the least cost segmentation itself.
         int[] leastCostSegmentEndpoints = new int[y.length]; // there's only one possible segment of length 1
-        segmentPenalty = new Gamma(y, gamma, normalise).getSegmentPenalty();
 
         double[] cumulativeSums = precomputeCumulativeSums();
         double[] cumulativeSquaredSums = precomputeCumulativeSquaredSums();
@@ -71,11 +81,6 @@ public class Segmenter
         }
         Collections.reverse(segmentEndpoints);
         leastCostSegmentation = segmentEndpoints.isEmpty() ? new Segmentation(singletonList(y)) : segmentBy(segmentEndpoints);
-    }
-
-    public Segmenter(double[] y)
-    {
-        this(y, 50.0, false);
     }
 
     public PiecewiseConstantFit pcf()
