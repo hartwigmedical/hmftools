@@ -146,7 +146,7 @@ public class PartitionSlicer
 
         if(mFilterRegion != null)
         {
-            if(positionsOverlap(readStart, readStart + mConfig.readLength(), mFilterRegion.start(), mFilterRegion.end()))
+            if(positionsOverlap(readStart, record.getAlignmentEnd(), mFilterRegion.start(), mFilterRegion.end()))
                 return;
         }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
@@ -26,26 +27,38 @@ public class DepthTracker
         mWindowDepth = new int[windows];
     }
 
-    public int calcDepth(int position)
+    public double calcDepth(int position)
     {
         int index = windowIndex(position);
-
-        return index != INVALID_INDEX && index < mWindowDepth.length ? mWindowDepth[index] : 0;
+        return index != INVALID_INDEX && index < mWindowDepth.length ? mWindowDepth[index] / (double)mWindowSize : 0;
     }
 
     public void processRead(final SAMRecord read)
     {
-        int indexStart = windowIndex(read.getAlignmentStart());
+        int readStart = read.getAlignmentStart();
+        int readEnd = read.getAlignmentEnd();
+
+        int indexStart = windowIndex(readStart);
 
         if(indexStart == INVALID_INDEX || indexStart >= mWindowDepth.length)
             return;
 
-        ++mWindowDepth[indexStart];
+        int windowEnd = mRegion.start() + (indexStart + 1) * mWindowSize;
+        int windowRange = min(readEnd, windowEnd) - readStart;
 
-        int indexEnd = windowIndex(read.getAlignmentEnd());
+        mWindowDepth[indexStart] += windowRange;
 
-        if(indexEnd > indexStart && indexEnd < mWindowDepth.length)
-            ++mWindowDepth[indexEnd];
+        // assumes read spans at most 2 windows
+        if(readEnd > windowEnd)
+        {
+            int indexEnd = indexStart + 1;
+
+            if(indexEnd < mWindowDepth.length)
+            {
+                windowRange = readEnd - windowEnd;
+                mWindowDepth[indexEnd] += windowRange;
+            }
+        }
     }
 
     private static final int INVALID_INDEX = -1;

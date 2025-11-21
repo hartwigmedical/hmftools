@@ -92,12 +92,12 @@ public class MiscTest
 
         depthTracker.processRead(read);
 
-        assertEquals(2, depthTracker.calcDepth(1));
-        assertEquals(2, depthTracker.calcDepth(100));
-        assertEquals(2, depthTracker.calcDepth(101));
-        assertEquals(2, depthTracker.calcDepth(199));
-        assertEquals(0, depthTracker.calcDepth(301));
-        assertEquals(1, depthTracker.calcDepth(1000));
-        assertEquals(0, depthTracker.calcDepth(1001));
+        assertEquals(1, depthTracker.calcDepth(1), 0.1);
+        assertEquals(1, depthTracker.calcDepth(100), 0.1);
+        assertEquals(0.7, depthTracker.calcDepth(101), 0.1);
+        assertEquals(0.7, depthTracker.calcDepth(199), 0.1);
+        assertEquals(0, depthTracker.calcDepth(301), 0.1);
+        assertEquals(0.5, depthTracker.calcDepth(1000), 0.1);
+        assertEquals(0, depthTracker.calcDepth(1001), 0.1);
     }
 }

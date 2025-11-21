@@ -18,6 +18,8 @@ public final class SvConstants
     public static final int MIN_MAP_QUALITY = 20;
 
     public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
+    public static final int DEFAULT_MAX_FRAGMENT_LENGTH = 1100;
+
     public static final int MIN_UPPER_FRAGMENT_LENGTH = 800; // in place for panels to maintain a minimum
 
     public static int maxConcordantFragmentLength(int observedMaxFragmentLength)

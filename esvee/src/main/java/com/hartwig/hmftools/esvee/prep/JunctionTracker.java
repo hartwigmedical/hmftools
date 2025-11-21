@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -37,7 +36,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
@@ -671,13 +669,13 @@ public class JunctionTracker
         mLastJunctionIndex = index;
     }
 
-    private int findJunctionIndex(final PrepRead read, int maxSupportDistance)
+    private int findJunctionIndex(final PrepRead read, int distanceBuffer)
     {
         if(mJunctions.size() <= 5)
         {
             for(int index = 0; index < mJunctions.size(); ++index)
             {
-                if(readWithinJunctionRange(read, mJunctions.get(index), maxSupportDistance))
+                if(readWithinJunctionRange(read, mJunctions.get(index), distanceBuffer))
                     return index;
             }
 
@@ -691,12 +689,41 @@ public class JunctionTracker
 
         int iterations = 0;
 
+        int readLowerBound = read.AlignmentStart - distanceBuffer;
+        int readUpperBound = read.AlignmentEnd + distanceBuffer;
+
         while(true)
         {
             JunctionData junctionData = mJunctions.get(currentIndex);
 
-            if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
+            if(readWithinJunctionRange(read, junctionData, distanceBuffer))
                 return currentIndex;
+
+            if(readLowerBound >= junctionData.Position && junctionData.Position <= readUpperBound)
+            {
+                // read straddles the current junction so search only within this range
+                for(int i = 0; i <= 1; ++i)
+                {
+                    boolean searchDown = (i == 0);
+
+                    int juncIndex = currentIndex + (searchDown ? -1 : 1);
+
+                    while(juncIndex >= 0 && juncIndex < mJunctions.size())
+                    {
+                        junctionData = mJunctions.get(juncIndex);
+
+                        if(readWithinJunctionRange(read, junctionData, distanceBuffer))
+                            return juncIndex;
+
+                        if(searchDown && junctionData.Position < readLowerBound)
+                            break;
+                        else if(!searchDown && junctionData.Position > readUpperBound)
+                            break;
+
+                        juncIndex += searchDown ? -1 : 1;
+                    }
+                }
+            }
 
             if(read.AlignmentEnd < junctionData.Position)
             {
@@ -803,7 +830,7 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
-        if(!junctionData.hotspot() && !junctionAboveMinDepth(junctionData))
+        if(!junctionData.hotspot() && !junctionAboveMinAF(junctionData))
             return false;
 
         if(junctionData.discordantGroup())
@@ -834,9 +861,10 @@ public class JunctionTracker
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }
 
-    private boolean junctionAboveMinDepth(final JunctionData junctionData)
+    private boolean junctionAboveMinAF(final JunctionData junctionData)
     {
-        int regionDepth = mDepthTracker.calcDepth(junctionData.Position);
+        // sites with an AF below 0.5% (1% for discordant) are filtered
+        double regionDepth = mDepthTracker.calcDepth(junctionData.Position);
 
         if(regionDepth < DEPTH_MIN_CHECK)
             return true;
@@ -848,7 +876,9 @@ public class JunctionTracker
         if(junctionData.discordantGroup())
             junctionSupport += junctionData.supportingFragmentCount();
 
-        return junctionSupport >= regionDepth * requiredSupportRatio;
+        double requiredSupport = regionDepth * requiredSupportRatio;
+
+        return junctionSupport >= requiredSupport;
     }
 
     private void perfCounterStart(final PerfCounters pc)

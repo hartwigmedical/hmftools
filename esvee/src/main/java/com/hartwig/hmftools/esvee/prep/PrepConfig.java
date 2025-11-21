@@ -36,7 +36,6 @@ import static com.hartwig.hmftools.esvee.common.WriteType.PREP_BAM;
 import static com.hartwig.hmftools.esvee.common.WriteType.PREP_READ;
 import static com.hartwig.hmftools.esvee.common.WriteType.registerWriteTypes;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_JUNCTION_SUPPORT;
@@ -96,7 +95,6 @@ public class PrepConfig
     private boolean mIsValid;
 
     // both of these are set from the fragment length distribution
-    private int mReadLength;
     private boolean mUnpairedReads;
 
     // config strings
@@ -106,7 +104,6 @@ public class PrepConfig
 
     private static final String WRITE_TYPES = "write_types";
 
-    public static final String READ_LENGTH = "read_length";
     public static final String PARTITION_SIZE = "partition_size";
 
     private static final String TRACK_REMOTES = "track_remotes";
@@ -182,8 +179,6 @@ public class PrepConfig
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
-
-        mReadLength = configBuilder.getInteger(READ_LENGTH);
         mUnpairedReads = false;
     }
 
@@ -197,9 +192,6 @@ public class PrepConfig
 
         return true;
     }
-
-    public int readLength() { return mReadLength; }
-    public void setReadLength(int length) { mReadLength = length; }
 
     public boolean unpairedReads() { return mUnpairedReads; }
     public void setUnpairedReads(boolean unpaired) { mUnpairedReads = unpaired; }
@@ -256,7 +248,6 @@ public class PrepConfig
         MaxFragmentLengthOverride = -1;
 
         mUnpairedReads = false;
-        mReadLength = DEFAULT_READ_LENGTH;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -266,7 +257,6 @@ public class PrepConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion hotspot BED file");
-        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         registerCommonConfig(configBuilder);
