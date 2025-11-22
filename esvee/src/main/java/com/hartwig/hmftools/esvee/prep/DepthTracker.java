@@ -5,6 +5,7 @@ import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
@@ -14,7 +15,8 @@ public class DepthTracker
 {
     private final BaseRegion mRegion;
     private final int mWindowSize;
-    private final int[] mWindowDepth;
+    private final long[] mWindowDepth;
+    private final int[] mWindowReadCounts;
 
     public DepthTracker(final BaseRegion region, final int windowSize)
     {
@@ -24,7 +26,8 @@ public class DepthTracker
         int regionLength = mRegion.baseLength();
         int windows = (int)ceil(regionLength / mWindowSize);
 
-        mWindowDepth = new int[windows];
+        mWindowDepth = new long[windows];
+        mWindowReadCounts = new int[windows];
     }
 
     public double calcDepth(int position)
@@ -33,8 +36,17 @@ public class DepthTracker
         return index != INVALID_INDEX && index < mWindowDepth.length ? mWindowDepth[index] / (double)mWindowSize : 0;
     }
 
+    public int windowReadCount(int position)
+    {
+        int index = windowIndex(position);
+        return index != INVALID_INDEX && index < mWindowReadCounts.length ? mWindowReadCounts[index] : 0;
+    }
+
     public void processRead(final SAMRecord read)
     {
+        if(read.getReadUnmappedFlag())
+            return;
+
         int readStart = read.getAlignmentStart();
         int readEnd = read.getAlignmentEnd();
 
@@ -46,7 +58,15 @@ public class DepthTracker
         int windowEnd = mRegion.start() + (indexStart + 1) * mWindowSize;
         int windowRange = min(readEnd, windowEnd) - readStart;
 
+        if(windowRange < 0 || windowRange > mWindowSize)
+        {
+            SV_LOGGER.error("depth range failed: read({}:{}-{}) window(idx={} end={}) range({})",
+                    readStart, readEnd, indexStart, windowEnd, windowRange);
+            return;
+        }
+
         mWindowDepth[indexStart] += windowRange;
+        ++mWindowReadCounts[indexStart];
 
         // assumes read spans at most 2 windows
         if(readEnd > windowEnd)
@@ -56,7 +76,16 @@ public class DepthTracker
             if(indexEnd < mWindowDepth.length)
             {
                 windowRange = readEnd - windowEnd;
+
+                if(windowRange < 0 || windowRange > mWindowSize)
+                {
+                    SV_LOGGER.error("depth range failed: read({}:{}-{}) window(idx={} end={}) range({})",
+                            readStart, readEnd, indexEnd, windowEnd, windowRange);
+                    return;
+                }
+
                 mWindowDepth[indexEnd] += windowRange;
+                ++mWindowReadCounts[indexEnd];
             }
         }
     }

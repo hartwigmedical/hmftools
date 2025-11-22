@@ -28,6 +28,7 @@ public class JunctionData
     private boolean mInternalIndel;
     private boolean mDiscordantGroup;
     private boolean mHotspot;
+    private int mDepth;
 
     public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
@@ -49,6 +50,7 @@ public class JunctionData
         mHotspot = false;
         mInternalIndel = false;
         mDiscordantGroup = false;
+        mDepth = 0;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -100,6 +102,9 @@ public class JunctionData
 
     public boolean discordantGroup() { return mDiscordantGroup; }
     public void markDiscordantGroup() { mDiscordantGroup = true; }
+
+    public int depth() { return mDepth; }
+    public void setDepth(double depth) { mDepth = (int)depth; }
 
     public void addReadType(final PrepRead read, final ReadType type)
     {

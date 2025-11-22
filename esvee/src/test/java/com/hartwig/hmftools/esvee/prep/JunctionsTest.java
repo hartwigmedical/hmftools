@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.INVALID_JUNC_INDEX;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.findJunctionIndex;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
@@ -410,4 +412,76 @@ public class JunctionsTest
         assertEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
         assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
     }
+
+    @Test
+    public void testJunctionDataLookup()
+    {
+        // test junction-finding logic
+        String readBases = REF_BASES.substring(0, 100);
+        String leftCigar = "30S70M";
+
+        PrepRead read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 100, readBases, leftCigar));
+
+        mJunctionTracker.addJunctionData(read);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 150, readBases, leftCigar));
+
+        mJunctionTracker.addJunctionData(read);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, leftCigar));
+
+        mJunctionTracker.addJunctionData(read);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 250, readBases, leftCigar));
+
+        mJunctionTracker.addJunctionData(read);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 300, readBases, leftCigar));
+
+        mJunctionTracker.addJunctionData(read);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 101, readBases, leftCigar));
+
+        List<JunctionData> junctions = mJunctionTracker.junctions();
+        int juncIndex = findJunctionIndex(junctions, read, 1, 10);
+
+        assertEquals(0, juncIndex);
+
+        // using fast-search logic
+        juncIndex = findJunctionIndex(junctions, read, 1, 0);
+
+        assertEquals(0, juncIndex);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 102, readBases, leftCigar));
+        juncIndex = findJunctionIndex(junctions, read, 1, 0);
+        assertEquals(INVALID_JUNC_INDEX, juncIndex);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 98, readBases, leftCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(0, juncIndex);
+
+        String rightCigar = "40M30S";
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 60, readBases, rightCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(0, juncIndex);
+
+        // test the other junctions
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 150, readBases, rightCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(1, juncIndex);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, rightCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(2, juncIndex);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 250, readBases, rightCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(3, juncIndex);
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 300, readBases, rightCigar));
+        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        assertEquals(4, juncIndex);
+    }
+
 }
