@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFra
 import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDuplicationFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ public class RefBaseExtender
         List<NonJunctionRead> candidateReads = Lists.newArrayList();
         List<Read> discordantReads;
 
-        if(isIndelJunction)
+        if(isIndelJunction || !hasPairedReads())
         {
             discordantReads = Collections.emptyList();
         }
@@ -132,33 +133,36 @@ public class RefBaseExtender
             }
         }
 
-        // for now add these candidate discordant reads without any further checks
-        for(NonJunctionRead read : candidateReads)
+        if(!candidateReads.isEmpty())
         {
-            assembly.addCandidateSupport(read.read());
-        }
-
-        // now all possible discordant and junction mate reads have been collected, so test for overlaps with the min/max aligned position
-        // process in order of closest to furthest-out reads in the ref base direction
-        List<NonJunctionRead> sortedCandidateReads = candidateReads.stream()
-                .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()))
-                .collect(Collectors.toList());
-
-        // look for evidence of a soft-clip on the ref side for possible branching during phasing and linking, searching from those
-        // reads closest to the junction and stopping whenever a gap is encountered
-        for(NonJunctionRead nonJuncRead : sortedCandidateReads)
-        {
-            Read read = nonJuncRead.read();
-
-            if(isForwardJunction)
+            // for now add these candidate discordant reads without any further checks
+            for(NonJunctionRead read : candidateReads)
             {
-                if(read.hasJunctionMate() || read.alignmentEnd() >= newRefBasePosition - ASSEMBLY_REF_BASE_MAX_GAP)
-                    newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
+                assembly.addCandidateSupport(read.read());
             }
-            else
+
+            // now all possible discordant and junction mate reads have been collected, so test for overlaps with the min/max aligned position
+            // process in order of closest to furthest-out reads in the ref base direction
+            List<NonJunctionRead> sortedCandidateReads = candidateReads.stream()
+                    .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()))
+                    .collect(Collectors.toList());
+
+            // look for evidence of a soft-clip on the ref side for possible branching during phasing and linking, searching from those
+            // reads closest to the junction and stopping whenever a gap is encountered
+            for(NonJunctionRead nonJuncRead : sortedCandidateReads)
             {
-                if(read.hasJunctionMate() || read.alignmentStart() <= newRefBasePosition + ASSEMBLY_REF_BASE_MAX_GAP)
-                    newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
+                Read read = nonJuncRead.read();
+
+                if(isForwardJunction)
+                {
+                    if(read.hasJunctionMate() || read.alignmentEnd() >= newRefBasePosition - ASSEMBLY_REF_BASE_MAX_GAP)
+                        newRefBasePosition = min(newRefBasePosition, read.alignmentStart());
+                }
+                else
+                {
+                    if(read.hasJunctionMate() || read.alignmentStart() <= newRefBasePosition + ASSEMBLY_REF_BASE_MAX_GAP)
+                        newRefBasePosition = max(newRefBasePosition, read.alignmentEnd());
+                }
             }
         }
 

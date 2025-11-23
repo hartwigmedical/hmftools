@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGIO
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMENTARY;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.Collections;
 import java.util.Comparator;

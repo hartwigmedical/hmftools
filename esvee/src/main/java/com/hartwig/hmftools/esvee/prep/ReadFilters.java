@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 import static com.hartwig.hmftools.esvee.common.SvConstants.maxConcordantFragmentLength;
@@ -94,7 +95,7 @@ public class ReadFilters
 
     public static boolean filterLowQualRead(final SAMRecord read, double maxPermittedLowPercent)
     {
-        if(isSbx() || isUltima())
+        if(!isIllumina())
             return false;
 
         // filter any read with 50% + bases classified as low qual or any invalid base

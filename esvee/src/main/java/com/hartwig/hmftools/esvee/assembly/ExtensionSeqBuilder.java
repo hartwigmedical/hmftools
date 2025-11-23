@@ -222,8 +222,8 @@ public class ExtensionSeqBuilder
         SequenceDiffInfo seqDiffInfo = SequenceDiffInfo.UNSET;
 
         byte[] readNextBases = read.getNextBases(NEXT_BASE_CHECK_COUNT);
-        byte[] consensusNextBases = read.getNextBases(NEXT_BASE_CHECK_COUNT);
-        byte[] consensusCurrentAndNext = read.getNextBases(NEXT_BASE_CHECK_COUNT);
+        byte[] consensusNextBases = new byte[NEXT_BASE_CHECK_COUNT];
+        byte[] consensusCurrentAndNext = new byte[NEXT_BASE_CHECK_COUNT];
 
         mSequenceBuilder.populateBases(consensusCurrentAndNext, extensionIndex);
         mSequenceBuilder.populateBases(consensusNextBases, extensionIndex + (mBuildForwards ? 1 : -1));
@@ -237,7 +237,7 @@ public class ExtensionSeqBuilder
         RepeatInfo consensusRepeat = null;
         int previousRepeatLength = 0;
 
-        if(basesMatch(readNextBases, consensusNextBases))
+        if(readNextBases == null || consensusNextBases == null || basesMatch(readNextBases, consensusNextBases))
         {
             // this will handle the low-qual mismatch
             seqDiffInfo = SequenceDiffInfo.fromSnv(read, extensionIndex);

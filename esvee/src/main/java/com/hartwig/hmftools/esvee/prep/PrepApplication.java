@@ -112,9 +112,6 @@ public class PrepApplication
                     fragmentLengthBounds.LowerBound,
                     mConfig.MaxFragmentLengthOverride > 0 ? mConfig.MaxFragmentLengthOverride : fragmentLengthBounds.UpperBound);
         }
-
-        if(!fragSizeDistribution.hasPairedReads())
-            mConfig.setUnpairedReads(true);
     }
 
     public static void main(@NotNull final String[] args)

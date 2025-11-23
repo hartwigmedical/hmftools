@@ -930,15 +930,17 @@ public class SequenceBuilder
     public void populateBases(final byte[] bases, final int indexStart)
     {
         int baseIndex = indexStart;
+
         for(int i = 0; i < bases.length; ++i)
         {
+            if(baseIndex < 0 || baseIndex >= mBases.length)
+                break;
+
             int destIndex = mBuildForwards ? i : bases.length - i - 1;
+
             bases[destIndex] = mBases[baseIndex];
 
             baseIndex += mBuildForwards ? 1 : -1;
-
-            if(baseIndex < 0 || baseIndex >= mBases.length)
-                break;
         }
     }
 

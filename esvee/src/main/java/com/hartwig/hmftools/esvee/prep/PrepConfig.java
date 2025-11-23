@@ -193,9 +193,6 @@ public class PrepConfig
         return true;
     }
 
-    public boolean unpairedReads() { return mUnpairedReads; }
-    public void setUnpairedReads(boolean unpaired) { mUnpairedReads = unpaired; }
-
     public String sampleId() { return SampleIds.get(0); }
     public String bamFile() { return BamFiles.get(0); }
 

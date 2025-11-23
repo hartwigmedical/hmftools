@@ -34,6 +34,8 @@ public final class SvConstants
     public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
     public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
 
+    public static boolean hasPairedReads() { return isIllumina(); }
+
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;
     public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;

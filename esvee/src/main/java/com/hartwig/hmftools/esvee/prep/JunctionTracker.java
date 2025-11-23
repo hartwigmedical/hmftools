@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.INVALID_JUNC_INDEX;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
@@ -315,10 +316,15 @@ public class JunctionTracker
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            boolean isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
+            boolean isDiscordantGroup = false;
 
-            if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
-                mCandidateDiscordantGroups.add(readGroup);
+            if(hasPairedReads())
+            {
+                isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
+
+                if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
+                    mCandidateDiscordantGroups.add(readGroup);
+            }
 
             if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
                 mDiscordantStats.processReadGroup(readGroup);
@@ -329,7 +335,7 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(mConfig.unpairedReads())
+        if(!hasPairedReads())
             return;
 
         perfCounterStart(PerfCounters.DiscordantGroups);
@@ -598,7 +604,7 @@ public class JunctionTracker
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
 
-        int maxSupportDistance = mConfig.unpairedReads() ? UNPAIRED_READ_JUNCTION_DISTANCE : mFilterConfig.maxSupportingFragmentDistance();
+        int maxSupportDistance = hasPairedReads() ? mFilterConfig.maxSupportingFragmentDistance() : UNPAIRED_READ_JUNCTION_DISTANCE;
 
         // first check the last index since the next read is likely to be close by
         int closeJunctionIndex = INVALID_JUNC_INDEX;
@@ -660,7 +666,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != ReadType.SUPPORT && !mConfig.unpairedReads() && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != ReadType.SUPPORT && hasPairedReads() && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, ReadType.SUPPORT);
             read.setReadType(ReadType.SUPPORT, true);
@@ -776,9 +782,6 @@ public class JunctionTracker
         double regionDepth = mDepthTracker.calcDepth(junctionData.Position);
         int regionReadCount = mDepthTracker.windowReadCount(junctionData.Position);
 
-        //if(regionDepth < DEPTH_MIN_CHECK)
-        //    return true;
-
         if(regionReadCount < DEPTH_MIN_READ_COUNT || regionDepth < DEPTH_MIN_CHECK)
             return true;
 
@@ -790,7 +793,6 @@ public class JunctionTracker
             junctionSupport += junctionData.supportingFragmentCount();
 
         double requiredSupport = max(regionDepth, regionReadCount) * requiredSupportRatio;
-        // double requiredSupport = regionDepth * requiredSupportRatio;
 
         return junctionSupport >= requiredSupport;
     }
