@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.lilac.LilacConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.lilac.LilacConfig.isIllumina;
 import static com.hartwig.hmftools.lilac.LilacConfig.isSbx;
 import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
+import static com.hartwig.hmftools.lilac.LilacConstants.BAD_READ_NAMES;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.lilac.ReferenceData.refBases;
 import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
@@ -72,6 +73,12 @@ public class Read
         ReadIndexEnd = readIndexEnd;
         mRecord = record;
         mTrimmedBases = trimmedBases;
+    }
+
+    // TODO:
+    public boolean isBad()
+    {
+        return BAD_READ_NAMES.contains(mRecord.getReadName());
     }
 
     public String readInfo()

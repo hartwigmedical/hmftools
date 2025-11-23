@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.BAD_READ_NAMES;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 
@@ -80,6 +81,12 @@ public class Fragment
         mAminoAcidsByLoci = Maps.newTreeMap();
 
         mScope = UNSET;
+    }
+
+    // TODO:
+    public boolean isBad()
+    {
+        return mReads.stream().anyMatch(x -> x.isBad());
     }
 
     public String id() { return mReads.get(0).Id; }

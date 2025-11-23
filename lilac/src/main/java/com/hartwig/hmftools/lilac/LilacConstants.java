@@ -1,13 +1,25 @@
 package com.hartwig.hmftools.lilac;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.lilac.hla.HlaGene;
 
 public final class LilacConstants
 {
     private LilacConstants() {}
+
+    // TODO:
+    public static final Set<String> BAD_READ_NAMES = Sets.newHashSet(
+            "fm-609:250926_HWG-HTP_01:ABT09R03C04:5ED6DE22F9CF:CNS_15|13",
+            "fm-609:250926_HWG-HTP_01:ABT09R03C04:8D0CCBBD9CB9:15|13",
+            "fm-609:250926_HWG-HTP_01:ABT09R03C04:00E069064818:15|13"
+    );
+    public static final int BAD_AMINO_ACID_LOCUS = 122;
+    public static final HlaGene BAD_GENE = HlaGene.HLA_C;
 
     public static final String APP_NAME = "Lilac";
 

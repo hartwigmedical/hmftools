@@ -234,7 +234,7 @@ public class LilacApplication
         List<PhasedEvidence> combinedPhasedEvidence = Lists.newArrayList();
         geneTasks.forEach(x -> combinedPhasedEvidence.addAll(x.phasedEvidence()));
 
-        List<HlaAllele> recoveredAlleles = Lists.newArrayList();
+        List<HlaAllele> recoveredAlleles_ = Lists.newArrayList();
 
         // make special note of the known stop-loss INDEL on HLA-C
         Map<HlaAllele, List<Fragment>> knownStopLossFragments = Maps.newHashMap();
@@ -251,7 +251,7 @@ public class LilacApplication
                 knownStopLossFragments.put(allele, entry.getValue());
 
                 if(!candidateAlleles.contains(allele))
-                    recoveredAlleles.add(allele);
+                    recoveredAlleles_.add(allele);
             }
         }
 
@@ -260,18 +260,18 @@ public class LilacApplication
             // add common alleles - either if supported or forced for inclusion
             List<HlaAllele> missedCommonAlleles = mRefData.CommonAlleles.stream()
                     .filter(x -> !candidateAlleles.contains(x))
-                    .filter(x -> !recoveredAlleles.contains(x))
+                    .filter(x -> !recoveredAlleles_.contains(x))
                     .collect(Collectors.toList());
 
             if(!missedCommonAlleles.isEmpty())
             {
                 Collections.sort(missedCommonAlleles);
                 LL_LOGGER.info("recovering {} common alleles: {}", missedCommonAlleles.size(), HlaAllele.toString(missedCommonAlleles));
-                recoveredAlleles.addAll(missedCommonAlleles);
+                recoveredAlleles_.addAll(missedCommonAlleles);
             }
         }
 
-        candidateAlleles.addAll(recoveredAlleles);
+        candidateAlleles.addAll(recoveredAlleles_);
 
         List<HlaAllele> missingExpected = mConfig.ActualAlleles.stream()
                 .filter(x -> !candidateAlleles.contains(x))
@@ -298,11 +298,11 @@ public class LilacApplication
         List<HlaSequenceLoci> candidateNucSequences = mRefData.NucleotideSequences.stream()
                 .filter(x -> candidateAlleles.contains(x.Allele.asFourDigit())).collect(Collectors.toList());
 
-        List<HlaSequenceLoci> recoveredSequences = mRefData.AminoAcidSequences.stream()
-                .filter(x -> recoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
+        List<HlaSequenceLoci> recoveredSequences_ = mRefData.AminoAcidSequences.stream()
+                .filter(x -> recoveredAlleles_.contains(x.Allele)).collect(Collectors.toList());
 
         Map<HlaGene, Map<Integer, Set<String>>> geneAminoAcidHetLociMap =
-                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+                extractHeterozygousLociSequences(mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences_);
 
         mFragAlleleMapper = new FragmentAlleleMapper(
                 geneAminoAcidHetLociMap, refNucleotideHetLociMap, mAminoAcidPipeline.getReferenceNucleotides());
@@ -327,16 +327,16 @@ public class LilacApplication
         // build and score complexes
         ComplexBuilder complexBuilder = new ComplexBuilder(mRefData);
 
-        complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
+        complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles_);
         allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
 
         // reassess fragment-allele assignment with the reduced set of filtered alleles
         List<HlaAllele> confirmedRecoveredAlleles = complexBuilder.getConfirmedRecoveredAlleles();
-        recoveredSequences = recoveredSequences.stream()
+        recoveredSequences_ = recoveredSequences_.stream()
                 .filter(x -> confirmedRecoveredAlleles.contains(x.Allele)).collect(Collectors.toList());
 
         geneAminoAcidHetLociMap = extractHeterozygousLociSequences(
-                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences);
+                mAminoAcidPipeline.getReferenceAminoAcidCounts(), recoveredSequences_);
 
         mFragAlleleMapper.setHetAminoAcidLoci(geneAminoAcidHetLociMap);
         if(mHlaYCoverage != null)
@@ -376,7 +376,7 @@ public class LilacApplication
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
         ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
-        mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
+        mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles_), candidateSequences));
 
         if(mRankedComplexes.isEmpty())
         {
@@ -394,7 +394,7 @@ public class LilacApplication
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
             complexRanker = new ComplexCoverageRanking(0, mRefData);
             mRankedComplexes.clear();
-            mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
+            mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles_), candidateSequences));
         }
 
         ComplexCoverage winningRefCoverage = mRankedComplexes.get(0);

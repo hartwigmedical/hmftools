@@ -2,9 +2,11 @@ package com.hartwig.hmftools.lilac.seq;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.BAD_AMINO_ACID_LOCUS;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_EVIDENCE_SUPPORT;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_B;
@@ -14,6 +16,7 @@ import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_DRB3;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -146,14 +149,29 @@ public final class SequenceCount
     public int depth(final int locus) { return mSeqCountsByLoci.get(locus).size(); }
 
     public static Map<HlaGene, Map<Integer, Set<String>>> extractHeterozygousLociSequences(
-            final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci)
+            final Map<HlaGene, SequenceCount> geneCountsMap, final Collection<HlaSequenceLoci> extraSeqLoci_)
     {
+        // TODO:
+        Collection<HlaSequenceLoci> extraSeqLoci = extraSeqLoci_;
+//        Collection<HlaSequenceLoci> extraSeqLoci = Collections.emptyList();
+
+        // TODO:
+        for(var entry : geneCountsMap.entrySet())
+        {
+            System.out.println(format("*** geneCountsMap %s@%d: %s",
+                    entry.getKey(),
+                    BAD_AMINO_ACID_LOCUS,
+                    entry.getValue().get(BAD_AMINO_ACID_LOCUS)));
+        }
+
         Map<HlaGene, Map<Integer, Set<String>>> geneHetLociMap = Maps.newHashMap();
         for(Map.Entry<HlaGene, SequenceCount> geneEntry : geneCountsMap.entrySet())
         {
             HlaGene gene = geneEntry.getKey();
             SequenceCount sequenceCounts = geneEntry.getValue();
+            // NOTE: loci asscoiated to this gene
             List<HlaSequenceLoci> geneExtraSeqLoci = extraSeqLoci.stream().filter(x -> x.Allele.Gene == gene).toList();
+            // NOTE: adds this to the geneHetLociMap?
             Map<Integer, Set<String>> hetLociMap = sequenceCounts.extractHeterozygousLociSequences(geneExtraSeqLoci);
             geneHetLociMap.put(gene, hetLociMap);
         }
@@ -165,6 +183,15 @@ public final class SequenceCount
         else if(geneHetLociMap.containsKey(HLA_DRB3))
         {
             addDrbHeterozygousLociSequences(geneHetLociMap);
+        }
+
+        // TODO:
+        for(var entry : geneHetLociMap.entrySet())
+        {
+            System.out.println(format("*** extractHeterozygousLociSequences %s@%d: %s",
+                    entry.getKey(),
+                    BAD_AMINO_ACID_LOCUS,
+                    entry.getValue().get(BAD_AMINO_ACID_LOCUS)));
         }
 
         return geneHetLociMap;
@@ -246,6 +273,7 @@ public final class SequenceCount
         for(Map.Entry<Integer, Multiset<String>> entry : mSeqCountsByLoci.entrySet())
         {
             int locus = entry.getKey();
+            // NOTE: min evidence
             Set<String> aminoAcids = Sets.newHashSet(getMinEvidenceSequences(locus));
             for(HlaSequenceLoci extraSeqLoci : extraSequences)
             {
@@ -254,8 +282,17 @@ public final class SequenceCount
                     continue;
                 }
 
+                // NOTE: add extra seq
                 String lociSeq = extraSeqLoci.sequence(locus);
                 aminoAcids.add(lociSeq);
+
+                // TODO:
+                if(locus == BAD_AMINO_ACID_LOCUS && lociSeq.equals("S"))
+                {
+                    System.out.println(format("*** extra loci %s %s",
+                            extraSeqLoci.Allele,
+                            lociSeq));
+                }
             }
 
             if(aminoAcids.size() > 1)

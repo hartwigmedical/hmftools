@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.lilac.coverage;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.BAD_AMINO_ACID_LOCUS;
+import static com.hartwig.hmftools.lilac.LilacConstants.BAD_GENE;
 import static com.hartwig.hmftools.lilac.LilacConstants.MIN_WILDCARD_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.ReferenceData.getAminoAcidExonBoundaries;
 import static com.hartwig.hmftools.lilac.ReferenceData.getNucleotideExonBoundaries;
@@ -169,6 +173,14 @@ public class FragmentAlleleMapper
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         Map<HlaAllele, SequenceMatchType> aminoAcidAlleleMatches = findAminoAcidMatches(fragment, aminoAcidSequences);
+
+        // TODO:
+        if(fragment.isBad())
+        {
+            System.out.println(format("*** %s: aminoAcidAlleleMatches = %s",
+                    fragment.reads().get(0).bamRecord().getReadName(),
+                    aminoAcidAlleleMatches));
+        }
 
         List<HlaAllele> fullAminoAcidMatch = aminoAcidAlleleMatches.entrySet().stream()
                 .filter(x -> x.getValue() == FULL).map(x -> x.getKey()).collect(Collectors.toList());
@@ -347,39 +359,59 @@ public class FragmentAlleleMapper
         Map<HlaGene, List<Integer>> fragGeneLociMap = Maps.newHashMap(); // per-gene map of heterozygous locations for this fragment
         Map<HlaGene, List<String>> fragGeneSequenceMap = Maps.newHashMap(); // per-gene map of fragment sequences at these het loci
 
+        // NOTE: for each gene, look at het loci map
         for(Map.Entry<HlaGene, Map<Integer, Set<String>>> geneEntry : mGeneAminoAcidHetLociMap.entrySet())
         {
             Map<Integer, Set<String>> hetLociSeqMap = geneEntry.getValue();
 
-            NavigableSet<Integer> fragAminoAcidLoci = fragment.aminoAcidsByLoci().keySet().stream()
+            // NOTE: High qual loci that are het on this gene.
+            NavigableSet<Integer> fragAminoAcidLoci_ = fragment.aminoAcidsByLoci().keySet().stream()
                     .filter(x -> hetLociSeqMap.containsKey(x))
                     .collect(Collectors.toCollection(Sets::newTreeSet));
 
             // also attempt to retrieve amino acids from low-qual nucleotides
             Map<Integer, String> missedAminoAcids = Maps.newHashMap();
 
-            List<Integer> missedAminoAcidLoci = hetLociSeqMap.keySet().stream()
-                    .filter(x -> !fragAminoAcidLoci.contains(x)).collect(Collectors.toList());
+            // NOTE: Het loci that are not high qual.
+            List<Integer> missedAminoAcidLoci_ = hetLociSeqMap.keySet().stream()
+                    .filter(x -> !fragAminoAcidLoci_.contains(x)).collect(Collectors.toList());
 
-            for(Integer missedLocus : missedAminoAcidLoci)
+            for(Integer missedLocus : missedAminoAcidLoci_)
             {
+                // NOTE: calculate low qual amino acid
                 String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
 
                 if(lowQualAminoAcid.isEmpty())
                     continue;
 
+                // NOTE: get amino acid candidates at missed locus.
                 Set<String> candidateAminoAcids = hetLociSeqMap.get(missedLocus);
 
+                // TODO:
+                if(fragment.isBad() && geneEntry.getKey() == BAD_GENE && BAD_AMINO_ACID_LOCUS == missedLocus)
+                {
+                    System.out.println(format("*** %s %s@%d: lowQualAminoAcid = %s, candidateAminoAcids = %s",
+                            fragment.reads().get(0).bamRecord().getReadName(),
+                            BAD_GENE,
+                            BAD_AMINO_ACID_LOCUS,
+                            lowQualAminoAcid,
+                            candidateAminoAcids));
+
+                    // TODO: skipping this gives the correct result, includes C*07:01 as a full match
+//                    continue;
+                }
+
+                // NOTE: if low qual amino acid matches, add.
                 if(candidateAminoAcids.contains(lowQualAminoAcid))
                 {
-                    fragAminoAcidLoci.add(missedLocus);
+                    fragAminoAcidLoci_.add(missedLocus);
                     missedAminoAcids.put(missedLocus, lowQualAminoAcid);
                 }
             }
 
-            final List<String> fragmentAminoAcids = Lists.newArrayListWithExpectedSize(fragAminoAcidLoci.size());
+            final List<String> fragmentAminoAcids = Lists.newArrayListWithExpectedSize(fragAminoAcidLoci_.size());
 
-            for(Integer locus : fragAminoAcidLoci)
+            for(Integer locus : fragAminoAcidLoci_)
             {
                 if(missedAminoAcids.containsKey(locus))
                     fragmentAminoAcids.add(missedAminoAcids.get(locus));
@@ -387,7 +419,7 @@ public class FragmentAlleleMapper
                     fragmentAminoAcids.add(fragment.aminoAcid(locus));
             }
 
-            fragGeneLociMap.put(geneEntry.getKey(), Lists.newArrayList(fragAminoAcidLoci));
+            fragGeneLociMap.put(geneEntry.getKey(), Lists.newArrayList(fragAminoAcidLoci_));
             fragGeneSequenceMap.put(geneEntry.getKey(), fragmentAminoAcids);
         }
 
