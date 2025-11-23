@@ -235,14 +235,14 @@ public class FragmentAlleleMapper
                 if(missedLocus >= mRefNucleotides.size())
                     continue;
 
-                String lowQualNucleotide = fragment.getRawNucleotide(missedLocus);
+                String lowQualNucleotide = fragment.getRawNucleotide(missedLocus, true);
 
                 if(lowQualNucleotide.isEmpty())
                     continue;
 
                 Set<String> candidateNucleotides = mRefNucleotides.get(missedLocus);
 
-                if(candidateNucleotides.contains(lowQualNucleotide))
+                if(lowQualNucleotide.equals(WILD_STR) || candidateNucleotides.contains(lowQualNucleotide))
                 {
                     fragmentMatchedLoci.add(missedLocus);
                     missedNucleotides.put(missedLocus, lowQualNucleotide);
@@ -363,14 +363,14 @@ public class FragmentAlleleMapper
 
             for(Integer missedLocus : missedAminoAcidLoci)
             {
-                String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus);
+                String lowQualAminoAcid = fragment.getLowQualAminoAcid(missedLocus, true);
 
                 if(lowQualAminoAcid.isEmpty())
                     continue;
 
                 Set<String> candidateAminoAcids = hetLociSeqMap.get(missedLocus);
 
-                if(candidateAminoAcids.contains(lowQualAminoAcid))
+                if(lowQualAminoAcid.equals(WILD_STR) || candidateAminoAcids.contains(lowQualAminoAcid))
                 {
                     fragAminoAcidLoci.add(missedLocus);
                     missedAminoAcids.put(missedLocus, lowQualAminoAcid);

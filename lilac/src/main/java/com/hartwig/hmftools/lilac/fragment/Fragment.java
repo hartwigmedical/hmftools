@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.lilac.fragment;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
+import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
+import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.Collection;
 import java.util.List;
@@ -250,16 +254,24 @@ public class Fragment
         mAminoAcidsByLoci.keySet().removeIf(l -> !loci.contains(l));
     }
 
-    public String getRawNucleotide(int locus)
+    public String getRawNucleotide(int locus, boolean checkUncertainBaseQual)
     {
         Nucleotide nucleotide = mRawNucleotidesByLoci.get(locus);
         if(nucleotide == null)
             return "";
 
+        if(checkUncertainBaseQual && !isUltima() && nucleotide.qual() != MISSING_BASE_QUAL && isUncertainBaseQual(nucleotide.qual()))
+            return WILD_STR;
+
         return nucleotide.bases();
     }
 
     public String getLowQualAminoAcid(int locus)
+    {
+        return getLowQualAminoAcid(locus, false);
+    }
+
+    public String getLowQualAminoAcid(int locus, boolean checkUncertainBaseQual)
     {
         int startNucleotideLocus = locus * 3;
         if(!mRawNucleotidesByLoci.containsKey(startNucleotideLocus))
@@ -270,6 +282,16 @@ public class Fragment
 
         if(!mRawNucleotidesByLoci.containsKey(startNucleotideLocus + 2))
             return "";
+
+        if(checkUncertainBaseQual && !isUltima())
+        {
+            for(int i = 0; i < 3; i++)
+            {
+                Nucleotide nuc = mRawNucleotidesByLoci.get(startNucleotideLocus + i);
+                if(nuc.qual() != MISSING_BASE_QUAL && isUncertainBaseQual(nuc.qual()))
+                    return WILD_STR;
+            }
+        }
 
         return FragmentUtils.formCodonAminoAcid(locus, mRawNucleotidesByLoci);
     }
