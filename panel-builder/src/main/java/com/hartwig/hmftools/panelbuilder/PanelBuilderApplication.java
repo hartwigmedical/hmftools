@@ -164,13 +164,13 @@ public class PanelBuilderApplication
 
     private void generateCustomRegionProbes()
     {
-        if(mConfig.customRegionsFile() == null)
+        if(mConfig.customRegionsFiles() == null)
         {
             LOGGER.info("Custom regions not provided; skipping custom region probes");
         }
         else
         {
-            CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomRegions.generateProbes(mConfig.customRegionsFiles(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }

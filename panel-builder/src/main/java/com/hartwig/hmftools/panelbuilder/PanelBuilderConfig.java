@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.mappability.ProbeQualityProfile.CFG_PROBE_QUALITY_FILE;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
@@ -16,6 +17,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputId;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_BACKBONE_RESOLUTION_KB_DEFAULT;
+
+import java.util.Arrays;
+import java.util.List;
 
 import com.hartwig.hmftools.common.mappability.ProbeQualityProfile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -34,7 +38,7 @@ public record PanelBuilderConfig(
         @Nullable String amberSitesFile,
         int cnBackboneResolution,
         boolean includeCdr3,
-        @Nullable String customRegionsFile,
+        List<String> customRegionsFiles,
         @Nullable String customSvsFile,
         @Nullable SampleVariantsConfig sampleVariants,
         int threads,
@@ -56,7 +60,7 @@ public record PanelBuilderConfig(
     private static final String CFG_INCLUDE_CDR3 = "cdr3";
     private static final String DESC_INCLUDE_CDR3 = "Include fixed CDR3 panel probes";
     private static final String CFG_CUSTOM_REGIONS_FILE = "custom_regions";
-    private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file";
+    private static final String DESC_CUSTOM_REGIONS_FILE = "Custom regions TSV file(s) (separate multiple paths with comma)";
     private static final String CFG_CUSTOM_SVS_FILE = "custom_svs";
     private static final String DESC_CUSTOM_SV_FILE = "Custom structural variants TSV file";
     private static final String CFG_VERBOSE_OUTPUT = "verbose_output";
@@ -76,7 +80,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_AMBER_SITES_FILE),
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
-                configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE),
+                Arrays.asList(configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE).split(CONFIG_FILE_DELIM)),
                 configBuilder.getValue(CFG_CUSTOM_SVS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 parseThreads(configBuilder),
@@ -99,7 +103,7 @@ public record PanelBuilderConfig(
         configBuilder.addInteger(CFG_CN_BACKBONE_RESOLUTION, DESC_CN_BACKBONE_RESOLUTION, CN_BACKBONE_RESOLUTION_KB_DEFAULT);
         configBuilder.addPath(CFG_TARGET_GENES_FILE, false, DESC_TARGET_GENES_FILE);
         configBuilder.addFlag(CFG_INCLUDE_CDR3, DESC_INCLUDE_CDR3);
-        configBuilder.addPath(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
+        configBuilder.addPaths(CFG_CUSTOM_REGIONS_FILE, false, DESC_CUSTOM_REGIONS_FILE);
         configBuilder.addPath(CFG_CUSTOM_SVS_FILE, false, DESC_CUSTOM_SV_FILE);
 
         SampleVariantsConfig.registerConfig(configBuilder);

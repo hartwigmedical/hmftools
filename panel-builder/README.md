@@ -27,26 +27,26 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type    | Default                     | Description                                                                                                                        |
-|--------------------|---------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                                           |
-| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
-| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
-| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
-| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
-| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
-| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
-| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
-| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
-| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
-| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
-| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
-| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
-| custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
-| threads            | Integer | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
-| output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
-| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
-| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
+| Argument           | Type                         | Default                     | Description                                                                                                                        |
+|--------------------|------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir   | Path                         | (none)                      | Ensembl cache directory.                                                                                                           |
+| bwa_lib            | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
+| genes              | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
+| cn_backbone        | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
+| cn_backbone_res_kb | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
+| amber_sites        | Path                         | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
+| cdr3               | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
+| sample             | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
+| linx_dir           | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
+| linx_germline_dir  | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
+| purple_dir         | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
+| sample_probes      | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                |
+| custom_regions     | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                    |
+| custom_svs         | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| threads            | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
+| output_id          | String                       | (none)                      | Prefix for output files.                                                                                                           |
+| verbose_output     | Flag                         | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
+| log_level          | String                       | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
 
 ## Example Usage
 
