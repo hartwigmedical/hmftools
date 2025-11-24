@@ -46,9 +46,15 @@ public final class AssemblyConstants
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
     public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
 
+    // consensus building and read mismatches
     public static final double READ_MISMATCH_PENALTY = 1;
     public static final double READ_MISMATCH_MED_QUAL_PENALTY = 0.25;
+    public static final double READ_MAX_MISMATCH_RATE = 0.33; // max rate of mismatches per read even if zero penalty
+    public static final int READ_MISMATCH_RATE_MIN_BASE = MIN_VARIANT_LENGTH;
 
+    public static final double TOTAL_READ_MISMATCH_RATE = 0.1; // to consider more extensive searches for mismatch causes
+
+    // penalty factors as function of repeat length
     public static final int READ_MISMATCH_PENALTY_LENGTH_1 = 5;
     public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0;
     public static final int READ_MISMATCH_PENALTY_LENGTH_2 = 15;
@@ -57,7 +63,7 @@ public final class AssemblyConstants
     public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
     public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 2;
 
-    public static final int REPEAT_MIN_COUNT = 4;
+    public static final int REPEAT_MIN_COUNT = 4; // minimum number of repeats to consider a repeat
     public static final int REPEAT_MAX_BASE_LENGTH = 5;
 
     public static final int READ_MISMATCH_LOW_REPEAT_COUNT = REPEAT_MIN_COUNT;

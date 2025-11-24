@@ -89,7 +89,7 @@ public final class AssemblyUtils
 
     public static boolean basesMatch(final byte[] bases1, final byte[] bases2)
     {
-        if(bases1.length != bases2.length)
+        if(bases1 == null || bases2 == null || bases1.length != bases2.length)
             return false;
 
         for(int i = 0; i < bases1.length; ++i)

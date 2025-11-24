@@ -123,6 +123,7 @@ public class ReadParseState
     public int elementLength() { return mElement != null ? mElement.getLength() : 0; }
 
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
+    public int evaluatedBaseCount() { return (mMoveForward ? mReadIndex - mStartIndex : mStartIndex - mReadIndex) + 1; }
 
     public void moveOnMatchType(final SequenceDiffInfo seqDiffInfo)
     {
@@ -500,10 +501,10 @@ public class ReadParseState
                     mRefPosition, mElementIndex + 1, mElement.toString(), mCigarIndex + 1, mElementCount);
         }
 
-        return format("%s: index(%d/%d)%sstate(%s) match(HQ=%d MM=%.1f)",
+        return format("%s: index(%d/%d)%sstate(%s) match(%d hq=%d pen=%.1f mm=%d)",
                 mRead.id(), mReadIndex, mBaseLength - 1, cigarInfo != null ? cigarInfo : " ",
                 mMismatched ? "mismatched" : (mExhausted ? "exhausted" : "active"),
-                mHighQualMatches, mismatchPenalty());
+                mBaseMatches, mHighQualMatches, mismatchPenalty(), mMismatches != null ? mMismatches.size() : 0);
     }
 
     public String mismatchInfo()

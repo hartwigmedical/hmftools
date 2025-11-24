@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.Doubles.medianInteger;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MAX_MISMATCH_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_RATE_MIN_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MAX_BASE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT;
@@ -21,6 +23,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATC
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_2;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_3;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_LONG;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.TOTAL_READ_MISMATCH_RATE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
@@ -320,8 +323,6 @@ public class SequenceBuilder
             allReadNextBases.add(readNextBases); // stored even if null
 
             // no consideration for qual at this point - will revert to a low-qual mismatch after testing indels and repeats
-            // boolean baseMatch = basesMatch(consensusBase, read.currentBase(), consensusQual, read.currentQual());
-
             if(read.currentBase() == consensusBase)
             {
                 consensusReadNextBases.add(readNextBases);
@@ -388,7 +389,10 @@ public class SequenceBuilder
         }
 
         // otherwise check for a repeat expansion / contraction
-        assessRepeatDifferences(activeReads, seqDiffInfos, NO_BASE, 0);
+        int remaininingUnset = (int)Arrays.stream(seqDiffInfos).filter(x -> x == UNSET).count();
+
+        if(remaininingUnset > TOTAL_READ_MISMATCH_RATE * readCount)
+            assessRepeatDifferences(activeReads, seqDiffInfos, NO_BASE, 0);
 
         for(int readIndex = 0; readIndex < activeReads.size(); ++readIndex)
         {
@@ -413,12 +417,13 @@ public class SequenceBuilder
 
         for(int readIndex = 0; readIndex < activeReads.size(); ++readIndex)
         {
-            ReadParseState read = activeReads.get(readIndex);
             SequenceDiffInfo seqDiffInfo = seqDiffInfos[readIndex];
-            byte[] readNextBases = allReadNextBases.get(readIndex);
+
+            if(seqDiffInfo.Type == MATCH || seqDiffInfo.Type == BASE)
+                continue;
 
             seqDiffInfos[readIndex] = assessNovelIndelDifferences(
-                    read, seqDiffInfo, readNextBases, consensusNextBases, consensusCurrentAndNext);
+                    activeReads.get(readIndex), seqDiffInfo, allReadNextBases.get(readIndex), consensusNextBases, consensusCurrentAndNext);
         }
     }
 
@@ -667,13 +672,20 @@ public class SequenceBuilder
 
     private static byte[] findConsensusNextBases(final List<byte[]> consensusReadNextBases)
     {
+        if(consensusReadNextBases.isEmpty())
+            return null;
+
+        if(consensusReadNextBases.size() == 1)
+            return consensusReadNextBases.get(0);
+
         // find the following set of consensus bases
-        byte[] consensusNextBases = new byte[NEXT_BASE_CHECK_COUNT];
+        byte[] consensusNextBases = null;
 
         Map<byte[],Integer> consensusNextBasesFreq = null;
 
         int consensusReadNextBaseMatchCount = 0;
         int consensusReadCount = consensusReadNextBases.size();
+        double requiredMatchCount = 0.5 * consensusReadCount;
 
         for(byte[] readNextBases : consensusReadNextBases)
         {
@@ -690,6 +702,9 @@ public class SequenceBuilder
                 if(basesMatch(readNextBases, consensusNextBases))
                 {
                     ++consensusReadNextBaseMatchCount;
+
+                    if(consensusReadNextBaseMatchCount > requiredMatchCount)
+                        return consensusNextBases;
                 }
                 else
                 {
@@ -707,7 +722,12 @@ public class SequenceBuilder
                 {
                     if(basesMatch(readNextBases, entry.getKey()))
                     {
-                        entry.setValue(entry.getValue() + 1);
+                        Integer newCount = entry.getValue() + 1;
+
+                        if(newCount > requiredMatchCount)
+                            return consensusNextBases;
+
+                        entry.setValue(newCount);
                         found = true;
                         break;
                     }
@@ -874,9 +894,23 @@ public class SequenceBuilder
 
     public static boolean exceedsReadMismatches(final ReadParseState read)
     {
-        double mismatches = read.mismatchPenalty();
+        double mismatchPenalty = read.mismatchPenalty();
+
         double permittedPenalty = permittedReadMismatches(read.overlapBaseCount());
-        return mismatches > permittedPenalty;
+        if(mismatchPenalty > permittedPenalty)
+            return true;
+
+        int evaluatedBases = read.evaluatedBaseCount();
+
+        if(evaluatedBases >= READ_MISMATCH_RATE_MIN_BASE)
+        {
+            int mismatchCount = read.mismatchCount(false);
+
+            if(mismatchCount >= READ_MAX_MISMATCH_RATE * evaluatedBases)
+                return true;
+        }
+
+        return false;
     }
 
     public static double permittedReadMismatches(int readOverlap)
