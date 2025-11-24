@@ -273,6 +273,10 @@ public class Genes
             }
             else
             {
+                if(transcriptData.nonCoding())
+                {
+                    LOGGER.debug("Noncoding gene transcript: {}:{}", geneData.GeneName, transName);
+                }
                 transcriptDatas.add(transcriptData);
             }
         }
