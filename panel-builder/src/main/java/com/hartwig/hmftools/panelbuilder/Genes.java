@@ -271,12 +271,6 @@ public class Genes
                 LOGGER.error("Gene transcript not found: {}:{}", geneData.GeneName, transName);
                 error = true;
             }
-            else if(transcriptData.nonCoding())
-            {
-                // The only support for noncoding regions we have is a single probe for UTR, which is probably not what the user wants.
-                LOGGER.error("Noncoding gene transcript, add as custom region instead: {}:{}", geneData.GeneName, transcriptData.TransName);
-                error = true;
-            }
             else
             {
                 transcriptDatas.add(transcriptData);
@@ -440,6 +434,13 @@ public class Genes
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
 
+        if(regions.isEmpty())
+        {
+            // Perhaps the user configured no features or configured only coding features for a noncoding gene.
+            // Perhaps annoying to have as an error, but the user should be made aware.
+            LOGGER.warn("No features produced for gene {}", gene.gene().GeneName);
+        }
+
         return regions;
     }
 
@@ -465,9 +466,9 @@ public class Genes
             TranscriptData transcript = pair.getLeft();
             ExonData exon = pair.getRight();
 
-            BaseRegion codingRegion = new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
+            BaseRegion codingRegion = transcript.nonCoding() ? null : new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
             BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
-            boolean isCoding = codingRegion.overlaps(exonRegion);
+            boolean isCoding = codingRegion != null && codingRegion.overlaps(exonRegion);
 
             mergedExons.stream()
                     .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))
