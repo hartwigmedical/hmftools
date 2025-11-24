@@ -99,14 +99,11 @@ public class Genes
     {
         LOGGER.info("Generating gene probes");
 
-        List<GeneDefinition> geneDefs = loadGenesFile(targetGeneFile);
-        geneDefs.forEach(gene -> LOGGER.debug("{}", gene));
+        List<GeneDefinition> geneDefinitions = loadGenesFile(targetGeneFile);
+        geneDefinitions.forEach(gene -> LOGGER.debug("{}", gene));
 
         LOGGER.debug("Loading gene transcript data");
-        List<GeneTranscriptData> geneTranscriptDatas = geneDefs.stream()
-                .map(gene -> loadGeneTranscriptData(gene, ensemblData))
-                .flatMap(Optional::stream)
-                .toList();
+        List<GeneTranscriptData> geneTranscriptDatas = loadGeneTranscriptDatas(geneDefinitions, ensemblData);
 
         // When generating probes, don't check probe overlap between genes. This is because:
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
@@ -142,14 +139,6 @@ public class Genes
             List<String> extraTranscriptNames
     )
     {
-        public List<String> transcriptNames()
-        {
-            // Always get the canonical transcript, plus any extra transcripts requested.
-            List<String> names = new ArrayList<>();
-            names.add(null);
-            names.addAll(extraTranscriptNames);
-            return names;
-        }
     }
 
     private static List<GeneDefinition> loadGenesFile(final String filePath)
@@ -161,6 +150,11 @@ public class Genes
             List<GeneDefinition> genes = reader.stream().map(row ->
             {
                 String geneName = row.get(FLD_GENE_NAME);
+                if(geneName.isBlank())
+                {
+                    throw new UserInputError("Gene name cannot be blank: " + geneName);
+                }
+
                 boolean coding = row.getBoolean(FLD_INCLUDE_CODING);
                 boolean utr = row.getBoolean(FLD_INCLUDE_UTR);
                 boolean exonFlank = row.getBoolean(FLD_INCLUDE_EXON_FLANK);
@@ -181,13 +175,21 @@ public class Genes
 
     private static List<String> parseGeneExtraTranscripts(@Nullable final String field)
     {
-        if(field == null)
+        if(field == null || field.isEmpty())
         {
             return emptyList();
         }
         else
         {
-            return Arrays.asList(field.strip().split(","));
+            List<String> transcriptNames = Arrays.asList(field.strip().split(","));
+            for(String transcriptName : transcriptNames)
+            {
+                if(transcriptName.isBlank())
+                {
+                    throw new UserInputError("Transcript name cannot be blank: " + transcriptName);
+                }
+            }
+            return transcriptNames;
         }
     }
 
@@ -199,46 +201,93 @@ public class Genes
     {
     }
 
-    private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneDefinition geneDef,
+    private static List<GeneTranscriptData> loadGeneTranscriptDatas(final List<GeneDefinition> geneDefinitions,
+            final EnsemblDataCache ensemblData)
+    {
+        List<GeneTranscriptData> geneTranscriptDatas = new ArrayList<>();
+        boolean error = false;
+        for(GeneDefinition geneDef : geneDefinitions)
+        {
+            Optional<GeneTranscriptData> geneTranscriptData = loadGeneTranscriptDatas(geneDef, ensemblData);
+            if(geneTranscriptData.isPresent())
+            {
+                geneTranscriptDatas.add(geneTranscriptData.get());
+            }
+            else
+            {
+                // Don't immediately fail, so we can log all the errors for the user. Only fail at the end of all the loading.
+                error = true;
+            }
+        }
+        if(error)
+        {
+            throw new UserInputError("Invalid genes (see error logs for details)");
+        }
+        else
+        {
+            return geneTranscriptDatas;
+        }
+    }
+
+    private static Optional<GeneTranscriptData> loadGeneTranscriptDatas(final GeneDefinition geneDef,
             final EnsemblDataCache ensemblData)
     {
         GeneData geneData = ensemblData.getGeneDataByName(geneDef.geneName());
         if(geneData == null)
         {
-            throw new UserInputError(format("Gene not found: %s", geneDef.geneName()));
+            LOGGER.error("Gene not found: {}", geneDef.geneName());
+            return Optional.empty();
         }
 
-        List<TranscriptData> transcriptDatas = geneDef.transcriptNames().stream()
-                .map(transName ->
-                {
-                    TranscriptData transcriptData = transName == null ?
-                            ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                            ensemblData.getTranscriptData(geneData.GeneId, transName);
-                    if(transcriptData == null)
-                    {
-                        throw new UserInputError(format("Gene not found: %s:%s", geneDef.geneName(), transName));
-                    }
-                    return transcriptData;
-                })
-                .filter(transcriptData ->
-                {
-                    if(transcriptData.nonCoding())
-                    {
-                        // User should add as a custom region instead.
-                        LOGGER.warn("Noncoding gene skipped: {}:{}", geneDef.geneName(), transcriptData.TransName);
-                        return false;
-                    }
-                    return true;
-                })
-                .toList();
-
+        List<TranscriptData> transcriptDatas = loadGeneTranscripts(geneData, geneDef.extraTranscriptNames(), ensemblData);
         if(transcriptDatas.isEmpty())
         {
+            // Error occurred loading transcripts.
             return Optional.empty();
         }
         else
         {
             return Optional.of(new GeneTranscriptData(geneData, transcriptDatas, geneDef.options()));
+        }
+    }
+
+    private static List<TranscriptData> loadGeneTranscripts(final GeneData geneData, final List<String> extraTranscriptNames,
+            final EnsemblDataCache ensemblData)
+    {
+        List<String> transcriptNames = new ArrayList<>();
+        // Null indicates the canonical transcript.
+        transcriptNames.add(null);
+        transcriptNames.addAll(extraTranscriptNames);
+
+        List<TranscriptData> transcriptDatas = new ArrayList<>();
+        boolean error = false;
+        for(String transName : transcriptNames)
+        {
+            TranscriptData transcriptData = transName == null ?
+                    ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
+                    ensemblData.getTranscriptData(geneData.GeneId, transName);
+            if(transcriptData == null)
+            {
+                LOGGER.error("Gene transcript not found: {}:{}", geneData.GeneName, transName);
+                error = true;
+            }
+            else
+            {
+                if(transcriptData.nonCoding())
+                {
+                    LOGGER.debug("Noncoding gene transcript: {}:{}", geneData.GeneName, transName);
+                }
+                transcriptDatas.add(transcriptData);
+            }
+        }
+
+        if(error)
+        {
+            return emptyList();
+        }
+        else
+        {
+            return transcriptDatas;
         }
     }
 
@@ -389,6 +438,13 @@ public class Genes
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
 
+        if(regions.isEmpty())
+        {
+            // Perhaps the user configured no features or configured only coding features for a noncoding gene.
+            // Perhaps annoying to have as an error, but the user should be made aware.
+            LOGGER.warn("No features produced for gene {}", gene.gene().GeneName);
+        }
+
         return regions;
     }
 
@@ -414,9 +470,9 @@ public class Genes
             TranscriptData transcript = pair.getLeft();
             ExonData exon = pair.getRight();
 
-            BaseRegion codingRegion = new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
+            BaseRegion codingRegion = transcript.nonCoding() ? null : new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
             BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
-            boolean isCoding = codingRegion.overlaps(exonRegion);
+            boolean isCoding = codingRegion != null && codingRegion.overlaps(exonRegion);
 
             mergedExons.stream()
                     .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))

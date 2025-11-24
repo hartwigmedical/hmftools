@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO: how do we input multiple custom regions files?
 // Probes covering a list of arbitrary regions provided by the user.
 public class CustomRegions
 {
@@ -24,12 +23,14 @@ public class CustomRegions
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
 
-    public static void generateProbes(final String customRegionFile, final Map<String, Integer> chromosomeLengths,
+    public static void generateProbes(final List<String> customRegionFiles, final Map<String, Integer> chromosomeLengths,
             final ProbeGenerator probeGenerator, PanelData panelData)
     {
         LOGGER.info("Generating custom region probes");
 
-        List<CustomRegion> customRegions = CustomRegion.readFromFile(customRegionFile);
+        List<CustomRegion> customRegions = customRegionFiles.stream()
+                .flatMap(customRegionFile -> CustomRegion.readFromFile(customRegionFile).stream())
+                .toList();
 
         checkRegionBounds(customRegions, chromosomeLengths);
         checkNoOverlaps(customRegions);

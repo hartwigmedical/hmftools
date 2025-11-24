@@ -164,13 +164,13 @@ public class PanelBuilderApplication
 
     private void generateCustomRegionProbes()
     {
-        if(mConfig.customRegionsFile() == null)
+        if(mConfig.customRegionsFiles() == null)
         {
             LOGGER.info("Custom regions not provided; skipping custom region probes");
         }
         else
         {
-            CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomRegions.generateProbes(mConfig.customRegionsFiles(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }
@@ -240,8 +240,7 @@ public class PanelBuilderApplication
         }
         catch(UserInputError e)
         {
-            LOGGER.error("Bad input data");
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Bad input data: {}", e.getMessage());
             exit(1);
         }
         catch(IOException e)

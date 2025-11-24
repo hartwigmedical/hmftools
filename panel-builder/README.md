@@ -27,26 +27,26 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type    | Default                     | Description                                                                                                                        |
-|--------------------|---------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                                           |
-| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
-| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
-| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
-| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
-| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
-| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
-| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
-| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
-| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
-| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
-| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
-| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
-| custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
-| threads            | Integer | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
-| output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
-| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
-| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
+| Argument           | Type                         | Default                     | Description                                                                                                                        |
+|--------------------|------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir   | Path                         | (none)                      | Ensembl cache directory.                                                                                                           |
+| bwa_lib            | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
+| genes              | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
+| cn_backbone        | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
+| cn_backbone_res_kb | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
+| amber_sites        | Path                         | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
+| cdr3               | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
+| sample             | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
+| linx_dir           | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
+| linx_germline_dir  | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
+| purple_dir         | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
+| sample_probes      | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                |
+| custom_regions     | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                    |
+| custom_svs         | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| threads            | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
+| output_id          | String                       | (none)                      | Prefix for output files.                                                                                                           |
+| verbose_output     | Flag                         | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
+| log_level          | String                       | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
 
 ## Example Usage
 
@@ -122,7 +122,7 @@ Feature methodology:
 | Gene feature               | Probe generation                                                                                                                               | Probe evaluation criteria                               |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
 | Promoter                   | Cover whole region from transcription start to 500b upstream.                                                                                  | `QS>=0.05`                                              |
-| UTR                        | One probe covering centre of exon.                                                                                                             | `QS>=0.05`                                              |
+| UTR                        | One probe covering centre of noncoding exon.                                                                                                   | `QS>=0.05`                                              |
 | Coding                     | Cover whole region of coding exons + 10b of splice region.                                                                                     | `QS>=0.05`                                              |
 | Exon flanks                | Small intron (3-5kb): one probe in 1kb region centered between probes.<br>Large intron (>5kb): probe in each 1-5kb region 1kb away from exons. | `QS>=0.5`, `0.4<=GC<=0.5`. Select closest to `GC=0.45`  |
 | Upstream/downstream flanks | One probe in the 2kb region 1kb upstream/downstream of the gene.                                                                               | `QS>=0.5`, `0.4<=GC<=0.5`. Select closest to `GC=0.45`. |
@@ -203,8 +203,13 @@ This allows capturing of the full V+D+J sequence present in the sample.
 ### Sample Variants
 
 If provided, Linx and Purple output can be used to generate probes covering variants identified in a sample.
-The number of variant probes is controlled by the `sample_probes` argument.
-Variants are selected with a priority scheme, with drivers having the highest priority, and then nondrivers filling the remaining probe quota.
+
+Since there may be many variants in a sample, only a subset of variants is selected.
+Variants are selected to fill a maximum number of probes, controlled by the `sample_probes` argument.
+
+1. Variants are filtered based on the criteria in the table below. Only variants which pass the filters are selected for probe generation.
+2. The selected variants are prioritised. Drivers are given the highest priority, followed by nondrivers.
+3. Generate probes from the selected variants, in order of priority, until the maximum number of accepted probes is reached, or there are no more selected variants. Note that a variant may be selected but its probe rejected.
 
 Methodology per variant category:
 

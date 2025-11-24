@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cobalt.segmentation;
 
+import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.IOException;
@@ -18,17 +19,20 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.segmentation.FixedPenalty;
+import com.hartwig.hmftools.common.segmentation.GammaPenaltyCalculator;
+import com.hartwig.hmftools.common.segmentation.PenaltyCalculator;
 import com.hartwig.hmftools.common.segmentation.PiecewiseConstantFit;
 import com.hartwig.hmftools.common.segmentation.Segmenter;
 import com.hartwig.hmftools.common.utils.pcf.CobaltSegment;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.FastMath;
 
 public abstract class RatioSegmenter
 {
     private final ListMultimap<ChrArm, CobaltRatio> ArmToRatios = ArrayListMultimap.create();
-    private final double mGamma;
+    private final Map<ChrArm, SegmentationData> mDataByArm = new HashMap<>();
+    private final PenaltyCalculator mPenaltyCalculator;
 
     public static void writeTumorSegments(ListMultimap<Chromosome, CobaltRatio> ratios,
             double gamma,
@@ -75,9 +79,29 @@ public abstract class RatioSegmenter
                     ArmToRatios.put(chrArmLocator.map(cobaltRatio), cobaltRatio);
                 }
             });
-
         });
-        mGamma = gamma;
+        ArmToRatios.keySet().forEach(chrArm -> mDataByArm.put(chrArm, new SegmentationData(ArmToRatios.get(chrArm), this::value)));
+        int totalCount = mDataByArm.values().stream().mapToInt(SegmentationData::count).sum();
+        int position = 0;
+        if (totalCount < 100_000)
+        {
+            double[] allRatios = new double[totalCount];
+            for (ChrArm chrArm : mDataByArm.keySet())
+            {
+                SegmentationData data = mDataByArm.get(chrArm);
+                System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
+                position += data.count();
+            }
+            CB_LOGGER.info("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
+            GammaPenaltyCalculator oneOffCalculation  = new GammaPenaltyCalculator(gamma, true);
+            final double penalty = oneOffCalculation.getPenalty(allRatios);
+            mPenaltyCalculator = new FixedPenalty(penalty);
+            CB_LOGGER.info("Uniform segmentation penalty: {}", penalty);
+        }
+        else
+        {
+            mPenaltyCalculator = new GammaPenaltyCalculator(gamma, true);
+        }
     }
 
     private static void write(RefGenomeVersion genomeVersion, Map<ChrArm, CobaltSegments> data, String filename) throws IOException
@@ -134,30 +158,14 @@ public abstract class RatioSegmenter
 
     private Pair<ChrArm, CobaltSegments> calculateSegmentsForChromosome(List<CobaltRatio> ratios, ChrArm arm)
     {
-        if(ratios.isEmpty())
+        SegmentationData dataForArm = mDataByArm.get(arm);
+        if(dataForArm.isEmpty())
         {
             return null;
         }
-        double[] valuesForSegmentation = new double[ratios.size()];
-        double[] rawValues = new double[ratios.size()];
-        for(int i = 0; i < ratios.size(); i++)
-        {
-            CobaltRatio ratio = ratios.get(i);
-            final double v = value(ratio);
-            rawValues[i] = v;
-            // Our R script that called copynumber put 0.001 as a floor for the ratios and converted
-            // them to log_2 values. Note that negative ratio values have already been filtered out.
-            if(v < 0.001)
-            {
-                valuesForSegmentation[i] = -9.965784;
-            }
-            else {
-                valuesForSegmentation[i] = (float)FastMath.log(2, v);
-            }
-        }
-        Segmenter segmenter = new Segmenter(valuesForSegmentation, mGamma, true);
+        Segmenter segmenter = new Segmenter(dataForArm.valuesForSegmentation(), mPenaltyCalculator);
         PiecewiseConstantFit fit = segmenter.pcf();
-        CobaltSegments segments = new CobaltSegments(arm, ratios, rawValues, fit);
+        CobaltSegments segments = new CobaltSegments(arm, ratios, dataForArm.rawValues(), fit);
         return Pair.of(arm, segments);
     }
 }
