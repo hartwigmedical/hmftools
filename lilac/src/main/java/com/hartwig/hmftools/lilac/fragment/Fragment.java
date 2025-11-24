@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
-import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import java.util.Collection;
 import java.util.List;
@@ -261,7 +260,7 @@ public class Fragment
             return "";
 
         if(checkUncertainBaseQual && !isUltima() && nucleotide.qual() != MISSING_BASE_QUAL && isUncertainBaseQual(nucleotide.qual()))
-            return WILD_STR;
+            return "";
 
         return nucleotide.bases();
     }
@@ -289,7 +288,7 @@ public class Fragment
             {
                 Nucleotide nuc = mRawNucleotidesByLoci.get(startNucleotideLocus + i);
                 if(nuc.qual() != MISSING_BASE_QUAL && isUncertainBaseQual(nuc.qual()))
-                    return WILD_STR;
+                    return "";
             }
         }
 
