@@ -240,8 +240,7 @@ public class PanelBuilderApplication
         }
         catch(UserInputError e)
         {
-            LOGGER.error("Bad input data");
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Bad input data: {}", e.getMessage());
             exit(1);
         }
         catch(IOException e)
