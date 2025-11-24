@@ -79,7 +79,8 @@ public class SampleVariants
         variants.addAll(GermlineSv.load(config.sampleId(), config.linxGermlineDir()));
 
         Map<Variant, EvaluationResult> variantFilters = new HashMap<>();
-        ProbeGenerationResult result = generateProbes(variants, config.maxProbes(), probeGenerator, panelData, variantFilters);
+        ProbeGenerationResult result =
+                generateProbes(variants, config.maxProbes(), config.prioritiseSmallIndels(), probeGenerator, panelData, variantFilters);
 
         List<VariantInfo> variantInfos = createVariantInfos(variants, variantFilters);
         ExtraOutput extraOutput = new ExtraOutput(variantInfos);
@@ -102,8 +103,8 @@ public class SampleVariants
         }
     }
 
-    public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage, Map<Variant, EvaluationResult> variantFilters)
+    public static ProbeGenerationResult generateProbes(final List<Variant> variants, int maxProbes, boolean prioritiseSmallIndels,
+            final ProbeGenerator probeGenerator, final PanelCoverage coverage, Map<Variant, EvaluationResult> variantFilters)
     {
         ProbeGenerationResult result = new ProbeGenerationResult();
         Map<String, Integer> geneDisruptions = new HashMap<>();
@@ -113,7 +114,7 @@ public class SampleVariants
                         maxProbes - result.probes().size(), probeGenerator, coverage));
         result = result.add(
                 generateProbes(
-                        remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes),
+                        remainingProbes -> selectNondriverVariants(variants, variantFilters, remainingProbes, prioritiseSmallIndels),
                         maxProbes - result.probes().size(), probeGenerator, coverage));
         return result;
     }
@@ -185,7 +186,7 @@ public class SampleVariants
     }
 
     private static List<Variant> selectNondriverVariants(final List<Variant> variants, Map<Variant, EvaluationResult> variantFilters,
-            int maxCount)
+            int maxCount, boolean prioritiseSmallIndels)
     {
         LOGGER.debug("Selecting up to {} nondriver variants", maxCount);
 
@@ -196,7 +197,7 @@ public class SampleVariants
                 .filter(variant -> variant instanceof SomaticMutation)
                 .filter(variant -> !variant.isDriver())
                 .map(variant -> (SomaticMutation) variant)
-                .sorted(new NondriverVariantComparator())
+                .sorted(new NondriverVariantComparator(prioritiseSmallIndels))
                 .toList();
 
         List<Variant> selectedVariants = new ArrayList<>();
@@ -235,11 +236,18 @@ public class SampleVariants
         return EvaluationResult.applyEvaluations(filters);
     }
 
-    private static class NondriverVariantComparator implements Comparator<SomaticMutation>
+    private record NondriverVariantComparator(
+            boolean prioritiseSmallerVariants
+    )
+            implements Comparator<SomaticMutation>
     {
         @Override
         public int compare(final SomaticMutation v1, final SomaticMutation v2)
         {
+            if(prioritiseSmallerVariants && v1.indelLength() != v2.indelLength())
+            {
+                return v1.indelLength() < v2.indelLength() ? -1 : 1;
+            }
             if(v1.isCoding() != v2.isCoding())
             {
                 return v1.isCoding() ? -1 : 1;

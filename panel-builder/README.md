@@ -41,6 +41,7 @@ You input the genomic features you are interested in and PanelBuilder creates th
 | linx_germline_dir  | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
 | purple_dir         | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
 | sample_probes      | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                |
+| prefer_small_indel | Flag                         | (none)                      | If specified, when selecting nondriver sample variants, prefer variants with lower `IndelLength`.                                  | 
 | custom_regions     | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                    |
 | custom_svs         | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
 | threads            | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
@@ -213,16 +214,16 @@ Variants are selected to fill a maximum number of probes, controlled by the `sam
 
 Methodology per variant category:
 
-| Variant category             | Variant selection criteria                                                                                               | Probe evaluation criteria |
-|------------------------------|--------------------------------------------------------------------------------------------------------------------------|---------------------------|
-| Somatic fusion driver        | (none)                                                                                                                   | `QS>=0.05`                |
-| Somatic amplification driver | Highest JCN variant in cluster only                                                                                      | `QS>=0.05`                |
-| Somatic deletion driver      | For breakends that flank minimum copy number region                                                                      | `QS>=0.05`                |
-| Somatic disruption driver    | `VAF>=0.05`, `AD>=11`                                                                                                    | `QS>=0.05`                |
-| Somatic SNV/INDEL driver     | (none)                                                                                                                   | `QS>=0.05`                |
-| Germline SV driver           | (none)                                                                                                                   | `QS>=0.05`                |
-| Germline SNV/INDEL driver    | (none)                                                                                                                   | `QS>=0.05`                |
-| Somatic SNV/INDEL nondriver  | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
+| Variant category             | Variant selection criteria                                                                                                                                              | Probe evaluation criteria |
+|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
+| Somatic fusion driver        | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Somatic amplification driver | Highest JCN variant in cluster only                                                                                                                                     | `QS>=0.05`                |
+| Somatic deletion driver      | For breakends that flank minimum copy number region                                                                                                                     | `QS>=0.05`                |
+| Somatic disruption driver    | `VAF>=0.05`, `AD>=11`                                                                                                                                                   | `QS>=0.05`                |
+| Somatic SNV/INDEL driver     | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Germline SV driver           | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Germline SNV/INDEL driver    | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Somatic SNV/INDEL nondriver  | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise lower `IndelLength` (only if configured), then coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
 
 Additionally, for all somatic SV drivers, limit variant selection to five breakends per gene.
 
