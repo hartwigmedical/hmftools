@@ -129,8 +129,11 @@ public class ExtensionSeqBuilder
             if(!sufficientHighQualMatches(read))
                 continue;
 
-            supportReads.add(new SupportRead(
-                    read.read(), SupportType.JUNCTION, read.startIndex(), read.matchedBases(), read.mismatches().size()));
+            SupportRead supportRead = new SupportRead(
+                    read.read(), SupportType.JUNCTION, read.startIndex(), read.matchedBases(), read.mismatchCount(true));
+            supportRead.setMismatchInfo(read.mismatchInfo());
+
+            supportReads.add(supportRead);
         }
 
         return supportReads;

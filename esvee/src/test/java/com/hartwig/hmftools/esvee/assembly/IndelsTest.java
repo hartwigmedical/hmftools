@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximate
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.calcIndelInferredUnclippedPositions;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.isWeakIndelBasedUnlinkedAssembly;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 
 import static org.junit.Assert.assertEquals;
@@ -229,7 +228,7 @@ public class IndelsTest
 
         SupportRead support = new SupportRead(indelRead1, INDEL, 50, indelRead1.basesLength(), 0);
         support.setReferenceMismatches(0);
-        assembly.addSupport(indelRead1, INDEL, 50, 50, 0);
+        assembly.addJunctionRead(indelRead1, INDEL, 50);
 
         // since 50% if the reads now
         assertTrue(isWeakIndelBasedUnlinkedAssembly(assembly));
@@ -243,7 +242,7 @@ public class IndelsTest
         assertFalse(isWeakIndelBasedUnlinkedAssembly(assembly));
 
         // 2 longest reads are indels
-        assembly.addSupport(indelRead1, INDEL, 50, 50, 0);
+        assembly.addJunctionRead(indelRead1, INDEL, 50);
 
         assertTrue(isWeakIndelBasedUnlinkedAssembly(assembly));
     }

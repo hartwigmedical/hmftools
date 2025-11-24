@@ -390,40 +390,6 @@ public class JunctionAssembler
         return newAssembly;
     }
 
-    /*
-    private void addJunctionReads(
-            final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
-    {
-        int mismatchReadCount = 0;
-
-        // test other junction-spanning reads against this new assembly
-        for(Read read : junctionReads)
-        {
-            if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
-                continue;
-
-            if(!canAddJunctionRead(assembly, extensionSeqBuilder, read))
-                ++mismatchReadCount;
-        }
-
-        assembly.addMismatchReadCount(mismatchReadCount);
-    }
-
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
-    {
-        ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
-
-        if(readParseState == null)
-            return false;
-
-        if(readParseState.exceedsMaxMismatches() || !extensionSeqBuilder.sufficientHighQualMatches(readParseState))
-            return false;
-
-        assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
-        return true;
-    }
-    */
-
     private void addJunctionReads(
             final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final List<Read> junctionReads)
     {
@@ -442,8 +408,7 @@ public class JunctionAssembler
             }
             else
             {
-                assembly.addSupport(
-                        read, JUNCTION, readInfo.startIndex(), readInfo.matchedBases(), readInfo.mismatchCount(true));
+                assembly.addJunctionSupport(read, JUNCTION, readInfo.startIndex(), readInfo);
             }
         }
 

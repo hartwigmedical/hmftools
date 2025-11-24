@@ -211,7 +211,7 @@ public class JunctionAssembly
     public int mismatchReadCount() { return mMismatchReadCount; }
     public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
-    public void addRead(final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type)
+    public void addRefBaseSupportRead(final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type)
     {
         if(readAssemblyIndices == ReadAssemblyIndices.INVALID_INDICES)
             return;
@@ -266,15 +266,23 @@ public class JunctionAssembly
         }
 
         int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(mJunctionIndex);
-        addSupport(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount);
+
+        SupportRead support = new SupportRead(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount);
+        mSupport.add(support);
     }
 
-    public void addSupport(
-            final Read read, final SupportType type, int junctionReadStartDistance, int matches, int mismatches)
+    public void addJunctionSupport(
+            final Read read, final SupportType type, int junctionReadStartDistance, final ReadParseState readInfo)
     {
         boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
         SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
-        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matches, mismatches);
+
+        int matchedBases = readInfo.matchedBases();
+        int mismatchCount = readInfo.mismatchCount(true);
+        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matchedBases, mismatchCount);
+
+        if(readInfo != null)
+            support.setMismatchInfo(readInfo.mismatchInfo());
 
         mSupport.add(support);
     }
@@ -855,6 +863,16 @@ public class JunctionAssembly
 
         SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, extensionBases, 0);
         support.setReferenceMismatches(0);
+        mSupport.add(support);
+    }
+
+    @VisibleForTesting
+    public void addJunctionRead(final Read read, final SupportType type, int junctionReadStartDistance)
+    {
+        boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
+        SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
+        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, junctionReadStartDistance, 0);
+
         mSupport.add(support);
     }
 

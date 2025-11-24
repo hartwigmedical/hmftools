@@ -2,12 +2,14 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.calcMismatchPenalty;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.MATCH;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
@@ -17,11 +19,13 @@ import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sequencing.UltimaBamUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -488,7 +492,7 @@ public class ReadParseState
 
     public String toString()
     {
-        String cigarInfo = "";
+        String cigarInfo = " ";
 
         if(mElements != null)
         {
@@ -500,6 +504,68 @@ public class ReadParseState
                 mRead.id(), mReadIndex, mBaseLength - 1, cigarInfo != null ? cigarInfo : " ",
                 mMismatched ? "mismatched" : (mExhausted ? "exhausted" : "active"),
                 mHighQualMatches, mismatchPenalty());
+    }
+
+    public String mismatchInfo()
+    {
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        if(mMismatches == null || mMismatches.isEmpty())
+            return "EXACT";
+
+        if(mMismatched)
+            return "MISMATCHED";
+
+        sj.add(format("HQ=%d", mHighQualMatches));
+
+        int lowQualMismatches = 0;
+        int snvs = 0;
+        int indels = 0;
+        int homopolymers = 0;
+        int otherRepeats = 0;
+
+        for(SequenceDiffInfo mismatch : mismatches())
+        {
+            if(mismatch.MismatchPenalty > 0)
+            {
+                if(mismatch.Type == BASE)
+                {
+                    ++snvs;
+                }
+                else if(mismatch.Type == REPEAT)
+                {
+                    if(mismatch.Bases.length() == 1)
+                        ++homopolymers;
+                    else
+                        ++otherRepeats;
+                }
+                else if(mismatch.Type == INSERT || (mismatch.Type == DELETE))
+                {
+                    ++indels;
+                }
+            }
+            else
+            {
+                ++lowQualMismatches;
+            }
+        }
+
+        if(lowQualMismatches > 0)
+            sj.add(format("LQ=%d", lowQualMismatches));
+
+        if(snvs > 0)
+            sj.add(format("SNV=%d", snvs));
+
+        if(homopolymers > 0)
+            sj.add(format("HP=%d", homopolymers));
+
+        if(otherRepeats > 0)
+            sj.add(format("OR=%d", otherRepeats));
+
+        if(indels > 0)
+            sj.add(format("ID=%d", indels));
+
+        return sj.toString();
     }
 
     @VisibleForTesting
@@ -542,5 +608,4 @@ public class ReadParseState
             mElementIndex = mElement.getLength() - 1;
         }
     }
-
 }

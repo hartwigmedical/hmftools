@@ -590,7 +590,7 @@ public class RefBaseExtender
             return false;
         }
 
-        assembly.addRead(read, readAssemblyIndices, supportType);
+        assembly.addRefBaseSupportRead(read, readAssemblyIndices, supportType);
 
         return true;
     }

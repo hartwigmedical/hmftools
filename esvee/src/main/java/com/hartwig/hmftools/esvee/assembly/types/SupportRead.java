@@ -81,6 +81,7 @@ public class SupportRead
     private int mExtBaseMatches;
     private int mExtBaseMismatches;
     private Integer mRefBaseMismatches;
+    private String mMismatchInfo;
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
@@ -129,6 +130,7 @@ public class SupportRead
         mExtBaseMatches = matches;
         mExtBaseMismatches = mismatches;
         mRefBaseMismatches =  null;
+        mMismatchInfo = "";
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
@@ -188,6 +190,9 @@ public class SupportRead
 
     public int referenceMismatches() { return mRefBaseMismatches != null ? mRefBaseMismatches : -1; }
     public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
+
+    public String mismatchInfo() { return mMismatchInfo; }
+    public void setMismatchInfo(final String mismatchInfo) { mMismatchInfo = mismatchInfo; }
 
     public void setReferenceMismatches(int mismatches) { mRefBaseMismatches = mismatches; }
 
