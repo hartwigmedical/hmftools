@@ -16,6 +16,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AlignmentWriter
 {

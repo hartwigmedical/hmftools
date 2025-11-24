@@ -42,19 +42,22 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
+import static com.hartwig.hmftools.esvee.common.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.common.WriteType.WRITE_TYPES;
+import static com.hartwig.hmftools.esvee.common.WriteType.registerWriteTypes;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -65,13 +68,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import htsjdk.samtools.SAMRecord;
 
 public class AssemblyConfig
 {
@@ -91,7 +92,7 @@ public class AssemblyConfig
     public final String RefGenomeImageFile;
     public final String DecoyGenome;
 
-    public final List<WriteType> WriteTypes;
+    public final Set<WriteType> WriteTypes;
 
     public final String OutputDir;
     public final String OutputId;
@@ -124,7 +125,6 @@ public class AssemblyConfig
 
     private static final String DECOY_GENOME = "decoy_genome";
 
-    private static final String WRITE_TYPES = "write_types";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
@@ -245,7 +245,7 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
-        WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
+        WriteTypes = WriteType.parseAssemblyTypes(configBuilder.getValue(WRITE_TYPES));
 
         loadAlignerLibrary(configBuilder.getValue(BWA_LIB_PATH));
 
@@ -349,14 +349,12 @@ public class AssemblyConfig
         configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
 
         registerCommonConfig(configBuilder);
+        registerWriteTypes(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
         configBuilder.addPath(BWA_LIB_PATH, false, BWA_LIB_PATH_DESC);
-
-        if(!configBuilder.isRegistered(WRITE_TYPES))
-            configBuilder.addConfigItem(WRITE_TYPES, false, enumValueSelectionAsStr(WriteType.values(), "Write types"));
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addConfigItem(
@@ -415,7 +413,7 @@ public class AssemblyConfig
         RefGenomeImageFile = null;
         DecoyGenome = null;
 
-        WriteTypes = Collections.emptyList();
+        WriteTypes = Collections.emptySet();
 
         OutputDir = null;
         OutputId = null;

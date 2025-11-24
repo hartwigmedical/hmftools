@@ -61,14 +61,6 @@ public class VisCopyNumber implements GenomeRegion
         return Math.max(0, (1 - BAF) * CopyNumber);
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_copy_number.tsv";
-    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_copy_number.tsv";
-
-    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
-    {
-        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
-    }
-
     public static List<VisCopyNumber> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));

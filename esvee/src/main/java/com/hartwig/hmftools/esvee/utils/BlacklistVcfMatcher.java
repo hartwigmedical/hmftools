@@ -21,7 +21,7 @@ import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.BLACKLIST_BED;
+import static com.hartwig.hmftools.esvee.utils.BlacklistRepeatAnalyser.BLACKLIST_BED;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,7 +37,6 @@ import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.esvee.prep.BlacklistLocations;
 
 import org.jetbrains.annotations.NotNull;
 

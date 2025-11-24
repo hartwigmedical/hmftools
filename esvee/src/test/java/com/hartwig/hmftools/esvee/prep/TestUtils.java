@@ -22,5 +22,4 @@ public final class TestUtils
 
     public static final ReadFilterConfig READ_FILTERS = ReadFilterConfig.from(READ_FILTERS_CONFIG);
     public static final HotspotCache HOTSPOT_CACHE = new HotspotCache(null);
-    public static final BlacklistLocations BLACKLIST_LOCATIONS = new BlacklistLocations(null);
 }

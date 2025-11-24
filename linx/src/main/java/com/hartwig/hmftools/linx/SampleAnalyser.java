@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisExonFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusionFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisProteinFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSegmentFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSvFilename;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
@@ -433,11 +438,11 @@ public class SampleAnalyser implements Callable<Void>
                 LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
                 LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
 
-                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
-                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisSvData.write(generateVisSvFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisGeneExon.write(generateVisExonFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisSegment.write(generateVisSegmentFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisFusion.write(generateVisFusionFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisProteinDomain.write(generateVisProteinFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             }
         }
         catch(IOException e)

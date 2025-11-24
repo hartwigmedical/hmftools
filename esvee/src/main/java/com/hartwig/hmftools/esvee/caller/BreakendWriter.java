@@ -44,8 +44,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.FilterType;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class BreakendWriter
 {
@@ -205,6 +205,7 @@ public class BreakendWriter
 
     private class BreakendData implements Comparable<BreakendData>
     {
+        public final String BreakendId;
         public final String Chromosome;
         public final int Position;
         public final Orientation Orient;
@@ -217,10 +218,11 @@ public class BreakendWriter
         public final String ValuesStr;
 
         public BreakendData(
-                final String chromosome, final int position, final Orientation orient, final StructuralVariantType type,
+                final String breakendId, final String chromosome, final int position, final Orientation orient, final StructuralVariantType type,
                 final String mateChromosome, final int matePosition, final Orientation mateOrient,
                 final String insertSequence, final String valuesStr)
         {
+            BreakendId = breakendId;
             Chromosome = chromosome;
             Position = position;
             Orient = orient;
@@ -234,6 +236,9 @@ public class BreakendWriter
 
         public boolean matches(final Breakend other)
         {
+            if(!BreakendId.equals(other.VcfId))
+                return false;
+
             if(Type != other.sv().type())
             {
                 // allow DUP vs INS differences
@@ -268,6 +273,7 @@ public class BreakendWriter
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, TSV_DELIM);
 
+            int idIndex = fieldsIndexMap.get("Id");
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
             int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
@@ -285,6 +291,7 @@ public class BreakendWriter
             {
                 final String[] values = line.split(TSV_DELIM, -1);
 
+                String breakendId = values[idIndex];
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
                 Orientation orientation = fromByteStr(values[orientIndex]);
@@ -318,7 +325,7 @@ public class BreakendWriter
                 }
 
                 breakendList.add(new BreakendData(
-                        chromosome, position, orientation, svType, mateChromosome, matePosition, mateOrientation, insSequence, line));
+                        breakendId, chromosome, position, orientation, svType, mateChromosome, matePosition, mateOrientation, insSequence, line));
             }
 
             // sort ahead of comparison

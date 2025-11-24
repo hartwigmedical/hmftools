@@ -69,14 +69,6 @@ public class VisFusion
         return GeneNameUp + "_" + GeneNameDown;
     }
 
-    private static final String FILE_EXTENSION = ".linx.vis_fusion.tsv";
-    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_fusion.tsv";
-
-    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
-    {
-        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
-    }
-
     public static List<VisFusion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisExonFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusionFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSvFilename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -28,10 +31,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader
 {
-    private static final String VIS_FUSION_FILE_EXTENSION = ".linx.vis_fusion.tsv";
-    private static final String VIS_SV_DATA_FILE_EXTENSION = ".linx.vis_sv_data.tsv";
-    private static final String VIS_GENE_EXON_FILE_EXTENSION = ".linx.vis_gene_exon.tsv";
-
     public static LinxData load(final OrangeConfig config)throws IOException
     {
         String linxSomaticDir = config.linxSomaticDataDirectory();
@@ -43,9 +42,9 @@ public final class LinxDataLoader
         String somaticFusionFile = LinxFusion.generateFilename(linxSomaticDir, tumorSample);
         String somaticDriversFile = LinxDriver.generateFilename(linxSomaticDir, tumorSample);
         String somaticDriverCatalogFile = LinxDriver.generateCatalogFilename(linxSomaticDir, tumorSample, true);
-        String somaticVisFusionFile = generateVisFusionFilename(linxSomaticDir, tumorSample);
-        String somaticVisSvDataFile = generateVisSvDataFilename(linxSomaticDir, tumorSample);
-        String somaticVisGeneExonFile = generateVisGeneExonFilename(linxSomaticDir, tumorSample);
+        String somaticVisFusionFile = generateVisFusionFilename(linxSomaticDir, tumorSample, false);
+        String somaticVisSvDataFile = generateVisSvFilename(linxSomaticDir, tumorSample, false);
+        String somaticVisGeneExonFile = generateVisExonFilename(linxSomaticDir, tumorSample, false);
 
         String germlineSvAnnotationFile = null;
         String germlineBreakendFile = null;
@@ -202,11 +201,6 @@ public final class LinxDataLoader
         return reportableGermlineSvs;
     }
 
-    private static String generateVisFusionFilename(final String basePath, final String sample)
-    {
-        return basePath + File.separator + sample + VIS_FUSION_FILE_EXTENSION;
-    }
-
     private static Set<Integer> loadFusionClusters(final String filename) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(filename).toPath());
@@ -227,11 +221,6 @@ public final class LinxDataLoader
         }
 
         return clusterIds;
-    }
-
-    private static String generateVisSvDataFilename(final String basePath, final String sample)
-    {
-        return basePath + File.separator + sample + VIS_SV_DATA_FILE_EXTENSION;
     }
 
     private static void loadSvToCluster(
@@ -267,11 +256,6 @@ public final class LinxDataLoader
                 clusterIdToLinkCount.put(clusterId, 1);
             }
         }
-    }
-
-    private static String generateVisGeneExonFilename(final String basePath, final String sample)
-    {
-        return basePath + File.separator + sample + VIS_GENE_EXON_FILE_EXTENSION;
     }
 
     private static Map<Integer, Integer> loadClusterExonCounts(final String filename) throws IOException

@@ -208,9 +208,7 @@ public class OrangeAlgo
 
         List<DriverGene> driverGenes = mDriverGenes.values().stream().collect(Collectors.toList());
 
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(
-                purpleVariantFactory, germlineGainDeletionFactory, germlineLOHFactory, driverGenes, linx, chord,
-                config.convertGermlineToSomatic());
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainDeletionFactory, germlineLOHFactory);
 
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 

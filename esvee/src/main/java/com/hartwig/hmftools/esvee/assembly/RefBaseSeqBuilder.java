@@ -219,11 +219,13 @@ public class RefBaseSeqBuilder
                         ++consensusReadCount;
                         continue;
                     }
-                    else if(base != consensusBase && belowMinQual(qual))
+                    /*
+                    else if(base != consensusBase && belowMinQual(qual)) // now handled by qual-aware mismatch logic
                     {
                         // low-qual disagreement - ignore regardless of consensus qual
                         continue;
                     }
+                    */
 
                     // high-qual mismatch so start tracking frequencies for each base
                     readCounts = new int[DNA_BASE_COUNT];

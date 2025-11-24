@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
+import static com.hartwig.hmftools.esvee.common.WriteType.PREP_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_WINDOW_SIZE;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_JUNCTION;
 
 import java.util.List;
 import java.util.Map;
@@ -72,7 +72,7 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mDepthTracker = new DepthTracker(new BaseRegion(mRegion.start(), mRegion.end()), DEPTH_WINDOW_SIZE);
-        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots, mConfig.Blacklist);
+        mJunctionTracker = new JunctionTracker(mRegion, mConfig, mDepthTracker, mConfig.Hotspots);
 
         mSamReaders = samReaders;
         mBamSlicer = bamSlicer;
@@ -146,7 +146,7 @@ public class PartitionSlicer
 
         if(mFilterRegion != null)
         {
-            if(positionsOverlap(readStart, readStart + mConfig.readLength(), mFilterRegion.start(), mFilterRegion.end()))
+            if(positionsOverlap(readStart, record.getAlignmentEnd(), mFilterRegion.start(), mFilterRegion.end()))
                 return;
         }
 

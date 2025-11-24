@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMEN
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeLowQualDiscordantOnlyRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeWeakSupplementaryRegions;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.filterLowQualRead;
 
 import java.util.List;
@@ -56,9 +57,12 @@ public final class RemoteRegionFinder
 
         mergeRegions(remoteRegions);
 
-        // purge regions with only weak supplementary support
-        purgeWeakSupplementaryRegions(remoteRegions);
-        purgeLowQualDiscordantOnlyRegions(remoteRegions);
+        if(hasPairedReads())
+        {
+            // purge regions with only weak supplementary or discordant support
+            purgeWeakSupplementaryRegions(remoteRegions);
+            purgeLowQualDiscordantOnlyRegions(remoteRegions);
+        }
 
         // remove regions which overlap the assembly
         int index = 0;

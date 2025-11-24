@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasFragmentO
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.EXTENSION;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isLineInsertPair;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.Collections;
 import java.util.List;
@@ -535,6 +536,9 @@ public class PhaseSetBuilder
 
     private void findUnmappedExtensions()
     {
+        if(!hasPairedReads())
+            return;
+
         initialisePerfStage(Stage.FindUnmappedExtensions);
 
         double extractRemoteReadsTotalSeconds = 0;
@@ -619,6 +623,9 @@ public class PhaseSetBuilder
                 continue;
 
             proximateLineAssemblies.add(assembly);
+
+            if(!hasPairedReads())
+                continue;
 
             List<Read> sharedUnmappedReads = Lists.newArrayList();
             List<RemoteRegion> combinedRemoteRegions = Lists.newArrayList();
@@ -774,6 +781,9 @@ public class PhaseSetBuilder
     private boolean applySplitLinkSupport(
             final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching, boolean allowDiscordantReads)
     {
+        if(!hasPairedReads())
+            return false;
+
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<Read> matchedCandidates1 = Lists.newArrayList();
         List<Read> matchedCandidates2 = Lists.newArrayList();

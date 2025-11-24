@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 
 import java.io.File;
 import java.util.List;

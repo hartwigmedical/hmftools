@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.DISCORDANT_STATS;
+import static com.hartwig.hmftools.esvee.common.WriteType.DISCORDANT_STATS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
 
