@@ -1,6 +1,11 @@
-package com.hartwig.hmftools.datamodel.linx;
+package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
+
+import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
+import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -10,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxFusion
+public interface Fusion
 {
     @NotNull
     default String display()
@@ -38,17 +43,14 @@ public interface LinxFusion
 
     boolean reported();
 
-    @NotNull
-    LinxFusionType reportedType();
+    @NotNull LinxFusionType reportedType();
 
     @NotNull
     List<LinxUnreportableReason> unreportedReasons();
 
-    @NotNull
-    FusionPhasedType phased();
+    @NotNull FusionPhasedType phased();
 
-    @NotNull
-    FusionLikelihoodType driverLikelihood();
+    @NotNull FusionLikelihoodType driverLikelihood();
 
     int fusedExonUp();
 
