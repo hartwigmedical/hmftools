@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.finding;
 
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
@@ -23,9 +24,9 @@ public interface BreakendEntry
     }
 
     @Value.Derived
-    default boolean reported()
+    default ReportedStatus reportedStatus()
     {
-        return linxBreakend().reported();
+        return linxBreakend().reportedStatus();
     }
 
     @Value.Derived

@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ final class RnaFusionSelector
     }
 
     @NotNull
-    public static List<RnaFusion> selectNovelKnownFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<LinxFusion> linxFusions,
+    public static List<RnaFusion> selectNovelKnownFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<Fusion> linxFusions,
             @NotNull KnownFusionCache knownFusionCache)
     {
         List<RnaFusion> result = Lists.newArrayList();
@@ -50,7 +50,7 @@ final class RnaFusionSelector
     }
 
     @NotNull
-    public static List<RnaFusion> selectNovelPromiscuousFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<LinxFusion> linxFusions,
+    public static List<RnaFusion> selectNovelPromiscuousFusions(@NotNull List<RnaFusion> rnaFusions, @NotNull List<Fusion> linxFusions,
             @NotNull KnownFusionCache knownFusionCache)
     {
         List<RnaFusion> result = Lists.newArrayList();

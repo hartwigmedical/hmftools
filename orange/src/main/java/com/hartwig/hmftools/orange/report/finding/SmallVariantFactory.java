@@ -3,8 +3,9 @@ package com.hartwig.hmftools.orange.report.finding;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.finding.ImmutableSmallVariant;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.SmallVariant;
 import com.hartwig.hmftools.datamodel.interpretation.Drivers;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -41,6 +42,7 @@ public final class SmallVariantFactory
         return entries;
     }
 
+    // TODOHWL: driver should not be null
     @NotNull
     private static SmallVariant toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
     {
@@ -59,15 +61,16 @@ public final class SmallVariantFactory
             transcriptImpact = variant.canonicalImpact();
         }
 
+        boolean isCanonical = driver == null || driver.transcript().equals(variant.canonicalImpact().transcript());
+
         return ImmutableSmallVariant.builder()
-                .findingKey(FindingKeys.findingKey(variant, transcriptImpact))
-                .isReportable(variant.reported())
-                .isCandidate(false)
+                .findingKey(FindingKeys.findingKey(variant, transcriptImpact, isCanonical))
+                .reportedStatus(driver != null ? driver.reportedStatus() : ReportedStatus.NON_DRIVER_GENE)
+                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : DriverInterpretation.LOW)
                 .purpleVariant(variant)
                 .driver(driver)
                 .transcriptImpact(transcriptImpact)
-                .isCanonical(driver == null || driver.transcript().equals(variant.canonicalImpact().transcript()))
-                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : DriverInterpretation.LOW)
+                .isCanonical(isCanonical)
                 .build();
     }
 

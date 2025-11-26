@@ -27,31 +27,31 @@ public class FindingFactory {
             @Nullable CuppaData cuppaData)
     {
 
-        boolean containsTumorCells = purple.fit().qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
+        boolean containsTumorCells = !purple.fit().qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
 
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder();
 
-        builder.allSomaticVariants(SmallVariantFactory.create(purple.allSomaticVariants(), purple.somaticDrivers()));
+        builder.driverSomaticSmallVariants(SmallVariantFactory.create(purple.driverSomaticVariants(), purple.somaticDrivers()));
 
-        List<PurpleVariant> allGermlineVariants = purple.allGermlineVariants();
+        List<PurpleVariant> allGermlineVariants = purple.driverGermlineVariants();
         List<PurpleDriver> germlineDrivers = purple.germlineDrivers();
         if(allGermlineVariants != null && germlineDrivers != null) {
-            builder.allGermlineVariants(SmallVariantFactory.create(allGermlineVariants,
+            builder.driverGermlineSmallVariants(SmallVariantFactory.create(allGermlineVariants,
                     germlineDrivers));
         }
 
 
-        builder.allSomaticCopyNumbers(CopyNumberFactory.convert(purple.allSomaticGainsDels()));
+        //builder.driverSomaticCopyNumbers(GainDeletionFactory.convert(purple.driverSomaticGeneCopyNumbers()));
 
-        builder.allSomaticFusions(FusionFactory.convert(linx.allSomaticFusions()));
+        /*builder.driverSomaticFusions(FusionFactory.convert(linx.allSomaticFusions()));
 
-        builder.allSomaticDisruptions(DisruptionFactory.convert(linx.allSomaticBreakends(),
+        builder.driverSomaticDisruptions(DisruptionFactory.convert(linx.driverSomaticBreakends(),
                 linx.allSomaticStructuralVariants(),
-                containsTumorCells));
+                containsTumorCells));*/
 
         if(virusInterpreterData != null)
         {
-            builder.allViruses(VirusFactory.convert(virusInterpreterData.allViruses()));
+            builder.driverViruses(VirusFactory.convert(virusInterpreterData.allViruses()));
         }
 
         if(cuppaData != null)

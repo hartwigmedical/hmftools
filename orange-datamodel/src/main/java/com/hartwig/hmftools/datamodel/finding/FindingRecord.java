@@ -34,12 +34,12 @@ public interface FindingRecord
     }
 
     @NotNull
-    List<GainDeletion> driverSomaticCopyNumbers();
+    List<GainDeletion> driverSomaticGainDeletion();
 
     @NotNull
-    default List<GainDeletion> driverSomaticCopyNumbers(ReportedStatus reportedStatus)
+    default List<GainDeletion> driverSomaticGainDeletion(ReportedStatus reportedStatus)
     {
-        return filterReported(driverSomaticCopyNumbers(), reportedStatus);
+        return filterReported(driverSomaticGainDeletion(), reportedStatus);
     }
 
     @Nullable

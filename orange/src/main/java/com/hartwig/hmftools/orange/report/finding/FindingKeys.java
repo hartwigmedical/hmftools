@@ -3,10 +3,9 @@ package com.hartwig.hmftools.orange.report.finding;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -22,18 +21,24 @@ public class FindingKeys {
 
     public static String findingKey(@NotNull PurpleVariant variant, @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
-        return String.format("smallVariant[%s %s]", geneLabel(variant.gene(), isCanonical), impact(transcriptImpact));
+        return String.format("smallVariant[%s %s]", geneTranscriptLabel(variant.gene(), isCanonical, transcriptImpact.transcript()), impact(transcriptImpact));
     }
 
-    public static String findingKey(String gene, CopyNumberInterpretation copyNumberInterpretation, boolean isCanonical) {
-        return String.format("gainDeletion[%s %s]", geneLabel(gene, isCanonical), copyNumberInterpretation.name());
+    public static String findingKey(String gene, CopyNumberInterpretation copyNumberInterpretation,
+            boolean isCanonical, String transcriptId)
+    {
+        return String.format("gainDeletion[%s %s]", geneTranscriptLabel(gene, isCanonical, transcriptId), copyNumberInterpretation.name());
     }
 
-    public static String findingKey(LinxBreakend breakend) {
-        return String.format("disruption[%s]", geneLabel(breakend.gene(), breakend.isCanonical()));
+    public static String findingKey(LinxBreakend breakend)
+    {
+        return String.format("disruption[%s %d]",
+                geneTranscriptLabel(breakend.gene(), breakend.isCanonical(), breakend.transcript()),
+                breakend.svId());
     }
 
-    public static String findingKey(LinxFusion fusion) {
+    public static String findingKey(LinxFusion fusion)
+    {
         return String.format("fusion[%s %s]", fusion.geneStart(), fusion.geneEnd());
     }
 
@@ -64,8 +69,9 @@ public class FindingKeys {
         return String.format("predictedTumorOrigin[%s]", cuppaPrediction.cancerType());
     }
 
-    private static String geneLabel(String gene, boolean isCanonical) {
-        return String.format("%s%s", gene, isCanonical ? "" : " (alt)");
+    // only show transcript ID for non canonical transcripts
+    private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId) {
+        return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);
     }
 
     private static String impact(@NotNull PurpleTranscriptImpact transcriptImpact) {

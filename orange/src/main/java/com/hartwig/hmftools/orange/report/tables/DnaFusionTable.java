@@ -2,18 +2,19 @@ package com.hartwig.hmftools.orange.report.tables;
 
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -33,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 public final class DnaFusionTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
+    public static Table build(@NotNull String title, float width, @NotNull List<Fusion> fusions, @Nullable IsofoxRecord isofox,
             @NotNull ReportResources reportResources)
     {
         if(fusions.isEmpty())
@@ -46,7 +47,7 @@ public final class DnaFusionTable
                 new float[] { 1, 5 },
                 new Cell[] { cells.createHeader("Fusion"), cells.createHeader("Details") });
 
-        for(LinxFusion fusion : sortLinxFusions(fusions))
+        for(Fusion fusion : sortLinxFusions(fusions))
         {
             table.addCell(cells.createContent(fusion.display()));
 
@@ -58,7 +59,7 @@ public final class DnaFusionTable
                                     cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)).setKeepTogether(true)),
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
-                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
+                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.driverInterpretation()) + ")")),
                             Maps.immutableEntry("Unreported reason(s)", cells.createValue(display(fusion.unreportedReasons()))),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
@@ -92,7 +93,7 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static String display(FusionLikelihoodType fusionLikelihoodType)
+    private static String display(DriverInterpretation fusionLikelihoodType)
     {
         switch(fusionLikelihoodType)
         {
@@ -100,8 +101,6 @@ public final class DnaFusionTable
                 return "High";
             case LOW:
                 return "Low";
-            case NA:
-                return "NA";
         }
         throw new IllegalStateException();
     }
@@ -150,19 +149,19 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static String fiveEndString(@NotNull LinxFusion fusion)
+    private static String fiveEndString(@NotNull Fusion fusion)
     {
         return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
     }
 
     @NotNull
-    private static String threeStartString(@NotNull LinxFusion fusion)
+    private static String threeStartString(@NotNull Fusion fusion)
     {
         return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
     }
 
     @NotNull
-    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull Fusion fusion, @NotNull Cells cells)
     {
         if(isofox == null)
         {
@@ -184,7 +183,7 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion)
+    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull Fusion fusion)
     {
         GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
 
@@ -203,7 +202,7 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion,
+    private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull Fusion fusion,
             @NotNull Cells cells)
     {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
@@ -241,7 +240,7 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull Fusion fusion, @NotNull Cells cells)
     {
         List<RnaFusion> matches = Lists.newArrayList();
         for(RnaFusion rnaFusion : isofox.allFusions())
@@ -288,26 +287,14 @@ public final class DnaFusionTable
     }
 
     @NotNull
-    private static List<LinxFusion> sortLinxFusions(@NotNull List<LinxFusion> fusions)
+    private static List<Fusion> sortLinxFusions(@NotNull List<Fusion> fusions)
     {
-        return fusions.stream().sorted((fusion1, fusion2) ->
-        {
-            if(fusion1.driverLikelihood() == fusion2.driverLikelihood())
-            {
-                if(fusion1.geneStart().equals(fusion2.geneStart()))
-                {
-                    return fusion1.geneEnd().compareTo(fusion2.geneEnd());
-                }
-                else
-                {
-                    return fusion1.geneStart().compareTo(fusion2.geneStart());
-                }
-            }
-            else
-            {
-                return fusion1.driverLikelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
-            }
-        }).collect(Collectors.toList());
+        Comparator<Fusion> comparator = Comparator.comparing(Fusion::reportedType)
+                .thenComparing(Fusion::driverInterpretation)
+                .thenComparing(Fusion::geneStart)
+                .thenComparing(Fusion::geneEnd);
+
+        return fusions.stream().sorted(comparator).collect(Collectors.toList());
     }
 
     @NotNull

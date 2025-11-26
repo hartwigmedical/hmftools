@@ -15,6 +15,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -23,7 +24,6 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -298,7 +298,7 @@ public class OrangeJsonTest
         assertEquals(breakend, linx.driverSomaticBreakends().iterator().next());
 
         assertEquals(1, linx.allSomaticFusions().size());
-        LinxFusion fusion = linx.allSomaticFusions().iterator().next();
+        Fusion fusion = linx.allSomaticFusions().iterator().next();
         assertTrue(fusion.reported());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
         assertEquals(LinxUnreportableReason.NONE, fusion.unreportedReasons().iterator().next());

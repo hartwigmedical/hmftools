@@ -278,7 +278,7 @@ public final class GermlineConversion
         DriverInterpretation driverInterpretation = DriverUtils.maxDriverInterpretation(somaticDel.driverInterpretation(), germlineDel.driverInterpretation());
 
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.findingKey(somaticDel.gene(), interpretation, somaticDel.isCanonical()))
+                .findingKey(FindingKeys.findingKey(somaticDel.gene(), interpretation, somaticDel.isCanonical(), somaticDel.transcript()))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)

@@ -167,7 +167,7 @@ public class PurpleInterpreter
 
         // TODO: transcript fix
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.findingKey(driver.gene(), copyNumberInterpretation, driver.isCanonical()))
+                .findingKey(FindingKeys.findingKey(driver.gene(), copyNumberInterpretation, driver.isCanonical(), driver.transcript()))
                 .reportedStatus(convertReportedStatus(driver.reportedStatus()))
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .chromosome(driver.chromosome())

@@ -25,6 +25,11 @@ public class DriverUtils
         return maxReportedStatus(Arrays.asList(reportedStatuses));
     }
 
+    public static ReportedStatus maxReportedStatus(@NotNull com.hartwig.hmftools.common.purple.ReportedStatus... reportedStatuses)
+    {
+        return maxReportedStatus(Arrays.stream(reportedStatuses).map(DriverUtils::convertReportedStatus).toList());
+    }
+
     public static ReportedStatus maxReportedStatus(@NotNull Collection<ReportedStatus> reportedStatuses)
     {
         ReportedStatus maxStatus = ReportedStatus.NON_DRIVER_GENE;

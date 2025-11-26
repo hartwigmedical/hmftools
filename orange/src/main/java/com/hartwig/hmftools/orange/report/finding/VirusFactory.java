@@ -3,8 +3,9 @@ package com.hartwig.hmftools.orange.report.finding;
 import java.util.Collection;
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.finding.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.finding.ImmutableVirus;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.Virus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
@@ -26,8 +27,7 @@ public class VirusFactory {
     {
         return ImmutableVirus.builder().from(virusInterpreterEntry)
                 .findingKey(FindingKeys.findingKey(virusInterpreterEntry))
-                .isReportable(virusInterpreterEntry.reported())
-                .isCandidate(false)
+                .reportedStatus(ReportedStatus.REPORTED) // TODOHWL: fix
                 .driverInterpretation(convert(virusInterpreterEntry.driverLikelihood()))
                 .build();
     }

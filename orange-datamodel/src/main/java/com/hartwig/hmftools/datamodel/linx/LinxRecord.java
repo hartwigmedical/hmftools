@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.datamodel.linx;
 
 import java.util.List;
-import java.util.Optional;
+
+import com.hartwig.hmftools.datamodel.finding.Disruption;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -23,13 +25,12 @@ public interface LinxRecord
     List<LinxSvAnnotation> allGermlineStructuralVariants();
 
     @NotNull
-    List<LinxFusion> allSomaticFusions();
+    List<Fusion> allSomaticFusions();
 
-    @Gson.Ignore
     @NotNull
-    default List<LinxFusion> reportableSomaticFusions()
+    default List<Fusion> reportableSomaticFusions()
     {
-        return allSomaticFusions().stream().filter(LinxFusion::reported).toList();
+        return allSomaticFusions().stream().filter(Fusion::reported).toList();
     }
 
     @NotNull
@@ -45,6 +46,12 @@ public interface LinxRecord
 
     @Nullable
     List<LinxBreakend> otherGermlineBreakends();
+
+    @NotNull
+    List<Disruption> driverSomaticDisruptions();
+
+    @Nullable
+    List<Disruption> driverGermlineDisruptions();
 
     @NotNull
     List<LinxHomozygousDisruption> somaticHomozygousDisruptions();

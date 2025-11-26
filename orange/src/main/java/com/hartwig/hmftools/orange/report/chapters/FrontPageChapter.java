@@ -19,7 +19,7 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.interpretation.Drivers;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -442,7 +442,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-        for(LinxFusion fusion : report.linx().reportableSomaticFusions())
+        for(Fusion fusion : report.linx().reportableSomaticFusions())
         {
             fusions.add(fusion.display());
         }

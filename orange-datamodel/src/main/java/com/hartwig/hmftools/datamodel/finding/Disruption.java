@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
 import com.hartwig.hmftools.datamodel.driver.Driver;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.immutables.gson.Gson;
@@ -22,7 +23,7 @@ public interface Disruption extends Driver {
     String gene();
 
     @NotNull
-    String disruptedRange();
+    String transcript();
 
     @NotNull LinxBreakendType type();
 
@@ -34,4 +35,10 @@ public interface Disruption extends Driver {
 
     @Nullable
     Integer clusterId();
+
+    @Nullable
+    LinxBreakend breakendStart();
+
+    @Nullable
+    LinxBreakend breakendEnd();
 }

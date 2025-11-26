@@ -16,6 +16,7 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -47,7 +48,7 @@ public class LinxBreakendInterpreter
                 .chromosomeBand(chromosomeBand(linxBreakend.gene()))
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
+                .geneOrientation(geneOrientation(linxBreakend.geneOrientation()))
                 .isCanonical(linxBreakend.canonical())
                 .disruptive(linxBreakend.disruptive())
                 .reportedStatus(convertReportedStatus(linxBreakend.reportedStatus()))
@@ -85,6 +86,19 @@ public class LinxBreakendInterpreter
     {
         GeneData geneData = mEnsemblDataCache.getGeneDataByName(gene);
         return geneData != null ? geneData.KaryotypeBand : "";
+    }
+
+    private LinxGeneOrientation geneOrientation(final String geneOrientation)
+    {
+        if(geneOrientation.equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM))
+        {
+            return LinxGeneOrientation.UPSTREAM;
+        }
+        else if(geneOrientation.equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM))
+        {
+            return LinxGeneOrientation.DOWNSTREAM;
+        }
+        throw new IllegalArgumentException("Unknown gene orientation: " + geneOrientation);
     }
 
     @VisibleForTesting

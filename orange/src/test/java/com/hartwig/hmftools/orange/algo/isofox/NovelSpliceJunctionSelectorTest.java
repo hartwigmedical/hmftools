@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ public class NovelSpliceJunctionSelectorTest
         knownFusionCache.addData(KnownFusionCacheTestFactory.createExonDelDup("gene 1"));
         knownFusionCache.addData(KnownFusionCacheTestFactory.createExonDelDup("gene 2"));
 
-        List<LinxFusion> linxFusions =
+        List<Fusion> linxFusions =
                 Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("gene 2").geneEnd("gene 2").build());
 
         List<NovelSpliceJunction> skippedExons = NovelSpliceJunctionSelector.selectSkippedExons(junctions, linxFusions, knownFusionCache);

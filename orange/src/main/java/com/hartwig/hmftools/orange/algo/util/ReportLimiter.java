@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ReportLimiter
@@ -91,7 +89,6 @@ public final class ReportLimiter
                 .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
                         filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
-                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .otherSomaticBreakends(filteredAllSomaticBreakends)
                 .driverSomaticBreakends(filteredReportableSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))

@@ -4,21 +4,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.ImmutableFusion;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.algo.linx.HomozygousDisruption;
+import com.hartwig.hmftools.orange.report.finding.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -60,9 +64,21 @@ public final class LinxConversion
     }
 
     @NotNull
-    public static LinxFusion convert(@NotNull com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
+    public static Fusion convert(@NotNull com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
     {
-        return ImmutableLinxFusion.builder()
+        List<LinxUnreportableReason> unreportableReasons = unreportableReasonStringToList(linxFusion.reportableReasons());
+
+        // TODOHWL: check with Charles
+        ReportedStatus reportedStatus = linxFusion.reported() ? ReportedStatus.REPORTED :
+                unreportableReasons.contains(LinxUnreportableReason.NOT_KNOWN) ? ReportedStatus.NON_DRIVER_GENE :
+                        ReportedStatus.NOT_REPORTED;
+
+        DriverInterpretation driverInterpretation = toDriverInterpretation(linxFusion.likelihood());
+
+        return ImmutableFusion.builder()
+                .findingKey(FindingKeys.findingKey(linxFusion))
+                .reportedStatus(reportedStatus)
+                .driverInterpretation(driverInterpretation)
                 .geneStart(linxFusion.geneStart())
                 .geneContextStart(linxFusion.geneContextStart())
                 .geneTranscriptStart(linxFusion.geneTranscriptStart())
@@ -71,9 +87,8 @@ public final class LinxConversion
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
-                .unreportedReasons(unreportableReasonStringToList(linxFusion.reportableReasons()))
+                .unreportedReasons(unreportableReasons)
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
-                .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
                 .fusedExonDown(linxFusion.fusedExonDown())
                 .chainLinks(linxFusion.chainLinks())
@@ -115,5 +130,14 @@ public final class LinxConversion
                 .transcript(homozygousDisruption.transcript())
                 .isCanonical(homozygousDisruption.isCanonical())
                 .build();
+    }
+
+    @NotNull
+    private static DriverInterpretation toDriverInterpretation(@NotNull FusionLikelihoodType likelihood)
+    {
+        return switch (likelihood) {
+            case HIGH -> DriverInterpretation.HIGH;
+            case LOW, NA -> DriverInterpretation.LOW;
+        };
     }
 }

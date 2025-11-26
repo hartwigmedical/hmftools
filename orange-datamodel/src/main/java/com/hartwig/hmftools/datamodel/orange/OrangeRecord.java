@@ -53,6 +53,7 @@ public interface OrangeRecord
     @NotNull
     OrangeSample tumorSample();
 
+    // we take the findings from various parts of the sub records
     @NotNull
     FindingRecord findings();
 

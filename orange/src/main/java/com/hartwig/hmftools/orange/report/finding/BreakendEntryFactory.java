@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.finding;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,11 +9,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public final class BreakendEntryFactory
 {
@@ -32,7 +31,6 @@ public final class BreakendEntryFactory
         return entries;
     }
 
-    @VisibleForTesting
     static String range(final LinxBreakend breakend)
     {
         String exonRange = null;
@@ -58,7 +56,7 @@ public final class BreakendEntryFactory
             return "";
         }
 
-        return exonRange + " " + breakend.geneOrientation();
+        return exonRange + " " + (breakend.geneOrientation() == LinxGeneOrientation.UPSTREAM ? "Upstream" : "Downstream");
     }
 
     private static int determineClusterId(final LinxBreakend breakend, final List<LinxSvAnnotation> variants)

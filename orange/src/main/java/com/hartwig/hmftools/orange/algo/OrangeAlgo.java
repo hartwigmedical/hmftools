@@ -200,7 +200,7 @@ public class OrangeAlgo
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(mEnsemblDataCache);
 
-        LinxRecord linx = linxInterpreter.interpret(linxData);
+        LinxRecord linx = linxInterpreter.interpret(linxData, purpleData.purityContext().qc());
 
         PaveAlgo pave = new PaveAlgo(mEnsemblDataCache, !mSuppressGeneWarnings);
 
