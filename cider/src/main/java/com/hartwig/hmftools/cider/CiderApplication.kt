@@ -53,7 +53,7 @@ class CiderApplication(configBuilder: ConfigBuilder)
         val readProcessor = CiderReadScreener(
             ciderGeneDatastore,
             candidateBlosumSearcher,
-            CiderConstants.MAX_READ_DISTANCE_FROM_ANCHOR,
+            CiderConstants.MIN_READ_CDR3_OVERLAP,
             mParams.approxMaxFragmentLength)
 
         readBamFile(readProcessor, ciderGeneDatastore)

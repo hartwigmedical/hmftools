@@ -42,18 +42,30 @@ data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation
         return genomeLocation.baseLength()
     }
 
-    // get the reference position of the end of the anchor
+    // get the side of the anchor towards the CDR3 sequence
     // this is the end of the C codon for V and the start of the W / F codon for J
-    fun anchorBoundaryReferencePosition() : Int
+    fun anchorBoundarySide() : Int
     {
         return if (vjGeneType.vj == VJ.V && genomeLocation.strand == Strand.FORWARD ||
             vjGeneType.vj == VJ.J && genomeLocation.strand == Strand.REVERSE)
             {
-                genomeLocation.posEnd
+                1
             }
             else
             {
-                genomeLocation.posStart
+                -1
+            }
+    }
+
+    fun anchorBoundaryReferencePosition() : Int
+    {
+        return if (anchorBoundarySide() == 1)
+            {
+                end
+            }
+            else
+            {
+                start
             }
     }
 }

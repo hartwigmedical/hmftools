@@ -16,7 +16,8 @@ object CiderConstants
     const val CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 10
     const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 3
 
-    const val MAX_READ_DISTANCE_FROM_ANCHOR: Int = 50
+    // The minimum number of bases a read must overlap the CDR3 sequence (i.e. sequence past the anchor) to be used.
+    const val MIN_READ_CDR3_OVERLAP: Int = 25
 
     // minimum amount of bases a read must overlap with a layout for it to be added
     const val LAYOUT_MIN_READ_OVERLAP_BASES: Int = 20
