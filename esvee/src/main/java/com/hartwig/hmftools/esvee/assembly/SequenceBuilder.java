@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
@@ -24,6 +23,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATC
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_3;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_LONG;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.TOTAL_READ_MISMATCH_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
@@ -107,7 +107,7 @@ public class SequenceBuilder
             }
             else
             {
-                if(baseIndex >= repeat.Index && baseIndex <= repeat.lastIndex())
+                if(baseIndex >= repeat.lastIndex() && baseIndex <= repeat.Index)
                     return repeat;
             }
         }
@@ -167,12 +167,6 @@ public class SequenceBuilder
                         else
                             ++consensusMedQualCount;
                     }
-                    /*
-                    else if(base != consensusBase && belowMinQual(qual))
-                    {
-                        // low-qual disagreement - ignore regardless of consensus qual
-                    }
-                    */
                     else
                     {
                         hasMismatch = true;
@@ -836,6 +830,9 @@ public class SequenceBuilder
                 if(repeatBaseIndex < 0)
                     repeatBaseIndex = repeatLength - 1;
             }
+
+            if(mCurrentIndex < 0 || mCurrentIndex >= mBases.length)
+                break;
         }
     }
 

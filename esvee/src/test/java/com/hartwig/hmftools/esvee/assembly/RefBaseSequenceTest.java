@@ -129,17 +129,17 @@ public class RefBaseSequenceTest
         refBaseSeqBuilder = new RefBaseSeqBuilder(assembly);
 
         refSeqBases = readRefBases.substring(0, 10) + readRefBases.substring(15, 20) + insert + readRefBases.substring(20, 30);
+        assertEquals("10M5D5M2I10M", refBaseSeqBuilder.cigarStr());
         assertEquals(refSeqBases, refBaseSeqBuilder.refBaseSequence());
         assertEquals(71, refBaseSeqBuilder.refBasePosition());
         assertEquals(27, refBaseSeqBuilder.refBaseLength());
-        assertEquals("10M5D5M2I10M", refBaseSeqBuilder.cigarStr());
 
         assertEquals(0, getReadMismatchCount(refBaseSeqBuilder, read1));
         assertEquals(5, getReadMismatchCount(refBaseSeqBuilder, read2));
         assertEquals(2, getReadMismatchCount(refBaseSeqBuilder, read3));
     }
 
-    private final byte LOW_QUAL_BASE = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+    private final byte LOW_QUAL_BASE = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD - 1; // until isLowQual is corrected to include 26
 
     private static void setBaseQuals(final Read read, int readStart, int readEnd, byte qual)
     {

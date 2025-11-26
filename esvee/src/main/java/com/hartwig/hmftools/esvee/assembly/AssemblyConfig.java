@@ -150,19 +150,39 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder, boolean asSubRoutine)
     {
-        if(!configBuilder.hasValue(OUTPUT_DIR) && configBuilder.hasValue(TUMOR_BAM))
+        String prepBamDir = null;
+
+        if(!asSubRoutine)
         {
-            List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
-            OutputDir = pathFromFile(tumorBams.get(0));
+            if(configBuilder.hasValue(TUMOR_BAM))
+            {
+                List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+                prepBamDir = pathFromFile(tumorBams.get(0));
+            }
+            else if(configBuilder.hasValue(REFERENCE_BAM))
+            {
+                List<String> refBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+                prepBamDir = pathFromFile(refBams.get(0));
+            }
+        }
+
+        if(!configBuilder.hasValue(OUTPUT_DIR) && prepBamDir != null)
+        {
+            OutputDir = prepBamDir;
         }
         else
         {
             OutputDir = parseOutputDir(configBuilder);
         }
 
-        OutputId = configBuilder.getValue(OUTPUT_ID);
+        if(configBuilder.hasValue(PREP_DIR))
+            PrepDir = checkAddDirSeparator(configBuilder.getValue(PREP_DIR));
+        else if(prepBamDir != null)
+            PrepDir = prepBamDir;
+        else
+            PrepDir = OutputDir;
 
-        PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         TumorIds = parseSampleBamLists(configBuilder, TUMOR);
 

@@ -29,14 +29,15 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class AssemblyUtils
 {
-    public static final int DNA_BASE_COUNT = Nucleotides.DNA_BASES.length + 1; // allows for Ns
+    public static final byte[] DNA_BASE_BYTES = { 65, 67, 71, 84, 78 }; // allows for Ns
+    public static final int DNA_BASE_COUNT = DNA_BASE_BYTES.length + 1;
     public static final byte NO_BASE = 0;
 
     public static int baseIndex(final byte base)
     {
         // protects against out of array errors from non-standard letters (N is permitted)
         int baseIndex = Nucleotides.baseIndex(base);
-        return baseIndex < 0 || baseIndex >= DNA_BASE_COUNT ? DNA_BASE_COUNT - 1 : baseIndex;
+        return baseIndex < 0 || baseIndex >= DNA_BASE_COUNT ? DNA_BASE_COUNT - 1 : baseIndex; // returns N if non-standard
     }
 
     public static int mismatchesPerComparisonLength(final int sequenceLength)

@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
+import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
@@ -134,9 +136,9 @@ public class JunctionAssemblyTest
         // now test adding non-extension reads
         readBases = read1.getBasesString();
         Read juncRead = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
-        ReadParseState readParseState = extSeqBuilder.checkAddJunctionRead(juncRead);
-        assertNotNull(readParseState);
-        assertFalse(readParseState.mismatched());
+        ReadParseState readInfo = extSeqBuilder.checkAddJunctionRead(juncRead);
+        assertNotNull(readInfo);
+        assertFalse(readInfo.mismatched());
 
         // now test with low qual mismatches in all 3 three reads but still overall agreement
         read2.getBases()[30] = MockRefGenome.getNextBase(read1.getBases()[30]);
@@ -158,6 +160,25 @@ public class JunctionAssemblyTest
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
         assertEquals(3, extSeqBuilder.formAssemblySupport().size());
+
+        // test reads with novel INDELs
+        String newExtBases = extBases.substring(0, 10) + "A" + extBases.substring(10, 20);
+        readBases = refBases + newExtBases;
+        juncRead = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, newExtBases.length()));
+        readInfo = extSeqBuilder.checkAddJunctionRead(juncRead);
+        assertNotNull(readInfo);
+        assertFalse(readInfo.mismatched());
+        SequenceDiffInfo mismatch = readInfo.mismatches().get(0);
+        assertEquals(INSERT, mismatch.Type);
+
+        newExtBases = extBases.substring(0, 10) + extBases.substring(11, 20);
+        readBases = refBases + newExtBases;
+        juncRead = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, newExtBases.length()));
+        readInfo = extSeqBuilder.checkAddJunctionRead(juncRead);
+        assertNotNull(readInfo);
+        assertFalse(readInfo.mismatched());
+        mismatch = readInfo.mismatches().get(0);
+        assertEquals(DELETE, mismatch.Type);
     }
 
     @Test
@@ -329,6 +350,36 @@ public class JunctionAssemblyTest
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
         assertEquals(5, supportReads.size());
         assertEquals(4, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
+
+        // now test adding further junction reads with differing repeats
+        Read read1c = cloneRead(read1, READ_ID_GENERATOR.nextId());
+        Read read2b = cloneRead(read2, READ_ID_GENERATOR.nextId());
+        Read read3b = cloneRead(read3, READ_ID_GENERATOR.nextId());
+        Read read4b = cloneRead(read4, READ_ID_GENERATOR.nextId());
+
+        ReadParseState readInfo = extSeqBuilder.checkAddJunctionRead(read1c);
+        assertNotNull(readInfo);
+
+        readInfo = extSeqBuilder.checkAddJunctionRead(read2b);
+        assertNotNull(readInfo);
+        assertEquals(1, readInfo.mismatches().size());
+        SequenceDiffInfo mismatch = readInfo.mismatches().get(0);
+        assertEquals(SequenceDiffType.REPEAT, mismatch.Type);
+        assertEquals(5, mismatch.RepeatCount);
+
+        readInfo = extSeqBuilder.checkAddJunctionRead(read3b);
+        assertNotNull(readInfo);
+        assertEquals(1, readInfo.mismatches().size());
+        mismatch = readInfo.mismatches().get(0);
+        assertEquals(SequenceDiffType.REPEAT, mismatch.Type);
+        assertEquals(3, mismatch.RepeatCount);
+
+        readInfo = extSeqBuilder.checkAddJunctionRead(read4b);
+        assertNotNull(readInfo);
+        assertEquals(1, readInfo.mismatches().size());
+        mismatch = readInfo.mismatches().get(0);
+        assertEquals(SequenceDiffType.REPEAT, mismatch.Type);
+        assertEquals(6, mismatch.RepeatCount);
     }
 
     @Test

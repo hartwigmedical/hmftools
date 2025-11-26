@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.NO_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.calcMismatchPenalty;
@@ -142,7 +143,7 @@ public class ReadParseState
         else if(seqDiffInfo.Type == INSERT)
         {
             // skip this and the consensus base
-            moveNextBases(2);
+            moveNextBases(2); // CHECK: would need to know insert (diff) length if novel INDEls < 1 base are supported
         }
     }
 
@@ -396,6 +397,10 @@ public class ReadParseState
 
     public BaseQualType rangeMinQualType(int readIndexStart, int readIndexEnd)
     {
+        if(readIndexStart < 0)
+            return BaseQualType.LOW;
+
+        // take the lowest qual across a range
         if(isUltima())
         {
             if(mLowQualIndices == null)
@@ -413,16 +418,21 @@ public class ReadParseState
         {
             final byte[] baseQuals = mRead.getBaseQuality();
 
+            if(readIndexEnd >= baseQuals.length)
+                return BaseQualType.LOW;
+
+            boolean hasMedium = false;
+
             for(int i = readIndexStart; i <= readIndexEnd; ++i)
             {
-                if(isHighBaseQual(baseQuals[i]))
-                    return BaseQualType.HIGH;
-                else if(isMediumBaseQual(baseQuals[i]))
-                    return BaseQualType.MEDIUM;
-            }
-        }
+                if(isLowBaseQual(baseQuals[i]))
+                    return BaseQualType.LOW;
 
-        return BaseQualType.LOW;
+                hasMedium |= isMediumBaseQual(baseQuals[i]);
+            }
+
+            return hasMedium ? BaseQualType.MEDIUM : BaseQualType.HIGH;
+        }
     }
 
     public int matchedBases() { return mBaseMatches; }

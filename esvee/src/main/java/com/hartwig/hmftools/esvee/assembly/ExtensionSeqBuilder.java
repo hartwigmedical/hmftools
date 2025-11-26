@@ -191,6 +191,8 @@ public class ExtensionSeqBuilder
             byte qual = readParseState.currentQual();
             boolean isHighQual = isHighBaseQual(qual);
 
+            int extBaseMove = 1;
+
             if(base == consensusBase)
             {
                 readParseState.addBaseMatch(isHighQual);
@@ -198,8 +200,8 @@ public class ExtensionSeqBuilder
             }
             else
             {
-                // evaluate difference and decide how to proceed
-                assessReadMismatch(readParseState, extensionIndex);
+                // evaluate difference and decide how to proceed in the read and extension bases
+                extBaseMove = assessReadMismatch(readParseState, extensionIndex);
 
                 if(readParseState.mismatched())
                     return readParseState;
@@ -208,7 +210,7 @@ public class ExtensionSeqBuilder
             if(readParseState.exhausted())
                 break;
 
-            extensionIndex += mBuildForwards ? 1 : -1;
+            extensionIndex += mBuildForwards ? extBaseMove : -extBaseMove;
         }
 
         if(sufficientHighQualMatches(readParseState))
@@ -220,7 +222,7 @@ public class ExtensionSeqBuilder
         return readParseState;
     }
 
-    private void assessReadMismatch(final ReadParseState read, int extensionIndex)
+    private int assessReadMismatch(final ReadParseState read, int extensionIndex)
     {
         SequenceDiffInfo seqDiffInfo = SequenceDiffInfo.UNSET;
 
@@ -257,13 +259,25 @@ public class ExtensionSeqBuilder
 
             if(consensusRepeat != null)
             {
-                previousRepeatLength = abs(consensusRepeat.Index - extensionIndex) + 1;
+                int prevExtBaseLength = abs(consensusRepeat.Index - extensionIndex); // was +1 but seems incorrect
+                // previousRepeatLength = abs(consensusRepeat.Index - extensionIndex) + 1;
+
                 int repeatBaseLength = consensusRepeat.repeatLength();
-                int previousRepeatCount = previousRepeatLength / repeatBaseLength;
-                int readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousRepeatCount, mBuildForwards);
+                int previousExtRepeatCount = prevExtBaseLength / repeatBaseLength;
+                int repeatExtRemainder = prevExtBaseLength % repeatBaseLength;
+
+                int readRepeatCount = 0;
+
+                if(previousExtRepeatCount > 0 && repeatExtRemainder == 0)
+                {
+                    // get further repeat counts in the read from this point, assuming has matched until this point
+                    readRepeatCount = getRepeatCount(read, consensusRepeat.Bases, previousExtRepeatCount, mBuildForwards);
+                }
 
                 if(readRepeatCount > 0)
                 {
+                    previousRepeatLength = prevExtBaseLength;
+
                     int readRepeatStart = SequenceDiffInfo.repeatIndex(
                             read.readIndex(), readRepeatCount, consensusRepeat, previousRepeatLength, mBuildForwards, true);
 
@@ -294,6 +308,21 @@ public class ExtensionSeqBuilder
         }
 
         mSequenceBuilder.applyReadMismatches(read, seqDiffInfo, consensusRepeat, previousRepeatLength);
+
+        int extBaseMove = 1;
+
+        // NOTE: indels don't need to change the extension index move since the next bases (including current) have been checked for a match
+        if(seqDiffInfo.Type == REPEAT)
+        {
+            // if the consensus repeat is longer than the read's repeat, then the extension index will move further ahead
+            // otherwise it will stay as is, waiting to compare the next base again
+            if(consensusRepeat.Count > seqDiffInfo.RepeatCount)
+                extBaseMove = (consensusRepeat.Count - seqDiffInfo.RepeatCount) * consensusRepeat.repeatLength();
+            else if(seqDiffInfo.RepeatCount > consensusRepeat.Count)
+                extBaseMove = 0;
+        }
+
+        return extBaseMove;
     }
 
     private void validateFinalBases()

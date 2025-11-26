@@ -351,6 +351,12 @@ public class JunctionAssembler
         if(firstAssembly.hasLineSequence())
             return null;
 
+        int secondSupport = extensionReads.size();
+        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+
+        if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
+            return null;
+
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())
@@ -358,8 +364,9 @@ public class JunctionAssembler
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        int secondSupport = assemblySupport.size();
-        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+        // test min support again from actual supporting reads
+        secondSupport = assemblySupport.size();
+        secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
 
         if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
             return null;
