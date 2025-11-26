@@ -99,7 +99,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final List<SimpleVariant> SpecificVariants;;
+    public final List<SimpleVariant> SpecificVariants;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -348,13 +348,10 @@ public class SageConfig
         if(!makeOutputDir(outputDir))
             return false;
 
-        if(Visualiser.Enabled && !makeOutputDir(Visualiser.OutputDir))
-            return false;
-
-        return true;
+        return !Visualiser.Enabled || makeOutputDir(Visualiser.OutputDir);
     }
 
-    public boolean makeOutputDir(final File outputDir)
+    private static boolean makeOutputDir(final File outputDir)
     {
         if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
         {
@@ -373,10 +370,7 @@ public class SageConfig
         if(HumanChromosome.contains(chromosome))
             return true;
 
-        if(IncludeMT && MitochondrialChromosome.contains(chromosome))
-            return true;
-
-        return false;
+        return IncludeMT && MitochondrialChromosome.contains(chromosome);
     }
 
     public boolean logPerfStats() { return PerfWarnTime > 0; }

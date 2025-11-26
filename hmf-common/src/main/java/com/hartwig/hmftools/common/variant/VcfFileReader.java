@@ -30,7 +30,7 @@ public class VcfFileReader implements AutoCloseable
     private final boolean mFileValid;
     private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
 
-    private final Map<String,Integer> mGenotypeOrdinals;
+    private final Map<String, Integer> mGenotypeOrdinals;
     private int mReferenceOrdinal;
     private int mTumorOrdinal;
 
@@ -55,7 +55,7 @@ public class VcfFileReader implements AutoCloseable
             mReader = getFeatureReader(filename, new VCFCodec(), requireIndex);
             mFileValid = true;
 
-            List<String> vcfSampleNames = ((VCFHeader)mReader.getHeader()).getGenotypeSamples();
+            List<String> vcfSampleNames = ((VCFHeader) mReader.getHeader()).getGenotypeSamples();
             for(int i = 0; i < vcfSampleNames.size(); ++i)
             {
                 mGenotypeOrdinals.put(vcfSampleNames.get(i), i);
@@ -70,7 +70,7 @@ public class VcfFileReader implements AutoCloseable
 
     public void registerSampleNames(final String referenceId, final String tumorId)
     {
-        List<String> vcfSampleNames = ((VCFHeader)mReader.getHeader()).getGenotypeSamples();
+        List<String> vcfSampleNames = ((VCFHeader) mReader.getHeader()).getGenotypeSamples();
         for(int i = 0; i < vcfSampleNames.size(); ++i)
         {
             if(vcfSampleNames.get(i).equals(referenceId))
@@ -80,7 +80,7 @@ public class VcfFileReader implements AutoCloseable
         }
     }
 
-    public Map<String,Integer> genotypeOrdinals() { return mGenotypeOrdinals; }
+    public Map<String, Integer> genotypeOrdinals() { return mGenotypeOrdinals; }
     public int tumorOrdinal() { return mTumorOrdinal; }
     public int referenceOrdinal() { return mReferenceOrdinal; }
 
@@ -100,7 +100,7 @@ public class VcfFileReader implements AutoCloseable
     }
 
     @Nullable
-    public VCFHeader vcfHeader() { return (VCFHeader)mReader.getHeader(); }
+    public VCFHeader vcfHeader() { return (VCFHeader) mReader.getHeader(); }
 
     @Nullable
     public AbstractFeatureReader<VariantContext, LineIterator> reader() { return mReader; }

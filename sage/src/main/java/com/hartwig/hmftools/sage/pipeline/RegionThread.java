@@ -38,7 +38,7 @@ public class RegionThread extends Thread
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
-    private  final PhaseSetCounter mPhaseSetCounter;
+    private final PhaseSetCounter mPhaseSetCounter;
 
     private final Queue<PartitionTask> mPartitions;
     private final RegionResults mRegionResults;

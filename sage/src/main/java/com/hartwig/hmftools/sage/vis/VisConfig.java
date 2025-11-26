@@ -62,7 +62,7 @@ public class VisConfig
         if(SpecificVariants.isEmpty())
             return true;
 
-        return SpecificVariants.stream().anyMatch(x -> variant.matches(x));
+        return SpecificVariants.stream().anyMatch(variant::matches);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

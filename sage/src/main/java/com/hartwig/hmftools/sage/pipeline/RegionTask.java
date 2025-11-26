@@ -106,7 +106,7 @@ public class RegionTask
         mPerfCounters.add(new PerformanceCounter("Variants"));
     }
 
-    public final List<SageVariant> getVariants() { return mSageVariants; }
+    public List<SageVariant> getVariants() { return mSageVariants; }
 
     public void run()
     {
@@ -122,7 +122,7 @@ public class RegionTask
         {
             SG_LOGGER.warn("region({}) initial candidate({}) reads({}) processing time({})",
                     mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
-                    String.format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
+                    format("%.3f", mPerfCounters.get(PC_CANDIDATES).getLastTime()));
         }
 
         if(initialCandidates.isEmpty())
@@ -152,8 +152,8 @@ public class RegionTask
         if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.Common.PerfWarnTime)
         {
             SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) hardFilter({}) processing time({})",
-                    mRegion, finalCandidates.size(),  mVariantPhaser.getPhasingGroupCount(), mVariantPhaser.getPhasedCollections().size(),
-                    tumorEvidence.variantFilters().filterCountsStr(), String.format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
+                    mRegion, finalCandidates.size(), mVariantPhaser.getPhasingGroupCount(), mVariantPhaser.getPhasedCollections().size(),
+                    tumorEvidence.variantFilters().filterCountsStr(), format("%.3f", mPerfCounters.get(PC_EVIDENCE).getLastTime()));
         }
 
         mVariantPhaser.signalPhaseReadsEnd();
@@ -218,7 +218,7 @@ public class RegionTask
                 continue;
 
             // ignore if filtered other than by germline-only filters
-            if(!variant.isPassing() && variant.filters().stream().anyMatch(x -> TUMOR_FILTERS.contains(x)))
+            if(!variant.isPassing() && variant.filters().stream().anyMatch(TUMOR_FILTERS::contains))
                 continue;
 
             for(int i = 0; i <= 1; ++i)
@@ -254,7 +254,9 @@ public class RegionTask
 
     private void finaliseResults()
     {
-        mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
+        mSageVariants.stream()
+                .filter(x -> x.isPassing() && x.hasLocalPhaseSets())
+                .forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
 
         List<SageVariant> finalVariants = mSageVariants.stream()
                 .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig.Common, mConfig.PanelOnly))

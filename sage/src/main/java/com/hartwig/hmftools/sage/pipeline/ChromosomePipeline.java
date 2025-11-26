@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -44,7 +43,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
-    private  final PhaseSetCounter mPhaseSetCounter;
+    private final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
     private final FragmentLengthWriter mFragmentLengths;
@@ -92,12 +91,10 @@ public class ChromosomePipeline implements AutoCloseable
         List<ChrBaseRegion> partitionedRegions = chrPartition.partition(mChromosome);
 
         int taskId = 0;
-        for(int i = 0; i < partitionedRegions.size(); ++i)
+        for(ChrBaseRegion region : partitionedRegions)
         {
-            ChrBaseRegion region = partitionedRegions.get(i);
-
             List<BaseRegion> regionPanel = mPanelRegions != null ? mPanelRegions.stream()
-                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
+                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).toList()
                     : Lists.newArrayList();
 
             if(mConfig.PanelOnly && regionPanel.isEmpty())

@@ -49,7 +49,6 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
@@ -79,10 +78,10 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
-import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -124,25 +123,23 @@ public class VariantVis
             rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
 
     private static final List<ReadContextMatch> SORTED_MATCH_TYPES = Arrays.stream(ReadContextMatch.values())
-            .sorted(Comparator.comparingInt(x -> visSortKey(x)))
-            .collect(Collectors.toList());
+            .sorted(Comparator.comparingInt(VariantVis::visSortKey))
+            .toList();
 
-    public static int visSortKey(final ReadContextMatch type)
+    private static int visSortKey(final ReadContextMatch type)
     {
-        switch(type)
+        return switch(type)
         {
-            case FULL: return 0;
-            case PARTIAL_CORE: return 1;
-            case REALIGNED: return 2;
-            case CORE: return 3;
-            case REF: return 3;
-            case NONE:
-            default:
-                return 5;
-        }
+            case FULL -> 0;
+            case PARTIAL_CORE -> 1;
+            case REALIGNED -> 2;
+            case CORE -> 3;
+            case REF -> 3;
+            default -> 5;
+        };
     }
 
-    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
+    private static final Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
 
     private final VisConfig mConfig;
 
@@ -175,7 +172,6 @@ public class VariantVis
         mReadContext = readContext;
         mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
-        int indelSize = mVariant.ref().length() - mVariant.alt().length();
         int coreStart = mReadContext.CorePositionStart;
         int coreEnd = mReadContext.CorePositionEnd;
         int flankStart = coreStart - mReadContext.leftFlankLength();
@@ -221,15 +217,7 @@ public class VariantVis
 
         mReadCountByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadCount = 0;
-
-        SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
-        if(indexedBasesKeySet == null)
-        {
-            indexedBasesKeySet = new TreeSet<>();
-            VARIANT_INDEXED_BASES_MAP.put(mVariantKey, indexedBasesKeySet);
-        }
-
-        indexedBasesKeySet.add(mIndexedBasesKey);
+        VARIANT_INDEXED_BASES_MAP.computeIfAbsent(mVariantKey, k -> Sets.newTreeSet()).add(mIndexedBasesKey);
     }
 
     private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
@@ -248,10 +236,10 @@ public class VariantVis
 
         // can be null if doesn't meet the configured criteria
         List<VariantVis> tumorVis = tumorReadCounters.stream()
-                .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+                .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
 
         List<VariantVis> refVis = refReadCounters.stream()
-                .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+                .map(ReadContextCounter::variantVis).filter(Objects::nonNull).toList();
 
         if(tumorVis.isEmpty() && refVis.isEmpty())
             return;
@@ -283,8 +271,8 @@ public class VariantVis
             return;
         }
 
-        tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
-        refVis.forEach(x -> x.downsampleReadEvidenceRecords());
+        tumorVis.forEach(VariantVis::downsampleReadEvidenceRecords);
+        refVis.forEach(VariantVis::downsampleReadEvidenceRecords);
 
         Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true, aaElements)).flatMap(Collection::stream);
         Stream<DomContent> refReadTableRows = refVis.stream().map(x -> x.renderReads(false, aaElements)).flatMap(Collection::stream);
@@ -446,10 +434,9 @@ public class VariantVis
         CssBuilder cellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5)).merge(borderStyle);
 
         ReadContextCounter tumorCounter = null;
-        for (int i = 0; i < tumorReadCounters.size(); i++)
+        for(ReadContextCounter counter : tumorReadCounters)
         {
-            ReadContextCounter counter = tumorReadCounters.get(i);
-            if (counter.variantVis() == null)
+            if(counter.variantVis() == null)
                 continue;
 
             tumorCounter = counter;
@@ -457,10 +444,9 @@ public class VariantVis
         }
 
         ReadContextCounter refCounter = null;
-        for (int i = 0; i < refReadCounters.size(); i++)
+        for(ReadContextCounter counter : refReadCounters)
         {
-            ReadContextCounter counter = refReadCounters.get(i);
-            if (counter.variantVis() == null)
+            if(counter.variantVis() == null)
                 continue;
 
             refCounter = counter;
@@ -657,13 +643,7 @@ public class VariantVis
         ++mReadCount;
         mReadCountByType.put(matchType, mReadCountByType.getOrDefault(matchType, 0) + 1);
 
-        List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
-        if(records == null)
-        {
-            records = Lists.newArrayList();
-            mReadEvidenceRecordsByType.put(matchType, records);
-        }
-
+        List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.computeIfAbsent(matchType, k -> Lists.newArrayList());
         if(fragment == null)
         {
             records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mVariant.Position));
@@ -692,7 +672,6 @@ public class VariantVis
 
     private DomContent renderVariantInfo(final List<String> tumorIds, final List<String> referenceIds)
     {
-        CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder strongStyle = CssBuilder.EMPTY.fontWeight("bold");
 
         StringJoiner infoJoiner = new StringJoiner(" ");
@@ -1005,7 +984,7 @@ public class VariantVis
 
     private DomContent renderRead(final ReadEvidenceRecord readEvidence)
     {
-        BaseSeqViewModel readViewModel = null;
+        BaseSeqViewModel readViewModel;
         BaseSeqViewModel firstViewModel = null;
         BaseSeqViewModel secondViewModel = null;
         if(readEvidence.Fragment == null)

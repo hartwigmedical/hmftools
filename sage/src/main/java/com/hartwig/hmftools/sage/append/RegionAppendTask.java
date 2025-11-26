@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -62,7 +63,8 @@ public class RegionAppendTask implements Callable<Void>
 
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
-            final SageAppendConfig config, final IndexedFastaSequenceFile refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap,
             final FragmentLengthWriter fragmentLengths, final MsiJitterCalcs msiJitterCalcs)
     {
         mTaskId = taskId;
@@ -101,7 +103,7 @@ public class RegionAppendTask implements Callable<Void>
 
         List<Candidate> candidates = mOriginalVariants.stream()
                 .map(x -> CandidateSerialisation.toCandidate(x, refSequence))
-                .filter(x -> x != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         if(candidates.size() < mOriginalVariants.size())
@@ -163,7 +165,7 @@ public class RegionAppendTask implements Callable<Void>
         return null;
     }
 
-    public void createFinalVariants(final ReadContextCounters readContextCounters, final List<String> sampleIds)
+    private void createFinalVariants(final ReadContextCounters readContextCounters, final List<String> sampleIds)
     {
         for(int i = 0; i < mOriginalVariants.size(); ++i)
         {
@@ -185,7 +187,7 @@ public class RegionAppendTask implements Callable<Void>
 
         for(Genotype genotype : variantContext.getGenotypes())
         {
-            genotype.getExtendedAttributes().keySet().forEach(x -> existingGenotypeTags.add(x));
+            existingGenotypeTags.addAll(genotype.getExtendedAttributes().keySet());
         }
 
         Set<String> expectedGenotypeTags = Sets.newHashSet();
@@ -210,7 +212,7 @@ public class RegionAppendTask implements Callable<Void>
             genotypes.add(checkGenotypeFields(genotype, expectedGenotypeTags));
         }
 
-        newGenotypes.forEach(x -> genotypes.add(x));
+        genotypes.addAll(newGenotypes);
 
         return builder.genotypes(genotypes).make();
     }
@@ -239,9 +241,9 @@ public class RegionAppendTask implements Callable<Void>
             if(vcfTag.equals(MIN_COORDS_COUNT))
                 genotypeBuilder.attribute(MIN_COORDS_COUNT, 0);
             else if(vcfTag.equals(AVG_SEQ_TECH_BASE_QUAL))
-                genotypeBuilder.attribute(AVG_SEQ_TECH_BASE_QUAL, new int[] {0, 0});
+                genotypeBuilder.attribute(AVG_SEQ_TECH_BASE_QUAL, new int[] { 0, 0 });
             else if(vcfTag.equals(AVG_EDGE_DISTANCE_PERC))
-                genotypeBuilder.attribute(AVG_EDGE_DISTANCE_PERC, new double[] {0, 0});
+                genotypeBuilder.attribute(AVG_EDGE_DISTANCE_PERC, new double[] { 0, 0 });
             else if(vcfTag.equals(UMI_TYPE_COUNTS))
                 genotypeBuilder.attribute(UMI_TYPE_COUNTS, new int[CONSENSUS_TAG_TYPE_COUNT]);
             else

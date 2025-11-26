@@ -9,7 +9,7 @@ import java.util.StringJoiner;
 import org.pcollections.PMap;
 import org.pcollections.TreePMap;
 
-public class CssBuilder
+public final class CssBuilder
 {
     public static final CssBuilder EMPTY = new CssBuilder();
 
@@ -31,7 +31,7 @@ public class CssBuilder
         mBoxShadowValues = boxShadowValues;
     }
 
-    private static String colorToHexString(Color color)
+    private static String colorToHexString(final Color color)
     {
         return format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }

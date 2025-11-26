@@ -29,7 +29,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
-public class SvgRender
+public final class SvgRender
 {
     public static final Color FORWARD_STRAND_COLOR = new Color(81, 144, 207);
     public static final Color REVERSE_STRAND_COLOR = new Color(242, 167, 121);
@@ -72,28 +72,30 @@ public class SvgRender
 
     private static final int MAX_BASEQ_SHADING_CUTTOFF = 37;
 
-    private static void drawTopBoxBorder(SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
+    private SvgRender() {}
+
+    private static void drawTopBoxBorder(final SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx, 0.0, 1.0, boxPropWidth);
         svgCanvas.fill(rect);
     }
 
-    private static void drawRightBoxBorder(SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
+    private static void drawRightBoxBorder(final SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx + 1 - boxPropWidth, 0.0, boxPropWidth, 1.0);
         svgCanvas.fill(rect);
     }
 
-    private static void drawBottomBoxBorder(SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
+    private static void drawBottomBoxBorder(final SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx, 1.0 - boxPropWidth, 1.0, boxPropWidth);
         svgCanvas.fill(rect);
     }
 
-    private static void drawLeftBoxBorder(SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
+    private static void drawLeftBoxBorder(final SVGGraphics2D svgCanvas, int boxIdx, double boxPropWidth)
     {
         // canvas is scaled to be in units of BASE_BOX_SIZE
         Rectangle2D rect = new Rectangle2D.Double(boxIdx, 0.0, boxPropWidth, 1.0);
@@ -408,7 +410,7 @@ public class SvgRender
         return svgCanvas;
     }
 
-    public static void drawForwardArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
+    private static void drawForwardArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
     {
         Path2D.Double forwardArrowPath = new Path2D.Double();
         forwardArrowPath.moveTo(left, top);
@@ -419,7 +421,7 @@ public class SvgRender
         svgCanvas.fill(forwardArrowPath);
     }
 
-    public static void drawReverseArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
+    private static void drawReverseArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
     {
         Path2D.Double reverseArrowPath = new Path2D.Double();
         reverseArrowPath.moveTo(left, top + 0.5 * height);
