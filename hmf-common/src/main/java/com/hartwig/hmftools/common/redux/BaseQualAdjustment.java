@@ -62,8 +62,8 @@ public class BaseQualAdjustment
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
 
-    public static boolean isLowBaseQual(final byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
-    public static boolean aboveLowBaseQual(final byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean isLowBaseQual(final byte qual) { return qual <= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean aboveLowBaseQual(final byte qual) { return qual > LOW_BASE_QUAL_THRESHOLD; }
 
     public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
     {
