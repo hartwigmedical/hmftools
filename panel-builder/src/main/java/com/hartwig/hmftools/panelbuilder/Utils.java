@@ -3,7 +3,9 @@ package com.hartwig.hmftools.panelbuilder;
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
@@ -48,5 +50,38 @@ public class Utils
         return IntStream.iterate(0, absOffset -> -absOffset >= minOffset || absOffset <= maxOffset, absOffset -> absOffset + 1)
                 .flatMap(absOffset -> absOffset == 0 ? IntStream.of(absOffset) : IntStream.of(absOffset, -absOffset))
                 .filter(offset -> offset >= minOffset && offset <= maxOffset);
+    }
+
+    public static <T> List<T> findDuplicates(final List<T> items, BiPredicate<T, T> isDuplicate)
+    {
+        List<T> duplicates = new ArrayList<>();
+        for(int i = 0; i < items.size(); i++)
+        {
+            T item1 = items.get(i);
+            for(int j = 0; j < items.size(); j++)
+            {
+                if(i != j)
+                {
+                    T item2 = items.get(j);
+                    if(isDuplicate.test(item1, item2))
+                    {
+                        if(!duplicates.contains(item1))
+                        {
+                            duplicates.add(item1);
+                        }
+                        if(!duplicates.contains(item2))
+                        {
+                            duplicates.add(item2);
+                        }
+                    }
+                }
+            }
+        }
+        return duplicates;
+    }
+
+    public static <T> List<T> findDuplicates(final List<T> items)
+    {
+        return findDuplicates(items, Object::equals);
     }
 }

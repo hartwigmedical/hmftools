@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionOverlapsOrAdjacent;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
+import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -104,6 +106,7 @@ public class Genes
 
         LOGGER.debug("Loading gene transcript data");
         List<GeneTranscriptData> geneTranscriptDatas = loadGeneTranscriptDatas(geneDefinitions, ensemblData);
+        checkNoDuplicateGenes(geneTranscriptDatas);
 
         // When generating probes, don't check probe overlap between genes. This is because:
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
@@ -201,6 +204,20 @@ public class Genes
     {
     }
 
+    private static void checkNoDuplicateGenes(final List<GeneTranscriptData> genes)
+    {
+        List<String> transcripts = genes.stream()
+                .flatMap(gene -> gene.transcripts().stream().map(
+                        transcript -> format("%s:%s", gene.gene().GeneName, formatTranscriptName(transcript))))
+                .toList();
+        List<String> duplicates = findDuplicates(transcripts);
+        if(!duplicates.isEmpty())
+        {
+            duplicates.forEach(transcript -> LOGGER.error("Duplicate gene transcript: {}", transcript));
+            throw new UserInputError("Duplicate genes");
+        }
+    }
+
     private static List<GeneTranscriptData> loadGeneTranscriptDatas(final List<GeneDefinition> geneDefinitions,
             final EnsemblDataCache ensemblData)
     {
@@ -261,21 +278,21 @@ public class Genes
 
         List<TranscriptData> transcriptDatas = new ArrayList<>();
         boolean error = false;
-        for(String transName : transcriptNames)
+        for(String transcriptName : transcriptNames)
         {
-            TranscriptData transcriptData = transName == null ?
+            TranscriptData transcriptData = transcriptName == null ?
                     ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                    ensemblData.getTranscriptData(geneData.GeneId, transName);
+                    ensemblData.getTranscriptData(geneData.GeneId, transcriptName);
             if(transcriptData == null)
             {
-                LOGGER.error("Gene transcript not found: {}:{}", geneData.GeneName, transName);
+                LOGGER.error("Gene transcript not found: {}:{}", geneData.GeneName, formatTranscriptName(transcriptName));
                 error = true;
             }
             else
             {
                 if(transcriptData.nonCoding())
                 {
-                    LOGGER.debug("Noncoding gene transcript: {}:{}", geneData.GeneName, transName);
+                    LOGGER.debug("Noncoding gene transcript: {}:{}", geneData.GeneName, formatTranscriptName(transcriptName));
                 }
                 transcriptDatas.add(transcriptData);
             }
@@ -527,7 +544,7 @@ public class Genes
     private static TargetMetadata createTargetMetadata(final GeneRegion geneRegion)
     {
         GeneData geneData = geneRegion.gene().gene();
-        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::transcriptDataName).toList();
+        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::formatTranscriptName).toList();
         // If there are multiple transcripts, merge their names, since the region is determined based on one or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
@@ -535,16 +552,14 @@ public class Genes
         return new TargetMetadata(TARGET_TYPE, extraInfo, geneRegion);
     }
 
-    private static String transcriptDataName(final TranscriptData transcriptData)
+    private static String formatTranscriptName(final TranscriptData transcriptData)
     {
-        if(transcriptData.IsCanonical)
-        {
-            return "canon";
-        }
-        else
-        {
-            return transcriptData.TransName;
-        }
+        return formatTranscriptName(transcriptData.IsCanonical ? null : transcriptData.TransName);
+    }
+
+    private static String formatTranscriptName(@Nullable final String transcriptName)
+    {
+        return Objects.requireNonNullElse(transcriptName, "canon");
     }
 
     private static List<GeneStats> computeGeneStats(final ProbeGenerationResult result, List<GeneTranscriptData> genes)

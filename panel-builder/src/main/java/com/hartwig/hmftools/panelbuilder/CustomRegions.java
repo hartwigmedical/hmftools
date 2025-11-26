@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REG
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isRegionValid;
+import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.List;
 import java.util.Map;
@@ -59,14 +60,10 @@ public class CustomRegions
     private static void checkNoOverlaps(final List<CustomRegion> customRegions)
     {
         LOGGER.debug("Checking custom regions for overlap");
-        List<CustomRegion> invalid = customRegions.stream()
-                .filter(region ->
-                        customRegions.stream().anyMatch(region2 ->
-                                region2 != region && region.region().overlaps(region2.region()))
-                ).toList();
-        if(!invalid.isEmpty())
+        List<CustomRegion> overlapped = findDuplicates(customRegions, (region1, region2) -> region1.region().overlaps(region2.region()));
+        if(!overlapped.isEmpty())
         {
-            invalid.forEach(region -> LOGGER.error("Overlapping custom region: {}", region));
+            overlapped.forEach(region -> LOGGER.error("Overlapping custom region: {}", region));
             throw new UserInputError("Custom regions overlap");
         }
     }

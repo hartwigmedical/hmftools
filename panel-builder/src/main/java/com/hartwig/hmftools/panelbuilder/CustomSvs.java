@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_SV_
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isPositionValid;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
+import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.List;
 import java.util.Map;
@@ -61,12 +62,9 @@ public class CustomSvs
     private static void checkNoDuplicates(final List<CustomSv> customSvs)
     {
         LOGGER.debug("Checking custom structural variants for duplicates");
-        List<CustomSv> duplicated = customSvs.stream()
-                .filter(sv1 ->
-                        customSvs.stream().anyMatch(sv2 -> sv1 != sv2
-                                && sv1.startPosition() == sv2.startPosition() && sv1.startOrientation() == sv2.startOrientation()
-                                && sv1.endPosition() == sv2.endPosition() && sv1.endOrientation() == sv2.endOrientation())
-                ).toList();
+        List<CustomSv> duplicated = findDuplicates(customSvs, (sv1, sv2) ->
+                sv1.startPosition() == sv2.startPosition() && sv1.startOrientation() == sv2.startOrientation() &&
+                        sv1.endPosition() == sv2.endPosition() && sv1.endOrientation() == sv2.endOrientation());
         if(!duplicated.isEmpty())
         {
             duplicated.forEach(customSv -> LOGGER.error("Duplicate custom structural variant: {}", customSv));

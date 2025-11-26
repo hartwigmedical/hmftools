@@ -71,7 +71,7 @@ public class SomaticMutation implements Variant
 
     public int indelLength()
     {
-        return abs(mVariantDecorator.alt().length() - mVariantDecorator.ref().length());
+        return max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length());
     }
 
     public GermlineStatus germlineStatus()
