@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
@@ -122,6 +124,8 @@ public class PaveConfig
             OutputDir = pathFromFile(vcfFile);
         }
     }
+
+    public boolean requireIndex() { return VcfFile.endsWith(VCF_ZIP_EXTENSION); }
 
     public boolean isValid()
     {

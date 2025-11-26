@@ -56,7 +56,7 @@ public class ReferenceData
         Annotators = Lists.newArrayList();
 
         // skip applying the PON and Gnomad annotations if already done by Sage
-        VcfFileReader vcfFileReader = new VcfFileReader(config.VcfFile, true);
+        VcfFileReader vcfFileReader = new VcfFileReader(config.VcfFile, config.requireIndex());
         boolean hasPonAnnotation = vcfFileReader.vcfHeader().hasInfoLine(PON_COUNT);
         boolean hasGnomadAnnotation = vcfFileReader.vcfHeader().hasInfoLine(GNOMAD_FREQ);
 
