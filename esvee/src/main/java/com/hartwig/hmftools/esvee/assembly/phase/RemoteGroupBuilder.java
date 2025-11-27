@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_PHASING_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder.linkToPhaseGroups;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.Collections;
 import java.util.List;
@@ -105,7 +106,6 @@ public class RemoteGroupBuilder extends ThreadTask
     private void findRemotePhasedAssemblies(final JunctionGroup junctionGroup, final JunctionAssembly assembly)
     {
         // for the given assembly, looks in all overlapping other junction groups (based on remote regions, ref-side soft-clips, and
-        // the local junction group for indels) for other assemblies with shared reads
         if(assembly.remoteRegions().isEmpty())
             return;
 
@@ -156,10 +156,13 @@ public class RemoteGroupBuilder extends ThreadTask
         if(overlappingRegion == null)
             return false;
 
-        if(!assembliesShareReads(overlappingRegion, otherAssembly, REMOTE_PHASING_MIN_READS, mConfig.ApplyRemotePhasingReadCheckThreshold))
+        if(hasPairedReads())
         {
-            ++mBuildStats.AssemblyNonMatches;
-            return false;
+            if(!assembliesShareReads(overlappingRegion, otherAssembly, REMOTE_PHASING_MIN_READS, mConfig.ApplyRemotePhasingReadCheckThreshold))
+            {
+                ++mBuildStats.AssemblyNonMatches;
+                return false;
+            }
         }
 
         ++mBuildStats.AssemblyMatches;

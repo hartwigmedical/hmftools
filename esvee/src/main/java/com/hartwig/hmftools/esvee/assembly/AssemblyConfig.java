@@ -117,6 +117,7 @@ public class AssemblyConfig
 
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
+    public static boolean AssemblyLogAllReads = false;
     public static boolean DevDebug = false;
     public static boolean PerfDebug;
     public static double PerfLogTime;
@@ -133,6 +134,7 @@ public class AssemblyConfig
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
+    private static final String ASSEMBLY_LOG_ALL_READS = "asm_log_all_reads";
     private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
     private static final String ASSEMBLY_TSV_DETAILED = "assembly_detailed_tsv";
@@ -315,6 +317,7 @@ public class AssemblyConfig
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
+        AssemblyLogAllReads = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
@@ -401,6 +404,7 @@ public class AssemblyConfig
         configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
+        configBuilder.addFlag(ASSEMBLY_LOG_ALL_READS, "Log assembly all reads even if not used in support");
         configBuilder.addFlag(ASSEMBLY_TSV_DETAILED, "Log extra assembly info to TSV");
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
