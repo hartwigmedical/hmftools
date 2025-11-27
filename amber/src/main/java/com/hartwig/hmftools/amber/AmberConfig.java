@@ -75,7 +75,7 @@ public class AmberConfig
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
 
     private static final String SAMPLE_DELIM = ",";
-    private static final String LOCI_FILE = "loci";
+    public static final String LOCI_FILE = "loci";
 
     private static final String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
     private static final String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";

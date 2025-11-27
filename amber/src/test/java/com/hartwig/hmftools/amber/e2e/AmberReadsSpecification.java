@@ -2,12 +2,11 @@ package com.hartwig.hmftools.amber.e2e;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.AmberSitesFile;
+import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.bam.FastBamWriter;
 import com.hartwig.hmftools.common.bam.testutilities.PairedRecordsBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -20,27 +19,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class AmberE2EData
+public class AmberReadsSpecification
 {
-    public static void main(String[] args) throws Exception
-    {
-        File refGenomeFile = new File("/Users/timlavers/work/data/reference_genomes/38/Homo_sapiens_assembly38.alt.masked.fasta");
-        RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
-        File junkDir = new File("/Users/timlavers/work/junk");
-        File outputFile = new File(junkDir, "TwoChromosomes.bam");
-        new AmberE2EData("TwoChromosomes").writeBam(refGenomeSource, outputFile.getAbsolutePath());
-    }
-
-    private final String Scenario;
     private final ListMultimap<Chromosome, AmberSiteRead> Sites = ArrayListMultimap.create();
 
-    public AmberE2EData(final String scenario) throws Exception
+    public AmberReadsSpecification(final ListMultimap<Chromosome, AmberSite> amberSites, final File readsFile) throws Exception
     {
-        Scenario = scenario;
-        var amberSites = AmberSitesFile.loadFile(getSitesFile(scenario).getAbsolutePath());
-        List<String> lines = FileUtils.readLines(getReadsFile(scenario), StandardCharsets.UTF_8);
+        List<String> lines = FileUtils.readLines(readsFile, StandardCharsets.UTF_8);
         lines.forEach(line ->
         {
             // For now assume that there's just one site per line.
@@ -48,11 +34,6 @@ public class AmberE2EData
             AmberSiteReadsSpecification spec = new AmberSiteReadsSpecification(split[0].trim(), split[1].trim());
             Sites.putAll(spec.chromosome(), spec.resolve(amberSites));
         });
-    }
-
-    public void createAmberLocationsFile(File destination)
-    {
-
     }
 
     public void writeBam(RefGenomeSource refGenomeSource, String outputFileName) throws Exception
@@ -84,15 +65,5 @@ public class AmberE2EData
                 bamWriter.addAlignment(records.getLeft());
             }
         }
-    }
-
-    File getSitesFile(String scenario)
-    {
-        return Path.of("src", "test", "resources", "e2e", scenario + ".tsv").toFile();
-    }
-
-    File getReadsFile(String scenario)
-    {
-        return Path.of("src", "test", "resources", "e2e", scenario + ".reads.tsv").toFile();
     }
 }

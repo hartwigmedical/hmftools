@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import java.util.Arrays;
+
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -9,6 +11,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class PairedRecordsBuilder
 {
+    private final byte BASE_QUAL_F = (byte) ('A' + 5);
     private final String readName;
     private final SAMFileHeader header;
 
@@ -60,7 +63,16 @@ public class PairedRecordsBuilder
         int lengthSign = forward ? 1 : -1;
         record.setInferredInsertSize(lengthSign * 2 * length);
         record.setAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE, 60); // 60?
+        // Perfect base qualities.
+        record.setBaseQualities(baseQualities(length));
 
         return record;
+    }
+
+    private byte[] baseQualities(int length)
+    {
+        byte[] qualities = new byte[length];
+        Arrays.fill(qualities, BASE_QUAL_F);
+        return qualities;
     }
 }
