@@ -69,7 +69,7 @@ public class ReferenceData
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
 
-        if(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.Vcf != null && mGeneDataCacheLoaded)
+        if(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null && mGeneDataCacheLoaded)
         {
             File ensemblDataDir = new File(configBuilder.getValue(ENSEMBL_DATA_DIR));
             loadTranscriptAminoAcidData(ensemblDataDir, TransAminoAcidMap, Collections.emptyList(), false);
@@ -107,7 +107,7 @@ public class ReferenceData
 
     private void loadGeneData()
     {
-        GeneDataCache.setRequiredData(true, false, false, !(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.Vcf != null));
+        GeneDataCache.setRequiredData(true, false, false, !(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null));
         mGeneDataCacheLoaded = GeneDataCache.load(false);
 
         for(Map.Entry<String, List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())

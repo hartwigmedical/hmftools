@@ -712,27 +712,27 @@ public class VariantVis
     private static AminoAcidElements getAminoAcidsElements(final VisConfig config, @Nullable final ReferenceData refData,
             final BaseRegion viewRegion, final SageVariant sageVariant, final RefGenomeSource refGenome)
     {
-        if(config.Vcf == null)
+        if(config.PurpleVcf == null)
         {
-            SG_LOGGER.info("skipping amino acid annotations in vis, since vcf not given");
+            SG_LOGGER.debug("skipping amino acid annotations in vis, since purple vcf not given");
             return null;
         }
 
         if(refData == null || !refData.geneDataCacheLoaded())
         {
-            SG_LOGGER.info("skipping amino acid annotations in vis, since ensembl data is not loaded");
+            SG_LOGGER.debug("skipping amino acid annotations in vis, since ensembl data is not loaded");
             return null;
         }
 
         final SimpleVariant simpleVariant = sageVariant.variant();
         List<VariantContext> vcfVariants;
-        try(VcfFileReader vcfFileReader = new VcfFileReader(config.Vcf.toString(), true))
+        try(VcfFileReader vcfFileReader = new VcfFileReader(config.PurpleVcf.toString(), true))
         {
             vcfVariants = vcfFileReader.findVariants(simpleVariant.Chromosome, viewRegion.start(), viewRegion.end());
         }
 
         if(vcfVariants == null)
-            throw new RuntimeException(format("Failed to read VCF: %s", config.Vcf));
+            throw new RuntimeException(format("Failed to read purple VCF: %s", config.PurpleVcf));
 
         if(vcfVariants.isEmpty())
             return null;
@@ -742,7 +742,11 @@ public class VariantVis
         VariantContext variant = null;
         for(VariantContext variantContext : vcfVariants)
         {
-            List<String> impact = (List<String>) variantContext.getAttribute(IMPACT_KEY);
+            Object rawImpact = variantContext.getAttribute(IMPACT_KEY);
+            if(rawImpact == null)
+                continue;
+
+            List<String> impact = (List<String>) rawImpact;
             String transcriptName = impact.get(TRANSCRIPT_NAME_IDX);
             TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);
             boolean isCanonical = transcriptAminoAcids.Canonical;
@@ -776,6 +780,9 @@ public class VariantVis
 
             variant = variantContext;
         }
+
+        if(bestTranscriptName == null)
+            return null;
 
         String transcriptName = bestTranscriptName.name;
         TranscriptAminoAcids transcriptAminoAcids = refData.TransAminoAcidMap.get(transcriptName);

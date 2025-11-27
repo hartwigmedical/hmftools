@@ -2,6 +2,10 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.LayoutForest
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE
+import com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition
+import com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition
+import com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped
 import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.Level
@@ -9,6 +13,8 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.random.Random
 
 // helper class to convert from the outer VJ classes to the layout classes
@@ -124,9 +130,21 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     // apply trim bases and polyG trimming
     private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean) : ReadSlice?
     {
-        // work out the slice start and end
-        var sliceStart: Int = trimBases
-        var sliceEnd: Int = read.readLength - trimBases
+        var sliceStart = 0
+        var sliceEnd = read.readLength
+
+        // Trim off any sequencing adapter bases.
+        val adapterTrim = calculateAdapterSequenceTrim(read)
+        if (adapterTrim.first > 0 || adapterTrim.second > 0)
+        {
+            sLogger.trace("Trimmed adapter DNA {} {}:{} trim={}", read.readName, read.referenceName, read.alignmentStart, adapterTrim)
+        }
+        sliceStart += adapterTrim.first
+        sliceEnd -= adapterTrim.second
+
+        // Apply constant trimming.
+        sliceStart += trimBases
+        sliceEnd -= trimBases
 
         // now we also want to try poly G tail trimming
         // we want to work out there the tail is.
@@ -154,6 +172,12 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             }
         }
 
+        if ((sliceEnd - sliceStart) < 5)
+        {
+            // if too little left don't bother
+            return null
+        }
+
         // the above logic is before reverse complement, the following logic is after
         // so we swap the start / end here
         if (useReverseComplement)
@@ -161,12 +185,6 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val sliceStartTmp = sliceStart
             sliceStart = read.readLength - sliceEnd
             sliceEnd = read.readLength - sliceStartTmp
-        }
-
-        if ((sliceEnd - sliceStart) < 5)
-        {
-            // if too little left don't bother
-            return null
         }
 
         return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
@@ -317,5 +335,38 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     companion object
     {
         private val sLogger = LogManager.getLogger(VJReadLayoutBuilder::class.java)
+
+        // Calculate how much to trim a read to remove any adapter sequence leftover from sequencing.
+        // This can occur if the fragment is very small, particularly for some types of panels.
+        private fun calculateAdapterSequenceTrim(read: SAMRecord): Pair<Int, Int>
+        {
+            // A = adapter DNA
+            // C = align clip
+            // fragment:             AAA--------------------------------AAA
+            // left read (+):    5'     CCCC------------------------CCCCAAA  3'
+            // right read (-):   3'  AAACCCC------------------------CCCC     5'
+            // insert length:           --------------------------------
+            // left trim:                                               ---
+            // right trim:           ---
+
+            if (!read.readUnmappedFlag && !mateUnmapped(read) && read.contig == read.mateReferenceName
+                && read.readNegativeStrandFlag != read.mateNegativeStrandFlag) {
+                val fivePrimePosition = getFivePrimeUnclippedPosition(read.alignmentStart, read.cigarString, read.readNegativeStrandFlag)
+                val threePrimePosition = getThreePrimeUnclippedPosition(read)
+                val mateFivePrimePosition = getFivePrimeUnclippedPosition(
+                    read.mateAlignmentStart, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), !read.mateNegativeStrandFlag)
+                val insertLength = abs(mateFivePrimePosition - fivePrimePosition)
+                val adapterBases = if (read.readNegativeStrandFlag)
+                    max(0, mateFivePrimePosition - threePrimePosition) else
+                    max(0, threePrimePosition - mateFivePrimePosition)
+                return if (insertLength < read.readLength && adapterBases > 0)
+                    (if (read.readNegativeStrandFlag) Pair(adapterBases, 0) else Pair(0, adapterBases)) else
+                    Pair(0, 0)
+            }
+            else {
+                // Can't determine any adapter sequence, just don't trim.
+                return Pair(0, 0)
+            }
+        }
     }
 }

@@ -36,6 +36,7 @@ public final class SageVisConstants
         MAX_READS_PER_TYPE.put(ReadContextMatch.REF, 20);
     }
 
+    public static final String REPORTED_KEY = "REPORTED";
     public static final String IMPACT_KEY = "IMPACT";
     public static final int GENE_NAME_IDX = 0;
     public static final int TRANSCRIPT_NAME_IDX = 1;
