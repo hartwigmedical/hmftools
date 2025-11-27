@@ -1,0 +1,10 @@
+Chromosome	Position	Ref	Alt	SnpCheck
+chr1	49554	A	G	false
+chr1	52238	T	G	false
+chr1	55926	T	C	false
+chr1	56381	T	C	false
+chr2	11124	G	T	false
+chr2	13486	A	G	false
+chr2	15607	T	C	false
+chr2	17834	A	G	false
+chr2	19842	C	G	false

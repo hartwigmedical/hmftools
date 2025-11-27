@@ -18,10 +18,10 @@ public class PairedRecordsBuilder
         this.header = header;
     }
 
-    public Pair<SAMRecord, SAMRecord> build(Pair<BaseRegion, BaseRegion> baseRegionPair)
+    public Pair<SAMRecord, SAMRecord> build(Pair<BasesRegion, BasesRegion> baseRegionPair)
     {
-        BaseRegion readRegion = baseRegionPair.getLeft();
-        BaseRegion mateRegion = baseRegionPair.getRight();
+        BasesRegion readRegion = baseRegionPair.getLeft();
+        BasesRegion mateRegion = baseRegionPair.getRight();
         int length = readRegion.mBases.length;
         SAMRecord read1 = createRecord(length, true);
         // flags: 1 (paired), 2, (read mapped in proper pair), 32 (mate reverse strand), 64 (1st in pair)

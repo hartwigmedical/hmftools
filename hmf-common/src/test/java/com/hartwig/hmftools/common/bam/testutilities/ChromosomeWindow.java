@@ -23,7 +23,7 @@ public record ChromosomeWindow(HumanChromosome chromosome, int start, int end)
         return V38.versionedChromosome(chromosome);
     }
 
-    public Pair<BaseRegion,BaseRegion> toACGTBasesRegion()
+    public Pair<BasesRegion, BasesRegion> toACGTBasesRegion()
     {
         int length = end - start;
         int quadCount = length / 4;
@@ -31,14 +31,14 @@ public record ChromosomeWindow(HumanChromosome chromosome, int start, int end)
         return buildPairFromBases(bases);
     }
 
-    public Pair<BaseRegion,BaseRegion> toRandomBasesRegion()
+    public Pair<BasesRegion, BasesRegion> toRandomBasesRegion()
     {
         int length = end - start;
         byte[] bases = MockRefGenome.generateRandomBases(length).getBytes();
         return buildPairFromBases(bases);
     }
 
-    public Pair<BaseRegion, BaseRegion> toBasesWithGivenGC(int  gcPercentage)
+    public Pair<BasesRegion, BasesRegion> toBasesWithGivenGC(int  gcPercentage)
     {
         Preconditions.checkArgument(gcPercentage >= 0 && gcPercentage <= 100);
         int length = end - start;
@@ -51,31 +51,31 @@ public record ChromosomeWindow(HumanChromosome chromosome, int start, int end)
         return buildPairFromBases(bases);
     }
 
-    public Pair<BaseRegion,BaseRegion> toBaseRegionPair(RefGenomeSource refGenomeSource){
+    public Pair<BasesRegion, BasesRegion> toBaseRegionPair(RefGenomeSource refGenomeSource){
         return Pair.of(toBaseRegion(refGenomeSource), mateBaseRegion(refGenomeSource));
     }
 
-    private BaseRegion toBaseRegion(RefGenomeSource refGenomeSource)
+    private BasesRegion toBaseRegion(RefGenomeSource refGenomeSource)
     {
         byte[] bases = refGenomeSource.getBases(chromosomeName(), start, end - 1);
-        return new BaseRegion(chromosome, start, end, bases);
+        return new BasesRegion(chromosome, start, end, bases);
     }
 
-    private BaseRegion mateBaseRegion(RefGenomeSource refGenomeSource)
+    private BasesRegion mateBaseRegion(RefGenomeSource refGenomeSource)
     {
         int mateStart = end;
         int mateStop = mateStart + (end - start);
         byte[] mateBases = refGenomeSource.getBases(chromosomeName(), mateStart, mateStop - 1);
-        return new BaseRegion(chromosome, mateStart, mateStop, mateBases);
+        return new BasesRegion(chromosome, mateStart, mateStop, mateBases);
     }
 
     @NotNull
-    private ImmutablePair<BaseRegion, BaseRegion> buildPairFromBases(final byte[] bases)
+    private ImmutablePair<BasesRegion, BasesRegion> buildPairFromBases(final byte[] bases)
     {
-        BaseRegion left = new BaseRegion(chromosome, start, end, bases);
+        BasesRegion left = new BasesRegion(chromosome, start, end, bases);
         int mateStart = end;
         int mateStop = mateStart + (end - start);
-        BaseRegion right = new BaseRegion(chromosome, mateStart, mateStop, bases);
+        BasesRegion right = new BasesRegion(chromosome, mateStart, mateStop, bases);
         return new ImmutablePair<>(left, right);
     }
 }
