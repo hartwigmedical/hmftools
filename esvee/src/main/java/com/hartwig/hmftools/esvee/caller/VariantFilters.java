@@ -51,6 +51,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.DEL_SHORT_LOW_VAF;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.List;
 import java.util.Map;
@@ -284,6 +285,9 @@ public class VariantFilters
 
     private boolean belowMinFragmentLength(final Variant var)
     {
+        if(!hasPairedReads())
+            return false;
+
         if(var.isSgl())
             return false;
 
