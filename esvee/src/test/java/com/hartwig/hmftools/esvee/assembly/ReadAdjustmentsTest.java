@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.trimAdapterBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -222,6 +223,32 @@ public class ReadAdjustmentsTest
         assertEquals("90M", read.cigarString());
         assertEquals(10, read.baseTrimCount());
         assertEquals(110, read.alignmentStart());
+    }
+
+    @Test
+    public void testAdapter()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        Read read = createRead(TEST_READ_ID, 110, readBases, "20S60M20S");
+        read.bamRecord().setMateNegativeStrandFlag(true);
+
+        Read mateRead = createRead(TEST_READ_ID, 100, readBases, "20S60M20S");
+        mateRead.bamRecord().setReadNegativeStrandFlag(true);
+
+        read.setMateRead(mateRead);
+        mateRead.setMateRead(read);
+
+        trimAdapterBases(read);
+        trimAdapterBases(mateRead);
+
+        assertEquals(10, read.baseTrimCount());
+        assertEquals("20S60M10S", read.cigarString());
+        assertEquals(179, read.unclippedEnd());
+
+        assertEquals(10, mateRead.baseTrimCount());
+        assertEquals("10S60M20S", mateRead.cigarString());
+        assertEquals(90, mateRead.unclippedStart());
     }
 
     @Test

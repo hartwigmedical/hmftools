@@ -463,7 +463,7 @@ public class Read
 
         mBases = newBases;
         mBaseQuals = newBaseQuals;
-        mTrimCount = count;
+        mTrimCount += count;
 
         updateCigarString();
         setBoundaries(newReadStart);

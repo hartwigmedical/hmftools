@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.trimAdapterBases;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -260,8 +261,13 @@ public class JunctionGroupAssembler extends ThreadTask
 
         markLineSoftClips(read);
 
-        if(isIllumina() && ReadAdjustments.trimLowQualSoftClipBases(read))
-            ++mReadStats.LowBaseQualTrimmed;
+        if(isIllumina())
+        {
+            if(ReadAdjustments.trimLowQualSoftClipBases(read))
+                ++mReadStats.LowBaseQualTrimmed;
+
+            trimAdapterBases(read);
+        }
 
         if(IndelBuilder.calcIndelInferredUnclippedPositions(read))
             ++mReadStats.IndelSoftClipConverted;
