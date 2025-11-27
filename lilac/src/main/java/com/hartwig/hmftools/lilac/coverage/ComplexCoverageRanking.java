@@ -153,9 +153,11 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
-        int complexity = solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
+        double penaltyFactor = 6.0 / complexCoverage.getAlleles().size();
+
+        double complexity = penaltyFactor * solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
         double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
-        double cohortFrequencyPenalty = complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
+        double cohortFrequencyPenalty = penaltyFactor *  complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
         double score = totalCoverage
                 + cohortFrequencyPenalty
                 + complexityPenalty

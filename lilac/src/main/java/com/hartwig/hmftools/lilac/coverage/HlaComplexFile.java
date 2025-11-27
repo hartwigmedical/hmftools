@@ -70,7 +70,7 @@ public final class HlaComplexFile
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.format("%.2f", coverage.getComplexityPenalty()));
-        sj.add(String.format("%d", coverage.getComplexity()));
+        sj.add(String.format("%.2f", coverage.getComplexity()));
         sj.add(String.valueOf(coverage.homozygousCount()));
         sj.add(String.format("%.2f", coverage.getCohortFrequencyPenalty()));
         sj.add(String.format("%.2f", coverage.cohortFrequencyTotal()));
