@@ -80,5 +80,4 @@ class AmberSiteRead
         byte[] bytes = refGenomeSource.getBases(Site.Chromosome, start, end);
         return new BasesRegion(chromosome(), start, end, bytes);
     }
-
 }

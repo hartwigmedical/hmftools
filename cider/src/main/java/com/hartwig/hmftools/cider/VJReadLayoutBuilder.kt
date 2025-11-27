@@ -350,23 +350,30 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             // right trim:           ---
 
             if (!read.readUnmappedFlag && !mateUnmapped(read) && read.contig == read.mateReferenceName
-                && read.readNegativeStrandFlag != read.mateNegativeStrandFlag) {
-                val fivePrimePosition = getFivePrimeUnclippedPosition(read.alignmentStart, read.cigarString, read.readNegativeStrandFlag)
-                val threePrimePosition = getThreePrimeUnclippedPosition(read)
-                val mateFivePrimePosition = getFivePrimeUnclippedPosition(
-                    read.mateAlignmentStart, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), !read.mateNegativeStrandFlag)
-                val insertLength = abs(mateFivePrimePosition - fivePrimePosition)
-                val adapterBases = if (read.readNegativeStrandFlag)
-                    max(0, mateFivePrimePosition - threePrimePosition) else
-                    max(0, threePrimePosition - mateFivePrimePosition)
-                return if (insertLength < read.readLength && adapterBases > 0)
-                    (if (read.readNegativeStrandFlag) Pair(adapterBases, 0) else Pair(0, adapterBases)) else
-                    Pair(0, 0)
+                && read.readNegativeStrandFlag != read.mateNegativeStrandFlag)
+            {
+                val mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE)
+                if (mateCigar != null)
+                {
+                    val fivePrimePosition =
+                        getFivePrimeUnclippedPosition(read.alignmentStart, read.cigarString, read.readNegativeStrandFlag)
+                    val threePrimePosition = getThreePrimeUnclippedPosition(read)
+                    val mateFivePrimePosition = getFivePrimeUnclippedPosition(
+                        read.mateAlignmentStart, mateCigar, !read.mateNegativeStrandFlag
+                    )
+                    val insertLength = abs(mateFivePrimePosition - fivePrimePosition)
+                    val adapterBases = if (read.readNegativeStrandFlag)
+                        max(0, mateFivePrimePosition - threePrimePosition) else
+                        max(0, threePrimePosition - mateFivePrimePosition)
+                    if (insertLength < read.readLength && adapterBases > 0)
+                    {
+                        return if (read.readNegativeStrandFlag) Pair(adapterBases, 0) else Pair(0, adapterBases)
+                    }
+                }
             }
-            else {
-                // Can't determine any adapter sequence, just don't trim.
-                return Pair(0, 0)
-            }
+
+            // No adapter sequence or can't calculate it.
+            return Pair(0, 0)
         }
     }
 }

@@ -227,6 +227,9 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 - Using the GRCh37/hg19 reference genome for gene annotation, many TRB genes will not be annotated. This is a known issue with the reference genome and gene data, and will be fixed soon.
 
 # Version History and Download Links
+- 1.1.1
+  - Require reads to overlap CDR3 sequence to assemble consensus sequence.
+  - Trim adapter sequence from reads.
 - 1.1
   - Replace Blastn with BWA-MEM (large performance increase).
   - Output additional gene annotation in the `*GeneSupplementary` fields.
