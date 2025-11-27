@@ -9,7 +9,7 @@ import java.util.StringJoiner;
 import org.pcollections.PMap;
 import org.pcollections.TreePMap;
 
-public class CssBuilder
+public final class CssBuilder
 {
     public static final CssBuilder EMPTY = new CssBuilder();
 
@@ -31,7 +31,7 @@ public class CssBuilder
         mBoxShadowValues = boxShadowValues;
     }
 
-    private static String colorToHexString(Color color)
+    private static String colorToHexString(final Color color)
     {
         return format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
@@ -59,6 +59,16 @@ public class CssBuilder
     public CssBuilder borderCollapse(final String value)
     {
         return new CssBuilder(mProperties.plus("border-collapse", value), mBoxShadowValues);
+    }
+
+    public CssBuilder floatStyle(final String value)
+    {
+        return new CssBuilder(mProperties.plus("float", value), mBoxShadowValues);
+    }
+
+    public CssBuilder marginRight(final CssSize size)
+    {
+        return new CssBuilder(mProperties.plus("margin-right", size.toString()), mBoxShadowValues);
     }
 
     public CssBuilder writingMode(final String value)
@@ -144,6 +154,21 @@ public class CssBuilder
     public CssBuilder borderRight(final CssSize size, final String style, final Color color)
     {
         return new CssBuilder(mProperties.plus("border-right", format("%s %s %s", size.toString(), style, colorToHexString(color))), mBoxShadowValues);
+    }
+
+    public CssBuilder border(final CssSize size, final String style, final Color color)
+    {
+        return new CssBuilder(mProperties.plus("border", format("%s %s %s", size.toString(), style, colorToHexString(color))), mBoxShadowValues);
+    }
+
+    public CssBuilder noBorder()
+    {
+        return new CssBuilder(mProperties.plus("border", "none"), mBoxShadowValues);
+    }
+
+    public CssBuilder verticalAlign(final String value)
+    {
+        return new CssBuilder(mProperties.plus("vertical-align", value), mBoxShadowValues);
     }
 
     public CssBuilder fontSizePt(int ptSize)

@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneRegions.buildDriverGeneBaseRegions;
-import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptAminoAcidData;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
+import static com.hartwig.hmftools.common.region.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,29 +22,32 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
+import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class ReferenceData
 {
-    public final Map<Chromosome,List<BaseRegion>> PanelWithHotspots;
-    public final ListMultimap<Chromosome,SimpleVariant> Hotspots;
-    public final Map<Chromosome,List<BaseRegion>> HighConfidence;
+    public final Map<Chromosome, List<BaseRegion>> PanelWithHotspots;
+    public final ListMultimap<Chromosome, SimpleVariant> Hotspots;
+    public final Map<Chromosome, List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
+    private boolean mGeneDataCacheLoaded;
     public final List<DriverGene> DriverGenes;
 
-    public final Map<String,List<TranscriptData>> ChromosomeTranscripts;
+    public final Map<String, List<TranscriptData>> ChromosomeTranscripts;
+    public final Map<String, TranscriptAminoAcids> TransAminoAcidMap;
 
     public final IndexedFastaSequenceFile RefGenome;
 
@@ -55,11 +61,19 @@ public class ReferenceData
         Hotspots = ArrayListMultimap.create();
         HighConfidence = Maps.newHashMap();
         ChromosomeTranscripts = Maps.newHashMap();
+        TransAminoAcidMap = Maps.newHashMap();
 
         RefGenome = loadRefGenome(config.Common.RefGenomeFile);
 
+        mGeneDataCacheLoaded = false;
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
+
+        if(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null && mGeneDataCacheLoaded)
+        {
+            File ensemblDataDir = new File(configBuilder.getValue(ENSEMBL_DATA_DIR));
+            loadTranscriptAminoAcidData(ensemblDataDir, TransAminoAcidMap, Collections.emptyList(), false);
+        }
 
         if(configBuilder.hasValue(DriverGenePanelConfig.DRIVER_GENE_PANEL))
         {
@@ -93,10 +107,10 @@ public class ReferenceData
 
     private void loadGeneData()
     {
-        GeneDataCache.setRequiredData(true, false, false, true);
-        GeneDataCache.load(false);
+        GeneDataCache.setRequiredData(true, false, false, !(mConfig.Common.Visualiser.Enabled && mConfig.Common.Visualiser.PurpleVcf != null));
+        mGeneDataCacheLoaded = GeneDataCache.load(false);
 
-        for(Map.Entry<String,List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())
+        for(Map.Entry<String, List<GeneData>> entry : GeneDataCache.getChrGeneDataMap().entrySet())
         {
             String chromosome = entry.getKey();
 
@@ -132,12 +146,12 @@ public class ReferenceData
         {
             if(DriverGenes != null)
             {
-                List<String> driverGeneNames = DriverGenes.stream().map(x -> x.gene()).collect(Collectors.toList());
+                List<String> driverGeneNames = DriverGenes.stream().map(DriverGene::gene).collect(Collectors.toList());
 
-                Map<String,List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
+                Map<String, List<BaseRegion>> driverGeneRegions = buildDriverGeneBaseRegions(
                         GeneDataCache, driverGeneNames, false, true);
 
-                for(Map.Entry<String,List<BaseRegion>> entry : driverGeneRegions.entrySet())
+                for(Map.Entry<String, List<BaseRegion>> entry : driverGeneRegions.entrySet())
                 {
                     Chromosome chromosome = HumanChromosome.fromString(entry.getKey());
                     PanelWithHotspots.put(chromosome, entry.getValue());
@@ -145,28 +159,28 @@ public class ReferenceData
             }
             else if(!mConfig.PanelBed.isEmpty())
             {
-                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed, true);
+                Map<Chromosome, List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed, true);
 
                 if(panelBed == null)
                     return false;
 
                 PanelWithHotspots.putAll(panelBed);
                 SG_LOGGER.info("read {} panel entries from bed file: {}",
-                        PanelWithHotspots.values().stream().mapToInt(x -> x.size()).sum(), mConfig.PanelBed);
+                        PanelWithHotspots.values().stream().mapToInt(List::size).sum(), mConfig.PanelBed);
             }
 
             loadHotspots();
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
-                Map<Chromosome,List<BaseRegion>> hcPanelBed = loadBedFileChrMap(mConfig.HighConfidenceBed);
+                Map<Chromosome, List<BaseRegion>> hcPanelBed = loadBedFileChrMap(mConfig.HighConfidenceBed);
 
                 if(hcPanelBed == null)
                     return false;
 
                 HighConfidence.putAll(hcPanelBed);
                 SG_LOGGER.info("read {} high-confidence entries from bed file: {}",
-                        HighConfidence.values().stream().mapToInt(x -> x.size()).sum(), mConfig.HighConfidenceBed);
+                        HighConfidence.values().stream().mapToInt(List::size).sum(), mConfig.HighConfidenceBed);
             }
         }
         catch(IOException e)
@@ -183,7 +197,7 @@ public class ReferenceData
         if(mConfig.Hotspots.isEmpty())
             return;
 
-        ListMultimap<Chromosome,VariantHotspot> hotspotMap = VariantHotspotFile.readFromVCF(mConfig.Hotspots);
+        ListMultimap<Chromosome, VariantHotspot> hotspotMap = VariantHotspotFile.readFromVCF(mConfig.Hotspots);
 
         for(VariantHotspot variant : hotspotMap.values())
         {
@@ -197,14 +211,7 @@ public class ReferenceData
         for(Chromosome chromosome : Hotspots.keySet())
         {
             List<SimpleVariant> hotspots = Hotspots.get(chromosome);
-            List<BaseRegion> panelRegions = PanelWithHotspots.get(chromosome);
-
-            if(panelRegions == null)
-            {
-                panelRegions = Lists.newArrayList();
-                PanelWithHotspots.put(chromosome, panelRegions);
-            }
-
+            List<BaseRegion> panelRegions = PanelWithHotspots.computeIfAbsent(chromosome, k -> Lists.newArrayList());
             for(SimpleVariant hotspot : hotspots)
             {
                 boolean covered = false;
@@ -257,4 +264,6 @@ public class ReferenceData
             }
         }
     }
+
+    public boolean geneDataCacheLoaded() { return mGeneDataCacheLoaded; }
 }
