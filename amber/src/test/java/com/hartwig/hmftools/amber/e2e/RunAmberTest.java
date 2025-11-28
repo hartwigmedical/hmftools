@@ -49,8 +49,8 @@ public class RunAmberTest
         ReferenceSample = null;
         TumorBamFile = null;
         ReferenceBamFile = null;
-        File tempDir = Files.createTempDirectory("amber").toFile();
-        OutputDir = new File(tempDir, "output");
+        var TempDir = new File("/Users/timlavers/work/junk/basura"); //Files.createTempDirectory("amber").toFile();
+        OutputDir = new File(TempDir, "output");
         //noinspection ResultOfMethodCallIgnored
         OutputDir.mkdirs();
         FileUtils.cleanDirectory(OutputDir);

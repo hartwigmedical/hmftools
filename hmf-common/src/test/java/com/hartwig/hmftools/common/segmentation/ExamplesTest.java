@@ -15,6 +15,14 @@ import org.junit.Test;
 public class ExamplesTest extends SegmentationTestBase
 {
     @Test
+    public void amber()
+    {
+        PiecewiseConstantFit pcf = pcfForFile("amber1.tsv", 100.0, true, "tumorModifiedBAF");
+        PiecewiseConstantFit expected = new PiecewiseConstantFit(new int[] { 5, 5, 5 }, new int[] { 0, 5, 10 }, d(0.515, 0.962, 0.511));
+        assertEquals(expected, pcf);
+    }
+
+    @Test
     public void minima()
     {
         assertEquals(
