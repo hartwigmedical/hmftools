@@ -33,19 +33,34 @@ class AmberSiteReadsSpecification
         return Chromosome;
     }
 
+    public int altCount()
+    {
+        return AltReadsCount;
+    }
+
+    public int refCount()
+    {
+        return RefReadsCount;
+    }
+
+    public int depth()
+    {
+        return RefReadsCount + AltReadsCount + OtherReadsCount;
+    }
+
     public List<AmberSiteRead> resolve(ListMultimap<Chromosome, AmberSite> sites)
     {
         AmberSite site = sites.get(Chromosome).get(Index);
         List<AmberSiteRead> result = new ArrayList<>();
-        for (int i=0; i<RefReadsCount; i++)
+        for(int i = 0; i < RefReadsCount; i++)
         {
             result.add(new AmberSiteRead(site, AmberSiteRead.BaseInstruction.REF));
         }
-        for (int i=0; i<AltReadsCount; i++)
+        for(int i = 0; i < AltReadsCount; i++)
         {
             result.add(new AmberSiteRead(site, AmberSiteRead.BaseInstruction.ALT));
         }
-        for (int i=0; i<OtherReadsCount; i++)
+        for(int i = 0; i < OtherReadsCount; i++)
         {
             result.add(new AmberSiteRead(site, AmberSiteRead.BaseInstruction.OTHER));
         }

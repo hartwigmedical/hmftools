@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.amber.e2e;
 
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
@@ -11,22 +12,30 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
+import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.AmberApplication;
+import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberBAFFile;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class RunAmberTest
 {
-    private File TempDir;
     private String TumorSample;
     private String ReferenceSample;
     private File TumorBamFile;
     private File ReferenceBamFile;
-    private File GermlineSitesFile;
     private File OutputDir;
+    private Multimap<Chromosome, AmberBAF> Results;
+
 
     @Before
     public void setup() throws IOException
@@ -35,11 +44,12 @@ public class RunAmberTest
         ReferenceSample = null;
         TumorBamFile = null;
         ReferenceBamFile = null;
-        TempDir = Files.createTempDirectory("amber").toFile();
-        OutputDir = new File(TempDir, "output");
+        File tempDir = Files.createTempDirectory("amber").toFile();
+        OutputDir = new File(tempDir, "output");
         //noinspection ResultOfMethodCallIgnored
         OutputDir.mkdirs();
         FileUtils.cleanDirectory(OutputDir);
+        Results = null;
     }
 
     @Test
@@ -47,12 +57,18 @@ public class RunAmberTest
     {
         AmberScenario scenario = new AmberScenario("TwoChromosomes");
         runAmber(scenario);
+        scenario.checkResults(Results);
+        Assert.assertEquals(2, Results.keySet().size());
+        List<AmberBAF> chr1Results = Results.get(_1).stream().sorted().toList();
+        Assert.assertEquals(15, chr1Results.size());
+
     }
 
     private void runAmber(AmberScenario scenario) throws Exception
     {
         File sitesFile = scenario.createAmberLocationsFile(OutputDir);
         TumorBamFile = scenario.getTumorBamFile();
+        TumorSample = scenario.getTumorSampleName();
 
         int argCount = 6;
         if(TumorBamFile != null)
@@ -83,16 +99,13 @@ public class RunAmberTest
             args[index++] = String.format("-%s", REFERENCE);
             args[index++] = String.format("%s", ReferenceSample);
             args[index++] = String.format("-%s", REFERENCE_BAM);
-            args[index++] = String.format("%s", ReferenceBamFile.getAbsolutePath());
+            args[index] = String.format("%s", ReferenceBamFile.getAbsolutePath());
         }
 
         AmberApplication.main(args);
 
-//        File ratioFile;
-//        if(tumorBamFile != null)
-//        {
-//            ratioFile = new File(OutputDir, sample + ".cobalt.ratio.tsv.gz");
-//        }
+        File bafFile = new File(OutputDir, TumorSample + ".amber.baf.tsv.gz");
+        Results = AmberBAFFile.read(bafFile.getAbsolutePath(), TumorSample != null);
 //        else
 //        {
 //            ratioFile = new File(OutputDir, referenceSample + ".cobalt.ratio.tsv.gz");

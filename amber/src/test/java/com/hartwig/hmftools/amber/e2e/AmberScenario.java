@@ -3,15 +3,18 @@ package com.hartwig.hmftools.amber.e2e;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
+import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -29,7 +32,6 @@ public class AmberScenario
     private final String Name;
     private final AmberReadsSpecification TumorReads;
     private final AmberReadsSpecification ReferenceReads;
-    private final ListMultimap<Chromosome, AmberSiteRead> Sites = ArrayListMultimap.create();
 
     public AmberScenario(final String name) throws Exception
     {
@@ -56,21 +58,43 @@ public class AmberScenario
         Preconditions.checkState(TumorReads != null || ReferenceReads != null);
     }
 
-    public File getTumorBamFile()
+    public void checkResults(Multimap<Chromosome, AmberBAF> results)
     {
-        if (TumorReads == null)
+        Assert.assertEquals(TumorReads.chromosomes(), results.keySet());
+        TumorReads.chromosomes().forEach(chromosome ->
+                checkTumorChromosomeResults(results.get(chromosome), TumorReads.specifications(chromosome)));
+    }
+
+    File getTumorBamFile()
+    {
+        if(TumorReads == null)
         {
             return null;
         }
         return new File(testResourcesDir(), Name + ".tumor.bam");
     }
 
-    public File createAmberLocationsFile(File destination) throws IOException
+    String getTumorSampleName()
+    {
+        return Name + "_tumor";
+    }
+
+    File createAmberLocationsFile(File destination) throws IOException
     {
         File sitesFile = getSitesFile();
         File locationsFile = new File(destination, "AmberGermlineSites.38.tsv");
         FileUtils.copyFile(sitesFile, locationsFile);
         return locationsFile;
+    }
+
+    private void checkTumorChromosomeResults(Collection<AmberBAF> results, List<AmberSiteExpectation> expectedResults)
+    {
+        Assert.assertEquals(results.size(), expectedResults.size());
+        for(AmberBAF baf : results)
+        {
+            AmberSiteExpectation match = expectedResults.stream().filter(expectation -> expectation.aligns(baf)).findFirst().orElseThrow();
+            match.checkTumorBaf(baf);
+        }
     }
 
     private File testResourcesDir()

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.amber.e2e;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -20,11 +21,12 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class AmberReadsSpecification
+class AmberReadsSpecification
 {
     private final ListMultimap<Chromosome, AmberSiteRead> Sites = ArrayListMultimap.create();
+    private final ListMultimap<Chromosome, AmberSiteExpectation> Specifications = ArrayListMultimap.create();
 
-    public AmberReadsSpecification(final ListMultimap<Chromosome, AmberSite> amberSites, final File readsFile) throws Exception
+    AmberReadsSpecification(final ListMultimap<Chromosome, AmberSite> amberSites, final File readsFile) throws Exception
     {
         List<String> lines = FileUtils.readLines(readsFile, StandardCharsets.UTF_8);
         lines.forEach(line ->
@@ -32,11 +34,24 @@ public class AmberReadsSpecification
             // For now assume that there's just one site per line.
             String[] split = line.split(" ");
             AmberSiteReadsSpecification spec = new AmberSiteReadsSpecification(split[0].trim(), split[1].trim());
-            Sites.putAll(spec.chromosome(), spec.resolve(amberSites));
+            final List<AmberSiteRead> amberSiteReads = spec.resolve(amberSites);
+            Sites.putAll(spec.chromosome(), amberSiteReads);
+            int position = amberSiteReads.iterator().next().position();
+            Specifications.put(spec.chromosome(), new AmberSiteExpectation(position, spec.refCount(), spec.altCount(), spec.depth()));
         });
     }
 
-    public void writeBam(RefGenomeSource refGenomeSource, String outputFileName) throws Exception
+    Set<Chromosome> chromosomes()
+    {
+        return Sites.keySet();
+    }
+
+    List<AmberSiteExpectation> specifications(Chromosome chromosome)
+    {
+        return Specifications.get(chromosome);
+    }
+
+    void writeBam(RefGenomeSource refGenomeSource, String outputFileName)
     {
         var header = new SAMFileHeader();
         Sites.keySet().forEach(chromosomeIndex ->
