@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class PairedRecordsBuilder
 {
-    private final byte BASE_QUAL_F = (byte) ('A' + 5);
+    private final byte BASE_QUAL_F = (byte) 37;
     private final String readName;
     private final SAMFileHeader header;
 

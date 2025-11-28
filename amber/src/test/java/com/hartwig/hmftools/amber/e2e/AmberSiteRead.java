@@ -60,6 +60,11 @@ class AmberSiteRead
         return Site.chr();
     }
 
+    int position()
+    {
+        return Site.Position;
+    }
+
     public BasesRegion baseRegion(RefGenomeSource refGenomeSource)
     {
         int leftPartStart = Site.Position - (READ_SEMI_LENGTH - 1);

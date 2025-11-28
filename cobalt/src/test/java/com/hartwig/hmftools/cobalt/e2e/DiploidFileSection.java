@@ -11,7 +11,7 @@ public record DiploidFileSection(HumanChromosome chromosome, int start, int stop
     @Override
     public String line(final int position)
     {
-        return format("chr%s\t%d\t%d", chromosome().contig(),start,stop);
+        return format("chr%s\t%d\t%d", chromosome().toString(),start,stop);
     }
 
     @Override
