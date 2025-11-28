@@ -17,9 +17,11 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.TaggedRegion;
 
 public class TargetRegionsData
@@ -177,35 +179,37 @@ public class TargetRegionsData
                 }
             }
 
-            // now compute the coding bases
+            // now compute the coding bases that overlap the target regions
             for(TaggedRegion region : chrRegions)
             {
                 mTotalBases += region.baseLength();
 
-                int codingMinStart = -1;
-                int codingMaxEnd = -1;
+                List<BaseRegion> exonicRegions = Lists.newArrayList();
 
                 for(TranscriptData transcriptData : overlappedTranscripts)
                 {
-                    if(positionsOverlap(transcriptData.CodingStart, transcriptData.CodingEnd, region.start(), region.end()))
+                    for(ExonData exon : transcriptData.exons())
                     {
-                        int maxStart = max(transcriptData.CodingStart, region.start());
-                        codingMinStart = codingMinStart > 0 ? min(codingMinStart, maxStart) : maxStart;
+                        if(transcriptData.CodingStart > exon.End)
+                            continue;
 
-                        int minEnd = min(transcriptData.CodingEnd, region.end());
-                        codingMaxEnd = codingMaxEnd > 0 ? max(codingMaxEnd, minEnd) : minEnd;
-
-                        if(codingMinStart == region.start() && codingMaxEnd == region.end())
-                        {
+                        if(exon.Start > transcriptData.CodingEnd)
                             break;
+
+                        int maxCodingStart = max(transcriptData.CodingStart, exon.Start);
+                        int minCodingEnd = min(transcriptData.CodingEnd, exon.End);
+
+                        if(positionsOverlap(maxCodingStart, minCodingEnd, region.start(), region.end()))
+                        {
+                            exonicRegions.add(new BaseRegion(max(maxCodingStart, region.start()), min(minCodingEnd, region.end())));
                         }
                     }
                 }
 
-                if(codingMinStart > 0 && codingMaxEnd > 0)
-                {
-                    mCodingBases += codingMaxEnd - codingMinStart + 1;
-                }
+                BaseRegion.checkMergeOverlaps(exonicRegions);
+                int regionCodingBases = exonicRegions.stream().mapToInt(x -> x.baseLength()).sum();
+
+                mCodingBases += regionCodingBases;
             }
         }
 
