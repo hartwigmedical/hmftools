@@ -119,7 +119,7 @@ public class VariantPurityFitter
 
     public FittedPurity calcSomaticOnlyFit(final List<FittedPurity> allCandidates)
     {
-        return mSomaticPurityFitter.fitFromSomaticsOnly(mReferenceData.DriverGenes, mFittingSomatics, allCandidates);
+        return mSomaticPurityFitter.fitFromSomaticsOnly(mReferenceData.DriverGenes, mFittingSomatics, allCandidates, mConfig.tumorOnlyMode());
     }
 
     public static boolean somaticFitIsWorse(final FittedPurity lowestScore, final FittedPurity somaticFit, final SomaticFitConfig config)
