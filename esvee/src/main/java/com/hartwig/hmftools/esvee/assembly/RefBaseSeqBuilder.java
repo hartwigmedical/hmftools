@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LE
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.Collections;
 import java.util.List;
@@ -170,9 +171,16 @@ public class RefBaseSeqBuilder
             int[] maxQuals = null;
 
             // move to the next position or index if during an insert
+            int priorActiveReads = activeReads.size();
+
             progressReadState(activeReads, currentElementType);
 
             if(activeReads.isEmpty())
+                break;
+
+            int softClippedReads = (int)mReads.stream().filter(x -> x.exhausted() && x.operator() == S).count();
+
+            if(activeReads.size() / (double)priorActiveReads < 0.1 && softClippedReads / (double)priorActiveReads > 0.9)
                 break;
 
             // establish new most common operator
