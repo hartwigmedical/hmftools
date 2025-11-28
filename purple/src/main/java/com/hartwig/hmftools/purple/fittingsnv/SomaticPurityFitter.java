@@ -320,7 +320,8 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fitFromSomaticsOnly(
-            final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
+            final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates,
+            final boolean tumorOnlyMode)
     {
         List<Double> variantVafs = Lists.newArrayList();
 
@@ -356,7 +357,10 @@ public class SomaticPurityFitter
             }
             else
             {
-                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN || vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
+                    continue;
+
+                if(tumorOnlyMode && vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
                     continue;
             }
 
