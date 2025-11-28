@@ -8,7 +8,8 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-// proxy all calls to the inner variant to simplify parsing code
+// Proxies all method calls to the inner Variant
+// This is created to allow VCF reading code to share a variant builder
 public interface VariantProxy extends Variant
 {
     @NotNull

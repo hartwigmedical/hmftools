@@ -19,21 +19,12 @@ public class VariantBuilderUtils
     public static ImmutableVariantImpl.Builder createVariantBuilder(
             final AllelicDepth allelicDepth, final VariantContext context,
             @Nullable final String reference,
-            @Nullable String rna)
+            @Nullable final String rna)
     {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
 
         final AllelicDepth rnaDepth = extractRnaDepth(context, rna);
-
-        // to protect against changes in types, which aren't expected to impact downstream processing
-        GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
-
-        try
-        {
-            germlineStatus = GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, germlineStatus.toString()));
-        }
-        catch(Exception e) {}
 
         final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : GenotypeStatus.UNKNOWN;
 
@@ -65,7 +56,7 @@ public class VariantBuilderUtils
                 .biallelic(decorator.biallelic())
                 .reported(decorator.reported())
                 .genotypeStatus(genotypeStatus)
-                .germlineStatus(germlineStatus)
+                .germlineStatus(extractGermlineStatus(context))
                 .trinucleotideContext(decorator.trinucleotideContext())
                 .microhomology(decorator.microhomology())
                 .repeatSequence(decorator.repeatSequence())
@@ -81,6 +72,19 @@ public class VariantBuilderUtils
         }
 
         return builder;
+    }
+
+    private static GermlineStatus extractGermlineStatus(final VariantContext context)
+    {
+        // to protect against changes in types, which aren't expected to impact downstream processing
+        try
+        {
+            return GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, GermlineStatus.UNKNOWN.name()));
+        }
+        catch(IllegalArgumentException ignored)
+        {
+            return GermlineStatus.UNKNOWN;
+        }
     }
 
     @Nullable
