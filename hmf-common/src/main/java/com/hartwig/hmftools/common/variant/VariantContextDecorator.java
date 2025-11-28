@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
@@ -14,6 +16,7 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABIL
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -293,6 +296,17 @@ public class VariantContextDecorator implements GenomePosition
 
         return clinvarPathogenicSummary().Status == Pathogenicity.UNKNOWN
                 && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
+    }
+
+    @Nullable
+    public List<String> reportableTranscripts()
+    {
+        if(mContext.hasAttribute(REPORTABLE_TRANSCRIPTS))
+        {
+            String reportableTransStr = mContext.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
+            return Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1)).toList();
+        }
+        return null;
     }
 
     private static String displayFilter(final VariantContext context)

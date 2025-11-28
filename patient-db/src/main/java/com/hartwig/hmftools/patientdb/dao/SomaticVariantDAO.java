@@ -18,9 +18,11 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -96,7 +98,7 @@ public class SomaticVariantDAO
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
                 new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
-        return ImmutableSomaticVariantImpl.builder()
+        Variant variant = ImmutableVariantImpl.builder()
                 .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
                 .position(record.getValue(SOMATICVARIANT.POSITION))
                 .filter(record.getValue(SOMATICVARIANT.FILTER))
@@ -127,19 +129,23 @@ public class SomaticVariantDAO
                 .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                 .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                 .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
                 .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                 .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                 .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                 .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))
-                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
-                .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                 .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
-                .referenceDepth(referenceAllelicDepth)
                 .rnaDepth(rnaAllelicDepth)
                 .qual(record.get(SOMATICVARIANT.QUAL))
                 .localPhaseSets(SomaticVariantFactory.localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
                 .genotypeStatus(UNKNOWN)
+                .build();
+
+        return ImmutableSomaticVariantImpl.builder()
+                .variant(variant)
+                .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
+                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
+                .referenceDepth(referenceAllelicDepth)
                 .build();
     }
 

@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
@@ -69,6 +71,14 @@ public final class TestPurpleVariantFactory
     public static ImmutablePurpleVariantContext.Builder contextBuilder()
     {
         return ImmutablePurpleVariantContext.builder()
+                .variant(variantBuilder().build())
+                .biallelicProbability(0.)
+                .subclonalLikelihood(0);
+    }
+
+    @NotNull static ImmutableVariantImpl.Builder variantBuilder()
+    {
+        return ImmutableVariantImpl.builder()
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .allelicDepth(new AllelicDepth(0, 0))
@@ -81,7 +91,12 @@ public final class TestPurpleVariantFactory
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .qual(0)
+                .mappability(0)
+                .filter(Strings.EMPTY)
+                .genesAffected(0)
                 .spliceRegion(false)
+                .otherReportedEffects(Strings.EMPTY)
                 .worstCodingEffect(CodingEffect.UNDEFINED)
                 .tier(VariantTier.UNKNOWN)
                 .hotspot(Hotspot.NON_HOTSPOT)
@@ -91,9 +106,11 @@ public final class TestPurpleVariantFactory
                 .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
-                .biallelicProbability(0.)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
-                .repeatCount(0)
-                .subclonalLikelihood(0);
+                .germlineStatus(GermlineStatus.UNKNOWN)
+                .trinucleotideContext(Strings.EMPTY)
+                .microhomology(Strings.EMPTY)
+                .repeatSequence(Strings.EMPTY)
+                .repeatCount(0);
     }
 }
