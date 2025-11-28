@@ -16,12 +16,12 @@ import org.apache.logging.log4j.Logger;
 
 public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 {
-    public final String mTag;
+    public final String Tag;
 
-    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String mTag)
+    public TaggedRegion(String chromosome, final int posStart, final int posEnd, final String tag)
     {
         super(chromosome, posStart, posEnd);
-        this.mTag = mTag;
+        Tag = tag;
     }
 
     private static final Logger LOGGER = LogManager.getLogger(TaggedRegion.class);
@@ -52,7 +52,7 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
 
     public String formatted()
     {
-        return !mTag.isEmpty() ? format("%s:%d-%d", mTag, start(), end()) : format("%d-%d", start(), end());
+        return !Tag.isEmpty() ? format("%s:%d-%d", Tag, start(), end()) : format("%d-%d", start(), end());
     }
 
     @Override
@@ -67,12 +67,12 @@ public class TaggedRegion extends ChrBaseRegion implements Chromosomal
             return false;
         }
         final TaggedRegion that = (TaggedRegion) o;
-        return Objects.equals(mTag, that.mTag);
+        return Objects.equals(Tag, that.Tag);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), mTag);
+        return Objects.hash(super.hashCode(), Tag);
     }
 }

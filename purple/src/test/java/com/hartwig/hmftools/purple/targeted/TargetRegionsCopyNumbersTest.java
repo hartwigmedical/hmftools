@@ -103,9 +103,9 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(26694001, cn0.cobaltRatio().position());
         assertEquals(3, cn0.overlappingRegions().size());
         assertEquals(26694021, cn0.overlappingRegions().get(0).start());
-        assertEquals("ARID1A_0", cn0.overlappingRegions().get(0).mTag);
-        assertEquals("ARID1A_1", cn0.overlappingRegions().get(1).mTag);
-        assertEquals("ARID1A_2", cn0.overlappingRegions().get(2).mTag);
+        assertEquals("ARID1A_0", cn0.overlappingRegions().get(0).Tag);
+        assertEquals("ARID1A_1", cn0.overlappingRegions().get(1).Tag);
+        assertEquals("ARID1A_2", cn0.overlappingRegions().get(2).Tag);
         assertEquals(1, cn0.purpleCopyNumber().start());
         assertEquals(63461950, cn0.purpleCopyNumber().end());
         assertEquals(HOM_DELETION, cn0.germlineStatus());
@@ -115,7 +115,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(55020001, cn2.cobaltRatio().position());
         assertEquals(1, cn2.overlappingRegions().size());
         assertEquals(55020021, cn2.overlappingRegions().get(0).start());
-        assertEquals("EGFR_1", cn2.overlappingRegions().get(0).mTag);
+        assertEquals("EGFR_1", cn2.overlappingRegions().get(0).Tag);
         assertEquals(38402474, cn2.purpleCopyNumber().start());
         assertEquals(59554330, cn2.purpleCopyNumber().end());
         assertEquals(UNKNOWN, cn2.germlineStatus());
@@ -125,7 +125,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn3.overlappingRegions().size());
         assertEquals(55020021, cn3.overlappingRegions().get(0).start());
         assertEquals(55021520, cn3.overlappingRegions().get(0).end());
-        assertEquals("EGFR_1", cn3.overlappingRegions().get(0).mTag);
+        assertEquals("EGFR_1", cn3.overlappingRegions().get(0).Tag);
     }
 
     @Test
@@ -162,7 +162,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(11801001, cn0.cobaltRatio().position());
         assertEquals(1, cn0.overlappingRegions().size());
         assertEquals(11801068, cn0.overlappingRegions().get(0).start());
-        assertEquals("ETV6_UP_STREAM", cn0.overlappingRegions().get(0).mTag);
+        assertEquals("ETV6_UP_STREAM", cn0.overlappingRegions().get(0).Tag);
         assertEquals(1, cn0.purpleCopyNumber().start());
         assertEquals(11804000, cn0.purpleCopyNumber().end());
 
@@ -175,7 +175,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn1.overlappingRegions().size());
         assertEquals(11803062, cn1.overlappingRegions().get(0).start());
         assertEquals(11803094, cn1.overlappingRegions().get(0).end());
-        assertEquals("ETV6_CODING", cn1.overlappingRegions().get(0).mTag);
+        assertEquals("ETV6_CODING", cn1.overlappingRegions().get(0).Tag);
         assertEquals(1, cn1.purpleCopyNumber().start());
         assertEquals(11804000, cn1.purpleCopyNumber().end());
 
@@ -188,7 +188,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn2.overlappingRegions().size());
         assertEquals(11804454, cn2.overlappingRegions().get(0).start());
         assertEquals(11804573, cn2.overlappingRegions().get(0).end());
-        assertEquals("ETV6_INTRONIC_LONG", cn2.overlappingRegions().get(0).mTag);
+        assertEquals("ETV6_INTRONIC_LONG", cn2.overlappingRegions().get(0).Tag);
         assertEquals(11804001, cn2.purpleCopyNumber().start());
         assertEquals(36356693, cn2.purpleCopyNumber().end());
 
@@ -201,7 +201,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn3.overlappingRegions().size());
         assertEquals(1610706, cn3.overlappingRegions().get(0).start());
         assertEquals(1610755, cn3.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn3.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn3.overlappingRegions().get(0).Tag);
         assertEquals(1610001, cn3.purpleCopyNumber().start());
         assertEquals(1611050, cn3.purpleCopyNumber().end());
 
@@ -214,7 +214,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn4.overlappingRegions().size());
         assertEquals(1611706, cn4.overlappingRegions().get(0).start());
         assertEquals(1611755, cn4.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn4.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn4.overlappingRegions().get(0).Tag);
         assertEquals(1610001, cn4.purpleCopyNumber().start());
         assertEquals(1611050, cn4.purpleCopyNumber().end());
 
@@ -227,7 +227,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn5.overlappingRegions().size());
         assertEquals(1611706, cn5.overlappingRegions().get(0).start());
         assertEquals(1611755, cn5.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn5.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn5.overlappingRegions().get(0).Tag);
         assertEquals(1611051, cn5.purpleCopyNumber().start());
         assertEquals(1611150, cn5.purpleCopyNumber().end());
 
@@ -240,7 +240,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn6.overlappingRegions().size());
         assertEquals(1611706, cn6.overlappingRegions().get(0).start());
         assertEquals(1611755, cn6.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn6.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn6.overlappingRegions().get(0).Tag);
         assertEquals(1611151, cn6.purpleCopyNumber().start());
         assertEquals(1611350, cn6.purpleCopyNumber().end());
 
@@ -252,7 +252,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn7.overlappingRegions().size());
         assertEquals(1611706, cn7.overlappingRegions().get(0).start());
         assertEquals(1611755, cn7.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn7.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn7.overlappingRegions().get(0).Tag);
         assertEquals(1611351, cn7.purpleCopyNumber().start());
         assertEquals(1611450, cn7.purpleCopyNumber().end());
 
@@ -264,7 +264,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn8.overlappingRegions().size());
         assertEquals(1611706, cn8.overlappingRegions().get(0).start());
         assertEquals(1611755, cn8.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn8.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn8.overlappingRegions().get(0).Tag);
         assertEquals(1611451, cn8.purpleCopyNumber().start());
         assertEquals(1613000, cn8.purpleCopyNumber().end());
 
@@ -276,7 +276,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn9.overlappingRegions().size());
         assertEquals(1612706, cn9.overlappingRegions().get(0).start());
         assertEquals(1612755, cn9.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn9.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn9.overlappingRegions().get(0).Tag);
         assertEquals(1611451, cn9.purpleCopyNumber().start());
         assertEquals(1613000, cn9.purpleCopyNumber().end());
 
@@ -288,7 +288,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn10.overlappingRegions().size());
         assertEquals(1613706, cn10.overlappingRegions().get(0).start());
         assertEquals(1613755, cn10.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn10.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn10.overlappingRegions().get(0).Tag);
         assertEquals(1613001, cn10.purpleCopyNumber().start());
         assertEquals(26181781, cn10.purpleCopyNumber().end());
 
@@ -300,7 +300,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn11.overlappingRegions().size());
         assertEquals(1614706, cn11.overlappingRegions().get(0).start());
         assertEquals(1614755, cn11.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn11.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn11.overlappingRegions().get(0).Tag);
         assertEquals(1613001, cn11.purpleCopyNumber().start());
         assertEquals(26181781, cn11.purpleCopyNumber().end());
 
@@ -312,7 +312,7 @@ public class TargetRegionsCopyNumbersTest
         assertEquals(1, cn12.overlappingRegions().size());
         assertEquals(1615706, cn12.overlappingRegions().get(0).start());
         assertEquals(1615755, cn12.overlappingRegions().get(0).end());
-        assertEquals("TCF3_CODING", cn12.overlappingRegions().get(0).mTag);
+        assertEquals("TCF3_CODING", cn12.overlappingRegions().get(0).Tag);
         assertEquals(1613001, cn12.purpleCopyNumber().start());
         assertEquals(26181781, cn12.purpleCopyNumber().end());
     }
