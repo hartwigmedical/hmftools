@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -20,44 +21,48 @@ public final class SomaticVariantTestFactory
     public static ImmutableSomaticVariantImpl.Builder builder()
     {
         return ImmutableSomaticVariantImpl.builder()
-                .qual(100)
+                .variant(variantBuilder().build())
+                .kataegis(Strings.EMPTY)
+                .subclonalLikelihood(0)
+                .gnomadFrequency(0)
+                .somaticLikelihood(UNKNOWN);
+    }
+
+    @NotNull static ImmutableVariantImpl.Builder variantBuilder()
+    {
+        return ImmutableVariantImpl.builder()
                 .chromosome(Strings.EMPTY)
                 .position(0)
+                .allelicDepth(new AllelicDepth(0, 0))
+                .type(VariantType.UNDEFINED)
+                .gene(Strings.EMPTY)
                 .ref(Strings.EMPTY)
                 .alt(Strings.EMPTY)
-                .type(VariantType.UNDEFINED)
-                .filter(Strings.EMPTY)
-                .allelicDepth(AllelicDepth.NO_DEPTH)
-                .gene(Strings.EMPTY)
-                .genotypeStatus(GenotypeStatus.UNKNOWN)
-                .genesAffected(0)
-                .canonicalEffect(Strings.EMPTY)
                 .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.UNDEFINED)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .qual(100)
+                .mappability(0)
+                .filter(Strings.EMPTY)
+                .genesAffected(0)
                 .spliceRegion(false)
                 .otherReportedEffects(Strings.EMPTY)
-                .worstCodingEffect(CodingEffect.NONE)
+                .worstCodingEffect(CodingEffect.UNDEFINED)
+                .tier(VariantTier.UNKNOWN)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .recovered(false)
                 .reported(false)
-                .adjustedCopyNumber(0D)
-                .adjustedVAF(0D)
-                .minorAlleleCopyNumber(0D)
-                .germlineStatus(GermlineStatus.UNKNOWN)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAlleleCopyNumber(0)
                 .variantCopyNumber(0)
                 .biallelic(false)
-                .kataegis(Strings.EMPTY)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
+                .germlineStatus(GermlineStatus.UNKNOWN)
                 .trinucleotideContext(Strings.EMPTY)
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
-                .repeatCount(0)
-                .subclonalLikelihood(0)
-                .tier(VariantTier.UNKNOWN)
-                .mappability(0D)
-                .clinvarInfo("")
-                .gnomadFrequency(0)
-                .somaticLikelihood(UNKNOWN);
+                .repeatCount(0);
     }
 }
