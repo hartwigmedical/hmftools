@@ -3,25 +3,30 @@ package com.hartwig.hmftools.amber.e2e;
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.AmberApplication;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -57,11 +62,24 @@ public class RunAmberTest
     {
         AmberScenario scenario = new AmberScenario("TwoChromosomes");
         runAmber(scenario);
+        // Check that baf.tsv file.
         scenario.checkResults(Results);
-        Assert.assertEquals(2, Results.keySet().size());
-        List<AmberBAF> chr1Results = Results.get(_1).stream().sorted().toList();
-        Assert.assertEquals(15, chr1Results.size());
 
+        // Check the segmentation file.
+        String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
+        Map<String, List<BaseRegion>> pcfData = PCFFile.loadChrBaseRegions(segmentsFile);
+        assert pcfData != null;
+        assertEquals(2, pcfData.size());
+        List<BaseRegion> chr1Positions = pcfData.get(V38.versionedChromosome(_1));
+        // The R program that does segmentation puts a couple of spurious segments
+        // at the start of each chromosome.
+        assertEquals(5, chr1Positions.size());
+        assertEquals(49554, chr1Positions.get(0).start());
+//        assertEquals(1001, chr1Positions.get(1).Position);
+//        assertEquals(2001, chr1Positions.get(2).Position);
+//        assertEquals(41001, chr1Positions.get(3).Position);
+//        assertEquals(71001, chr1Positions.get(4).Position);
+//        assertEquals(101001, chr1Positions.get(5).Position);
     }
 
     private void runAmber(AmberScenario scenario) throws Exception

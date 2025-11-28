@@ -61,8 +61,7 @@ public class AmberScenario
     public void checkResults(Multimap<Chromosome, AmberBAF> results)
     {
         Assert.assertEquals(TumorReads.chromosomes(), results.keySet());
-        TumorReads.chromosomes().forEach(chromosome ->
-                checkTumorChromosomeResults(results.get(chromosome), TumorReads.specifications(chromosome)));
+        TumorReads.chromosomes().forEach(c -> checkTumorChromosomeResults(results.get(c), TumorReads.specifications(c)));
     }
 
     File getTumorBamFile()
