@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -618,7 +619,17 @@ public class JunctionTracker
 
             if(readWithinJunctionRange(read, junctionData, distanceBuffer)
             || positionWithin(junctionData.Position, read.AlignmentStart, read.AlignmentEnd))
+            {
                 closeJuncIndex = mRecentJunctionIndex;
+            }
+            else if(mRecentJunctionIndex < mJunctions.size() - 1)
+            {
+                // the preceding junction will typically have been found from the read start, so check it if is still good to use
+                JunctionData nextJunctionData = mJunctions.get(mRecentJunctionIndex + 1);
+
+                if(positionsOverlap(read.AlignmentStart, read.AlignmentEnd, junctionData.Position, nextJunctionData.Position))
+                    closeJuncIndex = mRecentJunctionIndex;
+            }
         }
 
         if(closeJuncIndex == INVALID_JUNC_INDEX)
@@ -656,9 +667,12 @@ public class JunctionTracker
                 }
                 else
                 {
-                    // given the find routine returns a match or the preceding, must search at least 1 higher
-                    if(searchUp && index > closeJuncIndex && !readWithinJunctionRange(read, junctionData, distanceBuffer))
-                        break;
+                    if(!readWithinJunctionRange(read, junctionData, distanceBuffer))
+                    {
+                        // given the find routine returns a match or the preceding, must search at least 1 higher
+                        if(!searchUp || index > closeJuncIndex)
+                            break;
+                    }
                 }
 
                 checkReadSupportsJunction(readGroup, read, junctionData, supportedJunctions);
