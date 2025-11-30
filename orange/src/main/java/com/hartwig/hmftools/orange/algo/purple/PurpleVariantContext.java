@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.Variant;
-import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.VariantDelegate;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import org.immutables.value.Value;
@@ -16,49 +12,20 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleVariantContext extends Variant
+public interface PurpleVariantContext extends VariantDelegate
 {
-    boolean spliceRegion();
-
-    @NotNull
-    CodingEffect worstCodingEffect();
-
     @NotNull
     List<VariantTranscriptImpact> otherImpacts();
 
-    @NotNull
-    VariantTier tier();
-
-    @NotNull
-    Hotspot hotspot();
-
-    boolean reported();
-
-    @Nullable
-    AllelicDepth rnaDepth();
-
-    double adjustedCopyNumber();
-
-    double adjustedVAF();
-
-    double minorAlleleCopyNumber();
-
-    double variantCopyNumber();
-
-    boolean biallelic();
-
     double biallelicProbability();
-
-    @NotNull
-    GenotypeStatus genotypeStatus();
-
-    int repeatCount();
 
     double subclonalLikelihood();
 
-    @Nullable
-    List<Integer> localPhaseSets();
-
+    @Override
     @NotNull
-    List<String> reportableTranscripts();
+    default List<String> reportableTranscripts()
+    {
+        List<String> transcripts = variant().reportableTranscripts();
+        return transcripts != null ? transcripts : Collections.emptyList();
+    }
 }

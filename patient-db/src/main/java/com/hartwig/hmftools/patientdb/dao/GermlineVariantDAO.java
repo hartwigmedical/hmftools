@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableGermlineVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -377,7 +379,7 @@ public class GermlineVariantDAO
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
                 new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
-        return ImmutableGermlineVariantImpl.builder()
+        Variant variant = ImmutableVariantImpl.builder()
                 .chromosome(record.getValue(GERMLINEVARIANT.CHROMOSOME))
                 .position(record.getValue(GERMLINEVARIANT.POSITION))
                 .filter(record.getValue(GERMLINEVARIANT.FILTER))
@@ -418,6 +420,10 @@ public class GermlineVariantDAO
                 .genotypeStatus(UNKNOWN)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .clinvarInfo(record.get(GERMLINEVARIANT.CLINVARINFO))
+                .build();
+
+        return ImmutableGermlineVariantImpl.builder()
+                .variant(variant)
                 .pathogenicity(record.get(GERMLINEVARIANT.PATHOGENICITY))
                 .pathogenic(record.get(GERMLINEVARIANT.PATHOGENIC).intValue() == 1)
                 .build();

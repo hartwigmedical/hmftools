@@ -18,11 +18,14 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.SomaticvariantRecord;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -96,7 +99,7 @@ public class SomaticVariantDAO
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
                 new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
-        return ImmutableSomaticVariantImpl.builder()
+        Variant variant = ImmutableVariantImpl.builder()
                 .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
                 .position(record.getValue(SOMATICVARIANT.POSITION))
                 .filter(record.getValue(SOMATICVARIANT.FILTER))
@@ -127,26 +130,34 @@ public class SomaticVariantDAO
                 .microhomology(record.getValue(SOMATICVARIANT.MICROHOMOLOGY))
                 .repeatSequence(record.getValue(SOMATICVARIANT.REPEATSEQUENCE))
                 .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
                 .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)))
                 .mappability(record.getValue(SOMATICVARIANT.MAPPABILITY))
                 .germlineStatus(GermlineStatus.valueOf(record.getValue(SOMATICVARIANT.GERMLINESTATUS)))
                 .minorAlleleCopyNumber(record.getValue(SOMATICVARIANT.MINORALLELECOPYNUMBER))
-                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
-                .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                 .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
-                .referenceDepth(referenceAllelicDepth)
                 .rnaDepth(rnaAllelicDepth)
                 .qual(record.get(SOMATICVARIANT.QUAL))
                 .localPhaseSets(SomaticVariantFactory.localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
                 .genotypeStatus(UNKNOWN)
+                .build();
+
+        return ImmutableSomaticVariantImpl.builder()
+                .variant(variant)
+                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
+                .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
+                .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
+                .referenceDepth(referenceAllelicDepth)
+                .gnomadFrequency(record.getValue(SOMATICVARIANT.GNOMADFREQUENCY))
+                .somaticLikelihood(record.getValue(SOMATICVARIANT.SOMATICLIKELIHOOD).isEmpty()
+                        ? SomaticLikelihood.UNKNOWN
+                        : SomaticLikelihood.valueOf(record.getValue(SOMATICVARIANT.SOMATICLIKELIHOOD)))
                 .build();
     }
 
 
     private void writeAll(final Timestamp timestamp, final String sample, final List<SomaticVariant> variants)
     {
-        final InsertValuesStepN inserter = context.insertInto(SOMATICVARIANT,
+        final InsertValuesStepN<SomaticvariantRecord> inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,
                 SOMATICVARIANT.CHROMOSOME,
                 SOMATICVARIANT.POSITION,
@@ -197,7 +208,7 @@ public class SomaticVariantDAO
     }
 
     private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStepN inserter, final String sample, final SomaticVariant variant)
+            final Timestamp timestamp, final InsertValuesStepN<SomaticvariantRecord> inserter, final String sample, final SomaticVariant variant)
     {
         // append reportable status for each transcript where non-canonical may be reportable
         String otherReportedEffects = variant.otherReportedEffects();

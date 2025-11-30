@@ -2,12 +2,11 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static java.util.Collections.emptyList;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,7 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.VariantBuilderUtils;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
@@ -25,16 +26,12 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.util.VariantTranscriptImpactCleaner;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleVariantContextLoader
@@ -131,44 +128,12 @@ public class PurpleVariantContextLoader
                 .collect(Collectors.toList());
 
         final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
-        final AllelicDepth rnaDepth = extractRnaDepth(variantContext, rna);
-
-        List<Integer> localPhaseSets =
-                variantContext.hasAttribute(LOCAL_PHASE_SET) ? variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0) : null;
-
-        List<String> reportableTranscripts = extractReportableTranscripts(variantContext);
 
         return ImmutablePurpleVariantContext.builder()
-                .chromosome(contextDecorator.chromosome())
-                .position(contextDecorator.position())
-                .allelicDepth(new AllelicDepth(tumorDepth.TotalReadCount, tumorDepth.AlleleReadCount))
-                .spliceRegion(variantImpact.CanonicalSpliceRegion)
-                .type(contextDecorator.type())
-                .gene(variantImpact.GeneName)
-                .ref(contextDecorator.ref())
-                .alt(contextDecorator.alt())
-                .canonicalTranscript(variantImpact.CanonicalTranscript)
-                .canonicalEffect(variantImpact.CanonicalEffect)
-                .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
-                .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
-                .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
-                .worstCodingEffect(variantImpact.WorstCodingEffect)
+                .variant(VariantBuilderUtils.createVariantBuilder(tumorDepth, variantContext, reference, rna).build())
                 .otherImpacts(otherImpacts)
-                .tier(contextDecorator.tier())
-                .hotspot(contextDecorator.hotspot())
-                .reported(contextDecorator.reported())
-                .rnaDepth(rnaDepth)
-                .adjustedCopyNumber(contextDecorator.adjustedCopyNumber())
-                .adjustedVAF(contextDecorator.adjustedVaf())
-                .minorAlleleCopyNumber(contextDecorator.minorAlleleCopyNumber())
-                .variantCopyNumber(contextDecorator.variantCopyNumber())
-                .biallelic(contextDecorator.biallelic())
                 .biallelicProbability(contextDecorator.biallelicProbability())
-                .genotypeStatus(contextDecorator.genotypeStatus(reference))
-                .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .localPhaseSets(localPhaseSets)
-                .reportableTranscripts(reportableTranscripts)
                 .build();
     }
 
@@ -176,23 +141,6 @@ public class PurpleVariantContextLoader
             final List<VariantTranscriptImpact> impacts, String canonicalTranscript)
     {
         return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
-    }
-
-    @Nullable
-    private static AllelicDepth extractRnaDepth(VariantContext context, @Nullable String rna)
-    {
-        return Optional.ofNullable(context.getGenotype(rna))
-                .filter(AllelicDepth::containsAllelicDepth)
-                .map(AllelicDepth::fromGenotype)
-                .orElse(null);
-    }
-
-    private static List<String> extractReportableTranscripts(final VariantContext context)
-    {
-        return context.hasAttribute(REPORTABLE_TRANSCRIPTS)
-                ? Arrays.asList(context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "")
-                .split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1))
-                : emptyList();
     }
 
     private static boolean sampleInFile(final String sample, final VCFHeader header)
