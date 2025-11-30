@@ -44,8 +44,6 @@ import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.junit.Test;
 
-import htsjdk.samtools.SAMRecord;
-
 public class JunctionsTest
 {
     protected static final String REF_BASES = generateRandomBases(500);
@@ -414,74 +412,128 @@ public class JunctionsTest
     }
 
     @Test
-    public void testJunctionDataLookup()
+    public void testJunctionDataCreateAndLookup()
     {
         // test junction-finding logic
         String readBases = REF_BASES.substring(0, 100);
         String leftCigar = "30S70M";
 
         PrepRead read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 100, readBases, leftCigar));
+        mJunctionTracker.addJunctionData(read);
 
+        // ensure junction matches prevent duplicate junctions
         mJunctionTracker.addJunctionData(read);
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 150, readBases, leftCigar));
-
         mJunctionTracker.addJunctionData(read);
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, leftCigar));
-
         mJunctionTracker.addJunctionData(read);
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 250, readBases, leftCigar));
-
         mJunctionTracker.addJunctionData(read);
 
         read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 300, readBases, leftCigar));
-
         mJunctionTracker.addJunctionData(read);
 
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 101, readBases, leftCigar));
+        // ensure junction matches prevent duplicate junctions
+        mJunctionTracker.addJunctionData(read);
 
         List<JunctionData> junctions = mJunctionTracker.junctions();
-        int juncIndex = findJunctionIndex(junctions, read, 1, 10);
+        assertEquals(5, junctions.size());
 
+        // add junctions at matching positions but opposite orientations
+        String rightCigar = "50M30S";
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 101, readBases, rightCigar));
+        mJunctionTracker.addJunctionData(read);
+
+        assertEquals(6, junctions.size());
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 201, readBases, rightCigar));
+        mJunctionTracker.addJunctionData(read);
+
+        assertEquals(7, junctions.size());
+
+        // ensure junction matches prevent duplicate junctions
+        mJunctionTracker.addJunctionData(read);
+
+        int juncIndex = findJunctionIndex(junctions, 50, 10);
+        assertEquals(INVALID_JUNC_INDEX, juncIndex);
+
+        juncIndex = findJunctionIndex(junctions, 100, 10);
         assertEquals(0, juncIndex);
 
         // using fast-search logic
-        juncIndex = findJunctionIndex(junctions, read, 1, 0);
-
+        juncIndex = findJunctionIndex(junctions, 100, 0);
         assertEquals(0, juncIndex);
 
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 102, readBases, leftCigar));
-        juncIndex = findJunctionIndex(junctions, read, 1, 0);
-        assertEquals(INVALID_JUNC_INDEX, juncIndex);
-
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 98, readBases, leftCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        juncIndex = findJunctionIndex(junctions, 149, 0);
         assertEquals(0, juncIndex);
 
-        String rightCigar = "40M30S";
-
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 60, readBases, rightCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
-        assertEquals(0, juncIndex);
-
-        // test the other junctions
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 150, readBases, rightCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        juncIndex = findJunctionIndex(junctions, 150, 0);
         assertEquals(1, juncIndex);
 
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 200, readBases, rightCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        juncIndex = findJunctionIndex(junctions, 151, 0);
         assertEquals(2, juncIndex);
 
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 250, readBases, rightCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
+        juncIndex = findJunctionIndex(junctions, 200, 0);
         assertEquals(3, juncIndex);
 
-        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 300, readBases, rightCigar));
-        juncIndex = findJunctionIndex(junctions, read, 2, 0);
-        assertEquals(4, juncIndex);
-    }
+        juncIndex = findJunctionIndex(junctions, 225, 0);
+        assertEquals(3, juncIndex);
 
+        juncIndex = findJunctionIndex(junctions, 249, 0);
+        assertEquals(3, juncIndex);
+
+        juncIndex = findJunctionIndex(junctions, 250, 0);
+        assertEquals(4, juncIndex);
+
+        juncIndex = findJunctionIndex(junctions, 299, 0);
+        assertEquals(5, juncIndex);
+
+        juncIndex = findJunctionIndex(junctions, 300, 0);
+        assertEquals(6, juncIndex);
+
+        juncIndex = findJunctionIndex(junctions, 301, 0);
+        assertEquals(6, juncIndex);
+
+        // test adding discordant junctions - they will replace a split junction if have sufficiently more support
+
+        // first matches an existing, does not replace since the split junction has sufficient support
+        juncIndex = findJunctionIndex(junctions, 200, 0);
+
+        JunctionData splitJunction = junctions.get(juncIndex);
+        splitJunction.addJunctionReadGroup(new ReadGroup(read));
+        splitJunction.addJunctionReadGroup(new ReadGroup(read));
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 151, readBases, "50M"));
+        JunctionData discJunction = new JunctionData(200, REVERSE, read);
+        discJunction.markDiscordantGroup();
+
+        mJunctionTracker.addDiscordantJunction(discJunction);
+        assertEquals(7, junctions.size());
+        assertEquals(splitJunction, junctions.get(juncIndex));
+
+        // check replacing
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 251, readBases, "50M"));
+        discJunction = new JunctionData(300, REVERSE, read);
+        discJunction.markDiscordantGroup();
+
+        juncIndex = findJunctionIndex(junctions, 300, 0);
+
+        mJunctionTracker.addDiscordantJunction(discJunction);
+        assertEquals(7, junctions.size());
+        assertEquals(discJunction, junctions.get(juncIndex));
+
+        // add a new discordant group
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 221, readBases, "50M"));
+        discJunction = new JunctionData(270, REVERSE, read);
+        discJunction.markDiscordantGroup();
+
+        mJunctionTracker.addDiscordantJunction(discJunction);
+        assertEquals(8, junctions.size());
+        juncIndex = findJunctionIndex(junctions, 270, 0);
+        assertEquals(discJunction, junctions.get(juncIndex));
+    }
 }
