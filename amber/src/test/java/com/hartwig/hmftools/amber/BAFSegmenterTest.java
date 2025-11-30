@@ -67,8 +67,8 @@ public class BAFSegmenterTest
         assertEquals(1, regions1.size());
         assertEquals(100, regions1.get(0).start());
         assertEquals(300, regions1.get(0).end());
-//        double mean_1_0 =
-//        assertEquals(mean_1_0, regions1.get(0).MeanRatio, 0.0001);
+        double mean_1_0 = (baf1_0.tumorModifiedBAF() + baf1_1.tumorModifiedBAF() + baf1_2.tumorModifiedBAF())/3.0;
+        assertEquals(mean_1_0, regions1.get(0).MeanRatio, 0.0001);
 
     }
 

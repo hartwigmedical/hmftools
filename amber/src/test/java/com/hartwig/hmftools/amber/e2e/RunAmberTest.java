@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.amber.e2e;
 
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
+import static com.hartwig.hmftools.amber.AmberConfig.USE_NEW_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
@@ -18,6 +19,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.amber.AmberApplication;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
+import com.hartwig.hmftools.common.utils.pcf.PcfSegment;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -61,7 +64,7 @@ public class RunAmberTest
     public void twoChromosomes() throws Exception
     {
         AmberScenario scenario = new AmberScenario("TwoChromosomes");
-        runAmber(scenario);
+        runAmber(scenario, false);
         // Check that baf.tsv file.
         scenario.checkResults(Results);
 
@@ -75,14 +78,24 @@ public class RunAmberTest
         // at the start of each chromosome.
         assertEquals(5, chr1Positions.size());
         assertEquals(49554, chr1Positions.get(0).start());
-//        assertEquals(1001, chr1Positions.get(1).Position);
-//        assertEquals(2001, chr1Positions.get(2).Position);
-//        assertEquals(41001, chr1Positions.get(3).Position);
-//        assertEquals(71001, chr1Positions.get(4).Position);
-//        assertEquals(101001, chr1Positions.get(5).Position);
     }
 
-    private void runAmber(AmberScenario scenario) throws Exception
+    @Test
+    public void newSegmenter() throws Exception
+    {
+        AmberScenario scenario = new AmberScenario("TwoChromosomes");
+        runAmber(scenario, true);
+
+        // Check the segmentation file.
+        String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
+        ListMultimap<Chromosome, PcfSegment> pcfData = PCFFile.readPcfFile(segmentsFile);
+        assertEquals(2, pcfData.keySet().size());
+        List<PcfSegment> chr1Positions = pcfData.get(_1);
+        assertEquals(3, chr1Positions.size());
+        assertEquals(49554, chr1Positions.get(0).start());
+    }
+
+    private void runAmber(AmberScenario scenario, boolean useNewSegmenter) throws Exception
     {
         File sitesFile = scenario.createAmberLocationsFile(OutputDir);
         TumorBamFile = scenario.getTumorBamFile();
@@ -96,6 +109,10 @@ public class RunAmberTest
         if(ReferenceBamFile != null)
         {
             argCount += 4;
+        }
+        if(useNewSegmenter)
+        {
+            argCount += 1;
         }
         String[] args = new String[argCount];
         int index = 0;
@@ -117,7 +134,11 @@ public class RunAmberTest
             args[index++] = String.format("-%s", REFERENCE);
             args[index++] = String.format("%s", ReferenceSample);
             args[index++] = String.format("-%s", REFERENCE_BAM);
-            args[index] = String.format("%s", ReferenceBamFile.getAbsolutePath());
+            args[index++] = String.format("%s", ReferenceBamFile.getAbsolutePath());
+        }
+        if(useNewSegmenter)
+        {
+            args[index] = String.format("-%s", USE_NEW_SEGMENTER);
         }
 
         AmberApplication.main(args);

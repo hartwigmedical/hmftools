@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.segmentation;
+package com.hartwig.hmftools.common.segmentation.copynumber;
 
 import java.io.BufferedReader;
 import java.io.File;

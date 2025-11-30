@@ -19,9 +19,12 @@ import com.hartwig.hmftools.common.segmentation.copynumber.PiecewiseConstantFit;
 import com.hartwig.hmftools.common.segmentation.copynumber.Segmenter;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class PerArmSegmenter<T extends GenomePosition>
 {
+    private static final Logger SG_LOGGER = LogManager.getLogger(PerArmSegmenter.class);
     private final ListMultimap<ChrArm, T> ArmToRatios = ArrayListMultimap.create();
     private final Map<ChrArm, DataForSegmentation> mDataByArm = new HashMap<>();
     private final PenaltyCalculator mPenaltyCalculator;
@@ -51,11 +54,11 @@ public abstract class PerArmSegmenter<T extends GenomePosition>
                 System.arraycopy(data.valuesForSegmentation(), 0, allRatios, position, data.count());
                 position += data.count();
             }
-            //            CobaltConfig.CB_LOGGER.info("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
+            SG_LOGGER.info("Using uniform segmentation penalty, number of ratios: {}", allRatios.length);
             GammaPenaltyCalculator oneOffCalculation = new GammaPenaltyCalculator(gamma, true);
             final double penalty = oneOffCalculation.getPenalty(allRatios);
             mPenaltyCalculator = new FixedPenalty(penalty);
-            //            CobaltConfig.CB_LOGGER.info("Uniform segmentation penalty: {}", penalty);
+            SG_LOGGER.info("Uniform segmentation penalty: {}", penalty);
         }
         else
         {

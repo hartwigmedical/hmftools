@@ -54,7 +54,7 @@ public class AmberApplication implements AutoCloseable
         mConfig = new AmberConfig(configBuilder);
     }
 
-    public int run() throws IOException, InterruptedException
+    public int run() throws Exception
     {
         long startTimeMs = System.currentTimeMillis();
 
@@ -151,7 +151,7 @@ public class AmberApplication implements AutoCloseable
         return ImmutableListMultimap.copyOf(targetRegionSites);
     }
 
-    private void runGermlineOnly() throws InterruptedException, IOException
+    private void runGermlineOnly() throws Exception
     {
         GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory(mConfig), mChromosomeSites);
 
@@ -175,7 +175,7 @@ public class AmberApplication implements AutoCloseable
         mPersistence.persistHomozygousRegions(germline.getRegionsOfHomozygosity());
     }
 
-    private void runNormalMode() throws InterruptedException, IOException
+    private void runNormalMode() throws Exception
     {
         SamReaderFactory readerFactory = readerFactory(mConfig);
 
@@ -204,7 +204,7 @@ public class AmberApplication implements AutoCloseable
         mPersistence.persistHomozygousRegions(germline.getRegionsOfHomozygosity());
     }
 
-    private void runTumorOnly() throws InterruptedException, IOException
+    private void runTumorOnly() throws Exception
     {
         SamReaderFactory readerFactory = readerFactory(mConfig);
 
@@ -293,7 +293,7 @@ public class AmberApplication implements AutoCloseable
         AMB_LOGGER.info("Amber complete");
     }
 
-    public static void main(final String... args) throws IOException, InterruptedException
+    public static void main(final String... args) throws Exception
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         AmberConfig.registerConfig(configBuilder);

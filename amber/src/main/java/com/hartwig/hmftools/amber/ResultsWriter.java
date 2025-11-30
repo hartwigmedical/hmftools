@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
@@ -14,6 +16,7 @@ import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.config.VersionInfo;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -31,17 +34,20 @@ public class ResultsWriter
         versionInfo.write(mConfig.OutputDir);
     }
 
-    public void persistBAF(final List<AmberBAF> result) throws IOException, InterruptedException
+    public void persistBAF(final List<AmberBAF> result) throws Exception
     {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
         {
-            if (mConfig.UseNewSegmenter)
+            if(mConfig.UseNewSegmenter)
             {
-                AMB_LOGGER.info("creating pcf segmentation");
-
+                AMB_LOGGER.info("Creating pcf segmentation");
+                ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads);
+                final String pcfFile = PCFFile.generateBAFFilename(mConfig.OutputDir, mConfig.TumorId);
+                BAFSegmenter.writeSegments(result, mConfig.RefGenVersion, executorService, pcfFile);
+                executorService.shutdown();
             }
             else
             {
