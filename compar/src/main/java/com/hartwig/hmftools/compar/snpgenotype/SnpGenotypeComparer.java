@@ -70,7 +70,7 @@ public class SnpGenotypeComparer implements ItemComparer
 
         if(!vcfFileReader.fileValid())
         {
-            CMP_LOGGER.error("failed to read SNP genotype VCF file({})", vcfFile);
+            CMP_LOGGER.warn("failed to read SNP genotype VCF file({})", vcfFile);
             return null;
         }
 

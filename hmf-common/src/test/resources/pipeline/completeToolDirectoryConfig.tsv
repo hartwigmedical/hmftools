@@ -22,5 +22,6 @@ snpGenotypeDir
 tealDir	teal
 tumorFlagstatDir	bamtools/*_bamtools
 tumorMetricsDir	bamtools/*_bamtools
+vChordDir	vchord
 virusBreakendDir	virusbreakend
 virusInterpreterDir	virusinterpreter

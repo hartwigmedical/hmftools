@@ -120,6 +120,9 @@ public final class CommonConfig
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");
 
+    public static final String V_CHORD_DIR_CFG = toolDirectory("vchord");
+    public static final String V_CHORD_DIR_DESC = toolDirectoryDesc("vChord");
+
     public static final String TUMOR_METRICS_DIR_CFG = "tumor_metrics_dir";
     public static final String TUMOR_METRICS_DIR_DESC = "Path to sample metrics directory";
 
