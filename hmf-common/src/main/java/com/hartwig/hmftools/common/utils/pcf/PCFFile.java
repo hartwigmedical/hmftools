@@ -53,9 +53,9 @@ public final class PCFFile
         return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
     }
 
-    public static ListMultimap<Chromosome, CobaltSegment> readCobaltPcfFile(String path)
+    public static ListMultimap<Chromosome, PcfSegment> readPcfFile(String path)
     {
-        ListMultimap<Chromosome, CobaltSegment> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome, PcfSegment> result = ArrayListMultimap.create();
         try(DelimFileReader dfr = new DelimFileReader(path))
         {
             dfr.stream().forEach(row ->
@@ -65,7 +65,7 @@ public final class PCFFile
                 int start = row.getInt(1);
                 int end = row.getInt(2);
                 double meanRatio = row.getDouble(3);
-                result.put(chromosome, new CobaltSegment(chrName, start, end, meanRatio));
+                result.put(chromosome, new PcfSegment(chrName, start, end, meanRatio));
             });
         }
         return result;

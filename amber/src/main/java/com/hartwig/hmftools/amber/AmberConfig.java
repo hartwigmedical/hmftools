@@ -69,6 +69,7 @@ public class AmberConfig
     public final ValidationStringency BamStringency;
     public final int Threads;
     public final boolean SkipBafSegmentation;
+    public final boolean UseNewSegmenter;
 
     public final List<String> SpecificChromosomes;
 
@@ -89,6 +90,7 @@ public class AmberConfig
     private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
     private static final String POSITION_GAP = "position_gap";
     private static final String SKIP_BAF_SEGMENTATION = "skip_baf_segmentation";
+    public static final String USE_NEW_SEGMENTER = "use_new_segmenter";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -140,6 +142,7 @@ public class AmberConfig
         PositionGap = configBuilder.getInteger(POSITION_GAP);
 
         SkipBafSegmentation = configBuilder.hasFlag(SKIP_BAF_SEGMENTATION);
+        UseNewSegmenter = configBuilder.hasFlag(USE_NEW_SEGMENTER);
 
         WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
 
@@ -190,6 +193,7 @@ public class AmberConfig
         configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
         configBuilder.addDecimal(MAX_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MAX_HET_AF_PERCENTAGE);
 
+        configBuilder.addFlag(USE_NEW_SEGMENTER, "Use native segmenter");
         configBuilder.addFlag(SKIP_BAF_SEGMENTATION, "Skip BAF segmentation");
 
         configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");

@@ -38,8 +38,16 @@ public class ResultsWriter
 
         if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
         {
-            AMB_LOGGER.info("applying pcf segmentation");
-            new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
+            if (mConfig.UseNewSegmenter)
+            {
+                AMB_LOGGER.info("creating pcf segmentation");
+
+            }
+            else
+            {
+                AMB_LOGGER.info("applying pcf segmentation");
+                new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
+            }
         }
     }
 

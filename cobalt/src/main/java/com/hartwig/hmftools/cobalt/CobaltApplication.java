@@ -21,7 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.calculations.CobaltCalculator;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.count.DepthReading;
-import com.hartwig.hmftools.cobalt.segmentation.RatioSegmenter;
+import com.hartwig.hmftools.cobalt.segmentation.CobaltRatioSegmenter;
 import com.hartwig.hmftools.common.cobalt.CobaltGcMedianFile;
 import com.hartwig.hmftools.common.cobalt.CobaltMedianRatioFile;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
@@ -114,11 +114,11 @@ public class CobaltApplication
         {
             if(mConfig.TumorId != null)
             {
-                RatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
+                CobaltRatioSegmenter.writeTumorSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.tumorPcfFileName());
             }
             if(mConfig.ReferenceId != null)
             {
-                RatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
+                CobaltRatioSegmenter.writeReferenceSegments(results, mConfig.PcfGamma, mConfig.RefGenVersion, executorService, mConfig.referencePcfFileName());
             }
         }
         else
