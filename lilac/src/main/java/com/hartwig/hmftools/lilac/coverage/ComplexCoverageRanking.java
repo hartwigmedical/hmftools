@@ -40,11 +40,13 @@ public class ComplexCoverageRanking
 {
     private final double mMaxScoreDifference;
     private final ReferenceData mRefData;
+    private final int mGeneCount;
 
-    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
+    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData, int geneCount)
     {
         mMaxScoreDifference = maxScoreDifference;
         mRefData = refData;
+        mGeneCount = geneCount;
     }
 
     public List<ComplexCoverage> rankCandidates(
@@ -153,7 +155,7 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
-        double penaltyFactor = 6.0 / complexCoverage.getAlleles().size();
+        double penaltyFactor = 3.0 / mGeneCount;
 
         double complexity = penaltyFactor * solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
         double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;

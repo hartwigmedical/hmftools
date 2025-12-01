@@ -39,10 +39,11 @@ public class ComplexBuilder
     private final List<HlaAllele> mConfirmedProteinAlleles;
     private final List<HlaAllele> mUniqueProteinAlleles;
     private final List<HlaAllele> mConfirmedRecoveredAlleles;
+    private final int mGeneCount;
 
     private static final int DIPLOID_ALLELE_COUNT = 2;
 
-    public ComplexBuilder(final ReferenceData refData)
+    public ComplexBuilder(final ReferenceData refData, int geneCount)
     {
         mRefData = refData;
 
@@ -50,6 +51,7 @@ public class ComplexBuilder
         mUniqueProteinAlleles = Lists.newArrayList();
         mConfirmedProteinAlleles = Lists.newArrayList();
         mConfirmedRecoveredAlleles = Lists.newArrayList();
+        mGeneCount = geneCount;
     }
 
     public List<HlaAllele> getUniqueProteinAlleles() { return mUniqueProteinAlleles; }
@@ -479,7 +481,7 @@ public class ComplexBuilder
         List<ComplexCoverage> complexCoverages = complexes.stream()
                 .map(x -> calcProteinCoverage(fragAlleles, x.Alleles)).collect(Collectors.toList());
 
-        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(0, mRefData);
+        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(0, mRefData, mGeneCount);
         complexCoverages = complexRanker.rankCandidates(complexCoverages, recoveredAlleles, Lists.newArrayList());
 
         // take the top N alleles but no more than 5 that pair with something in the top 10
