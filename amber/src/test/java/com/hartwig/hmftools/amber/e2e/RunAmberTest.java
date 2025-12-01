@@ -3,8 +3,8 @@ package com.hartwig.hmftools.amber.e2e;
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
 import static com.hartwig.hmftools.amber.AmberConfig.USE_NEW_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
@@ -15,9 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
@@ -25,8 +23,9 @@ import com.hartwig.hmftools.amber.AmberApplication;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.utils.pcf.PcfSegment;
 
 import org.apache.commons.io.FileUtils;
@@ -70,14 +69,13 @@ public class RunAmberTest
 
         // Check the segmentation file.
         String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
-        Map<String, List<BaseRegion>> pcfData = PCFFile.loadChrBaseRegions(segmentsFile);
-        assert pcfData != null;
-        assertEquals(2, pcfData.size());
-        List<BaseRegion> chr1Positions = pcfData.get(V38.versionedChromosome(_1));
+        ListMultimap<Chromosome, PCFPosition> pcfData = PCFFile.readPositions(WINDOW_SIZE, PCFSource.TUMOR_BAF, segmentsFile);
+        assertEquals(2, pcfData.keySet().size());
+        List<PCFPosition> chr1Positions = pcfData.get(_1);
         // The R program that does segmentation puts a couple of spurious segments
         // at the start of each chromosome.
-        assertEquals(5, chr1Positions.size());
-        assertEquals(49554, chr1Positions.get(0).start());
+        assertEquals(9, chr1Positions.size());
+        assertEquals(49001, chr1Positions.get(0).Position);
     }
 
     @Test

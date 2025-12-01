@@ -6,16 +6,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -23,7 +20,6 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.Window;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
 import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
@@ -89,8 +85,7 @@ public final class PCFFile
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, final PCFSource source, final String filename)
-            throws IOException
+    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, PCFSource source, String filename) throws IOException
     {
         ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
@@ -157,54 +152,6 @@ public final class PCFFile
         }
 
         return result;
-    }
-
-    public static Map<String, List<BaseRegion>> loadChrBaseRegions(final String filename)
-    {
-        if(filename == null)
-        {
-            return Collections.emptyMap();
-        }
-
-        try
-        {
-            Map<String, List<BaseRegion>> regionsMap = Maps.newHashMap();
-
-            List<BaseRegion> regions = null;
-            String currentChromosome = "";
-
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-            lines.remove(0);
-
-            for(String line : lines)
-            {
-                String[] values = line.split(TSV_DELIM, -1);
-
-                String chromosome = values[COL_CHROMOSOME];
-                int posStart = Integer.parseInt(values[COL_POS_START]);
-                int posEnd = Integer.parseInt(values[COL_POS_END]);
-
-                if(!currentChromosome.equals(chromosome))
-                {
-                    currentChromosome = chromosome;
-                    regions = regionsMap.get(chromosome);
-
-                    if(regions == null)
-                    {
-                        regions = Lists.newArrayList();
-                        regionsMap.put(chromosome, regions);
-                    }
-                }
-
-                regions.add(new BaseRegion(posStart, posEnd));
-            }
-
-            return regionsMap;
-        }
-        catch(IOException e)
-        {
-            return null;
-        }
     }
 
     public static Multimap<String, GenomeRegion> read(int windowSize, final String filename) throws IOException
