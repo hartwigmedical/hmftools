@@ -78,6 +78,9 @@ public final class SvVcfTags
     public static final String UNIQUE_FRAG_POSITIONS = "UFP";
     public static final String UNIQUE_FRAG_POSITIONS_DESC = "Distinct fragment positions";
 
+    public static final String THREE_PRIME_RANGE = "TPR";
+    public static final String THREE_PRIME_RANGE_DESC = "Unpaired read three-prime position range";
+
     public static final String MAX_LOCAL_REPEAT = "MLR";
     public static final String MAX_LOCAL_REPEAT_DESC = "Max local indel repeat round breakend";
 

@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
@@ -126,11 +128,12 @@ public class Breakend
         return totalSupport > 0 ? fragmentCount / totalSupport : 0;
     }
 
-    public int fragmentCount(final Genotype genotype)
+    public int fragmentCount(final Genotype genotype, final String fragTag)
     {
-        return genotype != null ? getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0) : 0;
+        return genotype != null ? getGenotypeAttributeAsInt(genotype, fragTag, 0) : 0;
     }
 
+    public int fragmentCount(final Genotype genotype) { return fragmentCount(genotype, TOTAL_FRAGS); }
     public int fragmentCount() { return fragmentCount(mTumorGenotype) + fragmentCount(mRefGenotype); }
 
     // convenience
@@ -148,6 +151,7 @@ public class Breakend
         return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
     public int uniqueFragmentPositions() { return Context.getAttributeAsInt(UNIQUE_FRAG_POSITIONS, 0); }
+    public int threePrimePositionRange() { return Context.getAttributeAsInt(THREE_PRIME_RANGE, 0); }
 
     public String toString()
     {

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -38,6 +39,8 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_FACTOR;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_MAX_READS;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
@@ -51,6 +54,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.DEL_SHORT_LOW_VAF;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
+import static com.hartwig.hmftools.esvee.common.FilterType.UNPAIRED_THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.List;
@@ -125,6 +129,9 @@ public class VariantFilters
 
         if(failsStrandBias(var))
             var.addFilter(STRAND_BIAS);
+
+        if(lowThreePrimePositionRange(var))
+            var.addFilter(UNPAIRED_THREE_PRIME_RANGE);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -375,6 +382,38 @@ public class VariantFilters
             return false;
 
         return !anySamplesAboveAfThreshold(var, DEL_ARTEFACT_MIN_AF);
+    }
+
+    private boolean lowThreePrimePositionRange(final Variant var)
+    {
+        if(hasPairedReads())
+            return false;
+
+        Breakend breakend = var.breakendStart();
+
+        int threePrimePositionRange = breakend.threePrimePositionRange();
+
+        if(threePrimePositionRange < 0)
+            return false;
+
+        int splitFragments = 0;
+        double maxStrandBias = 0;
+
+        for(Genotype genotype : breakend.Context.getGenotypes())
+        {
+            splitFragments += breakend.fragmentCount(genotype, SPLIT_FRAGS);
+
+            double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+            double adjStrandBias = strandBias > 0.5 ? 1 - strandBias : strandBias;
+            maxStrandBias = max(adjStrandBias, maxStrandBias);
+        }
+
+        if(maxStrandBias > 0)
+            return false;
+
+        double maxPermittedRange = min(1.0 + splitFragments / THREE_PRIME_RANGE_FACTOR, THREE_PRIME_RANGE_MAX_READS);
+
+        return threePrimePositionRange < maxPermittedRange;
     }
 
     private boolean failsStrandBias(final Variant var)

@@ -101,6 +101,7 @@ public class BreakendWriter
             sj.add("AltAlignments");
             sj.add("InsertionType");
             sj.add("UniqueFragPos");
+            sj.add("ThreePrimeRange");
             sj.add("ClosestAssembly");
             sj.add("NonPrimaryFragments");
 
@@ -226,6 +227,7 @@ public class BreakendWriter
                 sj.add(insertionType.toString());
 
                 sj.add(String.valueOf(breakend.uniqueFragmentPositionCount()));
+                sj.add(String.valueOf(breakend.threePrimeRange()));
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
                 sj.add(assemblyMatchStr);

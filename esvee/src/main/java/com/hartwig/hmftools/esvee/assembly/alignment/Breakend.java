@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -50,6 +51,8 @@ public class Breakend implements Comparable<Breakend>
     private int mNonPrimaryAssemblyFragmentCount;
 
     private Set<Integer> mFragmentPositions;
+    private int mThreePrimeRangeStart;
+    private int mThreePrimeRangeEnd;
     private int mMaxLocalRepeat;
 
     public Breakend(
@@ -80,6 +83,8 @@ public class Breakend implements Comparable<Breakend>
         mNonPrimaryAssemblyFragmentCount = 0;
 
         mFragmentPositions = null;
+        mThreePrimeRangeStart = 0;
+        mThreePrimeRangeEnd = 0;
         mMaxLocalRepeat = 0;
     }
 
@@ -106,6 +111,21 @@ public class Breakend implements Comparable<Breakend>
     }
 
     public int uniqueFragmentPositionCount() { return mFragmentPositions != null ? mFragmentPositions.size() : 0; }
+
+    public void addThreePrimePosition(int position)
+    {
+        if(mThreePrimeRangeStart == 0)
+            mThreePrimeRangeStart = position;
+        else
+            mThreePrimeRangeStart = min(mThreePrimeRangeStart, position);
+
+        mThreePrimeRangeEnd = max(mThreePrimeRangeEnd, position);
+    }
+
+    public int threePrimeRange()
+    {
+        return mThreePrimeRangeStart > 0 ? mThreePrimeRangeEnd - mThreePrimeRangeStart : -1;
+    }
 
     public void setMaxLocalRepeat(int maxLocalRepeat) { mMaxLocalRepeat = maxLocalRepeat; }
     public int maxLocalRepeat() { return mMaxLocalRepeat; }

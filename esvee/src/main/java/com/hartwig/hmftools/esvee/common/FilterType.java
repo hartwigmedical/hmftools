@@ -22,6 +22,7 @@ public enum FilterType
     INV_SHORT_FRAG_LOW_VAF("invShortFragLowVaf", "Short (<300b) low-VAF INV artefacts", false),
     INV_SHORT_ISOLATED("invShortIsolated", "Short (<100b) isolated INV artefacts", false),
     DEL_SHORT_LOW_VAF("delShortLowVaf", "Short low-VAF DEL artefacts with homology", false),
+    UNPAIRED_THREE_PRIME_RANGE("threePrimeRange", "Three-prime position range", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;
