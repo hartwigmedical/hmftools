@@ -242,24 +242,27 @@ Regions are covered with the whole region tiling algorithm described in a subseq
 
 Probe evaluation criteria:
 
-- `QS>=0.1`
+- `QS>=QualityScoreMin` (see the file format below)
 
 #### Custom Regions Input File
 
 TSV file with these columns:
 
-| Column        | Type    | Description                                           |
-|---------------|---------|-------------------------------------------------------|
-| Chromosome    | String  | Chromosome name as matching the reference genome.     |
-| PositionStart | Integer | 1-indexed inclusive start of the region.              |
-| PositionEnd   | Integer | 1-indexed inclusive end of the region.                |
-| ExtraInfo     | String  | Arbitrary label which will be included in the output. |
+| Column          | Type    | Default if null | Description                                           |
+|-----------------|---------|-----------------|-------------------------------------------------------|
+| Chromosome      | String  | (N/A)           | Chromosome name as matching the reference genome.     |
+| PositionStart   | Integer | (N/A)           | 1-indexed inclusive start of the region.              |
+| PositionEnd     | Integer | (N/A)           | 1-indexed inclusive end of the region.                |
+| ExtraInfo       | String  | (N/A)           | Arbitrary label which will be included in the output. |
+| QualityScoreMin | Number  | 0.1             | Minimum quality score for probe evaluation criteria.  |
+
+Acceptable null values are `null` and `NULL`. If N/A then that column may not be null.
 
 Example:
 ```text
-Chromosome	PositionStart	PositionEnd	ExtraInfo
-17	7433101	7469631	custom1
-1	30429900	30429950	custom2
+Chromosome	PositionStart	PositionEnd	ExtraInfo	QualityScoreMin
+17	7433101	7469631	custom1	0
+1	30429900	30429950	custom2	NULL
 ```
 
 ### Custom Structural Variants
@@ -268,32 +271,35 @@ Arbitrary structural variants, for which probes are generated in the same manner
 
 Probe evaluation criteria:
 
-- `QS>=0.1`
+- `QS>=QualityScoreMin` (see the file format below)
 
 #### Custom Structural Variants Input File
 
 TSV file with these columns:
 
-| Column           | Type        | Description                                                      |
-|------------------|-------------|------------------------------------------------------------------|
-| ChromosomeStart  | String      | Chromosome name of breakend 1, as matching the reference genome. |
-| PositionStart    | Integer     | 1-indexed position of breakend 1.                                |
-| OrientationStart | `1` or `-1` | Orientation of breakend 1.                                       |
-| ChromosomeEnd    | String      | Chromosome name of breakend 2, as matching the reference genome. |
-| PositionEnd      | Integer     | 1-indexed position of breakend 2.                                |
-| OrientationEnd   | `1` or `-1` | Orientation of breakend 2.                                       |
-| InsertSequence   | String      | Nucleotide sequence inserted in between the two breakends.       |
-| ExtraInfo        | String      | Arbitrary label which will be included in the output.            |
+| Column           | Type        | Default if null | Description                                                      |
+|------------------|-------------|-----------------|------------------------------------------------------------------|
+| ChromosomeStart  | String      | (N/A)           | Chromosome name of breakend 1, as matching the reference genome. |
+| PositionStart    | Integer     | (N/A)           | 1-indexed position of breakend 1.                                |
+| OrientationStart | `1` or `-1` | (N/A)           | Orientation of breakend 1.                                       |
+| ChromosomeEnd    | String      | (N/A)           | Chromosome name of breakend 2, as matching the reference genome. |
+| PositionEnd      | Integer     | (N/A)           | 1-indexed position of breakend 2.                                |
+| OrientationEnd   | `1` or `-1` | (N/A)           | Orientation of breakend 2.                                       |
+| InsertSequence   | String      | (N/A)           | Nucleotide sequence inserted in between the two breakends.       |
+| ExtraInfo        | String      | (N/A)           | Arbitrary label which will be included in the output.            |
+| QualityScoreMin  | Number      | 0.1             | Minimum quality score for probe evaluation criteria.             |
+
+Acceptable null values are `null` and `NULL`. If N/A then that column may not be null.
 
 Example:
 
 ```text
-ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	OrientationEnd	InsertSequence	ExtraInfo
-1	30510000	1	1	30510020	-1		DEL
-1	30600000	-1	1	30600020	1		DUP
-1	30700000	1	1	30700020	1		INV
-1	30800000	1	2	30800000	-1		TRANS
-1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL
+ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	OrientationEnd	InsertSequence	ExtraInfo	QualityScoreMin
+1	30510000	1	1	30510020	-1		DEL	0.05
+1	30600000	-1	1	30600020	1		DUP	0
+1	30700000	1	1	30700020	1		INV	NULL
+1	30800000	1	2	30800000	-1		TRANS	NULL
+1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL	NULL
 ```
 
 ### Whole Region Tiling

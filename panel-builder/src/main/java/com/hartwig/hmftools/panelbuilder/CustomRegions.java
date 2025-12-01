@@ -2,7 +2,7 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_GC_TOLERANCE;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_REGION_QUALITY_MIN_DEFAULT;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isRegionValid;
 import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
@@ -18,8 +18,6 @@ public class CustomRegions
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CUSTOM_REGION;
 
-    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
-            CUSTOM_REGION_QUALITY_MIN, CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE);
     private static final ProbeSelector.Strategy PROBE_SELECT = new ProbeSelector.Strategy.MaxQuality();
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegions.class);
@@ -79,6 +77,9 @@ public class CustomRegions
     {
         LOGGER.debug("Generating probes for {}", region);
         TargetMetadata metadata = new TargetMetadata(TARGET_TYPE, region.extraInfo());
-        return new ProbeGenerationSpec.CoverRegion(region.region(), metadata, PROBE_CRITERIA, PROBE_SELECT);
+        ProbeEvaluator.Criteria evalCriteria = new ProbeEvaluator.Criteria(
+                region.qualityScoreMin() == null ? CUSTOM_REGION_QUALITY_MIN_DEFAULT : region.qualityScoreMin(),
+                CUSTOM_REGION_GC_TARGET, CUSTOM_REGION_GC_TOLERANCE);
+        return new ProbeGenerationSpec.CoverRegion(region.region(), metadata, evalCriteria, PROBE_SELECT);
     }
 }

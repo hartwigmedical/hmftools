@@ -64,7 +64,9 @@ public class ProbeEvaluator
         });
         probes = probes
                 .map(applyIfNotRejected(probe -> evaluateSequence(mAnnotateSequence.apply(probe))))
+                // TODO: don't have to annotate GC if there's no limit
                 .map(applyIfNotRejected(probe -> evaluateGcContent(mAnnotateGcContent.apply(probe))));
+                // TODO: don't have to annotate QS if threshold is 0
         probes = mAnnotateQualityScore.apply(probes)
                 .map(applyIfNotRejected(ProbeEvaluator::evaluateQualityScore));
         probes = probes.map(applyIfNotRejected(probe -> probe.withEvaluationResult(EvaluationResult.accept())));
@@ -127,10 +129,9 @@ public class ProbeEvaluator
 
         public Criteria
         {
-            if(!(qualityScoreMin > 0 && qualityScoreMin <= 1))
+            if(!(qualityScoreMin >= 0 && qualityScoreMin <= 1))
             {
-                // Note quality score is always required, quality=0 is never acceptable.
-                throw new IllegalArgumentException("qualityScoreMin must be in range (0, 1]");
+                throw new IllegalArgumentException("qualityScoreMin must be in range [0, 1]");
             }
             if(!(gcContentMax() >= 0 && gcContentMin() <= 1))
             {

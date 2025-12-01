@@ -1,11 +1,5 @@
 package com.hartwig.hmftools.panelbuilder;
 
-import static java.util.Objects.requireNonNull;
-
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
-
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -14,16 +8,24 @@ import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public record CustomRegion(
         ChrBaseRegion region,
         // Arbitrary descriptor for the user.
-        String extraInfo
+        String extraInfo,
+        // If null, use the default quality score minimum.
+        @Nullable Double qualityScoreMin
 )
 {
-    private static final String FLD_EXTRA_INFO = "ExtraInfo";
-
-    private static final List<String> COLUMNS = List.of(FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_EXTRA_INFO);
+    private enum Columns
+    {
+        Chromosome,
+        PositionStart,
+        PositionEnd,
+        ExtraInfo,
+        QualityScoreMin
+    }
 
     private static final Logger LOGGER = LogManager.getLogger(CustomRegion.class);
 
@@ -33,41 +35,37 @@ public record CustomRegion(
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            int chromosomeIdx = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
-            int posStartIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_START));
-            int posEndIdx = requireNonNull(reader.getColumnIndex(FLD_POSITION_END));
-            int extraInfoIdx = requireNonNull(reader.getColumnIndex(FLD_EXTRA_INFO));
-
-            List<CustomRegion> regions = reader.stream().map(row ->
+            List<CustomRegion> customRegions = reader.stream().map(row ->
             {
-                String chromosome = row.get(chromosomeIdx);
-                int start = row.getInt(posStartIdx);
-                int end = row.getInt(posEndIdx);
-                String extraInfo = row.get(extraInfoIdx);
-                ChrBaseRegion baseRegion = new ChrBaseRegion(chromosome, start, end);
-                return new CustomRegion(baseRegion, extraInfo);
+                String chromosome = row.get(Columns.Chromosome);
+                int startPosition = row.getInt(Columns.PositionStart);
+                int endPosition = row.getInt(Columns.PositionEnd);
+                String extraInfo = row.get(Columns.ExtraInfo);
+                Double qualityScoreMin = row.getDoubleOrNull(Columns.QualityScoreMin);
+                return new CustomRegion(new ChrBaseRegion(chromosome, startPosition, endPosition), extraInfo, qualityScoreMin);
             }).toList();
 
-            LOGGER.debug("Read {} custom regions from {}", regions.size(), filePath);
-            return regions;
+            LOGGER.debug("Read {} custom regions from {}", customRegions.size(), filePath);
+            return customRegions;
         }
     }
 
-    public static void writeToFile(final List<CustomRegion> regions, final String filePath)
+    public static void writeToFile(final List<CustomRegion> customRegions, final String filePath)
     {
         LOGGER.debug("Writing custom regions to file: {}", filePath);
 
-        try(DelimFileWriter<CustomRegion> writer = new DelimFileWriter<>(filePath, COLUMNS, CustomRegion::writeObj))
+        try(DelimFileWriter<CustomRegion> writer = new DelimFileWriter<>(filePath, Columns.values(), CustomRegion::writeObj))
         {
-            regions.forEach(writer::writeRow);
+            customRegions.forEach(writer::writeRow);
         }
     }
 
-    private static void writeObj(final CustomRegion region, final DelimFileWriter.Row row)
+    private static void writeObj(final CustomRegion customRegion, final DelimFileWriter.Row row)
     {
-        row.set(FLD_CHROMOSOME, region.region().chromosome());
-        row.set(FLD_POSITION_START, region.region().start());
-        row.set(FLD_POSITION_END, region.region().end());
-        row.set(FLD_EXTRA_INFO, region.extraInfo());
+        row.set(Columns.Chromosome, customRegion.region().chromosome());
+        row.set(Columns.PositionStart, customRegion.region().start());
+        row.set(Columns.PositionEnd, customRegion.region().end());
+        row.set(Columns.ExtraInfo, customRegion.extraInfo());
+        row.setOrNull(Columns.QualityScoreMin, customRegion.qualityScoreMin());
     }
 }

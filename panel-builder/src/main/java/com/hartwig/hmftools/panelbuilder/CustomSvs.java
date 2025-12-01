@@ -2,7 +2,7 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_SV_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_SV_GC_TOLERANCE;
-import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_SV_QUALITY_MIN;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CUSTOM_SV_QUALITY_MIN_DEFAULT;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.isPositionValid;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
@@ -21,9 +21,6 @@ import org.apache.logging.log4j.Logger;
 public class CustomSvs
 {
     private static final TargetMetadata.Type TARGET_TYPE = TargetMetadata.Type.CUSTOM_SV;
-
-    private static final ProbeEvaluator.Criteria PROBE_CRITERIA = new ProbeEvaluator.Criteria(
-            CUSTOM_SV_QUALITY_MIN, CUSTOM_SV_GC_TARGET, CUSTOM_SV_GC_TOLERANCE);
 
     private static final Logger LOGGER = LogManager.getLogger(CustomSvs.class);
 
@@ -89,7 +86,10 @@ public class CustomSvs
                 customSv.insertSequence(),
                 PROBE_LENGTH);
         TargetedRange targetedRange = TargetedRange.wholeRegion(definition.baseLength());
-        return new ProbeGenerationSpec.SingleProbe(definition, targetedRange, metadata, PROBE_CRITERIA);
+        ProbeEvaluator.Criteria evalCriteria = new ProbeEvaluator.Criteria(
+                customSv.qualityScoreMin() == null ? CUSTOM_SV_QUALITY_MIN_DEFAULT : customSv.qualityScoreMin(),
+                CUSTOM_SV_GC_TARGET, CUSTOM_SV_GC_TOLERANCE);
+        return new ProbeGenerationSpec.SingleProbe(definition, targetedRange, metadata, evalCriteria);
     }
 }
 

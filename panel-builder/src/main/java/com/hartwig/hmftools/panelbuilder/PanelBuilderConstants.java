@@ -70,12 +70,12 @@ public class PanelBuilderConstants
     public static final double CN_GC_OPTIMAL_TOLERANCE = 0.005;
 
     // Custom regions parameters.
-    public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
+    public static final double CUSTOM_REGION_QUALITY_MIN_DEFAULT = 0.1;
     public static final double CUSTOM_REGION_GC_TARGET = 0.45;
     public static final double CUSTOM_REGION_GC_TOLERANCE = 1;
 
     // Custom structural variants parameters.
-    public static final double CUSTOM_SV_QUALITY_MIN = 0.1;
+    public static final double CUSTOM_SV_QUALITY_MIN_DEFAULT = 0.1;
     public static final double CUSTOM_SV_GC_TARGET = 0.45;
     public static final double CUSTOM_SV_GC_TOLERANCE = 1;
 
