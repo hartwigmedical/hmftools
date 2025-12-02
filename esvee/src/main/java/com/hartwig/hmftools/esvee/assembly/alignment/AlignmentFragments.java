@@ -336,7 +336,7 @@ public class AlignmentFragments
                     continue;
 
                 breakend.addFragmentPosition(fragmentPosition);
-                breakend.addThreePrimePosition(read.orientation().isForward() ? read.unclippedEnd() : read.unclippedStart());
+                breakend.addThreePrimePosition(read.orientation().isForward() ? read.untrimmedEnd() : read.untrimmedStart());
 
                 processedBreakends.add(breakend);
             }

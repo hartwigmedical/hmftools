@@ -15,9 +15,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.READ_ID_TRIMMER;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.LOW_QUAL_SCORE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.findLowBaseQualTrimCount;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -73,7 +71,8 @@ public class Read
 
     private boolean mIsReference;
     private boolean mHasLineTail;
-    private int mTrimCount; // if non-zero this has been done to the 3' end
+    private int mTrimCountStart;
+    private int mTrimCountEnd;
     private boolean mLowQualTrimmed;
 
     public Read(final SAMRecord record)
@@ -104,7 +103,8 @@ public class Read
         mInvalidIndel = false;
 
         mHasLineTail = false;
-        mTrimCount = 0;
+        mTrimCountStart = 0;
+        mTrimCountEnd = 0;
         mLowQualTrimmed = false;
     }
 
@@ -463,13 +463,19 @@ public class Read
 
         mBases = newBases;
         mBaseQuals = newBaseQuals;
-        mTrimCount += count;
+
+        if(fromStart)
+            mTrimCountStart += count;
+        else
+            mTrimCountEnd += count;
 
         updateCigarString();
         setBoundaries(newReadStart);
     }
 
-    public int baseTrimCount() { return mTrimCount; }
+    public int trimCount() { return mTrimCountStart + mTrimCountEnd; }
+    public int trimCountStart() { return mTrimCountStart; }
+    public int trimCountEnd() { return mTrimCountEnd; }
 
     public void markLowQualTrimmed() { mLowQualTrimmed = true; }
     public boolean lowQualTrimmed() { return mLowQualTrimmed; }

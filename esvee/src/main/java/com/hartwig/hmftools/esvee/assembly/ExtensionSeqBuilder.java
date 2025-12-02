@@ -126,7 +126,7 @@ public class ExtensionSeqBuilder
             if(read.mismatched())
                 continue;
 
-            if(!sufficientHighQualMatches(read))
+            if(!sufficientQualMatches(read))
                 continue;
 
             SupportRead supportRead = new SupportRead(
@@ -139,7 +139,7 @@ public class ExtensionSeqBuilder
         return supportReads;
     }
 
-    public boolean sufficientHighQualMatches(final ReadParseState read)
+    public boolean sufficientQualMatches(final ReadParseState read)
     {
         int refBaseRepeatBuffer = refBaseRepeatCount() > 0 ? 2 : 0;
         int highQualExtensionMatches = read.highQualMatches() - 1; // to remove the initial junction ref bases
@@ -213,7 +213,7 @@ public class ExtensionSeqBuilder
             extensionIndex += mBuildForwards ? extBaseMove : -extBaseMove;
         }
 
-        if(sufficientHighQualMatches(readParseState))
+        if(sufficientQualMatches(readParseState))
         {
             // add as support
             mReads.add(readParseState);
@@ -441,7 +441,7 @@ public class ExtensionSeqBuilder
 
         for(ReadParseState read : mReads)
         {
-            if(!sufficientHighQualMatches(read))
+            if(!sufficientQualMatches(read))
                 continue;
 
             if(read.mismatchCount(false) == 0)

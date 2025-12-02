@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.Doubles.medianInteger;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MAX_MISMATCH_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_LENGTH_4;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_4;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_RATE_MIN_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MAX_BASE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
@@ -257,7 +259,7 @@ public class SequenceBuilder
 
                 for(ReadParseState read : activeReads)
                 {
-                    read.addBaseMatch(isHighBaseQual(read.currentQual()));
+                    read.addBaseMatch(aboveMinQual(read.currentQual()));
                     read.moveNext();
                 }
             }
@@ -853,7 +855,7 @@ public class SequenceBuilder
         }
         else
         {
-            read.addBaseMatch(isHighBaseQual(read.currentQual()));
+            read.addBaseMatch(aboveMinQual(read.currentQual()));
         }
 
         read.moveOnMatchType(seqDiffInfo);
@@ -876,7 +878,7 @@ public class SequenceBuilder
         int readRepeatStart = seqDiffInfo.repeatIndex(consensusRepeat, mBuildForwards, true);
         int readRepeatEnd = seqDiffInfo.repeatIndex(consensusRepeat, mBuildForwards, false);
 
-        int highQualRepeatBases = read.highQualBaseCount(readRepeatStart, readRepeatEnd);
+        int highQualRepeatBases = read.nonLowQualBaseCount(readRepeatStart, readRepeatEnd); // includes medium
         read.addBaseMatches(repeatedMatches, highQualRepeatBases);
     }
 
@@ -920,6 +922,9 @@ public class SequenceBuilder
 
         if(readOverlap <= READ_MISMATCH_PENALTY_LENGTH_3)
             return READ_MISMATCH_PENALTY_PENALTY_3;
+
+        if(readOverlap <= READ_MISMATCH_PENALTY_LENGTH_4)
+            return READ_MISMATCH_PENALTY_PENALTY_4;
 
         return READ_MISMATCH_PENALTY_PENALTY_LONG;
     }

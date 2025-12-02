@@ -413,7 +413,7 @@ public class JunctionAssembler
             {
                 ++mismatchReadCount;
             }
-            else
+            else if(extensionSeqBuilder.sufficientQualMatches(readInfo))
             {
                 assembly.addJunctionSupport(read, JUNCTION, readInfo.startIndex(), readInfo);
             }

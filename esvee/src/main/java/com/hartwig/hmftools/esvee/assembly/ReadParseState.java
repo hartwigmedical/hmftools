@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.DELETE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.MATCH;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
@@ -53,7 +54,7 @@ public class ReadParseState
     // track agreement and mismatches vs consensus sequence
     private boolean mMismatched;
     public int mBaseMatches;
-    public int mHighQualMatches;
+    public int mHighQualMatches; // includes medium qual
     private List<SequenceDiffInfo> mMismatches;
 
     private List<Integer> mLowQualIndices; // only used for Ultima for now
@@ -366,19 +367,19 @@ public class ReadParseState
         return bases;
     }
 
-    public int highQualBaseCount(int readIndexStart, int readIndexEnd)
+    public int nonLowQualBaseCount(int readIndexStart, int readIndexEnd)
     {
-        int highQualBases = 0;
+        int nonLowQualBases = 0;
         for(int i = readIndexStart; i <= readIndexEnd; ++i)
         {
             if(i >= 0 && i < mRead.getBaseQuality().length)
             {
-                if(isHighBaseQual(mRead.getBaseQuality()[i]))
-                    ++highQualBases;
+                if(aboveMinQual(mRead.getBaseQuality()[i]))
+                    ++nonLowQualBases;
             }
         }
 
-        return highQualBases;
+        return nonLowQualBases;
     }
 
     public BaseQualType qualType(int index) { return rangeMinQualType(index, index); }

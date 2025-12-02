@@ -39,7 +39,8 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_FACTOR;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM2;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_MAX_READS;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
@@ -389,31 +390,40 @@ public class VariantFilters
         if(hasPairedReads())
             return false;
 
-        Breakend breakend = var.breakendStart();
-
-        int threePrimePositionRange = breakend.threePrimePositionRange();
-
-        if(threePrimePositionRange < 0)
-            return false;
-
-        int splitFragments = 0;
-        double maxStrandBias = 0;
-
-        for(Genotype genotype : breakend.Context.getGenotypes())
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            splitFragments += breakend.fragmentCount(genotype, SPLIT_FRAGS);
+            if(var.breakends()[se] == null)
+                continue;
 
-            double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
-            double adjStrandBias = strandBias > 0.5 ? 1 - strandBias : strandBias;
-            maxStrandBias = max(adjStrandBias, maxStrandBias);
+            Breakend breakend = var.breakends()[se];
+
+            int threePrimePositionRange = breakend.threePrimePositionRange();
+
+            if(threePrimePositionRange < 0)
+                continue;
+
+            int splitFragments = 0;
+            double maxStrandBias = 0;
+
+            for(Genotype genotype : breakend.Context.getGenotypes())
+            {
+                splitFragments += breakend.fragmentCount(genotype, SPLIT_FRAGS);
+
+                double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+                double adjStrandBias = strandBias > 0.5 ? 1 - strandBias : strandBias;
+                maxStrandBias = max(adjStrandBias, maxStrandBias);
+            }
+
+            if(maxStrandBias > 0)
+                continue;
+
+            double maxPermittedRange = min(THREE_PRIME_RANGE_PARAM1 + splitFragments / THREE_PRIME_RANGE_PARAM2, THREE_PRIME_RANGE_MAX_READS);
+
+            if(threePrimePositionRange < maxPermittedRange)
+                return true;
         }
 
-        if(maxStrandBias > 0)
-            return false;
-
-        double maxPermittedRange = min(1.0 + splitFragments / THREE_PRIME_RANGE_FACTOR, THREE_PRIME_RANGE_MAX_READS);
-
-        return threePrimePositionRange < maxPermittedRange;
+        return false;
     }
 
     private boolean failsStrandBias(final Variant var)

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximate
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.trimAdapterBases;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -256,7 +257,7 @@ public class JunctionGroupAssembler extends ThreadTask
         if(mBamReader.currentIsReferenceSample())
             read.markReference();
 
-        if(ReadAdjustments.trimPolyGSequences(read))
+        if(isIllumina() && ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
 
         markLineSoftClips(read);
@@ -267,6 +268,19 @@ public class JunctionGroupAssembler extends ThreadTask
                 ++mReadStats.LowBaseQualTrimmed;
 
             trimAdapterBases(read);
+        }
+        else if(isSbx())
+        {
+            // trim uncertain bases from both ends
+            for(int i = 0; i <= 1; ++i)
+            {
+                boolean fromStart = (i == 0);
+                int trimCount = ReadAdjustments.findLowBaseQualTrimCount(
+                        read, 0, read.basesLength() - 1, fromStart, true);
+
+                if(trimCount > 0)
+                    read.trimBases(trimCount, fromStart);
+            }
         }
 
         if(IndelBuilder.calcIndelInferredUnclippedPositions(read))

@@ -58,14 +58,16 @@ public final class AssemblyConstants
 
     public static final double TOTAL_READ_MISMATCH_RATE = 0.1; // to consider more extensive searches for mismatch causes
 
-    // penalty factors as function of repeat length
+    // penalty factors as function of read extension base length
     public static final int READ_MISMATCH_PENALTY_LENGTH_1 = 5;
     public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0;
     public static final int READ_MISMATCH_PENALTY_LENGTH_2 = 15;
-    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.25;
-    public static final int READ_MISMATCH_PENALTY_LENGTH_3 = 100;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.2;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_3 = 49;
     public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
-    public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 2;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_4 = 99;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_4 = 2;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 3;
 
     public static final int REPEAT_MIN_COUNT = 4; // minimum number of repeats to consider a repeat
     public static final int REPEAT_MAX_BASE_LENGTH = 5;

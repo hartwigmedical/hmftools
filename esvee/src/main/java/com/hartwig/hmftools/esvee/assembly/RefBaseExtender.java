@@ -229,7 +229,7 @@ public class RefBaseExtender
         if(isDiscordant && read.mateRead() != null && read.mateRead().mappingQuality() == 0)
             return true;
 
-        return read.basesLength() - read.baseTrimCount() < UNMAPPED_TRIM_THRESHOLD;
+        return read.basesLength() - read.trimCount() < UNMAPPED_TRIM_THRESHOLD;
     }
 
     private class NonJunctionRead
