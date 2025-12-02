@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -189,7 +190,15 @@ public class ReferenceData
         exons = exons.subList(exons.size() - 2, exons.size());
 
         // adjust end of exon 2 so that we get a multiple of 3 nucleotide coding bases
-        int trimmedCodingStart = exons.get(0).Start + 1;
+        int nucCount = 0;
+        for(ExonData exon : exons)
+        {
+            int start = max(transcript.CodingStart, exon.Start);
+            int end = min(transcript.CodingEnd, exon.End);
+            nucCount += end - start + 1;
+        }
+
+        int trimmedCodingStart = exons.get(0).Start + (nucCount % 3);
         TranscriptData trimmedTranscript =
                 new TranscriptData(transcript.TransId, transcript.TransName, transcript.GeneId, transcript.IsCanonical, transcript.Strand, transcript.TransStart, transcript.TransEnd, trimmedCodingStart, transcript.CodingEnd, transcript.BioType, transcript.RefSeqId);
         trimmedTranscript.setExons(exons);
