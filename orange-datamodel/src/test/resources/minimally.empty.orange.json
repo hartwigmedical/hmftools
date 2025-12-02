@@ -68,13 +68,19 @@
     },
     "characteristics": {
       "wholeGenomeDuplication": true,
-      "microsatelliteIndelsPerMb": 0,
-      "microsatelliteStatus": "MSS",
-      "tumorMutationalBurdenPerMb": 0,
-      "tumorMutationalBurdenStatus": "UNKNOWN",
-      "tumorMutationalLoad": 0,
-      "tumorMutationalLoadStatus": "UNKNOWN",
-      "svTumorMutationalBurden": 0
+      "microsatelliteStability": {
+        "findingKey": "microsatelliteStability[MSS]",
+        "microsatelliteIndelsPerMb": 0,
+        "microsatelliteStatus": "MSS"
+      },
+      "tumorMutationStatus": {
+        "findingKey": "tumorMutationStatus",
+        "tumorMutationalBurdenPerMb": 0,
+        "tumorMutationalBurdenStatus": "UNKNOWN",
+        "tumorMutationalLoad": 0,
+        "tumorMutationalLoadStatus": "UNKNOWN",
+        "svTumorMutationalBurden": 0
+      }
     },
     "somaticDrivers": [],
     "germlineDrivers": null,
@@ -100,14 +106,18 @@
     "additionalViableSomaticFusions": []
   },
   "virusInterpreter": {
-    "allViruses": []
+    "allViruses": [],
+    "driverViruses": []
   },
   "chord": {
-    "hrdValue": 0,
-    "hrStatus": "HR_PROFICIENT",
-    "BRCA1Value": 0,
-    "BRCA2Value": 0,
-    "hrdType": ""
+    "homologousRecombination": {
+      "findingKey": "homologousRecombination[HR_PROFICIENT]",
+      "hrdValue": 0,
+      "hrStatus": "HR_PROFICIENT",
+      "brca1Value": 0,
+      "brca2Value": 0,
+      "hrdType": ""
+    }
   },
   "peach": [],
   "cuppa": {
@@ -121,7 +131,12 @@
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,
-    "LINECount": 0
+    "LINECount": 0,
+    "bestPredictedTumorOrigin": {
+      "findingKey": "predictedTumorOrigin[cancer]",
+      "cancerType": "cancer",
+      "likelihood": 0
+    }
   },
   "lilac": {
     "qc": "FAIL",

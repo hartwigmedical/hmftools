@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -20,7 +21,6 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
-import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -104,12 +104,12 @@ public class OrangeJsonTest
         assertEquals(0.12, purple.fit().purity(), EPSILON);
         assertEquals(3.1, purple.fit().ploidy(), EPSILON);
 
-        assertEquals(0.1, purple.characteristics().microsatelliteIndelsPerMb(), EPSILON);
-        assertEquals(PurpleMicrosatelliteStatus.MSS, purple.characteristics().microsatelliteStatus());
-        assertEquals(13.71, purple.characteristics().tumorMutationalBurdenPerMb(), EPSILON);
-        assertEquals(PurpleTumorMutationalStatus.HIGH, purple.characteristics().tumorMutationalBurdenStatus());
-        assertEquals(185, purple.characteristics().tumorMutationalLoad());
-        assertEquals(PurpleTumorMutationalStatus.HIGH, purple.characteristics().tumorMutationalLoadStatus());
+        assertEquals(0.1, purple.characteristics().microsatelliteStability().microsatelliteIndelsPerMb(), EPSILON);
+        assertEquals(PurpleMicrosatelliteStatus.MSS, purple.characteristics().microsatelliteStability().microsatelliteStatus());
+        assertEquals(13.71, purple.characteristics().tumorMutationStatus().tumorMutationalBurdenPerMb(), EPSILON);
+        assertEquals(PurpleTumorMutationalStatus.HIGH, purple.characteristics().tumorMutationStatus().tumorMutationalBurdenStatus());
+        assertEquals(185, purple.characteristics().tumorMutationStatus().tumorMutationalLoad());
+        assertEquals(PurpleTumorMutationalStatus.HIGH, purple.characteristics().tumorMutationStatus().tumorMutationalLoadStatus());
 
         assertEquals(2, purple.somaticDrivers().size());
         PurpleDriver somaticDriver1 = findDriverByGene(purple.somaticDrivers(), "SF3B1");
@@ -299,7 +299,7 @@ public class OrangeJsonTest
 
         assertEquals(1, linx.allSomaticFusions().size());
         Fusion fusion = linx.allSomaticFusions().iterator().next();
-        assertTrue(fusion.reported());
+        assertTrue(fusion.isReportable());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
         assertEquals(LinxUnreportableReason.NONE, fusion.unreportedReasons().iterator().next());
         assertEquals(1, fusion.unreportedReasons().size());
@@ -312,7 +312,7 @@ public class OrangeJsonTest
         assertEquals("ENST00000319349", fusion.geneTranscriptEnd());
         assertEquals("Exon 2", fusion.geneContextEnd());
         assertEquals(2, fusion.fusedExonDown());
-        assertEquals(FusionLikelihoodType.HIGH, fusion.driverLikelihood());
+        assertEquals(DriverInterpretation.HIGH, fusion.driverInterpretation());
         assertEquals(FusionPhasedType.INFRAME, fusion.phased());
         assertEquals(1.1, fusion.junctionCopyNumber(), EPSILON);
 
@@ -367,8 +367,8 @@ public class OrangeJsonTest
         assertEquals(VirusLikelihoodType.LOW, virus2.driverLikelihood());
         assertEquals(0.4, virus2.percentageCovered(), EPSILON);
 
-        assertEquals(1, virusInterpreter.reportableViruses().size());
-        assertEquals(virus1, virusInterpreter.reportableViruses().iterator().next());
+        assertEquals(1, virusInterpreter.driverViruses().size());
+        assertEquals(virus1, virusInterpreter.driverViruses().iterator().next());
     }
 
     @NotNull
