@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneTestFactory;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -279,6 +280,6 @@ public class WildTypeAlgoTest
 
     private static Fusion createFusion(final String geneStart, final String geneEnd)
     {
-        return LinxOrangeTestFactory.fusionBuilder().geneStart(geneStart).geneEnd(geneEnd).reported(true).build();
+        return LinxOrangeTestFactory.fusionBuilder().reportedStatus(ReportedStatus.REPORTED).geneStart(geneStart).geneEnd(geneEnd).build();
     }
 }

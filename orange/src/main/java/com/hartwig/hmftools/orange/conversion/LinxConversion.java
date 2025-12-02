@@ -84,7 +84,6 @@ public final class LinxConversion
                 .geneEnd(linxFusion.geneEnd())
                 .geneContextEnd(linxFusion.geneContextEnd())
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
-                .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .unreportedReasons(unreportableReasons)
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
