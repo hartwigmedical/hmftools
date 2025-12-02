@@ -41,8 +41,6 @@ public interface Fusion extends Driver
     @NotNull
     String geneTranscriptEnd();
 
-    boolean reported();
-
     @NotNull LinxFusionType reportedType();
 
     @NotNull

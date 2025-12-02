@@ -2,6 +2,7 @@ package com.hartwig.hmftools.datamodel.linx;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.finding.Disruption;
 import com.hartwig.hmftools.datamodel.finding.Fusion;
 
@@ -30,7 +31,7 @@ public interface LinxRecord
     @NotNull
     default List<Fusion> reportableSomaticFusions()
     {
-        return allSomaticFusions().stream().filter(Fusion::reported).toList();
+        return allSomaticFusions().stream().filter(Driver::isReportable).toList();
     }
 
     @NotNull
