@@ -38,9 +38,9 @@ The key configuration values to set are:
 
 The available categories are: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, 
 CHORD, LILAC, PEACH, VIRUS, TUMOR_FLAGSTAT, GERMLINE_FLAGSTAT, TUMOR_BAM_METRICS, GERMLINE_BAM_METRICS, SNP_GENOTYPE, COPY_NUMBER, GENE_COPY_NUMBER,
-CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH.
+CDR3_SEQUENCE, CDR3_LOCUS_SUMMARY, TELOMERE_LENGTH, V_CHORD.
 
-The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE.
+The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, TUMOR_FLAGSTAT, TUMOR_BAM_METRICS and SNP_GENOTYPE, V_CHORD.
 
 
 ### Optional configuration
@@ -88,6 +88,7 @@ Specify one or more tool directories to override the pipeline default paths.
 | VIRUS                                                        | virus_dir         |
 | CIDER                                                        | cider_dir         |
 | TEAL                                                         | teal_dir          |
+| V_CHORD                                                      | v_chord_dir       |
 
 Wildcards '*' can be used in place of sampleIds, in which case Compar will replace the wildcard with the sampleId for each path.
 Similarly, '$' can be used in place of germline sample IDs.
@@ -375,12 +376,23 @@ Data key: SampleId, Locus
 |---------------|-------------------------|
 | passSequences | Threshold [5%]          | 
 
-### Telomere lengths
+### Telomere Lengths
 Data key: SampleId, Type (tumor or ref)
 
 | Field          | Match Type & Thresholds |
 |----------------|-------------------------|
 | telomereLength | Threshold [5%]          | 
+
+### vChord
+Data key: SampleId
+
+| Field                 | Match Type & Thresholds |
+|-----------------------|-------------------------|
+| breastCancerHrdScore  | Threshold [0.1]         | 
+| ovarianCancerHrdScore | Threshold [0.1]         | 
+| pancreaticCancerScore | Threshold [0.1]         | 
+| prostateCancerScore   | Threshold [0.1]         | 
+| otherCancerScore      | Threshold [0.1]         | 
 
 ### Copy Number
 Only runs in DETAILED mode.

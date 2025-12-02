@@ -28,7 +28,8 @@ public enum Category
     SNP_GENOTYPE,
     CDR3_SEQUENCE,
     CDR3_LOCUS_SUMMARY,
-    TELOMERE_LENGTH;
+    TELOMERE_LENGTH,
+    V_CHORD;
 
     public static final String ALL_CATEGORIES = "ALL";
     public static final String LINX_CATEGORIES = "LINX";
@@ -47,6 +48,6 @@ public enum Category
 
     public static List<Category> panelCategories()
     {
-        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION);
+        return Lists.newArrayList(PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DISRUPTION, V_CHORD);
     }
 }

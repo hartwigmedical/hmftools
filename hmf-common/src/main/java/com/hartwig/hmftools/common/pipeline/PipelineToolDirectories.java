@@ -33,6 +33,7 @@ public record PipelineToolDirectories(
         String tealDir,
         String tumorFlagstatDir,
         String tumorMetricsDir,
+        String vChordDir,
         String virusBreakendDir,
         String virusInterpreterDir
 ) {
@@ -69,6 +70,7 @@ public record PipelineToolDirectories(
             "teal",
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
+            "vchord",  // not yet implemented in this version
             "virusbreakend",
             "virusinterpreter"
     );
@@ -98,6 +100,7 @@ public record PipelineToolDirectories(
             "teal",
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
+            "vchord",  // not yet implemented in this version
             "virusbreakend",
             "virusinterpreter"
     );
@@ -129,6 +132,7 @@ public record PipelineToolDirectories(
             "teal",
             "*/bam_metrics",
             "*/bam_metrics",
+            "vchord",
             "virusbreakend",
             "virusintrprtr"
     );
@@ -158,6 +162,7 @@ public record PipelineToolDirectories(
             "teal",
             "bamtools/*_bamtools",
             "bamtools/*_bamtools",
+            "vchord",  // not yet implemented in this version
             "virusbreakend",
             "virusinterpreter"
     );
@@ -254,6 +259,7 @@ public record PipelineToolDirectories(
                 convertWildcardSamplePath(tealDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(tumorFlagstatDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(tumorMetricsDir, tumorSampleId, normalSampleId),
+                convertWildcardSamplePath(vChordDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(virusBreakendDir, tumorSampleId, normalSampleId),
                 convertWildcardSamplePath(virusInterpreterDir, tumorSampleId, normalSampleId)
         );
