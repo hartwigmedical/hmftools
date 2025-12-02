@@ -187,8 +187,8 @@ public class SomaticFindingsChapter implements ReportChapter
             }
             else
             {
-                String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
-                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
+                String titleDrivers = driverVirusTitle + " (" + virusInterpreter.driverViruses().size() + ")";
+                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.driverViruses(), reportResources));
             }
         }
     }
