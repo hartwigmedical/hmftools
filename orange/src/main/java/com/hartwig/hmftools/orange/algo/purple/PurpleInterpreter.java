@@ -95,13 +95,13 @@ public class PurpleInterpreter
         }
 
         List<PurpleDriver> somaticDrivers = ConversionUtil.mapToList(purple.somaticDrivers(), PurpleConversion::convert);
-        List<SmallVariant> somaticSmallVariants = SmallVariantFactory.create(driverSomaticVariants, somaticDrivers);
+        List<SmallVariant> somaticSmallVariants = SmallVariantFactory.create(FindingKeys.SampleType.SOMATIC, driverSomaticVariants, somaticDrivers);
         List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
         List<SmallVariant> germlineSmallVariants = null;
 
         if(germlineDrivers != null)
         {
-            germlineSmallVariants = SmallVariantFactory.create(driverGermlineVariants, germlineDrivers);
+            germlineSmallVariants = SmallVariantFactory.create(FindingKeys.SampleType.GERMLINE, driverGermlineVariants, germlineDrivers);
         }
 
         return ImmutablePurpleRecord.builder()
@@ -160,29 +160,30 @@ public class PurpleInterpreter
 
     private static List<GainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
-        return gainsDelsFromDrivers(drivers, Set.of(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL));
+        return gainsDelsFromDrivers(drivers, Set.of(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL), FindingKeys.SampleType.SOMATIC);
     }
 
     private static List<GainDeletion> germlineGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
-        return gainsDelsFromDrivers(drivers, Set.of(DriverType.GERMLINE_DELETION));
+        return gainsDelsFromDrivers(drivers, Set.of(DriverType.GERMLINE_DELETION), FindingKeys.SampleType.GERMLINE);
     }
 
-    private static List<GainDeletion> gainsDelsFromDrivers(final List<DriverCatalog> drivers, final Set<DriverType> driverTypes)
+    private static List<GainDeletion> gainsDelsFromDrivers(final List<DriverCatalog> drivers, final Set<DriverType> driverTypes,
+            FindingKeys.SampleType sampleType)
     {
         return drivers.stream()
                 .filter(o -> driverTypes.contains(o.driver()))
-                .map(PurpleInterpreter::toGainDel)
+                .map(o -> toGainDel(o, sampleType))
                 .toList();
     }
 
-    private static GainDeletion toGainDel(final DriverCatalog driver)
+    private static GainDeletion toGainDel(final DriverCatalog driver, FindingKeys.SampleType sampleType)
     {
         CopyNumberInterpretation copyNumberInterpretation = CopyNumberInterpretationUtil.fromCNADriver(driver);
 
         // TODO: transcript fix
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(driver.gene(), copyNumberInterpretation, driver.isCanonical(), driver.transcript()))
+                .findingKey(FindingKeys.gainDeletion(sampleType, driver.gene(), copyNumberInterpretation, driver.isCanonical(), driver.transcript()))
                 .reportedStatus(convertReportedStatus(driver.reportedStatus()))
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .driver(convert(driver))
@@ -213,6 +214,9 @@ public class PurpleInterpreter
 
     private static PurpleCharacteristics createCharacteristics(final PurpleData purple)
     {
+        PurpleTumorMutationalStatus tmbStatus = PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalBurdenStatus().name());
+        PurpleTumorMutationalStatus tmlStatus = PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name());
+
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
                 .microsatelliteStability(ImmutableMicrosatelliteStability.builder()
@@ -221,13 +225,11 @@ public class PurpleInterpreter
                         .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
                         .build())
                 .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
-                        .findingKey(FindingKeys.tumorMutationStatus())
+                        .findingKey(FindingKeys.tumorMutationStatus(tmbStatus, tmlStatus))
                         .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                        .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
-                                .tumorMutationalBurdenStatus()
-                                .name()))
+                        .tumorMutationalBurdenStatus(tmbStatus)
                         .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
-                        .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
+                        .tumorMutationalLoadStatus(tmlStatus)
                         .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
                         .build()
                 )

@@ -73,7 +73,7 @@ public final class TestPurpleInterpretationFactory
                         .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
                         .build())
                 .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
-                        .findingKey(FindingKeys.tumorMutationStatus())
+                        .findingKey(FindingKeys.tumorMutationStatus(PurpleTumorMutationalStatus.UNKNOWN, PurpleTumorMutationalStatus.UNKNOWN))
                         .tumorMutationalBurdenPerMb(0D)
                         .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
                         .tumorMutationalLoad(0)

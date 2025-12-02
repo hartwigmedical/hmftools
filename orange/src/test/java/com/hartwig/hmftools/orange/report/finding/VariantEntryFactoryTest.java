@@ -18,6 +18,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.SmallVariantFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -73,7 +74,7 @@ public class VariantEntryFactoryTest
         List<PurpleVariant> variants = List.of(driverVariant, nonDriverVariant);
         List<PurpleDriver> drivers = List.of(canonicalDriver, nonCanonicalDriver);
 
-        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(FindingKeys.SampleType.SOMATIC, variants, drivers);
 
         // we will not create a SmallVariant for non driver
         assertEquals(2, entries.size());
@@ -167,7 +168,7 @@ public class VariantEntryFactoryTest
         List<PurpleVariant> variants = List.of(driverVariant1, driverVariant2);
         List<PurpleDriver> drivers = List.of(canonicalDriver, nonCanonicalDriver);
 
-        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(FindingKeys.SampleType.SOMATIC, variants, drivers);
 
         assertEquals(4, entries.size());
         SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
@@ -236,7 +237,7 @@ public class VariantEntryFactoryTest
         List<PurpleVariant> variants = Lists.newArrayList(driverVariant1, driverVariant2);
         List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
 
-        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(FindingKeys.SampleType.SOMATIC, variants, drivers);
 
         assertEquals(3, entries.size());
         SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 2");

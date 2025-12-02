@@ -14,6 +14,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
@@ -38,7 +39,8 @@ public class LinxInterpreter
 
         List<LinxSvAnnotation> allSomaticSvAnnotations = ConversionUtil.mapToList(linx.allSomaticSvAnnotations(), LinxConversion::convert);
         List<LinxBreakend> driverSomaticBreakends = ConversionUtil.mapToList(linx.driverSomaticBreakends(), somaticBreakendInterpreter::interpret);
-        List<Disruption> driverSomaticDisruptions = createDisruptions(driverSomaticBreakends, allSomaticSvAnnotations, hasReliablePurity);
+        List<Disruption> driverSomaticDisruptions = createDisruptions(FindingKeys.SampleType.SOMATIC, driverSomaticBreakends,
+                allSomaticSvAnnotations, hasReliablePurity);
 
         List<LinxSvAnnotation> allGermlineSvAnnotations = null;
         List<LinxBreakend> driverGermlineBreakends = null;
@@ -53,7 +55,8 @@ public class LinxInterpreter
             allGermlineSvAnnotations = ConversionUtil.mapToList(linx.allGermlineSvAnnotations(), LinxConversion::convert);
             driverGermlineBreakends = ConversionUtil.mapToList(linx.driverGermlineBreakends(), germlineBreakendInterpreter::interpret);
             otherGermlineBreakends = ConversionUtil.mapToList(linx.allGermlineBreakends(), germlineBreakendInterpreter::interpret);
-            driverGermlineDisruptions = createDisruptions(driverGermlineBreakends, allGermlineSvAnnotations, hasReliablePurity);
+            driverGermlineDisruptions = createDisruptions(FindingKeys.SampleType.GERMLINE, driverGermlineBreakends,
+                    allGermlineSvAnnotations, hasReliablePurity);
         }
 
         return ImmutableLinxRecord.builder()

@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 public final class SmallVariantFactory
 {
     @NotNull
-    public static List<SmallVariant> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+    public static List<SmallVariant> create(
+            @NotNull FindingKeys.SampleType sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
     {
         List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
@@ -29,7 +30,7 @@ public final class SmallVariantFactory
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
                 if(driver != null)
                 {
-                    entries.add(toSmallVariant(variant, driver));
+                    entries.add(toSmallVariant(variant, driver, sampleType));
                 }
             }
         }
@@ -39,7 +40,7 @@ public final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType));
             }
         }
 
@@ -47,7 +48,8 @@ public final class SmallVariantFactory
     }
 
     @NotNull
-    private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver)
+    private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver,
+            @NotNull FindingKeys.SampleType sampleType)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -60,7 +62,7 @@ public final class SmallVariantFactory
         boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
 
         return ImmutableSmallVariant.builder()
-                .findingKey(FindingKeys.smallVariant(variant, transcriptImpact, isCanonical))
+                .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
                 .reportedStatus(driver.reportedStatus())
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .purpleVariant(variant)

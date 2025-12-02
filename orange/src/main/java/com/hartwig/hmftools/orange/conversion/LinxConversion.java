@@ -74,8 +74,9 @@ public final class LinxConversion
 
         DriverInterpretation driverInterpretation = toDriverInterpretation(linxFusion.likelihood());
 
+        // currently there is no germline fusion
         return ImmutableFusion.builder()
-                .findingKey(FindingKeys.fusion(linxFusion))
+                .findingKey(FindingKeys.fusion(FindingKeys.SampleType.SOMATIC, linxFusion))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .geneStart(linxFusion.geneStart())

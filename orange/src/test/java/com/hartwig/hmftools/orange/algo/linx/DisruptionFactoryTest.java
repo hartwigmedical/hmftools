@@ -12,6 +12,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.junit.Test;
 
@@ -46,7 +47,7 @@ public class DisruptionFactoryTest
                         pairedBreakendBuilder.exonUp(8).exonDown(9).undisruptedCopyNumber(2.1)
                                 .geneOrientation(LinxGeneOrientation.DOWNSTREAM).build());
 
-        List<Disruption> geneDisruptions = DisruptionFactory.createDisruptions(pairedBreakends, List.of(), true);
+        List<Disruption> geneDisruptions = DisruptionFactory.createDisruptions(FindingKeys.SampleType.SOMATIC, pairedBreakends, List.of(), true);
 
         assertEquals(1, geneDisruptions.size());
 
@@ -75,7 +76,7 @@ public class DisruptionFactoryTest
                 .junctionCopyNumber(1.12);
         List<LinxBreakend> pairedBreakends = List.of(pairedBreakendBuilder.exonUp(3).exonDown(4).undisruptedCopyNumber(4.3).build());
 
-        List<Disruption> geneDisruptions = DisruptionFactory.createDisruptions(pairedBreakends, List.of(), true);
+        List<Disruption> geneDisruptions = DisruptionFactory.createDisruptions(FindingKeys.SampleType.SOMATIC, pairedBreakends, List.of(), true);
 
         assertEquals(1, geneDisruptions.size());
 
@@ -98,7 +99,7 @@ public class DisruptionFactoryTest
                 pairedBreakendBuilder.transcript("ENST 2").svId(1).build(),
                 pairedBreakendBuilder.transcript("ENST 2").svId(1).build());
 
-        List<Disruption> disruptions = DisruptionFactory.createDisruptions(pairedDisruptions, List.of(), true);
+        List<Disruption> disruptions = DisruptionFactory.createDisruptions(FindingKeys.SampleType.SOMATIC, pairedDisruptions, List.of(), true);
 
         assertEquals(2, disruptions.size());
     }

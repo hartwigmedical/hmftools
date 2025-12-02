@@ -29,8 +29,11 @@ import org.jetbrains.annotations.Nullable;
 public class DisruptionFactory
 {
     @NotNull
-    public static List<Disruption> createDisruptions(@NotNull Collection<LinxBreakend> breakends,
-            @NotNull Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity)
+    public static List<Disruption> createDisruptions(
+            @NotNull FindingKeys.SampleType sampleType,
+            @NotNull Collection<LinxBreakend> breakends,
+            @NotNull Collection<LinxSvAnnotation> structuralVariants,
+            boolean hasReliablePurity)
     {
         List<Disruption> reportableDisruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -58,6 +61,7 @@ public class DisruptionFactory
                 undisruptedCopyNumber = breakend.undisruptedCopyNumber();
             }
             reportableDisruptions.add(createDisruption(
+                    sampleType,
                     primarybreakendStart,
                     primarybreakendEnd,
                     undisruptedCopyNumber,
@@ -68,7 +72,9 @@ public class DisruptionFactory
     }
 
     @NotNull
-    public static Disruption createDisruption(@Nullable LinxBreakend breakendStart,
+    public static Disruption createDisruption(
+            @NotNull FindingKeys.SampleType sampleType,
+            @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
             double undisruptedCopyNumber,
             Collection<LinxSvAnnotation> structuralVariants, boolean hasReliablePurity)
@@ -84,7 +90,7 @@ public class DisruptionFactory
         ReportedStatus reportedStatus = breakend.reportedStatus();
 
         return ImmutableDisruption.builder()
-                .findingKey(FindingKeys.disruption(breakend))
+                .findingKey(FindingKeys.disruption(sampleType, breakend))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
                 .chromosome(breakend.chromosome())

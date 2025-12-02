@@ -74,7 +74,7 @@ public class GermlineGainDeletionFactory
                 DriverInterpretation.HIGH : DriverInterpretation.LOW;
 
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(geneName, interpretation, true, canonicalTranscript.TransName))
+                .findingKey(FindingKeys.gainDeletion(FindingKeys.SampleType.GERMLINE, geneName, interpretation, true, canonicalTranscript.TransName))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)
