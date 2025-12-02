@@ -61,6 +61,15 @@ public interface FindingRecord
     }
 
     @Nullable
+    List<Disruption> driverGermlineDisruptions();
+
+    @Nullable
+    default List<Disruption> driverGermlineDisruptions(ReportedStatus reportedStatus)
+    {
+        return filterReported(driverGermlineDisruptions(), reportedStatus);
+    }
+
+    @Nullable
     List<Virus> driverViruses();
 
     @Nullable
@@ -70,7 +79,16 @@ public interface FindingRecord
     }
 
     @Nullable
+    MicrosatelliteStability microsatelliteStability();
+
+    @Nullable
+    TumorMutationStatus tumorMutationStatus();
+
+    @Nullable
     PredictedTumorOrigin predictedTumorOrigin();
+
+    @Nullable
+    HomologousRecombination homologousRecombination();
 
     private static <T extends Driver> List<T> filterReported(List<T> drivers, ReportedStatus reportedStatus)
     {

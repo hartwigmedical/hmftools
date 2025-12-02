@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.datamodel.chord;
 
-import com.google.gson.annotations.SerializedName;
+import com.hartwig.hmftools.datamodel.finding.HomologousRecombination;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -12,17 +12,31 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ChordRecord
 {
-    @SerializedName("BRCA1Value")
-    double brca1Value();
-
-    @SerializedName("BRCA2Value")
-    double brca2Value();
-
-    double hrdValue();
-
+    // wrap the data to provide a finding type
     @NotNull
-    ChordStatus hrStatus();
+    HomologousRecombination homologousRecombination();
 
+    // convenience accessors
+    default double brca1Value()
+    {
+        return homologousRecombination().brca1Value();
+    }
+    default double brca2Value()
+    {
+        return homologousRecombination().brca2Value();
+    }
+    default double hrdValue()
+    {
+        return homologousRecombination().hrdValue();
+    }
     @NotNull
-    String hrdType();
+    default ChordStatus hrStatus()
+    {
+        return homologousRecombination().hrStatus();
+    }
+    @NotNull
+    default String hrdType()
+    {
+        return homologousRecombination().hrdType();
+    }
 }

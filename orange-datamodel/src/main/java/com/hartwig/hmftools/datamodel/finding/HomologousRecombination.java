@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -8,9 +10,15 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PredictedTumorOrigin extends Finding
+public interface HomologousRecombination extends Finding
 {
+    double brca1Value();
+    double brca2Value();
+    double hrdValue();
+
     @NotNull
-    String cancerType();
-    double likelihood();
+    ChordStatus hrStatus();
+
+    @NotNull
+    String hrdType();
 }

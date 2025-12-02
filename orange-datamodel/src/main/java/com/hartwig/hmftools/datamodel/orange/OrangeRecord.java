@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.finding.FindingRecordFactory;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -55,7 +56,10 @@ public interface OrangeRecord
 
     // we take the findings from various parts of the sub records
     @NotNull
-    FindingRecord findings();
+    default FindingRecord findings()
+    {
+        return FindingRecordFactory.fromOrangeRecord(this);
+    }
 
     @Nullable
     Map<String, Double> germlineMVLHPerGene();

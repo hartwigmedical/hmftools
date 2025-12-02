@@ -23,7 +23,7 @@ public interface SmallVariant extends Driver
     @NotNull
     PurpleVariant purpleVariant();
 
-    @Nullable PurpleDriver driver();
+    @NotNull PurpleDriver driver();
 
     @NotNull
     PurpleTranscriptImpact transcriptImpact();
@@ -91,11 +91,10 @@ public interface SmallVariant extends Driver
         return purpleVariant().hotspot();
     }
 
-    @Nullable
+    @NotNull
     default Double driverLikelihood()
     {
-        PurpleDriver driver = driver();
-        return driver != null ? driver.driverLikelihood() : null;
+        return driver().driverLikelihood();
     }
 
     @Value.Derived

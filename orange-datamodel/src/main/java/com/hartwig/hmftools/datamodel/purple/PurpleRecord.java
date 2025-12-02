@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
-import java.util.Optional;
 
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -43,14 +42,11 @@ public interface PurpleRecord
     @Nullable
     List<PurpleVariant> otherGermlineVariants();
 
-    @Value.Lazy
+    @NotNull
+    List<SmallVariant> driverSomaticSmallVariants();
+
     @Nullable
-    default List<PurpleVariant> driverGermlineVariants(ReportedStatus reportedStatus)
-    {
-        return Optional.ofNullable(driverGermlineVariants())
-                .map(o -> o.stream().filter(PurpleVariant::reported).toList())
-                .orElse(null);
-    }
+    List<SmallVariant> driverGermlineSmallVariants();
 
     @NotNull
     List<PurpleCopyNumber> somaticCopyNumbers();

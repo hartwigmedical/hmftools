@@ -3,6 +3,7 @@ package com.hartwig.hmftools.datamodel.cuppa;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
+import com.hartwig.hmftools.datamodel.finding.PredictedTumorOrigin;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -30,4 +31,7 @@ public interface CuppaData
 
     @SerializedName("LINECount")
     int lineCount();
+
+    @NotNull
+    PredictedTumorOrigin bestPredictedTumorOrigin();
 }
