@@ -91,7 +91,8 @@ public class TestOrangeJsonWriter
 {
     public static void main(String[] args) throws IOException
     {
-        String path = "/Users/hongwingl/hmftools2/orange-datamodel/src/test/resources/minimally.populated.orange.json";
+        // change the path to suit your set up
+        String path = "resources/minimally.populated.orange.json";
         OrangeRecord record = createOrangeRecord();
         OrangeJson.getInstance().write(record, path);
     }
