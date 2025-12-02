@@ -6,10 +6,10 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.wildtype.ImmutableWildTypeGene;
@@ -27,7 +27,7 @@ public final class WildTypeAlgo
     public static List<WildTypeGene> determineWildTypeGenes(
             final Map<String,DriverGene> driverGenes,
             final List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
-            final List<PurpleGainDeletion> reportableSomaticGainsDels, final List<LinxFusion> reportableFusions,
+            final List<GainDeletion> reportableSomaticGainsDels, final List<Fusion> reportableFusions,
             final List<LinxHomozygousDisruption> homozygousDisruptions, final List<LinxBreakend> reportableBreakends)
     {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
@@ -56,7 +56,7 @@ public final class WildTypeAlgo
             }
 
             boolean hasSomaticgainDel = false;
-            for(PurpleGainDeletion gainDel : reportableSomaticGainsDels)
+            for(GainDeletion gainDel : reportableSomaticGainsDels)
             {
                 if(driverGene.gene().equals(gainDel.gene()))
                 {
@@ -65,7 +65,7 @@ public final class WildTypeAlgo
             }
 
             boolean hasFusion = false;
-            for(LinxFusion fusion : reportableFusions)
+            for(Fusion fusion : reportableFusions)
             {
                 if(driverGene.gene().equals(fusion.geneStart()) || driverGene.gene().equals(fusion.geneEnd()))
                 {

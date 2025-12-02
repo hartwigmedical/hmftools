@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmutableImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -108,9 +108,9 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isDeleted(final List<PurpleGainDeletion> allSomaticGainDels, final String geneToCheck)
+    private static boolean isDeleted(final List<GainDeletion> allSomaticGainDels, final String geneToCheck)
     {
-        for(PurpleGainDeletion somaticGainDel : allSomaticGainDels)
+        for(GainDeletion somaticGainDel : allSomaticGainDels)
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {
@@ -147,9 +147,9 @@ public final class ImmuneEscapeInterpreter
         return false;
     }
 
-    private static boolean isAmplified(final List<PurpleGainDeletion> somaticGainDels, final String geneToCheck)
+    private static boolean isAmplified(final List<GainDeletion> somaticGainDels, final String geneToCheck)
     {
-        for(PurpleGainDeletion somaticGainDel : somaticGainDels)
+        for(GainDeletion somaticGainDel : somaticGainDels)
         {
             if(somaticGainDel.gene().equals(geneToCheck) && somaticGainDel.isCanonical())
             {

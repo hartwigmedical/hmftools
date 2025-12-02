@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.orange.report.datamodel;
+package com.hartwig.hmftools.orange.report.finding;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -8,12 +8,15 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.datamodel.finding.Variants;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.SmallVariantFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
@@ -67,13 +70,14 @@ public class VariantEntryFactoryTest
                 .driverLikelihood(0.4)
                 .build();
 
-        List<PurpleVariant> variants = Lists.newArrayList(driverVariant, nonDriverVariant);
-        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+        List<PurpleVariant> variants = List.of(driverVariant, nonDriverVariant);
+        List<PurpleDriver> drivers = List.of(canonicalDriver, nonCanonicalDriver);
 
-        List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
 
-        assertEquals(3, entries.size());
-        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
+        // we will not create a SmallVariant for non driver
+        assertEquals(2, entries.size());
+        SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
         assertTrue(entry1.isCanonical());
         assertEquals(2D, entry1.variantCopyNumber(), EPSILON);
         assertEquals(2D, entry1.totalCopyNumber(), EPSILON);
@@ -83,45 +87,42 @@ public class VariantEntryFactoryTest
         assertEquals(0.5, entry1.driverLikelihood(), EPSILON);
         assertEquals(0.7, entry1.clonalLikelihood(), EPSILON);
 
-        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        SmallVariant entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
         assertFalse(entry2.isCanonical());
         assertEquals(0.4, entry2.driverLikelihood(), EPSILON);
-
-        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 2", "impact 3");
-        assertNull(entry3.driverLikelihood());
     }
 
     @Test
     public void canDetermineTranscriptImpact()
     {
         assertEquals("p.G12C",
-                VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
+                Variants.impactField(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.Gly12Cys")
                         .addEffects(PurpleVariantEffect.MISSENSE)
                         .codingEffect(PurpleCodingEffect.MISSENSE)
-                        .build()));
+                        .build(), true));
         assertEquals("c.123A>C splice",
-                VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
+                Variants.impactField(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact("p.?")
                         .addEffects(PurpleVariantEffect.MISSENSE)
                         .codingEffect(PurpleCodingEffect.SPLICE)
-                        .build()));
+                        .build(), true));
         assertEquals("c.123A>C",
-                VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
+                Variants.impactField(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")
                         .hgvsProteinImpact(Strings.EMPTY)
                         .addEffects(PurpleVariantEffect.MISSENSE)
                         .codingEffect(PurpleCodingEffect.MISSENSE)
-                        .build()));
+                        .build(), true));
         assertEquals("missense_variant",
-                VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
+                Variants.impactField(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact(Strings.EMPTY)
                         .hgvsProteinImpact(Strings.EMPTY)
                         .addEffects(PurpleVariantEffect.MISSENSE)
                         .codingEffect(PurpleCodingEffect.MISSENSE)
-                        .build()));
+                        .build(), true));
     }
 
     @Test
@@ -163,22 +164,22 @@ public class VariantEntryFactoryTest
                 .driverLikelihood(0.4)
                 .build();
 
-        List<PurpleVariant> variants = Lists.newArrayList(driverVariant1, driverVariant2);
-        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+        List<PurpleVariant> variants = List.of(driverVariant1, driverVariant2);
+        List<PurpleDriver> drivers = List.of(canonicalDriver, nonCanonicalDriver);
 
-        List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
 
         assertEquals(4, entries.size());
-        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
+        SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
         assertTrue(entry1.isCanonical());
 
-        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        SmallVariant entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
         assertFalse(entry2.isCanonical());
 
-        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 3");
+        SmallVariant entry3 = findByGeneAndImpact(entries, "gene 1", "impact 3");
         assertTrue(entry3.isCanonical());
 
-        VariantEntry entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
+        SmallVariant entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
         assertFalse(entry4.isCanonical());
     }
 
@@ -235,26 +236,26 @@ public class VariantEntryFactoryTest
         List<PurpleVariant> variants = Lists.newArrayList(driverVariant1, driverVariant2);
         List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
 
-        List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
+        List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
 
         assertEquals(3, entries.size());
-        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 2");
         assertFalse(entry1.isCanonical());
 
-        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 3");
+        SmallVariant entry2 = findByGeneAndImpact(entries, "gene 1", "impact 3");
         assertTrue(entry2.isCanonical());
 
-        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 4");
+        SmallVariant entry3 = findByGeneAndImpact(entries, "gene 1", "impact 4");
         assertFalse(entry3.isCanonical());
     }
 
     @NotNull
-    private static VariantEntry findByGeneAndImpact(@NotNull List<VariantEntry> entries, @NotNull String geneToFind,
+    private static SmallVariant findByGeneAndImpact(@NotNull List<SmallVariant> entries, @NotNull String geneToFind,
             @NotNull String impactToFind)
     {
-        for(VariantEntry entry : entries)
+        for(SmallVariant entry : entries)
         {
-            if(entry.gene().equals(geneToFind) && entry.impact().equals(impactToFind))
+            if(entry.gene().equals(geneToFind) && Variants.impactField(entry.transcriptImpact(), false).equals(impactToFind))
             {
                 return entry;
             }

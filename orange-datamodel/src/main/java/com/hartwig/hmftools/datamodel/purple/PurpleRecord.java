@@ -2,6 +2,9 @@ package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -40,19 +43,28 @@ public interface PurpleRecord
     List<PurpleVariant> otherGermlineVariants();
 
     @NotNull
+    List<SmallVariant> driverSomaticSmallVariants();
+
+    @Nullable
+    List<SmallVariant> driverGermlineSmallVariants();
+
+    @NotNull
     List<PurpleCopyNumber> somaticCopyNumbers();
 
     @NotNull
     List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
 
     @NotNull
-    List<PurpleGainDeletion> driverSomaticGainsDels();
+    List<GainDeletion> driverSomaticGainsDels();
+
+    @NotNull
+    List<GainDeletion> otherSomaticGainsDels();
 
     @Nullable
     List<PurpleGermlineDeletion> otherGermlineDeletions();
 
     @Nullable
-    List<PurpleGainDeletion> driverGermlineDeletions();
+    List<GainDeletion> driverGermlineDeletions();
 
     @Nullable
     List<PurpleLossOfHeterozygosity> driverGermlineLossOfHeterozygosities();

@@ -2,7 +2,9 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
 
-import com.hartwig.hmftools.datamodel.purple.ImmutableChromosomalRearrangements;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.finding.ImmutableMicrosatelliteStability;
+import com.hartwig.hmftools.datamodel.finding.ImmutableTumorMutationStatus;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -64,13 +67,19 @@ public final class TestPurpleInterpretationFactory
     {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(false)
-                .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
-                .tumorMutationalBurdenPerMb(0D)
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
-                .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
-                .svTumorMutationalBurden(0)
+                .microsatelliteStability(ImmutableMicrosatelliteStability.builder()
+                        .findingKey(FindingKeys.microsatelliteStability(MicrosatelliteStatus.UNKNOWN))
+                        .microsatelliteIndelsPerMb(0D)
+                        .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
+                        .build())
+                .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
+                        .findingKey(FindingKeys.tumorMutationStatus())
+                        .tumorMutationalBurdenPerMb(0D)
+                        .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
+                        .tumorMutationalLoad(0)
+                        .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
+                        .svTumorMutationalBurden(0)
+                        .build())
                 .build();
     }
 }

@@ -28,11 +28,16 @@ public interface PurpleData
 
     List<PurpleVariantContext> driverSomaticVariants();
 
+    List<PurpleVariantContext> otherSomaticVariants();
+
     @Nullable
     List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
     List<PurpleVariantContext> driverGermlineVariants();
+
+    @Nullable
+    List<PurpleVariantContext> otherGermlineVariants();
 
     List<StructuralVariant> allPassingSomaticStructuralVariants();
 
@@ -44,15 +49,23 @@ public interface PurpleData
     @Nullable
     List<StructuralVariant> allInferredGermlineStructuralVariants();
 
+    // copy number of every segment in the genome
     List<PurpleCopyNumber> somaticCopyNumbers();
 
+    // copy number of every gene
     List<GeneCopyNumber> somaticGeneCopyNumbers();
+
+    // driver gene gain deletions
+    List<DriverCatalog> driverSomaticGainDels();
 
     @Nullable
     List<GermlineDeletion> allGermlineDeletions();
 
     @Nullable
     List<GermlineDeletion> driverGermlineDeletions();
+
+    @Nullable
+    List<GermlineDeletion> otherGermlineDeletions();
 
     List<Segment> segments();
 }

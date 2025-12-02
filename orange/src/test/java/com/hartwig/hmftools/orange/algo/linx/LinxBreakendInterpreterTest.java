@@ -89,6 +89,7 @@ public class LinxBreakendInterpreterTest
                 .gene(GENE)
                 .isStart(isStart)
                 .svId(1)
+                .geneOrientation(LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM)
                 .regionType(TranscriptRegionType.INTRONIC)
                 .build();
     }

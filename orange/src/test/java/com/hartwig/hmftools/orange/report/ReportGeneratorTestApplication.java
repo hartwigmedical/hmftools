@@ -146,11 +146,9 @@ public class ReportGeneratorTestApplication
                 .from(report)
                 .purple(ImmutablePurpleRecord.builder()
                         .from(report.purple())
-                        .otherSomaticVariants(report.purple().driverSomaticVariants())
-                        .otherGermlineVariants(report.purple().driverGermlineVariants())
+                        .otherSomaticVariants(List.of())
+                        .otherGermlineVariants(List.of())
                         .somaticCopyNumbers(Lists.newArrayList())
-                        .somaticGeneCopyNumbers(retainReportableCopyNumbers(report.purple().somaticGeneCopyNumbers(),
-                                report.purple().somaticDrivers()))
                         .build())
                 .linx(ImmutableLinxRecord.builder()
                         .from(report.linx())

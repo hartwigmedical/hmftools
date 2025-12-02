@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +18,7 @@ final class NovelSpliceJunctionSelector
 {
     @NotNull
     public static List<NovelSpliceJunction> selectSkippedExons(@NotNull List<NovelSpliceJunction> junctions,
-            @NotNull List<LinxFusion> linxFusions, @NotNull KnownFusionCache knownFusionCache)
+            @NotNull List<Fusion> linxFusions, @NotNull KnownFusionCache knownFusionCache)
     {
         List<NovelSpliceJunction> result = Lists.newArrayList();
 

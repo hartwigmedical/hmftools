@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,20 +18,11 @@ public final class VirusInterpreterDataLoader
         LOGGER.info("Loading VirusInterpreter data from {}", new File(annotatedVirusTsv).getParent());
         List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
 
-        List<AnnotatedVirus> reportable = Lists.newArrayList();
-        for(AnnotatedVirus virus : viruses)
-        {
-            if(virus.reported())
-            {
-                reportable.add(virus);
-            }
-        }
-
         LOGGER.info(" Loaded {} annotated viruses (of which {} are reportable) from {}",
                 viruses.size(),
-                reportable.size(),
+                viruses.stream().filter(AnnotatedVirus::reported).count(),
                 annotatedVirusTsv);
 
-        return ImmutableVirusInterpreterData.builder().allViruses(viruses).reportableViruses(reportable).build();
+        return ImmutableVirusInterpreterData.builder().allViruses(viruses).build();
     }
 }

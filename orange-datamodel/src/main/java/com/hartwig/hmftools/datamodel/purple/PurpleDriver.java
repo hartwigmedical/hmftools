@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.purple;
 
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 
 import org.immutables.gson.Gson;
@@ -28,6 +29,9 @@ public interface PurpleDriver
 
     @NotNull
     ReportedStatus reportedStatus();
+
+    @NotNull
+    DriverInterpretation driverInterpretation();
 
     boolean isCanonical();
 }

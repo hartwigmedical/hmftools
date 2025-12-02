@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.util.DriverUtils.convertReportedStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -10,14 +11,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LinxBreakendInterpreter
@@ -48,10 +48,10 @@ public class LinxBreakendInterpreter
                 .chromosomeBand(chromosomeBand(linxBreakend.gene()))
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
+                .geneOrientation(geneOrientation(linxBreakend.geneOrientation()))
                 .isCanonical(linxBreakend.canonical())
                 .disruptive(linxBreakend.disruptive())
-                .reportedStatus(ReportedStatus.valueOf(linxBreakend.reportedStatus().name()))
+                .reportedStatus(convertReportedStatus(linxBreakend.reportedStatus()))
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
                 .type(svAnnotation != null ? LinxBreakendType.valueOf(svAnnotation.type().name()) : LinxBreakendType.BND)
                 .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
@@ -86,6 +86,19 @@ public class LinxBreakendInterpreter
     {
         GeneData geneData = mEnsemblDataCache.getGeneDataByName(gene);
         return geneData != null ? geneData.KaryotypeBand : "";
+    }
+
+    private LinxGeneOrientation geneOrientation(final String geneOrientation)
+    {
+        if(geneOrientation.equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM))
+        {
+            return LinxGeneOrientation.UPSTREAM;
+        }
+        else if(geneOrientation.equals(com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM))
+        {
+            return LinxGeneOrientation.DOWNSTREAM;
+        }
+        throw new IllegalArgumentException("Unknown gene orientation: " + geneOrientation);
     }
 
     @VisibleForTesting

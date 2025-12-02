@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.junit.Test;
@@ -29,7 +29,7 @@ public class RnaFusionSelectorTest
         knownFusionCache.addData(KnownFusionCacheTestFactory.createKnownPair("A", "B"));
         knownFusionCache.addData(KnownFusionCacheTestFactory.createKnownPair("C", "D"));
 
-        List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
+        List<Fusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
 
         List<RnaFusion> novelFusions = RnaFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions, knownFusionCache);
         assertEquals(1, novelFusions.size());

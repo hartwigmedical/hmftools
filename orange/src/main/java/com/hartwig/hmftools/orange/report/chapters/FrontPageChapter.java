@@ -17,26 +17,27 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.MicrosatelliteStability;
+import com.hartwig.hmftools.datamodel.finding.TumorMutationStatus;
+import com.hartwig.hmftools.datamodel.finding.Virus;
+import com.hartwig.hmftools.datamodel.interpretation.Drivers;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.Drivers;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.datamodel.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -361,7 +362,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
+        List<GainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
         if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -370,7 +371,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String copyNumberDriverString(@NotNull List<PurpleGainDeletion> gainsDels)
+    private static String copyNumberDriverString(@NotNull List<GainDeletion> gainsDels)
     {
         if(gainsDels.isEmpty())
         {
@@ -378,7 +379,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(PurpleGainDeletion gainDel : gainsDels)
+        for(GainDeletion gainDel : gainsDels)
         {
             genes.add(gainDel.gene());
         }
@@ -442,7 +443,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-        for(LinxFusion fusion : report.linx().reportableSomaticFusions())
+        for(Fusion fusion : report.linx().reportableSomaticFusions())
         {
             fusions.add(fusion.display());
         }
@@ -463,13 +464,13 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        if(virusInterpreter.reportableViruses().isEmpty())
+        if(virusInterpreter.driverViruses().isEmpty())
         {
             return NONE;
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for(VirusInterpreterEntry virus : virusInterpreter.reportableViruses())
+        for(Virus virus : virusInterpreter.driverViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)
@@ -482,7 +483,7 @@ public class FrontPageChapter implements ReportChapter
             }
         }
 
-        return virusInterpreter.reportableViruses().size() + " (" + concat(viruses) + ")";
+        return virusInterpreter.driverViruses().size() + " (" + concat(viruses) + ")";
     }
 
     @NotNull
@@ -504,7 +505,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        PurpleCharacteristics characteristics = report.purple().characteristics();
+        MicrosatelliteStability characteristics = report.purple().characteristics().microsatelliteStability();
         return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " ("
                 + characteristics.microsatelliteStatus().display() + ")";
     }
@@ -517,7 +518,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        PurpleCharacteristics characteristics = report.purple().characteristics();
+        TumorMutationStatus characteristics = report.purple().characteristics().tumorMutationStatus();
         return formatSingleDigitDecimal(characteristics.tumorMutationalBurdenPerMb()) +
                 " (" + characteristics.tumorMutationalBurdenStatus().display() + ")";
     }
@@ -530,7 +531,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        PurpleCharacteristics characteristics = report.purple().characteristics();
+        TumorMutationStatus characteristics = report.purple().characteristics().tumorMutationStatus();
         return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
     }
 
@@ -613,7 +614,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
+        String svTmb = String.valueOf(report.purple().characteristics().tumorMutationStatus().svTumorMutationalBurden());
 
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;

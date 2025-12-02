@@ -2,18 +2,16 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
-import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.datamodel.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntry;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
@@ -110,10 +108,7 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
-
-            List<VariantEntry> reportableVariants =
-                    VariantEntryFactory.create(VariantDedup.apply(report.purple().driverSomaticVariants()), somaticDrivers);
+            List<SmallVariant> reportableVariants = report.findings().driverSomaticSmallVariants(ReportedStatus.REPORTED);
             String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
             document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
         }
@@ -192,8 +187,8 @@ public class SomaticFindingsChapter implements ReportChapter
             }
             else
             {
-                String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
-                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
+                String titleDrivers = driverVirusTitle + " (" + virusInterpreter.driverViruses().size() + ")";
+                document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.driverViruses(), reportResources));
             }
         }
     }

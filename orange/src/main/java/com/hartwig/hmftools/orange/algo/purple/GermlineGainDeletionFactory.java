@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.algo.util.DriverUtils.convertReportedStatus;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,11 +14,12 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.orange.algo.util.DriverUtils;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 public class GermlineGainDeletionFactory
 {
@@ -27,28 +30,29 @@ public class GermlineGainDeletionFactory
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    public Map<PurpleGainDeletion, Boolean> getReportabilityMap(
+    public Map<GainDeletion, Boolean> getReportabilityMap(
             final List<GermlineDeletion> germlineDeletions, final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
         List<GermlineDeletion> germlineDeletionsHomozygousInTumor =
-                germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HOM_DELETION).collect(Collectors.toList());
+                germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HOM_DELETION).toList();
         Set<String> relevantGeneNames = germlineDeletionsHomozygousInTumor.stream().map(d -> d.GeneName).collect(Collectors.toSet());
 
-        Map<PurpleGainDeletion, Boolean> delToReportability = Maps.newHashMap();
+        Map<GainDeletion, Boolean> delToReportability = Maps.newHashMap();
         for(String geneName : relevantGeneNames)
         {
             List<GermlineDeletion> deletionsForGene =
                     germlineDeletionsHomozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
-            PurpleGainDeletion del = toGainDel(geneName, deletionsForGene, somaticGeneCopyNumber);
+            GainDeletion del = toGainDel(geneName, deletionsForGene, somaticGeneCopyNumber);
             boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported == ReportedStatus.REPORTED);
             delToReportability.put(del, reported);
         }
         return delToReportability;
     }
 
-    private PurpleGainDeletion toGainDel(final String geneName, final List<GermlineDeletion> deletionsForGene,
+
+    private GainDeletion toGainDel(final String geneName, final List<GermlineDeletion> deletionsForGene,
             final GeneCopyNumber somaticGeneCopyNumber)
     {
         TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
@@ -60,7 +64,19 @@ public class GermlineGainDeletionFactory
         String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);
         String chromosomeBand = GermlineDeletionUtil.getChromosomeBand(deletionsForGene);
 
-        return ImmutablePurpleGainDeletion.builder()
+        // get the reported status
+        com.hartwig.hmftools.datamodel.driver.ReportedStatus reportedStatus = DriverUtils.maxReportedStatus(
+                deletionsForGene.stream().map(o -> convertReportedStatus(o.Reported)).collect(Collectors.toList())
+        );
+
+        // TODOHWL: double check this
+        DriverInterpretation driverInterpretation = reportedStatus == com.hartwig.hmftools.datamodel.driver.ReportedStatus.REPORTED ?
+                DriverInterpretation.HIGH : DriverInterpretation.LOW;
+
+        return ImmutableGainDeletion.builder()
+                .findingKey(FindingKeys.gainDeletion(geneName, interpretation, true, canonicalTranscript.TransName))
+                .reportedStatus(reportedStatus)
+                .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)
                 .chromosome(chromosome)
                 .chromosomeBand(chromosomeBand)

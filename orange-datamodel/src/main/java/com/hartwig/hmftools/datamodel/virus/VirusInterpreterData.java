@@ -2,6 +2,8 @@ package com.hartwig.hmftools.datamodel.virus;
 
 import java.util.List;
 
+import com.hartwig.hmftools.datamodel.finding.Virus;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,5 +18,5 @@ public interface VirusInterpreterData
     List<VirusInterpreterEntry> allViruses();
 
     @NotNull
-    List<VirusInterpreterEntry> reportableViruses();
+    List<Virus> driverViruses();
 }

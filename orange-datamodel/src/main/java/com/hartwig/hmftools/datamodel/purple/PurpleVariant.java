@@ -71,7 +71,6 @@ public interface PurpleVariant
     @Nullable
     List<Integer> localPhaseSets();
 
-    @Value.Derived
     default boolean reported()
     {
         if(canonicalImpact().reported())

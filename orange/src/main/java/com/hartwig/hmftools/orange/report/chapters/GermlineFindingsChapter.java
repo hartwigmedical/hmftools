@@ -6,21 +6,18 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
-import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
-import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntry;
+import com.hartwig.hmftools.orange.report.finding.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
@@ -87,12 +84,9 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineVariants(@NotNull Document document)
     {
-        List<PurpleDriver> drivers = report.purple().germlineDrivers();
-
-        List<PurpleVariant> reportableVariants = report.purple().driverGermlineVariants();
-        if(drivers != null && reportableVariants != null)
+        List<SmallVariant> reportableEntries = report.findings().driverGermlineSmallVariants(ReportedStatus.REPORTED);
+        if(reportableEntries != null)
         {
-            List<VariantEntry> reportableEntries = VariantEntryFactory.create(VariantDedup.apply(reportableVariants), drivers);
             String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, reportResources));
         }
@@ -100,7 +94,7 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineDeletions(@NotNull Document document)
     {
-        List<PurpleGainDeletion> reportableGermlineFullDels = report.purple().driverGermlineDeletions();
+        List<GainDeletion> reportableGermlineFullDels = report.purple().driverGermlineDeletions();
         if(reportableGermlineFullDels != null)
         {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";

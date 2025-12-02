@@ -140,7 +140,7 @@ class GermlineDeletionUtil
         List<GermlineDeletion> relevantSortedDeletions = deletionsForGene.stream()
                 .filter(d -> overlaps(d, exon))
                 .sorted(Comparator.comparingInt(o -> o.RegionStart))
-                .collect(Collectors.toList());
+                .toList();
 
         if(relevantSortedDeletions.isEmpty())
         {

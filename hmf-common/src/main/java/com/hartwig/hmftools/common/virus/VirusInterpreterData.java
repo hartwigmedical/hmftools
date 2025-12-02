@@ -12,7 +12,4 @@ public abstract class VirusInterpreterData
 {
     @NotNull
     public abstract List<AnnotatedVirus> allViruses();
-
-    @NotNull
-    public abstract List<AnnotatedVirus> reportableViruses();
 }

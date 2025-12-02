@@ -27,4 +27,10 @@ public interface PurpleFit
     double minPloidy();
 
     double maxPloidy();
+
+    @Gson.Ignore
+    default boolean containsTumorCells()
+    {
+        return !qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
+    }
 }

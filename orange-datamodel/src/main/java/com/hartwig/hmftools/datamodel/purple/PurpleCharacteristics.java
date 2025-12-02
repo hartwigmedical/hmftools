@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.datamodel.purple;
 
+import com.hartwig.hmftools.datamodel.finding.MicrosatelliteStability;
+import com.hartwig.hmftools.datamodel.finding.TumorMutationStatus;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -12,20 +15,9 @@ public interface PurpleCharacteristics
 {
     boolean wholeGenomeDuplication();
 
-    double microsatelliteIndelsPerMb();
+    @NotNull
+    MicrosatelliteStability microsatelliteStability();
 
     @NotNull
-    PurpleMicrosatelliteStatus microsatelliteStatus();
-
-    double tumorMutationalBurdenPerMb();
-
-    @NotNull
-    PurpleTumorMutationalStatus tumorMutationalBurdenStatus();
-
-    int tumorMutationalLoad();
-
-    @NotNull
-    PurpleTumorMutationalStatus tumorMutationalLoadStatus();
-
-    int svTumorMutationalBurden();
+    TumorMutationStatus tumorMutationStatus();
 }

@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -43,6 +44,7 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
+import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
@@ -186,9 +188,9 @@ public class OrangeAlgo
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config, mDriverGenes);
-        ChordData chord = loadChordAnalysis(config);
+        ChordData chordData = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
-        VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
+        VirusInterpreterData virusInterpreterData = loadVirusInterpreterData(config);
         CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
@@ -196,7 +198,7 @@ public class OrangeAlgo
 
         LinxInterpreter linxInterpreter = new LinxInterpreter(mEnsemblDataCache);
 
-        LinxRecord linx = linxInterpreter.interpret(linxData);
+        LinxRecord linx = linxInterpreter.interpret(linxData, purpleData.purityContext().qc());
 
         PaveAlgo pave = new PaveAlgo(mEnsemblDataCache, !mSuppressGeneWarnings);
 
@@ -213,6 +215,9 @@ public class OrangeAlgo
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         ImmuneEscapeRecord immuneEscape = ImmuneEscapeInterpreter.interpret(purple, linx);
+
+        com.hartwig.hmftools.datamodel.virus.VirusInterpreterData virusInterpreter = virusInterpreterData != null ? VirusInterpreter.interpret(virusInterpreterData) : null;
+        ChordRecord chord = chordData != null ? OrangeConversion.convert(chordData) : null;
 
         IsofoxRecord isofox = null;
         if(isofoxData != null)
@@ -255,8 +260,8 @@ public class OrangeAlgo
                 .isofox(isofox)
                 .lilac(lilac != null ? OrangeConversion.convert(lilac, hasRefSample, config.rnaConfig() != null) : null)
                 .immuneEscape(immuneEscape)
-                .virusInterpreter(virusInterpreter != null ? VirusInterpreter.interpret(virusInterpreter) : null)
-                .chord(chord != null ? OrangeConversion.convert(chord) : null)
+                .virusInterpreter(virusInterpreter)
+                .chord(chord)
                 .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, mEtiologyPerSignature))
@@ -569,7 +574,7 @@ public class OrangeAlgo
         }
 
         String chordPredictionTxt = config.wgsRefConfig().chordPredictionTxt();
-        if(chordPredictionTxt == null)
+        if(Strings.isNullOrEmpty(chordPredictionTxt))
         {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
             return null;
@@ -646,7 +651,7 @@ public class OrangeAlgo
         Observation svTmbObservation = ImmutableObservation.builder()
                 .sample(createSample(config))
                 .type(type)
-                .value(purple.characteristics().svTumorMutationalBurden())
+                .value(purple.characteristics().tumorMutationStatus().svTumorMutationalBurden())
                 .build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());

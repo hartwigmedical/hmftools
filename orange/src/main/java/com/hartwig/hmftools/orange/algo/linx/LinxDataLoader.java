@@ -169,15 +169,7 @@ public final class LinxDataLoader
 
     private static List<LinxBreakend> selectReportableBreakends(final List<LinxBreakend> breakends)
     {
-        List<LinxBreakend> reportableBreakends = new ArrayList<>();
-        for(LinxBreakend breakend : breakends)
-        {
-            if(breakend.reportedStatus() == ReportedStatus.REPORTED)
-            {
-                reportableBreakends.add(breakend);
-            }
-        }
-        return reportableBreakends;
+        return breakends.stream().filter(o -> o.reportedStatus() == ReportedStatus.REPORTED).toList();
     }
 
     private static List<LinxGermlineDisruption> selectReportableGermlineSvs(
@@ -192,7 +184,6 @@ public final class LinxDataLoader
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
-
             if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
             {
                 reportableGermlineSvs.add(germlineSv);

@@ -2,12 +2,13 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.ImmutableFusion;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.apache.logging.log4j.util.Strings;
@@ -23,9 +24,9 @@ public final class LinxOrangeTestFactory
     }
 
     @NotNull
-    public static ImmutableLinxFusion.Builder fusionBuilder()
+    public static ImmutableFusion.Builder fusionBuilder()
     {
-        return ImmutableLinxFusion.builder()
+        return ImmutableFusion.builder()
                 .from(LinxConversion.convert(LinxTestFactory.fusionBuilder().build()));
     }
 
@@ -40,9 +41,9 @@ public final class LinxOrangeTestFactory
                 .chromosomeBand("2")
                 .transcript(Strings.EMPTY)
                 .isCanonical(true)
-                .geneOrientation(Strings.EMPTY)
+                .geneOrientation(LinxGeneOrientation.UPSTREAM)
                 .disruptive(false)
-                .reportedStatus(ReportedStatus.NONE)
+                .reportedStatus(ReportedStatus.NOT_REPORTED)
                 .undisruptedCopyNumber(0D)
                 .type(LinxBreakendType.BND)
                 .regionType(TranscriptRegionType.UNKNOWN)

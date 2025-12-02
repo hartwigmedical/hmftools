@@ -11,9 +11,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
-import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainDeletionFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestGainDeletionFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
@@ -42,17 +41,17 @@ public class ImmuneEscapeInterpreterTest
                         .biallelic(true)
                         .subclonalLikelihood(0D)
                         .build())
-                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestGainDeletionFactory.builder()
                         .gene("TABBP")
                         .interpretation(CopyNumberInterpretation.FULL_DEL)
                         .isCanonical(false)
                         .build())
-                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestGainDeletionFactory.builder()
                         .gene("CD274")
                         .interpretation(CopyNumberInterpretation.PARTIAL_GAIN)
                         .isCanonical(true)
                         .build())
-                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestGainDeletionFactory.builder()
                         .gene("SETDB1")
                         .interpretation(CopyNumberInterpretation.FULL_GAIN)
                         .isCanonical(true)
@@ -236,7 +235,7 @@ public class ImmuneEscapeInterpreterTest
     private static PurpleRecord withDeletion(@NotNull String gene)
     {
         return TestPurpleInterpretationFactory.builder()
-                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestGainDeletionFactory.builder()
                         .gene(gene)
                         .isCanonical(true)
                         .interpretation(CopyNumberInterpretation.FULL_DEL)
@@ -248,7 +247,7 @@ public class ImmuneEscapeInterpreterTest
     private static PurpleRecord withAmplification(@NotNull String gene)
     {
         return TestPurpleInterpretationFactory.builder()
-                .addDriverSomaticGainsDels(TestPurpleGainDeletionFactory.builder()
+                .addDriverSomaticGainsDels(TestGainDeletionFactory.builder()
                         .gene(gene)
                         .isCanonical(true)
                         .interpretation(CopyNumberInterpretation.FULL_GAIN)

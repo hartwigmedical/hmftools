@@ -79,6 +79,6 @@ public final class VirusTestFactory
     @NotNull
     private static VirusInterpreterData createWithVirus(@NotNull AnnotatedVirus virus)
     {
-        return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllViruses(virus).build();
+        return ImmutableVirusInterpreterData.builder().addAllViruses(virus).build();
     }
 }

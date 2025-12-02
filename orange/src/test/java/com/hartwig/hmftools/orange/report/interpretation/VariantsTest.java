@@ -6,11 +6,12 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.finding.Variants;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
-import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.datamodel.TestVariantEntryFactory;
-import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
+import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.orange.report.finding.TestVariantEntryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -20,15 +21,25 @@ public class VariantsTest
     @Test
     public void canSortVariantEntries()
     {
-        VariantEntry entry1 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(600).build();
-        VariantEntry entry2 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(700).build();
-        VariantEntry entry3 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(1D).affectedCodon(600).build();
-        VariantEntry entry4 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(0.5).affectedCodon(600).build();
-        VariantEntry entry5 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(600).build();
-        VariantEntry entry6 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(null).affectedCodon(null).build();
+        SmallVariant entry1 = TestVariantEntryFactory.builder("gene A")
+                .driver(PurpleDriverTestFactory.builder().driverLikelihood(1D).build())
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(600).build()).build();
+        SmallVariant entry2 = TestVariantEntryFactory.builder("gene A")
+                .driver(PurpleDriverTestFactory.builder().driverLikelihood(1D).build())
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(700).build()).build();
+        SmallVariant entry3 = TestVariantEntryFactory.builder("gene B")
+                .driver(PurpleDriverTestFactory.builder().driverLikelihood(1D).build())
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(600).build()).build();
+        SmallVariant entry4 = TestVariantEntryFactory.builder("gene B")
+                .driver(PurpleDriverTestFactory.builder().driverLikelihood(0.5).build())
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(600).build()).build();
+        SmallVariant entry5 = TestVariantEntryFactory.builder("gene B")
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(600).build()).build();
+        SmallVariant entry6 = TestVariantEntryFactory.builder("gene B")
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().affectedCodon(null).build()).build();
 
-        List<VariantEntry> entries = Lists.newArrayList(entry5, entry6, entry1, entry3, entry2, entry4);
-        List<VariantEntry> sorted = Variants.sort(entries);
+        List<SmallVariant> entries = List.of(entry5, entry6, entry1, entry3, entry2, entry4);
+        List<SmallVariant> sorted = Variants.sort(entries);
 
         assertEquals(entry1, sorted.get(0));
         assertEquals(entry2, sorted.get(1));
@@ -41,11 +52,13 @@ public class VariantsTest
     @Test
     public void canRenderVariantField()
     {
-        VariantEntry canonical = TestVariantEntryFactory.builder().gene("gene").isCanonical(true).impact("impact").build();
-        assertEquals("gene impact", Variants.variantField(canonical));
+        SmallVariant canonical = TestVariantEntryFactory.builder("gene").isCanonical(true)
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().hgvsProteinImpact("impact").build()).build();
+        assertEquals("gene impact", Variants.variantField(canonical, true));
 
-        VariantEntry nonCanonical = TestVariantEntryFactory.builder().gene("gene").isCanonical(false).impact("impact").build();
-        assertEquals("gene (alt) impact", Variants.variantField(nonCanonical));
+        SmallVariant nonCanonical = TestVariantEntryFactory.builder("gene").isCanonical(false)
+                .transcriptImpact(TestPurpleVariantFactory.impactBuilder().hgvsProteinImpact("impact").build()).build();
+        assertEquals("gene (alt) impact", Variants.variantField(nonCanonical, true));
     }
 
     @Test
@@ -53,7 +66,8 @@ public class VariantsTest
     {
         for(HotspotType hotspot : HotspotType.values())
         {
-            VariantEntry entry = TestVariantEntryFactory.builder().hotspot(hotspot).build();
+            SmallVariant entry = TestVariantEntryFactory.builder("gene")
+                    .purpleVariant(TestPurpleVariantFactory.builder().hotspot(hotspot).build()).build();
             assertNotNull(Variants.hotspotField(entry));
         }
     }
@@ -61,60 +75,70 @@ public class VariantsTest
     @Test
     public void canRenderBiallelicStatus()
     {
-        VariantEntry biallelic = TestVariantEntryFactory.builder().biallelicProbability(1.).build();
+        SmallVariant biallelic = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().biallelicProbability(1.).build()).build();
         assertEquals("100%", Variants.biallelicLikelihoodField(biallelic));
 
-        VariantEntry nonBiallelic = TestVariantEntryFactory.builder().biallelicProbability(0.2).build();
+        SmallVariant nonBiallelic = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().biallelicProbability(0.2).build()).build();
         assertEquals("20%", Variants.biallelicLikelihoodField(nonBiallelic));
     }
 
     @Test
     public void canRenderDriverLikelihood()
     {
-        VariantEntry driver = TestVariantEntryFactory.builder().driverLikelihood(0.4).build();
+        SmallVariant driver = TestVariantEntryFactory.builder("gene")
+                .driver(PurpleDriverTestFactory.builder().driverLikelihood(0.4).build()).build();
         assertEquals("40%", Variants.driverLikelihoodField(driver));
-
-        VariantEntry nonDriver = TestVariantEntryFactory.builder().driverLikelihood(null).build();
-        assertEquals(Strings.EMPTY, Variants.driverLikelihoodField(nonDriver));
     }
 
     @Test
     public void canRenderClonalLikelihood()
     {
-        VariantEntry clonal = TestVariantEntryFactory.builder().clonalLikelihood(1D).build();
+        SmallVariant clonal = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().subclonalLikelihood(0.0).build()).build();
         assertEquals("100%", Variants.clonalLikelihoodField(clonal));
 
-        VariantEntry subclonal = TestVariantEntryFactory.builder().clonalLikelihood(0.3).build();
+        SmallVariant subclonal = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().subclonalLikelihood(0.7).build()).build();
         assertEquals("30%", Variants.clonalLikelihoodField(subclonal));
     }
 
     @Test
     public void canRenderRnaDepthField()
     {
-        VariantEntry missingRna = TestVariantEntryFactory.builder().rnaDepth(null).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaDepthField(missingRna));
+        String notAvailableString = "N/A";
 
-        VariantEntry proper = TestVariantEntryFactory.builder()
+        SmallVariant missingRna = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().rnaDepth(null).build()).build();
+        assertEquals(notAvailableString, Variants.rnaDepthField(missingRna, notAvailableString));
+
+        SmallVariant proper = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder()
                 .rnaDepth(TestPurpleVariantFactory.depthBuilder().alleleReadCount(10).totalReadCount(20).build())
-                .build();
-        assertEquals("10/20 (50%)", Variants.rnaDepthField(proper));
+                .build()).build();
+        assertEquals("10/20 (50%)", Variants.rnaDepthField(proper, notAvailableString));
 
-        VariantEntry noDepth = TestVariantEntryFactory.builder()
+        SmallVariant noDepth = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder()
                 .rnaDepth(TestPurpleVariantFactory.depthBuilder().alleleReadCount(0).totalReadCount(0).build())
-                .build();
-        assertEquals("0/0", Variants.rnaDepthField(noDepth));
+                .build()).build();
+        assertEquals("0/0", Variants.rnaDepthField(noDepth, notAvailableString));
     }
 
     @Test
     public void canRenderPhaseSetField()
     {
-        VariantEntry missingPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(null).build();
+        SmallVariant missingPhaseSet = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().localPhaseSets(null).build()).build();
         assertEquals(Strings.EMPTY, Variants.phaseSetField(missingPhaseSet));
 
-        VariantEntry emptyPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList()).build();
+        SmallVariant emptyPhaseSet = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().localPhaseSets(Lists.newArrayList()).build()).build();
         assertEquals(Strings.EMPTY, Variants.phaseSetField(emptyPhaseSet));
 
-        VariantEntry multiPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList(1, 2)).build();
+        SmallVariant multiPhaseSet = TestVariantEntryFactory.builder("gene")
+                .purpleVariant(TestPurpleVariantFactory.builder().localPhaseSets(Lists.newArrayList(1, 2)).build()).build();
         assertEquals("1, 2", Variants.phaseSetField(multiPhaseSet));
     }
 }

@@ -23,11 +23,14 @@ public final class ReportLimiter
 {
     public static OrangeRecord limitAllListsToMaxOne(final OrangeRecord report)
     {
+        PurpleRecord purple = limitPurpleDataToOne(report.purple());
+        LinxRecord linx = limitLinxDataToOne(report.linx());
+
         return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
-                .purple(limitPurpleDataToOne(report.purple()))
-                .linx(limitLinxDataToOne(report.linx()))
+                .purple(purple)
+                .linx(linx)
                 .isofox(limitIsofoxDataToOne(report.isofox()))
                 .build();
     }
@@ -84,7 +87,6 @@ public final class ReportLimiter
                 .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
                         filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
-                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .otherSomaticBreakends(filteredAllSomaticBreakends)
                 .driverSomaticBreakends(filteredReportableSomaticBreakends)
                 .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))

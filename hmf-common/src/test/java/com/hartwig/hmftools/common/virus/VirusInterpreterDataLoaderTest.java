@@ -18,6 +18,6 @@ public class VirusInterpreterDataLoaderTest
         VirusInterpreterData virusInterpreterData = VirusInterpreterDataLoader.load(SAMPLE_VIRUS_ANNOTATED_TSV);
 
         assertEquals(2, virusInterpreterData.allViruses().size());
-        assertEquals(1, virusInterpreterData.reportableViruses().size());
+        assertEquals(1, virusInterpreterData.allViruses().stream().filter(AnnotatedVirus::reported).count());
     }
 }

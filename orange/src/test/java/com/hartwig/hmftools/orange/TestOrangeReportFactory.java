@@ -15,6 +15,9 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.metrics.BamMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
+import com.hartwig.hmftools.datamodel.finding.Fusion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableFindingRecord;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
@@ -29,7 +32,6 @@ import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.isofox.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
@@ -151,17 +153,19 @@ public final class TestOrangeReportFactory
                         .gene("ARID1A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.1920+9571_1920+9596delAGTGAACCGTTGACTAGAGTTTGGTT")
+                                .reported(true)
                                 .build())
                         .build())
                 .addDriverSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
                         .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                                 .hgvsCodingImpact("c.8558+420_8558+442delCCGATACGATGAAAGAAAAGAGC")
+                                .reported(true)
                                 .build())
                         .build())
                 .addDriverSomaticVariants(TestPurpleVariantFactory.builder()
                         .gene("USH2A")
-                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").build())
+                        .canonicalImpact(TestPurpleVariantFactory.impactBuilder().hgvsCodingImpact("c.11712-884A>T").reported(true).build())
                         .addLocalPhaseSets(42256)
                         .build())
                 .otherGermlineVariants(Lists.newArrayList())
@@ -174,17 +178,17 @@ public final class TestOrangeReportFactory
     @NotNull
     private static LinxRecord createTestLinxData()
     {
-        LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
+        Fusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
-                .addReportableSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
+                .addAllSomaticFusions(fusion)
                 .allGermlineStructuralVariants(Lists.newArrayList())
                 .otherGermlineBreakends(Lists.newArrayList())
                 .driverGermlineBreakends(Lists.newArrayList())
@@ -329,12 +333,18 @@ public final class TestOrangeReportFactory
                 .driverLikelihood(VirusLikelihoodType.UNKNOWN)
                 .build());
 
-        return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
+        return ImmutableVirusInterpreterData.builder().allViruses(reportableViruses).build();
     }
 
     @NotNull
     private static Set<PeachGenotype> createTestPeachData()
     {
         return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").allele("allele").build()));
+    }
+
+    @NotNull
+    private static FindingRecord createMinimalFindingData()
+    {
+        return ImmutableFindingRecord.builder().build();
     }
 }

@@ -1,26 +1,31 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.algo.util.DriverUtils.convertReportedStatus;
+import static com.hartwig.hmftools.orange.conversion.PurpleConversion.convert;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.driver.DriverCatalogKey;
-import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.finding.GainDeletion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
+import com.hartwig.hmftools.datamodel.finding.ImmutableMicrosatelliteStability;
+import com.hartwig.hmftools.datamodel.finding.ImmutableTumorMutationStatus;
+import com.hartwig.hmftools.datamodel.finding.SmallVariant;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
@@ -28,6 +33,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
+
+import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
@@ -54,24 +62,24 @@ public class PurpleInterpreter
         List<PurpleVariant> driverSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverSomaticVariants());
 
         List<PurpleVariant> allGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverGermlineVariants());
+        @Nullable List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverGermlineVariants());
 
-        List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
+        List<GainDeletion> driverSomaticGainDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
 
-        List<PurpleGainDeletion> allGermlineFullDels = null;
-        List<PurpleGainDeletion> driverGermlineDeletions = null;
+        List<GainDeletion> allGermlineFullDels = null;
+        List<GainDeletion> driverGermlineDeletions = null;
         List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities = null;
         List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
 
         if(allGermlineDeletions != null)
         {
-            Map<PurpleGainDeletion, Boolean> fullDelToReportability = mGermlineGainDelFactory.getReportabilityMap(
+            Map<GainDeletion, Boolean> fullDelToReportability = mGermlineGainDelFactory.getReportabilityMap(
                     allGermlineDeletions, purple.somaticGeneCopyNumbers());
 
             allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
-            driverGermlineDeletions = selectReportablegainDels(fullDelToReportability);
+            driverGermlineDeletions = selectReportableGainDels(fullDelToReportability);
 
             LOGGER.info(" Resolved {} germline deletions of which {} are reportable",
                     allGermlineFullDels.size(), driverGermlineDeletions.size());
@@ -86,32 +94,45 @@ public class PurpleInterpreter
                     allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
+        List<PurpleDriver> somaticDrivers = ConversionUtil.mapToList(purple.somaticDrivers(), PurpleConversion::convert);
+        List<SmallVariant> somaticSmallVariants = SmallVariantFactory.create(driverSomaticVariants, somaticDrivers);
+        List<PurpleDriver> germlineDrivers = ConversionUtil.mapToNullableList(purple.germlineDrivers(), PurpleConversion::convert);
+        List<SmallVariant> germlineSmallVariants = null;
+
+        if(germlineDrivers != null)
+        {
+            germlineSmallVariants = SmallVariantFactory.create(driverGermlineVariants, germlineDrivers);
+        }
+
         return ImmutablePurpleRecord.builder()
                 .fit(createFit(purple))
                 .tumorStats(TumorStatsFactory.compute(purple))
                 .characteristics(createCharacteristics(purple))
-                .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
-                .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
-                .otherSomaticVariants(allSomaticVariants)
+                .somaticDrivers(somaticDrivers)
+                .germlineDrivers(germlineDrivers)
                 .driverSomaticVariants(driverSomaticVariants)
+                .otherSomaticVariants(allSomaticVariants)
+                .driverGermlineVariants(driverGermlineVariants)
                 .otherGermlineVariants(allGermlineVariants)
                 .driverGermlineVariants(driverGermlineVariants)
+                .driverSomaticSmallVariants(somaticSmallVariants)
+                .driverGermlineSmallVariants(germlineSmallVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
-                .driverSomaticGainsDels(driverSomaticGainsDels)
-                .otherGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
+                .driverSomaticGainsDels(driverSomaticGainDels)
+                .otherGermlineDeletions(ConversionUtil.mapToNullableList(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .driverGermlineDeletions(driverGermlineDeletions)
                 .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
                 .driverGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
                 .build();
     }
 
-    private static List<PurpleGainDeletion> selectReportablegainDels(final Map<PurpleGainDeletion, Boolean> fullDelToReportability)
+    private static List<GainDeletion> selectReportableGainDels(final Map<GainDeletion, Boolean> fullDelToReportability)
     {
-        List<PurpleGainDeletion> reportable = Lists.newArrayList();
-        for(Map.Entry<PurpleGainDeletion, Boolean> entry : fullDelToReportability.entrySet())
+        List<GainDeletion> reportable = Lists.newArrayList();
+        for(Map.Entry<GainDeletion, Boolean> entry : fullDelToReportability.entrySet())
         {
-            PurpleGainDeletion gainDel = entry.getKey();
+            GainDeletion gainDel = entry.getKey();
             boolean reported = entry.getValue();
             if(reported)
             {
@@ -137,34 +158,40 @@ public class PurpleInterpreter
         return reportable;
     }
 
-    private static final Set<DriverType> AMP_DEL_TYPES = Sets.newHashSet(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL);
-
-    private static List<PurpleGainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
+    private static List<GainDeletion> somaticGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
-        List<PurpleGainDeletion> gainsDels = Lists.newArrayList();
-
-        Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
-        for(DriverCatalogKey key : geneDriverMap.keySet())
-        {
-            DriverCatalog geneDriver = geneDriverMap.get(key);
-
-            if(AMP_DEL_TYPES.contains(geneDriver.driver()))
-            {
-                gainsDels.add(toGainDel(geneDriver));
-            }
-        }
-        return gainsDels;
+        return gainsDelsFromDrivers(drivers, Set.of(DriverType.AMP, DriverType.PARTIAL_AMP, DriverType.DEL));
     }
 
-    private static PurpleGainDeletion toGainDel(final DriverCatalog driver)
+    private static List<GainDeletion> germlineGainsDelsFromDrivers(final List<DriverCatalog> drivers)
     {
-        return ImmutablePurpleGainDeletion.builder()
+        return gainsDelsFromDrivers(drivers, Set.of(DriverType.GERMLINE_DELETION));
+    }
+
+    private static List<GainDeletion> gainsDelsFromDrivers(final List<DriverCatalog> drivers, final Set<DriverType> driverTypes)
+    {
+        return drivers.stream()
+                .filter(o -> driverTypes.contains(o.driver()))
+                .map(PurpleInterpreter::toGainDel)
+                .toList();
+    }
+
+    private static GainDeletion toGainDel(final DriverCatalog driver)
+    {
+        CopyNumberInterpretation copyNumberInterpretation = CopyNumberInterpretationUtil.fromCNADriver(driver);
+
+        // TODO: transcript fix
+        return ImmutableGainDeletion.builder()
+                .findingKey(FindingKeys.gainDeletion(driver.gene(), copyNumberInterpretation, driver.isCanonical(), driver.transcript()))
+                .reportedStatus(convertReportedStatus(driver.reportedStatus()))
+                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
+                .driver(convert(driver))
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
                 .gene(driver.gene())
                 .transcript(driver.transcript())
                 .isCanonical(driver.isCanonical())
-                .interpretation(CopyNumberInterpretationUtil.fromCNADriver(driver))
+                .interpretation(copyNumberInterpretation)
                 .minCopies(Math.max(0, driver.minCopyNumber()))
                 .maxCopies(Math.max(0, driver.maxCopyNumber()))
                 .build();
@@ -173,7 +200,7 @@ public class PurpleInterpreter
     private static PurpleFit createFit(final PurpleData purple)
     {
         return ImmutablePurpleFit.builder()
-                .qc(PurpleConversion.convert(purple.purityContext().qc()))
+                .qc(convert(purple.purityContext().qc()))
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
@@ -188,15 +215,22 @@ public class PurpleInterpreter
     {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
-                .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
-                .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
-                .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
-                        .tumorMutationalBurdenStatus()
-                        .name()))
-                .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
-                .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
+                .microsatelliteStability(ImmutableMicrosatelliteStability.builder()
+                        .findingKey(FindingKeys.microsatelliteStability(purple.purityContext().microsatelliteStatus()))
+                        .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
+                        .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
+                        .build())
+                .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
+                        .findingKey(FindingKeys.tumorMutationStatus())
+                        .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
+                        .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
+                                .tumorMutationalBurdenStatus()
+                                .name()))
+                        .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
+                        .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
+                        .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())
+                        .build()
+                )
                 .build();
     }
 
