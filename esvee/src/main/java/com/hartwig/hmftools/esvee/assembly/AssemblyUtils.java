@@ -102,6 +102,25 @@ public final class AssemblyUtils
         return true;
     }
 
+    public static boolean basesMatch(
+            final byte[] bases1, int firstIndexStart, int firstIndexEnd,
+            final byte[] bases2, int secondIndexStart, int secondIndexEnd)
+    {
+        if(bases1 == null || bases2 == null || firstIndexEnd - firstIndexStart != secondIndexEnd - secondIndexStart)
+            return false;
+
+        int firstIndex = firstIndexStart;
+        int secondIndex = secondIndexStart;
+
+        for(; firstIndex < bases1.length && secondIndex < bases2.length; ++firstIndex, ++secondIndex)
+        {
+            if(bases1[firstIndex] != bases2[secondIndex])
+                return false;
+        }
+
+        return true;
+    }
+
     public static boolean isLocalAssemblyCandidate(
             final JunctionAssembly first, final JunctionAssembly second, boolean checkConcordantReads, boolean checkLineInsertion)
     {

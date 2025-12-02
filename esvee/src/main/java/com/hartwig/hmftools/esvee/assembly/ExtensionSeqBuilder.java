@@ -290,7 +290,7 @@ public class ExtensionSeqBuilder
 
                     seqDiffInfo = new SequenceDiffInfo(
                             read.readIndex(), extensionIndex, consensusRepeat.Bases, REPEAT, baseQualType,
-                            readRepeatCount, readRepeatIndexBegin);
+                            readRepeatCount, readRepeatIndexBegin, 0);
                 }
             }
 

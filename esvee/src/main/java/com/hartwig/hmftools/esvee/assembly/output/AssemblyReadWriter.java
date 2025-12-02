@@ -85,7 +85,8 @@ public class AssemblyReadWriter
             sj.add("ExtMismatches");
             sj.add("RefMismatches");
             sj.add("MismatchInfo");
-            sj.add("TrimCount");
+            sj.add("TrimCountStart");
+            sj.add("TrimCountEnd");
             sj.add("LineTail");
 
             writer.write(sj.toString());
@@ -176,7 +177,8 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(support.extensionBaseMismatches()));
                 sj.add(String.valueOf(support.referenceMismatches()));
                 sj.add(support.mismatchInfo());
-                sj.add(String.valueOf(support.trimCount()));
+                sj.add(String.valueOf(support.trimCountStart()));
+                sj.add(String.valueOf(support.trimCountEnd()));
                 sj.add(String.valueOf(support.hasLineTail()));
 
                 mWriter.write(sj.toString());

@@ -16,6 +16,8 @@ public class SequenceDiffInfo
     public final String Bases; // either the alt SNV base, the novel indel or the repeat sequence if a contraction or expansion
     public final SequenceDiffType Type;
 
+    public final int IndelLength; // novel indel length
+
     // repeat-diff fields
     public final int RepeatCount; // repeat count in the read
     public final int RepeatIndexBegin; // index where the repeat begins in the read, from the build direction
@@ -24,23 +26,24 @@ public class SequenceDiffInfo
     public double MismatchPenalty;
 
     public static final SequenceDiffInfo UNSET = new SequenceDiffInfo(
-            -1, -1, "", SequenceDiffType.UNSET, BaseQualType.LOW, 0, -1);
+            -1, -1, "", SequenceDiffType.UNSET, BaseQualType.LOW, 0, -1, 0);
 
     public SequenceDiffInfo(
             int readIndex, int consensusIndex, final String bases, final SequenceDiffType type, final BaseQualType qualType)
     {
-        this(readIndex, consensusIndex, bases, type, qualType, 0, -1);
+        this(readIndex, consensusIndex, bases, type, qualType, 0, -1, 0);
     }
 
     public SequenceDiffInfo(
             int readIndex, int consensusIndex, final String bases, final SequenceDiffType type, final BaseQualType qualType,
-            int repeatCount, int repeatIndexBegin)
+            int repeatCount, int repeatIndexBegin, int indelLength)
     {
         ReadIndex = readIndex;
         ConsensusIndex = consensusIndex;
         Bases = bases;
         Type = type;
         QualType = qualType;
+        IndelLength = indelLength;
         RepeatCount = repeatCount;
         RepeatIndexBegin = repeatIndexBegin;
 
@@ -56,6 +59,13 @@ public class SequenceDiffInfo
     public static SequenceDiffInfo fromMatch(int readIndex, int consensusIndex)
     {
         return new SequenceDiffInfo(readIndex, consensusIndex, null, SequenceDiffType.MATCH, BaseQualType.HIGH);
+    }
+
+    public static SequenceDiffInfo fromIndel(
+            final int readIndex, int consensusIndex, final String bases, final SequenceDiffType type,
+            final BaseQualType qualType, final int indelLength)
+    {
+        return new SequenceDiffInfo(readIndex, consensusIndex, bases, type, qualType, 0, 0, indelLength);
     }
 
     // repeat related methods
@@ -93,10 +103,22 @@ public class SequenceDiffInfo
 
     public String toString()
     {
-        if(Type == SequenceDiffType.MATCH)
-            return format("index(r=%d c=%d): %s", ReadIndex, ConsensusIndex, Type);
+        switch(Type)
+        {
+            case MATCH: return format("index(r=%d c=%d): %s", ReadIndex, ConsensusIndex, Type);
 
-        String info = format("index(r=%d c=%d): %s %s penalty(%.2f)", ReadIndex, ConsensusIndex, Type, Bases, MismatchPenalty);
-        return RepeatCount == 0 ? info : format("%s x%d)", info, RepeatCount);
+            case BASE:
+            case OTHER:
+                return format("index(r=%d c=%d): %s %s penalty(%.2f)", ReadIndex, ConsensusIndex, Type, Bases, MismatchPenalty);
+
+            case INSERT:
+            case DELETE:
+                return format("index(r=%d c=%d): %s-%d %s penalty(%.2f)", ReadIndex, ConsensusIndex, Type, IndelLength, Bases, MismatchPenalty);
+
+            case REPEAT:
+                return format("index(r=%d c=%d): %s x%d penalty(%.2f)", ReadIndex, ConsensusIndex, Type, RepeatCount, MismatchPenalty);
+
+            default: return "UNSET";
+        }
     }
 }

@@ -139,12 +139,12 @@ public class ReadParseState
         }
         else if(seqDiffInfo.Type == DELETE)
         {
-            // skip over base
+            // hold on base
         }
         else if(seqDiffInfo.Type == INSERT)
         {
             // skip this and the consensus base
-            moveNextBases(2); // CHECK: would need to know insert (diff) length if novel INDEls < 1 base are supported
+            moveNextBases(seqDiffInfo.IndelLength + 1); // the insert and the current aligned base
         }
     }
 

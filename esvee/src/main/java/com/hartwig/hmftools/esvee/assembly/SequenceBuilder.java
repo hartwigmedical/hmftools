@@ -436,7 +436,24 @@ public class SequenceBuilder
             BaseQualType qualType = read.qualType(read.readIndex());
             String base = String.valueOf((char)read.currentBase());
 
-            return new SequenceDiffInfo(read.readIndex(), mCurrentIndex, base, SequenceDiffType.INSERT, qualType);
+            return SequenceDiffInfo.fromIndel(read.readIndex(), mCurrentIndex, base, SequenceDiffType.INSERT, qualType, 1);
+        }
+
+        // check for a 2-base insert
+        int readNextIndexStart = mBuildForwards ? 1 : 0;
+        int readNextIndexEnd = mBuildForwards ? readNextBases.length - 1 : readNextBases.length - 2;
+        int consensusNextIndexStart = mBuildForwards ? 0 : 1;
+        int consensusNextIndexEnd = mBuildForwards ? readNextBases.length - 2 : readNextBases.length - 1;
+
+        if(basesMatch(
+                consensusCurrentAndNext, consensusNextIndexStart, consensusNextIndexEnd,
+                readNextBases, readNextIndexStart, readNextIndexEnd))
+        {
+            // test a 2-base insert
+            BaseQualType qualType = read.rangeMinQualType(read.readIndex(), read.readIndex() + 1);
+            String bases = String.valueOf((char)read.currentBase()) + (char)readNextBases[0];
+
+            return SequenceDiffInfo.fromIndel(read.readIndex(), mCurrentIndex, bases, SequenceDiffType.INSERT, qualType, 2);
         }
         else
         {
@@ -447,8 +464,8 @@ public class SequenceBuilder
                 int previousIndex = read.readIndex() + (mBuildForwards ? -1 : 1);
                 BaseQualType qualType = read.straddlingQualType(read.readIndex(), previousIndex); // order doesn't matter
 
-                return new SequenceDiffInfo(
-                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, qualType);
+                return SequenceDiffInfo.fromIndel(
+                        read.readIndex(), mCurrentIndex, "", SequenceDiffType.DELETE, qualType, 1);
             }
         }
 
@@ -584,7 +601,8 @@ public class SequenceBuilder
             BaseQualType baseQualType = read.rangeMinQualType(readRepeatStart, readRepeatEnd);
 
             seqDiffInfos[readIndex] = new SequenceDiffInfo(
-                    read.readIndex(), mCurrentIndex, selectedRepeatBases, diffType, baseQualType, readRepeatCount, readRepeatIndexBegin);
+                    read.readIndex(), mCurrentIndex, selectedRepeatBases, diffType, baseQualType,
+                    readRepeatCount, readRepeatIndexBegin, 0);
         }
     }
 
