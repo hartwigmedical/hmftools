@@ -110,7 +110,7 @@ public class ReferenceData
 
         Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, mConfig.Genes);
         if(config.Genes == HLA_DRB1)
-            hlaTranscriptMap = trimDrb1Transcripts(hlaTranscriptMap);
+            trimDrb1Transcripts(hlaTranscriptMap);
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
 
@@ -145,7 +145,7 @@ public class ReferenceData
         if(config.Genes.coversMhcClass1())
             EXCLUDED_ALLELES.addAll(CLASS_1_EXCLUDED_ALLELES);
 
-        if(config.Genes == HLA_DRB1)
+        if(config.Genes.contains(HlaGene.HLA_DRB1))
             EXCLUDED_ALLELES.addAll(HLA_DRB1_EXCLUDED_ALLELES);
 
         // see note above
@@ -181,7 +181,7 @@ public class ReferenceData
         return HLA_REF_BASES.substring(startPos - HLA_REF_START, endPos - HLA_REF_START + 1);
     }
 
-    private static Map<HlaGene, TranscriptData> trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
+    private static void trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
     {
         // restrict to first two exons
         TranscriptData transcript = transcripts.get(HlaGene.HLA_DRB1);
@@ -193,9 +193,7 @@ public class ReferenceData
         TranscriptData trimmedTranscript =
                 new TranscriptData(transcript.TransId, transcript.TransName, transcript.GeneId, transcript.IsCanonical, transcript.Strand, transcript.TransStart, transcript.TransEnd, trimmedCodingStart, transcript.CodingEnd, transcript.BioType, transcript.RefSeqId);
         trimmedTranscript.setExons(exons);
-        Map<HlaGene, TranscriptData> trimmedTranscripts = Maps.newHashMap();
-        trimmedTranscripts.put(HlaGene.HLA_DRB1, trimmedTranscript);
-        return trimmedTranscripts;
+        transcripts.put(HlaGene.HLA_DRB1, trimmedTranscript);
     }
 
     private static void setPonIndels(final RefGenomeVersion version)
@@ -519,14 +517,14 @@ public class ReferenceData
             String sequenceStr = items[1];
             HlaSequenceLoci newSequence = HlaSequenceFile.createFromReference(allele, sequenceStr, isProteinFile);
 
-            // restrict to first two exons on HLA-DRB1
-            if(mConfig.Genes == HLA_DRB1)
+            // restrict to first three exons on HLA-DRB1
+            if(allele.Gene == HlaGene.HLA_DRB1)
             {
                 int nucCount = GENE_CACHE.NucleotideLengths.get(HlaGene.HLA_DRB1);
                 int acidCount = nucCount / 3;
                 int trimLength = isProteinFile ? acidCount : nucCount;
-                List<String> trimmedSequence =
-                        Lists.newArrayList(newSequence.getSequences().subList(0, min(trimLength, newSequence.getSequences().size())));
+                List<String> trimmedSequence = Lists.newArrayList(
+                        newSequence.getSequences().subList(0, min(trimLength, newSequence.getSequences().size())));
                 newSequence = new HlaSequenceLoci(allele, trimmedSequence);
             }
 
