@@ -19,7 +19,7 @@ import com.hartwig.hmftools.datamodel.finding.ImmutableDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.orange.report.finding.FindingKeys;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -84,7 +84,7 @@ public class DisruptionFactory
         ReportedStatus reportedStatus = breakend.reportedStatus();
 
         return ImmutableDisruption.builder()
-                .findingKey(FindingKeys.findingKey(breakend))
+                .findingKey(FindingKeys.disruption(breakend))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
                 .chromosome(breakend.chromosome())

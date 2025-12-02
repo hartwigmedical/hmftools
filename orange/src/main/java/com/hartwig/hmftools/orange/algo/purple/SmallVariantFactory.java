@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.orange.report.finding;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.finding.ImmutableSmallVariant;
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.SmallVariant;
 import com.hartwig.hmftools.datamodel.interpretation.Drivers;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,8 +25,12 @@ public final class SmallVariantFactory
         {
             if(hasCanonicalImpact(variant))
             {
+                // find the driver object, if it is found, it is reported finding
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
-                entries.add(toVariantEntry(variant, driver));
+                if(driver != null)
+                {
+                    entries.add(toSmallVariant(variant, driver));
+                }
             }
         }
 
@@ -35,38 +39,30 @@ public final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver));
             }
         }
 
         return entries;
     }
 
-    // TODOHWL: driver should not be null
     @NotNull
-    private static SmallVariant toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
+    private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver)
     {
         PurpleTranscriptImpact transcriptImpact;
 
-        if(driver != null)
+        transcriptImpact = findTranscriptImpact(variant, driver.transcript());
+        if(transcriptImpact == null)
         {
-            transcriptImpact = findTranscriptImpact(variant, driver.transcript());
-            if(transcriptImpact == null)
-            {
-                throw new IllegalStateException("Could not find impact on transcript " + driver.transcript() + " for variant " + variant);
-            }
-        }
-        else
-        {
-            transcriptImpact = variant.canonicalImpact();
+            throw new IllegalStateException("Could not find impact on transcript " + driver.transcript() + " for variant " + variant);
         }
 
-        boolean isCanonical = driver == null || driver.transcript().equals(variant.canonicalImpact().transcript());
+        boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
 
         return ImmutableSmallVariant.builder()
-                .findingKey(FindingKeys.findingKey(variant, transcriptImpact, isCanonical))
-                .reportedStatus(driver != null ? driver.reportedStatus() : ReportedStatus.NON_DRIVER_GENE)
-                .driverInterpretation(driver != null ? DriverInterpretation.interpret(driver.driverLikelihood()) : DriverInterpretation.LOW)
+                .findingKey(FindingKeys.smallVariant(variant, transcriptImpact, isCanonical))
+                .reportedStatus(driver.reportedStatus())
+                .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .purpleVariant(variant)
                 .driver(driver)
                 .transcriptImpact(transcriptImpact)

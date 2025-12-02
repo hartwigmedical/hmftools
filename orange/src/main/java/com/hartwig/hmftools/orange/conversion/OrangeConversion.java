@@ -5,10 +5,10 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
-import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
+import com.hartwig.hmftools.datamodel.finding.ImmutableHomologousRecombination;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.datamodel.hla.ImmutableLilacRecord;
@@ -19,11 +19,7 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -95,31 +91,17 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
-    {
-        VirusType interpretation = annotatedVirus.interpretation();
-        return ImmutableVirusInterpreterEntry.builder()
-                .name(annotatedVirus.name())
-                .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
-                .integrations(annotatedVirus.integrations())
-                .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
-                .percentageCovered(annotatedVirus.percentageCovered())
-                .meanCoverage(annotatedVirus.meanCoverage())
-                .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
-                .reported(annotatedVirus.reported())
-                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
-                .build();
-    }
-
-    @NotNull
     public static ChordRecord convert(@NotNull ChordData chordData)
     {
         return ImmutableChordRecord.builder()
-                .brca1Value(chordData.BRCA1Value())
-                .brca2Value(chordData.BRCA2Value())
-                .hrdValue(chordData.hrdValue())
-                .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
-                .hrdType(chordData.hrdType())
+                .homologousRecombination(ImmutableHomologousRecombination.builder()
+                        .findingKey(FindingKeys.homologousRecombination(chordData.hrStatus()))
+                        .brca1Value(chordData.BRCA1Value())
+                        .brca2Value(chordData.BRCA2Value())
+                        .hrdValue(chordData.hrdValue())
+                        .hrStatus(ChordStatus.valueOf(chordData.hrStatus().name()))
+                        .hrdType(chordData.hrdType())
+                        .build())
                 .build();
     }
 

@@ -8,6 +8,8 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
+import com.hartwig.hmftools.datamodel.finding.ImmutablePredictedTumorOrigin;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,6 +35,11 @@ public final class TestCuppaFactory
                 .maxComplexSize(0)
                 .telomericSGLs(0)
                 .lineCount(0)
+                .bestPredictedTumorOrigin(ImmutablePredictedTumorOrigin.builder()
+                        .findingKey(FindingKeys.predictedTumorOrigin(prediction.cancerType()))
+                        .cancerType(prediction.cancerType())
+                        .likelihood(prediction.likelihood())
+                        .build())
                 .build();
     }
 }

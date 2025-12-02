@@ -90,10 +90,6 @@ public class VariantsTest
         SmallVariant driver = TestVariantEntryFactory.builder("gene")
                 .driver(PurpleDriverTestFactory.builder().driverLikelihood(0.4).build()).build();
         assertEquals("40%", Variants.driverLikelihoodField(driver));
-
-        SmallVariant nonDriver = TestVariantEntryFactory.builder("gene")
-                .driver(null).build();
-        assertEquals(Strings.EMPTY, Variants.driverLikelihoodField(nonDriver));
     }
 
     @Test

@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.orange.report.finding;
+package com.hartwig.hmftools.orange.algo.util;
 
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.common.purple.MicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
@@ -19,54 +20,48 @@ import org.jetbrains.annotations.Nullable;
 
 public class FindingKeys {
 
-    public static String findingKey(@NotNull PurpleVariant variant, @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
+    public static String smallVariant(@NotNull PurpleVariant variant, @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
         return String.format("smallVariant[%s %s]", geneTranscriptLabel(variant.gene(), isCanonical, transcriptImpact.transcript()), impact(transcriptImpact));
     }
 
-    public static String findingKey(String gene, CopyNumberInterpretation copyNumberInterpretation,
+    public static String gainDeletion(String gene, CopyNumberInterpretation copyNumberInterpretation,
             boolean isCanonical, String transcriptId)
     {
         return String.format("gainDeletion[%s %s]", geneTranscriptLabel(gene, isCanonical, transcriptId), copyNumberInterpretation.name());
     }
 
-    public static String findingKey(LinxBreakend breakend)
+    public static String disruption(LinxBreakend breakend)
     {
         return String.format("disruption[%s %d]",
                 geneTranscriptLabel(breakend.gene(), breakend.isCanonical(), breakend.transcript()),
                 breakend.svId());
     }
 
-    public static String findingKey(LinxFusion fusion)
+    public static String fusion(LinxFusion fusion)
     {
         return String.format("fusion[%s %s]", fusion.geneStart(), fusion.geneEnd());
     }
 
-    public static String findingKey(VirusInterpreterEntry virus) {
+    public static String virus(VirusInterpreterEntry virus) {
         String label = virus.interpretation() + (virus.interpretation() == VirusInterpretation.HPV ? " (" + virus.name() + ")" : "");
         return String.format("virus[%s]", label);
     }
 
-    /*
-    public static String findingKey(MicrosatelliteStability microsatelliteStability) {
-        return MolecularCharacteristicEvents.MICROSATELLITE_UNSTABLE;
+    public static String microsatelliteStability(MicrosatelliteStatus status) {
+        return String.format("microsatelliteStability[%s]", status.name());
     }
 
-    public static String findingKey(HomologousRecombination homologousRecombination) {
-        return MolecularCharacteristicEvents.HOMOLOGOUS_RECOMBINATION_DEFICIENT;
+    public static String homologousRecombination(ChordStatus status) {
+        return String.format("homologousRecombination[%s]", status.name());
     }
 
-    public static String findingKey(TumorMutationalBurden tumorMutationalBurden) {
-        return MolecularCharacteristicEvents.HIGH_TUMOR_MUTATIONAL_BURDEN;
+    public static String tumorMutationStatus() {
+        return "tumorMutationStatus";
     }
 
-    public static String findingKey(TumorMutationalLoad tumorMutationalLoad) {
-        return MolecularCharacteristicEvents.HIGH_TUMOR_MUTATIONAL_LOAD;
-    }
-    */
-
-    public static String findingKey(@NotNull CuppaPrediction cuppaPrediction) {
-        return String.format("predictedTumorOrigin[%s]", cuppaPrediction.cancerType());
+    public static String predictedTumorOrigin(@NotNull String cancerType) {
+        return String.format("predictedTumorOrigin[%s]", cancerType);
     }
 
     // only show transcript ID for non canonical transcripts

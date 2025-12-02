@@ -16,7 +16,6 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +32,6 @@ public final class ReportLimiter
                 .purple(purple)
                 .linx(linx)
                 .isofox(limitIsofoxDataToOne(report.isofox()))
-                .findings(FindingFactory.create(purple, linx, report.virusInterpreter(), report.cuppa()))
                 .build();
     }
 

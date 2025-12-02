@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
+import com.hartwig.hmftools.datamodel.finding.Virus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
@@ -60,7 +61,8 @@ public class VirusInterpreterTest
             @NotNull VirusInterpreterData converted)
     {
         assertEqualsValue(input.allViruses(), converted.allViruses());
-        assertEqualsValue(input.allViruses().stream().filter(AnnotatedVirus::reported).toList(), converted.reportableViruses());
+        assertEqualsValue(input.allViruses().stream().filter(AnnotatedVirus::reported).toList(),
+                converted.driverViruses().stream().map(Virus::interpreterEntry).toList());
     }
 
     private static void assertEqualsValue(@NotNull List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input,

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
+import com.hartwig.hmftools.orange.algo.virus.VirusInterpreter;
 
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public class OrangeConversionTest
         assertNotNull(OrangeConversion.convert(DoidTestFactory.createTestDoidNode()));
         assertNotNull(OrangeConversion.convert(LilacTestFactory.createEmptyData(), true, true));
         assertNotNull(OrangeConversion.convert(LilacTestFactory.alleleBuilder().build(), true, true));
-        assertNotNull(OrangeConversion.convert(VirusTestFactory.annotatedVirusBuilder().build()));
+        assertNotNull(VirusInterpreter.convert(VirusTestFactory.annotatedVirusBuilder().build()));
         assertNotNull(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()));
         assertNotNull(OrangeConversion.convert(PeachTestFactory.builder().build()));
     }

@@ -41,8 +41,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.TumorStats;
-import com.hartwig.hmftools.orange.report.finding.FindingFactory;
-import com.hartwig.hmftools.orange.report.finding.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +60,6 @@ public final class GermlineConversion
                 .germlineMVLHPerGene(null)
                 .purple(purple)
                 .linx(linx)
-                .findings(FindingFactory.create(purple, linx, report.virusInterpreter(), report.cuppa()))
                 .build();
     }
 
@@ -278,7 +275,7 @@ public final class GermlineConversion
         DriverInterpretation driverInterpretation = DriverUtils.maxDriverInterpretation(somaticDel.driverInterpretation(), germlineDel.driverInterpretation());
 
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.findingKey(somaticDel.gene(), interpretation, somaticDel.isCanonical(), somaticDel.transcript()))
+                .findingKey(FindingKeys.gainDeletion(somaticDel.gene(), interpretation, somaticDel.isCanonical(), somaticDel.transcript()))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)

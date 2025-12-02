@@ -16,6 +16,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.SmallVariantFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
@@ -74,7 +75,8 @@ public class VariantEntryFactoryTest
 
         List<SmallVariant> entries = SmallVariantFactory.create(variants, drivers);
 
-        assertEquals(3, entries.size());
+        // we will not create a SmallVariant for non driver
+        assertEquals(2, entries.size());
         SmallVariant entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
         assertTrue(entry1.isCanonical());
         assertEquals(2D, entry1.variantCopyNumber(), EPSILON);
@@ -88,9 +90,6 @@ public class VariantEntryFactoryTest
         SmallVariant entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
         assertFalse(entry2.isCanonical());
         assertEquals(0.4, entry2.driverLikelihood(), EPSILON);
-
-        SmallVariant entry3 = findByGeneAndImpact(entries, "gene 2", "impact 3");
-        assertNull(entry3.driverLikelihood());
     }
 
     @Test

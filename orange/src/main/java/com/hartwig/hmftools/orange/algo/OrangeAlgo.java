@@ -47,7 +47,6 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -100,7 +99,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
-import com.hartwig.hmftools.orange.report.finding.FindingFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -244,8 +242,6 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
-        FindingRecord finding = FindingFactory.create(purple, linx, virusInterpreter, cuppa);
-
         boolean hasRefSample = config.wgsRefConfig() != null && config.wgsRefConfig().referenceSampleId() != null;
 
         OrangeRecord report = ImmutableOrangeRecord.builder()
@@ -271,7 +267,6 @@ public class OrangeAlgo
                 .sigAllocations(SigsInterpreter.interpret(sigAllocations, mEtiologyPerSignature))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
-                .findings(finding)
                 .build();
 
         verifyPlots(report.plots(), linxData);
@@ -656,7 +651,7 @@ public class OrangeAlgo
         Observation svTmbObservation = ImmutableObservation.builder()
                 .sample(createSample(config))
                 .type(type)
-                .value(purple.characteristics().svTumorMutationalBurden())
+                .value(purple.characteristics().tumorMutationStatus().svTumorMutationalBurden())
                 .build();
 
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());

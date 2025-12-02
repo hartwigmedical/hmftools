@@ -84,8 +84,7 @@ public final class TestOrangeReportFactory
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
                 .cuppa(TestCuppaFactory.createMinimalCuppaData())
-                .plots(createMinimalOrangePlots())
-                .findings(createMinimalFindingData());
+                .plots(createMinimalOrangePlots());
     }
 
     @NotNull

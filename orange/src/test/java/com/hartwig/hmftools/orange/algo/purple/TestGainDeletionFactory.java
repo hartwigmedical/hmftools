@@ -5,7 +5,6 @@ import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.orange.report.finding.FindingKeys;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

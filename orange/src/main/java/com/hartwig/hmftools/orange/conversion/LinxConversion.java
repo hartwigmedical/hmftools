@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
@@ -22,7 +21,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
 import com.hartwig.hmftools.orange.algo.linx.HomozygousDisruption;
-import com.hartwig.hmftools.orange.report.finding.FindingKeys;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -76,7 +75,7 @@ public final class LinxConversion
         DriverInterpretation driverInterpretation = toDriverInterpretation(linxFusion.likelihood());
 
         return ImmutableFusion.builder()
-                .findingKey(FindingKeys.findingKey(linxFusion))
+                .findingKey(FindingKeys.fusion(linxFusion))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .geneStart(linxFusion.geneStart())

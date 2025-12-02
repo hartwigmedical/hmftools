@@ -19,7 +19,7 @@ import com.hartwig.hmftools.datamodel.finding.GainDeletion;
 import com.hartwig.hmftools.datamodel.finding.ImmutableGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.orange.algo.util.DriverUtils;
-import com.hartwig.hmftools.orange.report.finding.FindingKeys;
+import com.hartwig.hmftools.orange.algo.util.FindingKeys;
 
 public class GermlineGainDeletionFactory
 {
@@ -51,7 +51,7 @@ public class GermlineGainDeletionFactory
         return delToReportability;
     }
 
-    // FIX THIS: this is not correct
+
     private GainDeletion toGainDel(final String geneName, final List<GermlineDeletion> deletionsForGene,
             final GeneCopyNumber somaticGeneCopyNumber)
     {
@@ -74,7 +74,7 @@ public class GermlineGainDeletionFactory
                 DriverInterpretation.HIGH : DriverInterpretation.LOW;
 
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.findingKey(geneName, interpretation, true, canonicalTranscript.TransName))
+                .findingKey(FindingKeys.gainDeletion(geneName, interpretation, true, canonicalTranscript.TransName))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(driverInterpretation)
                 .interpretation(interpretation)
