@@ -185,12 +185,12 @@ public class ReferenceData
 
     private static void trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
     {
-        // restrict to first two exons
+        // restrict to first three exons
         TranscriptData transcript = transcripts.get(HlaGene.HLA_DRB1);
         List<ExonData> exons = Lists.newArrayList(transcript.exons());
-        exons = exons.subList(exons.size() - 2, exons.size());
+        exons = exons.subList(exons.size() - 3, exons.size());
 
-        // adjust end of exon 2 so that we get a multiple of 3 nucleotide coding bases
+        // adjust end of exon 3 so that we get a multiple of 3 nucleotide coding bases
         int nucCount = 0;
         for(ExonData exon : exons)
         {
