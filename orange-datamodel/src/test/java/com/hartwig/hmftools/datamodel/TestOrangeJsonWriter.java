@@ -83,7 +83,6 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 // use this class to write the resources/minimally.populated.orange.json
@@ -108,7 +107,7 @@ public class TestOrangeJsonWriter
                 .tumorSample(createOrangeSample())
                 .purple(createPurpleRecord())
                 .linx(createLinxRecord())
-                .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
+                .lilac(createLilacRecord())
                 .immuneEscape(createImmuneEscapeRecord())
                 .virusInterpreter(createVirusInterpreterData())
                 .chord(ImmutableChordRecord.builder()
@@ -126,12 +125,9 @@ public class TestOrangeJsonWriter
                         .gene("DPYD")
                         .allele("*1")
                         .alleleCount(2)
-                        .haplotype("*1_HOM")
                         .function("Normal Function")
                         .linkedDrugs("5-Fluorouracil")
                         .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104939")
-                        .panelVersion("peach_prod_v1.3")
-                        .repoVersion("1.7")
                         .build())
                 .cuppa(createCuppaData())
                 .plots(ImmutableOrangePlots.builder()

@@ -379,8 +379,21 @@
   "wildTypeGenes": [],
   "isofox": null,
   "lilac": {
-    "qc": "",
-    "alleles": []
+    "qc": "PASS",
+    "alleles": [
+      {
+        "allele": "A*01:01",
+        "tumorCopyNumber": 6.1,
+        "refFragments": 210,
+        "tumorFragments": 1602,
+        "rnaFragments": 0,
+        "somaticMissense": 5.0,
+        "somaticNonsenseOrFrameshift": 4.0,
+        "somaticSplice": 3.0,
+        "somaticSynonymous": 0.4,
+        "somaticInframeIndel": 1.0
+      }
+    ]
   },
   "immuneEscape": {
     "hasHlaEscape": true,
@@ -481,12 +494,9 @@
       "gene": "DPYD",
       "allele": "*1",
       "alleleCount": 2,
-      "haplotype": "*1_HOM",
       "function": "Normal Function",
       "linkedDrugs": "5-Fluorouracil",
-      "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104939",
-      "panelVersion": "peach_prod_v1.3",
-      "repoVersion": "1.7"
+      "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104939"
     }
   ],
   "sigAllocations": null,
