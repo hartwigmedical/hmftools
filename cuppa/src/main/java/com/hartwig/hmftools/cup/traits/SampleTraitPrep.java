@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -39,21 +40,19 @@ public class SampleTraitPrep implements CategoryPrep
 
         try
         {
-            final PurityContext purityContext = PurityContextFile.readWithQC(
-                    mConfig.purpleQcFile(sampleId),
-                    mConfig.purplePurityFile(sampleId));
+            PurplePurity purity = PurplePurity.read(mConfig.purplePurityFile(sampleId));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(),
-                    purityContext.gender() == Gender.MALE));
+                    purity.Sex == Gender.MALE));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(),
-                    purityContext.microsatelliteIndelsPerMb(), FLOAT_FORMAT_MS_INDELS_TMB));
+                    purity.MsIndelsPerMb, FLOAT_FORMAT_MS_INDELS_TMB));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(),
-                    purityContext.wholeGenomeDuplication()));
+                    purity.WholeGenomeDuplication));
 
             return dataItems;
         }

@@ -105,7 +105,6 @@ assuming the input directory structure looks like this:
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.somatic.vcf.gz
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.sv.vcf.gz
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.purity.tsv
-/data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.qc
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.clusters.tsv
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.driver.catalog.tsv
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.fusion.tsv
@@ -145,7 +144,6 @@ Below is a description of the input files for `CuppaDataPrep`:
 | DNA      | PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
 | DNA      | PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
 | DNA      | PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
-| DNA      | PURPLE            | .purple.qc               | WGS quality control stats                        |
 | DNA      | LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
 | DNA      | LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
 | DNA      | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
