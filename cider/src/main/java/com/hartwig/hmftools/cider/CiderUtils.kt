@@ -1,17 +1,23 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE
+import com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition
+import com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition
+import com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped
 import htsjdk.samtools.Cigar
 import htsjdk.samtools.CigarElement
 import htsjdk.samtools.CigarOperator
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.max
 
 data class AlignmentBlock(val readStart: Int, val length: Int)
 
 object CiderUtils
 {
-    private val sLogger = LogManager.getLogger(javaClass)
+    private val sLogger = LogManager.getLogger(CiderUtils::class.java)
 
     fun calcBaseHash(base: Char): Int
     {
@@ -23,15 +29,6 @@ object CiderUtils
             'G' -> 3
             else -> throw IllegalArgumentException("unknown base: $base")
         }
-    }
-
-    fun conservedAA(vjGeneType: VJGeneType): Char
-    {
-        if (vjGeneType.vj == VJ.V)
-            return 'C'
-        if (vjGeneType == VJGeneType.IGHJ)
-            return 'W'
-        return 'F'
     }
 
     @JvmStatic
@@ -112,93 +109,6 @@ object CiderUtils
         return Collections.unmodifiableList(alignmentBlocks)
     }
 
-    //
-    // apply reverse complement, trim bases and polyG trimming
-    fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean, trimBases: Int) : ReadSlice?
-    {
-        // work out the slice start and end
-        var sliceStart: Int = trimBases
-        var sliceEnd: Int = read.readLength - trimBases
-
-        // now we also want to try poly G tail trimming
-        // we want to work out there the tail is.
-        // the tail is on the right side and poly G if !read.readNegativeStrandFlag
-        // the tail is on the left side and poly C otherwise
-        if (!read.readNegativeStrandFlag)
-        {
-            // ends with poly G, but take trim bases into account
-            val numGs = numTrailingPolyG(read.readString, sliceEnd)
-            if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
-            {
-                sLogger.trace("read({}) strand(+) poly G tail of length({}) found({})",
-                    read, numGs, read.readString)
-                sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
-            }
-        }
-        else
-        {
-            val numCs = numLeadingPolyC(read.readString, sliceStart)
-            if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
-            {
-                sLogger.trace("read({}) strand(-) poly G tail of length({}) found({})",
-                    read, numCs, read.readString)
-                sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
-            }
-        }
-
-        // the above logic is before reverse complement, the following logic is after
-        // so we swap the start / end here
-        if (useReverseComplement)
-        {
-            val sliceStartTmp = sliceStart
-            sliceStart = read.readLength - sliceEnd
-            sliceEnd = read.readLength - sliceStartTmp
-        }
-
-        if ((sliceEnd - sliceStart) < 5)
-        {
-            // if too little left don't bother
-            return null
-        }
-
-        return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
-    }
-
-    // apart from trim bases and poly G trim, this also remove bases that are "outside" the anchor
-    // i.e. for V anchor read, bases before the anchor are trimmed, for J anchor read, bases after anchor are trimmed
-    private fun determineAnchorReadSlice(read: SAMRecord, useReverseComplement: Boolean, vj: VJ,
-                                   anchorOffsetStart: Int, anchorOffsetEnd: Int, trimBases: Int) : ReadSlice?
-    {
-        val readSlice = determineReadSlice(read, useReverseComplement, trimBases)
-
-        if (readSlice == null)
-            return null
-
-        var sliceStart: Int = readSlice.sliceStart
-        var sliceEnd: Int = readSlice.sliceEnd
-
-        if (vj == VJ.V)
-        {
-            // for V, we layout from the anchor start, left to right
-            // we are only interested in what comes after anchor start
-            sliceStart = Math.max(anchorOffsetStart, sliceStart)
-        }
-        else
-        {
-            // for J, we layout from the anchor last, right to left
-            // we are only interested in what comes before anchor end
-            sliceEnd = Math.min(anchorOffsetEnd, sliceEnd)
-        }
-
-        if ((sliceEnd - sliceStart) < 5)
-        {
-            // if too little left don't bother
-            return null
-        }
-
-        return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)
-    }
-
     fun numTrailingPolyG(seq: String, sliceEnd: Int) : Int
     {
         for (i in 0 until sliceEnd)
@@ -223,29 +133,62 @@ object CiderUtils
         return seq.length - sliceStart
     }
 
-    fun safeSubstring(str: String, start: Int, end: Int): String
+    // Calculate how much to trim a read to remove any adapter sequence leftover from sequencing.
+    // This can occur if the fragment is very small, particularly for some types of panels.
+    fun calculateAdapterSequenceTrim(read: SAMRecord): Pair<Int, Int>
     {
-        if (start >= str.length)
+        // A = adapter DNA
+        // C = align clip
+        // fragment:             AAA--------------------------------AAA
+        // left read (+):    5'     CCCC------------------------CCCCAAA  3'
+        // right read (-):   3'  AAACCCC------------------------CCCC     5'
+        // insert length:           --------------------------------
+        // left trim:                                               ---
+        // right trim:           ---
+
+        if (!read.readUnmappedFlag && !mateUnmapped(read) && read.contig == read.mateReferenceName
+            && read.readNegativeStrandFlag != read.mateNegativeStrandFlag)
         {
-            return ""
+            val mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE)
+            if (mateCigar != null)
+            {
+                val fivePrimePosition =
+                    getFivePrimeUnclippedPosition(read.alignmentStart, read.cigarString, read.readNegativeStrandFlag)
+                val threePrimePosition = getThreePrimeUnclippedPosition(read)
+                val mateFivePrimePosition = getFivePrimeUnclippedPosition(
+                    read.mateAlignmentStart, mateCigar, !read.mateNegativeStrandFlag
+                )
+                val insertLength = abs(mateFivePrimePosition - fivePrimePosition)
+                val adapterBases = if (read.readNegativeStrandFlag)
+                    max(0, mateFivePrimePosition - threePrimePosition) else
+                    max(0, threePrimePosition - mateFivePrimePosition)
+                if (insertLength < read.readLength && adapterBases > 0)
+                {
+                    return if (read.readNegativeStrandFlag) Pair(adapterBases, 0) else Pair(0, adapterBases)
+                }
+            }
         }
-        if (end >= str.length)
-        {
-            return str.substring(start)
-        }
-        return str.substring(start, end)
+
+        // No adapter sequence or can't calculate it.
+        return Pair(0, 0)
     }
 
-    fun safeSubstring(str: String, range: IntRange): String
+    private const val ADAPTER_DNA_TRIM_ATTRIBUTE = "CiderDnaAdapterTrim"
+
+    fun setAdapterDnaTrim(read: SAMRecord)
     {
-        if (str.length <= range.first)
+        val trim = calculateAdapterSequenceTrim(read)
+        // A bit ugly to store this into the SAMRecord, but it's better than replacing SAMRecord everywhere it's used.
+        read.setTransientAttribute(ADAPTER_DNA_TRIM_ATTRIBUTE, trim)
+        if (trim.first > 0 || trim.second > 0)
         {
-            return ""
+            sLogger.trace("Trimmed adapter DNA {} {}:{}-{} trim={}",
+                read.readName, read.referenceName, read.alignmentStart, read.alignmentEnd, trim)
         }
-        if (str.length <= range.last)
-        {
-            return str.substring(range.first)
-        }
-        return str.substring(range)
+    }
+
+    fun getAdapterDnaTrim(read: SAMRecord): Pair<Int, Int>
+    {
+        return (read.getTransientAttribute(ADAPTER_DNA_TRIM_ATTRIBUTE) ?: Pair(0, 0)) as Pair<Int, Int>
     }
 }

@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderUtils.getAdapterDnaTrim
 import com.hartwig.hmftools.cider.layout.LayoutForest
 import com.hartwig.hmftools.cider.layout.ReadLayout
-import com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE
-import com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition
-import com.hartwig.hmftools.common.bam.SamRecordUtils.getThreePrimeUnclippedPosition
-import com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped
 import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.Level
@@ -13,8 +10,6 @@ import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
-import kotlin.math.abs
-import kotlin.math.max
 import kotlin.random.Random
 
 // helper class to convert from the outer VJ classes to the layout classes
@@ -134,11 +129,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         var sliceEnd = read.readLength
 
         // Trim off any sequencing adapter bases.
-        val adapterTrim = calculateAdapterSequenceTrim(read)
-        if (adapterTrim.first > 0 || adapterTrim.second > 0)
-        {
-            sLogger.trace("Trimmed adapter DNA {} {}:{} trim={}", read.readName, read.referenceName, read.alignmentStart, adapterTrim)
-        }
+        val adapterTrim = getAdapterDnaTrim(read)
         sliceStart += adapterTrim.first
         sliceEnd -= adapterTrim.second
 
@@ -335,45 +326,5 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     companion object
     {
         private val sLogger = LogManager.getLogger(VJReadLayoutBuilder::class.java)
-
-        // Calculate how much to trim a read to remove any adapter sequence leftover from sequencing.
-        // This can occur if the fragment is very small, particularly for some types of panels.
-        private fun calculateAdapterSequenceTrim(read: SAMRecord): Pair<Int, Int>
-        {
-            // A = adapter DNA
-            // C = align clip
-            // fragment:             AAA--------------------------------AAA
-            // left read (+):    5'     CCCC------------------------CCCCAAA  3'
-            // right read (-):   3'  AAACCCC------------------------CCCC     5'
-            // insert length:           --------------------------------
-            // left trim:                                               ---
-            // right trim:           ---
-
-            if (!read.readUnmappedFlag && !mateUnmapped(read) && read.contig == read.mateReferenceName
-                && read.readNegativeStrandFlag != read.mateNegativeStrandFlag)
-            {
-                val mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE)
-                if (mateCigar != null)
-                {
-                    val fivePrimePosition =
-                        getFivePrimeUnclippedPosition(read.alignmentStart, read.cigarString, read.readNegativeStrandFlag)
-                    val threePrimePosition = getThreePrimeUnclippedPosition(read)
-                    val mateFivePrimePosition = getFivePrimeUnclippedPosition(
-                        read.mateAlignmentStart, mateCigar, !read.mateNegativeStrandFlag
-                    )
-                    val insertLength = abs(mateFivePrimePosition - fivePrimePosition)
-                    val adapterBases = if (read.readNegativeStrandFlag)
-                        max(0, mateFivePrimePosition - threePrimePosition) else
-                        max(0, threePrimePosition - mateFivePrimePosition)
-                    if (insertLength < read.readLength && adapterBases > 0)
-                    {
-                        return if (read.readNegativeStrandFlag) Pair(adapterBases, 0) else Pair(0, adapterBases)
-                    }
-                }
-            }
-
-            // No adapter sequence or can't calculate it.
-            return Pair(0, 0)
-        }
     }
 }
