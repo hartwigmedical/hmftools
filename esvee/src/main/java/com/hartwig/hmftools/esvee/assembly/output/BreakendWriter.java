@@ -232,7 +232,8 @@ public class BreakendWriter
                 String strandBias = breakend.sampleSupport().stream().map(x -> format("%.2f", x.strandBias())).collect(Collectors.joining(ITEM_DELIM));
                 sj.add(strandBias);
 
-                sj.add(String.valueOf(breakend.threePrimeRange()));
+                int[] readOrientationRange = breakend.readOrientationRange();
+                sj.add(format("%d;%d", readOrientationRange[0], readOrientationRange[1]));
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
                 sj.add(assemblyMatchStr);

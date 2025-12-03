@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
@@ -9,7 +11,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
@@ -72,7 +73,7 @@ public class Breakend
 
         if(context.hasAttribute(IHOMPOS))
         {
-            final List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
+            List<Integer> ihompos = context.getAttributeAsIntList(IHOMPOS, 0);
             InexactHomology = new Interval(ihompos.get(0), ihompos.get(1));
         }
         else
@@ -151,7 +152,21 @@ public class Breakend
         return Context.getAttributeAsInt(SEG_REPEAT_LENGTH, 0);
     }
     public int uniqueFragmentPositions() { return Context.getAttributeAsInt(UNIQUE_FRAG_POSITIONS, 0); }
-    public int threePrimePositionRange() { return Context.getAttributeAsInt(THREE_PRIME_RANGE, 0); }
+
+    public int minOrientationPositionRange()
+    {
+        List<Integer> orientationRanges = Context.getAttributeAsIntList(THREE_PRIME_RANGE, 0);
+        if(orientationRanges.size() != 2)
+            return -1;
+
+        int fivePrimeRange = orientationRanges.get(0);
+        int threePrimeRange = orientationRanges.get(1);
+
+        if(fivePrimeRange >= 0 && threePrimeRange >= 0)
+            return min(fivePrimeRange, threePrimeRange);
+
+        return fivePrimeRange >= 0 ? fivePrimeRange : threePrimeRange;
+    }
 
     public String toString()
     {

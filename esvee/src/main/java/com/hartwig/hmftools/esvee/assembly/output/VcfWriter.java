@@ -207,7 +207,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
         metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 1, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
-        metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 1, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
+        metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 2, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
 
         for(FilterType filter : FilterType.values())
@@ -354,7 +354,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
         builder.attribute(UNIQUE_FRAG_POSITIONS, breakend.uniqueFragmentPositionCount());
-        builder.attribute(THREE_PRIME_RANGE, breakend.threePrimeRange());
+        builder.attribute(THREE_PRIME_RANGE, breakend.readOrientationRange());
 
         if(breakend.maxLocalRepeat() > 0)
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());

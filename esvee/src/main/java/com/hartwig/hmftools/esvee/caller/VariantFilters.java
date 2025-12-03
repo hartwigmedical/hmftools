@@ -397,9 +397,9 @@ public class VariantFilters
 
             Breakend breakend = var.breakends()[se];
 
-            int threePrimePositionRange = breakend.threePrimePositionRange();
+            int minPositionRange = breakend.minOrientationPositionRange();
 
-            if(threePrimePositionRange < 0)
+            if(minPositionRange < 0)
                 continue;
 
             int splitFragments = 0;
@@ -419,7 +419,7 @@ public class VariantFilters
 
             double maxPermittedRange = min(THREE_PRIME_RANGE_PARAM1 + splitFragments / THREE_PRIME_RANGE_PARAM2, THREE_PRIME_RANGE_MAX_READS);
 
-            if(threePrimePositionRange < maxPermittedRange)
+            if(minPositionRange < maxPermittedRange)
                 return true;
         }
 

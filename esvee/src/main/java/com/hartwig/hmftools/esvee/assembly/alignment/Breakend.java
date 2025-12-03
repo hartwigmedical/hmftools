@@ -24,7 +24,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvUtils;
-import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -51,6 +50,8 @@ public class Breakend implements Comparable<Breakend>
     private int mNonPrimaryAssemblyFragmentCount;
 
     private Set<Integer> mFragmentPositions;
+    private int mFivePrimeRangeStart;
+    private int mFivePrimeRangeEnd;
     private int mThreePrimeRangeStart;
     private int mThreePrimeRangeEnd;
     private int mMaxLocalRepeat;
@@ -83,6 +84,8 @@ public class Breakend implements Comparable<Breakend>
         mNonPrimaryAssemblyFragmentCount = 0;
 
         mFragmentPositions = null;
+        mFivePrimeRangeStart = 0;
+        mFivePrimeRangeEnd = 0;
         mThreePrimeRangeStart = 0;
         mThreePrimeRangeEnd = 0;
         mMaxLocalRepeat = 0;
@@ -112,19 +115,31 @@ public class Breakend implements Comparable<Breakend>
 
     public int uniqueFragmentPositionCount() { return mFragmentPositions != null ? mFragmentPositions.size() : 0; }
 
-    public void addThreePrimePosition(int position)
+    public void addOrientationPositions(final Orientation readOrientation, int readStart, int readEnd)
     {
-        if(mThreePrimeRangeStart == 0)
-            mThreePrimeRangeStart = position;
-        else
-            mThreePrimeRangeStart = min(mThreePrimeRangeStart, position);
+        int fivePrimePosition = readOrientation.isForward() ? readStart : readEnd;
+        int threePrimePosition = readOrientation.isForward() ? readEnd : readStart;
 
-        mThreePrimeRangeEnd = max(mThreePrimeRangeEnd, position);
+        if(mFivePrimeRangeStart == 0)
+            mFivePrimeRangeStart = fivePrimePosition;
+        else
+            mFivePrimeRangeStart = min(mFivePrimeRangeStart, fivePrimePosition);
+
+        mFivePrimeRangeEnd = max(mFivePrimeRangeEnd, fivePrimePosition);
+
+        if(mThreePrimeRangeStart == 0)
+            mThreePrimeRangeStart = threePrimePosition;
+        else
+            mThreePrimeRangeStart = min(mThreePrimeRangeStart, threePrimePosition);
+
+        mThreePrimeRangeEnd = max(mThreePrimeRangeEnd, threePrimePosition);
     }
 
-    public int threePrimeRange()
+    public int[] readOrientationRange()
     {
-        return mThreePrimeRangeStart > 0 ? mThreePrimeRangeEnd - mThreePrimeRangeStart : -1;
+        return new int[] {
+                mFivePrimeRangeStart > 0 ? mFivePrimeRangeEnd - mFivePrimeRangeStart : -1,
+                mThreePrimeRangeStart > 0 ? mThreePrimeRangeEnd - mThreePrimeRangeStart : -1 };
     }
 
     public void setMaxLocalRepeat(int maxLocalRepeat) { mMaxLocalRepeat = maxLocalRepeat; }
