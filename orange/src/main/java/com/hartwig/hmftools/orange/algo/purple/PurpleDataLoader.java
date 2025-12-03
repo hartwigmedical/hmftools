@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,6 +20,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.orange.OrangeConfig;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -44,7 +43,7 @@ public final class PurpleDataLoader
         String purpleDir = config.purpleDataDirectory();
 
         String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
-        String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorSample);
+        String purityTsv = PurplePurity.generateFilename(purpleDir, tumorSample);
         String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorSample);
         String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorSample));
         String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);

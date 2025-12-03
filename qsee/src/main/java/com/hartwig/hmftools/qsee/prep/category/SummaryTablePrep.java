@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.metrics.ValueFrequency;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.common.purple.PurpleQCFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +60,7 @@ public class SummaryTablePrep implements CategoryPrep
     private PurityContext loadPurplePurity(String sampleId, List<String> missingInputPaths)
     {
         String baseDir = mConfig.getPurpleDir(sampleId);
-        String purityFile = PurityContextFile.generateFilenameForReading(baseDir, sampleId);
+        String purityFile = PurplePurity.generateFilename(baseDir, sampleId);
         String qcFile = PurpleQCFile.generateFilename(baseDir, sampleId);
 
         try
