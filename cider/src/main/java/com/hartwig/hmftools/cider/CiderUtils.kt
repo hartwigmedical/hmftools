@@ -189,6 +189,6 @@ object CiderUtils
 
     fun getAdapterDnaTrim(read: SAMRecord): Pair<Int, Int>
     {
-        return read.getTransientAttribute(ADAPTER_DNA_TRIM_ATTRIBUTE) as Pair<Int, Int>
+        return (read.getTransientAttribute(ADAPTER_DNA_TRIM_ATTRIBUTE) ?: Pair(0, 0)) as Pair<Int, Int>
     }
 }
