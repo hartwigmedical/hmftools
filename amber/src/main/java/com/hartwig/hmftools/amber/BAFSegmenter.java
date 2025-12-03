@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.amber;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -20,6 +21,11 @@ public class BAFSegmenter extends PerArmSegmenter<AmberBAF>
             ExecutorService executor,
             String outputPath) throws Exception
     {
+        if(amberBAFS.isEmpty())
+        {
+            SegmentsFile.write(genomeVersion, new HashMap<>(), outputPath);
+            return;
+        }
         ArrayListMultimap<Chromosome, AmberBAF> bafMap = ArrayListMultimap.create();
         amberBAFS.forEach(amberBAF -> bafMap.put(amberBAF.chr(), amberBAF));
         BAFSegmenter segmenter = new BAFSegmenter(bafMap, ChrArmLocator.defaultLocator(genomeVersion));

@@ -53,6 +53,7 @@ import com.hartwig.hmftools.compar.purple.GermlineDeletionComparer;
 import com.hartwig.hmftools.compar.purple.PurityComparer;
 import com.hartwig.hmftools.compar.snpgenotype.SnpGenotypeComparer;
 import com.hartwig.hmftools.compar.teal.TealComparer;
+import com.hartwig.hmftools.compar.vchord.VChordComparer;
 import com.hartwig.hmftools.compar.virus.VirusComparer;
 
 public class CommonUtils
@@ -169,6 +170,9 @@ public class CommonUtils
 
             case TELOMERE_LENGTH:
                 return new TealComparer(config);
+
+            case V_CHORD:
+                return new VChordComparer(config);
 
             default:
                 return null;

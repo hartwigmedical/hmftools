@@ -43,7 +43,6 @@ public class RunAmberTest
     private File OutputDir;
     private Multimap<Chromosome, AmberBAF> Results;
 
-
     @Before
     public void setup() throws IOException
     {
@@ -91,6 +90,18 @@ public class RunAmberTest
         List<PcfSegment> chr1Positions = pcfData.get(_1);
         assertEquals(3, chr1Positions.size());
         assertEquals(49554, chr1Positions.get(0).start());
+    }
+
+    @Test
+    public void handleEmptyData() throws Exception
+    {
+        AmberScenario scenario = new AmberScenario("NoBafs");
+        runAmber(scenario, true);
+
+        // Check the segmentation file.
+        String segmentsFile = PCFFile.generateBAFFilename(OutputDir.getAbsolutePath(), TumorSample);
+        ListMultimap<Chromosome, PcfSegment> pcfData = PCFFile.readPcfFile(segmentsFile);
+        assertEquals(0, pcfData.keySet().size());
     }
 
     private void runAmber(AmberScenario scenario, boolean useNewSegmenter) throws Exception
@@ -143,11 +154,5 @@ public class RunAmberTest
 
         File bafFile = new File(OutputDir, TumorSample + ".amber.baf.tsv.gz");
         Results = AmberBAFFile.read(bafFile.getAbsolutePath(), TumorSample != null);
-//        else
-//        {
-//            ratioFile = new File(OutputDir, referenceSample + ".cobalt.ratio.tsv.gz");
-//        }
-//        assertTrue(ratioFile.exists());
-//        assertTrue(ratioFile.isFile());
     }
 }

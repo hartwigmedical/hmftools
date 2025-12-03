@@ -25,8 +25,8 @@ public class AmberScenario
         File refGenomeFile = new File("/Users/timlavers/work/data/reference_genomes/38/Homo_sapiens_assembly38.alt.masked.fasta");
         RefGenomeSource refGenomeSource = new RefGenomeSource(new IndexedFastaSequenceFile(refGenomeFile));
         File junkDir = new File("/Users/timlavers/work/junk");
-        File outputFile = new File(junkDir, "TwoChromosomes.tumor.bam");
-        new AmberScenario("TwoChromosomes").TumorReads.writeBam(refGenomeSource, outputFile.getAbsolutePath());
+        File outputFile = new File(junkDir, "NoBafs.tumor.bam");
+        new AmberScenario("NoBafs").TumorReads.writeBam(refGenomeSource, outputFile.getAbsolutePath());
     }
 
     private final String Name;

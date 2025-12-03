@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 
 import org.immutables.value.Value;
 
@@ -24,7 +25,11 @@ public abstract class LinxFusion
     public abstract String name();
     public abstract boolean reported();
     public abstract String reportedType();
-    public abstract String reportableReasons();
+    public abstract List<FusionReportableReason> reportableReasons();
+    public String reportableReasonsStr()
+    {
+        return reportableReasonsToStr(reportableReasons());
+    }
     public abstract FusionPhasedType phased();
     public abstract FusionLikelihoodType likelihood();
     public abstract String fivePrimeVcfId();
@@ -100,7 +105,7 @@ public abstract class LinxFusion
                     .name(values[fieldsIndexMap.get("name")])
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
                     .reportedType(values[fieldsIndexMap.get("reportedType")])
-                    .reportableReasons(reportReasonIndex != null ? values[reportReasonIndex] : "")
+                    .reportableReasons(reportReasonIndex != null ? strToReportableReasons(values[reportReasonIndex]) : List.of())
                     .phased(FusionPhasedType.valueOf(values[fieldsIndexMap.get("phased")]))
                     .likelihood(FusionLikelihoodType.valueOf(values[fieldsIndexMap.get("likelihood")]))
                     .fivePrimeVcfId(fiveVcfIdIndex != null ? values[fiveVcfIdIndex] : "")
@@ -171,7 +176,7 @@ public abstract class LinxFusion
                 .add(String.valueOf(fusion.name()))
                 .add(String.valueOf(fusion.reported()))
                 .add(String.valueOf(fusion.reportedType()))
-                .add(String.valueOf(fusion.reportableReasons()))
+                .add(fusion.reportableReasonsStr())
                 .add(String.valueOf(fusion.phased()))
                 .add(String.valueOf(fusion.likelihood()))
                 .add(fusion.fivePrimeVcfId())
@@ -229,5 +234,15 @@ public abstract class LinxFusion
     public static double fusionJcn(double downstreamJcn, double upstreamJcn)
     {
         return (upstreamJcn + downstreamJcn) * 0.5;
+    }
+
+    public static String reportableReasonsToStr(final List<FusionReportableReason> reasons)
+    {
+        return FileDelimiters.joinEnumsToStr(reasons);
+    }
+
+    public static List<FusionReportableReason> strToReportableReasons(final String reasons)
+    {
+        return FileDelimiters.splitEnumsFromStr(reasons, FusionReportableReason.class);
     }
 }

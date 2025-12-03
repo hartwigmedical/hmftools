@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxFusion.context;
 import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
+import static com.hartwig.hmftools.common.linx.LinxFusion.reportableReasonsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -108,7 +109,7 @@ public class FusionWriter implements CohortFileInterface
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
                     .reportedType(geneFusion.knownTypeStr())
-                    .reportableReasons(geneFusion.reportableReasonsStr())
+                    .reportableReasons(geneFusion.reportableReasons())
                     .phased(geneFusion.phaseType())
                     .likelihood(geneFusion.likelihoodType())
                     .fivePrimeVcfId(upGeneData.vcfId())
@@ -240,7 +241,7 @@ public class FusionWriter implements CohortFileInterface
 
         sj.add(sampleId);
         sj.add(valueOf(fusion.reportable()));
-        sj.add(fusion.reportableReasonsStr());
+        sj.add(reportableReasonsToStr(fusion.reportableReasons()));
         sj.add(fusion.knownTypeStr());
 
         sj.add(valueOf(fusion.phaseType()));

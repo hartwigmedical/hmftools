@@ -55,6 +55,7 @@ public enum GeneSelector
     }
 
     public LinkedHashSet<HlaGene> genes() { return mGenes; }
+    public int geneCount() { return mGenes.size(); }
     public LinkedHashSet<HlaGene> allGenes() { return mAllGenes; }
 
     public boolean contains(final HlaGene gene)
