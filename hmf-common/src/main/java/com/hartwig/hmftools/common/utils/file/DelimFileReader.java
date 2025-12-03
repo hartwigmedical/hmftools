@@ -298,47 +298,47 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         public String get(String column) { return getString(column); }
         public String get(Enum<?> column) { return getString(column); }
         public String getString(int column) { return getString(column, false); }
-        public String getString(String column) { return getString(getColumn(column), false); }
-        public String getString(Enum<?> column) { return getString(getColumn(column), false); }
-        @Nullable public String getStringOrNull(String column) { return getString(getColumn(column), true); }
-        @Nullable public String getStringOrNull(Enum<?> column) { return getString(getColumn(column), true); }
+        public String getString(String column) { return getString(getColumnIndex(column), false); }
+        public String getString(Enum<?> column) { return getString(getColumnIndex(column), false); }
+        @Nullable public String getStringOrNull(String column) { return getString(getColumnIndex(column), true); }
+        @Nullable public String getStringOrNull(Enum<?> column) { return getString(getColumnIndex(column), true); }
 
-        public byte getByte(String column) { return getByte(getColumn(column), false); }
-        public byte getByte(Enum<?> column) { return getByte(getColumn(column), false); }
-        @Nullable public Byte getByteOrNull(String column) { return getByte(getColumn(column), true); }
-        @Nullable public Byte getByteOrNull(Enum<?> column) { return getByte(getColumn(column), true); }
+        public byte getByte(String column) { return getByte(getColumnIndex(column), false); }
+        public byte getByte(Enum<?> column) { return getByte(getColumnIndex(column), false); }
+        @Nullable public Byte getByteOrNull(String column) { return getByte(getColumnIndex(column), true); }
+        @Nullable public Byte getByteOrNull(Enum<?> column) { return getByte(getColumnIndex(column), true); }
 
-        public char getChar(String column) { return getChar(getColumn(column), false); }
-        public char getChar(Enum<?> column) { return getChar(getColumn(column), false); }
-        @Nullable public Character getCharOrNull(String column) { return getChar(getColumn(column), true); }
-        @Nullable public Character getCharOrNull(Enum<?> column) { return getChar(getColumn(column), true); }
+        public char getChar(String column) { return getChar(getColumnIndex(column), false); }
+        public char getChar(Enum<?> column) { return getChar(getColumnIndex(column), false); }
+        @Nullable public Character getCharOrNull(String column) { return getChar(getColumnIndex(column), true); }
+        @Nullable public Character getCharOrNull(Enum<?> column) { return getChar(getColumnIndex(column), true); }
 
-        public boolean getBoolean(String column) { return getBoolean(getColumn(column), false); }
-        public boolean getBoolean(Enum<?> column) { return getBoolean(getColumn(column), false); }
-        @Nullable public Boolean getBooleanOrNull(String column) { return getBoolean(getColumn(column), true); }
-        @Nullable public Boolean getBooleanOrNull(Enum<?> column) { return getBoolean(getColumn(column), true); }
+        public boolean getBoolean(String column) { return getBoolean(getColumnIndex(column), false); }
+        public boolean getBoolean(Enum<?> column) { return getBoolean(getColumnIndex(column), false); }
+        @Nullable public Boolean getBooleanOrNull(String column) { return getBoolean(getColumnIndex(column), true); }
+        @Nullable public Boolean getBooleanOrNull(Enum<?> column) { return getBoolean(getColumnIndex(column), true); }
 
         public int getInt(int column) { return getInt(column, false); }
-        public int getInt(String column) { return getInt(getColumn(column), false); }
-        public int getInt(Enum<?> column) { return getInt(getColumn(column), false); }
-        @Nullable public Integer getIntOrNull(String column) { return getInt(getColumn(column), true); }
-        @Nullable public Integer getIntOrNull(Enum<?> column) { return getInt(getColumn(column), true); }
+        public int getInt(String column) { return getInt(getColumnIndex(column), false); }
+        public int getInt(Enum<?> column) { return getInt(getColumnIndex(column), false); }
+        @Nullable public Integer getIntOrNull(String column) { return getInt(getColumnIndex(column), true); }
+        @Nullable public Integer getIntOrNull(Enum<?> column) { return getInt(getColumnIndex(column), true); }
 
-        public long getLong(String column) { return getLong(getColumn(column), false); }
-        public long getLong(Enum<?> column) { return getLong(getColumn(column), false); }
-        @Nullable public Long getLongOrNull(String column) { return getLong(getColumn(column), true); }
-        @Nullable public Long getLongOrNull(Enum<?> column) { return getLong(getColumn(column), true); }
+        public long getLong(String column) { return getLong(getColumnIndex(column), false); }
+        public long getLong(Enum<?> column) { return getLong(getColumnIndex(column), false); }
+        @Nullable public Long getLongOrNull(String column) { return getLong(getColumnIndex(column), true); }
+        @Nullable public Long getLongOrNull(Enum<?> column) { return getLong(getColumnIndex(column), true); }
 
-        public float getFloat(String column) { return getFloat(getColumn(column), false); }
-        public float getFloat(Enum<?> column) { return getFloat(getColumn(column), false); }
-        @Nullable public Float getFloatOrNull(String column) { return getFloat(getColumn(column), true); }
-        @Nullable public Float getFloatOrNull(Enum<?> column) { return getFloat(getColumn(column), true); }
+        public float getFloat(String column) { return getFloat(getColumnIndex(column), false); }
+        public float getFloat(Enum<?> column) { return getFloat(getColumnIndex(column), false); }
+        @Nullable public Float getFloatOrNull(String column) { return getFloat(getColumnIndex(column), true); }
+        @Nullable public Float getFloatOrNull(Enum<?> column) { return getFloat(getColumnIndex(column), true); }
 
         public double getDouble(int column) { return getDouble(column, false); }
-        public double getDouble(String column) { return getDouble(getColumn(column), false); }
-        public double getDouble(Enum<?> column) { return getDouble(getColumn(column), false); }
-        @Nullable public Double getDoubleOrNull(String column) { return getDouble(getColumn(column), true); }
-        @Nullable public Double getDoubleOrNull(Enum<?> column) { return getDouble(getColumn(column), true); }
+        public double getDouble(String column) { return getDouble(getColumnIndex(column), false); }
+        public double getDouble(Enum<?> column) { return getDouble(getColumnIndex(column), false); }
+        @Nullable public Double getDoubleOrNull(String column) { return getDouble(getColumnIndex(column), true); }
+        @Nullable public Double getDoubleOrNull(Enum<?> column) { return getDouble(getColumnIndex(column), true); }
 
         private String getString(int column, boolean allowNull)
         {
@@ -408,12 +408,12 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             }
         }
 
-        private int getColumn(Enum<?> column)
+        private int getColumnIndex(Enum<?> column)
         {
-            return getColumn(column.name());
+            return getColumnIndex(column.name());
         }
 
-        private int getColumn(String column)
+        private int getColumnIndex(String column)
         {
             Integer columnIndex = mColumnIndexMap.get(column);
             if(columnIndex == null)
