@@ -175,7 +175,7 @@ public class StructuralVariantFusionDAO
                         fusion.name(),
                         fusion.reported(),
                         fusion.reportedType(),
-                        DatabaseUtil.checkStringLength(fusion.reportableReasons(), SVFUSION.REPORTEDREASON),
+                        DatabaseUtil.checkStringLength(fusion.reportableReasonsStr(), SVFUSION.REPORTEDREASON),
                         fusion.phased().toString(),
                         fusion.likelihood().toString(),
                         fusion.chainLength(),
@@ -212,6 +212,7 @@ public class StructuralVariantFusionDAO
                     .name(record.getValue(SVFUSION.NAME))
                     .reported(record.getValue(SVFUSION.REPORTED) == 1)
                     .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
+                    .reportableReasons(LinxFusion.strToReportableReasons(record.getValue(SVFUSION.REPORTEDREASON)))
                     .likelihood(FusionLikelihoodType.valueOf(record.getValue(SVFUSION.LIKELIHOOD)))
                     .phased(FusionPhasedType.valueOf(record.getValue(SVFUSION.PHASED)))
                     .chainLength(record.getValue(SVFUSION.CHAINLENGTH))

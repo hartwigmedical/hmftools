@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -40,11 +39,13 @@ public class ComplexCoverageRanking
 {
     private final double mMaxScoreDifference;
     private final ReferenceData mRefData;
+    private final int mGeneCount;
 
-    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData)
+    public ComplexCoverageRanking(double maxScoreDifference, final ReferenceData refData, int geneCount)
     {
         mMaxScoreDifference = maxScoreDifference;
         mRefData = refData;
+        mGeneCount = geneCount;
     }
 
     public List<ComplexCoverage> rankCandidates(
@@ -70,8 +71,10 @@ public class ComplexCoverageRanking
 
         // initial cull before sort
         double baseThreshold = topScore - 0.25 * topCoverage;
-        List<ComplexCoverage> candidateResults = complexes.stream().filter(x -> x.getScore() >= baseThreshold).collect(Collectors.toList());
-        Collections.sort(candidateResults, new ComplexCoverageSorter());
+        List<ComplexCoverage> candidateResults = complexes.stream()
+                .filter(x -> x.getScore() >= baseThreshold)
+                .sorted(new ComplexCoverageSorter())
+                .toList();
 
         List<ComplexCoverage> results = Lists.newArrayList();
 
@@ -153,11 +156,11 @@ public class ComplexCoverageRanking
     {
         int totalCoverage = complexCoverage.TotalCoverage;
 
-        double penaltyFactor = 6.0 / complexCoverage.getAlleles().size();
+        double penaltyFactor = 3.0 / mGeneCount;
 
         double complexity = penaltyFactor * solutionComplexity(mRefData.ExonSequencesLookup, complexCoverage);
         double complexityPenalty = -complexity * SOLUTION_COMPLEXITY_PENALTY_WEIGHT * totalCoverage;
-        double cohortFrequencyPenalty = penaltyFactor *  complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
+        double cohortFrequencyPenalty = penaltyFactor * complexCoverage.cohortFrequencyTotal() * FREQUENCY_SCORE_PENALTY * totalCoverage;
         double score = totalCoverage
                 + cohortFrequencyPenalty
                 + complexityPenalty

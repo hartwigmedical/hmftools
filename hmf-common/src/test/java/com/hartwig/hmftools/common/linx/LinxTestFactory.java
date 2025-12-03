@@ -59,7 +59,7 @@ public final class LinxTestFactory
                 .name(Strings.EMPTY)
                 .reported(false)
                 .reportedType(KnownFusionType.NONE.toString())
-                .reportableReasons("OK")
+                .addReportableReasons(FusionReportableReason.OK)
                 .phased(FusionPhasedType.OUT_OF_FRAME)
                 .likelihood(FusionLikelihoodType.NA)
                 .chainLength(0)

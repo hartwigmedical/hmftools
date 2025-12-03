@@ -325,7 +325,7 @@ public class LilacApplication
             mHlaYCoverage.checkThreshold(mRefFragAlleles, refAminoAcidFrags);
 
         // build and score complexes
-        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData);
+        ComplexBuilder complexBuilder = new ComplexBuilder(mRefData, mConfig.Genes.geneCount());
 
         complexBuilder.filterCandidates(mRefFragAlleles, candidateAlleles, recoveredAlleles);
         allValid &= validateAlleles(complexBuilder.getUniqueProteinAlleles());
@@ -375,7 +375,7 @@ public class LilacApplication
 
         List<ComplexCoverage> calculatedComplexes = complexCalculator.calculateComplexCoverages(calcRefFragAlleles, complexes);
 
-        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData);
+        ComplexCoverageRanking complexRanker = new ComplexCoverageRanking(mConfig.TopScoreThreshold, mRefData, mConfig.Genes.geneCount());
         mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
 
         if(mRankedComplexes.isEmpty())
@@ -392,7 +392,7 @@ public class LilacApplication
                     filteredComplexes.size(), mRefFragAlleles.size());
 
             calculatedComplexes = complexCalculator.calculateComplexCoverages(mRefFragAlleles, filteredComplexes);
-            complexRanker = new ComplexCoverageRanking(0, mRefData);
+            complexRanker = new ComplexCoverageRanking(0, mRefData, mConfig.Genes.geneCount());
             mRankedComplexes.clear();
             mRankedComplexes.addAll(complexRanker.rankCandidates(calculatedComplexes, Sets.newHashSet(recoveredAlleles), candidateSequences));
         }
