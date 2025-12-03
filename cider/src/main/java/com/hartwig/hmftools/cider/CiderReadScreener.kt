@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderUtils.getAdapterDnaTrim
+import com.hartwig.hmftools.cider.CiderUtils.setAdapterDnaTrim
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
@@ -61,6 +63,10 @@ class CiderReadScreener(// collect the reads and sort by types
             //sLogger.trace("read record {} already processed", readRecordKey);
             return
         }
+
+        // Calculate the trimming required to remove any sequencing adapter bases left on the read (for short fragments).
+        // The trimming amount is stored into the read so we can retrieve it later when needed.
+        setAdapterDnaTrim(samRecord)
 
         var matchFound = false
 
@@ -138,13 +144,15 @@ class CiderReadScreener(// collect the reads and sort by types
         var readAnchorStart = readAnchorRange.left
         var readAnchorEnd = readAnchorRange.right
 
+        val readTrim = getAdapterDnaTrim(samRecord)
+
         // read:   |---------------|    |---------------------|
         // anchor:    |----|                   |----|
         // CDR3:           |-------------------|
         // check:          <------->    <------>
 
-        if ((anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readAnchorEnd >= mMinReadCdr3Overlap) ||
-            (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart >= mMinReadCdr3Overlap))
+        if ((anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap) ||
+            (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap))
         {
             if (anchorLocation.strand === Strand.REVERSE)
             {
