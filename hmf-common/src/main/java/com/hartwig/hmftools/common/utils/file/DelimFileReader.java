@@ -495,18 +495,6 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return v == null ? null : Integer.parseInt(v);
         }
 
-        // store boolean as 1 and 0
-        public boolean getBoolean(final int columnIndex)
-        {
-            return getInt(columnIndex) != 0;
-        }
-
-        public @Nullable Boolean getBooleanOrNull(final int columnIndex)
-        {
-            Integer v = getIntOrNull(columnIndex);
-            return v == null ? null : v != 0;
-        }
-
         public char getChar(final int columnIndex)
         {
             return get(columnIndex).charAt(0);
