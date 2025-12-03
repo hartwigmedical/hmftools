@@ -124,6 +124,7 @@ public class ReadParseState
     public CigarOperator operator() { return mElement != null ? mElement.getOperator() : null; }
     public int elementLength() { return mElement != null ? mElement.getLength() : 0; }
 
+    public int baseLength() { return mBaseLength; }
     public int overlapBaseCount() { return mMoveForward ? mBaseLength - mStartIndex : mStartIndex + 1; }
     public int evaluatedBaseCount() { return (mMoveForward ? mReadIndex - mStartIndex : mStartIndex - mReadIndex) + 1; }
 
@@ -438,18 +439,18 @@ public class ReadParseState
 
     public int matchedBases() { return mBaseMatches; }
 
-    public void addBaseMatch(boolean isHighQual)
+    public void addBaseMatch(boolean aboveMinQual)
     {
         ++mBaseMatches;
 
-        if(isHighQual)
+        if(aboveMinQual)
             ++mHighQualMatches;
     }
 
-    public void addBaseMatches(int count, int highQualCount)
+    public void addBaseMatches(int count, int aboveMinQualCount)
     {
         mBaseMatches += count;
-        mHighQualMatches += highQualCount;
+        mHighQualMatches += aboveMinQualCount;
     }
 
     public int highQualMatches() { return mHighQualMatches; }

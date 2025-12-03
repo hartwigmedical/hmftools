@@ -101,6 +101,7 @@ public class BreakendWriter
             sj.add("AltAlignments");
             sj.add("InsertionType");
             sj.add("UniqueFragPos");
+            sj.add("StrandBias");
             sj.add("ThreePrimeRange");
             sj.add("ClosestAssembly");
             sj.add("NonPrimaryFragments");
@@ -227,6 +228,10 @@ public class BreakendWriter
                 sj.add(insertionType.toString());
 
                 sj.add(String.valueOf(breakend.uniqueFragmentPositionCount()));
+
+                String strandBias = breakend.sampleSupport().stream().map(x -> format("%.2f", x.strandBias())).collect(Collectors.joining(ITEM_DELIM));
+                sj.add(strandBias);
+
                 sj.add(String.valueOf(breakend.threePrimeRange()));
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);

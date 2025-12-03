@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.hasValidCigar;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -272,15 +273,33 @@ public class JunctionGroupAssembler extends ThreadTask
         else if(isSbx())
         {
             // trim uncertain bases from both ends
+            boolean trimmed = false;
+            int midIndex = read.basesLength() / 2;
+
             for(int i = 0; i <= 1; ++i)
             {
                 boolean fromStart = (i == 0);
-                int trimCount = ReadAdjustments.findLowBaseQualTrimCount(
-                        read, 0, read.basesLength() - 1, fromStart, true);
+                int indexStart = fromStart ? 0 : midIndex + 1;
+                int indexEnd = fromStart ? midIndex : read.basesLength() - 1;
+
+                int trimCount = ReadAdjustments.findLowBaseQualTrimCount(read, indexStart, indexEnd, fromStart, true);
 
                 if(trimCount > 0)
+                {
                     read.trimBases(trimCount, fromStart);
+                    trimmed = true;
+                }
             }
+
+            if(trimmed)
+                ++mReadStats.LowBaseQualTrimmed;
+        }
+
+        // read may be invalid after trimming
+        if(read.trimCount() > 0 && !hasValidCigar(read.cigarElements()))
+        {
+            ++mReadStats.LowBaseQualFiltered;
+            return;
         }
 
         if(IndelBuilder.calcIndelInferredUnclippedPositions(read))

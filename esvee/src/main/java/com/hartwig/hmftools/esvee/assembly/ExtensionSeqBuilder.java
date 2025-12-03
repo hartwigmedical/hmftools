@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.INSERT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.REPEAT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.aboveMinQual;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHighBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
@@ -189,13 +190,13 @@ public class ExtensionSeqBuilder
 
             byte base = readParseState.currentBase();
             byte qual = readParseState.currentQual();
-            boolean isHighQual = isHighBaseQual(qual);
+            boolean aboveMinQual = aboveMinQual(qual);
 
             int extBaseMove = 1;
 
             if(base == consensusBase)
             {
-                readParseState.addBaseMatch(isHighQual);
+                readParseState.addBaseMatch(aboveMinQual);
                 readParseState.moveNext();
             }
             else

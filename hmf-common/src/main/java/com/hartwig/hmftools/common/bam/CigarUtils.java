@@ -234,13 +234,6 @@ public final class CigarUtils
         return currentPosition - 1;
     }
 
-    public static int maxIndelLength(final List<CigarElement> cigarElements)
-    {
-        return cigarElements.stream()
-                .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
-    }
-
     public static int getReadIndexFromPosition(final int alignmentStart, final List<CigarElement> cigarElements, int position)
     {
         return getReadIndexFromPosition(alignmentStart, cigarElements, position, false, false);
@@ -493,5 +486,40 @@ public final class CigarUtils
         }
 
         return modified;
+    }
+
+    public static boolean hasValidCigar(final List<CigarElement> cigarElements)
+    {
+        int cigarCount = cigarElements.size();
+
+        if(cigarCount > 1)
+        {
+            CigarOperator lastOperator = cigarElements.get(0).getOperator();
+
+            if(lastOperator != S && lastOperator != M)
+                return false;
+
+            for(int i = 1; i < cigarCount; ++i)
+            {
+                CigarOperator operator = cigarElements.get(i).getOperator();
+
+                if(operator == lastOperator)
+                    return false;
+
+                if(lastOperator == S && operator != M)
+                    return false;
+
+                if(i == cigarCount - 1 && operator != M && operator != S)
+                    return false;
+
+                lastOperator = operator;
+            }
+        }
+        else if(cigarElements.get(0).getOperator() != M)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
