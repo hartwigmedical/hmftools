@@ -461,6 +461,7 @@
     "mode": "WGS",
     "predictions": [
       {
+        "findingKey": "predictedTumorOrigin[cancer]",
         "cancerType": "Melanoma",
         "likelihood": 0.996,
         "snvPairwiseClassifier": 0.979,
@@ -471,6 +472,7 @@
       }
     ],
     "bestPrediction": {
+      "findingKey": "predictedTumorOrigin[cancer]",
       "cancerType": "Melanoma",
       "likelihood": 0.996,
       "snvPairwiseClassifier": 0.979,
@@ -482,12 +484,7 @@
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,
-    "LINECount": 0,
-    "bestPredictedTumorOrigin": {
-      "findingKey": "predictedTumorOrigin[Melanoma]",
-      "cancerType": "Melanoma",
-      "likelihood": 0.996
-    }
+    "LINECount": 0
   },
   "peach": [
     {

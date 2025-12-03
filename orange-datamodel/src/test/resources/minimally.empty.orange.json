@@ -125,18 +125,14 @@
     "predictions": [
     ],
     "bestPrediction": {
+      "findingKey": "predictedTumorOrigin[cancer]",
       "cancerType": "cancer",
       "likelihood": 0
     },
     "simpleDups32To200B": 0,
     "maxComplexSize": 0,
     "telomericSGLs": 0,
-    "LINECount": 0,
-    "bestPredictedTumorOrigin": {
-      "findingKey": "predictedTumorOrigin[cancer]",
-      "cancerType": "cancer",
-      "likelihood": 0
-    }
+    "LINECount": 0
   },
   "lilac": {
     "qc": "FAIL",

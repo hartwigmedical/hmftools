@@ -18,10 +18,10 @@ public interface CuppaData
     CuppaMode mode();
 
     @NotNull
-    List<CuppaPrediction> predictions();
+    List<PredictedTumorOrigin> predictions();
 
     @NotNull
-    CuppaPrediction bestPrediction();
+    PredictedTumorOrigin bestPrediction();
 
     int simpleDups32To200B();
 
@@ -31,7 +31,4 @@ public interface CuppaData
 
     @SerializedName("LINECount")
     int lineCount();
-
-    @NotNull
-    PredictedTumorOrigin bestPredictedTumorOrigin();
 }

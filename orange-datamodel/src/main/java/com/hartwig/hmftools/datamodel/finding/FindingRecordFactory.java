@@ -22,7 +22,7 @@ public class FindingRecordFactory
                 .driverViruses(Optional.ofNullable(orangeRecord.virusInterpreter()).map(VirusInterpreterData::driverViruses).orElse(null))
                 .microsatelliteStability(orangeRecord.purple().characteristics().microsatelliteStability())
                 .tumorMutationStatus(orangeRecord.purple().characteristics().tumorMutationStatus())
-                .predictedTumorOrigin(Optional.ofNullable(orangeRecord.cuppa()).map(CuppaData::bestPredictedTumorOrigin).orElse(null))
+                .predictedTumorOrigin(Optional.ofNullable(orangeRecord.cuppa()).map(CuppaData::bestPrediction).orElse(null))
                 .homologousRecombination(Optional.ofNullable(orangeRecord.chord()).map(ChordRecord::homologousRecombination).orElse(null))
                 .build();
     }

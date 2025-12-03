@@ -12,5 +12,21 @@ public interface PredictedTumorOrigin extends Finding
 {
     @NotNull
     String cancerType();
+
     double likelihood();
+
+    @Nullable
+    Double snvPairwiseClassifier();
+
+    @Nullable
+    Double genomicPositionClassifier();
+
+    @Nullable
+    Double featureClassifier();
+
+    @Nullable
+    Double altSjCohortClassifier();
+
+    @Nullable
+    Double expressionPairwiseClassifier();
 }

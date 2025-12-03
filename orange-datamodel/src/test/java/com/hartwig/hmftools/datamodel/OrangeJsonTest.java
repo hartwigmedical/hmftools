@@ -15,8 +15,8 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.finding.Fusion;
+import com.hartwig.hmftools.datamodel.finding.PredictedTumorOrigin;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -337,7 +337,7 @@ public class OrangeJsonTest
     {
         assertNotNull(cuppa);
         assertEquals(1, cuppa.predictions().size());
-        CuppaPrediction prediction = cuppa.predictions().iterator().next();
+        PredictedTumorOrigin prediction = cuppa.predictions().iterator().next();
         assertEquals("Melanoma", prediction.cancerType());
         assertEquals(0.996, prediction.likelihood(), EPSILON);
         assertEquals(0.979, prediction.snvPairwiseClassifier(), EPSILON);

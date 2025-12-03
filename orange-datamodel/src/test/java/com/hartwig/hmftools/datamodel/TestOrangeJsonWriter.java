@@ -8,9 +8,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaMode;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.ImmutableFusion;
@@ -20,6 +18,7 @@ import com.hartwig.hmftools.datamodel.finding.ImmutableMicrosatelliteStability;
 import com.hartwig.hmftools.datamodel.finding.ImmutablePredictedTumorOrigin;
 import com.hartwig.hmftools.datamodel.finding.ImmutableTumorMutationStatus;
 import com.hartwig.hmftools.datamodel.finding.ImmutableVirus;
+import com.hartwig.hmftools.datamodel.finding.PredictedTumorOrigin;
 import com.hartwig.hmftools.datamodel.flagstat.ImmutableFlagstat;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
@@ -470,7 +469,8 @@ public class TestOrangeJsonWriter
 
     public static CuppaData createCuppaData()
     {
-        CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
+        PredictedTumorOrigin prediction = ImmutablePredictedTumorOrigin.builder()
+                .findingKey("predictedTumorOrigin[Melanoma]")
                 .cancerType("Melanoma")
                 .likelihood(0.996)
                 .snvPairwiseClassifier(0.979)
@@ -488,11 +488,6 @@ public class TestOrangeJsonWriter
                 .maxComplexSize(0)
                 .telomericSGLs(0)
                 .lineCount(0)
-                .bestPredictedTumorOrigin(ImmutablePredictedTumorOrigin.builder()
-                        .findingKey("predictedTumorOrigin[Melanoma]")
-                        .cancerType(prediction.cancerType())
-                        .likelihood(prediction.likelihood())
-                        .build())
                 .build();
     }
 
