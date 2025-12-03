@@ -36,6 +36,8 @@ public final class PurityContextFile
     {
         PurpleQCFile.write(PurpleQCFile.generateFilename(basePath, sample), context.qc());
         writeBestPurity(basePath, sample, context);
+
+        // PurplePurity.write(PurplePurity.generateFilename(basePath, sample), context);
     }
 
     private static void writeBestPurity(final String basePath, final String sample, final PurityContext context) throws IOException
