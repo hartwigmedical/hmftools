@@ -358,8 +358,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
 
         private Boolean getBoolean(int column, boolean allowNull)
         {
-            // TODO: should accept only true or false
-            return getValue(column, Boolean::parseBoolean, allowNull);
+            return getValue(column, Row::parseBoolean, allowNull);
         }
 
         private Integer getInt(int column, boolean allowNull)
@@ -434,6 +433,23 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         private static boolean valueIndicatesNull(String rawValue)
         {
             return rawValue.equals("null") || rawValue.equals("NULL");
+        }
+
+        private static boolean parseBoolean(String string)
+        {
+            String lower = string.toLowerCase();
+            if (lower.equals("true"))
+            {
+                return true;
+            }
+            else if (lower.equals("false"))
+            {
+                return false;
+            }
+            else
+            {
+                throw new IllegalArgumentException(String.format("Invalid boolean string: %s", string));
+            }
         }
     }
 }
