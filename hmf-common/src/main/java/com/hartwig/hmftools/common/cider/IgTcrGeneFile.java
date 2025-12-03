@@ -70,8 +70,8 @@ public class IgTcrGeneFile
                 String allele = record.get(Column.allele);
                 IgTcrRegion region = IgTcrRegion.valueOf(record.get(Column.region));
                 IgTcrFunctionality functionality = IgTcrFunctionality.fromCode(record.get(Column.functionality));
-                boolean isPrimaryAssembly = record.getBoolean(Column.primaryAssembly);
-                String assemblyName = isPrimaryAssembly ? null : record.get(Column.assemblyName);
+                Boolean isPrimaryAssembly = record.getBooleanOrNull(Column.primaryAssembly);
+                String assemblyName = isPrimaryAssembly == null || isPrimaryAssembly ? null : record.get(Column.assemblyName);
 
                 String anchorSequence = record.get(Column.anchorSequence);
                 if(anchorSequence.isEmpty())
