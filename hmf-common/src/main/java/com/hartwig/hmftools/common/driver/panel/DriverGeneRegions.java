@@ -148,17 +148,22 @@ public final class DriverGeneRegions
 
         final List<GeneRegion> regions = Lists.newArrayList();
 
-        for(int i = 0; i < transData.exons().size(); i++)
+        int exonCount = transData.exons().size();
+
+        for(int i = 0; i < exonCount; i++)
         {
             ExonData exon = transData.exons().get(i);
 
-            int exonStart = i == 0 ? exon.Start : exon.Start - SPLICE_SIZE;
-            int exonEnd = i == transData.exons().size() - 1 ? exon.End : exon.End + SPLICE_SIZE;
+            int exonStart = exon.Start;
+            int exonEnd = exon.End;
 
-            if(includeSplice)
+            if(includeSplice) // excluding the first and last exons
             {
-                exonStart -= SPLICE_SIZE;
-                exonEnd += SPLICE_SIZE;
+                if(i > 0)
+                    exonStart -= SPLICE_SIZE;
+
+                if(i < exonCount - 1)
+                    exonEnd += SPLICE_SIZE;
             }
 
             if(positionsOverlap(startPosition, endPosition, exonStart, exonEnd))
