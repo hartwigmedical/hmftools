@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -210,7 +211,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
     public Iterator<Row> iterator()
     {
         // make sure we have got the column names
-        getColumnNames();
+        setColumnNames();
         return new Iterator<>()
         {
             // almost entirely the same as the one in BufferedReader
@@ -293,270 +294,141 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             mValues = values;
         }
 
-        public boolean isNull(final String column)
+        public String get(int column) { return getString(column); }
+        public String get(String column) { return getString(column); }
+        public String get(Enum<?> column) { return getString(column); }
+        public String getString(int column) { return getString(column, false); }
+        public String getString(String column) { return getString(getColumn(column), false); }
+        public String getString(Enum<?> column) { return getString(getColumn(column), false); }
+        @Nullable public String getStringOrNull(String column) { return getString(getColumn(column), true); }
+        @Nullable public String getStringOrNull(Enum<?> column) { return getString(getColumn(column), true); }
+
+        public byte getByte(String column) { return getByte(getColumn(column), false); }
+        public byte getByte(Enum<?> column) { return getByte(getColumn(column), false); }
+        @Nullable public Byte getByteOrNull(String column) { return getByte(getColumn(column), true); }
+        @Nullable public Byte getByteOrNull(Enum<?> column) { return getByte(getColumn(column), true); }
+
+        public char getChar(String column) { return getChar(getColumn(column), false); }
+        public char getChar(Enum<?> column) { return getChar(getColumn(column), false); }
+        @Nullable public Character getCharOrNull(String column) { return getChar(getColumn(column), true); }
+        @Nullable public Character getCharOrNull(Enum<?> column) { return getChar(getColumn(column), true); }
+
+        public boolean getBoolean(String column) { return getBoolean(getColumn(column), false); }
+        public boolean getBoolean(Enum<?> column) { return getBoolean(getColumn(column), false); }
+        @Nullable public Boolean getBooleanOrNull(String column) { return getBoolean(getColumn(column), true); }
+        @Nullable public Boolean getBooleanOrNull(Enum<?> column) { return getBoolean(getColumn(column), true); }
+
+        public int getInt(int column) { return getInt(column, false); }
+        public int getInt(String column) { return getInt(getColumn(column), false); }
+        public int getInt(Enum<?> column) { return getInt(getColumn(column), false); }
+        @Nullable public Integer getIntOrNull(String column) { return getInt(getColumn(column), true); }
+        @Nullable public Integer getIntOrNull(Enum<?> column) { return getInt(getColumn(column), true); }
+
+        public long getLong(String column) { return getLong(getColumn(column), false); }
+        public long getLong(Enum<?> column) { return getLong(getColumn(column), false); }
+        @Nullable public Long getLongOrNull(String column) { return getLong(getColumn(column), true); }
+        @Nullable public Long getLongOrNull(Enum<?> column) { return getLong(getColumn(column), true); }
+
+        public float getFloat(String column) { return getFloat(getColumn(column), false); }
+        public float getFloat(Enum<?> column) { return getFloat(getColumn(column), false); }
+        @Nullable public Float getFloatOrNull(String column) { return getFloat(getColumn(column), true); }
+        @Nullable public Float getFloatOrNull(Enum<?> column) { return getFloat(getColumn(column), true); }
+
+        public double getDouble(int column) { return getDouble(column, false); }
+        public double getDouble(String column) { return getDouble(getColumn(column), false); }
+        public double getDouble(Enum<?> column) { return getDouble(getColumn(column), false); }
+        @Nullable public Double getDoubleOrNull(String column) { return getDouble(getColumn(column), true); }
+        @Nullable public Double getDoubleOrNull(Enum<?> column) { return getDouble(getColumn(column), true); }
+
+        private String getString(int column, boolean allowNull)
         {
-            return valueIndicatesNull(parseRawValue(column));
+            return getValue(column, Function.identity(), allowNull);
         }
 
-        public String get(final String column)
+        private Byte getByte(int column, boolean allowNull)
         {
-            String v = parseRawValue(column);
-            if(valueIndicatesNull(v))
+            return getValue(column, Byte::parseByte, allowNull);
+        }
+
+        private Character getChar(int column, boolean allowNull)
+        {
+            // TODO? should forbid more than 1 char
+            return getValue(column, string -> string.charAt(0), allowNull);
+        }
+
+        private Boolean getBoolean(int column, boolean allowNull)
+        {
+            // TODO: should accept only true or false
+            return getValue(column, Boolean::parseBoolean, allowNull);
+        }
+
+        private Integer getInt(int column, boolean allowNull)
+        {
+            return getValue(column, Integer::parseInt, allowNull);
+        }
+
+        private Long getLong(int column, boolean allowNull)
+        {
+            return getValue(column, Long::parseLong, allowNull);
+        }
+
+        private Float getFloat(int column, boolean allowNull)
+        {
+            return getValue(column, Float::parseFloat, allowNull);
+        }
+
+        private Double getDouble(int column, boolean allowNull)
+        {
+            return getValue(column, Double::parseDouble, allowNull);
+        }
+
+        private <T> T getValue(int column, Function<String, T> parser, boolean allowNull)
+        {
+            String string = getStringValue(column, allowNull);
+            return string == null ? null : parser.apply(string);
+        }
+
+        private String getStringValue(int column, boolean allowNull)
+        {
+            String rawValue = getRawValue(column);
+            if (valueIndicatesNull(rawValue))
             {
-                throw new NoSuchElementException();
+                if (allowNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw new NoSuchElementException(String.format("column %d is null", column));
+                }
             }
-            return v;
-        }
-
-        public @Nullable String getOrNull(final String column)
-        {
-            String v = parseRawValue(column);
-            if(valueIndicatesNull(v))
+            else
             {
-                return null;
+                return rawValue;
             }
-            return v;
         }
 
-        public int getInt(final String column)
+        private int getColumn(Enum<?> column)
         {
-            return Integer.parseInt(get(column));
+            return getColumn(column.name());
         }
 
-        public @Nullable Integer getIntOrNull(final String column)
+        private int getColumn(String column)
         {
-            String v = getOrNull(column);
-            return v == null ? null : Integer.parseInt(v);
-        }
-
-        public boolean getBoolean(final String column)
-        {
-            return Boolean.parseBoolean(get(column));
-        }
-
-        public @Nullable Boolean getBooleanOrNull(final String column)
-        {
-            String v = getOrNull(column);
-            return v == null ? null : Boolean.parseBoolean(v);
-        }
-
-        public char getChar(final String column)
-        {
-            return get(column).charAt(0);
-        }
-
-        public @Nullable Character getCharOrNull(final String column)
-        {
-            String v = getOrNull(column);
-            return v == null ? null : v.charAt(0);
-        }
-
-        public byte getByte(final String column)
-        {
-            return Byte.parseByte(get(column));
-        }
-
-        public @Nullable Byte getByteOrNull(final String column)
-        {
-            String v = getOrNull(column);
-            return v == null ? null : Byte.parseByte(v);
-        }
-
-        public double getDouble(final String column)
-        {
-            return Double.parseDouble(get(column));
-        }
-
-        public @Nullable Double getDoubleOrNull(final String column)
-        {
-            String v = getOrNull(column);
-            return v == null ? null : Double.parseDouble(v);
-        }
-
-        public long getLong(final String column)
-        {
-            return Long.parseLong(get(column));
-        }
-
-        public @Nullable Long getLongOrNull(final String column)
-        {
-            String v = getOrNull(column);
-            return v == null ? null : Long.parseLong(v);
-        }
-
-        // overloads that allow using enum as column
-
-        public boolean isNull(final Enum<?> column)
-        {
-            return isNull(column.name());
-        }
-
-        public String get(final Enum<?> column)
-        {
-            return get(column.name());
-        }
-
-        public @Nullable String getOrNull(final Enum<?> column)
-        {
-            return getOrNull(column.name());
-        }
-
-        public int getInt(final Enum<?> column)
-        {
-            return getInt(column.name());
-        }
-
-        public @Nullable Integer getIntOrNull(final Enum<?> column)
-        {
-            return getIntOrNull(column.name());
-        }
-
-        public boolean getBoolean(final Enum<?> column)
-        {
-            return getBoolean(column.name());
-        }
-
-        public @Nullable Boolean getBooleanOrNull(final Enum<?> column)
-        {
-            return getBooleanOrNull(column.name());
-        }
-
-        public char getChar(final Enum<?> column)
-        {
-            return getChar(column.name());
-        }
-
-        public @Nullable Character getCharOrNull(final Enum<?> column)
-        {
-            return getCharOrNull(column.name());
-        }
-
-        public byte getByte(final Enum<?> column)
-        {
-            return getByte(column.name());
-        }
-
-        public @Nullable Byte getByteOrNull(final Enum<?> column)
-        {
-            return getByteOrNull(column.name());
-        }
-
-        public double getDouble(final Enum<?> column)
-        {
-            return getDouble(column.name());
-        }
-
-        public @Nullable Double getDoubleOrNull(final Enum<?> column)
-        {
-            return getDoubleOrNull(column.name());
-        }
-
-        public long getLong(final Enum<?> column)
-        {
-            return getLong(column.name());
-        }
-
-        public @Nullable Long getLongOrNull(final Enum<?> column)
-        {
-            return getLongOrNull(column.name());
-        }
-
-        // overloads that get by column index, provided for speed reasons.
-        // Onus is on caller to make sure the indices are valid
-        // Or IndexOutOfBoundsException will be thrown
-        public String get(final int columnIndex)
-        {
-            String v = mValues[columnIndex];
-            if(valueIndicatesNull(v))
-            {
-                throw new NoSuchElementException();
-            }
-            return v;
-        }
-
-        public @Nullable String getOrNull(final int columnIndex)
-        {
-            String v = mValues[columnIndex];
-            if(valueIndicatesNull(v))
-            {
-                return null;
-            }
-            return v;
-        }
-
-        public int getInt(final int columnIndex)
-        {
-            return Integer.parseInt(get(columnIndex));
-        }
-
-        public @Nullable Integer getIntOrNull(final int columnIndex)
-        {
-            String v = getOrNull(columnIndex);
-            return v == null ? null : Integer.parseInt(v);
-        }
-
-        public char getChar(final int columnIndex)
-        {
-            return get(columnIndex).charAt(0);
-        }
-
-        public @Nullable Character getCharOrNull(final int columnIndex)
-        {
-            String v = getOrNull(columnIndex);
-            return v == null ? null : v.charAt(0);
-        }
-
-        public byte getByte(final int columnIndex)
-        {
-            return Byte.parseByte(get(columnIndex));
-        }
-
-        public @Nullable Byte getByteOrNull(final int columnIndex)
-        {
-            String v = getOrNull(columnIndex);
-            return v == null ? null : Byte.parseByte(v);
-        }
-
-        public double getDouble(final int columnIndex)
-        {
-            return Double.parseDouble(get(columnIndex));
-        }
-
-        public @Nullable Double getDoubleOrNull(final int columnIndex)
-        {
-            String v = getOrNull(columnIndex);
-            return v == null ? null : Double.parseDouble(v);
-        }
-
-        public long getLong(final int columnIndex)
-        {
-            return Long.parseLong(get(columnIndex));
-        }
-
-        public @Nullable Long getLongOrNull(final int columnIndex)
-        {
-            String v = getOrNull(columnIndex);
-            return v == null ? null : Long.parseLong(v);
-        }
-
-        // Gets the raw field value by column index, provided for speed reasons.
-        // Onus is on caller to:
-        //   - Ensure the column index are valid or IndexOutOfBoundsException will be thrown.
-        //   - Handle the raw file value appropriately, including nulls.
-        public String getRawValue(int column)
-        {
-            return mValues[column];
-        }
-
-        // get the value that is stored in the row
-        private String parseRawValue(String column)
-        {
-            Integer index = mColumnIndexMap.get(column);
-            if(index == null)
+            Integer columnIndex = mColumnIndexMap.get(column);
+            if(columnIndex == null)
             {
                 throw new NoSuchElementException(String.format("column: %s not found", column));
             }
-            return mValues[index];
+            else
+            {
+                return columnIndex;
+            }
+        }
+
+        private String getRawValue(int column)
+        {
+            return mValues[column];
         }
 
         private static boolean valueIndicatesNull(String rawValue)

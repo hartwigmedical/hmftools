@@ -164,7 +164,7 @@ public class Genes
                 boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
                 boolean promoter = row.getBoolean(FLD_INCLUDE_PROMOTER);
-                String extraTranscriptsStr = row.getOrNull(FLD_EXTRA_TRANSCRIPTS);
+                String extraTranscriptsStr = row.getStringOrNull(FLD_EXTRA_TRANSCRIPTS);
                 List<String> extraTranscripts = parseGeneExtraTranscripts(extraTranscriptsStr);
 
                 GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream, promoter);

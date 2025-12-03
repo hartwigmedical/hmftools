@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.common.mappability;
 
 import static java.lang.Double.isFinite;
-import static java.lang.Float.parseFloat;
-import static java.lang.Integer.parseInt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -183,18 +180,14 @@ public class ProbeQualityProfile
 
         try(DelimFileReader reader = new DelimFileReader(filePath))
         {
-            int chromosomeField = requireNonNull(reader.getColumnIndex(FLD_CHROMOSOME));
-            int startField = requireNonNull(reader.getColumnIndex(FLD_POSITION_START));
-            int qualityScoreField = requireNonNull(reader.getColumnIndex(FLD_QUALITY_SCORE));
-
             String curChromosome = null;
             WindowArray curWindows = null;
 
             for(DelimFileReader.Row row : reader)
             {
-                String chromosome = row.getRawValue(chromosomeField);
-                int start = parseInt(row.getRawValue(startField));
-                double qualityScore = parseFloat(row.getRawValue(qualityScoreField));
+                String chromosome = row.getString(FLD_CHROMOSOME);
+                int start = row.getInt(FLD_POSITION_START);
+                float qualityScore = row.getFloat(FLD_QUALITY_SCORE);
 
                 if((start - 1) % baseWindowSpacing != 0)
                 {
@@ -217,7 +210,7 @@ public class ProbeQualityProfile
                     }
                 }
 
-                curWindows.add(start, (float) qualityScore);
+                curWindows.add(start, qualityScore);
             }
         }
 

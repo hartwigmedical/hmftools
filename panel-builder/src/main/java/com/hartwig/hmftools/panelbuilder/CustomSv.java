@@ -46,16 +46,16 @@ public record CustomSv(
         {
             List<CustomSv> customSvs = reader.stream().map(row ->
             {
-                BasePosition startPosition = new BasePosition(row.get(Columns.ChromosomeStart), row.getInt(Columns.PositionStart));
-                Orientation startOrientation = Orientation.fromByteStr(row.get(Columns.OrientationStart));
-                BasePosition endPosition = new BasePosition(row.get(Columns.ChromosomeEnd), row.getInt(Columns.PositionEnd));
-                Orientation endOrientation = Orientation.fromByteStr(row.get(Columns.OrientationEnd));
-                String insertSequence = row.getOrNull(Columns.InsertSequence);
+                BasePosition startPosition = new BasePosition(row.getString(Columns.ChromosomeStart), row.getInt(Columns.PositionStart));
+                Orientation startOrientation = Orientation.fromByteStr(row.getString(Columns.OrientationStart));
+                BasePosition endPosition = new BasePosition(row.getString(Columns.ChromosomeEnd), row.getInt(Columns.PositionEnd));
+                Orientation endOrientation = Orientation.fromByteStr(row.getString(Columns.OrientationEnd));
+                String insertSequence = row.getStringOrNull(Columns.InsertSequence);
                 if(insertSequence == null)
                 {
                     insertSequence = "";
                 }
-                String extraInfo = row.get(Columns.ExtraInfo);
+                String extraInfo = row.getString(Columns.ExtraInfo);
                 Double qualityScoreMin = row.getDoubleOrNull(Columns.QualityScoreMin);
                 return new CustomSv(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
             }).toList();
