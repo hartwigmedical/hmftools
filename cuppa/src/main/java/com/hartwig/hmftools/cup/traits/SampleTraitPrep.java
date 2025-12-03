@@ -12,8 +12,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;

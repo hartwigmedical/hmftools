@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.hartwig.hmftools.common.cuppa.CuppaCommon;
+import com.hartwig.hmftools.common.purple.PurplePurity;
 import com.hartwig.hmftools.cup.prep.CategoryType;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
@@ -27,8 +27,6 @@ import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
@@ -122,12 +120,9 @@ public class DriverPrep implements CategoryPrep
 
     public void getIndelDrivers(String sampleId) throws IOException
     {
-        PurityContext purityContext = PurityContextFile.readWithQC(
-                mConfig.purpleQcFile(sampleId),
-                mConfig.purplePurityFile(sampleId)
-        );
+        PurplePurity purity = PurplePurity.read(mConfig.purplePurityFile(sampleId));
 
-        boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
+        boolean isMicrosatelliteStable = purity.MsStatus == MSS;
 
         if(!isMicrosatelliteStable)
             return;

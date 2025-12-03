@@ -39,7 +39,6 @@ import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
@@ -156,7 +155,6 @@ public class PrepConfig
     public String somaticVariantsGenericFile(final String sampleId) { return SomaticVariant.generateFilename(getSomaticVariantsDir(sampleId), sampleId); }
     public String purpleSvFile(final String sampleId) { return PurpleCommon.purpleSomaticSvFile(getPurpleDataDir(sampleId), sampleId); }
     public String purplePurityFile(final String sampleId) { return PurpleCommon.purplePurityFile(getPurpleDataDir(sampleId), sampleId); }
-    public String purpleQcFile(final String sampleId) { return PurpleCommon.purpleQcFile(getPurpleDataDir(sampleId), sampleId); }
     public String purpleDriverCatalogFile(final String sampleId) { return DriverCatalogFile.generateSomaticFilename(getPurpleDataDir(sampleId), sampleId); }
     public String linxDriverCatalogFile(final String sampleId) { return LinxDriver.generateCatalogFilename(getLinxDataDir(sampleId), sampleId, true); }
     public String linxClusterFile(final String sampleId) { return LinxCluster.generateFilename(getLinxDataDir(sampleId), sampleId, false); }
