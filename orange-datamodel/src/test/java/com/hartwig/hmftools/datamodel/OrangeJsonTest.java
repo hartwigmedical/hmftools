@@ -6,14 +6,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.ServiceLoader;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapterFactory;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -24,6 +31,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -76,7 +84,26 @@ public class OrangeJsonTest
     @Test
     public void canReadRealOrangeRecordJson() throws IOException
     {
-        assertNotNull(OrangeJson.getInstance().read(REAL_ORANGE_JSON));
+        OrangeRecord orangeRecord = OrangeJson.getInstance().read(REAL_ORANGE_JSON);
+        assertNotNull(orangeRecord);
+
+        // create the findings
+        FindingRecord findingRecord = orangeRecord.findingRecord();
+
+        assertNotNull(findingRecord);
+
+        /* GsonBuilder gsonBuilder = new GsonBuilder().setPrettyPrinting();
+        for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
+            gsonBuilder.registerTypeAdapterFactory(factory);
+        }
+
+        Gson gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("testFindingRecord.json"))) {
+            gson.toJson(findingRecord, FindingRecord.class, writer);
+        }*/
     }
 
     @Test
@@ -302,7 +329,7 @@ public class OrangeJsonTest
         assertEquals(-1, breakend.nextSpliceExonRank());
         assertEquals(1, breakend.exonUp());
         assertEquals(2, breakend.exonDown());
-        assertEquals("Upstream", breakend.geneOrientation());
+        assertEquals(LinxGeneOrientation.Upstream, breakend.geneOrientation());
         assertEquals(-1, breakend.orientation());
         assertEquals(TranscriptRegionType.EXONIC, breakend.regionType());
         assertEquals(TranscriptCodingType.UTR_3P, breakend.codingType());

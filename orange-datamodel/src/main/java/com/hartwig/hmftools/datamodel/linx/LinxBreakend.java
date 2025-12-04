@@ -32,7 +32,7 @@ public interface LinxBreakend
     boolean isCanonical();
 
     @NotNull
-    String geneOrientation();
+    LinxGeneOrientation geneOrientation();
 
     boolean disruptive();
 

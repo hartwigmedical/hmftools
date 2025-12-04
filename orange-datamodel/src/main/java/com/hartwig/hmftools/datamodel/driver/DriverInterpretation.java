@@ -1,12 +1,13 @@
-package com.hartwig.hmftools.orange.algo.purple;
+package com.hartwig.hmftools.datamodel.driver;
 
 import org.jetbrains.annotations.NotNull;
 
 public enum DriverInterpretation
 {
-    HIGH,
+    // must be listed from low to high for comparison
+    LOW,
     MEDIUM,
-    LOW;
+    HIGH;
 
     @NotNull
     public static DriverInterpretation interpret(double driverLikelihood)
