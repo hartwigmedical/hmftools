@@ -151,14 +151,10 @@ public class SbxDuplexIndelBuilder
 
         int totalInsertedBases = insertRepeatShift + duplexMismatchInsertCount;
 
-        int totalRepeatBaseLength = insertRepeatShift + duplexMismatchLength - duplexMismatchInsertCount;
-
-        // int trimLength = insertRepeatShift > 0 ? min(insertRepeatShift, duplexMismatchLength) : duplexMismatchLength; // old
         int trimLength = insertRepeatShift > 0 ? min(totalInsertedBases, duplexMismatchLength) : duplexMismatchLength;
 
         int lowBaseQualCount = duplexMismatchLength;
 
-        // int trimmedRepeatBaseLength = totalRepeatBaseLength - trimLength; // old
         int trimmedRepeatBaseLength = totalInsertedBases - trimLength;
 
         // ensure there are enough low-qual bases for symmetry around the repeat
