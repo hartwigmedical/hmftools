@@ -44,7 +44,7 @@ public final class AssemblyConstants
 
     public static final int WEAK_ASSEMBLY_UNPAIRED_MAX_READS = 3;
     public static final double WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR = 5;
-    public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR = 3;
+    public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR = 2.5;
 
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
