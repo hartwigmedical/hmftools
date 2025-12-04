@@ -1,14 +1,23 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_CIGAR_100;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setSbxSequencing;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimSbxUncertainBases;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHigherBaseQualCategory;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 
 import org.junit.After;
 import org.junit.Test;
@@ -41,5 +50,58 @@ public class SbxAssemblyTest
         // assertFalse(isHigherBaseQualCategory(qual1, qual2));
     }
 
+    @Test
+    public void testTrimUncertainBases()
+    {
+        String readBases = REF_BASES_RANDOM_100;
 
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        // low qual will be 70% of outer bases
+        for(int i = 3; i < 10; ++i)
+        {
+            baseQualities[i] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+            baseQualities[baseQualities.length - i - 1] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        trimSbxUncertainBases(read);
+
+        assertEquals(10, read.trimCountStart());
+        assertEquals(10, read.trimCountEnd());
+
+        // now with a read that can trim from both sides past each other
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        for(int i = 0; i < 80; ++i)
+        {
+            baseQualities[i] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+        }
+
+        read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        trimSbxUncertainBases(read);
+
+        assertEquals(80, read.trimCountStart());
+        assertEquals(0, read.trimCountEnd());
+
+        // and the other side
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        for(int i = 20; i < 100; ++i)
+        {
+            baseQualities[i] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+        }
+
+        read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        trimSbxUncertainBases(read);
+
+        assertEquals(0, read.trimCountStart());
+        assertEquals(80, read.trimCountEnd());
+    }
 }

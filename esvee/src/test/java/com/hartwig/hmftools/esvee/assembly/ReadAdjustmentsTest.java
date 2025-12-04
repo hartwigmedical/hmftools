@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.trimAdapterBases;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimIlluminaAdapterBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -250,7 +250,7 @@ public class ReadAdjustmentsTest
     }
 
     @Test
-    public void testAdapter()
+    public void testIlluminaAdapter()
     {
         String readBases = REF_BASES_RANDOM_100;
 
@@ -263,8 +263,8 @@ public class ReadAdjustmentsTest
         read.setMateRead(mateRead);
         mateRead.setMateRead(read);
 
-        trimAdapterBases(read);
-        trimAdapterBases(mateRead);
+        trimIlluminaAdapterBases(read);
+        trimIlluminaAdapterBases(mateRead);
 
         assertEquals(10, read.trimCount());
         assertEquals("20S60M10S", read.cigarString());

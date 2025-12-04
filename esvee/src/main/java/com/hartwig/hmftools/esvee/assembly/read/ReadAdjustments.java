@@ -194,40 +194,4 @@ public final class ReadAdjustments
     }
 
     protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
-
-    public static void trimAdapterBases(final Read read)
-    {
-        // trim any 3' bases extending past the unclipped 5' position
-        if(!read.isPairedRead() || read.mateRead() == null)
-            return;
-
-        Read mateRead = read.mateRead();
-
-        if(read.orientation() == mateRead.orientation())
-            return;
-
-        if(!read.chromosome().equals(mateRead.chromosome()))
-            return;
-
-        if(read.orientation().isForward())
-        {
-            int threePrimeEnd = read.unclippedEnd();
-            int mateFivePrimeEnd = mateRead.unclippedEnd();
-
-            if(threePrimeEnd > mateFivePrimeEnd)
-            {
-                read.trimBases(threePrimeEnd - mateFivePrimeEnd, false);
-            }
-        }
-        else
-        {
-            int threePrimeStart = read.unclippedStart();
-            int mateFivePrimeStart = mateRead.unclippedStart();
-
-            if(threePrimeStart < mateFivePrimeStart)
-            {
-                read.trimBases(mateFivePrimeStart - threePrimeStart, true);
-            }
-        }
-    }
 }

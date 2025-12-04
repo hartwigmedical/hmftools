@@ -8,8 +8,9 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimIlluminaAdapterBases;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimSbxUncertainBases;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.trimAdapterBases;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 
@@ -268,30 +269,11 @@ public class JunctionGroupAssembler extends ThreadTask
             if(ReadAdjustments.trimLowQualSoftClipBases(read))
                 ++mReadStats.LowBaseQualTrimmed;
 
-            trimAdapterBases(read);
+            trimIlluminaAdapterBases(read);
         }
         else if(isSbx())
         {
-            // trim uncertain bases from both ends
-            boolean trimmed = false;
-            int midIndex = read.basesLength() / 2;
-
-            for(int i = 0; i <= 1; ++i)
-            {
-                boolean fromStart = (i == 0);
-                int indexStart = fromStart ? 0 : midIndex + 1;
-                int indexEnd = fromStart ? midIndex : read.basesLength() - 1;
-
-                int trimCount = ReadAdjustments.findLowBaseQualTrimCount(read, indexStart, indexEnd, fromStart, true);
-
-                if(trimCount > 0)
-                {
-                    read.trimBases(trimCount, fromStart);
-                    trimmed = true;
-                }
-            }
-
-            if(trimmed)
+            if(trimSbxUncertainBases(read))
                 ++mReadStats.LowBaseQualTrimmed;
         }
 
