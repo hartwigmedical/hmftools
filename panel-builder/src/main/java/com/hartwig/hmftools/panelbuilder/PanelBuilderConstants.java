@@ -94,6 +94,7 @@ public class PanelBuilderConstants
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
+    public static final int SAMPLE_INSERT_SEQUENCE_LENGTH_MAX = 60;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRI
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_DRIVER_QUALITY_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_FRAGMENT_COUNT_MIN;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INDEL_LENGTH_MAX;
+import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_INSERT_SEQUENCE_LENGTH_MAX;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TARGET;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_GC_TOLERANCE;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.SAMPLE_NONDRIVER_QUALITY_MIN;
@@ -170,7 +171,6 @@ public class SampleVariants
                 LOGGER.warn("Filled sample variant probe quota without including all driver variants!");
                 break;
             }
-
             EvaluationResult filterResult = driverFilters(variant, geneDisruptions);
             variantFilters.put(variant, filterResult);
             filterResult.unwrap(
@@ -218,7 +218,26 @@ public class SampleVariants
         return selectedVariants;
     }
 
+    private static EvaluationResult commonFilters(final Variant variant)
+    {
+        List<Supplier<EvaluationResult>> filters = new ArrayList<>();
+
+        if(variant instanceof StructuralVariant sv)
+        {
+            filters.add(() -> insertSequenceLengthFilter(sv.insertSequenceLength()));
+        }
+
+        return EvaluationResult.applyEvaluations(filters);
+    }
+
     private static EvaluationResult driverFilters(final Variant variant, Map<String, Integer> geneDisruptions)
+    {
+        return EvaluationResult.applyEvaluations(List.of(
+                () -> commonFilters(variant),
+                () -> driverOnlyFilters(variant, geneDisruptions)));
+    }
+
+    private static EvaluationResult driverOnlyFilters(final Variant variant, Map<String, Integer> geneDisruptions)
     {
         List<Supplier<EvaluationResult>> filters = new ArrayList<>();
 
@@ -264,11 +283,23 @@ public class SampleVariants
     private static EvaluationResult nondriverFilters(final SomaticMutation variant)
     {
         return EvaluationResult.applyEvaluations(List.of(
+                () -> commonFilters(variant),
+                () -> nondriverOnlyFilters(variant)));
+    }
+
+    private static EvaluationResult nondriverOnlyFilters(final SomaticMutation variant)
+    {
+        return EvaluationResult.applyEvaluations(List.of(
                 () -> vafFilter(variant.vaf()),
                 () -> tumorFragmentsFilter(variant.tumorFragments()),
                 () -> indelLengthFilter(variant.indelLength()),
                 () -> repeatCountFilter(variant.repeatCount()),
                 () -> germlineStatusFilter(variant.germlineStatus())));
+    }
+
+    private static EvaluationResult insertSequenceLengthFilter(int insertSequenceLength)
+    {
+        return EvaluationResult.condition(insertSequenceLength <= SAMPLE_INSERT_SEQUENCE_LENGTH_MAX, "insert sequence length");
     }
 
     private static EvaluationResult vafFilter(double vaf)
