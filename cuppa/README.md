@@ -59,13 +59,32 @@ multiple samples.
 The below command will extract the DNA and RNA features for one sample:
 ```shell
 java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
-  -sample COLO829v003T \
+  -sample SAMPLE_ID \
+  -rna_sample SAMPLE_ID_RNA \
   -categories ALL \
   -ref_genome_version V37 \
-  -sample_data_dir /dir/with/all/input/files/ \
+  -sample_data_dir /sample/data/dir/ \
   -output_dir path/to/output/dir/ \
   -ref_alt_sj_sites /path/to/alt_sj.selected_loci.tsv.gz
 ```
+
+assuming the input files are all located in the same directory:
+```
+/sample/data/dir/SAMPLE_ID.purple.somatic.vcf.gz
+/sample/data/dir/SAMPLE_ID.purple.sv.vcf.gz
+/sample/data/dir/SAMPLE_ID.purple.purity.tsv
+/sample/data/dir/SAMPLE_ID.linx.clusters.tsv
+/sample/data/dir/SAMPLE_ID.linx.driver.catalog.tsv
+/sample/data/dir/SAMPLE_ID.linx.fusion.tsv
+/sample/data/dir/SAMPLE_ID.virus.annotated.tsv
+/sample/data/dir/SAMPLE_ID_RNA.isf.alt_splice_junc.csv
+/sample/data/dir/SAMPLE_ID_RNA.isf.gene_data.csv
+```
+
+Argument `-rna_sample` is only needed if the [sample ID prefix](#inputs-and-arguments) for RNA and DNA input files differ. 
+
+If the directories containing the files from each tool (PURPLE, LINX, etc...) are different, they can be 
+[specified individually](#inputs-and-arguments) (e.g. with `-purple_dir`).  
 
 This will produce a TSV file with the following format:
 ```
@@ -76,12 +95,9 @@ Source  Category       Key  Value
 ```
 
 ### Multi sample example
-In the single sample example, we have all input files in the path provided to `-sample_data_dir`. However, for multiple samples, the input
-files are likely located in separate dirs. 
-
-We can instead provide input paths to `-purple_dir`, `-linx_dir`, `-virus_dir`, and `-isofox_dir` 
-using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. **NOTE: Paths containing wildcards must 
-be surrounded by double quotes (`"`)!**
+For multiple samples, the input files are likely located in separate dirs. We can  provide input paths to `-purple_dir`, `-linx_dir`, 
+`-virus_dir`, and `-isofox_dir` using with wildcards (`*`) which are converted to sample ids as specified in the `-sample_id_file`. 
+**NOTE: Paths containing wildcards must be surrounded by double quotes (`"`)!**
 
 The below command will extract the DNA and RNA features for multiple samples:
 
@@ -100,7 +116,7 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -threads 8
 ```
 
-and with the below example `sample_ids.tsv` file:
+with the below example `sample_ids.tsv` file:
 ```tsv
 SampleId	RnaSampleId
 SAMPLE_1	
@@ -158,38 +174,39 @@ Source  Category       Key  SAMPLE_1  SAMPLE_2
 
 Below is a description of the input files for `CuppaDataPrep`:
 
-| Category | Tool              | Filename suffix          | File details                                     |
-|----------|-------------------|--------------------------|--------------------------------------------------|
-| DNA      | PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
-| DNA      | PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
-| DNA      | PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
-| DNA      | LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
-| DNA      | LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
-| DNA      | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
-| DNA      | Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
-| RNA      | ISOFOX            | .gene_data.csv           | Gene expression data                             |
-| RNA      | ISOFOX            | .alt_splice_junc.csv     | Alternative splice junction counts               |
+| Category | Tool              | Filename pattern                    | File details                                     |
+|----------|-------------------|-------------------------------------|--------------------------------------------------|
+| DNA      | PURPLE            | <SAMPLE_ID>.purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
+| DNA      | PURPLE            | <SAMPLE_ID>.purple.sv.vcf.gz        | Structural variants                              |
+| DNA      | PURPLE            | <SAMPLE_ID>.purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
+| DNA      | LINX              | <SAMPLE_ID>.linx.clusters.tsv       | Structural variant clusters                      |
+| DNA      | LINX              | <SAMPLE_ID>.linx.driver.catalog.tsv | Driver mutations                                 |
+| DNA      | LINX              | <SAMPLE_ID>.linx.fusion.tsv         | Gene fusions                                     |
+| DNA      | Virus Interpreter | <SAMPLE_ID>.virus.annotated.tsv     | Viral sequence insertions                        |
+| RNA      | ISOFOX            | <SAMPLE_ID>.gene_data.csv           | Gene expression data                             |
+| RNA      | ISOFOX            | <SAMPLE_ID>.alt_splice_junc.csv     | Alternative splice junction counts               |
 
 
 Below are all arguments that can be passed to `CuppaDataPrep`. Superscript numbers mark conditionally required arguments.
 
-| Argument              | Example                               | Description                                                                                                                                   |
-|-----------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| `-sample`             | COLO829v003T                          | [Required <sup>1</sup>] Sample name                                                                                                           |
-| `-sample_id_file`     | sample_ids.tsv                        | [Required <sup>1</sup>] One column text file with "SampleId" as the header, and where each row is a sample name                               |
-| `-sample_data_dir`    |                                       | [Required <sup>2</sup>] Directory containing all input files                                                                                  |
-| `-purple_dir`         | "/data/datasets/*/purple/"            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                 |
-| `-linx_dir`           | "/data/datasets/*/linx/"              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                   |
-| `-virus_dir`          | "/data/datasets/*/virus_interpreter/" | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                       |
-| `-isofox_dir`         | "/data/rna/*/"                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                 |
-| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz           | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd |
-| `-categories`         | DNA                                   | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                             |
-| `-output_dir`         |                                       | [Required] Directory to write the output files                                                                                                |
-| `-ref_genome_version` | V37                                   | Valid values: V37 (default), V38                                                                                                              |
-| `-threads`            | 8                                     | Number of threads to use. Each thread processes one sample at a time                                                                          |
-| `-write_by_category`  |                                       | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                     |
-| `-log_level`          | DEBUG                                 | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                    |
-| `-log_debug`          |                                       | Flag. Set log level to DEBUG                                                                                                                  |
+| Argument              | Example                               | Description                                                                                                                                                                        |
+|-----------------------|---------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-sample`             | SAMPLE_ID                             | [Required <sup>1</sup>] Sample ID                                                                                                                                                  |
+| `-rna_sample`         | SAMPLE_ID_RNA                         | Sample ID for RNA input files. Only needed if the sample ID prefix for the RNA and DNA input files differ                                                                          |
+| `-sample_id_file`     | sample_ids.tsv                        | [Required <sup>1</sup>] TSV file with columns SampleId and/or RnaSampleId. RnaSampleId values can be blank (SampleId value used instead) or NO_RNA (skips extracting RNA features) |
+| `-sample_data_dir`    |                                       | [Required <sup>2</sup>] Directory containing all input files                                                                                                                       |
+| `-purple_dir`         | "/data/datasets/*/purple/"            | [Required <sup>2</sup>] Directory containing the PURPLE files                                                                                                                      |
+| `-linx_dir`           | "/data/datasets/*/linx/"              | [Required <sup>2</sup>] Directory containing the LINX files                                                                                                                        |
+| `-virus_dir`          | "/data/datasets/*/virus_interpreter/" | [Required <sup>2</sup>] Directory containing the VirusInterpreter files                                                                                                            |
+| `-isofox_dir`         | "/data/rna/*/"                        | [Required <sup>2</sup>] Directory containing the ISOFOX files                                                                                                                      |
+| `-ref_alt_sj_sites`   | alt_sj.selected_loci.tsv.gz           | [Required <sup>3</sup>] TSV file containing the required alternative splice junctions. Required columns: GeneId, Chromosome, PosStart, PosEnd                                      |
+| `-categories`         | DNA                                   | [Required] One of: ALL, DNA, RNA; or one/many of: SNV, SV, DRIVER, SAMPLE_TRAIT, GENE_EXP, ALT_SJ                                                                                  |
+| `-output_dir`         |                                       | [Required] Directory to write the output files                                                                                                                                     |
+| `-ref_genome_version` | V37                                   | Valid values: V37 (default), V38                                                                                                                                                   |
+| `-threads`            | 8                                     | Number of threads to use. Each thread processes one sample at a time                                                                                                               |
+| `-write_by_category`  |                                       | Flag. Split output of `CuppaDataPrep` over multiple files                                                                                                                          |
+| `-log_level`          | DEBUG                                 | Set log level to one of: ERROR, WARN, INFO, DEBUG or TRACE                                                                                                                         |
+| `-log_debug`          |                                       | Flag. Set log level to DEBUG                                                                                                                                                       |
 
 Conditional requirements:
 1. Either `sample` or `sample_id_file` is required
