@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
@@ -45,6 +46,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -58,6 +60,8 @@ public class SequenceBuilder
     private final boolean mBuildForwards;
     private final List<ReadParseState> mReads;
 
+    // mismatch penalty calcs will use the second longest read's overlap, where consensus is still applied
+    private final int mMismatchPenaltyMaxReadLength;
     private final boolean mDisableMismatchPenalty;
 
     private int mCurrentIndex;
@@ -77,6 +81,15 @@ public class SequenceBuilder
     {
         mBuildForwards = buildForwards;
         mReads = reads;
+
+        List<Integer> readExtensionLengths = Lists.newArrayListWithCapacity(reads.size());
+        reads.forEach(x -> readExtensionLengths.add(x.overlapBaseCount()));
+        Collections.sort(readExtensionLengths, Comparator.reverseOrder());
+
+        if(readExtensionLengths.size() >= 2)
+            mMismatchPenaltyMaxReadLength = readExtensionLengths.get(1);
+        else
+            mMismatchPenaltyMaxReadLength = -1;
 
         mDisableMismatchPenalty = disableMismatchPenalty;
 
@@ -906,14 +919,19 @@ public class SequenceBuilder
             return false;
 
         // CHECK and compare with AssemblyUtils.mismatchesPerComparisonLength
-        return exceedsReadMismatches(read);
+        return exceedsReadMismatches(read, mMismatchPenaltyMaxReadLength);
     }
 
-    public static boolean exceedsReadMismatches(final ReadParseState read)
+    public static boolean exceedsReadMismatches(final ReadParseState read) { return exceedsReadMismatches(read, -1); }
+
+    private static boolean exceedsReadMismatches(final ReadParseState read, final int maxReadLength)
     {
         double mismatchPenalty = read.mismatchPenalty();
 
-        double permittedPenalty = permittedReadMismatches(read.overlapBaseCount());
+        int readOverlapLength = read.overlapBaseCount();
+        int readLength = maxReadLength > 0 ? min(maxReadLength, readOverlapLength) : readOverlapLength;
+
+        double permittedPenalty = permittedReadMismatches(readLength);
         if(mismatchPenalty > permittedPenalty)
             return true;
 
