@@ -100,8 +100,17 @@ java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
   -threads 8
 ```
 
+and with the below example `sample_ids.tsv` file:
+```tsv
+SampleId	RnaSampleId
+SAMPLE_1	
+SAMPLE_2	SAMPLE_2_RNA
+SAMPLE_3	NO_RNA
+```
+
 assuming the input directory structure looks like this:
 ```shell
+## SAMPLE_1: RNA input files have same sample ID prefix and dirname as DNA input files
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.somatic.vcf.gz
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.sv.vcf.gz
 /data/datasets/SAMPLE_1/purple/SAMPLE_1.purple.purity.tsv
@@ -109,9 +118,19 @@ assuming the input directory structure looks like this:
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.driver.catalog.tsv
 /data/datasets/SAMPLE_1/linx/SAMPLE_1.linx.fusion.tsv
 /data/datasets/SAMPLE_1/virus_interpreter/SAMPLE_1.virus.annotated.tsv
+
 /data/rna/SAMPLE_1/SAMPLE_1.isf.alt_splice_junc.csv
 /data/rna/SAMPLE_1/SAMPLE_1.isf.gene_data.csv
+
+## SAMPLE_2: has different sample ID prefix and dirname for RNA input files (SAMPLE_2_RNA)
 /data/datasets/SAMPLE_2/purple/SAMPLE_2.purple.somatic.vcf.gz
+...
+
+/data/rna/SAMPLE_2_RNA/SAMPLE_2_RNA.isf.alt_splice_junc.csv
+/data/rna/SAMPLE_2_RNA/SAMPLE_2_RNA.isf.gene_data.csv
+
+## SAMPLE_3: has no RNA data
+/data/datasets/SAMPLE_3/purple/SAMPLE_3.purple.somatic.vcf.gz
 ...
 ```
 

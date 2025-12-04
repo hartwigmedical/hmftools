@@ -10,16 +10,21 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.prep.SampleIdsLoader.COL_RNA_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.prep.SampleIdsLoader.COL_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.prep.SampleIdsLoader.NO_RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
 import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
@@ -45,6 +50,7 @@ import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 public class PrepConfig
 {
     public final List<String> SampleIds;
+    public final List<String> RnaSampleIds;
 
     // pipeline directories, accepting wildcards
     public final String SampleDataDir;
@@ -69,6 +75,7 @@ public class PrepConfig
     public static final String ALL_CATEGORIES = "ALL";
     public static final String DNA_CATEGORIES = "DNA";
     public static final String RNA_CATEGORIES = "RNA";
+    public static final String CATEGORY_DELIM = ";";
 
     public static final String REF_ALT_SJ_SITES = "ref_alt_sj_sites";
     public static final String REF_ALT_SJ_SITES_DESC = "RNA required alternative splice junction sites";
@@ -78,11 +85,17 @@ public class PrepConfig
 
     public static final String THREADS_DESC = "Number of threads to use in multi sample mode";
 
-    public static final String SUBSET_DELIM = ";";
+    public static final String RNA_SAMPLE_ID_DESC = String.format("RNA sample ID. Note: Output file prefix uses value from `-%s`", SAMPLE);
+
+    public static final String SAMPLE_ID_FILE_DESC =
+            String.format("TSV file with columns %s and/or %s. ", COL_SAMPLE_ID, COL_RNA_SAMPLE_ID) +
+            String.format("%s values can be blank (%s value used instead) or %s (skips extracting RNA features)", COL_RNA_SAMPLE_ID, COL_SAMPLE_ID, NO_RNA_SAMPLE_ID);
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = parseSampleConfig(configBuilder);
+        SampleIdsLoader sampleIdsLoader = new SampleIdsLoader().loadFromConfig(configBuilder);
+        SampleIds = sampleIdsLoader.sampleIds();
+        RnaSampleIds = sampleIdsLoader.rnaSampleIds();
 
         Categories = parseCategories(configBuilder);
 
@@ -106,6 +119,7 @@ public class PrepConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, RNA_SAMPLE_ID_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
@@ -120,25 +134,13 @@ public class PrepConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
         configBuilder.addPath(REF_ALT_SJ_SITES, false, REF_ALT_SJ_SITES_DESC);
 
-        FileWriterUtils.addOutputOptions(configBuilder);
+        configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        configBuilder.addConfigItem(OUTPUT_ID, false, OUTPUT_ID_DESC);
 
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, WRITE_FILE_BY_CATEGORY_DESC);
         configBuilder.addConfigItem(THREADS, false, THREADS_DESC, "1");
 
         ConfigUtils.addLoggingOptions(configBuilder);
-    }
-
-    private static List<String> parseSampleConfig(ConfigBuilder configBuilder)
-    {
-        if(configBuilder.hasValue(SAMPLE))
-            return List.of(configBuilder.getValue(SAMPLE));
-
-        if(configBuilder.hasValue(SAMPLE_ID_FILE))
-            return ConfigUtils.loadSampleIdsFile(configBuilder);
-
-        CUP_LOGGER.error("Either -{} or -{} must be provided to {} config", SAMPLE, SAMPLE_ID_FILE, CuppaDataPrep.class.getSimpleName());
-        System.exit(1);
-        return null;
     }
 
     public boolean isMultiSample() { return SampleIds.size() > 1; }
@@ -170,22 +172,30 @@ public class PrepConfig
 
         String configCategories = configBuilder.getValue(CATEGORIES).toUpperCase();
 
-        if(configCategories.equals(ALL_CATEGORIES))
-            return CategoryType.getAllCategories();
+        switch(configCategories)
+        {
+            case ALL_CATEGORIES ->
+            {
+                return CategoryType.getAllCategories();
+            }
+            case DNA_CATEGORIES ->
+            {
+                return CategoryType.getDnaCategories();
+            }
+            case RNA_CATEGORIES ->
+            {
+                return CategoryType.getRnaCategories();
+            }
+        }
 
-        if(configCategories.equals(DNA_CATEGORIES))
-            return CategoryType.getDnaCategories();
-
-        if(configCategories.equals(RNA_CATEGORIES))
-            return CategoryType.getRnaCategories();
-
-        final String[] categoryStrings = configCategories.split(SUBSET_DELIM);
+        final String[] categoryStrings = configCategories.split(CATEGORY_DELIM);
         return Arrays.stream(categoryStrings).map(CategoryType::valueOf).collect(Collectors.toList());
     }
 
     @VisibleForTesting
     public PrepConfig(
             final List<String> sampleIds,
+            final List<String> rnaSampleIds,
             final List<CategoryType> categories,
             final RefGenomeVersion refGenVersion,
             final String outputDir,
@@ -202,6 +212,7 @@ public class PrepConfig
     )
     {
         SampleIds = sampleIds;
+        RnaSampleIds = rnaSampleIds;
         Categories = categories;
         RefGenVersion = refGenVersion;
         OutputDir = outputDir;

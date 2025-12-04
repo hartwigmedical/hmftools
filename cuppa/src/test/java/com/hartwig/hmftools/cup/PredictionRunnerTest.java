@@ -2,7 +2,10 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_RNA_ID;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.prep.PrepConfig.ALL_CATEGORIES;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,9 +25,8 @@ public class PredictionRunnerTest
     private static final String CUPPA_DIR = System.getProperty("user.dir");
     private static final String USER_HOME = System.getProperty("user.home");
 
-    private static final String SAMPLE_ID = "TUMOR_SAMPLE";
-    private static final String SAMPLE_DATA_DIR = CUPPA_DIR + "/src/test/resources/pipeline_output/TUMOR_SAMPLE";
-    private static final String CLASSIFIER_PATH = format("%s/Hartwig/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz", USER_HOME);
+    private static final String SAMPLE_DATA_DIR = CUPPA_DIR + "/src/test/resources/pipeline_output/*";
+    private static final String CLASSIFIER_PATH = format("%s/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz", USER_HOME);
     private static final String OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "/cuppa_output/";
     private static final String PYTHON_PATH = format("%s/.pyenv/versions/3.9.4/envs/pycuppa_venv/bin/python", USER_HOME);
 
@@ -56,7 +58,9 @@ public class PredictionRunnerTest
     public void canPredictFromPipelineOutput()
     {
         String[] args = new String[] {
-                "-sample",SAMPLE_ID,
+                "-sample", TEST_TUMOR_SAMPLE_ID,
+                "-rna_sample", TEST_TUMOR_SAMPLE_RNA_ID,
+                "-categories", ALL_CATEGORIES,
                 "-sample_data_dir", SAMPLE_DATA_DIR,
                 "-classifier_path", CLASSIFIER_PATH,
                 "-output_dir", OUTPUT_DIR,
@@ -66,13 +70,3 @@ public class PredictionRunnerTest
         PredictionRunner.main(args);
     }
 }
-
-/*
-java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar \
-com.hartwig.hmftools.cup.cli.PredictionRunner \
--sample TUMOR_SAMPLE \
--output_dir /Users/lnguyen/Desktop/pycuppa_test_output \
--classifier_path /Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz \
--sample_data_dir /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/test/resources/pipeline_output/TUMOR_SAMPLE \
--python_path /Users/lnguyen/.pyenv/versions/3.9.4/envs/pycuppa_venv/bin/python
-*/
