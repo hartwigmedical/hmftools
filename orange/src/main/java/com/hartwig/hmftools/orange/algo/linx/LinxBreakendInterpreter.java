@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +64,7 @@ public class LinxBreakendInterpreter
                 .chromosomeBand(chromosomeBand(linxBreakend.gene()))
                 .transcript(linxBreakend.transcriptId())
                 .isCanonical(linxBreakend.canonical())
-                .geneOrientation(linxBreakend.geneOrientation())
+                .geneOrientation(linxBreakend.geneOrientation().equals(BREAKEND_ORIENTATION_UPSTREAM) ? LinxGeneOrientation.Upstream : LinxGeneOrientation.Downstream)
                 .isCanonical(linxBreakend.canonical())
                 .disruptive(linxBreakend.disruptive())
                 .reported(linxBreakend.reportedDisruption())

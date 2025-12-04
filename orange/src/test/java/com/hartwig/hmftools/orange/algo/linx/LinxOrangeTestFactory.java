@@ -8,6 +8,7 @@ import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.apache.logging.log4j.util.Strings;
@@ -40,7 +41,7 @@ public final class LinxOrangeTestFactory
                 .chromosomeBand("2")
                 .transcript(Strings.EMPTY)
                 .isCanonical(true)
-                .geneOrientation(Strings.EMPTY)
+                .geneOrientation(LinxGeneOrientation.Upstream)
                 .disruptive(false)
                 .reported(false)
                 .undisruptedCopyNumber(0D)
