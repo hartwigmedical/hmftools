@@ -9,7 +9,6 @@ public class SbxDuplexIndel
     public final int DuplexIndelIndexStart;
     public final int DuplexIndelIndexEnd;
     public final String RepeatBases;
-    public final int TotalRepeatBaseLength;
     public final int FirstReadInsertIndex;
 
     public final Set<Integer> LowBaseQualIndices; // after base trimming
@@ -18,13 +17,12 @@ public class SbxDuplexIndel
     public final int DeletedIndelIndexEnd;
 
     public SbxDuplexIndel(
-            int duplexIndelIndexStart, int duplexIndelIndexEnd, String repeatBases, int totalRepeatBaseLength,
+            int duplexIndelIndexStart, int duplexIndelIndexEnd, String repeatBases,
             int firstReadInsertIndex, final Set<Integer> lowBaseQualIndices, int deletedIndelIndexStart, int deletedIndelIndexEnd)
     {
         DuplexIndelIndexStart = duplexIndelIndexStart;
         DuplexIndelIndexEnd = duplexIndelIndexEnd;
         RepeatBases = repeatBases;
-        TotalRepeatBaseLength = totalRepeatBaseLength;
         FirstReadInsertIndex = firstReadInsertIndex;
         LowBaseQualIndices = lowBaseQualIndices;
         DeletedIndelIndexStart = deletedIndelIndexStart;
@@ -51,8 +49,8 @@ public class SbxDuplexIndel
 
     public String toString()
     {
-        return format("duplexIndel(%d-%d len=%d) repeat(%s full-len=%d start=%d) lowBq(%d) deleted(%d-%d)",
-                DuplexIndelIndexStart, DuplexIndelIndexEnd, duplexLowQualCount(), RepeatBases, TotalRepeatBaseLength,
+        return format("duplexIndel(%d-%d len=%d) repeat(%s start=%d) lowBq(%d) deleted(%d-%d)",
+                DuplexIndelIndexStart, DuplexIndelIndexEnd, duplexLowQualCount(), RepeatBases,
                 FirstReadInsertIndex, LowBaseQualIndices.size(), DeletedIndelIndexStart, DeletedIndelIndexEnd);
     }
 }

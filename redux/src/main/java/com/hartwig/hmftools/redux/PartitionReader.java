@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTR
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
+import static com.hartwig.hmftools.redux.ReduxConfig.ProcessOnlyReadIds;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
 import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isIllumina;
@@ -230,9 +231,16 @@ public class PartitionReader
             mNextLogReadCount += LOG_READ_COUNT;
         }
 
-        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
+        if(mLogReadIds) // debugging only
         {
-            RD_LOGGER.debug("specific read: {}", readToString(read));
+            if(mConfig.LogReadIds.contains(read.getReadName()))
+            {
+                RD_LOGGER.debug("specific read: {}", readToString(read));
+            }
+            else if(mConfig.ProcessOnlyReadIds)
+            {
+                return;
+            }
         }
 
         if(mConfig.BqrAndJitterMsiOnly)

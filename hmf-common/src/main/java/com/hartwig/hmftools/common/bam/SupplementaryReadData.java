@@ -87,9 +87,7 @@ public class SupplementaryReadData
     public static List<SupplementaryReadData> extractAlignments(@Nullable final String suppData)
     {
         if(suppData == null || suppData.isEmpty())
-        {
             return null;
-        }
 
         // example data: 2,33141317,+,94S57M,5,0;
         // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
