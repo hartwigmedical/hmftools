@@ -46,7 +46,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class SomaticSv implements Variant
+public class SomaticSv implements StructuralVariant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
@@ -129,6 +129,12 @@ public class SomaticSv implements Variant
         return isAmpDriver() || isDelDriver()
                 || mFusions.stream().anyMatch(LinxFusion::reported)
                 || isReportedDisruption();
+    }
+
+    @Override
+    public int insertSequenceLength()
+    {
+        return mVariant.insertSequence().length();
     }
 
     @Override

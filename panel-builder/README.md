@@ -214,16 +214,16 @@ Variants are selected to fill a maximum number of probes, controlled by the `sam
 
 Methodology per variant category:
 
-| Variant category             | Variant selection criteria                                                                                                                                              | Probe evaluation criteria |
-|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
-| Somatic fusion driver        | (none)                                                                                                                                                                  | `QS>=0.05`                |
-| Somatic amplification driver | Highest JCN variant in cluster only                                                                                                                                     | `QS>=0.05`                |
-| Somatic deletion driver      | For breakends that flank minimum copy number region                                                                                                                     | `QS>=0.05`                |
-| Somatic disruption driver    | `VAF>=0.05`, `AD>=11`                                                                                                                                                   | `QS>=0.05`                |
-| Somatic SNV/INDEL driver     | (none)                                                                                                                                                                  | `QS>=0.05`                |
-| Germline SV driver           | (none)                                                                                                                                                                  | `QS>=0.05`                |
-| Germline SNV/INDEL driver    | (none)                                                                                                                                                                  | `QS>=0.05`                |
-| Somatic SNV/INDEL nondriver  | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise lower `IndelLength` (only if configured), then coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
+| Variant category                | Variant selection criteria                                                                                                                                              | Probe evaluation criteria |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
+| Somatic SV fusion driver        | `InsSeqLength<=60`                                                                                                                                                      | `QS>=0.05`                |
+| Somatic SV amplification driver | `InsSeqLength<=60`, highest JCN variant in cluster only                                                                                                                 | `QS>=0.05`                |
+| Somatic SV deletion driver      | `InsSeqLength<=60`, breakends that flank minimum copy number region                                                                                                     | `QS>=0.05`                |
+| Somatic SV disruption driver    | `InsSeqLength<=60`, `VAF>=0.05`, `AD>=11`                                                                                                                               | `QS>=0.05`                |
+| Somatic SNV/INDEL driver        | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Germline SV driver              | `InsSeqLength<=60`                                                                                                                                                      | `QS>=0.05`                |
+| Germline SNV/INDEL driver       | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Somatic SNV/INDEL nondriver     | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise lower `IndelLength` (only if configured), then coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
 
 Additionally, for all somatic SV drivers, limit variant selection to five breakends per gene.
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_MINIMAL_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_RNA_ID;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 
 import static org.junit.Assert.assertEquals;
@@ -8,9 +11,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.cup.prep.CategoryType;
@@ -21,6 +24,7 @@ import com.hartwig.hmftools.cup.prep.DataItemsIO;
 import com.hartwig.hmftools.cup.prep.DataSource;
 import com.hartwig.hmftools.cup.prep.ItemType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
+import com.hartwig.hmftools.cup.prep.SampleIdsLoader;
 
 import org.apache.commons.io.FileUtils;
 
@@ -42,12 +46,11 @@ public class CuppaDataPrepTest
     {
         TMP_DIR.mkdir();
 
-        String selectedSampleId = "TUMOR_SAMPLE";
-
         PrepConfig prepConfig = new TestPrepConfigBuilder()
-                .sampleIds(List.of(selectedSampleId))
+                .sampleIds(List.of(TEST_TUMOR_SAMPLE_ID))
+                .rnaSampleIds(List.of(TEST_TUMOR_SAMPLE_RNA_ID))
                 .categories(CategoryType.getAllCategories())
-                .refGenomeVersion("V37")
+                .refGenomeVersion(TestPrepConfigBuilder.TEST_REF_GENOME_VERSION)
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
                 .outputDir(TMP_DIR.toString())
                 .build();
@@ -77,14 +80,14 @@ public class CuppaDataPrepTest
     {
         TMP_DIR.mkdir();
 
+        SampleIdsLoader sampleIdsLoader = new SampleIdsLoader()
+                .loadFromFile(TestPrepConfigBuilder.TEST_SAMPLE_ID_FILE);
+
         PrepConfig prepConfig = new TestPrepConfigBuilder()
-                .sampleIds(Arrays.asList(
-                        "MINIMAL_SAMPLE", "MINIMAL_SAMPLE", "MINIMAL_SAMPLE",
-                        "MINIMAL_SAMPLE_NO_RNA",
-                        "TUMOR_SAMPLE"
-                ))
+                .sampleIds(sampleIdsLoader.sampleIds())
+                .rnaSampleIds(sampleIdsLoader.rnaSampleIds())
                 .categories(CategoryType.getAllCategories())
-                .refGenomeVersion("V37")
+                .refGenomeVersion(TestPrepConfigBuilder.TEST_REF_GENOME_VERSION)
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
                 .outputDir(TMP_DIR.toString())
                 .threads(5)
@@ -93,21 +96,35 @@ public class CuppaDataPrepTest
         CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(prepConfig);
         cuppaDataPrep.run(true);
 
-        List<CategoryType> categoryTypes = cuppaDataPrep.mConfig.Categories;
+        List<Integer> minimalSampleIndexes = IntStream.range(0, sampleIdsLoader.sampleIds().size())
+                .filter(i -> sampleIdsLoader.sampleIds().get(i).equals(TEST_MINIMAL_SAMPLE_ID))
+                .boxed()
+                .toList();
+
+        int tumorSampleIndex = sampleIdsLoader.sampleIds().indexOf(TEST_TUMOR_SAMPLE_ID);
 
         HashMap<CategoryType, DataItemMatrix> dataItemMatricesByCategory = cuppaDataPrep.mDataItemMatricesByCategory;
+        List<CategoryType> categoryTypes = cuppaDataPrep.mConfig.Categories;
         for(CategoryType categoryType : categoryTypes)
         {
             // Check that values are exactly the same between duplicate "MINIMAL_SAMPLE" samples.
             // Thread unsafe operations lead to different feature values even though the samples are the same.
             DataItemMatrix dataItemMatrix = dataItemMatricesByCategory.get(categoryType);
 
-            assertEquals(dataItemMatrix.getSampleFeatureValues(0), dataItemMatrix.getSampleFeatureValues(1));
-
-            assertEquals(dataItemMatrix.getSampleFeatureValues(2), dataItemMatrix.getSampleFeatureValues(3));
+            assertEquals(
+                    dataItemMatrix.getSampleFeatureValues(minimalSampleIndexes.get(0)),
+                    dataItemMatrix.getSampleFeatureValues(minimalSampleIndexes.get(1))
+            );
+            assertEquals(
+                    dataItemMatrix.getSampleFeatureValues(minimalSampleIndexes.get(0)),
+                    dataItemMatrix.getSampleFeatureValues(minimalSampleIndexes.get(2))
+            );
 
             // Check that values of the "MINIMAL_SAMPLE" and "TUMOR_SAMPLE" are different
-            assertNotEquals(dataItemMatrix.getSampleFeatureValues(0), dataItemMatrix.getSampleFeatureValues(4));
+            assertNotEquals(
+                    dataItemMatrix.getSampleFeatureValues(minimalSampleIndexes.get(0)),
+                    dataItemMatrix.getSampleFeatureValues(tumorSampleIndex)
+            );
 
             // Check output files exist
             File outputFile = new File(cuppaDataPrep.getOutputPath(categoryType));

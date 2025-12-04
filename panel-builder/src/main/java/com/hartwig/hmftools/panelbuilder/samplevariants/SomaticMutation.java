@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 

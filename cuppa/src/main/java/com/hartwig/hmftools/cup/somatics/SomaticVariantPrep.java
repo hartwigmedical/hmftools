@@ -160,8 +160,7 @@ public class SomaticVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
-            e.printStackTrace();
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType(), e);
             System.exit(1);
         }
 

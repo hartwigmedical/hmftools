@@ -108,8 +108,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType());
-            e.printStackTrace();
+            CUP_LOGGER.error("sample({}) failed to extract category({}):", sampleId, categoryType(), e);
             System.exit(1);
             return null;
         }
@@ -149,7 +148,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         }
         catch (Exception e)
         {
-            CUP_LOGGER.error("Failed to read {} file({}): {}", REF_ALT_SJ_SITES, filename, e.toString());
+            CUP_LOGGER.error("Failed to read {} file({}): {}", REF_ALT_SJ_SITES, filename, e);
             System.exit(1);
         }
 

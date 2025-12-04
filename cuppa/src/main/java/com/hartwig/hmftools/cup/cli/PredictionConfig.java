@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.cup.cli;
 
-import com.hartwig.hmftools.common.utils.config.CommonConfig;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
@@ -32,7 +36,7 @@ public class PredictionConfig
 
     public PredictionConfig(ConfigBuilder configBuilder)
     {
-        SampleId = configBuilder.getValue(CommonConfig.SAMPLE);
+        SampleId = configBuilder.getValue(SAMPLE);
         ClassifierPath = configBuilder.getValue(CLASSIFIER_PATH);
         FeaturesPath = configBuilder.getValue(FEATURES_PATH);
         OutputDir = FileWriterUtils.parseOutputDir(configBuilder);
@@ -44,10 +48,10 @@ public class PredictionConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(CommonConfig.SAMPLE, false, CommonConfig.SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addPath(FEATURES_PATH, false, FEATURES_PATH_DESC);
         configBuilder.addPath(CLASSIFIER_PATH, true, CLASSIFIER_PATH_DESC);
-        configBuilder.addPath(FileWriterUtils.OUTPUT_DIR, true, FileWriterUtils.OUTPUT_DIR_DESC);
+        configBuilder.addConfigItem(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
         configBuilder.addPath(PYTHON_PATH, true, PYTHON_PATH_DESC);
 
         configBuilder.addConfigItem(CLF_GROUP, false, CLF_GROUP_DESC);

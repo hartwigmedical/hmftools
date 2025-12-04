@@ -68,8 +68,7 @@ public class GeneExpressionPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to extract category({})", sampleId, categoryType());
-            e.printStackTrace();
+            CUP_LOGGER.error("sample({}) failed to extract category({})", sampleId, categoryType(), e);
             return null; // No System.exit(1) allows RNA data to be missing for a sample in multi-sample mode
         }
     }

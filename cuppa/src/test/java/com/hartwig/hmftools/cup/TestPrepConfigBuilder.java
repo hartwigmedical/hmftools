@@ -2,7 +2,6 @@ package com.hartwig.hmftools.cup;
 
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.io.Resources;
@@ -13,8 +12,11 @@ import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 public class TestPrepConfigBuilder
 {
-    public static final String TEST_SAMPLE_ID_FILE = Resources.getResource("pipeline_output/sample_ids.csv").getPath();
-    public static final List<String> TEST_SAMPLE_IDS = Arrays.asList("COLO829v003T");
+    public static final String TEST_MINIMAL_SAMPLE_ID = "MINIMAL_SAMPLE";
+    public static final String TEST_TUMOR_SAMPLE_ID = "TUMOR_SAMPLE";
+    public static final String TEST_TUMOR_SAMPLE_RNA_ID = "TUMOR_SAMPLE_RNA";
+
+    public static final String TEST_SAMPLE_ID_FILE = Resources.getResource("pipeline_output/sample_ids.tsv").getPath();
     public static final RefGenomeVersion TEST_REF_GENOME_VERSION = RefGenomeVersion.V37;
     public static final List<CategoryType> TEST_CATEGORIES = CategoryType.getDnaCategories();
     public static final String TEST_OUTPUT_DIR = "";
@@ -25,7 +27,8 @@ public class TestPrepConfigBuilder
     public static final String TEST_SAMPLE_DATA_DIR = Resources.getResource("pipeline_output/").getPath();
     public static final String TEST_SOMATIC_VARIANTS_DIR = Resources.getResource("liftover_output/").getPath();
 
-    private List<String> SampleIds = TEST_SAMPLE_IDS;
+    private List<String> SampleIds;
+    private List<String> RnaSampleIds;
     public RefGenomeVersion RefGenVersion = TEST_REF_GENOME_VERSION;
     public List<CategoryType> Categories = TEST_CATEGORIES;
     private String OutputDir = TEST_OUTPUT_DIR;
@@ -45,6 +48,12 @@ public class TestPrepConfigBuilder
     public TestPrepConfigBuilder sampleIds(List<String> sampleIds)
     {
         SampleIds = sampleIds;
+        return this;
+    }
+
+    public TestPrepConfigBuilder rnaSampleIds(List<String> rnaSampleIds)
+    {
+        RnaSampleIds = rnaSampleIds;
         return this;
     }
 
@@ -141,6 +150,7 @@ public class TestPrepConfigBuilder
     {
         return new PrepConfig(
                 SampleIds,
+                RnaSampleIds,
                 Categories,
                 RefGenVersion,
                 OutputDir,

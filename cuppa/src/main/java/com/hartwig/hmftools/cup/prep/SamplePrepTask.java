@@ -12,9 +12,9 @@ public class SamplePrepTask implements Callable<Void>
 {
     private final PrepConfig mConfig;
     private final int mSampleIndex;
-    private final String mSampleName;
+    private final String mSampleId;
 
-    @Nullable private CategoryPrep mCategoryPrep;
+    private CategoryPrep mCategoryPrep;
 
     @Nullable private List<DataItem> mDataItems;
     @Nullable private ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
@@ -30,7 +30,10 @@ public class SamplePrepTask implements Callable<Void>
         mConfig = prepConfig;
         mCategoryPrep = categoryPrep;
         mSampleIndex = sampleIndex;
-        mSampleName = mConfig.SampleIds.get(mSampleIndex);
+
+        mSampleId = categoryPrep.categoryType().isRna()
+                ? mConfig.RnaSampleIds.get(mSampleIndex)
+                : mConfig.SampleIds.get(mSampleIndex);
 
         if(mConfig.isMultiSample() & featureBySampleMatrix == null)
         {
@@ -64,16 +67,22 @@ public class SamplePrepTask implements Callable<Void>
         {
             int sampleNum = mSampleIndex + 1;
             int totalSamples = mConfig.SampleIds.size();
-            CUP_LOGGER.debug("{}/{}: sample({})", sampleNum, totalSamples, mSampleName);
+            CUP_LOGGER.debug("{}/{}: sample({})", sampleNum, totalSamples, mSampleId);
         }
 
-        mDataItems = mCategoryPrep.extractSampleData(mSampleName);
+        boolean skipRnaCategory = mCategoryPrep.categoryType().isRna() && mSampleId.equals(SampleIdsLoader.NO_RNA_SAMPLE_ID);
+        if(!skipRnaCategory)
+            mDataItems = mCategoryPrep.extractSampleData(mSampleId);
 
         if(mConfig.isMultiSample())
         {
             if(mDataItems == null)
             {
-                CUP_LOGGER.error("multi-sample feature matrix will contain nulls for sample({}) category({})", mSampleName, mCategoryPrep.categoryType());
+                // The matrix header will always use `SampleId`, and not `RnaSampleId`
+                String sampleIdForLog =  mConfig.SampleIds.get(mSampleIndex);
+
+                CUP_LOGGER.warn("multi-sample feature matrix will contain nulls for sample({}) category({})",
+                        sampleIdForLog, mCategoryPrep.categoryType());
             }
             else
             {

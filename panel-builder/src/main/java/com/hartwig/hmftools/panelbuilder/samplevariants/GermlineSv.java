@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // Germline structural variant.
-public class GermlineSv implements Variant
+public class GermlineSv implements StructuralVariant
 {
     private final LinxGermlineDisruption mVariant;
     private final List<LinxBreakend> mBreakends;
@@ -45,6 +45,12 @@ public class GermlineSv implements Variant
     public boolean isDriver()
     {
         return mBreakends.stream().anyMatch(x -> x.reportedStatus() == REPORTED);
+    }
+
+    @Override
+    public int insertSequenceLength()
+    {
+        return mVariant.InsertSequence.length();
     }
 
     @Override
