@@ -785,7 +785,7 @@ public class AlignmentTest
         reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
         reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
         reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
-        reads.add(new SupportRead(read, SupportType.JUNCTION, 29, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 24, 0, 10));
 
         assertFalse(hasLongerMinorityExtensions(reads, REVERSE)); // ratio too low
 
