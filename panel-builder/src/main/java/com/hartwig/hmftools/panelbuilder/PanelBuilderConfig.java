@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.panelbuilder;
 
+import static java.util.Collections.emptyList;
+
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH;
 import static com.hartwig.hmftools.common.bwa.BwaUtils.BWA_LIB_PATH_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
@@ -69,6 +71,9 @@ public record PanelBuilderConfig(
     public static PanelBuilderConfig fromConfigBuilder(final ConfigBuilder configBuilder)
     {
         String refGenomePath = configBuilder.getValue(REF_GENOME);
+        String customRegionsFilesString = configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE);
+        List<String> customRegionsFiles = customRegionsFilesString == null ? emptyList() :
+                Arrays.asList(customRegionsFilesString.split(CONFIG_FILE_DELIM));
         return new PanelBuilderConfig(
                 refGenomePath,
                 configBuilder.getValue(ENSEMBL_DATA_DIR),
@@ -80,7 +85,7 @@ public record PanelBuilderConfig(
                 configBuilder.getValue(CFG_AMBER_SITES_FILE),
                 configBuilder.getInteger(CFG_CN_BACKBONE_RESOLUTION) * 1000,
                 configBuilder.hasFlag(CFG_INCLUDE_CDR3),
-                Arrays.asList(configBuilder.getValue(CFG_CUSTOM_REGIONS_FILE).split(CONFIG_FILE_DELIM)),
+                customRegionsFiles,
                 configBuilder.getValue(CFG_CUSTOM_SVS_FILE),
                 SampleVariantsConfig.fromConfigBuilder(configBuilder),
                 parseThreads(configBuilder),
