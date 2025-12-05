@@ -3,11 +3,19 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_PENALTY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.BaseQualType.LOW;
+import static com.hartwig.hmftools.esvee.assembly.BaseQualType.MEDIUM;
+import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.permittedReadMismatches;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
 
 import java.util.List;
 
@@ -99,57 +107,17 @@ public final class SequenceCompare
                 return true;
         }
 
+        int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
+        double maxMismatchPenalty = max(permittedReadMismatches(overlapLength), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+
         int mismatchCount = compareSequences(
                 first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
-                second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+                second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), maxMismatchPenalty);
 
-        if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+        if(mismatchCount <= maxMismatchPenalty)
             return true;
 
-        /* NOTE: reconsider this once the compareSequences has improved repeat handling logic
-
-        // try subsequence matches to anchor the full comparison
-        int subsequenceLength = MATCH_SUBSEQUENCE_LENGTH;
-
-        int firstSubSeqIndex = 0;
-
-        int subSeqIterations = (int)floor(firstFullSequence.length() / subsequenceLength);
-
-        for(int i = 0; i < subSeqIterations; ++i)
-        {
-            firstSubSeqIndex = i * subsequenceLength;
-            int matchSeqEndIndex = firstSubSeqIndex + subsequenceLength;
-
-            if(matchSeqEndIndex >= firstFullSequence.length())
-                break;
-
-            String assemblySubSequence = firstFullSequence.substring(firstSubSeqIndex, firstSubSeqIndex + subsequenceLength);
-
-            int secondSubSeqIndex = secondFullSequence.indexOf(assemblySubSequence);
-
-            if(secondSubSeqIndex < 0)
-                continue;
-
-            int minLowerOverlap = min(firstSubSeqIndex, secondSubSeqIndex);
-            int minUpperOverlap = min(firstFullSequence.length() - firstSubSeqIndex - 1, secondFullSequence.length() - secondSubSeqIndex - 1);
-
-            if(minLowerOverlap + minUpperOverlap < PROXIMATE_JUNCTION_DISTANCE)
-                continue;
-
-            firstIndexStart = firstSubSeqIndex - minLowerOverlap;
-            secondIndexStart = secondSubSeqIndex - minLowerOverlap;
-
-            firstIndexEnd = min(firstSubSeqIndex + minUpperOverlap, first.bases().length - 1);
-            secondIndexEnd = min(secondSubSeqIndex + minUpperOverlap, second.bases().length - 1);
-
-            mismatchCount = compareSequences(
-                    first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
-                    second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
-
-            if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
-                return true;
-        }
-        */
+        // no attempt for a subsequence match - assumes this is been determined prior to this function call
 
         return false;
     }
@@ -157,25 +125,25 @@ public final class SequenceCompare
     public static int compareSequences(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
-            int maxMismatches)
+            double maxMismatchPenalty)
     {
-        return compareSequencesMismatchSpec(
+        return (int)round(compareSequencesMismatchSpec(
                 firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
-                secondIndexEnd, secondRepeats, maxMismatches, true, true);
+                secondIndexEnd, secondRepeats, maxMismatchPenalty, true, true));
     }
 
-    private static int compareSequencesMismatchSpec(
+    private static double compareSequencesMismatchSpec(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
-            int maxMismatches, boolean checkForwards, boolean repeatsAreMismatches)
+            double maxMismatchPenalty, boolean checkForwards, boolean repeatsAreMismatches)
     {
         if(firstIndexStart < 0 || firstIndexEnd >= firstBases.length || firstIndexEnd >= firstBaseQuals.length
         || secondIndexStart < 0 || secondIndexEnd >= secondBases.length || secondIndexEnd >= secondBaseQuals.length)
         {
-            return maxMismatches < 0 ? maxMismatches : maxMismatches + 1; // invalid
+            return maxMismatchPenalty < 0 ? maxMismatchPenalty : maxMismatchPenalty + 1; // invalid
         }
 
-        int mismatchCount = 0;
+        double mismatchPenalty = 0;
 
         int firstIndex = checkForwards ? firstIndexStart : firstIndexEnd;
         int secondIndex = checkForwards ? secondIndexStart : secondIndexEnd;
@@ -199,6 +167,15 @@ public final class SequenceCompare
 
             if(recoverySkipBases != 0)
             {
+                int skipCount = abs(recoverySkipBases);
+                int firstRangeStart = checkForwards ? firstIndex : firstIndex - skipCount;
+                int firstRangeEnd = checkForwards ? firstIndex + skipCount : firstIndex;
+                BaseQualType firstQualType = rangeQualType(firstBaseQuals, firstRangeStart, firstRangeEnd);
+
+                int secondRangeStart = checkForwards ? secondIndex : secondIndex - skipCount;
+                int secondRangeEnd = checkForwards ? secondIndex + skipCount : secondIndex;
+                BaseQualType secondQualType = rangeQualType(secondBaseQuals, secondRangeStart, secondRangeEnd);
+
                 if(recoverySkipBases > 0)
                     firstIndex += checkForwards ? recoverySkipBases : -recoverySkipBases;
                 else
@@ -218,7 +195,8 @@ public final class SequenceCompare
                     continue;
                 }
 
-                ++mismatchCount;
+
+                mismatchPenalty += calcMismatchPenalty(firstQualType, secondQualType);
                 continue; // check the next base again
             }
 
@@ -236,21 +214,69 @@ public final class SequenceCompare
                     secondIndex += checkForwards ? -expectedRepeatBaseDiff : expectedRepeatBaseDiff;
 
                 if(repeatsAreMismatches)
-                    ++mismatchCount;
+                {
+                    int skipCount = abs(expectedRepeatBaseDiff);
+                    int firstRangeStart = checkForwards ? firstIndex : firstIndex - skipCount;
+                    int firstRangeEnd = checkForwards ? firstIndex + skipCount : firstIndex;
+                    BaseQualType firstQualType = rangeQualType(firstBaseQuals, firstRangeStart, firstRangeEnd);
+
+                    int secondRangeStart = checkForwards ? secondIndex : secondIndex - skipCount;
+                    int secondRangeEnd = checkForwards ? secondIndex + skipCount : secondIndex;
+                    BaseQualType secondQualType = rangeQualType(secondBaseQuals, secondRangeStart, secondRangeEnd);
+
+                    mismatchPenalty += calcMismatchPenalty(firstQualType, secondQualType);
+                }
 
                 continue; // check the next base again
             }
 
-            ++mismatchCount;
+            mismatchPenalty += calcMismatchPenalty(firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]);
 
-            if(maxMismatches >= 0 && mismatchCount > maxMismatches)
-                return mismatchCount;
+            if(maxMismatchPenalty >= 0 && mismatchPenalty > maxMismatchPenalty)
+                return mismatchPenalty;
 
             firstIndex += checkForwards ? 1 : -1;
             secondIndex += checkForwards ? 1 : -1;
         }
 
-        return mismatchCount;
+        return mismatchPenalty;
+    }
+
+    private static double calcMismatchPenalty(final BaseQualType firstQualType, final BaseQualType secondQualType)
+    {
+        BaseQualType lowerType = BaseQualType.selectLower(firstQualType, secondQualType);
+
+        if(lowerType == LOW)
+            return 0;
+
+        return lowerType == MEDIUM ? READ_MISMATCH_MED_QUAL_PENALTY : READ_MISMATCH_PENALTY;
+    }
+
+    private static double calcMismatchPenalty(final byte firstQual, final byte secondQual)
+    {
+        if(isLowBaseQual(firstQual) || isLowBaseQual(secondQual))
+            return 0;
+
+        if(isMediumBaseQual(firstQual) || isMediumBaseQual(secondQual))
+            return READ_MISMATCH_MED_QUAL_PENALTY;
+
+        return READ_MISMATCH_PENALTY;
+    }
+
+
+    private static BaseQualType rangeQualType(final byte[] baseQuals, int rangeStart, int rangeEnd)
+    {
+        boolean hasMedium = false;
+
+        for(int i = rangeStart; i <= rangeEnd; ++i)
+        {
+            if(isLowBaseQual(baseQuals[i]))
+                return BaseQualType.LOW;
+
+            hasMedium |= isMediumBaseQual(baseQuals[i]);
+        }
+
+        return hasMedium ? BaseQualType.MEDIUM : BaseQualType.HIGH;
     }
 
     public static int permittedRepeatCount(final int repeatCount)
@@ -317,21 +343,6 @@ public final class SequenceCompare
 
             return (firstRepeat.Count - secondRepeat.Count) * firstRepeat.Bases.length();
         }
-
-        /*
-        // also permitted is a repeat in only one of the sequences at the limit of min repeat count
-        // NOTE: this would require checking the other sequence's bases at this location to ensure they maatched the repeat
-        if(firstRepeat != null && secondRepeat == null)
-        {
-            if(firstRepeat.Count == minRequiredRepeatCount(firstRepeat.baseLength()))
-                return firstRepeat.baseLength();
-        }
-        else if(firstRepeat == null && secondRepeat != null)
-        {
-            if(secondRepeat.Count == minRequiredRepeatCount(secondRepeat.baseLength()))
-                return -secondRepeat.baseLength();
-        }
-        */
 
         return 0; // no valid repeat adjustment
     }
