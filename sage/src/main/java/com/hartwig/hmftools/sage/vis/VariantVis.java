@@ -23,6 +23,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
+import static com.hartwig.hmftools.common.vis.ColorUtil.DARK_BLUE;
+import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
+import static com.hartwig.hmftools.common.vis.SvgRender.renderCoords;
+import static com.hartwig.hmftools.common.vis.SvgRender.renderGeneData;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_READ_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
@@ -32,7 +37,6 @@ import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getAltGeneRegionViewMo
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegionLabel;
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getGeneRegions;
 import static com.hartwig.hmftools.sage.vis.AminoAcidUtil.getRefGeneRegionViewModels;
-import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_MAP_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
@@ -49,9 +53,6 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.IMPACT_KEY;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.TRANSCRIPT_NAME_IDX;
-import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
-import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
-import static com.hartwig.hmftools.sage.vis.SvgRender.renderGeneData;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
@@ -98,6 +99,12 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
+import com.hartwig.hmftools.common.vis.BaseViewModel;
+import com.hartwig.hmftools.common.vis.CssBuilder;
+import com.hartwig.hmftools.common.vis.CssSize;
+import com.hartwig.hmftools.common.vis.GeneRegionViewModel;
+import com.hartwig.hmftools.common.vis.SvgRender;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
@@ -106,6 +113,7 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityScores;
 import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.vis.ReadTableColumn.ContentAndStyle;
 
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
@@ -203,9 +211,9 @@ public class VariantVis
         int refPosEnd = min(chromosomeLength, mViewRegion.end());
         mRefGenome = loadRefGenome(config.RefGenomeFile);
         String refBases = mRefGenome.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
-        mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
+        mRefViewModel = fromStr(refBases, refPosStart);
 
-        mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
+        mContextViewModel = contextViewModelFromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarIndex));
@@ -218,6 +226,60 @@ public class VariantVis
         mReadCountByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadCount = 0;
         VARIANT_INDEXED_BASES_MAP.computeIfAbsent(mVariantKey, k -> Sets.newTreeSet()).add(mIndexedBasesKey);
+    }
+
+    private static BaseSeqViewModel contextViewModelFromVariant(final VariantReadContext readContext, final String ref, final String alt)
+    {
+        String rawBases = readContext.readBases();
+        int posStart = readContext.variant().Position - readContext.VarIndex;
+        if(ref.length() == alt.length())
+        {
+            return fromStr(rawBases, posStart);
+        }
+
+        // del
+        if(ref.length() > alt.length())
+        {
+            int delLen = ref.length() - alt.length();
+
+            // alt is single char
+            List<BaseViewModel> bases = Lists.newArrayList();
+            for(int i = 0; i <= readContext.VarIndex; ++i)
+            {
+                bases.add(new BaseViewModel(rawBases.charAt(i)));
+            }
+
+            for(int i = 0; i < delLen; ++i)
+            {
+                bases.add(BaseViewModel.createDelBase());
+            }
+
+            for(int i = readContext.VarIndex + 1; i < readContext.totalLength(); ++i)
+            {
+                bases.add(new BaseViewModel(rawBases.charAt(i)));
+            }
+
+            return new BaseSeqViewModel(bases, posStart, null, null);
+        }
+
+        // ins
+        int insLen = alt.length() - ref.length();
+
+        // ref is single char
+        List<BaseViewModel> bases = Lists.newArrayList();
+        for(int i = 0; i <= readContext.VarIndex; ++i)
+        {
+            bases.add(new BaseViewModel(rawBases.charAt(i)));
+        }
+
+        bases.get(bases.size() - 1).incRightInsertCount(insLen);
+
+        for(int i = readContext.VarIndex + insLen + 1; i < readContext.totalLength(); ++i)
+        {
+            bases.add(new BaseViewModel(rawBases.charAt(i)));
+        }
+
+        return new BaseSeqViewModel(bases, posStart, null, null);
     }
 
     private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
@@ -891,7 +953,7 @@ public class VariantVis
 
                 for(ReadTableColumn column : columns)
                 {
-                    ReadTableColumn.ContentAndStyle contentAndStyle = column.getContentAndStyle(record);
+                    ContentAndStyle contentAndStyle = column.getContentAndStyle(record);
                     CssBuilder style = tableInfoCellStyle.merge(contentAndStyle.Style);
                     if(isLastOfType)
                     {

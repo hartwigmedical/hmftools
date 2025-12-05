@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.vis;
+package com.hartwig.hmftools.common.vis;
 
 import static java.lang.String.format;
 

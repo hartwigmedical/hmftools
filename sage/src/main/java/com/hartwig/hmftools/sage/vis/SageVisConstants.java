@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.vis;
 import java.util.EnumMap;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 public final class SageVisConstants

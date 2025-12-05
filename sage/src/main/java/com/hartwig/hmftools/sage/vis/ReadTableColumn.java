@@ -2,23 +2,26 @@ package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_GREEN;
-import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
-import static com.hartwig.hmftools.sage.vis.ColorUtil.interpolateColors;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.vis.ColorUtil.DARK_GREEN;
+import static com.hartwig.hmftools.common.vis.ColorUtil.PURPLE;
+import static com.hartwig.hmftools.common.vis.ColorUtil.interpolateColors;
+import static com.hartwig.hmftools.common.vis.SvgRender.FORWARD_STRAND_COLOR;
+import static com.hartwig.hmftools.common.vis.SvgRender.OVERLAPPING_FRAGMENT_BORDER_COLOR;
+import static com.hartwig.hmftools.common.vis.SvgRender.REVERSE_STRAND_COLOR;
+import static com.hartwig.hmftools.common.vis.SvgRender.renderColoredBox;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_MAPQ_SHADING_CUTTOFF;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
-import static com.hartwig.hmftools.sage.vis.SvgRender.FORWARD_STRAND_COLOR;
-import static com.hartwig.hmftools.sage.vis.SvgRender.OVERLAPPING_FRAGMENT_BORDER_COLOR;
-import static com.hartwig.hmftools.sage.vis.SvgRender.REVERSE_STRAND_COLOR;
-import static com.hartwig.hmftools.sage.vis.SvgRender.renderColoredBox;
 
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.td;
 
 import java.awt.Color;
 import java.util.function.Function;
+
+import com.hartwig.hmftools.common.vis.CssBuilder;
+import com.hartwig.hmftools.common.vis.CssSize;
 
 import htsjdk.samtools.SAMRecord;
 import j2html.tags.specialized.TdTag;
