@@ -14,7 +14,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 public class DisruptionFactory
 {
     public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
+
+    private record Pair<A, B>(@Nullable A left, @Nullable B right) {}
 
     @NotNull
     public static List<Disruption> createDisruptions(
@@ -37,8 +38,8 @@ public class DisruptionFactory
 
         for(Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values())
         {
-            LinxBreakend primarybreakendStart = pairedBreakend.getLeft();
-            LinxBreakend primarybreakendEnd = pairedBreakend.getRight();
+            LinxBreakend primarybreakendStart = pairedBreakend.left();
+            LinxBreakend primarybreakendEnd = pairedBreakend.right();
 
             double undisruptedCopyNumber;
             if(primarybreakendStart != null && primarybreakendEnd != null)
@@ -168,7 +169,7 @@ public class DisruptionFactory
                 right = firstBeforeSecond ? breakends.get(1) : breakends.get(0);
             }
 
-            pairedMap.put(entry.getKey(), Pair.of(left, right));
+            pairedMap.put(entry.getKey(), new Pair<>(left, right));
         }
 
         return pairedMap;
