@@ -79,6 +79,9 @@ public interface FindingRecord
     }
 
     @Nullable
+    List<HlaAllele> hlaAlleles();
+
+    @Nullable
     MicrosatelliteStability microsatelliteStability();
 
     @Nullable

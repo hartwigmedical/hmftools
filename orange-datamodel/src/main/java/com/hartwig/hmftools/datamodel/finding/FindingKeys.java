@@ -3,6 +3,7 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
@@ -55,6 +56,11 @@ public class FindingKeys
     public static String virus(VirusInterpreterEntry virus) {
         String label = virus.interpretation() + (virus.interpretation() == VirusInterpretation.HPV ? " (" + virus.name() + ")" : "");
         return String.format("virus[%s]", label);
+    }
+
+    public static String hlaAllele(@NotNull LilacAllele allele)
+    {
+        return String.format("hlaAllele[%s]", allele.allele());
     }
 
     public static String microsatelliteStability(PurpleMicrosatelliteStatus status) {

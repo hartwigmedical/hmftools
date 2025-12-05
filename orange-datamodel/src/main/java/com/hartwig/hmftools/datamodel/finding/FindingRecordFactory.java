@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -112,6 +113,27 @@ public class FindingRecordFactory
                             .interpreterEntry(v)
                             .build()
                     ).toList());
+        }
+
+        LilacRecord lilac = orangeRecord.lilac();
+
+        if(lilac != null)
+        {
+            builder.hlaAlleles(lilac.alleles().stream()
+                    .map(o -> ImmutableHlaAllele.builder()
+                            .findingKey(FindingKeys.hlaAllele(o))
+                            .allele(o.allele())
+                            .tumorCopyNumber(o.tumorCopyNumber())
+                            .refFragments(o.refFragments())
+                            .tumorFragments(o.tumorFragments())
+                            .rnaFragments(o.rnaFragments())
+                            .somaticMissense(o.somaticMissense())
+                            .somaticNonsenseOrFrameshift(o.somaticNonsenseOrFrameshift())
+                            .somaticSplice(o.somaticSplice())
+                            .somaticSynonymous(o.somaticSynonymous())
+                            .somaticInframeIndel(o.somaticInframeIndel())
+                            .build())
+                    .toList());
         }
 
         return builder.build();
