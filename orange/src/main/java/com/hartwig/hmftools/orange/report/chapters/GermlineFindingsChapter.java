@@ -14,7 +14,6 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainDeletionTable;
-import com.hartwig.hmftools.orange.report.tables.GermlineLossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.MissedVariantLikelihoodTable;
@@ -91,39 +89,22 @@ public class GermlineFindingsChapter implements ReportChapter
     {
         List<PurpleDriver> drivers = report.purple().germlineDrivers();
 
-        List<PurpleVariant> reportableVariants = report.purple().reportableGermlineVariants();
+        List<PurpleVariant> reportableVariants = report.purple().driverGermlineVariants();
         if(drivers != null && reportableVariants != null)
         {
             List<VariantEntry> reportableEntries = VariantEntryFactory.create(VariantDedup.apply(reportableVariants), drivers);
             String titleDrivers = "Driver variants (" + reportableEntries.size() + ")";
             document.add(GermlineVariantTable.build(titleDrivers, contentWidth(), reportableEntries, reportResources));
         }
-
-        List<PurpleVariant> additionalSuspectVariants = report.purple().additionalSuspectGermlineVariants();
-        if(drivers != null && additionalSuspectVariants != null)
-        {
-            List<VariantEntry> additionalSuspectEntries =
-                    VariantEntryFactory.create(VariantDedup.apply(additionalSuspectVariants), drivers);
-            String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectEntries.size() + ")";
-            document.add(GermlineVariantTable.build(titleNonDrivers, contentWidth(), additionalSuspectEntries, reportResources));
-        }
     }
 
     private void addGermlineDeletions(@NotNull Document document)
     {
-        List<PurpleGainDeletion> reportableGermlineFullDels = report.purple().reportableGermlineFullDels();
+        List<PurpleGainDeletion> reportableGermlineFullDels = report.purple().driverGermlineDeletions();
         if(reportableGermlineFullDels != null)
         {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineFullDels.size() + ")";
             document.add(GainDeletionTable.build(title, contentWidth(), reportableGermlineFullDels, report.isofox(), reportResources));
-        }
-
-        List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities =
-                report.purple().reportableGermlineLossOfHeterozygosities();
-        if(reportableGermlineLossOfHeterozygosities != null)
-        {
-            String title = "Potentially pathogenic germline LOH events (" + reportableGermlineLossOfHeterozygosities.size() + ")";
-            document.add(GermlineLossOfHeterozygosityTable.build(title, contentWidth(), reportableGermlineLossOfHeterozygosities, report.isofox(), reportResources));
         }
     }
 
@@ -140,7 +121,7 @@ public class GermlineFindingsChapter implements ReportChapter
     private void addGermlineBreakends(@NotNull Document document)
     {
         List<LinxSvAnnotation> allGermlineStructuralVariants = report.linx().allGermlineStructuralVariants();
-        List<LinxBreakend> reportableGermlineBreakends = report.linx().reportableGermlineBreakends();
+        List<LinxBreakend> reportableGermlineBreakends = report.linx().driverGermlineBreakends();
 
         if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null)
         {

@@ -12,7 +12,7 @@ public final class GeneCopyNumberTestFactory
         return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, 0 ,0, 0, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, 0);
     }
 
     public static GeneCopyNumber createGeneCopyNumber(final String gene, final double minCopyNumber, final double maxCopyNumber)
@@ -20,7 +20,7 @@ public final class GeneCopyNumberTestFactory
         return new GeneCopyNumber(CHR_1, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, maxCopyNumber , minCopyNumber, 0, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
     }
 
     public static GeneCopyNumber createGeneCopyNumber(
@@ -29,7 +29,7 @@ public final class GeneCopyNumberTestFactory
         return new GeneCopyNumber(chromosome, 0, 0, gene, Strings.EMPTY, true,
                 Strings.EMPTY, maxCopyNumber , minCopyNumber, 0, 1, 1,
                 0, 0, 0, 1.0,
-                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN);
+                SegmentSupport.NONE, SegmentSupport.NONE, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
     }
 
     /*

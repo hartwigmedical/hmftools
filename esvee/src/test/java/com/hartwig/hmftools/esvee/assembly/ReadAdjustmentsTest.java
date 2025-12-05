@@ -11,12 +11,14 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimIlluminaAdapterBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.prep.ReadFilters;
@@ -209,7 +211,7 @@ public class ReadAdjustmentsTest
 
         assertTrue(read.lowQualTrimmed());
         assertEquals("90M", read.cigarString());
-        assertEquals(10, read.baseTrimCount());
+        assertEquals(10, read.trimCount());
         assertEquals(189, read.alignmentEnd());
 
         read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
@@ -220,8 +222,57 @@ public class ReadAdjustmentsTest
 
         assertTrue(read.lowQualTrimmed());
         assertEquals("90M", read.cigarString());
-        assertEquals(10, read.baseTrimCount());
+        assertEquals(10, read.trimCount());
         assertEquals(110, read.alignmentStart());
+    }
+
+    @Test
+    public void testUncertainBaseQualTrimming()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        // low qual will be 70% of outer bases
+        for(int i = 3; i < 10; ++i)
+        {
+            baseQualities[i] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+            baseQualities[baseQualities.length - i - 1] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+        }
+
+        Read read = createRead(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        int trimCountStart = ReadAdjustments.findLowBaseQualTrimCount(read, 0, read.basesLength() - 1, true, true);
+        int trimCountEnd = ReadAdjustments.findLowBaseQualTrimCount(read, 0, read.basesLength() - 1, false, true);
+        assertEquals(10, trimCountStart);
+        assertEquals(10, trimCountEnd);
+    }
+
+    @Test
+    public void testIlluminaAdapter()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        Read read = createRead(TEST_READ_ID, 110, readBases, "20S60M20S");
+        read.bamRecord().setMateNegativeStrandFlag(true);
+
+        Read mateRead = createRead(TEST_READ_ID, 100, readBases, "20S60M20S");
+        mateRead.bamRecord().setReadNegativeStrandFlag(true);
+
+        read.setMateRead(mateRead);
+        mateRead.setMateRead(read);
+
+        trimIlluminaAdapterBases(read);
+        trimIlluminaAdapterBases(mateRead);
+
+        assertEquals(10, read.trimCount());
+        assertEquals("20S60M10S", read.cigarString());
+        assertEquals(179, read.unclippedEnd());
+
+        assertEquals(10, mateRead.trimCount());
+        assertEquals("10S60M20S", mateRead.cigarString());
+        assertEquals(90, mateRead.unclippedStart());
     }
 
     @Test

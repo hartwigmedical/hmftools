@@ -65,18 +65,6 @@ public record SequenceDefinition(
         return new SequenceDefinition(region, null, "", null, null);
     }
 
-    public static SequenceDefinition simpleVariant(final ChrBaseRegion startRegion, final String insertSequence,
-            final ChrBaseRegion endRegion)
-    {
-        return new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, endRegion, Orientation.FORWARD);
-    }
-
-    public static SequenceDefinition structuralVariant(final ChrBaseRegion startRegion, final Orientation startOrientation,
-            String insertSequence, final ChrBaseRegion endRegion, final Orientation endOrientation)
-    {
-        return new SequenceDefinition(startRegion, startOrientation, insertSequence, endRegion, endOrientation);
-    }
-
     public static SequenceDefinition forwardSgl(final ChrBaseRegion startRegion, final String insertSequence)
     {
         return new SequenceDefinition(startRegion, Orientation.FORWARD, insertSequence, null, null);
@@ -108,10 +96,7 @@ public record SequenceDefinition(
         {
             length += startRegion.baseLength();
         }
-        if(insertSequence != null)
-        {
-            length += insertSequence.length();
-        }
+        length += insertSequence.length();
         if(endRegion != null)
         {
             length += endRegion.baseLength();

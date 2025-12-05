@@ -26,8 +26,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.FragmentData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
@@ -40,6 +42,151 @@ import htsjdk.samtools.CigarElement;
 
 public final class JunctionUtils
 {
+    protected static boolean readWithinJunctionRange(final PrepRead read, final JunctionData junctionData, int distanceBuffer)
+    {
+        if(abs(read.AlignmentEnd - junctionData.Position) <= distanceBuffer)
+            return true;
+
+        if(abs(read.AlignmentStart - junctionData.Position) <= distanceBuffer)
+            return true;
+
+        return false;
+    }
+
+    protected static final int INVALID_JUNC_INDEX = -1;
+    protected static final int SIMPLE_SEARCH_COUNT = 10;
+
+    @VisibleForTesting
+    protected static int findJunctionIndex(final List<JunctionData> junctions, int position, int simpleSearchCount)
+    {
+        // returns the index of a matched junction position, otherwise the preceding index, otherwise invalid if this is lower
+        if(junctions.isEmpty() || position < junctions.get(0).Position)
+            return INVALID_JUNC_INDEX;
+
+        int junctionCount = junctions.size();
+        int maxIndex = junctionCount - 1;
+
+        if(position >= junctions.get(junctionCount - 1).Position)
+            return maxIndex;
+
+        if(junctionCount <= simpleSearchCount)
+        {
+            for(int index = 0; index < junctionCount; ++index)
+            {
+                JunctionData junctionData = junctions.get(index);
+
+                if(junctionData.Position < position)
+                    continue;
+
+                if(junctionData.Position > position)
+                    return index - 1;
+
+                return index;
+            }
+
+            return maxIndex;
+        }
+
+        // binary search on junctions for a larger collection
+        int currentIndex = junctions.size() / 2;
+        int lowerIndex = 0;
+        int upperIndex = maxIndex;
+
+        int iterations = 0;
+
+        while(true)
+        {
+            JunctionData junctionData = junctions.get(currentIndex);
+
+            if(junctionData.Position == position)
+                return currentIndex;
+
+            if(upperIndex == lowerIndex + 1)
+                break;
+
+            if(position < junctionData.Position)
+            {
+                // need to search lower
+                if(currentIndex == 0)
+                    break;
+
+                if(currentIndex == 1)
+                {
+                    if(lowerIndex == currentIndex)
+                        break;
+
+                    upperIndex = 1;
+                    currentIndex = 0;
+                }
+                else
+                {
+                    upperIndex = currentIndex;
+                    currentIndex = (lowerIndex + upperIndex) / 2;
+                }
+            }
+            else if(position > junctionData.Position)
+            {
+                // search higher
+                if(currentIndex == maxIndex)
+                    break;
+
+                if(currentIndex == maxIndex - 1)
+                {
+                    if(upperIndex == currentIndex)
+                        break;
+
+                    lowerIndex = currentIndex;
+                    currentIndex = maxIndex;
+                }
+                else
+                {
+                    lowerIndex = currentIndex;
+                    currentIndex = (lowerIndex + upperIndex) / 2;
+                }
+            }
+            else
+            {
+                break;
+            }
+
+            ++iterations;
+
+            if(iterations > 100)
+            {
+                SV_LOGGER.warn("junction index search iterations({}}) junctions({}) index(cur={} low={} high={})",
+                        iterations, junctions.size(), currentIndex, lowerIndex, upperIndex);
+                break;
+            }
+        }
+
+        JunctionData junctionData = junctions.get(currentIndex);
+
+        // if not found, return the index of the junction immediately below this range
+        if(position > junctionData.Position)
+            return currentIndex;
+        else
+            return currentIndex - 1;
+    }
+
+    protected static int findJunctionMatchIndex(final List<JunctionData> junctions, int position, final Orientation orientation, int juncIndex)
+    {
+        // finds an exact match on position and orientation around the current index
+        for(int i = -1; i <= 1; ++i)
+        {
+            int index = juncIndex + i;
+
+            if(index >= 0 && index < junctions.size())
+            {
+                JunctionData junctionData = junctions.get(index);
+
+                if(junctionData.Position == position && junctionData.Orient == orientation)
+                    return index;
+            }
+        }
+
+        return INVALID_JUNC_INDEX;
+    }
+
     public static boolean hasOtherJunctionSupport(
             final PrepRead read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {

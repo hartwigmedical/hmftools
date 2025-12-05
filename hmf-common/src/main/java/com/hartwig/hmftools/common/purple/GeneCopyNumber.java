@@ -22,6 +22,7 @@ public class GeneCopyNumber implements GenomeRegion
     public final double MaxCopyNumber;
     public final double MinCopyNumber;
     public final double MinMinorAlleleCopyNumber;
+    public final double RelativeMinCopyNumber;
 
     public final int SomaticRegions;
     public final int MinRegions;
@@ -36,14 +37,14 @@ public class GeneCopyNumber implements GenomeRegion
     public final CopyNumberMethod MinRegionMethod;
 
     private DriverType mDriverType;
-    private ReportableStatus mReportableStatus;
+    private ReportedStatus mReportedStatus;
 
     public GeneCopyNumber(
             final String chromosome, final int positionStart, final int positionEnd, final String geneName, final String transName,
             final boolean isCanonical, final String chromosomeBand, final double maxCopyNumber, final double minCopyNumber,
             final double minMinorAlleleCopyNumber, final int somaticRegions, final int minRegions, final int minRegionStart,
             final int minRegionEnd, final int depthWindowCount, final double gcContent, final SegmentSupport minRegionStartSupport,
-            final SegmentSupport minRegionEndSupport, final CopyNumberMethod minRegionMethod)
+            final SegmentSupport minRegionEndSupport, final CopyNumberMethod minRegionMethod, final double relativeMinCopyNumber)
     {
         Chromosome = chromosome;
         PositionStart = positionStart;
@@ -64,10 +65,10 @@ public class GeneCopyNumber implements GenomeRegion
         MinRegionStartSupport = minRegionStartSupport;
         MinRegionEndSupport = minRegionEndSupport;
         MinRegionMethod = minRegionMethod;
+        RelativeMinCopyNumber = relativeMinCopyNumber;
 
         mDriverType = DriverType.UNKNOWN;
-        mReportableStatus = ReportableStatus.NONE;
-
+        mReportedStatus = ReportedStatus.NONE;
     }
 
     public String chromosome() { return Chromosome; }
@@ -87,8 +88,8 @@ public class GeneCopyNumber implements GenomeRegion
     public void setDriverType(final DriverType type) { mDriverType = type; }
     public DriverType driverType() { return mDriverType; }
 
-    public ReportableStatus reportableStatus() { return mReportableStatus; }
-    public void setReportableStatus(final ReportableStatus status) { mReportableStatus = status; }
+    public ReportedStatus reportedStatus() { return mReportedStatus; }
+    public void setReportedStatus(final ReportedStatus status) { mReportedStatus = status; }
 
     public int totalRegions()
     {

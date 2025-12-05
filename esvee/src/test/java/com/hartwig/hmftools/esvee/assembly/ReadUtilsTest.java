@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIB
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
@@ -16,6 +17,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -24,6 +29,275 @@ import org.junit.Test;
 
 public class ReadUtilsTest
 {
+    @Test
+    public void testForwardReadParseState()
+    {
+        String readBases = REF_BASES_200.substring(1, 41);
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 11, readBases, "10S30M");
+        int readJunctionIndex = 10; // soft-clip length
+        boolean moveForward = true;
+
+        ReadParseState readState = new ReadParseState(moveForward, read, readJunctionIndex, true);
+
+        assertEquals(11, readState.refPosition());
+        assertEquals(10, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(11), (char)readState.currentBase());
+
+        for(int i = 0; i < 29; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(40, readState.refPosition());
+        assertEquals(39, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(40), (char)readState.currentBase());
+        assertFalse(readState.exhausted());
+
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+
+        // test again with indels
+        read = createRead(READ_ID_GENERATOR.nextId(), 1, REF_BASES_200.substring(1, 36), "5M5D5M5I10M10S");
+
+        readState = new ReadParseState(moveForward, read, 0, true);
+
+        assertEquals(1, readState.refPosition());
+        assertEquals(0, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        for(int i = 0; i < 5; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(6, readState.refPosition());
+        assertEquals(4, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        // move through the delete
+        readState.moveNext();
+
+        assertEquals(7, readState.refPosition());
+        assertEquals(4, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+
+        assertEquals(10, readState.refPosition());
+        assertEquals(4, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        readState.moveNext();
+
+        assertEquals(11, readState.refPosition());
+        assertEquals(5, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        // move onto insert
+        for(int i = 0; i < 5; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(15, readState.refPosition());
+        assertEquals(10, readState.readIndex());
+        assertEquals(I, readState.operator());
+
+        readState.moveNext();
+        assertEquals(15, readState.refPosition());
+        assertEquals(11, readState.readIndex());
+        assertEquals(I, readState.operator());
+
+        // through rest of insert
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+
+        assertEquals(16, readState.refPosition());
+        assertEquals(15, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(16), (char)readState.currentBase());
+
+        // stop at final soft-clipping
+        for(int i = 0; i < 10; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertTrue(readState.exhausted());
+    }
+
+    @Test
+    public void testReverseReadState()
+    {
+        String readBases = REF_BASES_200.substring(1, 41);
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 1, readBases, "30M10S");
+        int readJunctionIndex = 29;
+        boolean moveForward = false;
+
+        ReadParseState readState = new ReadParseState(moveForward, read, readJunctionIndex, true);
+
+        assertEquals(30, readState.refPosition());
+        assertEquals(29, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(30), (char)readState.currentBase());
+
+        for(int i = 0; i < 29; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(1, readState.refPosition());
+        assertEquals(0, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(1), (char)readState.currentBase());
+        assertFalse(readState.exhausted());
+
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+
+        // test again with indels
+        read = createRead(READ_ID_GENERATOR.nextId(), 11, REF_BASES_200.substring(1, 36), "10S10M5D5M5I5M");
+        // bases 31-35, index 30-34 = 5M
+        // bases 30, index 25-29 = 5I
+        // bases 26-30, index 20-24 = 5M
+        // bases 21-25,  = 5D
+        // bases 11-20, index 10-19 = 10M
+        // bases 1-10, index 0-9 = 10S
+
+        readJunctionIndex = read.basesLength() - 1;
+        readState = new ReadParseState(moveForward, read, readJunctionIndex, true);
+
+        assertEquals(35, readState.refPosition());
+        assertEquals(34, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        for(int i = 0; i < 5; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(31, readState.refPosition());
+        assertEquals(29, readState.readIndex());
+        assertEquals(I, readState.operator());
+
+        // move through the insert
+        readState.moveNext();
+
+        assertEquals(31, readState.refPosition());
+        assertEquals(28, readState.readIndex());
+        assertEquals(I, readState.operator());
+
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+        readState.moveNext();
+
+        assertEquals(30, readState.refPosition());
+        assertEquals(24, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        // move to start of delete
+        for(int i = 0; i < 5; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(25, readState.refPosition());
+        assertEquals(20, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        // move past delete
+        for(int i = 0; i < 5; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(20, readState.refPosition());
+        assertEquals(19, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        // move to last aligned base
+        for(int i = 0; i < 9; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(11, readState.refPosition());
+        assertEquals(10, readState.readIndex());
+        assertEquals(M, readState.operator());
+
+        // stop at final soft-clipping
+        readState.moveNext();
+        assertTrue(readState.exhausted());
+    }
+
+    @Test
+    public void testHardClippedReads()
+    {
+        // index 0-14, ref pos 1-15
+        // index DEL, ref pos 16-21
+        // index 15-46, ref pos 22-52
+        String cigar = "105H15M6D31M";
+        String readBases = REF_BASES_200.substring(1, 16) + REF_BASES_200.substring(22, 53);
+
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 1, readBases, cigar);
+        int readJunctionIndex = 15;
+        boolean moveForwards = true;
+
+        ReadParseState readState = new ReadParseState(moveForwards, read, readJunctionIndex, true);
+
+        assertEquals(22, readState.refPosition());
+        assertEquals(15, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(22), (char)readState.currentBase());
+
+        readState.moveNext();
+
+        assertEquals(23, readState.refPosition());
+        assertEquals(16, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(23), (char)readState.currentBase());
+
+        // index 0-30, ref pos 1-31
+        // index DEL, ref pos 32-37
+        // index 31-45, ref pos 38-52
+        cigar = "31M6D15M105H";
+        readBases = REF_BASES_200.substring(1, 32) + REF_BASES_200.substring(38, 53);
+
+        read = createRead(READ_ID_GENERATOR.nextId(), 1, readBases, cigar);
+        readJunctionIndex = 31;
+        moveForwards = false;
+
+        readState = new ReadParseState(moveForwards, read, readJunctionIndex, true);
+
+        assertEquals(38, readState.refPosition());
+        assertEquals(31, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(38), (char)readState.currentBase());
+
+        readState.moveNext();
+
+        assertEquals(37, readState.refPosition());
+        assertEquals(31, readState.readIndex());
+        assertEquals(D, readState.operator());
+
+        for(int i = 0; i < 6; ++i)
+        {
+            readState.moveNext();
+        }
+
+        assertEquals(31, readState.refPosition());
+        assertEquals(30, readState.readIndex());
+        assertEquals(M, readState.operator());
+        assertEquals(REF_BASES_200.charAt(31), (char)readState.currentBase());
+    }
+
     @Test
     public void testMiscReadFunctions()
     {

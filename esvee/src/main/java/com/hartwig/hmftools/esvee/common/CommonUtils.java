@@ -2,10 +2,12 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_GAP;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_INDEL_MAX_OVERLAP;
 
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
@@ -21,6 +23,7 @@ public final class CommonUtils
     public static boolean belowMinQual(byte qual) { return BaseQualAdjustment.isLowBaseQual(qual); }
 
     public static boolean isHighBaseQual(byte qual) { return BaseQualAdjustment.isHighBaseQual(qual, SvConstants.SEQUENCING_TYPE); }
+    public static boolean isMediumBaseQual(byte qual) { return BaseQualAdjustment.isMediumBaseQual(qual, SvConstants.SEQUENCING_TYPE); }
 
     public static boolean isHigherBaseQualCategory(byte qual1, byte qual2)
     {
@@ -139,6 +142,19 @@ public final class CommonUtils
         }
 
         return pos1 < pos2 ? -1 : 1;
+    }
+
+    public static void checkStandardNucleotides(final SAMRecord read)
+    {
+        // simplifies usage downstream in assembly for other non-standard letters
+        for(int i = 0; i < read.getReadBases().length; ++i)
+        {
+            if(!Nucleotides.isValidDnaBase(read.getReadBases()[i]))
+            {
+                read.getReadBases()[i] = DNA_N_BYTE;
+                read.getBaseQualities()[i] = BaseQualAdjustment.BASE_QUAL_MINIMUM;
+            }
+        }
     }
 
     public static byte[] createByteArray(final int length, final byte value)

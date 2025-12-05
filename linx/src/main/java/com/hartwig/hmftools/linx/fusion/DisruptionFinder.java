@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.linx.visualiser.file.VisGeneAnnotationType.DI
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +41,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.linx.CohortFileInterface;
@@ -57,7 +60,7 @@ public class DisruptionFinder implements CohortFileInterface
 {
     private final EnsemblDataCache mGeneTransCache;
     private final Map<String,List<String>> mDisruptionGeneTranscripts;
-    private final List<DriverGene> mDriverGenes;
+    private final Map<String,DriverGene> mDriverGenes;
     private final VisSampleData mVisSampleData;
 
     private final List<SvDisruptionData> mDisruptions;
@@ -80,7 +83,7 @@ public class DisruptionFinder implements CohortFileInterface
         mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache) : null;
         mDriverGenes = config.DriverGenes;
 
-        mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, !mIsGermline, geneTransCache);
+        mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes.values(), !mIsGermline, geneTransCache);
 
         mVisSampleData = visSampleData;
         mCohortDataWriter = cohortDataWriter;
@@ -90,13 +93,14 @@ public class DisruptionFinder implements CohortFileInterface
     }
 
     public static Map<String,List<String>> getDisruptionGeneTranscripts(
-            final List<DriverGene> driverGenes, boolean onlyReportable, final EnsemblDataCache geneTransCache)
+            final Collection<DriverGene> driverGenes, boolean onlyReportable, final EnsemblDataCache geneTransCache)
     {
         // builds a list of genes meeting reportable driver disruption criteria and includes any non-canonical transcript names
         Map<String,List<String>> geneTransMap = Maps.newHashMap();
 
         for(DriverGene driverGene : driverGenes)
         {
+            // TODO: take all genes and then later on set reportable status
             if(onlyReportable && !driverGene.reportDisruption())
                 continue;
 
@@ -836,17 +840,23 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
             }
 
-            DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+            DriverGene driverGene = mDriverGenes.get(disruptionData.Gene.GeneName);
+
+            if(driverGene == null)
+                continue;
+
+            ReportedStatus reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)
-                    .category(driverGene != null ? driverGene.likelihoodType() : TSG)
+                    .category(driverGene.likelihoodType())
                     .gene(disruptionData.Gene.GeneName)
                     .transcript(disruptionData.Transcript.TransName)
                     .isCanonical(disruptionData.Transcript.IsCanonical)
                     .chromosome(disruptionData.Gene.Chromosome)
                     .chromosomeBand(disruptionData.Gene.KaryotypeBand)
                     .likelihoodMethod(LikelihoodMethod.DISRUPTION)
+                    .reportedStatus(reportedStatus)
                     .driverLikelihood(0)
                     .missense(0)
                     .nonsense(0)

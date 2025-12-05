@@ -3,9 +3,10 @@ package com.hartwig.hmftools.lilac.fragment;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.NANOS_IN_MILLISECOND;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DEFAULT_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_A;
@@ -124,7 +125,7 @@ public class FragmentsTest
                 TEST_READ_ID, CHR_1, 100, TEST_READ_BASES.substring(0, 50), "50M", CHR_1, 300,
                 false, false, null);
 
-        byte lowBaseQual = DEFAULT_MIN_BASE_QUAL - 1;
+        byte lowBaseQual = 20;
         setBaseQualities(record, 40, 49, lowBaseQual);
 
         Read read = createRead(codingRegion, record, true, false);
@@ -174,7 +175,7 @@ public class FragmentsTest
 
         // repeat on the negative strand
         record.setReadNegativeStrandFlag(true);
-        setBaseQualities(record, 0, 49, DEFAULT_MIN_BASE_QUAL); // reset
+        setBaseQualities(record, 0, 49, (byte) DEFAULT_BASE_QUAL); // reset
 
         setBaseQualities(record, 0, 9, lowBaseQual);
 
@@ -276,7 +277,8 @@ public class FragmentsTest
         List<Byte> qualities = Lists.newArrayList((byte) 37, (byte) 25, (byte) 37, (byte) 37, (byte) 37, (byte) 25);
         List<String> nucleotides = Lists.newArrayList("A", "G", "T", "C", "A", "G");
 
-        Fragment fragment = new Fragment(createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
+        Fragment fragment = Fragment.createFromQuals(
+		createReadRecord("01"), HLA_A, Sets.newHashSet(HLA_A), indices, qualities, nucleotides);
 
         fragment.removeLowQualBases();
 
@@ -300,11 +302,11 @@ public class FragmentsTest
     {
         String readId = "01";
         Read read = createReadRecord(readId);
-        Fragment frag1 = new Fragment(
+        Fragment frag1 = Fragment.createFromQuals(
                 read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
-        Fragment frag2 = new Fragment(
+        Fragment frag2 = Fragment.createFromQuals(
                 read, HLA_B, Sets.newHashSet(HLA_B),
                 Lists.newArrayList(1), Lists.newArrayList((byte) 30), Lists.newArrayList("A"));
 
@@ -316,7 +318,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.nucleotidesByLoci().size());
         assertEquals(1, mergedFrag.nucleotidesByLoci().size());
 
-        frag2 = new Fragment(
+        frag2 = Fragment.createFromQuals(
                 read, HLA_A, Sets.newHashSet(HLA_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30, (byte) 30),
@@ -331,7 +333,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.nucleotidesByLoci().size());
         assertEquals(4, mergedFrag.nucleotidesByLoci().size());
 
-        frag2 = new Fragment(
+        frag2 = Fragment.createFromQuals(
                 read, HLA_C, Sets.newHashSet(HLA_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList((byte) 30, (byte) 30, (byte) 30),

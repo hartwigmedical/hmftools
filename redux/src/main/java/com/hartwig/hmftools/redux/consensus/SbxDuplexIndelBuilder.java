@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarUtils;
@@ -150,13 +149,13 @@ public class SbxDuplexIndelBuilder
 
         int insertRepeatShift = abs(insertShiftCount);
 
-        int totalRepeatBaseLength = insertRepeatShift + duplexMismatchLength - duplexMismatchInsertCount;
+        int totalInsertedBases = insertRepeatShift + duplexMismatchInsertCount;
 
-        int trimLength = insertRepeatShift > 0 ? min(insertRepeatShift, duplexMismatchLength) : duplexMismatchLength;
+        int trimLength = insertRepeatShift > 0 ? min(totalInsertedBases, duplexMismatchLength) : duplexMismatchLength;
 
         int lowBaseQualCount = duplexMismatchLength;
 
-        int trimmedRepeatBaseLength = totalRepeatBaseLength - trimLength;
+        int trimmedRepeatBaseLength = totalInsertedBases - trimLength;
 
         // ensure there are enough low-qual bases for symmetry around the repeat
         if(lowBaseQualCount < trimmedRepeatBaseLength && (duplexMismatchLength % 2) == 1)
@@ -219,7 +218,7 @@ public class SbxDuplexIndelBuilder
             return;
 
         SbxDuplexIndel duplexIndel = new SbxDuplexIndel(
-                duplexIndelIndexStart, duplexIndelIndexEnd, new String(repeatBases), totalRepeatBaseLength,
+                duplexIndelIndexStart, duplexIndelIndexEnd, new String(repeatBases),
                 firstReadInsertIndex, lowQualIndices, deletedIndelIndexStart, deletedIndelIndexEnd);
 
         mDuplexIndels.add(duplexIndel);
@@ -240,7 +239,7 @@ public class SbxDuplexIndelBuilder
 
     private static boolean isAlignedOrInsert(final CigarOperator operator) { return operator == M || operator == I; }
 
-    public int findRepeatShiftLength(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, boolean shiftNext)
+    public int findRepeatShiftLength(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, boolean shiftUp)
     {
         // look for shifts of the repeat in either direction, including a partial shift
         int shiftBases = 0;
@@ -250,62 +249,57 @@ public class SbxDuplexIndelBuilder
 
         while(true)
         {
-            int targetStartIndex = initialBaseInfo.Index + shiftBases + (shiftNext ? repeatLength : -repeatLength);
-            ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
-            moveTo(readBaseInfo, targetStartIndex);
+            int shiftCount = shiftUp ? repeatLength : -repeatLength;
 
-            // test for a repeat match
-            boolean matched = true;
-
-            for(int i = 0; i < repeatLength; ++i)
-            {
-                if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[i] != readBaseInfo.Base)
-                {
-                    matched = false;
-                    break;
-                }
-
-                moveNext(readBaseInfo);
-            }
-
-            if(!matched)
+            if(!canShiftByLength(initialBaseInfo, repeatLength, repeatBases, shiftBases, shiftCount))
                 break;
 
-            shiftBases += shiftNext ? repeatLength : -repeatLength;
+            shiftBases += shiftCount;
         }
 
         if(repeatLength > 1)
         {
             // then consider a partial shift
+            int shiftCount = shiftUp ? 1 : -1;
+
             for(int i = 1; i < repeatLength; ++i)
             {
-                int targetStartIndex = initialBaseInfo.Index + shiftBases + (shiftNext ? i : -i);
-                ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
-                moveTo(readBaseInfo, targetStartIndex);
-
-                boolean matched = true;
-
-                for(int j = 0; j < repeatLength; ++j)
-                {
-                    if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[j] != readBaseInfo.Base)
-                    {
-                        matched = false;
-                        break;
-                    }
-
-                    moveNext(readBaseInfo);
-                }
-
-                if(!matched)
+                if(!canShiftByLength(initialBaseInfo, repeatLength, repeatBases, shiftBases, shiftCount))
                     break;
 
-                shiftBases += shiftNext ? 1 : -1;
+                shiftBases += shiftCount;
             }
         }
 
         return shiftBases;
     }
 
+    private boolean canShiftByLength(
+            final ReadBaseInfo initialBaseInfo, int repeatLength, final byte[] repeatBases, int existingShift, int newShift)
+    {
+        int targetStartIndex = initialBaseInfo.Index + existingShift + newShift;
+
+        ReadBaseInfo readBaseInfo = new ReadBaseInfo(initialBaseInfo);
+        moveTo(readBaseInfo, targetStartIndex);
+
+        if(!readBaseInfo.Valid)
+            return false;
+
+        // test for a repeat match
+        boolean matched = true;
+
+        for(int i = 0; i < repeatLength; ++i)
+        {
+            if(!readBaseInfo.Valid || !isAlignedOrInsert(readBaseInfo.CigarOp) || repeatBases[i] != readBaseInfo.Base)
+            {
+                return false;
+            }
+
+            moveNext(readBaseInfo);
+        }
+
+        return true;
+    }
 
     private int tryRightAligningRepeat(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, int duplexIndelIndexEnd)
     {
@@ -353,9 +347,6 @@ public class SbxDuplexIndelBuilder
             mAdjustedCigarElements.addAll(mSuppDataCigarElements);
         }
     }
-
-    private boolean useLeftSoftClipSuppData() { return mSuppData != null && mSuppDataInLeftSoftClip; }
-    private boolean useRightSoftClipSuppData() { return mSuppData != null && !mSuppDataInLeftSoftClip; }
 
     protected static List<CigarElement> checkSupplementaryCigar(
             final List<CigarElement> suppCigarElements, int softClipLength, boolean isLeftClipped)
@@ -440,13 +431,15 @@ public class SbxDuplexIndelBuilder
         public int CigarIndex;
         public CigarOperator CigarOp;
         public int IndexInCigar;
+        public int CigarLength;
         public boolean Valid;
 
-        public ReadBaseInfo(int index, byte base, int cigarIndex, final CigarOperator cigarOperator, int indexInCigar)
+        public ReadBaseInfo(int index, byte base, int cigarIndex, final CigarOperator cigarOperator, int cigarLength, int indexInCigar)
         {
             Index = index;
             Base = base;
             CigarOp = cigarOperator;
+            CigarLength = cigarLength;
             CigarIndex = cigarIndex;
             IndexInCigar = indexInCigar;
             Valid = true;
@@ -458,6 +451,7 @@ public class SbxDuplexIndelBuilder
             Base = other.Base;
             CigarIndex = other.CigarIndex;
             CigarOp = other.CigarOp;
+            CigarLength = other.CigarLength;
             IndexInCigar = other.IndexInCigar;
             Valid = other.Valid;
         }
@@ -467,7 +461,7 @@ public class SbxDuplexIndelBuilder
 
         public String toString()
         {
-            return format("%d: %c cigar(%s %d / %d)", Index, (char)Base, CigarOp, CigarIndex, IndexInCigar);
+            return format("%d: %c cigar(%d/%d%s)", Index, (char)Base, IndexInCigar + 1, CigarLength, CigarOp);
         }
     }
 
@@ -488,7 +482,8 @@ public class SbxDuplexIndelBuilder
                 int indexInCigar = targetReadIndex - readIndex;
 
                 return new ReadBaseInfo(
-                        targetReadIndex, mRecord.getReadBases()[targetReadIndex], currentCigarIndex, element.getOperator(), indexInCigar);
+                        targetReadIndex, mRecord.getReadBases()[targetReadIndex], currentCigarIndex,
+                        element.getOperator(), element.getLength(), indexInCigar);
             }
 
             readIndex += element.getLength();
@@ -545,6 +540,7 @@ public class SbxDuplexIndelBuilder
 
             element = mAdjustedCigarElements.get(readBaseInfo.CigarIndex);
             readBaseInfo.CigarOp = element.getOperator();
+            readBaseInfo.CigarLength = element.getLength();
             readBaseInfo.IndexInCigar = element.getLength() - 1;
         }
     }
@@ -575,6 +571,7 @@ public class SbxDuplexIndelBuilder
             ++readBaseInfo.CigarIndex;
             element = mAdjustedCigarElements.get(readBaseInfo.CigarIndex);
             readBaseInfo.CigarOp = element.getOperator();
+            readBaseInfo.CigarLength = element.getLength();
             readBaseInfo.IndexInCigar = 0;
         }
     }

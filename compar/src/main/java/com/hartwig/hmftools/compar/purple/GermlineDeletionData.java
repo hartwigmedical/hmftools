@@ -2,6 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_DELETION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_CHROMOSOME_BAND;
@@ -59,7 +60,7 @@ public class GermlineDeletionData implements ComparableItem
 
     @Override
     public boolean reportable() {
-        return Deletion.Reported;
+        return Deletion.Reported == REPORTED;
     }
 
     @Override
@@ -82,7 +83,7 @@ public class GermlineDeletionData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_REPORTED, Deletion.Reported, otherDeletion.Deletion.Reported);
+        checkDiff(diffs, FLD_REPORTED, Deletion.Reported == REPORTED, otherDeletion.Deletion.Reported == REPORTED);
         checkDiff(diffs, FLD_GERMLINE_STATUS, Deletion.NormalStatus.toString(), otherDeletion.Deletion.NormalStatus.toString());
         checkDiff(diffs, FLD_TUMOR_STATUS, Deletion.TumorStatus.toString(), otherDeletion.Deletion.TumorStatus.toString());
         checkDiff(diffs, FLD_GERMLINE_CN, Deletion.GermlineCopyNumber, otherDeletion.Deletion.GermlineCopyNumber, thresholds);

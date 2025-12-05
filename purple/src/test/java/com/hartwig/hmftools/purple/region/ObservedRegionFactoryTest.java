@@ -265,8 +265,8 @@ public class ObservedRegionFactoryTest
     private void checkRegion(ObservedRegion observedRegion, PurpleSupportSegment segment, int bafCount, double observedTumorRatio,
             double gcContent)
     {
-        assertEquals(segment.Start, observedRegion.start());
-        assertEquals(segment.End, observedRegion.end());
+        assertEquals(segment.start(), observedRegion.start());
+        assertEquals(segment.end(), observedRegion.end());
         assertEquals(bafCount, observedRegion.bafCount());
         assertEquals(observedTumorRatio, observedRegion.observedTumorRatio(), 0.001);
         assertEquals(gcContent, observedRegion.gcContent(), 0.001);

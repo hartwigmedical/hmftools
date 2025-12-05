@@ -6,9 +6,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
@@ -17,7 +16,6 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
-import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
 
 import java.util.List;
@@ -258,7 +256,7 @@ public class RefContextConsumer
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = max(rawNM(record, mRefSequence) - additionalIndels, 0);
+            readInfo.NumberOfEvents = max(getNumEvents(record) - additionalIndels, 0);
         }
 
         return readInfo;

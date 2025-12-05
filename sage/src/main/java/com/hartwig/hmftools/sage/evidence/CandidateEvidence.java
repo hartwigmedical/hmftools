@@ -40,10 +40,10 @@ public class CandidateEvidence
 
     public List<ReadContextCandidate> readBam(final SamSlicerInterface samSlicer, final RefSequence refSequence, final ChrBaseRegion bounds)
     {
-        final RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
+        RefContextCache refContextCache = new RefContextCache(mConfig, mHotspots, mPanel);
+        RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
 
-        final Consumer<SAMRecord> consumer = record ->
+        Consumer<SAMRecord> consumer = record ->
         {
             try
             {

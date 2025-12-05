@@ -42,6 +42,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MAX_LOCAL_REPEAT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
@@ -90,6 +92,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.common.FilterType;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Allele;
@@ -204,6 +207,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SEG_REPEAT_LENGTH, 1, VCFHeaderLineType.Integer, SEG_REPEAT_LENGTH_DESC));
 
         metaData.add(new VCFInfoHeaderLine(UNIQUE_FRAG_POSITIONS, 1, VCFHeaderLineType.Integer, UNIQUE_FRAG_POSITIONS_DESC));
+        metaData.add(new VCFInfoHeaderLine(THREE_PRIME_RANGE, 2, VCFHeaderLineType.Integer, THREE_PRIME_RANGE_DESC));
         metaData.add(new VCFInfoHeaderLine(MAX_LOCAL_REPEAT, 1, VCFHeaderLineType.Integer, MAX_LOCAL_REPEAT_DESC));
 
         for(FilterType filter : FilterType.values())
@@ -350,6 +354,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SEG_REPEAT_LENGTH, segments.stream().mapToInt(x -> x.Alignment.adjustedAlignment()).max().orElse(0));
 
         builder.attribute(UNIQUE_FRAG_POSITIONS, breakend.uniqueFragmentPositionCount());
+        builder.attribute(THREE_PRIME_RANGE, breakend.readOrientationRange());
 
         if(breakend.maxLocalRepeat() > 0)
             builder.attribute(MAX_LOCAL_REPEAT, breakend.maxLocalRepeat());

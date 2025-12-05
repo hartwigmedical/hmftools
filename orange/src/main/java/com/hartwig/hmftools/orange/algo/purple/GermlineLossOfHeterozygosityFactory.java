@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
@@ -19,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class GermlineLossOfHeterozygosityFactory
 {
-    @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
     public GermlineLossOfHeterozygosityFactory(@NotNull final EnsemblDataCache ensemblDataCache)
@@ -27,7 +27,6 @@ public class GermlineLossOfHeterozygosityFactory
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    @NotNull
     public Map<PurpleLossOfHeterozygosity, Boolean> getReportabilityMap(@NotNull List<GermlineDeletion> germlineDeletions,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
@@ -42,9 +41,10 @@ public class GermlineLossOfHeterozygosityFactory
                     germlineDeletionsHeterozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
-            PurpleLossOfHeterozygosity  lossOfHeterozygosity =
-                    toPurpleLossOfHeterozygosity(geneName, deletionsForGene, somaticGeneCopyNumber);
-            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported);
+            PurpleLossOfHeterozygosity  lossOfHeterozygosity = toPurpleLossOfHeterozygosity(
+                    geneName, deletionsForGene, somaticGeneCopyNumber);
+
+            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported == ReportedStatus.REPORTED);
             lohToReportability.put(lossOfHeterozygosity, reported);
         }
         return lohToReportability;

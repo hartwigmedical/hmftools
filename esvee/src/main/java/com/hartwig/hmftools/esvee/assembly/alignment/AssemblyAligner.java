@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvUtils.isShortLocalDelDupIns;
@@ -8,7 +9,12 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_REQUERY_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNLINKED_WEAK_ASSEMBLY_EXTENSION_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_MAX_READS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.writeAssemblyData;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,10 +23,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.TaskQueue;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.AlignmentWriter;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -444,9 +454,14 @@ public class AssemblyAligner extends ThreadTask
 
     private static boolean isWeakSingleReadExtensionAssembly(final AssemblyAlignment assemblyAlignment)
     {
-        if(assemblyAlignment.assemblies().size() != 1 || assemblyAlignment.breakends().isEmpty())
-        {
+        if(assemblyAlignment.breakends().isEmpty())
             return false;
+
+        if(assemblyAlignment.assemblies().size() != 1)
+        {
+            // a single assembly including if it locally aligned
+            if(!isLocalIndelAssembly(assemblyAlignment))
+                return false;
         }
 
         // check not a short indel
@@ -471,11 +486,52 @@ public class AssemblyAligner extends ThreadTask
             return false;
         }
 
-        if(assembly.stats().SoftClipSecondMaxLength >= ASSEMBLY_MIN_SOFT_CLIP_LENGTH) // only 1 read above the min length
+        if(isIllumina())
         {
-            return false;
+            return assembly.stats().SoftClipSecondMaxLength < ASSEMBLY_MIN_SOFT_CLIP_LENGTH; // only 1 read above the min length
+        }
+        else
+        {
+            // see if there is a minority of longer reads being
+            return hasLongerMinorityExtensions(assembly.support(), assembly.junction().Orient);
+        }
+    }
+
+    @VisibleForTesting
+    public static boolean hasLongerMinorityExtensions(final List<SupportRead> reads, final Orientation assemblyOrientation)
+    {
+        List<Integer> extensionLengths = Lists.newArrayListWithCapacity(reads.size());
+
+        for(SupportRead read : reads)
+        {
+            if(read.type() != SupportType.JUNCTION)
+                continue;
+
+            int extensionLength = assemblyOrientation.isForward() ?
+                    read.baseLength() - read.junctionReadStartDistance() : read.junctionReadStartDistance();
+
+            extensionLengths.add(extensionLength);
+
         }
 
-        return true;
+        double maxLongReadCount = min(max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, 1.0), WEAK_ASSEMBLY_UNPAIRED_MAX_READS);
+
+        Collections.sort(extensionLengths, Collections.reverseOrder());
+
+        for(int i = 0; i < extensionLengths.size() - 1; ++i)
+        {
+            int extLength = extensionLengths.get(i);
+            int nextLength = extensionLengths.get(i + 1);
+
+            int readCount = i + 1;
+
+            if(readCount > maxLongReadCount)
+                return false;
+
+            if(extLength > nextLength * WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR)
+                return true;
+        }
+
+        return false;
     }
 }

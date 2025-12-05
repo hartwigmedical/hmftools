@@ -12,14 +12,19 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
 public abstract class LinxSvAnnotation
 {
-    public abstract String vcfId();
     public abstract int svId();
+    public abstract String vcfIdStart();
+    public abstract String vcfIdEnd();
+    public abstract String coordsStart();
+    public abstract String coordsEnd();
+    public abstract StructuralVariantType type();
     public abstract int clusterId();
     public abstract String clusterReason();
     public abstract boolean fragileSiteStart();
@@ -78,13 +83,28 @@ public abstract class LinxSvAnnotation
 
         List<LinxSvAnnotation> annotations = Lists.newArrayList();
 
+        Integer vcfIdIndex = fieldsIndexMap.get("vcfId"); // deprecated
+        Integer vcfIdStartIndex = fieldsIndexMap.get("vcfIdStart");
+        Integer vcfIdEndIndex = fieldsIndexMap.get("vcfIdEnd");
+        Integer coordsStartIndex = fieldsIndexMap.get("coordsStart");
+        Integer coordsEndIndex = fieldsIndexMap.get("coordsEnd");
+        Integer typeIndex = fieldsIndexMap.get("type");
+
         for(int i = 1; i < lines.size(); ++i)
         {
             String[] values = lines.get(i).split(TSV_DELIM);
 
+            String vcfIdStart = vcfIdStartIndex != null ? values[vcfIdStartIndex] : values[vcfIdIndex];
+            String vcfIdEnd = vcfIdEndIndex != null ? values[vcfIdEndIndex] : vcfIdStart;
+            StructuralVariantType svType = typeIndex != null ? StructuralVariantType.valueOf(values[typeIndex]) : StructuralVariantType.BND;
+
             annotations.add(ImmutableLinxSvAnnotation.builder()
-                    .vcfId(values[fieldsIndexMap.get("vcfId")])
+                    .vcfIdStart(vcfIdStart)
+                    .vcfIdEnd(vcfIdEnd)
                     .svId(Integer.parseInt(values[fieldsIndexMap.get("svId")]))
+                    .coordsStart(coordsStartIndex != null ? values[coordsStartIndex] : "")
+                    .coordsEnd(coordsEndIndex != null ? values[coordsEndIndex] : "")
+                    .type(svType)
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
                     .clusterReason(values[fieldsIndexMap.get("clusterReason")])
                     .fragileSiteStart(Boolean.parseBoolean(values[fieldsIndexMap.get("fragileSiteStart")]))
@@ -111,8 +131,12 @@ public abstract class LinxSvAnnotation
     private static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("vcfId")
+                .add("vcfIdStart")
+                .add("vcfIdEnd")
                 .add("svId")
+                .add("coordsStart")
+                .add("coordsEnd")
+                .add("type")
                 .add("clusterId")
                 .add("clusterReason")
                 .add("fragileSiteStart")
@@ -136,8 +160,12 @@ public abstract class LinxSvAnnotation
     private static String toString(final LinxSvAnnotation svData)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(svData.vcfId()))
+                .add(svData.vcfIdStart())
+                .add(svData.vcfIdEnd())
                 .add(String.valueOf(svData.svId()))
+                .add(svData.coordsStart())
+                .add(svData.coordsEnd())
+                .add(String.valueOf(svData.type()))
                 .add(String.valueOf(svData.clusterId()))
                 .add(String.valueOf(svData.clusterReason()))
                 .add(String.valueOf(svData.fragileSiteStart()))

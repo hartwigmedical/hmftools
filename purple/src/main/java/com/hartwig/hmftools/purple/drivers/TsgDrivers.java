@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.purple.drivers.DndsCalculator.probabilityDriverVariant;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
@@ -10,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.driver.DriverType;
@@ -18,7 +18,8 @@ import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -27,7 +28,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class TsgDrivers extends SomaticVariantDriverFinder
 {
-    public TsgDrivers(final DriverGenePanel genePanel)
+    public TsgDrivers(final DriverGeneResource genePanel)
     {
         super(genePanel, DriverCategory.TSG);
     }
@@ -36,17 +37,17 @@ public class TsgDrivers extends SomaticVariantDriverFinder
             final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final Map<VariantType,Integer> variantTypeCounts,
             final Map<VariantType,Integer> variantTypeCountsBiallelic, final List<DriverSourceData> driverSourceData)
     {
-        final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        final Map<String,List<SomaticVariant>> codingVariants = mReportableVariants.stream()
+        Map<String,List<SomaticVariant>> codingVariants = mReportableVariants.stream()
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
 
         for(String gene : codingVariants.keySet())
         {
-            final DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
+            DndsDriverGeneLikelihood dndsLikelihood = mLikelihoodsByGene.containsKey(gene) ?
                     mLikelihoodsByGene.get(gene) : NO_GENE_DNDS_LIKELIHOOD;
 
-            final List<SomaticVariant> geneVariants = codingVariants.get(gene);
+            List<SomaticVariant> geneVariants = codingVariants.get(gene);
 
             List<GeneCopyNumber> geneCopyNumbers = geneCopyNumberMap.get(gene);
 
@@ -103,7 +104,8 @@ public class TsgDrivers extends SomaticVariantDriverFinder
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .reportedStatus(ReportedStatus.REPORTED);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
@@ -163,15 +165,12 @@ public class TsgDrivers extends SomaticVariantDriverFinder
     private static double multiHit(int firstVariantTypeCount, int secondVariantTypeCount,
             final DndsDriverImpactLikelihood firstLikelihood, final DndsDriverImpactLikelihood secondLikelihood)
     {
-        return DriverCatalogFactory.probabilityDriverVariant(firstVariantTypeCount,
-                secondVariantTypeCount,
-                firstLikelihood,
-                secondLikelihood);
+        return probabilityDriverVariant(firstVariantTypeCount, secondVariantTypeCount, firstLikelihood, secondLikelihood);
     }
 
     private static double singleHit(int sampleCount, final DndsDriverImpactLikelihood likelihood)
     {
-        return DriverCatalogFactory.probabilityDriverVariant(sampleCount, likelihood);
+        return probabilityDriverVariant(sampleCount, likelihood);
     }
 
     private static int variantCount(

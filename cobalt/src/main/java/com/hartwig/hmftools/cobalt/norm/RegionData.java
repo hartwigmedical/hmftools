@@ -27,8 +27,15 @@ public class RegionData
         mSampleRegionData = Lists.newArrayList();
     }
 
-    public int profileGcBucket() { return mGcBucket; }
-    public double mappability() { return mMappability; }
+    public int profileGcBucket()
+    {
+        return mGcBucket;
+    }
+
+    public double mappability()
+    {
+        return mMappability;
+    }
 
     public void setGcProfile(int gcBucket, double mappability)
     {
@@ -36,17 +43,35 @@ public class RegionData
         mMappability = mappability;
     }
 
-    public double relativeEnrichment() { return mRelativeEnrichment; }
-    public void setRelativeEnrichment(double relativeEnrichment) { mRelativeEnrichment = relativeEnrichment; }
+    public double relativeEnrichment()
+    {
+        return mRelativeEnrichment;
+    }
+
+    public void setRelativeEnrichment(double relativeEnrichment)
+    {
+        mRelativeEnrichment = relativeEnrichment;
+    }
 
     public void addSampleRegionData(final SampleRegionData sampleRegionData)
     {
         mSampleRegionData.add(sampleRegionData);
     }
 
-    public int sampleCount() { return mSampleRegionData.size(); }
-    public SampleRegionData getSampleData(final int sampleIndex) { return mSampleRegionData.get(sampleIndex); }
-    public List<SampleRegionData> getSamples() { return mSampleRegionData; }
+    public int sampleCount()
+    {
+        return mSampleRegionData.size();
+    }
+
+    public SampleRegionData getSampleData(final int sampleIndex)
+    {
+        return mSampleRegionData.get(sampleIndex);
+    }
+
+    public List<SampleRegionData> getSamples()
+    {
+        return mSampleRegionData;
+    }
 
     public String toString()
     {

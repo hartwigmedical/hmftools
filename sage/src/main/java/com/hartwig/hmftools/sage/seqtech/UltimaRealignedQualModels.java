@@ -19,7 +19,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class UltimaRealignedQualModels
 {
-    private final UltimaQualModel mOriginalQualModel;
+    public final UltimaQualModel mOriginalQualModel;
     private final List<UltimaRealignedQualModel> mRealignedQualModels;
 
     public UltimaRealignedQualModels(final UltimaQualModel qualModel, final List<UltimaRealignedQualModel> realignedQualModels)

@@ -31,7 +31,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class NormalisationFileBuilder
 {
     private final NormalisationConfig mConfig;
-    private final Map<String,List<RegionData>> mChrRegionData;
+    private final Map<String, List<RegionData>> mChrRegionData;
     private final GcProfileCache mGcProfileCache;
 
     public NormalisationFileBuilder(final ConfigBuilder configBuilder)
@@ -59,7 +59,7 @@ public class NormalisationFileBuilder
         setGcProfileData();
 
         // load Amber files and establish gender
-        Map<String,Gender> sampleGenders = !mConfig.SampleGender.isEmpty() ? mConfig.SampleGender : determineAmberGenders();
+        Map<String, Gender> sampleGenders = !mConfig.SampleGender.isEmpty() ? mConfig.SampleGender : determineAmberGenders();
 
         // load per-sample Cobalt ratios
         loadSampleCobaltData(sampleGenders);
@@ -73,14 +73,16 @@ public class NormalisationFileBuilder
         writeNormalisationFile(mChrRegionData, mConfig.RefGenVersion, mConfig.OutputFile);
 
         if(mConfig.DetailedFile != null)
+        {
             writeDetailedFile(mChrRegionData, mConfig.SampleIds, mConfig.DetailedFile);
+        }
 
         CB_LOGGER.info("Cobalt normalisation file generation complete");
     }
 
-    private Map<String,Gender> determineAmberGenders()
+    private Map<String, Gender> determineAmberGenders()
     {
-        Map<String,Gender> sampleGenders = Maps.newHashMap();
+        Map<String, Gender> sampleGenders = Maps.newHashMap();
 
         for(String sampleId : mConfig.SampleIds)
         {
@@ -109,19 +111,21 @@ public class NormalisationFileBuilder
     private void loadTargetRegionsBed(final String bedFile)
     {
         if(bedFile == null)
+        {
             return;
+        }
 
         List<ChrBaseRegion> regions = ChrBaseRegion.loadChrBaseRegionList(bedFile);
 
         addTargetRegions(regions, mChrRegionData);
 
         CB_LOGGER.info("loaded {} target regions from file({})",
-                mChrRegionData.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
+                mChrRegionData.values().stream().mapToInt(List::size).sum(), bedFile);
     }
 
     private void setGcProfileData()
     {
-        for(Map.Entry<String,List<RegionData>> entry : mChrRegionData.entrySet())
+        for(Map.Entry<String, List<RegionData>> entry : mChrRegionData.entrySet())
         {
             String chromosome = entry.getKey();
 
@@ -129,12 +133,14 @@ public class NormalisationFileBuilder
             {
                 GCProfile gcProfile = mGcProfileCache.findGcProfile(chromosome, regionData.Position);
                 if(gcProfile != null)
+                {
                     regionData.setGcProfile(calcGcBucket(gcProfile.gcContent()), gcProfile.mappablePercentage());
+                }
             }
         }
     }
 
-    private void loadSampleCobaltData(final Map<String,Gender> sampleGenders)
+    private void loadSampleCobaltData(final Map<String, Gender> sampleGenders)
     {
         for(String sampleId : mConfig.SampleIds)
         {

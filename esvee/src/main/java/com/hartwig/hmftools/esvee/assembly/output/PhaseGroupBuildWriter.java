@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class PhaseGroupBuildWriter
 {

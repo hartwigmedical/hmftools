@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
@@ -26,6 +27,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFilters.filterAlignments;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAlignment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAligner.hasLongerMinorityExtensions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,6 +55,8 @@ import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Test;
@@ -769,6 +773,41 @@ public class AlignmentTest
         aligner.PendingAlignments.add(requeryAlignments);
 
         assemblyAligner.processAssembly(assemblyAlignment);
+    }
+
+    @Test
+    public void testBreakendFilters()
+    {
+        List<SupportRead> reads = Lists.newArrayList();
+
+        Read read = createRead(READ_ID_GENERATOR.nextId(), 100, "", "");
+
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 24, 0, 10));
+
+        assertFalse(hasLongerMinorityExtensions(reads, REVERSE)); // ratio too low
+
+        reads.clear();
+
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 35, 0, 10));
+
+        assertTrue(hasLongerMinorityExtensions(reads, REVERSE));
+
+        reads.add(new SupportRead(read, SupportType.JUNCTION, 35, 0, 10));
+
+        assertFalse(hasLongerMinorityExtensions(reads, REVERSE)); // too many longer extending reads
+
+        for(int i = 0; i < 20; ++i)
+        {
+            reads.add(new SupportRead(read, SupportType.JUNCTION, 10, 0, 10));
+        }
+
+        assertTrue(hasLongerMinorityExtensions(reads, REVERSE));
     }
 
     private BwaMemAlignment createBwaAlignment(

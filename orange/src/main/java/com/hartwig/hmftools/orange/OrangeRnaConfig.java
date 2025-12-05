@@ -58,8 +58,8 @@ public interface OrangeRnaConfig
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRnaConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver,
-            @NotNull PipelineToolDirectories defaultToolDirectories)
+    static OrangeRnaConfig createConfig(
+            final ConfigBuilder configBuilder, final PathResolver pathResolver, final PipelineToolDirectories defaultToolDirectories)
     {
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);

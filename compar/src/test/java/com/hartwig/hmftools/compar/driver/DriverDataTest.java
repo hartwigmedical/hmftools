@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ComparableItemTest;
@@ -185,6 +186,7 @@ public class DriverDataTest extends ComparableItemTest<DriverData, DriverCompare
                 .driver(type)
                 .category(ONCO)
                 .likelihoodMethod(AMP)
+                .reportedStatus(ReportedStatus.REPORTED)
                 .driverLikelihood(likelihood)
                 .missense(0)
                 .nonsense(0)

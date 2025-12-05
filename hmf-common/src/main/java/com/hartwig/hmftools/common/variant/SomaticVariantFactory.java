@@ -1,14 +1,9 @@
 package com.hartwig.hmftools.common.variant;
 
-import static com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory.CLNSIG;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,14 +11,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -180,9 +171,6 @@ public class SomaticVariantFactory implements VariantContextFilter
     {
         final Genotype genotype = context.getGenotype(sample);
 
-        final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        final GenotypeStatus genotypeStatus = reference != null ? decorator.genotypeStatus(reference) : null;
-
         if(mFilter.test(context) && AllelicDepth.containsAllelicDepth(genotype))
         {
             AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
@@ -192,18 +180,11 @@ public class SomaticVariantFactory implements VariantContextFilter
                     .filter(AllelicDepth::containsAllelicDepth)
                     .map(AllelicDepth::fromGenotype);
 
-            Optional<AllelicDepth> rnaDepth = Optional.ofNullable(rna)
-                    .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
-                    .filter(AllelicDepth::containsAllelicDepth)
-                    .map(AllelicDepth::fromGenotype);
-
             if(tumorDepth.TotalReadCount > 0)
             {
-                ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
-                builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
+                ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context, reference, rna);
 
                 return Optional.of(builder)
-                        .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(ImmutableSomaticVariantImpl.Builder::build);
             }
@@ -211,78 +192,17 @@ public class SomaticVariantFactory implements VariantContextFilter
         return Optional.empty();
     }
 
-    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(final AllelicDepth allelicDepth, final VariantContext context)
+    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(final AllelicDepth allelicDepth, final VariantContext context,
+            @Nullable final String reference, @Nullable final String rna)
     {
-        final VariantContextDecorator decorator = new VariantContextDecorator(context);
-        final VariantImpact variantImpact = decorator.variantImpact();
-
-        List<String> reportableTranscripts = null;
-
-        if(context.hasAttribute(REPORTABLE_TRANSCRIPTS))
-        {
-            String reportableTransStr = context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
-
-            reportableTranscripts = Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1))
-                    .collect(Collectors.toList());
-        }
-
-        // to protect against changes in types, which aren't expected to impact downstream processing
-        GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
-
-        try
-        {
-            germlineStatus = GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, germlineStatus.toString()));
-        }
-        catch(Exception e) {}
-
-        ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
-                .qual(decorator.qual())
-                .type(decorator.type())
-                .filter(decorator.filter())
-                .chromosome(decorator.chromosome())
-                .position(decorator.position())
-                .ref(decorator.ref())
-                .alt(decorator.alt())
-                .allelicDepth(allelicDepth)
-                .hotspot(decorator.hotspot())
-                .minorAlleleCopyNumber(decorator.minorAlleleCopyNumber())
-                .adjustedCopyNumber(decorator.adjustedCopyNumber())
-                .adjustedVAF(decorator.adjustedVaf())
-                .variantCopyNumber(decorator.variantCopyNumber())
-                .mappability(decorator.mappability())
-                .tier(decorator.tier())
-                .trinucleotideContext(decorator.trinucleotideContext())
-                .microhomology(decorator.microhomology())
-                .repeatCount(decorator.repeatCount())
-                .repeatSequence(decorator.repeatSequence())
-                .reported(decorator.reported())
-                .biallelic(decorator.biallelic())
-                .gene(variantImpact.GeneName)
-                .canonicalTranscript(variantImpact.CanonicalTranscript)
-                .canonicalEffect(variantImpact.CanonicalEffect)
-                .canonicalCodingEffect(variantImpact.CanonicalCodingEffect)
-                .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
-                .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
-                .spliceRegion(variantImpact.CanonicalSpliceRegion)
-                .otherReportedEffects(variantImpact.OtherReportableEffects)
-                .reportableTranscripts(reportableTranscripts)
-                .worstCodingEffect(variantImpact.WorstCodingEffect)
-                .genesAffected(variantImpact.GenesAffected)
+        return ImmutableSomaticVariantImpl.builder()
+                .variant(VariantBuilderUtils.createVariantBuilder(allelicDepth, context, reference, rna).build())
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .germlineStatus(germlineStatus)
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
-                .clinvarInfo(context.getAttributeAsString(CLNSIG, ""))
                 .gnomadFrequency(context.getAttributeAsDouble(GNOMAD_FREQ, 0))
                 .somaticLikelihood(SomaticLikelihood.valueOf(
                         context.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString())));
-
-        if(context.hasAttribute(LOCAL_PHASE_SET))
-        {
-            builder.localPhaseSets(context.getAttributeAsIntList(LOCAL_PHASE_SET, 0));
-        }
-
-        return builder;
     }
 
     public static final String LPS_DELIM = ";";

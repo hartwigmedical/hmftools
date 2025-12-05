@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.genome.gc.GCProfile;
 
 public class GcProfileCache
 {
-    private final Map<String,List<GCProfile>> mChrGcProfiles;
+    private final Map<String, List<GCProfile>> mChrGcProfiles;
 
     private String mCurentChromosome;
     private int mPositionIndex;
@@ -24,7 +24,9 @@ public class GcProfileCache
         mCurentChromosome = "";
 
         if(filename == null)
+        {
             return;
+        }
 
         try
         {
@@ -37,7 +39,10 @@ public class GcProfileCache
         }
     }
 
-    public Map<String,List<GCProfile>> chrGcProfiles() { return mChrGcProfiles; }
+    public Map<String, List<GCProfile>> chrGcProfiles()
+    {
+        return mChrGcProfiles;
+    }
 
     public GCProfile findGcProfile(final String chromosome, final int position)
     {

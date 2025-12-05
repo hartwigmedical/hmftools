@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
@@ -74,6 +75,7 @@ public final class PurpleConversion
                 .driverLikelihood(catalog.driverLikelihood())
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())
+                .reportedStatus(com.hartwig.hmftools.datamodel.driver.ReportedStatus.valueOf(catalog.reportedStatus().name()))
                 .build();
     }
 
@@ -119,7 +121,7 @@ public final class PurpleConversion
                 .tumorCopyNumber(germlineDeletion.TumorCopyNumber)
                 .filter(germlineDeletion.Filter)
                 .cohortFrequency(germlineDeletion.CohortFrequency)
-                .reported(germlineDeletion.Reported)
+                .reported(germlineDeletion.Reported == ReportedStatus.REPORTED)
                 .build();
     }
 

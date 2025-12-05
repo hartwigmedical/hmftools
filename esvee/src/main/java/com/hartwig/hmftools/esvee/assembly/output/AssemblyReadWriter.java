@@ -24,6 +24,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class AssemblyReadWriter
 {
@@ -83,7 +84,9 @@ public class AssemblyReadWriter
             sj.add("Matches");
             sj.add("ExtMismatches");
             sj.add("RefMismatches");
-            sj.add("TrimCount");
+            sj.add("MismatchInfo");
+            sj.add("TrimCountStart");
+            sj.add("TrimCountEnd");
             sj.add("LineTail");
 
             writer.write(sj.toString());
@@ -173,7 +176,9 @@ public class AssemblyReadWriter
                 sj.add(String.valueOf(support.extensionBaseMatches()));
                 sj.add(String.valueOf(support.extensionBaseMismatches()));
                 sj.add(String.valueOf(support.referenceMismatches()));
-                sj.add(String.valueOf(support.trimCount()));
+                sj.add(support.mismatchInfo());
+                sj.add(String.valueOf(support.trimCountStart()));
+                sj.add(String.valueOf(support.trimCountEnd()));
                 sj.add(String.valueOf(support.hasLineTail()));
 
                 mWriter.write(sj.toString());

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.fastqtools.biomodalcollapse;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
-import static com.hartwig.hmftools.common.sequencing.BiomodalBamUtils.LOW_QUAL_CUTOFF;
+import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalBamUtils.LOW_QUAL_CUTOFF;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.getConsensusBase;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalCollapseUtil.modCConsensusBaseQualPair;
 import static com.hartwig.hmftools.fastqtools.biomodalcollapse.BiomodalConstants.MISMATCH_BASE;

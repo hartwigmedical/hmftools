@@ -80,12 +80,17 @@ public interface OrangeConfig
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
 
+    // TODO: add to pipeline directories for OA v3_0
+    String REDUX_DIR_CFG = "redux_dir";
+    String REDUX_DIR_DESC = "Path to Redux files";
+
     // Some additional optional params and flags
     String CONVERT_GERMLINE_TO_SOMATIC = "convert_germline_to_somatic";
     String LIMIT_JSON_OUTPUT = "limit_json_output";
+    String INCLUDE_NON_PANEL_GENES = "include_non_panel_genes";
     String ADD_DISCLAIMER = "add_disclaimer";
 
-    static void registerConfig(@NotNull ConfigBuilder configBuilder)
+    static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
@@ -101,6 +106,7 @@ public interface OrangeConfig
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
         configBuilder.addPath(SIGNATURES_ETIOLOGY_TSV, true, "Path to signatures etiology TSV.");
+        configBuilder.addPath(REDUX_DIR_CFG, true, REDUX_DIR_DESC);
         addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
@@ -125,6 +131,7 @@ public interface OrangeConfig
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
+        configBuilder.addFlag(INCLUDE_NON_PANEL_GENES, "Include events on genes outside gene panel");
         configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
         addLoggingOptions(configBuilder);
 
@@ -187,7 +194,7 @@ public interface OrangeConfig
     String tumorSampleFlagstatFile();
 
     @NotNull
-    String sageSomaticTumorSampleBQRPlot();
+    String tumorSampleBqrPlot();
 
     @NotNull
     String purpleDataDirectory();
@@ -210,14 +217,12 @@ public interface OrangeConfig
     boolean convertGermlineToSomatic();
 
     boolean limitJsonOutput();
+    boolean includeNonGenePanelEvents();
 
     boolean addDisclaimer();
 
-    @NotNull
-    static OrangeConfig createConfig(@NotNull ConfigBuilder configBuilder)
+    static OrangeConfig createConfig(final ConfigBuilder configBuilder)
     {
-        setLogLevel(configBuilder);
-
         if(LOGGER.isDebugEnabled())
         {
             LOGGER.debug("Switched root level logging to DEBUG");
@@ -227,6 +232,13 @@ public interface OrangeConfig
         if(addDisclaimer)
         {
             LOGGER.info("Disclaimer will be included in footer.");
+        }
+
+        boolean includeNonPanelGenes = configBuilder.hasFlag(INCLUDE_NON_PANEL_GENES);
+
+        if(includeNonPanelGenes)
+        {
+            LOGGER.info("JSON including non-gene-panel events");
         }
 
         boolean limitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
@@ -264,6 +276,8 @@ public interface OrangeConfig
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
+        String reduxDir = configBuilder.getValue(REDUX_DIR_CFG);
+
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver, defaultToolDirectories))
@@ -285,10 +299,10 @@ public interface OrangeConfig
                 .linxPlotDirectory(optionalPath(pathResolver.resolveOptionalToolPlotsDirectory(LINX_PLOT_DIR_CFG, defaultToolDirectories.linxSomaticDir())))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
+                .includeNonGenePanelEvents(includeNonPanelGenes)
                 .addDisclaimer(addDisclaimer);
 
-        String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, defaultToolDirectories.sageSomaticDir());
-        builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(BqrFile.generateFilename(sageSomaticDir, tumorSampleId)));
+        builder.tumorSampleBqrPlot(mandatoryPath(BqrFile.generatePlotFilename(reduxDir, tumorSampleId)));
 
         String lilacDir = pathResolver.resolveOptionalToolDirectory(LILAC_DIR_CFG, defaultToolDirectories.lilacDir());
         if(lilacDir != null)
@@ -309,14 +323,12 @@ public interface OrangeConfig
         return builder.build();
     }
 
-    @NotNull
-    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)
+    static Iterable<String> toStringSet(final String paramValue, final String separator)
     {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
-    @NotNull
-    private static LocalDate interpretSamplingDateParam(@NotNull String samplingDateString)
+    private static LocalDate interpretSamplingDateParam(final String samplingDateString)
     {
         String format = "yyMMdd";
 
@@ -334,8 +346,7 @@ public interface OrangeConfig
         return samplingDate;
     }
 
-    @NotNull
-    private static ExperimentType determineExperimentType(@NotNull String experimentTypeString)
+    private static ExperimentType determineExperimentType(final String experimentTypeString)
     {
         switch(experimentTypeString)
         {
@@ -348,8 +359,7 @@ public interface OrangeConfig
         }
     }
 
-    @NotNull
-    private static String parseMandatoryOutputDir(@NotNull ConfigBuilder configBuilder)
+    private static String parseMandatoryOutputDir(final ConfigBuilder configBuilder)
     {
         String dir = parseOutputDir(configBuilder);
         if(dir == null)
@@ -359,8 +369,7 @@ public interface OrangeConfig
         return mandatoryPath(dir);
     }
 
-    @NotNull
-    private static PipelineToolDirectories resolveDefaultPipelineDirectories(final @NotNull ConfigBuilder configBuilder)
+    private static PipelineToolDirectories resolveDefaultPipelineDirectories(final ConfigBuilder configBuilder)
     {
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 

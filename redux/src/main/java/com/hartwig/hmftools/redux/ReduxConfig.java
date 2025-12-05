@@ -122,6 +122,7 @@ public class ReduxConfig
     public final boolean SkipDuplicateMarking;
     public final SpecificRegions SpecificChrRegions;
     public static final List<String> LogReadIds = Lists.newArrayList();
+    public static boolean ProcessOnlyReadIds = false;
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final double PerfDebugTime;
@@ -166,6 +167,7 @@ public class ReduxConfig
     private static final String LOG_DUPLICATE_GROUP_SIZE = "log_dup_group_size";
     private static final String PARTIION_THREAD_RATIO = "partition_ratio";
     private static final String PARALLEL_CONCATENATION = "parallel_concat";
+    private static final String PROCESS_ONLY_READ_IDS = "process_read_only";
 
     public ReduxConfig(final ConfigBuilder configBuilder)
     {
@@ -276,7 +278,6 @@ public class ReduxConfig
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
         ParallelConcatenation = configBuilder.hasFlag(PARALLEL_CONCATENATION);
 
-
         Threads = parseThreads(configBuilder);
         PartitionThreadRatio = Threads <= 1 ? 1 : configBuilder.getInteger(PARTIION_THREAD_RATIO);
 
@@ -297,6 +298,9 @@ public class ReduxConfig
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         LogReadIds.addAll(parseLogReadIds(configBuilder));
+
+        if(configBuilder.hasFlag(PROCESS_ONLY_READ_IDS))
+            ProcessOnlyReadIds = true;
 
         PerfDebugTime = configBuilder.getDecimal(PERF_LOG_TIME);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
@@ -412,6 +416,7 @@ public class ReduxConfig
         configBuilder.addFlag(UNMAP_MITOCHONDRIAL, "Unmap mitochondrial reads");
         configBuilder.addFlag(UNMAP_NON_ALT_DECOY, "Unmap non-standard contig reads");
         configBuilder.addFlag(STANDARD_CHROMOSOMES, "Run on human chromosomes only");
+        configBuilder.addFlag(PROCESS_ONLY_READ_IDS, "Only process logged read IDs");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

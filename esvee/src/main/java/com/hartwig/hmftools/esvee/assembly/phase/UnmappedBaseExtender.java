@@ -6,8 +6,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
@@ -17,6 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_READ_TRIMMED_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.MATCH_SUBSEQUENCE_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.DNA_BASE_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.nonNullBaseStr;
@@ -30,8 +29,8 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -348,14 +347,14 @@ public class UnmappedBaseExtender
                     {
                         baseCounts = new int[DNA_BASE_COUNT];
 
-                        int consensusNucIndex = Nucleotides.baseIndex(consensusBase);
+                        int consensusNucIndex = AssemblyUtils.baseIndex(consensusBase);
 
                         if(consensusNucIndex >= 0)
                             baseCounts[consensusNucIndex] = i;
                     }
                 }
 
-                int nucIndex = Nucleotides.baseIndex(readBase);
+                int nucIndex = AssemblyUtils.baseIndex(readBase);
 
                 if(nucIndex >= 0)
                     ++baseCounts[nucIndex];
@@ -372,7 +371,7 @@ public class UnmappedBaseExtender
                 if(baseCounts[b] > maxCount)
                 {
                     maxCount = baseCounts[b];
-                    maxBase = b < DNA_BASE_BYTES.length ? DNA_BASE_BYTES[b] : DNA_N_BYTE;
+                    maxBase = DNA_BASE_BYTES[b];
                 }
             }
 

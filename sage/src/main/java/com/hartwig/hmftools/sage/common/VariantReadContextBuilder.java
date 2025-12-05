@@ -24,12 +24,12 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.seqtech.IlluminaArtefactContext;
-import com.hartwig.hmftools.sage.seqtech.UltimaCoreExtender;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -54,7 +54,8 @@ public class VariantReadContextBuilder
                 return null;
 
             // enforce full flanks
-            if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
+            int minFlankLength = isUltima() && SageConfig.AppendMode ? 1 : mFlankSize;
+            if(readContext.leftFlankLength() < minFlankLength || readContext.rightFlankLength() < minFlankLength)
                 return null;
 
             if(!aboveMinBaseQual(readContext, read, varReadIndex))
@@ -112,7 +113,7 @@ public class VariantReadContextBuilder
         {
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
-            int refBaseLength = read.getReadBases().length - varIndexInRead;
+            int refBaseLength = read.getReadBases().length - varIndexInRead + (variant.isDelete() ? variant.indelLengthAbs() : 0);
             byte[] homologyRefBases = refSequence.baseRange(variant.position(), variant.position() + refBaseLength);
 
             softClipReadAdjustment = checkIndelSoftClipAdjustment(read, variant, varIndexInRead);
@@ -131,6 +132,12 @@ public class VariantReadContextBuilder
                 homology = refHomology;
             if(homology != null)
                 readCoreEnd += homology.Length;
+
+            if(readCoreEnd + mFlankSize >= read.getReadBases().length && homology != null && SageConfig.AppendMode && isLongInsert(variant))
+            {
+                // most likely a long insert aligned from softclip - assume the old core is correct
+                readCoreEnd = read.getReadBases().length - mFlankSize - 1;
+            }
         }
         else
         {
@@ -172,20 +179,28 @@ public class VariantReadContextBuilder
             // long inserts with S elements won't work properly in append mode with core extension
             boolean skippableLongInsert = SageConfig.AppendMode && isLongInsert(variant);
 
-            UltimaCoreExtender.UltimaCoreInfo ultimaCoreInfo = extendUltimaCore(
+            ReadCigarInfo newReadCigarInfo = extendUltimaCore(
                     read.getReadBases(), refSequence,
                     softClipReadAdjustment != null ? softClipReadAdjustment.AlignmentStart : read.getAlignmentStart(),
                     softClipReadAdjustment != null ? softClipReadAdjustment.ConvertedCigar : read.getCigar().getCigarElements(),
                     readCigarInfo, mFlankSize, SageConfig.AppendMode);
 
-            if(!skippableLongInsert && (ultimaCoreInfo == null || !ultimaCoreInfo.CigarInfo.isValid()))
-                return null;
-
-            if(ultimaCoreInfo != null)
+            if(newReadCigarInfo != null)
             {
-                readCoreStart = ultimaCoreInfo.ReadCoreStart;
-                readCoreEnd = ultimaCoreInfo.ReadCoreEnd;
-                readCigarInfo = ultimaCoreInfo.CigarInfo;
+                readCigarInfo = newReadCigarInfo;
+
+                int maxPosStart = max(readCigarInfo.FlankPositionStart, readCigarInfo.ReadAlignmentStart);
+
+                readCoreStart = readCigarInfo.FlankIndexStart + CigarUtils.getReadIndexFromPosition(
+                        maxPosStart, readCigarInfo.Cigar, readCigarInfo.CorePositionStart, false, true);
+
+                readCoreEnd = readCigarInfo.FlankIndexStart + CigarUtils.getReadIndexFromPosition(
+                        maxPosStart, readCigarInfo.Cigar, readCigarInfo.CorePositionEnd, false, true);
+            }
+            else
+            {
+                if(!skippableLongInsert)
+                    return null;
             }
         }
 

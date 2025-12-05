@@ -57,8 +57,7 @@ public class DataItemsIO
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to write features:");
-            e.printStackTrace();
+            CUP_LOGGER.error("Failed to write features: ", e);
             System.exit(1);
         }
     }
@@ -107,8 +106,7 @@ public class DataItemsIO
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to write multi-sample feature matrix:");
-            e.printStackTrace();
+            CUP_LOGGER.error("Failed to write multi-sample feature matrix: ", e);
             System.exit(1);
         }
     }
@@ -144,8 +142,7 @@ public class DataItemsIO
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("Failed to load data items from file: {}", path);
-            e.printStackTrace();
+            CUP_LOGGER.error("Failed to load data items from file: {}", path, e);
             return null;
         }
     }
@@ -187,8 +184,7 @@ public class DataItemsIO
          }
          catch(IOException e)
          {
-             CUP_LOGGER.error("Failed to load data items from file: {}", path);
-             e.printStackTrace();
+             CUP_LOGGER.error("Failed to load data items from file: {}", path, e);
              return null;
          }
      }

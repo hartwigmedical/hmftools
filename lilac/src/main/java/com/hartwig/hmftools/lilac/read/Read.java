@@ -9,12 +9,26 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.getReadIndexFromPositio
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isMediumBaseQual;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualIndices;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.lilac.LilacConfig.SEQUENCING_TYPE;
+import static com.hartwig.hmftools.lilac.LilacConfig.isIllumina;
+import static com.hartwig.hmftools.lilac.LilacConfig.isSbx;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.LOW_BASE_TRIM_PERC;
-import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
+import static com.hartwig.hmftools.lilac.ReferenceData.refBases;
+import static com.hartwig.hmftools.lilac.evidence.Nucleotide.MISSING_BASE_QUAL;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -23,9 +37,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Read
 {
@@ -41,18 +52,20 @@ public class Read
     public final int ReadIndexStart;
     public final int ReadIndexEnd;
 
-    private final List<Indel> mIndels; // indels within the coding region
+    private final List<Indel> mValidIndels; // non-ignored indels within the coding region
+    private final List<Indel> mIgnoredIndels; // ignored indels within the coding region
     private final SAMRecord mRecord;
     private final int mTrimmedBases;
 
     public Read(
-            final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
+            final String id, int softClippedStart, int softClippedEnd, final Collection<Indel> indels, int positionStart,
             int positionEnd, int readIndexStart, int readIndexEnd, final SAMRecord record, int trimmedBases)
     {
         Id = id;
         SoftClippedStart = softClippedStart;
         SoftClippedEnd = softClippedEnd;
-        mIndels = indels;
+        mValidIndels = indels.stream().filter(x -> !x.Ignore).toList();
+        mIgnoredIndels = indels.stream().filter(x -> x.Ignore).toList();
         PositionStart = positionStart;
         PositionEnd = positionEnd;
         ReadIndexStart = readIndexStart;
@@ -67,32 +80,50 @@ public class Read
                 mRecord.getContig(), mRecord.getStart(), mRecord.getEnd(), mRecord.getCigarString());
     }
 
-    public String toString() { return format("%s %s indels(%s) sc(%d/%d)",
-            Id, readInfo(), mIndels.size(), SoftClippedStart, SoftClippedEnd); }
+    public String toString()
+    {
+        return format("%s %s indels(%d) ignoredIndels(%d) sc(%d/%d)",
+                Id, readInfo(), mValidIndels.size(), mIgnoredIndels.size(), SoftClippedStart, SoftClippedEnd);
+    }
 
-    public List<Indel> getIndels() { return mIndels; }
+    public List<Indel> getValidIndels() { return mValidIndels; }
+    public List<Indel> getIgnoredIndels() { return mIgnoredIndels; }
     public int trimmedBases() { return mTrimmedBases; }
 
     public SAMRecord bamRecord() { return mRecord; }
 
-    public final int maxIndelSize()
+    public int maxValidIndelSize()
     {
-        return mIndels.stream().mapToInt(x -> abs(x.Length)).max().orElse(0);
+        return mValidIndels.stream().mapToInt(x -> abs(x.Length)).max().orElse(0);
     }
 
-    public final boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
+    public boolean containsSoftClip() { return SoftClippedStart > 0 || SoftClippedEnd > 0; }
 
-    public final boolean containsIndel() { return !mIndels.isEmpty(); }
+    public boolean containsValidIndel() { return !mValidIndels.isEmpty(); }
 
-    public void populateCodingRegion(final char[] readBases, final byte[] readQuals, boolean reverseCompliment)
+    public void populateCodingRegion(final char[] readBases, final boolean[] isLowQuals, final byte[] readQuals, boolean reverseCompliment)
     {
+        Set<Integer> ultimaLowQualIndices = isUltima() ? Sets.newHashSet(extractLowQualIndices(mRecord)) : null;
         if(reverseCompliment)
         {
             int index = readBases.length - 1;
             for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = Nucleotides.swapDnaBase(mRecord.getReadString().charAt(i));
-                readQuals[index] = mRecord.getBaseQualities()[i];
+                byte qual = MISSING_BASE_QUAL;
+                boolean isLowQual = false;
+                if(ultimaLowQualIndices == null)
+                {
+                    qual = mRecord.getBaseQualities()[i];
+                    isLowQual = isLowBaseQual(qual);
+                }
+                else
+                {
+                    isLowQual = ultimaLowQualIndices.contains(i);
+                }
+
+                isLowQuals[index] = isLowQual;
+                readQuals[index] = qual;
                 --index;
             }
 
@@ -103,7 +134,20 @@ public class Read
             for(int i = ReadIndexStart; i <= ReadIndexEnd; ++i)
             {
                 readBases[index] = mRecord.getReadString().charAt(i);
-                readQuals[index] = mRecord.getBaseQualities()[i];
+                byte qual = MISSING_BASE_QUAL;
+                boolean isLowQual = false;
+                if(ultimaLowQualIndices == null)
+                {
+                    qual = mRecord.getBaseQualities()[i];
+                    isLowQual = isLowBaseQual(qual);
+                }
+                else
+                {
+                    isLowQual = ultimaLowQualIndices.contains(i);
+                }
+
+                isLowQuals[index] = isLowQual;
+                readQuals[index] = qual;
                 ++index;
             }
         }
@@ -116,7 +160,7 @@ public class Read
 
         return mRecord.getAlignmentBlocks().stream()
                 .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
-                .filter(x -> outerRegion.overlaps(x))
+                .filter(outerRegion::overlaps)
                 .map(x -> new BaseRegion(max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
                 .map(x -> createRead(x, mRecord, false, false))
                 .collect(Collectors.toList());
@@ -140,7 +184,7 @@ public class Read
         int softClipEnd = scLengthRight;
 
         // ignore soft-clip positions on the 3' end which run past the mate's 5' end for overlapping fragments
-        if(abs(record.getInferredInsertSize()) <= record.getReadBases().length)
+        if(record.getReadPairedFlag() && abs(record.getInferredInsertSize()) <= record.getReadBases().length)
         {
             if(record.getReadNegativeStrandFlag())
                 softClipStart = 0;
@@ -148,7 +192,7 @@ public class Read
                 softClipEnd = 0;
         }
 
-        int lowQualTrimmedBases = findLowQualTrimmedBases(record);
+        int lowQualTrimmedBases = isIllumina() ? findLowQualTrimmedBases(record) : 0;
 
         if(lowQualTrimmedBases > 0)
         {
@@ -227,7 +271,8 @@ public class Read
 
     private static List<Indel> indels(int startPosition, int endPosition, final SAMRecord record)
     {
-        List<Indel> indels = Lists.newArrayList();
+        final List<Indel> indels = Lists.newArrayList();
+        final Set<Integer> ultimaLowQualIndices = isUltima() ? Sets.newHashSet(extractLowQualIndices(record)) : null;
 
         CigarHandler cigarHandler = new CigarHandler()
         {
@@ -236,22 +281,54 @@ public class Read
                 if(startPosition <= refPosition && refPosition <= endPosition)
                 {
                     char baseChar = record.getReadString().charAt(readIndex);
-                    indels.add(new Indel(record.getContig(), refPosition, String.valueOf(baseChar),
-                            record.getReadString().substring(readIndex, readIndex + element.getLength() + 1)));
+                    boolean ignore = false;
+                    if(isUltima() || isSbx())
+                    {
+                        for(int i = readIndex + 1; i <= readIndex + element.getLength(); i++)
+                        {
+                            ignore = ultimaLowQualIndices != null
+                                    ? ultimaLowQualIndices.contains(i)
+                                    : isLowBaseQual(record.getBaseQualities()[i])
+                                            || isMediumBaseQual(record.getBaseQualities()[i], SEQUENCING_TYPE);
+
+                            if(ignore)
+                                break;
+                        }
+                    }
+
+                    indels.add(new Indel(record.getContig(), refPosition, readIndex, String.valueOf(baseChar),
+                            record.getReadString().substring(readIndex, readIndex + element.getLength() + 1), ignore));
                 }
             }
 
-            public void handleDelete(final SAMRecord record, final CigarElement element, int readIndex, int refPosition) {
-
+            public void handleDelete(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
+            {
                 if(startPosition <= refPosition && refPosition <= endPosition)
                 {
                     char baseChar = record.getReadString().charAt(readIndex);
-                    String delBases = String.valueOf(baseChar);
+                    int delPosStart = refPosition + 1;
+                    int delPosEnd = delPosStart + element.getLength() - 1;
+                    String delBases = baseChar + refBases(delPosStart, delPosEnd);
+                    boolean ignore = false;
+                    if(isUltima() || isSbx())
+                    {
+                        int leftIndex = readIndex;
+                        ignore = ultimaLowQualIndices != null
+                                ? ultimaLowQualIndices.contains(leftIndex)
+                                : isLowBaseQual(record.getBaseQualities()[leftIndex])
+                                        || isMediumBaseQual(record.getBaseQualities()[leftIndex], SEQUENCING_TYPE);
 
-                    for(int i = 0; i < element.getLength(); ++i)
-                        delBases += "N";
+                        if(!ignore)
+                        {
+                            int rightIndex = leftIndex + 1;
+                            ignore = ultimaLowQualIndices != null
+                                    ? ultimaLowQualIndices.contains(rightIndex)
+                                    : isLowBaseQual(record.getBaseQualities()[rightIndex])
+                                            || isMediumBaseQual(record.getBaseQualities()[rightIndex], SEQUENCING_TYPE);
+                        }
+                    }
 
-                    indels.add(new Indel(record.getContig(), refPosition, delBases, String.valueOf(baseChar)));
+                    indels.add(new Indel(record.getContig(), refPosition, readIndex, delBases, String.valueOf(baseChar), ignore));
                 }
             }
         };
@@ -268,10 +345,9 @@ public class Read
         double lowestScore = 0;
         double currentScore = 0;
         int lastLowestScoreIndex = -1;
-
         while(baseIndex >= 0 && baseIndex < record.getReadBases().length)
         {
-            if(belowMinQual(record.getBaseQualities()[baseIndex]))
+            if(isLowBaseQual(record.getBaseQualities()[baseIndex]))
             {
                 currentScore -= LOW_QUAL_SCORE;
 
@@ -298,5 +374,5 @@ public class Read
         return fromStart ? lastLowestScoreIndex + 1 : record.getReadBases().length - lastLowestScoreIndex;
     }
 
-    protected static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
+    private static final double LOW_QUAL_SCORE = 1 / LOW_BASE_TRIM_PERC - 1;
 }

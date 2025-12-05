@@ -49,7 +49,7 @@ public class FilterConfig
     private static final String ULTIMA_CANDIDATE_MIN_HIGH_BQ = "ultima_cand_min_high_bq";
 
     // sequencing specific filters
-    public static int ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = 0;
+    public static int ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD = 1; // requiring minimum of 1 high-qual read across the core
     public static int ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN = 8;
 
     public FilterConfig(final ConfigBuilder configBuilder)

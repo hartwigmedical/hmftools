@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
+import static com.hartwig.hmftools.pave.FilterType.PANEL;
+import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_HOTSPOT_PATHOGENIC_THRESHOLD;
 import static com.hartwig.hmftools.pave.PaveConstants.GNMOAD_FILTER_THRESHOLD;
@@ -41,6 +43,7 @@ import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.impact.VariantImpactBuilder;
 import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
+import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class ChromosomeTask implements Callable<Void>
@@ -90,7 +93,7 @@ public class ChromosomeTask implements Callable<Void>
     {
         int variantCount = 0;
 
-        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.VcfFile, true);
+        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.VcfFile, mConfig.requireIndex());
 
         if(!vcfFileReader.fileValid())
         {
@@ -104,12 +107,24 @@ public class ChromosomeTask implements Callable<Void>
         mStandardPon = mReferenceData.StandardPon.getChromosomeCache(mChromosomeStr);
         mArtefactsPon = mReferenceData.ArtefactsPon.getChromosomeCache(mChromosomeStr);
 
-        RefGenomeCoordinates coordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        ChrBaseRegion chrRegion = new ChrBaseRegion(mChromosomeStr, 1, coordinates.Lengths.get(mChromosome));
+        ChrBaseRegion chrRegion;
+
+        if(mConfig.SpecificRegions.size() == 1 && mConfig.SpecificRegions.get(0).Chromosome.equals(mChromosomeStr))
+        {
+            chrRegion = mConfig.SpecificRegions.get(0);
+        }
+        else
+        {
+            RefGenomeCoordinates coordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+            chrRegion = new ChrBaseRegion(mChromosomeStr, 1, coordinates.Lengths.get(mChromosome));
+        }
 
         PV_LOGGER.debug("chr({}) starting variant annotation", mChromosome);
 
-        for(VariantContext variantContext : vcfFileReader.regionIterator(chrRegion))
+        CloseableTribbleIterator<VariantContext> varIterator = mConfig.requireIndex() ?
+                vcfFileReader.regionIterator(chrRegion) : vcfFileReader.iterator();
+
+        for(VariantContext variantContext : varIterator)
         {
             if(!mConfig.SpecificRegions.isEmpty())
             {
@@ -144,9 +159,19 @@ public class ChromosomeTask implements Callable<Void>
 
         VariantData variant = VariantData.fromContext(variantContext);
 
-        if(!mConfig.ProcessNonPass)
+        boolean isPass = variantContext.getFilters().isEmpty() || variantContext.getFilters().contains(PASS_FILTER);
+
+        if(mConfig.Filter == PASS)
         {
-            if(!variantContext.getFilters().isEmpty() && !variantContext.getFilters().contains(PASS_FILTER))
+            if(!isPass)
+                return;
+        }
+        else if(mConfig.Filter == PANEL)
+        {
+            VariantTier tier = VariantTier.fromContext(variantContext);
+
+            // anything in the panel or passing variants
+            if(tier != VariantTier.HOTSPOT && tier != VariantTier.PANEL && !isPass)
                 return;
         }
 

@@ -33,24 +33,28 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.DEFAULT_DISC_RATE_INCREMENT;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.setSeqTechSpecifics;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE;
 import static com.hartwig.hmftools.esvee.common.FileCommon.JUNCTION_FILE_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.REF_GENOME_IMAGE_EXTENSION;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepBamFilenames;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.parseSampleBamLists;
 import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
 import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
+import static com.hartwig.hmftools.esvee.common.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.common.WriteType.WRITE_TYPES;
+import static com.hartwig.hmftools.esvee.common.WriteType.registerWriteTypes;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTION_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -61,13 +65,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import htsjdk.samtools.SAMRecord;
 
 public class AssemblyConfig
 {
@@ -87,7 +89,7 @@ public class AssemblyConfig
     public final String RefGenomeImageFile;
     public final String DecoyGenome;
 
-    public final List<WriteType> WriteTypes;
+    public final Set<WriteType> WriteTypes;
 
     public final String OutputDir;
     public final String OutputId;
@@ -112,6 +114,7 @@ public class AssemblyConfig
 
     public static boolean WriteCandidateReads;
     public static boolean AssemblyBuildDebug = false;
+    public static boolean AssemblyLogAllReads = false;
     public static boolean DevDebug = false;
     public static boolean PerfDebug;
     public static double PerfLogTime;
@@ -120,7 +123,6 @@ public class AssemblyConfig
 
     private static final String DECOY_GENOME = "decoy_genome";
 
-    private static final String WRITE_TYPES = "write_types";
     private static final String PERF_LOG_TIME = "perf_log_time";
 
     private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
@@ -129,6 +131,7 @@ public class AssemblyConfig
     private static final String ASSEMBLY_MAP_QUAL_THRESHOLD = "asm_map_qual_threshold";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
     private static final String ASSEMBLY_BUILD_DEBUG = "asm_build_debug";
+    private static final String ASSEMBLY_LOG_ALL_READS = "asm_log_all_reads";
     private static final String DISC_ONLY_DISABLED = "disc_only_disabled";
     private static final String WRITE_CANDIDATE_READS = "write_candidate_reads";
     private static final String ASSEMBLY_TSV_DETAILED = "assembly_detailed_tsv";
@@ -146,19 +149,39 @@ public class AssemblyConfig
 
     public AssemblyConfig(final ConfigBuilder configBuilder, boolean asSubRoutine)
     {
-        if(!configBuilder.hasValue(OUTPUT_DIR) && configBuilder.hasValue(TUMOR_BAM))
+        String prepBamDir = null;
+
+        if(!asSubRoutine)
         {
-            List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
-            OutputDir = pathFromFile(tumorBams.get(0));
+            if(configBuilder.hasValue(TUMOR_BAM))
+            {
+                List<String> tumorBams = parseSampleBamLists(configBuilder, TUMOR_BAM);
+                prepBamDir = pathFromFile(tumorBams.get(0));
+            }
+            else if(configBuilder.hasValue(REFERENCE_BAM))
+            {
+                List<String> refBams = parseSampleBamLists(configBuilder, REFERENCE_BAM);
+                prepBamDir = pathFromFile(refBams.get(0));
+            }
+        }
+
+        if(!configBuilder.hasValue(OUTPUT_DIR) && prepBamDir != null)
+        {
+            OutputDir = prepBamDir;
         }
         else
         {
             OutputDir = parseOutputDir(configBuilder);
         }
 
-        OutputId = configBuilder.getValue(OUTPUT_ID);
+        if(configBuilder.hasValue(PREP_DIR))
+            PrepDir = checkAddDirSeparator(configBuilder.getValue(PREP_DIR));
+        else if(prepBamDir != null)
+            PrepDir = prepBamDir;
+        else
+            PrepDir = OutputDir;
 
-        PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         TumorIds = parseSampleBamLists(configBuilder, TUMOR);
 
@@ -241,9 +264,10 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
-        WriteTypes = WriteType.parseConfigStr(configBuilder.getValue(WRITE_TYPES));
+        WriteTypes = WriteType.parseAssemblyTypes(configBuilder.getValue(WRITE_TYPES));
 
         setSequencingType(configBuilder);
+        setSeqTechSpecifics();
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -288,6 +312,7 @@ public class AssemblyConfig
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG) || PerfLogTime > 0;
         AssemblyBuildDebug = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
+        AssemblyLogAllReads = configBuilder.hasFlag(ASSEMBLY_BUILD_DEBUG);
         WriteCandidateReads = configBuilder.hasFlag(WRITE_CANDIDATE_READS);
 
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
@@ -342,6 +367,7 @@ public class AssemblyConfig
         configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
 
         registerCommonConfig(configBuilder);
+        registerWriteTypes(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
@@ -374,6 +400,7 @@ public class AssemblyConfig
         configBuilder.addFlag(WRITE_CANDIDATE_READS, "Write assembly candidate reads regardless of whether used");
 
         configBuilder.addFlag(ASSEMBLY_BUILD_DEBUG, "Log assembly building working");
+        configBuilder.addFlag(ASSEMBLY_LOG_ALL_READS, "Log assembly all reads even if not used in support");
         configBuilder.addFlag(ASSEMBLY_TSV_DETAILED, "Log extra assembly info to TSV");
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
@@ -406,7 +433,7 @@ public class AssemblyConfig
         RefGenomeImageFile = null;
         DecoyGenome = null;
 
-        WriteTypes = Collections.emptyList();
+        WriteTypes = Collections.emptySet();
 
         OutputDir = null;
         OutputId = null;

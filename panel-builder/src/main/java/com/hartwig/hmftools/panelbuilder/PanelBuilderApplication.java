@@ -53,7 +53,7 @@ public class PanelBuilderApplication
 
         ProbeQualityProfile probeQualityProfile = ProbeQualityProfile.loadFromResourceFile(mConfig.probeQualityProfileFile());
         loadAlignerLibrary(mConfig.bwaLibPath());
-        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), 1);
+        Supplier<BwaMemAligner> alignerFactory = () -> createBwaMemAligner(mConfig.bwaIndexImageFile(), mConfig.threads());
         ProbeQualityModel probeQualityModel = new ProbeQualityModel(alignerFactory, PROBE_LENGTH,
                 probeQualityProfile.matchScoreThreshold(), probeQualityProfile.matchScoreOffset());
 
@@ -76,21 +76,25 @@ public class PanelBuilderApplication
         mPanelData = new PanelData();
         // Note the order of generation here determines the priority of probe overlap resolution.
         // Probes generated first will exclude overlapping probes generated afterward.
-        Genes.ExtraOutput geneExtraOutput = generateTargetGeneProbes();
+        Genes.ExtraOutput genesExtraOutput = generateTargetGeneProbes();
         generateCustomRegionProbes();
         generateCustomSvProbes();
         generateCopyNumberBackboneProbes();
         generateCdr3Probes();
-        generateSampleVariantProbes();
+        SampleVariants.ExtraOutput sampleVariantsExtraOutput = generateSampleVariantProbes();
 
         LOGGER.info("Writing output");
         mOutputWriter.writePanelProbes(mPanelData.probes());
-        mOutputWriter.writeTargetRegions(mPanelData.coveredTargetRegions());
-        mOutputWriter.writeCandidateRegions(mPanelData.candidateTargetRegions());
-        mOutputWriter.writeRejectedRegions(mPanelData.rejectedRegions());
-        if(geneExtraOutput != null)
+        mOutputWriter.writeProbeTargetedRegions(mPanelData.coveredTargetRegions());
+        mOutputWriter.writeCandidateTargetRegions(mPanelData.candidateTargetRegions());
+        mOutputWriter.writeRejectedFeatures(mPanelData.rejectedFeatures());
+        if(genesExtraOutput != null)
         {
-            mOutputWriter.writeGeneStats(geneExtraOutput.geneStats());
+            mOutputWriter.writeGeneStats(genesExtraOutput.geneStats());
+        }
+        if(sampleVariantsExtraOutput != null)
+        {
+            mOutputWriter.writeSampleVariantInfos(sampleVariantsExtraOutput.variantInfos());
         }
         mOutputWriter.close();
         mOutputWriter = null;
@@ -160,13 +164,13 @@ public class PanelBuilderApplication
 
     private void generateCustomRegionProbes()
     {
-        if(mConfig.customRegionsFile() == null)
+        if(mConfig.customRegionsFiles() == null)
         {
             LOGGER.info("Custom regions not provided; skipping custom region probes");
         }
         else
         {
-            CustomRegions.generateProbes(mConfig.customRegionsFile(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
+            CustomRegions.generateProbes(mConfig.customRegionsFiles(), mRefGenome.chromosomeLengths(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
         }
     }
@@ -184,16 +188,19 @@ public class PanelBuilderApplication
         }
     }
 
-    private void generateSampleVariantProbes()
+    @Nullable
+    private SampleVariants.ExtraOutput generateSampleVariantProbes()
     {
         if(mConfig.sampleVariants() == null)
         {
             LOGGER.info("Sample data not provided; skipping sample variants probes");
+            return null;
         }
         else
         {
-            new SampleVariants(mConfig.sampleVariants(), mProbeGenerator, mPanelData).generateProbes();
+            SampleVariants.ExtraOutput extraOutput = SampleVariants.generateProbes(mConfig.sampleVariants(), mProbeGenerator, mPanelData);
             // Result is stored into mPanelData.
+            return extraOutput;
         }
     }
 
@@ -233,8 +240,7 @@ public class PanelBuilderApplication
         }
         catch(UserInputError e)
         {
-            LOGGER.error("Bad input data");
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Bad input data: {}", e.getMessage());
             exit(1);
         }
         catch(IOException e)

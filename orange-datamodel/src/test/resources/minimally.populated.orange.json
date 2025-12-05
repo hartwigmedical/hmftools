@@ -84,6 +84,7 @@
         "type": "MUTATION",
         "driverLikelihood": 0.2,
         "likelihoodMethod": "HOTSPOT",
+        "reportedStatus": "REPORTED",
         "isCanonical": false
       },
       {
@@ -92,6 +93,7 @@
         "type": "DEL",
         "driverLikelihood": 1.0,
         "likelihoodMethod": "HOTSPOT",
+        "reportedStatus": "REPORTED",
         "isCanonical": false
       }
     ],
@@ -102,10 +104,11 @@
         "type": "GERMLINE_MUTATION",
         "driverLikelihood": 0.8,
         "likelihoodMethod": "HOTSPOT",
+        "reportedStatus": "REPORTED",
         "isCanonical": false
       }
     ],
-    "allSomaticVariants": [
+    "otherSomaticVariants": [
       {
         "type": "SNP",
         "gene": "SF3B1",
@@ -146,7 +149,7 @@
         "localPhaseSets": null
       }
     ],
-    "reportableSomaticVariants": [
+    "driverSomaticVariants": [
       {
         "type": "SNP",
         "gene": "SF3B1",
@@ -187,7 +190,7 @@
         "localPhaseSets": null
       }
     ],
-    "allGermlineVariants": [
+    "otherGermlineVariants": [
       {
         "type": "SNP",
         "gene": "BRCA1",
@@ -232,7 +235,7 @@
         ]
       }
     ],
-    "reportableGermlineVariants": [
+    "driverGermlineVariants": [
       {
         "type": "SNP",
         "gene": "BRCA1",
@@ -277,7 +280,7 @@
         ]
       }
     ],
-    "allSomaticCopyNumbers": [
+    "somaticCopyNumbers": [
       {
         "chromosome": "1",
         "start": 10,
@@ -285,7 +288,7 @@
         "averageTumorCopyNumber": 4.1
       }
     ],
-    "allSomaticGeneCopyNumbers": [
+    "somaticGeneCopyNumbers": [
       {
         "gene": "gene",
         "chromosome": "12",
@@ -297,19 +300,7 @@
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
-    "allSomaticGainsDels": [
-      {
-        "interpretation": "FULL_DEL",
-        "chromosome": 5,
-        "chromosomeBand": "q2.2",
-        "gene": "SMAD4",
-        "transcript": "ENST00000591126",
-        "isCanonical": false,
-        "minCopies": 0.1,
-        "maxCopies": 1.2
-      }
-    ],
-    "reportableSomaticGainsDels": [
+    "driverSomaticGainsDels": [
       {
         "interpretation": "FULL_DEL",
         "chromosome": "5",
@@ -320,23 +311,7 @@
         "minCopies": 0.1,
         "maxCopies": 1.2
       }
-    ],
-    "suspectGeneCopyNumbersWithLOH": [
-      {
-        "gene": "gene",
-        "chromosome": "12",
-        "chromosomeBand": "p13",
-        "transcript": "trans",
-        "isCanonical": true,
-        "minCopyNumber": 1.2,
-        "maxCopyNumber": 1.2,
-        "minMinorAlleleCopyNumber": 0.4
-      }
-    ],
-    "chromosomalRearrangements": {
-      "hasTrisomy1q": false,
-      "hasCodeletion1p19q": false
-    }
+    ]
   },
   "linx": {
     "allSomaticStructuralVariants": [
@@ -412,9 +387,9 @@
         "domainsLost": ""
       }
     ],
-    "allSomaticBreakends": [
+    "otherSomaticBreakends": [
       {
-        "reported": false,
+        "reportedStatus": "NONE",
         "disruptive": false,
         "id": 0,
         "svId": 1,
@@ -436,9 +411,9 @@
         "codingType": "UTR_3P"
       }
     ],
-    "reportableSomaticBreakends": [
+    "driverSomaticBreakends": [
       {
-        "reported": false,
+        "reportedStatus": "NONE",
         "disruptive": false,
         "id": 0,
         "svId": 1,
@@ -468,33 +443,7 @@
         "transcript": "ENST00000358273",
         "isCanonical": true
       }
-    ],
-    "additionalSuspectSomaticBreakends": [
-      {
-        "reported": false,
-        "disruptive": false,
-        "id": 0,
-        "svId": 1,
-        "gene": "NF1",
-        "chromosome": "1",
-        "chromosomeBand": "p12",
-        "transcript": "trans",
-        "isCanonical": true,
-        "type": "DUP",
-        "junctionCopyNumber": 1.1,
-        "undisruptedCopyNumber": 1.0,
-        "nextSpliceExonRank": -1,
-        "exonUp": 1,
-        "exonDown": 2,
-        "geneOrientation": "Upstream",
-        "orientation": -1,
-        "strand": -1,
-        "regionType": "EXONIC",
-        "codingType": "UTR_3P"
-      }
-    ],
-    "additionalSuspectSomaticFusions": [],
-    "additionalViableSomaticFusions": []
+    ]
   },
   "virusInterpreter": {
     "allViruses": [

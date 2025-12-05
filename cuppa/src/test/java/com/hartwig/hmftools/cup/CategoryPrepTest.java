@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_ID;
+import static com.hartwig.hmftools.cup.TestPrepConfigBuilder.TEST_TUMOR_SAMPLE_RNA_ID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -23,10 +26,9 @@ import org.junit.Test;
 
 public class CategoryPrepTest
 {
-    public final String selectedSampleId = "TUMOR_SAMPLE";
-
     public final PrepConfig prepConfig = new TestPrepConfigBuilder()
-            .sampleIds(List.of(selectedSampleId))
+            .sampleIds(List.of(TEST_TUMOR_SAMPLE_ID))
+            .rnaSampleIds(List.of(TEST_TUMOR_SAMPLE_RNA_ID))
             .categories(CategoryType.getAllCategories())
             .refGenomeVersion("V37")
             .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
@@ -47,7 +49,7 @@ public class CategoryPrepTest
     public void canExtractSnvFeatures()
     {
         SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_ID);
 
         // Check that all required item types exist
         List<ItemType> itemTypesUnique = dataItems.stream().map(o -> o.Index.Type).distinct().collect(Collectors.toList());
@@ -77,14 +79,14 @@ public class CategoryPrepTest
     public void canExtractSnvFeaturesFromLiftoverGenericVariantsFiles()
     {
         PrepConfig prepConfig = new TestPrepConfigBuilder()
-                .sampleIds(List.of(selectedSampleId))
+                .sampleIds(List.of(TEST_TUMOR_SAMPLE_ID))
                 .categories(List.of(CategoryType.SNV))
                 .refGenomeVersion("V38")
                 .somaticVariantsDir(TestPrepConfigBuilder.TEST_SOMATIC_VARIANTS_DIR)
                 .build();
 
         SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_ID);
 
         // Check one value of each type
         HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
@@ -101,7 +103,7 @@ public class CategoryPrepTest
     public void canExtractSvFeatures()
     {
         StructuralVariantPrep prep = new StructuralVariantPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_ID);
 
         assertEquals(6, dataItems.size());
         assertEquals(new DataItem(DataSource.DNA, ItemType.SV_COUNT, "LINE", "3"), dataItems.get(0));
@@ -116,7 +118,7 @@ public class CategoryPrepTest
     public void canExtractTraitFeatures()
     {
         SampleTraitPrep prep = new SampleTraitPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_ID);
 
         assertEquals(3, dataItems.size());
         assertEquals(new DataItem(DataSource.DNA, ItemType.SAMPLE_TRAIT, "is_male", "1"), dataItems.get(0));
@@ -128,7 +130,7 @@ public class CategoryPrepTest
     public void canExtractEventFeatures()
     {
         DriverPrep prep = new DriverPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_ID);
 
         assertEquals(8, dataItems.size());
         assertEquals(new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0000"), dataItems.get(0));
@@ -145,7 +147,7 @@ public class CategoryPrepTest
     public void canExtractGeneExpFeatures()
     {
         GeneExpressionPrep prep = new GeneExpressionPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_RNA_ID);
 
         assertEquals(2, dataItems.size());
         assertEquals(new DataItem(DataSource.RNA, ItemType.EXPRESSION, "BRAF", "3.434e+00"), dataItems.get(0));
@@ -156,7 +158,7 @@ public class CategoryPrepTest
     public void canExtractAltSjFeatures()
     {
         AltSpliceJunctionPrep prep = new AltSpliceJunctionPrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData(TEST_TUMOR_SAMPLE_RNA_ID);
 
         assertEquals(4, dataItems.size());
         assertEquals(new DataItem(DataSource.RNA, ItemType.ALT_SJ, "7;140426316;140439612", "2"), dataItems.get(0));

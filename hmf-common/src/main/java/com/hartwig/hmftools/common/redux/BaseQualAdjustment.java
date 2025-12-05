@@ -16,6 +16,7 @@ public class BaseQualAdjustment
     // zero is not handled by some downstream tools
     // this low value also denotes an adjustment (eg by Redux) to indicate that the corresponding base is completely uncertain
     public static final byte BASE_QUAL_MINIMUM = 1;
+    public static final byte INVALID_QUAL = 0;
 
     public static final byte LOW_BASE_QUAL_THRESHOLD = 26; // quals below this value are considered low-qual
 
@@ -61,8 +62,8 @@ public class BaseQualAdjustment
 
     public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
 
-    public static boolean isLowBaseQual(final byte qual) { return qual < LOW_BASE_QUAL_THRESHOLD; }
-    public static boolean aboveLowBaseQual(final byte qual) { return qual >= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean isLowBaseQual(final byte qual) { return qual <= LOW_BASE_QUAL_THRESHOLD; }
+    public static boolean aboveLowBaseQual(final byte qual) { return qual > LOW_BASE_QUAL_THRESHOLD; }
 
     public static boolean isHighBaseQual(final byte qual, final SequencingType sequencingType)
     {

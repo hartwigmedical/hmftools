@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_GAP_OPEN_PEN
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MATCH_SCORE;
 import static com.hartwig.hmftools.common.aligner.BwaParameters.BWA_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.common.bam.CigarUtils.checkLeftAlignment;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsToStr;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftHardClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightHardClipLength;
 import static com.hartwig.hmftools.common.bam.ConsensusType.DUAL;
@@ -17,8 +19,10 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.codon.Nucleotides.baseIndex;
@@ -47,12 +51,14 @@ import static htsjdk.samtools.CigarOperator.X;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.redux.ReduxConfig;
 import com.hartwig.hmftools.redux.common.ReadInfo;
@@ -76,6 +82,8 @@ public final class SbxRoutines
     public static final int SBX_READ_CACHE_LOG_READ_COUNT_THRESHOLD = 5000;
 
     public static int SBX_CONSENSUS_MAX_DEPTH = 20;
+
+    public static final int DEFAULT_SBX_MAX_DUPLICATE_DISTANCE = 2;
 
     public static void prepProcessRead(final SAMRecord record)
     {
@@ -341,6 +349,31 @@ public final class SbxRoutines
 
         record.setCigar(new Cigar(newCigarElements));
 
+        // correct supplementary data if it exists
+        List<SupplementaryReadData> suppDataList = SupplementaryReadData.extractAlignments(record);
+
+        if(suppDataList != null)
+        {
+            // changes to this read's aligned and inserted bases need to be reflected in a reduction to the supplementary data's
+            // soft-clipped bases, since it will use this read's aligned sections to similarly strip out indels
+            int oldReadBaseLength = oldCigarElements.stream()
+                    .filter(x -> x.getOperator() == M || x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
+
+            int newReadBaseLength = newCigarElements.stream()
+                    .filter(x -> x.getOperator() == M || x.getOperator() == I).mapToInt(x -> x.getLength()).sum();
+
+            if(oldReadBaseLength > newReadBaseLength)
+            {
+                List<SupplementaryReadData> newSuppDataList = Lists.newArrayList(suppDataList);
+                SupplementaryReadData newSuppData = correctSupplementaryData(
+                        suppDataList.get(0), oldReadBaseLength - newReadBaseLength);
+                newSuppDataList.set(0, newSuppData);
+
+                String newSaTag = newSuppDataList.stream().map(x -> x.asSamTag()).collect(Collectors.joining(ALIGNMENTS_DELIM));
+                record.setAttribute(SUPPLEMENTARY_ATTRIBUTE, newSaTag);
+            }
+        }
+
         if(ReduxConfig.RunChecks)
         {
             ReadValidReason validReason = ReadValidReason.isValidRead(record);
@@ -350,6 +383,25 @@ public final class SbxRoutines
                 RD_LOGGER.debug("invalid read({}) reason({}) details: {}", record.getReadName(), validReason, readToString(record));
             }
         }
+    }
+
+    private static SupplementaryReadData correctSupplementaryData(final SupplementaryReadData suppData, int softClipReduction)
+    {
+        List<CigarElement> cigarElements = cigarElementsFromStr(suppData.Cigar);
+        int lastIndex = cigarElements.size() - 1;
+        if(cigarElements.get(0).getOperator() == S)
+        {
+            CigarElement softClip = cigarElements.get(0);
+            cigarElements.set(0, new CigarElement(softClip.getLength() - softClipReduction, S));
+        }
+        else if(cigarElements.get(lastIndex).getOperator() == S)
+        {
+            CigarElement softClip = cigarElements.get(lastIndex);
+            cigarElements.set(lastIndex, new CigarElement(softClip.getLength() - softClipReduction, S));
+        }
+
+        return new SupplementaryReadData(
+                suppData.Chromosome, suppData.Position, suppData.Strand, cigarElementsToStr(cigarElements), suppData.MapQuality, suppData.NM);
     }
 
     @VisibleForTesting
@@ -639,11 +691,18 @@ public final class SbxRoutines
 
         Map<Integer,Byte> duplexMismatchRefBase = null; // ref base at all mis-match indices/locations
 
+        boolean hasNumEventsAttribute = record.hasAttribute(NUM_MUTATONS_ATTRIBUTE);
+
         if(!record.getReadUnmappedFlag())
         {
-            int refPos = record.getAlignmentStart();
+            int readPositionStart = record.getAlignmentStart();
+            int refPos = readPositionStart;
+
+            byte[] refBases = refGenome.getBases(record.getContig(), readPositionStart, record.getAlignmentEnd());
+
             int readIndex = 0;
             byte[] readBases = record.getReadBases();
+            int numEvents = 0;
             int nmDiff = 0;
             int alignmentScoreDiff = 0;
 
@@ -668,6 +727,9 @@ public final class SbxRoutines
                     if(element.getOperator().consumesReferenceBases())
                         refPos += element.getLength();
 
+                    if(!hasNumEventsAttribute && element.getOperator().isIndel())
+                        numEvents += element.getLength();
+
                     continue;
                 }
 
@@ -675,6 +737,17 @@ public final class SbxRoutines
                 {
                     if(readIndex >= newBaseQuals.length)
                         break;
+
+                    byte refBase = -1;
+                    byte readBase = readBases[readIndex];
+
+                    if(!hasNumEventsAttribute)
+                    {
+                        refBase = refBases[refPos - readPositionStart];
+
+                        if(refBase != readBase)
+                            ++numEvents;
+                    }
 
                     if(newBaseQuals[readIndex] > SBX_DUPLEX_MISMATCH_QUAL)
                         continue;
@@ -685,11 +758,11 @@ public final class SbxRoutines
                     if(duplexMismatchRefBase == null)
                         duplexMismatchRefBase = Maps.newHashMap();
 
-                    byte refBase = refGenome.getBase(chromosome, refPos);
+                    if(refBase < 0)
+                        refBase = refBases[refPos - readPositionStart];
 
                     duplexMismatchRefBase.put(readIndex, refBase);
 
-                    byte readBase = readBases[readIndex];
                     if(refBase == readBase)
                         continue;
 
@@ -699,11 +772,19 @@ public final class SbxRoutines
                 }
             }
 
-            Integer oldNumMutations = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-            if(oldNumMutations != null && nmDiff != 0)
+            if(hasNumEventsAttribute)
             {
-                int newNumMutations = oldNumMutations + nmDiff;
-                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+                numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+                if(nmDiff != 0)
+                {
+                    int newNumMutations = max(numEvents + nmDiff, 0);
+                    record.setAttribute(NUM_MUTATONS_ATTRIBUTE, newNumMutations);
+                }
+            }
+            else
+            {
+                record.setAttribute(NUM_MUTATONS_ATTRIBUTE, numEvents);
             }
 
             Integer oldAlignmentScore = record.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);

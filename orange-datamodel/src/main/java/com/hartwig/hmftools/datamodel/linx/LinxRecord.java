@@ -28,25 +28,16 @@ public interface LinxRecord
     List<LinxFusion> reportableSomaticFusions();
 
     @NotNull
-    List<LinxFusion> additionalSuspectSomaticFusions();
+    List<LinxBreakend> driverSomaticBreakends();
 
     @NotNull
-    List<LinxFusion> additionalViableSomaticFusions();
-
-    @NotNull
-    List<LinxBreakend> allSomaticBreakends();
+    List<LinxBreakend> otherSomaticBreakends();
 
     @Nullable
-    List<LinxBreakend> allGermlineBreakends();
-
-    @NotNull
-    List<LinxBreakend> reportableSomaticBreakends();
+    List<LinxBreakend> driverGermlineBreakends();
 
     @Nullable
-    List<LinxBreakend> reportableGermlineBreakends();
-
-    @NotNull
-    List<LinxBreakend> additionalSuspectSomaticBreakends();
+    List<LinxBreakend> otherGermlineBreakends();
 
     @NotNull
     List<LinxHomozygousDisruption> somaticHomozygousDisruptions();

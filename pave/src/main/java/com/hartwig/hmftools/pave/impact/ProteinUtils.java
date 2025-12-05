@@ -114,7 +114,7 @@ public final class ProteinUtils
             }
             else
             {
-                pc.AltCodonBases = alt + pc.RefCodonBases.substring(varLength);
+                pc.AltCodonBases = alt + pc.RefCodonBases.substring(min(varLength, pc.RefCodonBases.length()));
             }
         }
         else

@@ -22,65 +22,41 @@ public interface PurpleRecord
     PurpleCharacteristics characteristics();
 
     @NotNull
-    ChromosomalRearrangements chromosomalRearrangements();
-
-    @NotNull
     List<PurpleDriver> somaticDrivers();
 
     @Nullable
     List<PurpleDriver> germlineDrivers();
 
     @NotNull
-    List<PurpleVariant> allSomaticVariants();
+    List<PurpleVariant> driverSomaticVariants();
 
     @NotNull
-    List<PurpleVariant> reportableSomaticVariants();
-
-    @NotNull
-    List<PurpleVariant> additionalSuspectSomaticVariants();
+    List<PurpleVariant> otherSomaticVariants();
 
     @Nullable
-    List<PurpleVariant> allGermlineVariants();
+    List<PurpleVariant> driverGermlineVariants();
 
     @Nullable
-    List<PurpleVariant> reportableGermlineVariants();
+    List<PurpleVariant> otherGermlineVariants();
+
+    @NotNull
+    List<PurpleCopyNumber> somaticCopyNumbers();
+
+    @NotNull
+    List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
+
+    @NotNull
+    List<PurpleGainDeletion> driverSomaticGainsDels();
 
     @Nullable
-    List<PurpleVariant> additionalSuspectGermlineVariants();
-
-    @NotNull
-    List<PurpleCopyNumber> allSomaticCopyNumbers();
-
-    @NotNull
-    List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers();
-
-    @NotNull
-    List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH();
-
-    @NotNull
-    List<PurpleGainDeletion> allSomaticGainsDels();
-
-    @NotNull
-    List<PurpleGainDeletion> reportableSomaticGainsDels();
-
-    @NotNull
-    List<PurpleGainDeletion> nearReportableSomaticGains();
-
-    @NotNull
-    List<PurpleGainDeletion> additionalSuspectSomaticGainsDels();
+    List<PurpleGermlineDeletion> otherGermlineDeletions();
 
     @Nullable
-    List<PurpleGermlineDeletion> allGermlineDeletions();
+    List<PurpleGainDeletion> driverGermlineDeletions();
 
     @Nullable
-    List<PurpleGainDeletion> allGermlineFullDels();
-
-    @Nullable
-    List<PurpleGainDeletion> reportableGermlineFullDels();
+    List<PurpleLossOfHeterozygosity> driverGermlineLossOfHeterozygosities();
 
     @Nullable
     List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities();
-
-    @Nullable
-    List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
 }

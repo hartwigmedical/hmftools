@@ -10,8 +10,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC_PANEL;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.isGermlineAndNotTumorFiltered;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.DEDUP_INDEL;
 
 import java.util.Collections;
@@ -142,14 +141,14 @@ public class IndelDeduper
         List<VariantData> overlappedIndels = Lists.newArrayList();
 
         // any DEL overlapping the main INDEL can be de-duped immediately
-        boolean hasPassingVariant = false;
+        boolean hasValidVariant = false;
 
         int index = 0;
         while(index < dedupGroup.size())
         {
             VariantData variant = dedupGroup.get(index);
 
-            hasPassingVariant |= variant.allowByFilter();
+            hasValidVariant |= variant.allowByFilter();
 
             if(variant.Variant.isDelete() && positionsOverlap(indelPosition, indelPosition, variant.position(), variant.positionEnd()))
             {
@@ -163,7 +162,7 @@ public class IndelDeduper
         }
 
         // must be at least one passing variant in the group
-        if(!hasPassingVariant)
+        if(!hasValidVariant)
             return;
 
         String refBases = mRefGenome.getBaseString(indel.Variant.chromosome(), indel.FlankPosStart, indel.FlankPosEnd);
@@ -199,8 +198,13 @@ public class IndelDeduper
                     continue;
 
                 markAsDedup(variant.Variant);
+
+                if(!indel.Variant.isPassing())
+                {
+                    indel.Variant.filters().forEach(x->variant.Variant.filters().add(x));
+                }
             }
-            else if(recoverFilteredVariant(variant.Variant, nonDedupedVariants))
+            else if(indel.Variant.isPassing() && recoverFilteredVariant(variant.Variant, nonDedupedVariants))
             {
                 variant.Variant.filters().clear();
             }
@@ -477,7 +481,7 @@ public class IndelDeduper
 
         public boolean allowByFilter()
         {
-            return Variant.isPassing();
+            return Variant.isPassing() || isGermlineAndNotTumorFiltered(Variant.filters());
         }
 
         public int indelScore()

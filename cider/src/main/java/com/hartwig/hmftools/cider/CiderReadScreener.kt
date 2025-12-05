@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderUtils.getAdapterDnaTrim
+import com.hartwig.hmftools.cider.CiderUtils.setAdapterDnaTrim
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
@@ -19,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 class CiderReadScreener(// collect the reads and sort by types
     private val mCiderGeneDatastore: ICiderGeneDatastore,
     private val mAnchorBlosumSearcher: IAnchorBlosumSearcher,
-    private val mMaxReadDistanceFromAnchor: Int,
+    private val mMinReadCdr3Overlap: Int,
     private val mMaxFragmentLength: Int
 )
 {
@@ -62,6 +64,10 @@ class CiderReadScreener(// collect the reads and sort by types
             return
         }
 
+        // Calculate the trimming required to remove any sequencing adapter bases left on the read (for short fragments).
+        // The trimming amount is stored into the read so we can retrieve it later when needed.
+        setAdapterDnaTrim(samRecord)
+
         var matchFound = false
 
         // first we try to match by genome region
@@ -96,16 +102,7 @@ class CiderReadScreener(// collect the reads and sort by types
         // first step we see if the read overlaps with any anchor location
         for (anchorLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
         {
-            val readCandidate = matchesAnchorLocation(samRecord, mapped, anchorLocation, false)
-            if (readCandidate != null)
-            {
-                return true
-            }
-        }
-        // if none overlaps then we try matching with extrapolation
-        for (anchorLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
-        {
-            val readCandidate = matchesAnchorLocation(samRecord, mapped, anchorLocation, true)
+            val readCandidate = matchesAnchorLocation(samRecord, mapped, anchorLocation)
             if (readCandidate != null)
             {
                 return true
@@ -132,22 +129,12 @@ class CiderReadScreener(// collect the reads and sort by types
     // what this function does is to see if the anchor location is within this read
     fun matchesAnchorLocation(
         samRecord: SAMRecord, mapped: GenomeRegion,
-        anchorLocation: VJAnchorGenomeLocation, allowExtrapolation: Boolean
+        anchorLocation: VJAnchorGenomeLocation,
     ): VJReadCandidate?
     {
-        val readLength = samRecord.readLength
-
-        if (allowExtrapolation)
-        {
-            if (!isRelevantToAnchorLocation(readLength, mapped, anchorLocation, mMaxReadDistanceFromAnchor))
-                return null
-        }
-        else
-        {
-            // only if mapped
-            if (!isMappedToAnchorLocation(mapped, anchorLocation))
-                return null
-        }
+        // only if mapped
+        if (!isMappedToAnchorLocation(mapped, anchorLocation))
+            return null
         val anchorLength: Int = anchorLocation.baseLength()
         if (anchorLength != 30)
         {
@@ -157,10 +144,15 @@ class CiderReadScreener(// collect the reads and sort by types
         var readAnchorStart = readAnchorRange.left
         var readAnchorEnd = readAnchorRange.right
 
-        // anchor does not have to overlap with the read at all
-        // we apply extrapolation to get reads that do not overlap with anchor
-        if (readAnchorStart < samRecord.readLength + mMaxReadDistanceFromAnchor &&
-            readAnchorEnd > -mMaxReadDistanceFromAnchor)
+        val readTrim = getAdapterDnaTrim(samRecord)
+
+        // read:   |---------------|    |---------------------|
+        // anchor:    |----|                   |----|
+        // CDR3:           |-------------------|
+        // check:          <------->    <------>
+
+        if ((anchorLocation.anchorBoundarySide() == 1 && samRecord.readLength - readTrim.second - readAnchorEnd >= mMinReadCdr3Overlap) ||
+            (anchorLocation.anchorBoundarySide() == -1 && readAnchorStart - readTrim.first >= mMinReadCdr3Overlap))
         {
             if (anchorLocation.strand === Strand.REVERSE)
             {
@@ -472,53 +464,6 @@ class CiderReadScreener(// collect the reads and sort by types
         {
             if (anchorLocation.chromosome != mapped.chromosome()) return false
             return anchorLocation.start <= mapped.end() && mapped.start() <= anchorLocation.end
-        }
-
-        // we are looking for read that can be extrapolated to the anchor location even if they do not overlap
-        fun isRelevantToAnchorLocation(readLength: Int, mapped: GenomeRegion,
-                                       anchorLocation: VJAnchorGenomeLocation,
-                                       maxReadDistanceFromAnchor: Int): Boolean
-        {
-            if (anchorLocation.chromosome != mapped.chromosome()) return false
-
-            // for V we only allow reads that are mapped upstream
-            // for J we only allow reads that are mapped downstream
-            //
-            // >------------V--------D----------J---------> positive strand
-            //             ======           ======
-            //
-            // or
-            //
-            // <------------J--------D----------V---------< negative strand
-            //             ======           ======
-            //
-            // reads mapped around the ===== sections are ok
-            // we translate it to the genome coord space.
-            val anchorLength: Int = anchorLocation.baseLength()
-            val isMappedAroundHere: Boolean
-            if (anchorLocation.vj == VJ.V && anchorLocation.strand == Strand.FORWARD ||
-                anchorLocation.vj == VJ.J && anchorLocation.strand == Strand.REVERSE)
-            {
-                // here we want the anchor to be downstream
-                // we want anchor mapped to higher coord than or equal read
-                // we allow anchor to overshoot the mapped region by half the anchor length
-                //           |__read__|
-                //    |_________________________________________________________|     allowed anchor range
-                //     anchor           read length + MaxReadDistanceFromAnchor
-                isMappedAroundHere = anchorLocation.start > mapped.start() - anchorLength &&
-                        anchorLocation.end < mapped.end() + readLength + maxReadDistanceFromAnchor
-            } else
-            {
-                // here we want the anchor to be upstream
-                // we want anchor mapped to lower coord than or equal read
-                // we allow anchor to overshoot the mapped region by half the anchor length
-                //                                            |__read__|
-                // |____________________________________________________________|    allowed anchor range
-                //   read length + MaxReadDistanceFromAnchor             anchor
-                isMappedAroundHere = anchorLocation.end < mapped.end() + anchorLength &&
-                        anchorLocation.start > mapped.start() - readLength - maxReadDistanceFromAnchor
-            }
-            return isMappedAroundHere
         }
 
         // 0 based read offset

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.linx;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -14,8 +15,12 @@ public final class LinxTestFactory
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {
         return ImmutableLinxSvAnnotation.builder()
-                .vcfId(Strings.EMPTY)
+                .vcfIdStart(Strings.EMPTY)
+                .vcfIdEnd(Strings.EMPTY)
                 .svId(0)
+                .coordsStart("1:1000:1")
+                .coordsEnd("1:2000:-1")
+                .type(StructuralVariantType.DEL)
                 .clusterId(0)
                 .clusterReason(Strings.EMPTY)
                 .fragileSiteStart(false)
@@ -47,10 +52,14 @@ public final class LinxTestFactory
         return ImmutableLinxFusion.builder()
                 .fivePrimeBreakendId(0)
                 .threePrimeBreakendId(0)
+                .fivePrimeVcfId(Strings.EMPTY)
+                .threePrimeVcfId(Strings.EMPTY)
+                .fivePrimeCoords(Strings.EMPTY)
+                .threePrimeCoords(Strings.EMPTY)
                 .name(Strings.EMPTY)
                 .reported(false)
                 .reportedType(KnownFusionType.NONE.toString())
-                .reportableReasons("OK")
+                .addReportableReasons(FusionReportableReason.OK)
                 .phased(FusionPhasedType.OUT_OF_FRAME)
                 .likelihood(FusionLikelihoodType.NA)
                 .chainLength(0)
@@ -77,13 +86,15 @@ public final class LinxTestFactory
         return ImmutableLinxBreakend.builder()
                 .id(0)
                 .svId(0)
+                .vcfId(Strings.EMPTY)
+                .coords(Strings.EMPTY)
                 .isStart(true)
                 .gene(Strings.EMPTY)
                 .transcriptId(Strings.EMPTY)
                 .canonical(true)
                 .geneOrientation(Strings.EMPTY)
                 .disruptive(false)
-                .reportedDisruption(false)
+                .reportedStatus(ReportedStatus.NONE)
                 .undisruptedCopyNumber(0D)
                 .regionType(TranscriptRegionType.UNKNOWN)
                 .codingType(TranscriptCodingType.UNKNOWN)
@@ -95,16 +106,5 @@ public final class LinxTestFactory
                 .totalExonCount(0)
                 .exonUp(0)
                 .exonDown(0);
-    }
-
-    @NotNull
-    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
-    {
-        return ImmutableHomozygousDisruption.builder()
-                .chromosome(Strings.EMPTY)
-                .chromosomeBand(Strings.EMPTY)
-                .gene(Strings.EMPTY)
-                .transcript(Strings.EMPTY)
-                .isCanonical(false);
     }
 }

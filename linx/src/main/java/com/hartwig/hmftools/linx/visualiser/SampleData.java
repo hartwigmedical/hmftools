@@ -2,6 +2,11 @@ package com.hartwig.hmftools.linx.visualiser;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisCopyNumberFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisFusionFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisProteinFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSegmentFilename;
+import static com.hartwig.hmftools.common.linx.LinxCommonTypes.generateVisSvFilename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 import static com.hartwig.hmftools.linx.visualiser.file.VisDataWriter.COHORT_VIS_COPY_NUMBER_FILE;
@@ -36,6 +41,7 @@ import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.visualiser.data.VisCopyNumbers;
 import com.hartwig.hmftools.linx.visualiser.data.VisExons;
 import com.hartwig.hmftools.linx.visualiser.data.VisProteinDomains;
@@ -72,29 +78,29 @@ public class SampleData
         boolean isGermline = config.IsGermline;
 
         if(!isGermline
-        && !Files.exists(Paths.get(VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, false)))
-        && Files.exists(Paths.get(VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, true))))
+        && !Files.exists(Paths.get(generateVisSvFilename(mConfig.SampleDataDir, mConfig.Sample, false)))
+        && Files.exists(Paths.get(generateVisSvFilename(mConfig.SampleDataDir, mConfig.Sample, true))))
         {
             isGermline = true;
         }
 
         final String svDataFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_SVS_FILE : VisSvData.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
+                mConfig.SampleDataDir + COHORT_VIS_SVS_FILE : generateVisSvFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String linksFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_LINKS_FILE : VisSegment.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
+                mConfig.SampleDataDir + COHORT_VIS_LINKS_FILE : generateVisSegmentFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String cnaFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_COPY_NUMBER_FILE : VisCopyNumber.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
+                mConfig.SampleDataDir + COHORT_VIS_COPY_NUMBER_FILE : generateVisCopyNumberFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String geneExonFile = mConfig.UseCohortFiles ?
                 mConfig.SampleDataDir + COHORT_VIS_GENE_EXONS_FILE : VisGeneExon.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String proteinFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_PROTEIN_FILE : VisProteinDomain.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
+                mConfig.SampleDataDir + COHORT_VIS_PROTEIN_FILE : generateVisProteinFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         final String fusionFile = mConfig.UseCohortFiles ?
-                mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
+                mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : generateVisFusionFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
         List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
@@ -318,10 +324,10 @@ public class SampleData
             try
             {
                 // reportable disruptions
-                final List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
+                List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
 
-                final List<Integer> svIds = breakends.stream()
-                        .filter(x -> x.reportedDisruption()).map(x -> x.svId()).collect(toList());
+                List<Integer> svIds = breakends.stream()
+                        .filter(x -> x.reportedStatus() == ReportedStatus.REPORTED).map(x -> x.svId()).collect(toList());
 
                 for(Integer svId : svIds)
                 {
@@ -330,7 +336,7 @@ public class SampleData
                          clusterIds.add(svData.ClusterId);
                 }
 
-                final List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
+                List<LinxDriver> drivers = LinxDriver.read(LinxDriver.generateFilename(mConfig.SampleDataDir, mConfig.Sample));
                 drivers.stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
             }
             catch(Exception e)

@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENG
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -83,7 +82,7 @@ public class CopyNumberBackbone
         ProbeGenerationResult result = generateProbes(partitions);
         // Probes generated here cannot overlap with themselves since there is one probe per partition.
         // So it's safe to generate all the probes together and then add them to the result at the end.
-        // No need to check overlap of generated probes with themselves.
+        // No need to check any overlap of generated probes with themselves.
         mPanelData.addResult(result);
 
         LOGGER.info("Done generating copy number backbone probes");
@@ -209,15 +208,19 @@ public class CopyNumberBackbone
 
     private ProbeGenerationResult generateProbes(final Map<String, List<Partition>> partitions)
     {
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = createProbeGenerationSpecs(partitions);
+        return mProbeGenerator.generateBatch(probeGenerationSpecs, mPanelData);
+    }
+
+    private static Stream<ProbeGenerationSpec> createProbeGenerationSpecs(final Map<String, List<Partition>> partitions)
+    {
         return partitions.entrySet().stream()
                 // Sort to ensure deterministic ordering.
                 .sorted(Map.Entry.comparingByKey())
-                .flatMap(entry ->
-                        entry.getValue().stream().map(this::generateProbe))
-                .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
+                .flatMap(entry -> entry.getValue().stream().map(CopyNumberBackbone::createProbeGenerationSpec));
     }
 
-    private ProbeGenerationResult generateProbe(final Partition partition)
+    private static ProbeGenerationSpec createProbeGenerationSpec(final Partition partition)
     {
         LOGGER.trace("Generating probes for {} with {} Amber sites", partition.Region, partition.Sites.size());
 
@@ -229,17 +232,18 @@ public class CopyNumberBackbone
         if(alternativeMethod)
         {
             LOGGER.trace("Using alternative methodology");
-            return mProbeGenerator.coverOneSubregion(partition.Region, metadata, PROBE_CRITERIA_ALTERNATIVE, PROBE_SELECT, mPanelData);
+            return new ProbeGenerationSpec.CoverOneSubregion(partition.Region, metadata, PROBE_CRITERIA_ALTERNATIVE, PROBE_SELECT);
         }
         else
         {
             BaseRegion positionBounds = new BaseRegion(partition.Region.start() + PROBE_LENGTH, partition.Region.end() - PROBE_LENGTH);
-            Stream<BasePosition> candidatePositions = partition.Sites.stream()
+            List<BasePosition> candidatePositions = partition.Sites.stream()
                     .map(AmberSite::position)
                     // Plausible that a site is near the edge of a partition such that the probe goes outside the partition.
                     // Filter these out to avoid probe overlap, since there are many probes to choose from.
-                    .filter(position -> positionBounds.containsPosition(position.Position));
-            return mProbeGenerator.coverOnePosition(candidatePositions, metadata, PROBE_CRITERIA, PROBE_SELECT, mPanelData);
+                    .filter(position -> positionBounds.containsPosition(position.Position))
+                    .toList();
+            return new ProbeGenerationSpec.CoverOnePosition(candidatePositions, metadata, PROBE_CRITERIA, PROBE_SELECT);
         }
     }
 

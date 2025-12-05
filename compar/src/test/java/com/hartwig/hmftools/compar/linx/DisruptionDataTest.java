@@ -145,7 +145,7 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
         assertEquals(refVictim, mismatch.RefItem());
         assertEquals(newVictim, mismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported true/false)"), mismatch.DiffValues());
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues());
     }
 
     @Test
@@ -164,14 +164,14 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
         assertEquals(reportableVictim, mismatch.RefItem());
         assertEquals(nonReportableVictim, mismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported true/false)"), mismatch.DiffValues());
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues());
 
         Mismatch oppositeMismatch = nonReportableVictim.findMismatch(reportableVictim, MatchLevel.REPORTABLE, diffThresholds, false);
 
         assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
         assertEquals(nonReportableVictim, oppositeMismatch.RefItem());
         assertEquals(reportableVictim, oppositeMismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported false/true)"), oppositeMismatch.DiffValues());
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported NONE/REPORTED)"), oppositeMismatch.DiffValues());
     }
 
     private void assertSingleFieldDifferenceInBreakendRecognized(final String field, final Consumer<TestBreakendDataBuilder> altInitializer,

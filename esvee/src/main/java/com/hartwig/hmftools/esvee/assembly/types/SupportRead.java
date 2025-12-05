@@ -63,7 +63,8 @@ public class SupportRead
     private final SupplementaryReadData mSupplementaryData;
     private final int mMapQual;
     private final int mInsertSize;
-    private final int mTrimCount;
+    private final int mTrimCountStart;
+    private final int mTrimCountEnd;
     private final boolean mHasIndel;
     private IndelCoords mIndelCoords;
     private final boolean mHasLineTail;
@@ -81,6 +82,7 @@ public class SupportRead
     private int mExtBaseMatches;
     private int mExtBaseMismatches;
     private Integer mRefBaseMismatches;
+    private String mMismatchInfo;
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
@@ -120,7 +122,8 @@ public class SupportRead
         mSupplementaryData = read.supplementaryData();
         mBaseLength = read.basesLength();
         mInsertSize = inferredInsertSizeAbs(read.bamRecord());
-        mTrimCount = read.baseTrimCount();
+        mTrimCountStart = read.trimCountStart();
+        mTrimCountEnd = read.trimCountEnd();
         mMapQual = read.mappingQuality();
         mHasIndel = read.indelCoords() != null;
         mIndelCoords = read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH ? read.indelCoords() : null;
@@ -129,6 +132,7 @@ public class SupportRead
         mExtBaseMatches = matches;
         mExtBaseMismatches = mismatches;
         mRefBaseMismatches =  null;
+        mMismatchInfo = "";
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
@@ -147,6 +151,8 @@ public class SupportRead
     public int alignmentEnd() { return mAlignmentEnd; }
     public int unclippedStart() { return mUnclippedStart; }
     public int unclippedEnd() { return mUnclippedEnd; }
+    public int untrimmedStart() { return mUnclippedStart - mTrimCountStart; }
+    public int untrimmedEnd() { return mUnclippedEnd + mTrimCountEnd; }
     public boolean isLeftClipped() { return mUnclippedStart < mAlignmentStart; }
     public boolean isRightClipped() { return mUnclippedEnd > mAlignmentEnd; }
     public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
@@ -156,7 +162,9 @@ public class SupportRead
     public int mateAlignmentEnd() { return mMateAlignmentEnd; }
     public int baseLength() { return mBaseLength; }
     public int insertSize() { return mInsertSize; }
-    public int trimCount() { return mTrimCount; }
+    public int trimCount() { return mTrimCountStart + mTrimCountEnd; }
+    public int trimCountStart() { return mTrimCountStart; }
+    public int trimCountEnd() { return mTrimCountEnd; }
     public boolean hasIndel() { return mHasIndel; }
     public IndelCoords indelCoords() { return mIndelCoords; }
     public String cigar() { return mCigar; }
@@ -188,6 +196,9 @@ public class SupportRead
 
     public int referenceMismatches() { return mRefBaseMismatches != null ? mRefBaseMismatches : -1; }
     public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
+
+    public String mismatchInfo() { return mMismatchInfo; }
+    public void setMismatchInfo(final String mismatchInfo) { mMismatchInfo = mismatchInfo; }
 
     public void setReferenceMismatches(int mismatches) { mRefBaseMismatches = mismatches; }
 

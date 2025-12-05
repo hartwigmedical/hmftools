@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.common.driver.DriverCatalogFactory.createCopyNumberDriver;
 import static com.hartwig.hmftools.common.driver.DriverType.DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.HET_DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
@@ -13,14 +12,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverType;
+import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
-import com.hartwig.hmftools.common.purple.ReportableStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -43,7 +44,7 @@ public class DeletionDrivers
     }
 
     public static List<DriverCatalog> findDeletions(
-            final Set<PurpleQCStatus> qcStatus, final double ploidy, final DriverGenePanel panel,
+            final Set<PurpleQCStatus> qcStatus, final double ploidy, final DriverGeneResource panel,
             final List<GeneCopyNumber> geneCopyNumbers, boolean isTargetRegions)
     {
         List<DriverCatalog> drivers = Lists.newArrayList();
@@ -51,32 +52,11 @@ public class DeletionDrivers
         boolean checkQcStatus = qcStatus.contains(PurpleQCStatus.WARN_DELETED_GENES)
                 || qcStatus.contains(PurpleQCStatus.WARN_HIGH_COPY_NUMBER_NOISE);
 
-        Map<String,DriverGene> deletionGenes = panel.deletionTargets().stream()
-                .filter(x -> x.reportDeletion() || x.reportHetDeletion())
-                .collect(Collectors.toMap(DriverGene::gene, x -> x));
-
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            DriverGene driverGene = deletionGenes.get(geneCopyNumber.geneName());
+            DriverGene driverGene = panel.DriverGeneMap.get(geneCopyNumber.geneName());
 
             if(driverGene == null)
-                continue;
-
-            DriverType driverType = DriverType.UNKNOWN;
-
-            if(driverGene.reportDeletion() && geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
-            {
-                driverType = DEL;
-            }
-            else if(driverGene.reportHetDeletion() && ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
-            {
-                double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
-
-                if(adjustedMinCopyNumber < driverGene.hetDeletionThreshold())
-                    driverType = HET_DEL;
-            }
-
-            if(driverType == UNKNOWN)
                 continue;
 
             boolean hasFullSvSupport = supportedByTwoSVs(geneCopyNumber);
@@ -105,9 +85,42 @@ public class DeletionDrivers
                 }
             }
 
+            DriverType driverType = DriverType.UNKNOWN;
+            ReportedStatus reportedStatus = ReportedStatus.NONE;
+
+            if(geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
+            {
+                driverType = DEL;
+
+                if(driverGene.reportDeletion())
+                    reportedStatus = ReportedStatus.REPORTED;
+            }
+            else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
+            {
+                double adjustedMinCopyNumber = geneCopyNumber.minCopyNumber() / ploidy;
+
+                if(adjustedMinCopyNumber < driverGene.hetDeletionThreshold())
+                {
+                    driverType = HET_DEL;
+
+                    if(driverGene.reportHetDeletion())
+                        reportedStatus = ReportedStatus.REPORTED;
+                }
+            }
+
+            if(driverType == UNKNOWN)
+                continue;
+
             geneCopyNumber.setDriverType(driverType);
-            geneCopyNumber.setReportableStatus(ReportableStatus.REPORTED); // candidates not yet supported
-            drivers.add(createDelDriver(driverGene, driverType, geneCopyNumber));
+            geneCopyNumber.setReportedStatus(reportedStatus);
+
+            boolean biallelic = driverType == DEL;
+            double likelihood = driverType == DEL ? 1 : 0;
+
+            DriverCatalog driverCatalog = createCopyNumberDriver(
+                    driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, likelihood, geneCopyNumber, reportedStatus);
+
+            drivers.add(driverCatalog);
         }
 
         return drivers;
@@ -133,11 +146,29 @@ public class DeletionDrivers
         return false;
     }
 
-    private static DriverCatalog createDelDriver(
-            final DriverGene driverGene, final DriverType driverType, final GeneCopyNumber geneCopyNumber)
+    protected static DriverCatalog createCopyNumberDriver(
+            DriverCategory category, DriverType driver, final LikelihoodMethod likelihoodMethod, final boolean biallelic,
+            final double likelihood, final GeneCopyNumber geneCopyNumber, final ReportedStatus reportedStatus)
     {
-        boolean biallelic = driverType == DEL;
-        double likelihood = driverType == DEL ? 1 : 0;
-        return createCopyNumberDriver(driverGene.likelihoodType(), driverType, LikelihoodMethod.DEL, biallelic, likelihood, geneCopyNumber);
+        return ImmutableDriverCatalog.builder()
+                .chromosome(geneCopyNumber.chromosome())
+                .chromosomeBand(geneCopyNumber.ChromosomeBand)
+                .gene(geneCopyNumber.geneName())
+                .transcript(geneCopyNumber.TransName)
+                .isCanonical(geneCopyNumber.IsCanonical)
+                .missense(0)
+                .nonsense(0)
+                .inframe(0)
+                .frameshift(0)
+                .splice(0)
+                .driverLikelihood(likelihood)
+                .driver(driver)
+                .likelihoodMethod(likelihoodMethod)
+                .category(category)
+                .biallelic(biallelic)
+                .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
+                .reportedStatus(reportedStatus)
+                .build();
     }
 }

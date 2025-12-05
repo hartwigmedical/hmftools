@@ -25,10 +25,16 @@ public final class BqrFile
     private static final Logger LOGGER = LogManager.getLogger(BqrFile.class);
 
     private static String FILE_EXTENSION = REDUX_FILE_ID + ".bqr.tsv";
+    private static String PLOT_EXTENSION = REDUX_FILE_ID + ".bqr.png";
 
     public static String generateFilename(String basePath, String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
+    }
+
+    public static String generatePlotFilename(String basePath, String sample)
+    {
+        return basePath + File.separator + sample + PLOT_EXTENSION;
     }
 
     public static void write(final String filename, final List<BqrRecord> counts) throws IOException

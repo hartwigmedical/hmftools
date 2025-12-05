@@ -2,16 +2,16 @@ package com.hartwig.hmftools.sage;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SEQUENCING_TYPE_CFG;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
@@ -41,13 +41,12 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
@@ -100,7 +99,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
-    public final List<SimpleVariant> SpecificVariants;;
+    public final List<SimpleVariant> SpecificVariants;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -349,13 +348,10 @@ public class SageConfig
         if(!makeOutputDir(outputDir))
             return false;
 
-        if(Visualiser.Enabled && !makeOutputDir(new File(Visualiser.OutputDir)))
-            return false;
-
-        return true;
+        return !Visualiser.Enabled || makeOutputDir(Visualiser.OutputDir);
     }
 
-    public boolean makeOutputDir(final File outputDir)
+    private static boolean makeOutputDir(final File outputDir)
     {
         if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
         {
@@ -374,10 +370,7 @@ public class SageConfig
         if(HumanChromosome.contains(chromosome))
             return true;
 
-        if(IncludeMT && MitochondrialChromosome.contains(chromosome))
-            return true;
-
-        return false;
+        return IncludeMT && MitochondrialChromosome.contains(chromosome);
     }
 
     public boolean logPerfStats() { return PerfWarnTime > 0; }

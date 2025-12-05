@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class LilacConstants
 {
@@ -10,8 +11,8 @@ public final class LilacConstants
 
     public static final String APP_NAME = "Lilac";
 
-    public static final byte DEFAULT_MIN_BASE_QUAL = 30;
-    public static byte LOW_BASE_QUAL_THRESHOLD = DEFAULT_MIN_BASE_QUAL; // may be adjusted by config or dynamically from median quals
+    public static final ChrBaseRegion V37_HLA_REGION = new ChrBaseRegion("6", 29908037, 33055978);
+    public static final ChrBaseRegion V38_HLA_REGION = new ChrBaseRegion("chr6", 29940260, 33090696);
 
     public static final double LOW_BASE_TRIM_PERC = 0.35;
     public static final double MAX_LOW_BASE_PERC = 0.5;

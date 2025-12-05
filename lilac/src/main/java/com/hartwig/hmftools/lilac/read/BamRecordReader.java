@@ -3,12 +3,14 @@ package com.hartwig.hmftools.lilac.read;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractLowQualCount;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConfig.isUltima;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.MAX_LOW_BASE_PERC;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
-import static com.hartwig.hmftools.lilac.LilacUtils.belowMinQual;
 import static com.hartwig.hmftools.lilac.ReferenceData.GENE_CACHE;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
@@ -131,7 +133,7 @@ public class BamRecordReader implements BamReader
 
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(
-		geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+                geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
         List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
 
         List<Read> reads = Lists.newArrayList();
@@ -177,11 +179,18 @@ public class BamRecordReader implements BamReader
         // filter any read with 50% + bases classified as low qual or any invalid base
         int baseLength = read.getReadBases().length;
         int qualCountThreshold = (int) floor(baseLength * MAX_LOW_BASE_PERC) + 1;
-        int lowQualCount = 0;
 
+        int lowQualCount;
+        if(isUltima())
+        {
+            lowQualCount = extractLowQualCount(read);
+            return lowQualCount >= qualCountThreshold;
+        }
+
+        lowQualCount = 0;
         for(int i = 0; i < baseLength; ++i)
         {
-            if(belowMinQual(read.getBaseQualities()[i]))
+            if(isLowBaseQual(read.getBaseQualities()[i]))
             {
                 ++lowQualCount;
 
@@ -231,15 +240,15 @@ public class BamRecordReader implements BamReader
                     mergeFragments(existingFragment, fragment);
                 }
 
-                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
                     addKnownIndelFragment(existingFragment);
 
                 continue;
             }
 
-            if(read.containsIndel())
+            if(read.containsValidIndel())
             {
-                if(read.getIndels().contains(STOP_LOSS_ON_C_INDEL))
+                if(read.getValidIndels().contains(STOP_LOSS_ON_C_INDEL))
                 {
                     LL_LOGGER.trace("missing known indel fragment: {} {}", read.Id, read.readInfo());
                 }
@@ -248,7 +257,7 @@ public class BamRecordReader implements BamReader
                 mDiscardIndelReadIds.add(read.Id);
             }
 
-            for(Indel indel : read.getIndels())
+            for(Indel indel : read.getValidIndels())
             {
                 if(INDEL_PON.contains(indel))
                 {
@@ -286,12 +295,15 @@ public class BamRecordReader implements BamReader
 
     private boolean bothEndsInRangeOfCodingTranscripts(final SAMRecord record)
     {
-        if(!record.getMateReferenceName().equals(HLA_CHR))
-            return false;
-
         // this check allows records to span across HLA genes, since a read may be mismapped
         boolean readInRange = mGeneCodingRegions.values().stream()
                 .anyMatch(x -> x.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE));
+
+        if(!record.getReadPairedFlag())
+            return readInRange;
+
+        if(!record.getMateReferenceName().equals(HLA_CHR))
+            return false;
 
         boolean mateInRange = mGeneCodingRegions.values().stream()
                 .anyMatch(x -> x.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE));
@@ -365,7 +377,7 @@ public class BamRecordReader implements BamReader
             Read codingRecord = Read.createRead(matchedCodingRegion, record, true, true);
 
             Fragment fragment = mFragmentFactory.createAlignmentFragments(
-		    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
+                    codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
             if(fragment != null)
                 fragments.add(fragment);
@@ -419,7 +431,7 @@ public class BamRecordReader implements BamReader
         if(variant.Alt.length() != variant.Ref.length())
         {
             Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
-            return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
+            return record.getValidIndels().stream().anyMatch(x -> x.match(expectedIndel));
         }
 
         for(int i = 0; i < variant.Alt.length(); ++i)

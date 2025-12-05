@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.bam.testutilities;
 
+import java.util.Arrays;
+
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -9,6 +11,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class PairedRecordsBuilder
 {
+    private final byte BASE_QUAL_F = (byte) 37;
     private final String readName;
     private final SAMFileHeader header;
 
@@ -18,10 +21,10 @@ public class PairedRecordsBuilder
         this.header = header;
     }
 
-    public Pair<SAMRecord, SAMRecord> build(Pair<BaseRegion, BaseRegion> baseRegionPair)
+    public Pair<SAMRecord, SAMRecord> build(Pair<BasesRegion, BasesRegion> baseRegionPair)
     {
-        BaseRegion readRegion = baseRegionPair.getLeft();
-        BaseRegion mateRegion = baseRegionPair.getRight();
+        BasesRegion readRegion = baseRegionPair.getLeft();
+        BasesRegion mateRegion = baseRegionPair.getRight();
         int length = readRegion.mBases.length;
         SAMRecord read1 = createRecord(length, true);
         // flags: 1 (paired), 2, (read mapped in proper pair), 32 (mate reverse strand), 64 (1st in pair)
@@ -60,7 +63,16 @@ public class PairedRecordsBuilder
         int lengthSign = forward ? 1 : -1;
         record.setInferredInsertSize(lengthSign * 2 * length);
         record.setAttribute(SamRecordUtils.MATE_QUALITY_ATTRIBUTE, 60); // 60?
+        // Perfect base qualities.
+        record.setBaseQualities(baseQualities(length));
 
         return record;
+    }
+
+    private byte[] baseQualities(int length)
+    {
+        byte[] qualities = new byte[length];
+        Arrays.fill(qualities, BASE_QUAL_F);
+        return qualities;
     }
 }

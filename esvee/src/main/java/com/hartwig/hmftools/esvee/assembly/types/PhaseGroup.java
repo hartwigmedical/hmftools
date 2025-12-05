@@ -21,6 +21,8 @@ public class PhaseGroup
     private final List<PhaseSet> mPhaseSets;
     private final List<AssemblyLink> mSecondarySplitLinks;
 
+    private int mNextPhaseSetId;
+
     public PhaseGroup(final JunctionAssembly first, @Nullable final JunctionAssembly second)
     {
         mId = -1;
@@ -28,6 +30,7 @@ public class PhaseGroup
         mDerivedAssemblies = Lists.newArrayList();
         mPhaseSets = Lists.newArrayList();
         mSecondarySplitLinks = Lists.newArrayList();
+        mNextPhaseSetId = 0;
 
         first.setPhaseGroup(this);
 
@@ -110,10 +113,9 @@ public class PhaseGroup
     public void finalisePhaseSetAlignments()
     {
         // also set phase set IDs
-        int phaseSetId = 0;
         for(PhaseSet phaseSet : mPhaseSets)
         {
-            phaseSet.setId(phaseSetId++);
+            phaseSet.setId(mNextPhaseSetId++);
 
             if(phaseSet.isShortLocalRefLink())
                 continue;
@@ -123,6 +125,13 @@ public class PhaseGroup
         }
 
         PhaseSetMerger.mergePhaseSets(mPhaseSets);
+    }
+
+    public int nextPhaseSetId()
+    {
+        int nextPhaseSetId = mNextPhaseSetId;
+        ++mNextPhaseSetId;
+        return nextPhaseSetId;
     }
 
     public String toString() { return format("id(%d) assemblies(%d)", mId, mAssemblies.size()); }

@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.orange.conversion;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.file.FileDelimiters;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
@@ -18,6 +17,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
+import com.hartwig.hmftools.orange.algo.linx.HomozygousDisruption;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ public final class LinxConversion
     public static LinxSvAnnotation convert(@NotNull com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
     {
         return ImmutableLinxSvAnnotation.builder()
-                .vcfId(linxSvAnnotation.vcfId())
+                .vcfId(linxSvAnnotation.vcfIdStart())
                 .svId(linxSvAnnotation.svId())
                 .clusterId(linxSvAnnotation.clusterId())
                 .clusterReason(linxSvAnnotation.clusterReason())
@@ -70,7 +70,7 @@ public final class LinxConversion
                 .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
-                .unreportedReasons(unreportableReasonStringToList(linxFusion.reportableReasons()))
+                .unreportedReasons(convertUnreportableReasons(linxFusion.reportableReasons()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
                 .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
@@ -84,28 +84,20 @@ public final class LinxConversion
     }
 
     @NotNull
-    private static List<LinxUnreportableReason> unreportableReasonStringToList(@NotNull String input)
+    private static List<LinxUnreportableReason> convertUnreportableReasons(@NotNull List<FusionReportableReason> reasons)
     {
-        return Arrays.stream(input.split(FileDelimiters.ITEM_DELIM))
-                .map(item ->
+        return reasons.stream()
+                .map(item -> switch(item)
                 {
-                    switch(item)
-                    {
-                        case "OK":
-                            return LinxUnreportableReason.NONE;
-                        case "PROTEIN_DOMAINS":
-                            return LinxUnreportableReason.DISRUPTED_PROTEIN_DOMAINS;
-                        case "NMD":
-                            return LinxUnreportableReason.NONSENSE_MEDIATED_DECAY;
-                        default:
-                            return LinxUnreportableReason.valueOf(item);
-                    }
-                })
-                .collect(Collectors.toList());
+                    case OK -> LinxUnreportableReason.NONE;
+                    case PROTEIN_DOMAINS -> LinxUnreportableReason.DISRUPTED_PROTEIN_DOMAINS;
+                    case NMD -> LinxUnreportableReason.NONSENSE_MEDIATED_DECAY;
+                    default -> LinxUnreportableReason.valueOf(item.name());
+                }).collect(Collectors.toList());
     }
 
     @NotNull
-    public static LinxHomozygousDisruption convert(@NotNull com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
+    public static LinxHomozygousDisruption convert(@NotNull HomozygousDisruption homozygousDisruption)
     {
         return ImmutableLinxHomozygousDisruption.builder()
                 .gene(homozygousDisruption.gene())

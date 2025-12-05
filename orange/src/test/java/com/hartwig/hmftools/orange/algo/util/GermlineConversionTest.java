@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
 import static com.hartwig.hmftools.orange.algo.purple.TumorStatsFactoryTest.createMinimalTumorStatsBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -59,15 +60,13 @@ public class GermlineConversionTest
                 .germlineMVLHPerGene(Maps.newHashMap())
                 .purple(TestPurpleInterpretationFactory.builder()
                         .germlineDrivers(Lists.newArrayList())
-                        .allGermlineVariants(Lists.newArrayList())
-                        .reportableGermlineVariants(Lists.newArrayList())
-                        .additionalSuspectGermlineVariants(Lists.newArrayList())
-                        .reportableGermlineFullDels(Lists.newArrayList())
+                        .otherGermlineVariants(Lists.newArrayList())
+                        .driverGermlineVariants(Lists.newArrayList())
                         .build())
                 .linx(TestLinxInterpretationFactory.builder()
                         .allGermlineStructuralVariants(Lists.newArrayList())
-                        .allGermlineBreakends(Lists.newArrayList())
-                        .reportableGermlineBreakends(Lists.newArrayList())
+                        .otherGermlineBreakends(Lists.newArrayList())
+                        .driverGermlineBreakends(Lists.newArrayList())
                         .germlineHomozygousDisruptions(Lists.newArrayList())
                         .build())
                 .build();
@@ -77,14 +76,13 @@ public class GermlineConversionTest
         assertNull(converted.germlineMVLHPerGene());
 
         assertNull(converted.purple().germlineDrivers());
-        assertNull(converted.purple().allGermlineVariants());
-        assertNull(converted.purple().reportableGermlineVariants());
-        assertNull(converted.purple().additionalSuspectGermlineVariants());
-        assertNull(converted.purple().reportableGermlineFullDels());
+        assertNull(converted.purple().otherGermlineVariants());
+        assertNull(converted.purple().driverGermlineVariants());
+        assertNull(converted.purple().driverGermlineDeletions());
 
         assertNull(converted.linx().allGermlineStructuralVariants());
-        assertNull(converted.linx().allGermlineBreakends());
-        assertNull(converted.linx().reportableGermlineBreakends());
+        assertNull(converted.linx().otherGermlineBreakends());
+        assertNull(converted.linx().driverGermlineBreakends());
         assertNull(converted.linx().germlineHomozygousDisruptions());
     }
 
@@ -106,7 +104,6 @@ public class GermlineConversionTest
         PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().build();
         PurpleVariant suspectGermlineVariant = TestPurpleVariantFactory.builder().build();
 
-        PurpleGainDeletion somaticGainDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleGainDeletion reportableSomaticGainDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleGainDeletion reportableGermlineFullDel = TestPurpleGainDeletionFactory.builder().build();
         PurpleLossOfHeterozygosity reportableGermlineLOH =
@@ -118,7 +115,6 @@ public class GermlineConversionTest
                         .minMinorAlleleCopyNumber(0.9)
                         .maxCopyNumber(2.0)
                         .build();
-        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE2).build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
         PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_MUTATION).build();
@@ -131,18 +127,14 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineMutationDriver, germlineHomozygousDeletionDriver, germlineHeterozygousDeletionDriver)
-                .addAllSomaticVariants(somaticVariant, suspectSomaticVariant, reportableSomaticVariant)
-                .addReportableSomaticVariants(reportableSomaticVariant)
-                .addAdditionalSuspectSomaticVariants(suspectSomaticVariant)
-                .addAllGermlineVariants(germlineVariant, suspectGermlineVariant, reportableGermlineVariant)
-                .addReportableGermlineVariants(reportableGermlineVariant)
-                .addAdditionalSuspectGermlineVariants(suspectGermlineVariant)
-                .addAllSomaticGainsDels(somaticGainDel, reportableSomaticGainDel)
-                .addReportableSomaticGainsDels(reportableSomaticGainDel)
-                .addReportableGermlineFullDels(reportableGermlineFullDel)
-                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
-                .addReportableGermlineLossOfHeterozygosities(reportableGermlineLOH)
-                .addAllSomaticGeneCopyNumbers(geneCopyNumberForGermlineLOH)
+                .addOtherSomaticVariants(somaticVariant, suspectSomaticVariant, reportableSomaticVariant)
+                .addDriverSomaticVariants(reportableSomaticVariant)
+                .addOtherGermlineVariants(germlineVariant, suspectGermlineVariant, reportableGermlineVariant)
+                .addDriverGermlineVariants(reportableGermlineVariant)
+                .addDriverSomaticGainsDels(reportableSomaticGainDel)
+                .addDriverGermlineDeletions(reportableGermlineFullDel)
+                .addDriverGermlineLossOfHeterozygosities(reportableGermlineLOH)
+                .addSomaticGeneCopyNumbers(geneCopyNumberForGermlineLOH)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -154,25 +146,17 @@ public class GermlineConversionTest
         assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.MUTATION));
         assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.DEL));
 
-        assertEquals(4, converted.allSomaticVariants().size());
-        assertTrue(converted.allSomaticVariants().contains(reportableGermlineVariant));
+        assertEquals(4, converted.otherSomaticVariants().size());
+        assertTrue(converted.otherSomaticVariants().contains(reportableGermlineVariant));
 
-        assertEquals(2, converted.reportableSomaticVariants().size());
-        assertTrue(converted.reportableSomaticVariants().contains(reportableSomaticVariant));
-        assertTrue(converted.reportableSomaticVariants().contains(reportableGermlineVariant));
+        assertEquals(2, converted.driverSomaticVariants().size());
+        assertTrue(converted.driverSomaticVariants().contains(reportableSomaticVariant));
+        assertTrue(converted.driverSomaticVariants().contains(reportableGermlineVariant));
 
-        assertEquals(1, converted.additionalSuspectSomaticVariants().size());
-        assertTrue(converted.additionalSuspectSomaticVariants().contains(suspectSomaticVariant));
+        assertEquals(2, converted.driverSomaticGainsDels().size());
+        assertTrue(converted.driverSomaticGainsDels().contains(reportableSomaticGainDel));
+        assertTrue(converted.driverSomaticGainsDels().contains(reportableGermlineFullDel));
 
-        assertEquals(3, converted.allSomaticGainsDels().size());
-        assertTrue(converted.allSomaticGainsDels().contains(reportableGermlineFullDel));
-
-        assertEquals(2, converted.reportableSomaticGainsDels().size());
-        assertTrue(converted.reportableSomaticGainsDels().contains(reportableSomaticGainDel));
-        assertTrue(converted.reportableSomaticGainsDels().contains(reportableGermlineFullDel));
-
-        assertEquals(2, converted.suspectGeneCopyNumbersWithLOH().size());
-        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(suspectSomaticGeneCopyNumberWithLOH));
         PurpleGeneCopyNumber convertedReportableGermlineLOH =
                 TestPurpleGeneCopyNumberFactory.builder()
                         .gene(TEST_GENE1)
@@ -180,17 +164,15 @@ public class GermlineConversionTest
                         .minMinorAlleleCopyNumber(0.)
                         .maxCopyNumber(2.0)
                         .build();
-        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedReportableGermlineLOH));
-
         PurpleRecord unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
         assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), PurpleDriverType.AMP));
 
-        assertEquals(1, unreliableConverted.reportableSomaticVariants().size());
-        assertTrue(unreliableConverted.reportableSomaticVariants().contains(reportableSomaticVariant));
+        assertEquals(1, unreliableConverted.driverSomaticVariants().size());
+        assertTrue(unreliableConverted.driverSomaticVariants().contains(reportableSomaticVariant));
 
-        assertEquals(1, unreliableConverted.reportableSomaticGainsDels().size());
-        assertTrue(unreliableConverted.reportableSomaticGainsDels().contains(reportableSomaticGainDel));
+        assertEquals(1, unreliableConverted.driverSomaticGainsDels().size());
+        assertTrue(unreliableConverted.driverSomaticGainsDels().contains(reportableSomaticGainDel));
     }
 
     @Test
@@ -207,19 +189,14 @@ public class GermlineConversionTest
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels()
-                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
-                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
-                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .addDriverSomaticGainsDels()
+                .addDriverGermlineLossOfHeterozygosities(germlineLOH)
+                .addSomaticGeneCopyNumbers(geneCopyNumber)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(0, converted.somaticDrivers().size());
-
-        assertEquals(1, converted.suspectGeneCopyNumbersWithLOH().size());
-        assertEquals(0.7, converted.suspectGeneCopyNumbersWithLOH().get(0).minCopyNumber(), EPSILON);
-        assertEquals(0., converted.suspectGeneCopyNumbersWithLOH().get(0).minMinorAlleleCopyNumber(), EPSILON);
     }
 
     @Test
@@ -235,10 +212,10 @@ public class GermlineConversionTest
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels()
-                .addReportableGermlineFullDels(reportableGermlineFullDel)
-                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
-                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .addDriverSomaticGainsDels()
+                .addDriverGermlineDeletions(reportableGermlineFullDel)
+                .addDriverGermlineLossOfHeterozygosities(germlineLOH)
+                .addSomaticGeneCopyNumbers(geneCopyNumber)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -250,8 +227,6 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();
         assertTrue(converted.somaticDrivers().contains(convertedDriver));
-
-        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
     }
 
     @Test
@@ -265,15 +240,14 @@ public class GermlineConversionTest
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels()
-                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
-                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .addDriverSomaticGainsDels()
+                .addDriverGermlineLossOfHeterozygosities(germlineLOH)
+                .addSomaticGeneCopyNumbers(geneCopyNumber)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(0, converted.somaticDrivers().size());
-        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
     }
 
     @Test
@@ -288,19 +262,14 @@ public class GermlineConversionTest
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels()
-                .addReportableGermlineLossOfHeterozygosities(germlineLOH1, germlineLOH2)
-                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .addDriverSomaticGainsDels()
+                .addDriverGermlineLossOfHeterozygosities(germlineLOH1, germlineLOH2)
+                .addSomaticGeneCopyNumbers(geneCopyNumber)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(0, converted.somaticDrivers().size());
-
-        assertEquals(1, converted.suspectGeneCopyNumbersWithLOH().size());
-        PurpleGeneCopyNumber convertedGeneCopyNumber =
-                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).build();
-        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedGeneCopyNumber));
     }
 
     @Test
@@ -336,8 +305,8 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticDel)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticDel)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -345,10 +314,10 @@ public class GermlineConversionTest
         assertEquals(1, converted.somaticDrivers().size());
         assertEquals(somaticDriver, converted.somaticDrivers().get(0));
 
-        assertEquals(1, converted.reportableSomaticGainsDels().size());
-        assertEquals(0.1, converted.reportableSomaticGainsDels().get(0).minCopies(), EPSILON);
-        assertEquals(1.0, converted.reportableSomaticGainsDels().get(0).maxCopies(), EPSILON);
-        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, converted.reportableSomaticGainsDels().get(0).interpretation());
+        assertEquals(1, converted.driverSomaticGainsDels().size());
+        assertEquals(0.1, converted.driverSomaticGainsDels().get(0).minCopies(), EPSILON);
+        assertEquals(1.0, converted.driverSomaticGainsDels().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.PARTIAL_DEL, converted.driverSomaticGainsDels().get(0).interpretation());
     }
 
     @Test
@@ -384,8 +353,8 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticDel)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticDel)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -393,10 +362,10 @@ public class GermlineConversionTest
         assertEquals(1, converted.somaticDrivers().size());
         assertEquals(somaticDriver, converted.somaticDrivers().get(0));
 
-        assertEquals(1, converted.reportableSomaticGainsDels().size());
-        assertEquals(0.1, converted.reportableSomaticGainsDels().get(0).minCopies(), EPSILON);
-        assertEquals(0.4, converted.reportableSomaticGainsDels().get(0).maxCopies(), EPSILON);
-        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.reportableSomaticGainsDels().get(0).interpretation());
+        assertEquals(1, converted.driverSomaticGainsDels().size());
+        assertEquals(0.1, converted.driverSomaticGainsDels().get(0).minCopies(), EPSILON);
+        assertEquals(0.4, converted.driverSomaticGainsDels().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.driverSomaticGainsDels().get(0).interpretation());
     }
 
     @Test
@@ -432,8 +401,8 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticDel)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticDel)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -441,10 +410,10 @@ public class GermlineConversionTest
         assertEquals(1, converted.somaticDrivers().size());
         assertEquals(somaticDriver, converted.somaticDrivers().get(0));
 
-        assertEquals(1, converted.reportableSomaticGainsDels().size());
-        assertEquals(0.1, converted.reportableSomaticGainsDels().get(0).minCopies(), EPSILON);
-        assertEquals(0.4, converted.reportableSomaticGainsDels().get(0).maxCopies(), EPSILON);
-        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.reportableSomaticGainsDels().get(0).interpretation());
+        assertEquals(1, converted.driverSomaticGainsDels().size());
+        assertEquals(0.1, converted.driverSomaticGainsDels().get(0).minCopies(), EPSILON);
+        assertEquals(0.4, converted.driverSomaticGainsDels().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.driverSomaticGainsDels().get(0).interpretation());
     }
 
     @Test
@@ -480,8 +449,8 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticDel)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticDel)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -489,10 +458,10 @@ public class GermlineConversionTest
         assertEquals(1, converted.somaticDrivers().size());
         assertEquals(somaticDriver, converted.somaticDrivers().get(0));
 
-        assertEquals(1, converted.reportableSomaticGainsDels().size());
-        assertEquals(0.1, converted.reportableSomaticGainsDels().get(0).minCopies(), EPSILON);
-        assertEquals(0.3, converted.reportableSomaticGainsDels().get(0).maxCopies(), EPSILON);
-        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.reportableSomaticGainsDels().get(0).interpretation());
+        assertEquals(1, converted.driverSomaticGainsDels().size());
+        assertEquals(0.1, converted.driverSomaticGainsDels().get(0).minCopies(), EPSILON);
+        assertEquals(0.3, converted.driverSomaticGainsDels().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_DEL, converted.driverSomaticGainsDels().get(0).interpretation());
     }
 
     @Test
@@ -523,8 +492,8 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticDel)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticDel)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
@@ -532,7 +501,7 @@ public class GermlineConversionTest
         assertEquals(2, converted.somaticDrivers().size());
         assertEquals(somaticDriver, converted.somaticDrivers().get(0));
 
-        assertEquals(2, converted.reportableSomaticGainsDels().size());
+        assertEquals(2, converted.driverSomaticGainsDels().size());
     }
 
     @Test
@@ -558,14 +527,14 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticAmp)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticAmp)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(2, converted.somaticDrivers().size());
-        assertEquals(2, converted.reportableSomaticGainsDels().size());
+        assertEquals(2, converted.driverSomaticGainsDels().size());
     }
 
     @Test
@@ -591,14 +560,14 @@ public class GermlineConversionTest
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
                 .addGermlineDrivers(germlineDriver)
-                .addReportableSomaticGainsDels(somaticPartialAmp)
-                .addReportableGermlineFullDels(germlineDel)
+                .addDriverSomaticGainsDels(somaticPartialAmp)
+                .addDriverGermlineDeletions(germlineDel)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertEquals(2, converted.somaticDrivers().size());
-        assertEquals(2, converted.reportableSomaticGainsDels().size());
+        assertEquals(2, converted.driverSomaticGainsDels().size());
     }
 
     @NotNull
@@ -749,15 +718,15 @@ public class GermlineConversionTest
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
         LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
-        LinxHomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
+        LinxHomozygousDisruption germlineHomozygousDisruption = linxHomozygousDisruptionBuilder().build();
 
         LinxRecord linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)
-                .addAllSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
-                .addReportableSomaticBreakends(reportableSomaticBreakend)
+                .addOtherSomaticBreakends(somaticBreakend, reportableSomaticBreakend)
+                .addDriverSomaticBreakends(reportableSomaticBreakend)
                 .addAllGermlineStructuralVariants(germlineStructuralVariant1, germlineStructuralVariant2, germlineStructuralVariant3)
-                .addAllGermlineBreakends(germlineBreakend, reportableGermlineBreakend)
-                .addReportableGermlineBreakends(reportableGermlineBreakend)
+                .addOtherGermlineBreakends(germlineBreakend, reportableGermlineBreakend)
+                .addDriverGermlineBreakends(reportableGermlineBreakend)
                 .addGermlineHomozygousDisruptions(germlineHomozygousDisruption)
                 .build();
 
@@ -766,11 +735,11 @@ public class GermlineConversionTest
         assertEquals(5, GermlineConversion.findMaxSvId(converted.allSomaticStructuralVariants()));
         assertEquals(8, GermlineConversion.findMaxClusterId(converted.allSomaticStructuralVariants()));
 
-        assertEquals(3, converted.allSomaticBreakends().size());
-        assertEquals(11, GermlineConversion.findMaxBreakendId(converted.allSomaticBreakends()));
+        assertEquals(3, converted.otherSomaticBreakends().size());
+        assertEquals(11, GermlineConversion.findMaxBreakendId(converted.otherSomaticBreakends()));
 
-        assertEquals(2, converted.reportableSomaticBreakends().size());
-        assertEquals(11, GermlineConversion.findMaxBreakendId(converted.reportableSomaticBreakends()));
+        assertEquals(2, converted.driverSomaticBreakends().size());
+        assertEquals(11, GermlineConversion.findMaxBreakendId(converted.driverSomaticBreakends()));
 
         assertEquals(1, converted.somaticHomozygousDisruptions().size());
         assertTrue(converted.somaticHomozygousDisruptions().contains(germlineHomozygousDisruption));
@@ -797,8 +766,8 @@ public class GermlineConversionTest
         PurpleVariant reportableGermlineVariant = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
-                .addAllSomaticVariants(somaticVariant)
-                .addReportableGermlineVariants(reportableGermlineVariant)
+                .addOtherSomaticVariants(somaticVariant)
+                .addDriverGermlineVariants(reportableGermlineVariant)
                 .tumorStats(createMinimalTumorStatsBuilder().hotspotMutationCount(1).build())
                 .build();
 

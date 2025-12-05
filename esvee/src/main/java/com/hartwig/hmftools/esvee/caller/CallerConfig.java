@@ -23,6 +23,8 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.INPUT_VCF_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR;
 import static com.hartwig.hmftools.esvee.common.FileCommon.PREP_DIR_DESC;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formEsveeInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.registerCommonConfig;
+import static com.hartwig.hmftools.esvee.common.FileCommon.setSequencingType;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -74,6 +76,8 @@ public class CallerConfig
         PrepDir = configBuilder.hasValue(PREP_DIR) ? checkAddDirSeparator(configBuilder.getValue(PREP_DIR)) : OutputDir;
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+
+        setSequencingType(configBuilder);
 
         SpecificChromosomes = loadSpecificChromsomes(configBuilder);
 
@@ -127,6 +131,8 @@ public class CallerConfig
         configBuilder.addPath(INPUT_VCF, false, INPUT_VCF_DESC);
         configBuilder.addPaths(PREP_DIR, false, PREP_DIR_DESC);
         configBuilder.addInteger(MANUAL_REF_DEPTH, "Manually set ref depth for testing", 0);
+
+        registerCommonConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

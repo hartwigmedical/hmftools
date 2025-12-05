@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.WriteType.CACHE_BAM;
 import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.chrFromChrPartition;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.CACHE_BAM;
 
 import java.io.File;
 import java.io.IOException;

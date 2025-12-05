@@ -8,13 +8,19 @@ import static com.hartwig.hmftools.common.bam.ConsensusType.SINGLE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractConsensusType;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_N_BYTE;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0Values;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractT0ValueAtIndex;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.ReduxConfig.SEQUENCING_TYPE;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.ReduxConfig.isUltima;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_INDEL_LOW_QUAL_VAF;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_INDEL_MED_QUAL_VAF;
 import static com.hartwig.hmftools.redux.ReduxConstants.BQR_MIN_MAP_QUAL;
+import static com.hartwig.hmftools.redux.ReduxConstants.BQR_NUM_EVENTS_THRESHOLD;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_CONSENSUS_TYPES;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_POSITIONS;
 import static com.hartwig.hmftools.redux.bqr.BqrConfig.LOG_QUAL;
@@ -70,8 +76,7 @@ public class BqrRegionReader implements CigarHandler
     private ConsensusType mCurrentReadType;
 
     public static final int REF_BASE_REGION_SIZE = 100000;
-    private static final int BASE_DATA_PURGE_POS_BUFFER = 10;
-    private static final int BASE_DATA_PURGE_POS_CHECK = 1000;
+    private static final int BASE_DATA_PURGE_POS_CHECK = 5000;
 
     public BqrRegionReader(final RefGenomeInterface refGenome, final BaseQualityResults results, final List<ChrBaseRegion> allRegions)
     {
@@ -202,7 +207,6 @@ public class BqrRegionReader implements CigarHandler
                     mRegion, String.format("%.1f", mPerfCounter.getLastTime()), mReadCounter);
         }
         */
-
     }
 
     public Collection<BqrKeyCounter> getQualityCounts() { return mQualityCounts; }
@@ -236,7 +240,12 @@ public class BqrRegionReader implements CigarHandler
         if(bqData == null)
             return;
 
-        if(bqData.hasIndel())
+        if(bqData.hasHighQualIndel())
+            return;
+
+        double indelVafThreshold = bqData.hasMediumQualIndel() ? BQR_INDEL_MED_QUAL_VAF : BQR_INDEL_LOW_QUAL_VAF;
+
+        if(bqData.indelVaf() > indelVafThreshold)
             return;
 
         Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts();
@@ -261,6 +270,11 @@ public class BqrRegionReader implements CigarHandler
             return;
 
         if(record.getMappingQuality() < BQR_MIN_MAP_QUAL)
+            return;
+
+        int numEvents = getNumEvents(record);
+
+        if((double)numEvents / record.getReadLength() > BQR_NUM_EVENTS_THRESHOLD)
             return;
 
         setShortFragmentBoundaries(record);
@@ -317,27 +331,57 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @Override
-    public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
+    public void handleInsert(final SAMRecord record, final CigarElement element, final int readIndex, final int refPos)
     {
+        int minQual = record.getBaseQualities()[readIndex + 1];
+
+        // checking if any inserted base is low qual
+        for(int i = 1; i < element.getLength(); ++i)
+        {
+            minQual = min(minQual, record.getBaseQualities()[readIndex + i + 1]);
+        }
+
         // note: ref position here is the last base of the previous aligned element - likewise for deletes
-        markIndelPosition(refPos);
+        markIndelPosition(refPos, (byte)minQual);
     }
 
     @Override
-    public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
+    public void handleDelete(final SAMRecord record, final CigarElement element, final int readIndex, final int refPos)
     {
-        markIndelPosition(refPos);
+        int minQual = record.getBaseQualities()[readIndex + 1];
+
+        if(isUltima())  // checking if low qual complete HP deletion implied by bases adjacent to delete
+        {
+            for(int i = 0; i <= 1; ++i)
+            {
+                minQual = min(minQual, extractT0ValueAtIndex(record, readIndex + i));
+            }
+        }
+        markIndelPosition(refPos, (byte)minQual);
     }
 
-    private void markIndelPosition(int position)
+    private void markIndelPosition(int position, byte minQual)
     {
         if(!mCurrentRefSequence.positionWithinBounds(position))
             return;
 
-        byte ref = mCurrentRefSequence.base(position);
         byte[] trinucleotideContext = mCurrentRefSequence.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
-        bqData.setHasIndel();
+        BaseQualityData bqData = getOrCreateBaseQualData(position, trinucleotideContext);
+        bqData.addIndelCount();
+
+        boolean isHighQual = true;
+        boolean isMediumQual = false;
+
+        if(isSbx() || isUltima())
+        {
+            isHighQual = BaseQualAdjustment.isHighBaseQual(minQual, SEQUENCING_TYPE);
+            isMediumQual = BaseQualAdjustment.isMediumBaseQual(minQual, SEQUENCING_TYPE);
+        }
+
+        if(isHighQual)
+            bqData.setHasHighQualIndel();
+        else if(isMediumQual)
+            bqData.setHasMediumQualIndel();
     }
 
     @Override
@@ -373,8 +417,6 @@ public class BqrRegionReader implements CigarHandler
 
             int readIndex = startReadIndex + i;
 
-            byte ref = mCurrentRefSequence.base(position);
-
             /*
             if(readIndex >= record.getReadBases().length)
             {
@@ -389,12 +431,6 @@ public class BqrRegionReader implements CigarHandler
                 continue;
 
             byte quality = record.getBaseQualities()[readIndex];
-
-            if(BaseQualAdjustment.isUncertainBaseQual(quality))
-                continue;
-
-            if(isUltima() && belowMaxUltimaQual(record, readIndex, t0Values))
-                continue;
 
             mCurrentRefSequence.populateTrinucleotideContext(position, trinucleotideContext);
             readUsed = true;
@@ -418,7 +454,15 @@ public class BqrRegionReader implements CigarHandler
                 }
             }
 
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, trinucleotideContext);
+            baseQualityData.addAlignedCount();
+
+            if(BaseQualAdjustment.isUncertainBaseQual(quality))
+                continue;
+
+            if(isUltima() && belowMaxUltimaQual(record, readIndex, t0Values))
+                continue;
+
             baseQualityData.processReadBase(consensusType, alt, quality, readPosStrand);
         }
 
@@ -439,6 +483,8 @@ public class BqrRegionReader implements CigarHandler
 
     private void purgeBaseDataList(int currentReadStartPos)
     {
+        int maxPurgePosition = currentReadStartPos - BASE_DATA_PURGE_POS_CHECK / 2;
+
         for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
         {
             int position = mCurrentRefSequence.position(mPurgeIndex);
@@ -450,7 +496,7 @@ public class BqrRegionReader implements CigarHandler
                 System.exit(1);
             }
 
-            if(position >= currentReadStartPos - BASE_DATA_PURGE_POS_BUFFER)
+            if(position >= maxPurgePosition)
                 break;
 
             BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
@@ -466,7 +512,7 @@ public class BqrRegionReader implements CigarHandler
     }
 
     @VisibleForTesting
-    public BaseQualityData getOrCreateBaseQualData(int position, final byte ref, final byte[] trinucleotideContext)
+    public BaseQualityData getOrCreateBaseQualData(int position, final byte[] trinucleotideContext)
     {
         int posIndex = mCurrentRefSequence.index(position);
         BaseQualityData baseQualityData = mBaseQualityData[posIndex];

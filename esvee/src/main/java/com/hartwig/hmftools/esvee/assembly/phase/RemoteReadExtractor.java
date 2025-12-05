@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.log10;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 

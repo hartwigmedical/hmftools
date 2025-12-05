@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
 
@@ -50,12 +51,14 @@ public class TestBreakendDataBuilder
         final LinxBreakend breakend = ImmutableLinxBreakend.builder()
                 .transcriptId(transcriptId)
                 .canonical(canonical)
-                .reportedDisruption(reportedDisruption)
+                .reportedStatus(reportedDisruption ? ReportedStatus.REPORTED : ReportedStatus.NONE)
                 .regionType(regionType)
                 .codingType(codingType)
                 .nextSpliceExonRank(nextSpliceExonRank)
                 .id(-1)
                 .svId(-1)
+                .vcfId("")
+                .coords("")
                 .isStart(true)
                 .gene("")
                 .geneOrientation("")

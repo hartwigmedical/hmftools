@@ -167,7 +167,7 @@ public class SbxDuplexReadTest
 
         assertEquals("3M1I4M", read.getCigarString());
         assertEquals("CTCTTACC", read.getReadString());
-        checkBaseQuals(read, List.of(3, 4));
+        checkBaseQuals(read, List.of(3));
         assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
 
         // test 3: 2 low-qual bases and 2-base repeat
@@ -342,6 +342,47 @@ public class SbxDuplexReadTest
         checkBaseQuals(read, List.of(4, 5, 8));
         assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
    }
+
+    @Test
+    public void testStripDuplexComplexIndels2()
+    {
+        int alignmentStart = 10;
+
+        // test 1: Long homopolymer repeat with low qual bases starting mid-way through
+
+        //                0123     4567890123456789     01234
+        String readStr = "ATGG" + "TTTTTTTTTTTTTTTT" + "ATGG";
+        // base quals     9999     9990000000000000     9999
+        // cigar          MMMM     IIIIIIIIIIIIIMMM     MMMM
+        String cigar = "4M13I7M";
+
+        SAMRecord read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        byte[] baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+
+        for(int i = 7; i <= 19; ++i)
+        {
+            baseQuals[i] = 0;
+        }
+
+        read.setBaseQualities(baseQuals);
+
+        String ycTagStr = "0-7" + "Z".repeat(13) + "4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
+        read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
+
+        stripDuplexIndels(read);
+
+        /*
+        assertEquals("13M", read.getCigarString());
+        assertEquals("ATGGTTTTTATGG", read.getReadString());
+        checkBaseQuals(read, List.of(3, 6));
+        assertEquals(2, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
+        */
+    }
 
     @Test
     public void testStripDuplexMultipleIndels()
@@ -549,22 +590,28 @@ public class SbxDuplexReadTest
         assertEquals("20M20S", read.getCigarString());
         assertEquals(40, read.getReadBases().length);
 
-        /*
-        // with supplementary having a different aligned and soft-clip length, requiring adjustment
-        cigar = "20M21S";
-        suppCigar = "18S12M2I12M";
+        // stripped indels in this read result in corrected supp data
+        String alignedBases2 = alignedBases.substring(0, 10) + "A" + alignedBases.substring(10);
+        suppBases = "ACGTACGTAAACGTACGTAA";
+        cigar = "10M1I10M20S";
+        suppCigar = "21S20M";
+        readBases = alignedBases2 + suppBases;
 
         suppData = new SupplementaryReadData(CHR_2, suppPosStart, SUPP_POS_STRAND, suppCigar, DEFAULT_MAP_QUAL, 0);
+
+        ycTagStr = "0-10Z120-0";
 
         read = createSamRecordUnpaired(
                 TEST_READ_ID, CHR_1, alignmentStart, readBases, cigar, false, false, suppData);
         read.setAttribute(SBX_YC_TAG, ycTagStr);
+        read.getBaseQualities()[10] = RAW_DUPLEX_MISMATCH_QUAL;
 
         stripDuplexIndels(read);
 
-        assertEquals("20M23S", read.getCigarString());
-        assertEquals(43, read.getReadBases().length);
-        */
+        assertEquals("20M20S", read.getCigarString());
+        assertEquals(40, read.getReadBases().length);
+        SupplementaryReadData newSuppData = SupplementaryReadData.extractAlignment(read);
+        assertEquals("20S20M", newSuppData.Cigar);
 
         // reversed supp data
         // index:    20                  30

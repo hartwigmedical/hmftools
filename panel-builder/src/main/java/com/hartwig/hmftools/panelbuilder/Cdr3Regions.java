@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.panelbuilder.ProbeUtils.probeRegionStartingAt
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.cider.IgTcrGene;
 import com.hartwig.hmftools.common.cider.IgTcrGeneFile;
@@ -61,17 +63,13 @@ public class Cdr3Regions
     private static ProbeGenerationResult generateProbes(final List<IgTcrGene> genes, final ProbeGenerator probeGenerator,
             final PanelCoverage coverage)
     {
-        ProbeGenerationResult result = new ProbeGenerationResult();
         List<ChrBaseRegion> generatedRegions = new ArrayList<>();
-        for(IgTcrGene gene : genes)
-        {
-            result = result.add(generateProbe(gene, probeGenerator, coverage, generatedRegions));
-        }
-        return result;
+        Stream<ProbeGenerationSpec> probeGenerationSpecs =
+                genes.stream().flatMap(gene -> createProbeGenerationSpec(gene, generatedRegions).stream());
+        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
     }
 
-    private static ProbeGenerationResult generateProbe(final IgTcrGene gene, final ProbeGenerator probeGenerator,
-            final PanelCoverage coverage, List<ChrBaseRegion> generatedRegions)
+    private static Optional<ProbeGenerationSpec> createProbeGenerationSpec(final IgTcrGene gene, List<ChrBaseRegion> generatedRegions)
     {
         ChrBaseRegion targetRegion = calculateTargetRegion(gene);
 
@@ -79,17 +77,18 @@ public class Cdr3Regions
         {
             // It's possible regions overlap other regions, in which case just take the first and discard the rest.
             LOGGER.trace("CDR3 region {} overlaps with another; discarding", targetRegion);
-            return new ProbeGenerationResult();
+            return Optional.empty();
         }
         else
         {
-            TargetMetadata metadata = createTargetMetadata(gene);
-            // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
-            // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
-            ProbeGenerationResult result = probeGenerator.probe(targetRegion, metadata, PROBE_CRITERIA, coverage);
             // For simplicity, don't check any regions where we already attempted any probe generation around that location.
             generatedRegions.add(targetRegion);
-            return result;
+            // Produce a probe exactly at the determined region or not at all. Shifting probes is not acceptable here.
+            // Need to produce a probe which is aligned with the edge of the gene. And want to match the previous CDR3 panel design closely.
+            SequenceDefinition sequenceDefinition = SequenceDefinition.singleRegion(targetRegion);
+            TargetedRange targetedRange = TargetedRange.wholeRegion(sequenceDefinition.baseLength());
+            TargetMetadata metadata = createTargetMetadata(gene);
+            return Optional.of(new ProbeGenerationSpec.SingleProbe(sequenceDefinition, targetedRange, metadata, PROBE_CRITERIA));
         }
     }
 

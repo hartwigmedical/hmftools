@@ -27,7 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.assembly.RefReadParseState;
+import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
@@ -211,7 +211,7 @@ public class JunctionAssembly
     public int mismatchReadCount() { return mMismatchReadCount; }
     public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
-    public void addRead(final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type)
+    public void addRefBaseSupportRead(final Read read, final ReadAssemblyIndices readAssemblyIndices, final SupportType type)
     {
         if(readAssemblyIndices == ReadAssemblyIndices.INVALID_INDICES)
             return;
@@ -266,15 +266,23 @@ public class JunctionAssembly
         }
 
         int junctionReadStartDistance = readAssemblyIndices.junctionReadStartDistance(mJunctionIndex);
-        addSupport(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount);
+
+        SupportRead support = new SupportRead(read, type, junctionReadStartDistance, highQualMatchCount, mismatchCount);
+        mSupport.add(support);
     }
 
-    public void addSupport(
-            final Read read, final SupportType type, int junctionReadStartDistance, int matches, int mismatches)
+    public void addJunctionSupport(
+            final Read read, final SupportType type, int junctionReadStartDistance, final ReadParseState readInfo)
     {
         boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
         SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
-        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matches, mismatches);
+
+        int matchedBases = readInfo.matchedBases();
+        int mismatchCount = readInfo.mismatchCount(true);
+        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, matchedBases, mismatchCount);
+
+        if(readInfo != null)
+            support.setMismatchInfo(readInfo.mismatchInfo());
 
         mSupport.add(support);
     }
@@ -337,11 +345,11 @@ public class JunctionAssembly
         for(int i = 0; i < mSupport.size(); ++i)
         {
             SupportRead read = mSupport.get(i);
-            RefReadParseState readState = refBaseSeqBuilder.reads().get(i);
+            ReadParseState readState = refBaseSeqBuilder.reads().get(i);
 
-            if(readState.isValid() && !readState.exceedsMaxMismatches())
+            if(readState.isValid() && !readState.mismatched())
             {
-                read.setReferenceMismatches(readState.mismatches());
+                read.setReferenceMismatches(readState.mismatchCount(true));
                 checkAddRefSideSoftClip(read.cachedRead());
             }
         }
@@ -855,6 +863,16 @@ public class JunctionAssembly
 
         SupportRead support = new SupportRead(read, JUNCTION, junctionReadStartDistance, extensionBases, 0);
         support.setReferenceMismatches(0);
+        mSupport.add(support);
+    }
+
+    @VisibleForTesting
+    public void addJunctionRead(final Read read, final SupportType type, int junctionReadStartDistance)
+    {
+        boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
+        SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
+        SupportRead support = new SupportRead(read, adjustedType, junctionReadStartDistance, junctionReadStartDistance, 0);
+
         mSupport.add(support);
     }
 

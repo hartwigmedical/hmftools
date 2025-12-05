@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION
 import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
 import static com.hartwig.hmftools.common.linx.LinxFusion.context;
 import static com.hartwig.hmftools.common.linx.LinxFusion.fusionJcn;
+import static com.hartwig.hmftools.common.linx.LinxFusion.reportableReasonsToStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -23,10 +24,12 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.linx.CohortDataWriter;
 import com.hartwig.hmftools.linx.CohortFileInterface;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
@@ -44,7 +47,7 @@ public class FusionWriter implements CohortFileInterface
     }
 
     public static void convertBreakendsAndFusions(
-            final List<GeneFusion> geneFusions, final List<BreakendTransData> transcripts,
+            final List<GeneFusion> geneFusions, final Map<String, DriverGene> driverGenes, final List<BreakendTransData> transcripts,
             final List<LinxFusion> fusions, final List<LinxBreakend> breakends)
     {
         int breakendId = 0;
@@ -54,16 +57,28 @@ public class FusionWriter implements CohortFileInterface
         {
             transIdMap.put(transcript, breakendId);
 
+            BreakendGeneData geneData = transcript.breakendGeneData();
+
+            DriverGene driverGene = driverGenes.get(geneData.GeneData.GeneName);
+            ReportedStatus reportedStatus = ReportedStatus.NONE;
+
+            if(driverGene != null && transcript.reportableDisruption())
+            {
+                reportedStatus = driverGene.reportDisruption() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
+            }
+
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(breakendId++)
-                    .svId(transcript.breakendGeneData().varId())
-                    .isStart(transcript.breakendGeneData().isStart())
+                    .svId(geneData.varId())
+                    .vcfId(geneData.vcfId())
+                    .coords(geneData.coordsStr())
+                    .isStart(geneData.isStart())
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
                     .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
-                    .reportedDisruption(transcript.reportableDisruption())
+                    .reportedStatus(reportedStatus)
                     .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
                     .regionType(transcript.regionType())
                     .codingType(transcript.codingType())
@@ -82,6 +97,9 @@ public class FusionWriter implements CohortFileInterface
 
         for(final GeneFusion geneFusion : geneFusions)
         {
+            BreakendGeneData upGeneData = geneFusion.upstreamTrans().breakendGeneData();
+            BreakendGeneData downGeneData = geneFusion.downstreamTrans().breakendGeneData();
+
             int upBreakendId = transIdMap.get(geneFusion.upstreamTrans());
             int downBreakendId = transIdMap.get(geneFusion.downstreamTrans());
 
@@ -91,9 +109,13 @@ public class FusionWriter implements CohortFileInterface
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
                     .reportedType(geneFusion.knownTypeStr())
-                    .reportableReasons(geneFusion.reportableReasonsStr())
+                    .reportableReasons(geneFusion.reportableReasons())
                     .phased(geneFusion.phaseType())
                     .likelihood(geneFusion.likelihoodType())
+                    .fivePrimeVcfId(upGeneData.vcfId())
+                    .threePrimeVcfId(downGeneData.vcfId())
+                    .fivePrimeCoords(upGeneData.coordsStr())
+                    .threePrimeCoords(downGeneData.coordsStr())
                     .chainLength(geneFusion.getChainLength())
                     .chainLinks(geneFusion.getChainLinks())
                     .chainTerminated(geneFusion.isTerminated())
@@ -219,7 +241,7 @@ public class FusionWriter implements CohortFileInterface
 
         sj.add(sampleId);
         sj.add(valueOf(fusion.reportable()));
-        sj.add(fusion.reportableReasonsStr());
+        sj.add(reportableReasonsToStr(fusion.reportableReasons()));
         sj.add(fusion.knownTypeStr());
 
         sj.add(valueOf(fusion.phaseType()));

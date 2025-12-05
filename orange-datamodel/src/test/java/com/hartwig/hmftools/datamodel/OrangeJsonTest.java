@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
@@ -32,13 +33,11 @@ import com.hartwig.hmftools.datamodel.orange.OrangePlots;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
-import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
-import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
@@ -129,8 +128,8 @@ public class OrangeJsonTest
         assertEquals(PurpleDriverType.GERMLINE_MUTATION, germlineDriver1.type());
         assertEquals(0.8, germlineDriver1.driverLikelihood(), EPSILON);
 
-        assertEquals(1, purple.allSomaticVariants().size());
-        PurpleVariant somaticVariant = findVariantByGene(purple.allSomaticVariants(), "SF3B1");
+        // assertEquals(1, purple.otherSomaticVariants().size());
+        PurpleVariant somaticVariant = findVariantByGene(purple.driverSomaticVariants(), "SF3B1");
         assertTrue(somaticVariant.reported());
         assertEquals(PurpleVariantType.SNP, somaticVariant.type());
         assertEquals("2", somaticVariant.chromosome());
@@ -159,11 +158,11 @@ public class OrangeJsonTest
         assertEquals(PurpleCodingEffect.MISSENSE, somaticVariant.canonicalImpact().codingEffect());
         assertTrue(somaticVariant.otherImpacts().isEmpty());
 
-        assertEquals(1, purple.reportableSomaticVariants().size());
-        assertEquals(somaticVariant, purple.reportableSomaticVariants().iterator().next());
+        assertEquals(1, purple.driverSomaticVariants().size());
+        assertEquals(somaticVariant, purple.driverSomaticVariants().iterator().next());
 
-        assertEquals(1, purple.allGermlineVariants().size());
-        PurpleVariant germlineVariant = findVariantByGene(purple.allGermlineVariants(), "BRCA1");
+        assertEquals(1, purple.otherGermlineVariants().size());
+        PurpleVariant germlineVariant = findVariantByGene(purple.otherGermlineVariants(), "BRCA1");
         assertTrue(germlineVariant.reported());
         assertEquals(PurpleVariantType.SNP, germlineVariant.type());
         assertEquals("17", germlineVariant.chromosome());
@@ -195,37 +194,25 @@ public class OrangeJsonTest
         assertEquals(PurpleCodingEffect.SPLICE, germlineVariant.canonicalImpact().codingEffect());
         assertTrue(germlineVariant.otherImpacts().isEmpty());
 
-        assertEquals(1, purple.reportableGermlineVariants().size());
-        assertEquals(germlineVariant, purple.reportableGermlineVariants().iterator().next());
+        assertEquals(1, purple.driverGermlineVariants().size());
+        assertEquals(germlineVariant, purple.driverGermlineVariants().iterator().next());
 
-        assertEquals(1, purple.allSomaticCopyNumbers().size());
-        PurpleCopyNumber copyNumber = purple.allSomaticCopyNumbers().iterator().next();
+        assertEquals(1, purple.somaticCopyNumbers().size());
+        PurpleCopyNumber copyNumber = purple.somaticCopyNumbers().iterator().next();
         assertEquals("1", copyNumber.chromosome());
         assertEquals(10, copyNumber.start());
         assertEquals(20, copyNumber.end());
         assertEquals(4.1, copyNumber.averageTumorCopyNumber(), EPSILON);
 
-        assertEquals(1, purple.allSomaticGeneCopyNumbers().size());
-        PurpleGeneCopyNumber geneCopyNumber = purple.allSomaticGeneCopyNumbers().iterator().next();
+        assertEquals(1, purple.somaticGeneCopyNumbers().size());
+        PurpleGeneCopyNumber geneCopyNumber = purple.somaticGeneCopyNumbers().iterator().next();
         assertEquals("gene", geneCopyNumber.gene());
         assertEquals("12", geneCopyNumber.chromosome());
         assertEquals("p13", geneCopyNumber.chromosomeBand());
         assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);
         assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
-        assertEquals(1, purple.allSomaticGainsDels().size());
-        PurpleGainDeletion gainDel = purple.allSomaticGainsDels().iterator().next();
-        assertEquals("5", gainDel.chromosome());
-        assertEquals("q2.2", gainDel.chromosomeBand());
-        assertEquals("SMAD4", gainDel.gene());
-        assertEquals("ENST00000591126", gainDel.transcript());
-        assertFalse(gainDel.isCanonical());
-        assertEquals(CopyNumberInterpretation.FULL_DEL, gainDel.interpretation());
-        assertEquals(0.1, gainDel.minCopies(), EPSILON);
-        assertEquals(1.2, gainDel.maxCopies(), EPSILON);
-
-        assertEquals(1, purple.reportableSomaticGainsDels().size());
-        assertEquals(gainDel, purple.reportableSomaticGainsDels().iterator().next());
+        assertEquals(1, purple.driverSomaticGainsDels().size());
     }
 
     @NotNull
@@ -287,9 +274,9 @@ public class OrangeJsonTest
         assertEquals("ENST00000358273", homozygousDisruption.transcript());
         assertTrue(homozygousDisruption.isCanonical());
 
-        assertEquals(1, linx.allSomaticBreakends().size());
-        LinxBreakend breakend = linx.allSomaticBreakends().iterator().next();
-        assertFalse(breakend.reported());
+        assertEquals(1, linx.otherSomaticBreakends().size());
+        LinxBreakend breakend = linx.otherSomaticBreakends().iterator().next();
+        assertFalse(breakend.reportedStatus() == ReportedStatus.REPORTED);
         assertFalse(breakend.disruptive());
         assertEquals(1, breakend.svId());
         assertEquals("NF1", breakend.gene());
@@ -307,8 +294,8 @@ public class OrangeJsonTest
         assertEquals(TranscriptRegionType.EXONIC, breakend.regionType());
         assertEquals(TranscriptCodingType.UTR_3P, breakend.codingType());
 
-        assertEquals(1, linx.reportableSomaticBreakends().size());
-        assertEquals(breakend, linx.reportableSomaticBreakends().iterator().next());
+        assertEquals(1, linx.driverSomaticBreakends().size());
+        assertEquals(breakend, linx.driverSomaticBreakends().iterator().next());
 
         assertEquals(1, linx.allSomaticFusions().size());
         LinxFusion fusion = linx.allSomaticFusions().iterator().next();

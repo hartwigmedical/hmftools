@@ -6,14 +6,20 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.INVALID_JUNC_INDEX;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.SIMPLE_SEARCH_COUNT;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.findJunctionMatchIndex;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.hasWellAnchoredRead;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.markSupplementaryDuplicates;
+import static com.hartwig.hmftools.esvee.prep.JunctionUtils.readWithinJunctionRange;
 import static com.hartwig.hmftools.esvee.prep.KnownHotspot.junctionMatchesHotspot;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_CHECK;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO_DISCORDANT;
@@ -32,12 +38,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.perf.PerformanceCounter;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
@@ -56,9 +62,7 @@ public class JunctionTracker
     private final ChrBaseRegion mRegion;
     private final PrepConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
-    private final List<BaseRegion> mBlacklistRegions;
     private final List<KnownHotspot> mKnownHotspots;
-    private final BlacklistLocations mBlacklist;
     private final DepthTracker mDepthTracker;
 
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
@@ -73,7 +77,7 @@ public class JunctionTracker
     private final List<ReadGroup> mCandidateDiscordantGroups;
 
     private final List<JunctionData> mJunctions; // ordered by position
-    private int mLastJunctionIndex;
+    private int mRecentJunctionIndex;
 
     private ReadIdTrimmer mReadIdTrimmer;
     private int mInitialSupportingFrags;
@@ -90,8 +94,7 @@ public class JunctionTracker
     };
 
     public JunctionTracker(
-            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker,
-            final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final PrepConfig config, final DepthTracker depthTracker, final HotspotCache hotspotCache)
     {
         mRegion = region;
         mConfig = config;
@@ -102,25 +105,13 @@ public class JunctionTracker
 
         mDiscordantGroupFinder = new DiscordantGroups(mRegion, mFilterConfig.observedFragLengthMax(), mKnownHotspots, mConfig.TrackRemotes);
 
-        mBlacklist = blacklist;
-        mBlacklistRegions = Lists.newArrayList();
-
-        List<BaseRegion> chrRegions = blacklist.getRegions(mRegion.Chromosome);
-
-        if(chrRegions != null)
-        {
-            // extract the blacklist regions just for this partition
-            chrRegions.stream().filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
-                    .forEach(x -> mBlacklistRegions.add(x));
-        }
-
         mReadGroupMap = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
         mExpectedReadGroups = Lists.newArrayList();
         mRemoteCandidateReadGroups = Sets.newHashSet();
         mCandidateDiscordantGroups = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
-        mLastJunctionIndex = -1;
+        mRecentJunctionIndex = INVALID_JUNC_INDEX;
         mInitialSupportingFrags = 0;
         mDiscordantStats = new DiscordantStats();
         mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
@@ -190,7 +181,7 @@ public class JunctionTracker
         if(!read.hasMate() && !read.hasSuppAlignment())
         {
             // handle unpaired reads similarly to simple groups
-            if(read.readType() == NO_SUPPORT || readInBlacklist(read))
+            if(read.readType() == NO_SUPPORT)
                 return;
         }
 
@@ -210,10 +201,6 @@ public class JunctionTracker
         if(readGroup.isSimpleComplete()) // purge irrelevant groups
         {
             if(readGroup.allNoSupport())
-            {
-                mReadGroupMap.remove(readGroup.id());
-            }
-            else if(groupInBlacklist(readGroup))
             {
                 mReadGroupMap.remove(readGroup.id());
             }
@@ -281,7 +268,7 @@ public class JunctionTracker
 
         perfCounterStop(PerfCounters.InitJunctions);
 
-        mLastJunctionIndex = -1; // reset before supporting fragment assignment
+        mRecentJunctionIndex = INVALID_JUNC_INDEX; // reset before supporting fragment assignment
         mInitialSupportingFrags = candidateSupportGroups.size();
 
         perfCounterStart(PerfCounters.JunctionSupport);
@@ -298,30 +285,13 @@ public class JunctionTracker
         {
             supportedJunctions.clear();
 
-            boolean hasBlacklistedRead = false;
-
             for(PrepRead read : readGroup.reads())
             {
-                // supporting reads cannot fall in blacklist regions, despite allowing junctions in them
-                if(readInBlacklist(read))
-                {
-                    hasBlacklistedRead = true;
-                    continue;
-                }
-                else if(readMateInBlacklist(read))
-                {
-                    hasBlacklistedRead = true;
-                }
-
                 if(hasJunctions)
                 {
                     // allow reads that match a junction to be considered for support (eg exact) for other junctions
                     if(read.readType() == ReadType.CANDIDATE_SUPPORT || read.readType() == ReadType.JUNCTION)
                         checkJunctionSupport(readGroup, read, supportedJunctions);
-                }
-                else if(hasBlacklistedRead)
-                {
-                    break;
                 }
             }
 
@@ -350,13 +320,15 @@ public class JunctionTracker
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            if(hasBlacklistedRead)
-                continue;
+            boolean isDiscordantGroup = false;
 
-            boolean isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
+            if(hasPairedReads())
+            {
+                isDiscordantGroup = mDiscordantGroupFinder.isDiscordantGroup(readGroup);
 
-            if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
-                mCandidateDiscordantGroups.add(readGroup);
+                if(isDiscordantGroup && mDiscordantGroupFinder.isRelevantDiscordantGroup(readGroup))
+                    mCandidateDiscordantGroups.add(readGroup);
+            }
 
             if(isDiscordantGroup || isDiscordantUnpairedReadGroup(readGroup))
                 mDiscordantStats.processReadGroup(readGroup);
@@ -367,7 +339,7 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(mConfig.unpairedReads())
+        if(!hasPairedReads())
             return;
 
         perfCounterStart(PerfCounters.DiscordantGroups);
@@ -380,7 +352,7 @@ public class JunctionTracker
                     mRegion, discordantJunctions.size(), mCandidateDiscordantGroups.size());
         }
 
-        discordantJunctions.forEach(x -> addJunction(x));
+        discordantJunctions.forEach(x -> addDiscordantJunction(x));
 
         // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
         // and allocated to these groups
@@ -426,10 +398,6 @@ public class JunctionTracker
 
                 int position = orientation.isReverse() ? read.AlignmentStart : read.AlignmentEnd;
 
-                // junctions cannot fall in blacklist regions
-                if(positionInBlacklist(position))
-                    continue;
-
                 if(!mRegion.containsPosition(position))
                 {
                     if(mConfig.TrackRemotes)
@@ -465,36 +433,9 @@ public class JunctionTracker
         }
     }
 
-    private boolean groupInBlacklist(final ReadGroup readGroup)
-    {
-        // test whether every read is in a blacklist region
-        return readGroup.reads().stream().allMatch(x -> readInBlacklist(x));
-    }
-
-    private boolean readInBlacklist(final PrepRead read)
-    {
-        return mBlacklistRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), read.AlignmentStart, read.AlignmentEnd));
-    }
-
-    private boolean readMateInBlacklist(final PrepRead read)
-    {
-        if(!read.hasMate())
-            return false;
-
-        return mBlacklist.inBlacklistLocation(read.MateChromosome, read.MatePosStart, read.MatePosStart + mConfig.readLength());
-    }
-
-    private boolean positionInBlacklist(int junctionPosition)
-    {
-        return mBlacklistRegions.stream().anyMatch(x -> x.containsPosition(junctionPosition));
-    }
-
     private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final IndelCoords indelCoords)
     {
         if(indelCoords.Length < mFilterConfig.MinIndelLength)
-            return;
-
-        if(positionInBlacklist(indelCoords.PosStart) || positionInBlacklist(indelCoords.PosEnd))
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
@@ -512,7 +453,7 @@ public class JunctionTracker
         readGroup.addJunctionPosition(junctionEnd);
     }
 
-    private void checkIndelSupport(final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
+    private void checkIndelSupport(final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions, final int closeJunctionIndex)
     {
         IndelCoords indelCoords = read.indelCoords();
 
@@ -537,43 +478,57 @@ public class JunctionTracker
         int readBoundsMax = max(read.AlignmentEnd, impliedUnclippedEnd);
 
         // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
-        for(JunctionData junctionData : mJunctions)
+        for(int i = 0; i <= 1; ++i)
         {
-            if(min(readBoundsMin, readBoundsMax) > junctionData.Position)
-                continue;
+            boolean searchUp = (i == 0);
 
-            if(junctionData.Position > max(readBoundsMin, readBoundsMax))
-                break;
+            int index = searchUp ? closeJunctionIndex : closeJunctionIndex - 1;
 
-            if(supportedJunctions.containsKey(junctionData))
-                continue;
-
-            boolean hasExactSupport = false;
-
-            for(int se = SE_START; se <= SE_END; ++se)
+            while(index >= 0 && index < mJunctions.size())
             {
-                int indelPos = se == SE_START ? indelCoords.PosStart : indelCoords.PosEnd;
+                JunctionData junctionData = mJunctions.get(index);
 
-                if(indelPos != junctionData.Position)
+                if(searchUp && junctionData.Position > readBoundsMax)
+                    break;
+
+                if(!searchUp && readBoundsMin > junctionData.Position)
+                    break;
+
+                if(supportedJunctions.containsKey(junctionData))
+                {
+                    index += searchUp ? 1 : -1;
                     continue;
+                }
 
-                if(se == SE_START && junctionData.isReverse())
-                    continue;
-                else if(se == SE_END && junctionData.isForward())
-                    continue;
+                boolean hasExactSupport = false;
 
-                // indel coords support a junction
-                read.setReadType(ReadType.EXACT_SUPPORT, true);
-                junctionData.addReadType(read, ReadType.EXACT_SUPPORT);
-                supportedJunctions.put(junctionData, ReadType.EXACT_SUPPORT);
-                hasExactSupport = true;
-            }
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    int indelPos = se == SE_START ? indelCoords.PosStart : indelCoords.PosEnd;
 
-            if(!hasExactSupport)
-            {
-                read.setReadType(ReadType.SUPPORT, true);
-                junctionData.addReadType(read, ReadType.SUPPORT);
-                supportedJunctions.put(junctionData, ReadType.SUPPORT);
+                    if(indelPos != junctionData.Position)
+                        continue;
+
+                    if(se == SE_START && junctionData.isReverse())
+                        continue;
+                    else if(se == SE_END && junctionData.isForward())
+                        continue;
+
+                    // indel coords support a junction
+                    read.setReadType(ReadType.EXACT_SUPPORT, true);
+                    junctionData.addReadType(read, ReadType.EXACT_SUPPORT);
+                    supportedJunctions.put(junctionData, ReadType.EXACT_SUPPORT);
+                    hasExactSupport = true;
+                }
+
+                if(!hasExactSupport)
+                {
+                    read.setReadType(ReadType.SUPPORT, true);
+                    junctionData.addReadType(read, ReadType.SUPPORT);
+                    supportedJunctions.put(junctionData, ReadType.SUPPORT);
+                }
+
+                index += searchUp ? 1 : -1;
             }
         }
     }
@@ -586,129 +541,147 @@ public class JunctionTracker
 
     private JunctionData getOrCreateJunction(final PrepRead read, final int junctionPosition, final Orientation orientation)
     {
-        // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
+        // junctions are stored in ascending order
 
-        // first check the last index for a match
-        if(mLastJunctionIndex >= 0)
+        // first check the last used index for a match
+        if(mRecentJunctionIndex >= 0)
         {
-            JunctionData junctionData = mJunctions.get(mLastJunctionIndex);
+            JunctionData junctionData = mJunctions.get(mRecentJunctionIndex);
 
             if(junctionData.Position == junctionPosition && junctionData.Orient == orientation)
                 return junctionData;
         }
 
-        int index = 0;
+        int closeJuncIndex = findJunctionIndex(junctionPosition); // returns a match or the preceding index
 
-        while(index < mJunctions.size())
+        if(closeJuncIndex != INVALID_JUNC_INDEX)
         {
-            JunctionData junctionData = mJunctions.get(index);
+            int exactJuncIndex = findJunctionMatchIndex(mJunctions, junctionPosition, orientation, closeJuncIndex);
 
-            if(junctionData.Position == junctionPosition)
+            if(exactJuncIndex != INVALID_JUNC_INDEX)
             {
-                if(junctionData.Orient == orientation)
-                {
-                    setLastJunctionIndex(index);
-                    return junctionData;
-                }
+                setLastJunctionIndex(exactJuncIndex);
+                return mJunctions.get(exactJuncIndex);
             }
-            else if(junctionData.Position > junctionPosition)
-            {
-                break;
-            }
-
-            ++index;
         }
 
+        int newJuncIndex = closeJuncIndex + 1;
+
         JunctionData junctionData = new JunctionData(junctionPosition, orientation, read);
-        mJunctions.add(index, junctionData);
-        setLastJunctionIndex(index);
+
+        if(newJuncIndex >= 0 && newJuncIndex < mJunctions.size())
+            mJunctions.add(newJuncIndex, junctionData);
+        else
+            mJunctions.add(junctionData);
+
+        setLastJunctionIndex(newJuncIndex);
         return junctionData;
     }
 
-    private void addJunction(final JunctionData newJunction)
+    @VisibleForTesting
+    public void addDiscordantJunction(final JunctionData discJunction)
     {
-        int index = 0;
+        int closeJuncIndex = findJunctionIndex(discJunction.Position);
 
-        while(index < mJunctions.size())
+        if(closeJuncIndex != INVALID_JUNC_INDEX)
         {
-            JunctionData junctionData = mJunctions.get(index);
+            int exactJuncIndex = findJunctionMatchIndex(mJunctions, discJunction.Position, discJunction.Orient, closeJuncIndex);
 
-            if(junctionData.Position == newJunction.Position)
+            if(exactJuncIndex != INVALID_JUNC_INDEX)
             {
-                if(junctionData.Orient == newJunction.Orient)
+                JunctionData junctionData = mJunctions.get(exactJuncIndex);
+
+                if(!junctionData.discordantGroup() && discJunction.discordantGroup() && !junctionData.hotspot()
+                && junctionData.junctionGroups().size() < mFilterConfig.MinJunctionSupport)
                 {
-                    // favour discordant-only groups if the split-read junction has minimum support, to ensure if will be processed
-                    // as a valid junction assembly by the assembler
-                    if(!junctionData.discordantGroup() && newJunction.discordantGroup() && !junctionData.hotspot())
-                    {
-                        if(junctionData.junctionGroups().size() < mFilterConfig.MinJunctionSupport)
-                        {
-                            mJunctions.set(index, newJunction);
-                        }
-                    }
-
-                    return;
+                    mJunctions.set(exactJuncIndex, discJunction);
                 }
-            }
-            else if(junctionData.Position > newJunction.Position)
-            {
-                break;
-            }
 
-            ++index;
+                return;
+            }
         }
 
-        mJunctions.add(index, newJunction);
+        int newJuncIndex = closeJuncIndex + 1;
+        mJunctions.add(newJuncIndex, discJunction);
     }
 
     private void checkJunctionSupport(final ReadGroup readGroup, final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
     {
-        // first check indel support
-        checkIndelSupport(read, supportedJunctions);
-
-        int maxSupportDistance = mConfig.unpairedReads() ? UNPAIRED_READ_JUNCTION_DISTANCE : mFilterConfig.maxSupportingFragmentDistance();
+        boolean hasPairedReads = hasPairedReads();
+        int distanceBuffer = hasPairedReads ? mFilterConfig.maxSupportingFragmentDistance() : UNPAIRED_READ_JUNCTION_DISTANCE;
 
         // first check the last index since the next read is likely to be close by
-        int closeJunctionIndex = -1;
+        int closeJuncIndex = INVALID_JUNC_INDEX;
 
-        if(mLastJunctionIndex >= 0)
+        if(mRecentJunctionIndex >= 0)
         {
-            JunctionData junctionData = mJunctions.get(mLastJunctionIndex);
-            if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
-                closeJunctionIndex = mLastJunctionIndex;
+            JunctionData junctionData = mJunctions.get(mRecentJunctionIndex);
+
+            if(readWithinJunctionRange(read, junctionData, distanceBuffer)
+            || positionWithin(junctionData.Position, read.AlignmentStart, read.AlignmentEnd))
+            {
+                closeJuncIndex = mRecentJunctionIndex;
+            }
+            else if(mRecentJunctionIndex < mJunctions.size() - 1)
+            {
+                // the preceding junction will typically have been found from the read start, so check it if is still good to use
+                JunctionData nextJunctionData = mJunctions.get(mRecentJunctionIndex + 1);
+
+                if(positionsOverlap(read.AlignmentStart, read.AlignmentEnd, junctionData.Position, nextJunctionData.Position))
+                    closeJuncIndex = mRecentJunctionIndex;
+            }
         }
 
-        if(closeJunctionIndex == -1)
-            closeJunctionIndex = findJunctionIndex(read, maxSupportDistance);
+        if(closeJuncIndex == INVALID_JUNC_INDEX)
+            closeJuncIndex = findJunctionIndex(read.AlignmentStart);
 
-        if(closeJunctionIndex < 0)
-            return;
+        if(closeJuncIndex == INVALID_JUNC_INDEX)
+            closeJuncIndex = 0;
 
-        setLastJunctionIndex(closeJunctionIndex);
-        checkReadSupportsJunction(readGroup, read, mJunctions.get(closeJunctionIndex), supportedJunctions);
+        setLastJunctionIndex(closeJuncIndex);
 
         // check up and down from this location
         for(int i = 0; i <= 1; ++i)
         {
             boolean searchUp = (i == 0);
 
-            int index = searchUp ? closeJunctionIndex + 1 : closeJunctionIndex - 1;
+            int index = searchUp ? closeJuncIndex : closeJuncIndex - 1;
 
             while(index >= 0 && index < mJunctions.size())
             {
                 JunctionData junctionData = mJunctions.get(index);
 
-                if(!readWithinJunctionRange(read, junctionData, maxSupportDistance))
-                    break;
+                if(!hasPairedReads)
+                {
+                    if(searchUp && junctionData.Position >= read.UnclippedEnd)
+                        break;
+
+                    if(!searchUp && junctionData.Position < read.UnclippedStart)
+                        break;
+
+                    if(!readWithinJunctionRange(read, junctionData, distanceBuffer))
+                    {
+                        index += searchUp ? 1 : -1;
+                        continue;
+                    }
+                }
+                else
+                {
+                    if(!readWithinJunctionRange(read, junctionData, distanceBuffer))
+                    {
+                        // given the find routine returns a match or the preceding, must search at least 1 higher
+                        if(!searchUp || index > closeJuncIndex)
+                            break;
+                    }
+                }
 
                 checkReadSupportsJunction(readGroup, read, junctionData, supportedJunctions);
 
-                if(searchUp)
-                    ++index;
-                else
-                    --index;
+                index += searchUp ? 1 : -1;
             }
         }
+
+        checkIndelSupport(read, supportedJunctions, closeJuncIndex);
     }
 
     private void checkReadSupportsJunction(
@@ -728,7 +701,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != ReadType.SUPPORT && !mConfig.unpairedReads() && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != ReadType.SUPPORT && hasPairedReads() && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, ReadType.SUPPORT);
             read.setReadType(ReadType.SUPPORT, true);
@@ -738,81 +711,12 @@ public class JunctionTracker
 
     private void setLastJunctionIndex(int index)
     {
-        mLastJunctionIndex = index;
+        mRecentJunctionIndex = index;
     }
 
-    private int findJunctionIndex(final PrepRead read, int maxSupportDistance)
+    private int findJunctionIndex(int position)
     {
-        if(mJunctions.size() <= 5)
-        {
-            for(int index = 0; index < mJunctions.size(); ++index)
-            {
-                if(readWithinJunctionRange(read, mJunctions.get(index), maxSupportDistance))
-                    return index;
-            }
-
-            return -1;
-        }
-
-        // binary search on junctions if the collection gets too large
-        int currentIndex = mJunctions.size() / 2;
-        int lowerIndex = 0;
-        int upperIndex = mJunctions.size() - 1;
-
-        int iterations = 0;
-
-        while(true)
-        {
-            JunctionData junctionData = mJunctions.get(currentIndex);
-
-            if(readWithinJunctionRange(read, junctionData, maxSupportDistance))
-                return currentIndex;
-
-            if(read.AlignmentEnd < junctionData.Position)
-            {
-                // search lower
-                if(lowerIndex + 1 == currentIndex)
-                    return currentIndex;
-
-                upperIndex = currentIndex;
-                currentIndex = (lowerIndex + upperIndex) / 2;
-            }
-            else if(read.AlignmentStart > junctionData.Position)
-            {
-                // search higher
-                if(currentIndex + 1 == upperIndex)
-                    return currentIndex;
-
-                lowerIndex = currentIndex;
-                currentIndex = (lowerIndex + upperIndex) / 2;
-            }
-            else
-            {
-                break;
-            }
-
-            ++iterations;
-
-            if(iterations > 1000)
-            {
-                SV_LOGGER.warn("junction index search iterations({}}) junctions({}) index(cur={} low={} high={})",
-                        iterations, mJunctions.size(), currentIndex, lowerIndex, upperIndex);
-                break;
-            }
-        }
-
-        return -1;
-    }
-
-    private boolean readWithinJunctionRange(final PrepRead read, final JunctionData junctionData, int maxDistance)
-    {
-        if(abs(read.AlignmentEnd - junctionData.Position) <= maxDistance)
-            return true;
-
-        if(abs(read.AlignmentStart - junctionData.Position) <= maxDistance)
-            return true;
-
-        return false;
+        return JunctionUtils.findJunctionIndex(mJunctions, position, SIMPLE_SEARCH_COUNT);
     }
 
     private void filterJunctions()
@@ -829,6 +733,7 @@ public class JunctionTracker
 
             if(junctionHasSupport(junctionData))
             {
+                junctionData.setDepth(mDepthTracker.calcDepth(junctionData.Position));
                 ++index;
             }
             else
@@ -873,7 +778,7 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
-        if(!junctionData.hotspot() && !junctionAboveMinDepth(junctionData))
+        if(!junctionData.hotspot() && !junctionAboveMinAF(junctionData))
             return false;
 
         if(junctionData.discordantGroup())
@@ -904,11 +809,15 @@ public class JunctionTracker
         return junctionFrags + exactSupportCount >= mFilterConfig.MinJunctionSupport;
     }
 
-    private boolean junctionAboveMinDepth(final JunctionData junctionData)
-    {
-        int regionDepth = mDepthTracker.calcDepth(junctionData.Position);
+    private static final int DEPTH_MIN_READ_COUNT = 200;
 
-        if(regionDepth < DEPTH_MIN_CHECK)
+    private boolean junctionAboveMinAF(final JunctionData junctionData)
+    {
+        // sites with an AF below 0.5% (1% for discordant) are filtered
+        double regionDepth = mDepthTracker.calcDepth(junctionData.Position);
+        int regionReadCount = mDepthTracker.windowReadCount(junctionData.Position);
+
+        if(regionReadCount < DEPTH_MIN_READ_COUNT || regionDepth < DEPTH_MIN_CHECK)
             return true;
 
         double requiredSupportRatio = junctionData.discordantGroup() ? DEPTH_MIN_SUPPORT_RATIO_DISCORDANT : DEPTH_MIN_SUPPORT_RATIO;
@@ -918,7 +827,9 @@ public class JunctionTracker
         if(junctionData.discordantGroup())
             junctionSupport += junctionData.supportingFragmentCount();
 
-        return junctionSupport >= regionDepth * requiredSupportRatio;
+        double requiredSupport = max(regionDepth, regionReadCount) * requiredSupportRatio;
+
+        return junctionSupport >= requiredSupport;
     }
 
     private void perfCounterStart(final PerfCounters pc)
@@ -935,5 +846,12 @@ public class JunctionTracker
             return;
 
         mPerfCounters.get(pc.ordinal()).stop();
+    }
+
+    @VisibleForTesting
+    public JunctionData addJunctionData(final PrepRead read)
+    {
+        Orientation orientation = read.isLeftClipped() ? REVERSE : FORWARD;
+        return getOrCreateJunction(read, orientation);
     }
 }

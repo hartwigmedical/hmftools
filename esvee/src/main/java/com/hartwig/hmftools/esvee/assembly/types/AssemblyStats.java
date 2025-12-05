@@ -79,7 +79,7 @@ public class AssemblyStats
             {
                 ++JuncSupps;
             }
-            else
+            else if(supportRead.isPairedRead())
             {
                 // don't attempt to set mate info for supplementaries - these counts are for the primary reads (ie the fragment itself)
                 boolean matePastJunction = (supportRead.orientation().isForward()) == junction.isForward();

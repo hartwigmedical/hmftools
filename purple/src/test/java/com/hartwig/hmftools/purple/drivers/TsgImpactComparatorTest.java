@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
@@ -66,10 +65,5 @@ public class TsgImpactComparatorTest {
         assertTrue(isSplice(list.get(3).variantImpact().CanonicalCodingEffect));
         assertTrue(isMissense(list.get(4).type(), list.get(5).variantImpact().CanonicalCodingEffect));
         assertTrue(isInframe(list.get(5).type(), list.get(5).variantImpact().CanonicalCodingEffect));
-    }
-
-    private static com.hartwig.hmftools.common.variant.SomaticVariant create(final VariantType type, final CodingEffect codingEffect)
-    {
-        return SomaticVariantTestFactory.builder().type(type).canonicalCodingEffect(codingEffect).build();
     }
 }

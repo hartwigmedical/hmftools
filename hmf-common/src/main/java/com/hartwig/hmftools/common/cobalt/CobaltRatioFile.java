@@ -47,7 +47,6 @@ public final class CobaltRatioFile
     public static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
-    private static final String EXTENSION_UNZIPPED = ".cobalt.ratio.tsv";
 
     @Deprecated
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
@@ -56,12 +55,6 @@ public final class CobaltRatioFile
     public static String generateFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + EXTENSION;
-    }
-
-    @NotNull
-    public static String generateFilenameUnzipped(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + EXTENSION_UNZIPPED;
     }
 
     @NotNull

@@ -2,6 +2,10 @@ package com.hartwig.hmftools.common.utils.file;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class FileDelimiters
 {
@@ -21,6 +25,8 @@ public final class FileDelimiters
 
     public static final String CRAM_EXTENSION = ".cram";
     public static final String CRAM_INDEX_EXTENSION = ".crai";
+
+    public static final String BED_EXTENSION = ".bed";
 
     public static String inferFileDelimiter(final String filename)
     {
@@ -57,5 +63,19 @@ public final class FileDelimiters
             return switchedFilename;
 
         return filename;
+    }
+
+    public static <T extends Enum<T>> String joinEnumsToStr(final Collection<T> enums)
+    {
+        return enums.stream()
+            .map(Enum::name)
+            .collect(Collectors.joining(ITEM_DELIM));
+    }
+
+    public static <T extends Enum<T>> List<T> splitEnumsFromStr(final String str, Class<T> enumClass)
+    {
+        return Arrays.stream(str.split(FileDelimiters.ITEM_DELIM))
+                .map(name -> Enum.valueOf(enumClass, name))
+                .toList();
     }
 }

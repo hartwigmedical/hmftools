@@ -42,15 +42,41 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_DEDUP_JITTER_MAX_DIST = 20;
     public static final int ASSEMBLY_DEDUP_HIGH_SUPPORT_RATIO = 50;
 
+    public static final int WEAK_ASSEMBLY_UNPAIRED_MAX_READS = 3;
+    public static final double WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR = 5;
+    public static final double WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR = 2.5;
+
     public static final double DEFAULT_DISC_RATE_INCREMENT = 0.01;
     public static final int DISC_RATE_JUNC_INCREMENT = 1;
     public static final int DISC_RATE_DISC_ONLY_INCREMENT = 3;
 
-    // repeat identification and sequence comparison
-    public static final int MAX_REPEAT_BASE_COUNT = 5;
-    public static final int MIN_SINGLE_REPEAT = 4;
-    public static final int MIN_DUAL_REPEAT = 3;
-    public static final int MIN_OTHER_REPEAT = 2;
+    // consensus building and read mismatches
+    public static final double READ_MISMATCH_PENALTY = 1;
+    public static final double READ_MISMATCH_MED_QUAL_PENALTY = 0.25;
+    public static final double READ_MAX_MISMATCH_RATE = 0.33; // max rate of mismatches per read even if zero penalty
+    public static final int READ_MISMATCH_RATE_MIN_BASE = MIN_VARIANT_LENGTH;
+
+    public static final double TOTAL_READ_MISMATCH_RATE = 0.1; // to consider more extensive searches for mismatch causes
+
+    // penalty factors as function of read extension base length
+    public static final int READ_MISMATCH_PENALTY_LENGTH_1 = 5;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_2 = 15;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.2;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_3 = 49;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
+    public static final int READ_MISMATCH_PENALTY_LENGTH_4 = 99;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_4 = 2;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_LONG = 3;
+
+    public static final int REPEAT_MIN_COUNT = 4; // minimum number of repeats to consider a repeat
+    public static final int REPEAT_MAX_BASE_LENGTH = 5;
+
+    public static final int READ_MISMATCH_LOW_REPEAT_COUNT = REPEAT_MIN_COUNT;
+    public static int READ_MISMATCH_MEDIUM_REPEAT_COUNT = 11;
+    public static int READ_MISMATCH_LONG_REPEAT_COUNT = 16;
+
+    // repeat identification and sequence comparison - deprecated??
     public static final int REPEAT_2_DIFF_COUNT = 11;
     public static final int REPEAT_3_DIFF_COUNT = 16;
 

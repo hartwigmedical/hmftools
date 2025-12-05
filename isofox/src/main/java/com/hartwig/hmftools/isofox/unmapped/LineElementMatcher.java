@@ -125,7 +125,7 @@ public class LineElementMatcher
 
             List<String> lineVcfIds = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(sampleLinxDir, sampleId)).stream()
                     .filter(x -> lineClusterIds.contains(x.clusterId()))
-                    .map(x -> x.vcfId())
+                    .map(x -> x.vcfIdStart())
                     .collect(Collectors.toList());
 
             StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter()).stream()

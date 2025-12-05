@@ -6,8 +6,6 @@ public class CobaltConstants
 {
     public static final String APP_NAME = "Cobalt";
 
-    public static final int INVALID_VALUE_INDICATOR = -1;
-
     public static final double DEFAULT_GC_RATIO_MIN = 0.24;
     public static final double DEFAULT_GC_RATIO_MAX = 0.68;
 

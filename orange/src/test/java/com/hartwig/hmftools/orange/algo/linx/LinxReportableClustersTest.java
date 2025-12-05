@@ -9,12 +9,11 @@ import java.util.Map;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.linx.DriverEventType;
-import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
-import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -69,7 +68,7 @@ public class LinxReportableClustersTest
     private static ImmutableLinxData.Builder linxDataBuilder()
     {
         List<LinxBreakend> breakends = new ArrayList<>();
-        breakends.add(LinxTestFactory.breakendBuilder().svId(15).reportedDisruption(true).build());
+        breakends.add(LinxTestFactory.breakendBuilder().svId(15).reportedStatus(ReportedStatus.REPORTED).build());
 
         List<LinxDriver> drivers = new ArrayList<>();
         drivers.add(ImmutableLinxDriver.builder().clusterId(10).gene("Gene A").eventType(DriverEventType.DEL).build());
@@ -80,7 +79,7 @@ public class LinxReportableClustersTest
         Map<Integer, Integer> clusterIdToExonCount = Map.of(10, 1, 50, 1, 100, 1);
 
         return ImmutableLinxData.builder()
-                .reportableSomaticBreakends(breakends)
+                .driverSomaticBreakends(breakends)
                 .somaticDrivers(drivers)
                 .fusionClusterIds(fusions)
                 .svIdToClusterId(svToCluster)

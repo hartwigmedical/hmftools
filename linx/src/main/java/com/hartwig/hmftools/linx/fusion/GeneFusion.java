@@ -17,10 +17,8 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOT
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.INFRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
@@ -34,36 +32,25 @@ public class GeneFusion
     private int mId; // optional identifier
     private final BreakendTransData[] mTranscripts;
 
-    private boolean mIsReportable;
-    private List<FusionReportableReason> mReportableReasons;
-    private boolean mPhaseMatched;
-    private int[] mExonsSkipped;
-    private KnownFusionType mKnownFusionType;
-    private final boolean[] mIsPromiscuous;
-    private boolean mKnownExons;
-    private boolean mHighImpactPromiscuous;
-    private boolean mProteinFeaturesSet;
+    private boolean mIsReportable = false;
+    private final List<FusionReportableReason> mReportableReasons = Lists.newArrayList();
+    private final boolean mPhaseMatched;
+    private final int[] mExonsSkipped = new int[] { 0, 0 };
+    private KnownFusionType mKnownFusionType = KnownFusionType.NONE;
+    private final boolean[] mIsPromiscuous = new boolean[] { false, false };
+    private boolean mKnownExons = false;
+    private boolean mHighImpactPromiscuous = false;
+    private boolean mProteinFeaturesSet = false;
 
-    private FusionAnnotations mAnnotations;
+    private FusionAnnotations mAnnotations = null;
 
     // calculated priority according to scheme for selecting fusions
-    private double mPriority;
+    private double mPriority = 0;
 
     public GeneFusion(final BreakendTransData upstreamTrans, final BreakendTransData downstreamTrans, boolean phaseMatched)
     {
         mTranscripts = new BreakendTransData[] { upstreamTrans, downstreamTrans };
-
-        mIsReportable = false;
-        mReportableReasons = Lists.newArrayList();
-        mKnownFusionType = KnownFusionType.NONE;
-        mIsPromiscuous = new boolean[] { false, false };
         mPhaseMatched = phaseMatched;
-        mExonsSkipped = new int[] { 0, 0 };
-        mKnownExons = false;
-        mHighImpactPromiscuous = false;
-        mProteinFeaturesSet = false;
-        mAnnotations = null;
-        mPriority = 0;
     }
 
     public void setId(final int id) { mId = id; }
@@ -102,17 +89,15 @@ public class GeneFusion
     public void setReportableReasons(final List<FusionReportableReason> reasons) { mReportableReasons.addAll(reasons); }
     public void addReportableReason(final FusionReportableReason reason) { mReportableReasons.add(reason); }
 
-    public String reportableReasonsStr()
+    public List<FusionReportableReason> reportableReasons()
     {
         if(mReportableReasons.isEmpty())
-            return FusionReportableReason.OK.toString();
+            return List.of(FusionReportableReason.OK);
 
         if(mKnownFusionType == KnownFusionType.NONE) // only log the first reason for non-known types
-            return mReportableReasons.get(0).toString();
+            return List.of(mReportableReasons.get(0));
 
-        StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mReportableReasons.forEach(x -> sj.add(x.toString()));
-        return sj.toString();
+        return mReportableReasons;
     }
 
     public boolean proteinFeaturesSet() { return mProteinFeaturesSet; }

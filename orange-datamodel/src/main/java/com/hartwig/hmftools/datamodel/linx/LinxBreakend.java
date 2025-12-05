@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.linx;
 
+import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 
@@ -36,7 +37,7 @@ public interface LinxBreakend
 
     boolean disruptive();
 
-    boolean reported();
+    ReportedStatus reportedStatus();
 
     double undisruptedCopyNumber();
 

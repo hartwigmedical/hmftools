@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignments;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REMOTE_REGION_DISC_READ_BASE_MIN_AS;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMEN
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeLowQualDiscordantOnlyRegions;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeWeakSupplementaryRegions;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 import static com.hartwig.hmftools.esvee.prep.ReadFilters.filterLowQualRead;
 
 import java.util.List;
@@ -56,9 +58,12 @@ public final class RemoteRegionFinder
 
         mergeRegions(remoteRegions);
 
-        // purge regions with only weak supplementary support
-        purgeWeakSupplementaryRegions(remoteRegions);
-        purgeLowQualDiscordantOnlyRegions(remoteRegions);
+        if(hasPairedReads())
+        {
+            // purge regions with only weak supplementary or discordant support
+            purgeWeakSupplementaryRegions(remoteRegions);
+            purgeLowQualDiscordantOnlyRegions(remoteRegions);
+        }
 
         // remove regions which overlap the assembly
         int index = 0;
@@ -149,16 +154,24 @@ public final class RemoteRegionFinder
 
     private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, int readScLength)
     {
-        SupplementaryReadData suppData = read.supplementaryData();
+        List<SupplementaryReadData> suppDataList = extractAlignments(read.bamRecord());
+        // SupplementaryReadData suppData = read.supplementaryData();
 
-        if(suppData == null || !HumanChromosome.contains(suppData.Chromosome))
-            return;
+        for(SupplementaryReadData suppData : suppDataList)
+        {
+            if(suppData == null || !HumanChromosome.contains(suppData.Chromosome))
+                continue;
 
-        int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
+            int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
 
-        RemoteRegion region = addOrCreateRemoteRegion(
-                remoteRegions, read, SUPPLEMENTARY, suppData.Chromosome, suppData.Position, remotePosEnd);
+            if(read.chromosome().equals(suppData.Chromosome)
+            && positionsOverlap(read.alignmentStart(), read.alignmentEnd(), suppData.Position, remotePosEnd))
+                continue;
 
-        region.addSoftClipMapQual(readScLength, suppData.MapQuality);
+            RemoteRegion region = addOrCreateRemoteRegion(
+                    remoteRegions, read, SUPPLEMENTARY, suppData.Chromosome, suppData.Position, remotePosEnd);
+
+            region.addSoftClipMapQual(readScLength, suppData.MapQuality);
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
@@ -19,17 +20,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class GermlineGainDeletionFactory
 {
-    @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
-    public GermlineGainDeletionFactory(@NotNull final EnsemblDataCache ensemblDataCache)
+    public GermlineGainDeletionFactory(final EnsemblDataCache ensemblDataCache)
     {
         this.ensemblDataCache = ensemblDataCache;
     }
 
-    @NotNull
-    public Map<PurpleGainDeletion, Boolean> getReportabilityMap(@NotNull List<GermlineDeletion> germlineDeletions,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    public Map<PurpleGainDeletion, Boolean> getReportabilityMap(
+            final List<GermlineDeletion> germlineDeletions, final List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
         List<GermlineDeletion> germlineDeletionsHomozygousInTumor =
                 germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HOM_DELETION).collect(Collectors.toList());
@@ -43,15 +42,14 @@ public class GermlineGainDeletionFactory
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
             PurpleGainDeletion del = toGainDel(geneName, deletionsForGene, somaticGeneCopyNumber);
-            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported);
+            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported == ReportedStatus.REPORTED);
             delToReportability.put(del, reported);
         }
         return delToReportability;
     }
 
-    @NotNull
-    private PurpleGainDeletion toGainDel(@NotNull String geneName, @NotNull List<GermlineDeletion> deletionsForGene,
-            @NotNull GeneCopyNumber somaticGeneCopyNumber)
+    private PurpleGainDeletion toGainDel(final String geneName, final List<GermlineDeletion> deletionsForGene,
+            final GeneCopyNumber somaticGeneCopyNumber)
     {
         TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
         CopyNumberInterpretation interpretation = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)

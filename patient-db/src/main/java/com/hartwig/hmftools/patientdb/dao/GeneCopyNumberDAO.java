@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
 import org.jooq.DSLContext;
@@ -67,7 +68,7 @@ public class GeneCopyNumberDAO
                     0, 0,
                     SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONSTARTSUPPORT)),
                     SegmentSupport.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONENDSUPPORT)),
-                    CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)));
+                    CopyNumberMethod.valueOf(record.getValue(GENECOPYNUMBER.MINREGIONMETHOD)), 0);
 
             geneCopyNumbers.add(geneCopyNumber);
         }
@@ -104,7 +105,7 @@ public class GeneCopyNumberDAO
                     record.getValue(GERMLINEDELETION.TUMORCOPYNUMBER),
                     record.getValue(GERMLINEDELETION.FILTER),
                     record.getValue(GERMLINEDELETION.COHORTFREQUENCY),
-                    record.getValue(GERMLINEDELETION.REPORTED).intValue() == 1));
+                    record.getValue(GERMLINEDELETION.REPORTED).intValue() == 1 ? ReportedStatus.REPORTED : ReportedStatus.NONE));
         }
         return germlineDeletions;
     }

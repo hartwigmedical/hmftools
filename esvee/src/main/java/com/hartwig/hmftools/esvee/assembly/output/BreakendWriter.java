@@ -27,10 +27,10 @@ import com.hartwig.hmftools.esvee.assembly.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
-import com.hartwig.hmftools.esvee.assembly.alignment.HomologyData;
 import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class BreakendWriter
 {
@@ -101,6 +101,8 @@ public class BreakendWriter
             sj.add("AltAlignments");
             sj.add("InsertionType");
             sj.add("UniqueFragPos");
+            sj.add("StrandBias");
+            sj.add("ThreePrimeRange");
             sj.add("ClosestAssembly");
             sj.add("NonPrimaryFragments");
 
@@ -226,6 +228,12 @@ public class BreakendWriter
                 sj.add(insertionType.toString());
 
                 sj.add(String.valueOf(breakend.uniqueFragmentPositionCount()));
+
+                String strandBias = breakend.sampleSupport().stream().map(x -> format("%.2f", x.strandBias())).collect(Collectors.joining(ITEM_DELIM));
+                sj.add(strandBias);
+
+                int[] readOrientationRange = breakend.readOrientationRange();
+                sj.add(format("%d;%d", readOrientationRange[0], readOrientationRange[1]));
 
                 String assemblyMatchStr = getClosestAssembly(breakend, assemblyAlignment.assemblies(), closestAssemblyMap, true);
                 sj.add(assemblyMatchStr);

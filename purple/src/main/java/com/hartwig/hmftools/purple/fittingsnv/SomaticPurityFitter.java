@@ -35,7 +35,7 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
@@ -320,7 +320,8 @@ public class SomaticPurityFitter
 
     @Nullable
     public FittedPurity fitFromSomaticsOnly(
-            final DriverGenePanel driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates)
+            final DriverGeneResource driverGenes, final List<SomaticVariant> variants, final List<FittedPurity> allCandidates,
+            final boolean tumorOnlyMode)
     {
         List<Double> variantVafs = Lists.newArrayList();
 
@@ -336,8 +337,7 @@ public class SomaticPurityFitter
                 if(codingEffect != NONSENSE_OR_FRAMESHIFT && codingEffect != MISSENSE)
                     continue;
 
-                DriverGene driverGene = driverGenes.driverGenes().stream()
-                        .filter(x -> x.gene().equals(variant.variantImpact().GeneName)).findFirst().orElse(null);
+                DriverGene driverGene = driverGenes.DriverGeneMap.get(variant.variantImpact().GeneName);
 
                 if(driverGene == null)
                     continue;
@@ -356,7 +356,10 @@ public class SomaticPurityFitter
             }
             else
             {
-                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN || vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
+                if(vaf < SOMATIC_FIT_TUMOR_ONLY_VAF_MIN)
+                    continue;
+
+                if(tumorOnlyMode && vaf > SOMATIC_FIT_TUMOR_ONLY_VAF_MAX)
                     continue;
             }
 

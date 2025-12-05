@@ -270,6 +270,9 @@ public class DelimFileWriter<T> implements AutoCloseable
         public void set(Enum<?> key, double value) { set(key.name(), value); }
         public void set(Enum<?> key, double value, String format) { set(key.name(), value, format); }
         public void set(Enum<?> key, double value, NumberFormat format) { set(key.name(), value, format); }
+
+        public void setOrNull(Enum<?> key, String value) { setOrNull(key.name(), value); }
+        public void setOrNull(Enum<?> key, Double value) { setOrNull(key.name(), value); }
     }
 
     // convert to unchecked IO exception to allow usage in streams

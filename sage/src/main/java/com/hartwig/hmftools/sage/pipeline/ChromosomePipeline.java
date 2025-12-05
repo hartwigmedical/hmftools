@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -22,11 +21,11 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.CandidateWriter;
 import com.hartwig.hmftools.sage.common.PartitionTask;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthWriter;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.BqrRecordMap;
@@ -39,11 +38,12 @@ public class ChromosomePipeline implements AutoCloseable
 {
     private final String mChromosome;
     private final SageCallConfig mConfig;
+    private final ReferenceData mRefData;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final MsiJitterCalcs mMsiJitterCalcs;
-    private  final PhaseSetCounter mPhaseSetCounter;
+    private final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
     private final FragmentLengthWriter mFragmentLengths;
@@ -65,6 +65,7 @@ public class ChromosomePipeline implements AutoCloseable
     {
         mChromosome = chromosome;
         mConfig = config;
+        mRefData = refData;
         mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mMsiJitterCalcs = msiJitterCalcs;
@@ -90,12 +91,10 @@ public class ChromosomePipeline implements AutoCloseable
         List<ChrBaseRegion> partitionedRegions = chrPartition.partition(mChromosome);
 
         int taskId = 0;
-        for(int i = 0; i < partitionedRegions.size(); ++i)
+        for(ChrBaseRegion region : partitionedRegions)
         {
-            ChrBaseRegion region = partitionedRegions.get(i);
-
             List<BaseRegion> regionPanel = mPanelRegions != null ? mPanelRegions.stream()
-                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
+                    .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).toList()
                     : Lists.newArrayList();
 
             if(mConfig.PanelOnly && regionPanel.isEmpty())
@@ -120,7 +119,7 @@ public class ChromosomePipeline implements AutoCloseable
         for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
-                    mChromosome, mConfig, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
+                    mChromosome, mConfig, mRefData, mQualityRecalibrationMap, mMsiJitterCalcs, mPhaseSetCounter,
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults,
                     mFragmentLengths, mCandidateWriter));
         }

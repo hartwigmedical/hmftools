@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.CN_GC_OPTIMAL_TOLERANCE;
@@ -26,12 +27,17 @@ import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionOverlapsOrAdjacent;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
+import static com.hartwig.hmftools.panelbuilder.Utils.findDuplicates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
@@ -95,34 +101,21 @@ public class Genes
     {
         LOGGER.info("Generating gene probes");
 
-        List<GeneDefinition> geneDefs = loadGenesFile(targetGeneFile);
-        geneDefs.forEach(gene -> LOGGER.debug("{}", gene));
+        List<GeneDefinition> geneDefinitions = loadGenesFile(targetGeneFile);
+        geneDefinitions.forEach(gene -> LOGGER.debug("{}", gene));
 
         LOGGER.debug("Loading gene transcript data");
-        List<GeneTranscriptData> geneTranscriptDatas = geneDefs.stream()
-                .map(gene -> loadGeneTranscriptData(gene, ensemblData))
-                .flatMap(Optional::stream)
-                .toList();
+        List<GeneTranscriptData> geneTranscriptDatas = loadGeneTranscriptDatas(geneDefinitions, ensemblData);
+        checkNoDuplicateGenes(geneTranscriptDatas);
 
-        // When generating probes, don't check probe overlap. This is because:
-        //   - Gene probes are generated first, so nothing is covered beforehand, and
+        // When generating probes, don't check probe overlap between genes. This is because:
         //   - Assume different genes don't overlap, or if they do, it's small enough that the overlap is tolerable, and
         //   - Within one gene, multiple transcripts are merged beforehand to avoid subregion overlap.
 
         LOGGER.debug("Generating probes");
-        ProbeGenerationResult result = new ProbeGenerationResult();
-        List<GeneStats> geneStats = new ArrayList<>();
-        for(GeneTranscriptData gene : geneTranscriptDatas)
-        {
-            List<GeneRegion> geneRegions = createGeneRegions(gene);
+        ProbeGenerationResult result = generateProbes(geneTranscriptDatas, probeGenerator, panelData);
 
-            ProbeGenerationResult geneResult = geneRegions.stream()
-                    .map(geneRegion -> generateProbes(geneRegion, probeGenerator))
-                    .reduce(new ProbeGenerationResult(), ProbeGenerationResult::add);
-            result = result.add(geneResult);
-
-            geneStats.add(new GeneStats(gene.gene().GeneName, geneResult.probes().size()));
-        }
+        List<GeneStats> geneStats = computeGeneStats(result, geneTranscriptDatas);
         ExtraOutput extraOutput = new ExtraOutput(geneStats);
 
         panelData.addResult(result);
@@ -149,14 +142,6 @@ public class Genes
             List<String> extraTranscriptNames
     )
     {
-        public List<String> transcriptNames()
-        {
-            // Always get the canonical transcript, plus any extra transcripts requested.
-            List<String> names = new ArrayList<>();
-            names.add(null);
-            names.addAll(extraTranscriptNames);
-            return names;
-        }
     }
 
     private static List<GeneDefinition> loadGenesFile(final String filePath)
@@ -168,13 +153,18 @@ public class Genes
             List<GeneDefinition> genes = reader.stream().map(row ->
             {
                 String geneName = row.get(FLD_GENE_NAME);
+                if(geneName.isBlank())
+                {
+                    throw new UserInputError("Gene name cannot be blank: " + geneName);
+                }
+
                 boolean coding = row.getBoolean(FLD_INCLUDE_CODING);
                 boolean utr = row.getBoolean(FLD_INCLUDE_UTR);
                 boolean exonFlank = row.getBoolean(FLD_INCLUDE_EXON_FLANK);
                 boolean upstream = row.getBoolean(FLD_INCLUDE_UPSTREAM);
                 boolean downstream = row.getBoolean(FLD_INCLUDE_DOWNSTREAM);
                 boolean promoter = row.getBoolean(FLD_INCLUDE_PROMOTER);
-                String extraTranscriptsStr = row.getOrNull(FLD_EXTRA_TRANSCRIPTS);
+                String extraTranscriptsStr = row.getStringOrNull(FLD_EXTRA_TRANSCRIPTS);
                 List<String> extraTranscripts = parseGeneExtraTranscripts(extraTranscriptsStr);
 
                 GeneOptions options = new GeneOptions(coding, utr, exonFlank, upstream, downstream, promoter);
@@ -188,13 +178,21 @@ public class Genes
 
     private static List<String> parseGeneExtraTranscripts(@Nullable final String field)
     {
-        if(field == null)
+        if(field == null || field.isEmpty())
         {
             return emptyList();
         }
         else
         {
-            return Arrays.asList(field.strip().split(","));
+            List<String> transcriptNames = Arrays.asList(field.strip().split(","));
+            for(String transcriptName : transcriptNames)
+            {
+                if(transcriptName.isBlank())
+                {
+                    throw new UserInputError("Transcript name cannot be blank: " + transcriptName);
+                }
+            }
+            return transcriptNames;
         }
     }
 
@@ -206,46 +204,107 @@ public class Genes
     {
     }
 
-    private static Optional<GeneTranscriptData> loadGeneTranscriptData(final GeneDefinition geneDef,
+    private static void checkNoDuplicateGenes(final List<GeneTranscriptData> genes)
+    {
+        List<String> transcripts = genes.stream()
+                .flatMap(gene -> gene.transcripts().stream().map(
+                        transcript -> format("%s:%s", gene.gene().GeneName, formatTranscriptName(transcript))))
+                .toList();
+        List<String> duplicates = findDuplicates(transcripts);
+        if(!duplicates.isEmpty())
+        {
+            duplicates.forEach(transcript -> LOGGER.error("Duplicate gene transcript: {}", transcript));
+            throw new UserInputError("Duplicate genes");
+        }
+    }
+
+    private static List<GeneTranscriptData> loadGeneTranscriptDatas(final List<GeneDefinition> geneDefinitions,
+            final EnsemblDataCache ensemblData)
+    {
+        List<GeneTranscriptData> geneTranscriptDatas = new ArrayList<>();
+        boolean error = false;
+        for(GeneDefinition geneDef : geneDefinitions)
+        {
+            Optional<GeneTranscriptData> geneTranscriptData = loadGeneTranscriptDatas(geneDef, ensemblData);
+            if(geneTranscriptData.isPresent())
+            {
+                geneTranscriptDatas.add(geneTranscriptData.get());
+            }
+            else
+            {
+                // Don't immediately fail, so we can log all the errors for the user. Only fail at the end of all the loading.
+                error = true;
+            }
+        }
+        if(error)
+        {
+            throw new UserInputError("Invalid genes (see error logs for details)");
+        }
+        else
+        {
+            return geneTranscriptDatas;
+        }
+    }
+
+    private static Optional<GeneTranscriptData> loadGeneTranscriptDatas(final GeneDefinition geneDef,
             final EnsemblDataCache ensemblData)
     {
         GeneData geneData = ensemblData.getGeneDataByName(geneDef.geneName());
         if(geneData == null)
         {
-            throw new UserInputError(format("Gene not found: %s", geneDef.geneName()));
+            LOGGER.error("Gene not found: {}", geneDef.geneName());
+            return Optional.empty();
         }
 
-        List<TranscriptData> transcriptDatas = geneDef.transcriptNames().stream()
-                .map(transName ->
-                {
-                    TranscriptData transcriptData = transName == null ?
-                            ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
-                            ensemblData.getTranscriptData(geneData.GeneId, transName);
-                    if(transcriptData == null)
-                    {
-                        throw new UserInputError(format("Gene not found: %s:%s", geneDef.geneName(), transName));
-                    }
-                    return transcriptData;
-                })
-                .filter(transcriptData ->
-                {
-                    if(transcriptData.nonCoding())
-                    {
-                        // User should add as a custom region instead.
-                        LOGGER.warn("Noncoding gene skipped: {}:{}", geneDef.geneName(), transcriptData.TransName);
-                        return false;
-                    }
-                    return true;
-                })
-                .toList();
-
+        List<TranscriptData> transcriptDatas = loadGeneTranscripts(geneData, geneDef.extraTranscriptNames(), ensemblData);
         if(transcriptDatas.isEmpty())
         {
+            // Error occurred loading transcripts.
             return Optional.empty();
         }
         else
         {
             return Optional.of(new GeneTranscriptData(geneData, transcriptDatas, geneDef.options()));
+        }
+    }
+
+    private static List<TranscriptData> loadGeneTranscripts(final GeneData geneData, final List<String> extraTranscriptNames,
+            final EnsemblDataCache ensemblData)
+    {
+        List<String> transcriptNames = new ArrayList<>();
+        // Null indicates the canonical transcript.
+        transcriptNames.add(null);
+        transcriptNames.addAll(extraTranscriptNames);
+
+        List<TranscriptData> transcriptDatas = new ArrayList<>();
+        boolean error = false;
+        for(String transcriptName : transcriptNames)
+        {
+            TranscriptData transcriptData = transcriptName == null ?
+                    ensemblData.getCanonicalTranscriptData(geneData.GeneId) :
+                    ensemblData.getTranscriptData(geneData.GeneId, transcriptName);
+            if(transcriptData == null)
+            {
+                LOGGER.error("Gene transcript not found: {}:{}", geneData.GeneName, formatTranscriptName(transcriptName));
+                error = true;
+            }
+            else
+            {
+                if(transcriptData.nonCoding())
+                {
+                    LOGGER.debug("Noncoding gene transcript: {}:{}", geneData.GeneName, formatTranscriptName(transcriptName));
+                }
+                transcriptDatas.add(transcriptData);
+            }
+        }
+
+        if(error)
+        {
+            return emptyList();
+        }
+        else
+        {
+            return transcriptDatas;
         }
     }
 
@@ -269,6 +328,14 @@ public class Genes
         {
             this(gene, type, ChrBaseRegion.from(gene.gene().Chromosome, region));
         }
+    }
+
+    private static ProbeGenerationResult generateProbes(final List<GeneTranscriptData> genes, final ProbeGenerator probeGenerator,
+            final PanelCoverage coverage)
+    {
+        Stream<ProbeGenerationSpec> probeGenerationSpecs = genes.stream()
+                .flatMap(gene -> createGeneRegions(gene).stream().map(Genes::createProbeGenerationSpec));
+        return probeGenerator.generateBatch(probeGenerationSpecs, coverage);
     }
 
     private static List<GeneRegion> createGeneRegions(final GeneTranscriptData gene)
@@ -388,6 +455,13 @@ public class Genes
 
         regions.forEach(region -> LOGGER.trace("Gene region: {}", region));
 
+        if(regions.isEmpty())
+        {
+            // Perhaps the user configured no features or configured only coding features for a noncoding gene.
+            // Perhaps annoying to have as an error, but the user should be made aware.
+            LOGGER.warn("No features produced for gene {}", gene.gene().GeneName);
+        }
+
         return regions;
     }
 
@@ -413,9 +487,9 @@ public class Genes
             TranscriptData transcript = pair.getLeft();
             ExonData exon = pair.getRight();
 
-            BaseRegion codingRegion = new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
+            BaseRegion codingRegion = transcript.nonCoding() ? null : new BaseRegion(transcript.CodingStart, transcript.CodingEnd);
             BaseRegion exonRegion = new BaseRegion(exon.Start, exon.End);
-            boolean isCoding = codingRegion.overlaps(exonRegion);
+            boolean isCoding = codingRegion != null && codingRegion.overlaps(exonRegion);
 
             mergedExons.stream()
                     .filter(region -> regionOverlapsOrAdjacent(region.Region, exonRegion))
@@ -452,7 +526,7 @@ public class Genes
         return mergedExons;
     }
 
-    private static ProbeGenerationResult generateProbes(final GeneRegion geneRegion, final ProbeGenerator probeGenerator)
+    private static ProbeGenerationSpec createProbeGenerationSpec(final GeneRegion geneRegion)
     {
         LOGGER.trace("Generating probes for {}", geneRegion);
 
@@ -461,31 +535,49 @@ public class Genes
         return switch(geneRegion.type())
         {
             case CODING, UTR, PROMOTER ->
-                    probeGenerator.coverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT, null);
+                    new ProbeGenerationSpec.CoverRegion(geneRegion.region(), metadata, GENERAL_PROBE_CRITERIA, GENERAL_PROBE_SELECT);
             case UP_STREAM, DOWN_STREAM, EXON_FLANK ->
-                    probeGenerator.coverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT, null);
+                    new ProbeGenerationSpec.CoverOneSubregion(geneRegion.region(), metadata, CN_PROBE_CRITERIA, CN_PROBE_SELECT);
         };
     }
 
     private static TargetMetadata createTargetMetadata(final GeneRegion geneRegion)
     {
         GeneData geneData = geneRegion.gene().gene();
-        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::transcriptDataName).toList();
+        List<String> transcriptNames = geneRegion.gene().transcripts().stream().map(Genes::formatTranscriptName).toList();
         // If there are multiple transcripts, merge their names, since the region is determined based on one or more transcripts.
         String transcripts = join("/", transcriptNames);
         String extraInfo = format("%s:%s:%s", geneData.GeneName, transcripts, geneRegion.type().name());
-        return new TargetMetadata(TARGET_TYPE, extraInfo);
+        // Store the gene region as extra data so it can be recovered later to generate summary statistics.
+        return new TargetMetadata(TARGET_TYPE, extraInfo, geneRegion);
     }
 
-    private static String transcriptDataName(final TranscriptData transcriptData)
+    private static String formatTranscriptName(final TranscriptData transcriptData)
     {
-        if(transcriptData.IsCanonical)
+        return formatTranscriptName(transcriptData.IsCanonical ? null : transcriptData.TransName);
+    }
+
+    private static String formatTranscriptName(@Nullable final String transcriptName)
+    {
+        return Objects.requireNonNullElse(transcriptName, "canon");
+    }
+
+    private static List<GeneStats> computeGeneStats(final ProbeGenerationResult result, List<GeneTranscriptData> genes)
+    {
+        Map<String, Integer> geneProbeCounts = new HashMap<>();
+        for(GeneTranscriptData gene : genes)
         {
-            return "canon";
+            geneProbeCounts.put(gene.gene.GeneName, 0);
         }
-        else
+        for(Probe probe : result.probes())
         {
-            return transcriptData.TransName;
+            GeneRegion geneRegion = (GeneRegion) requireNonNull(probe.metadata().extraData());
+            geneProbeCounts.merge(geneRegion.gene().gene().GeneName, 1, Integer::sum);
         }
+        return geneProbeCounts.entrySet().stream()
+                // Sort by gene name to ensure deterministic output.
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new GeneStats(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }

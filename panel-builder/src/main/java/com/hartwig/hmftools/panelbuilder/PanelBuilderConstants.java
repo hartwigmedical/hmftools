@@ -70,12 +70,12 @@ public class PanelBuilderConstants
     public static final double CN_GC_OPTIMAL_TOLERANCE = 0.005;
 
     // Custom regions parameters.
-    public static final double CUSTOM_REGION_QUALITY_MIN = 0.1;
+    public static final double CUSTOM_REGION_QUALITY_MIN_DEFAULT = 0.1;
     public static final double CUSTOM_REGION_GC_TARGET = 0.45;
     public static final double CUSTOM_REGION_GC_TOLERANCE = 1;
 
     // Custom structural variants parameters.
-    public static final double CUSTOM_SV_QUALITY_MIN = 0.1;
+    public static final double CUSTOM_SV_QUALITY_MIN_DEFAULT = 0.1;
     public static final double CUSTOM_SV_GC_TARGET = 0.45;
     public static final double CUSTOM_SV_GC_TOLERANCE = 1;
 
@@ -94,15 +94,20 @@ public class PanelBuilderConstants
     public static final int SAMPLE_SV_BREAKENDS_PER_GENE_MAX = 5;
     public static final int SAMPLE_INDEL_LENGTH_MAX = 31;
     public static final double SAMPLE_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
+    public static final int SAMPLE_INSERT_SEQUENCE_LENGTH_MAX = 60;
 
     // Output naming.
     public static final String PANEL_PROBES_FILE_STEM = "panel_probes";
-    public static final String TARGET_REGIONS_FILE_NAME = "target_regions.bed";
-    public static final String REJECTED_REGIONS_FILE_STEM = "rejected_regions";
-    public static final String CANDIDATE_REGIONS_FILE_NAME = "candidate_regions.bed";
-    // This output can get very large (multiple GB) so write it in compressed format.
+    public static final String PROBE_TARGETED_REGIONS_FILE_NAME = "targeted_regions.bed";
+    public static final String REJECTED_FEATURES_FILE_STEM = "rejections";
+    // This output can get somewhat large (hundreds of MB) due to the copy number backbone, so write it in compressed format.
+    public static final String CANDIDATE_TARGET_REGIONS_FILE_NAME = "candidate_regions.bed.gz";
+    // This output can get very large (multiple GB), so write it in compressed format.
     public static final String CANDIDATE_PROBES_FILE_NAME = "candidate_probes.tsv.gz";
     public static final String GENE_STATS_FILE_NAME = "gene_stats.tsv";
+    public static final String SAMPLE_VARIANT_INFO_FILE_NAME = "sample_variant_info.tsv";
+
+    public static final String FASTA_EXTENSION = ".fasta";
 
     static
     {

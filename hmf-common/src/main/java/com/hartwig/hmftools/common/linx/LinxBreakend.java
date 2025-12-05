@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -13,7 +15,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.immutables.value.Value;
 
@@ -22,13 +24,15 @@ public abstract class LinxBreakend
 {
     public abstract int id();
     public abstract int svId();
+    public abstract String vcfId();
+    public abstract String coords();
     public abstract boolean isStart();
     public abstract String gene();
     public abstract String transcriptId();
     public abstract boolean canonical();
     public abstract String geneOrientation();
     public abstract boolean disruptive();
-    public abstract boolean reportedDisruption();
+    public abstract ReportedStatus reportedStatus();
     public abstract double undisruptedCopyNumber();
     public abstract TranscriptRegionType regionType();
     public abstract TranscriptCodingType codingType();
@@ -46,6 +50,8 @@ public abstract class LinxBreakend
 
     public static final String BREAKEND_ORIENTATION_UPSTREAM = "Upstream";
     public static final String BREAKEND_ORIENTATION_DOWNSTREAM = "Downstream";
+
+    public static final String BREAKEND_COORD_DELIM = ":";
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -67,6 +73,29 @@ public abstract class LinxBreakend
         Files.write(new File(filename).toPath(), toLines(breakends));
     }
 
+    public static String coordsStr(final String chromosome, final int position, final byte orientation)
+    {
+        return new StringJoiner(BREAKEND_COORD_DELIM)
+                .add(chromosome)
+                .add(String.valueOf(position))
+                .add(String.valueOf(orientation)).toString();
+    }
+
+    public static String chromosomeFromCoords(final String coordStr)
+    {
+        return coordStr.split(BREAKEND_COORD_DELIM, 3)[0];
+    }
+
+    public static Integer positionFromCoords(final String coordStr)
+    {
+        return Integer.parseInt(coordStr.split(BREAKEND_COORD_DELIM, 3)[1]);
+    }
+
+    public static byte orientationFromCoords(final String coordStr)
+    {
+        return Byte.parseByte(coordStr.split(BREAKEND_COORD_DELIM, 3)[2]);
+    }
+
     private static List<String> toLines(final List<LinxBreakend> breakends)
     {
         final List<String> lines = Lists.newArrayList();
@@ -83,27 +112,37 @@ public abstract class LinxBreakend
 
         List<LinxBreakend> breakends = Lists.newArrayList();
 
-        // backwards compatibility on old column name
-        Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
-                fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
+        Integer vcfIdIndex = fieldsIndexMap.get("vcfId");
+        Integer coordsIndex = fieldsIndexMap.get("coords");
+        Integer reportedIndex = fieldsIndexMap.get("reportedDisruption");
+        Integer reportedStatusIndex = fieldsIndexMap.get("reportedStatus");
 
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM);
 
+            ReportedStatus reportedStatus;
+
+            if(reportedStatusIndex != null)
+                reportedStatus = ReportedStatus.valueOf(values[reportedStatusIndex]);
+            else
+                reportedStatus = Boolean.parseBoolean(values[reportedIndex]) ? ReportedStatus.REPORTED : ReportedStatus.NONE;
+
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
                     .svId(Integer.parseInt(values[fieldsIndexMap.get("svId")]))
+                    .vcfId(vcfIdIndex != null ? values[vcfIdIndex] : "")
+                    .coords(coordsIndex != null ? values[coordsIndex] : "")
                     .isStart(Boolean.parseBoolean(values[fieldsIndexMap.get("isStart")]))
                     .gene(values[fieldsIndexMap.get("gene")])
                     .transcriptId(values[fieldsIndexMap.get("transcriptId")])
                     .canonical(Boolean.parseBoolean(values[fieldsIndexMap.get("canonical")]))
                     .geneOrientation(values[fieldsIndexMap.get("geneOrientation")])
                     .disruptive(Boolean.parseBoolean(values[fieldsIndexMap.get("disruptive")]))
-                    .reportedDisruption(Boolean.parseBoolean(values[fieldsIndexMap.get("reportedDisruption")]))
+                    .reportedStatus(reportedStatus)
                     .undisruptedCopyNumber(Double.parseDouble(values[fieldsIndexMap.get("undisruptedCopyNumber")]))
                     .regionType(TranscriptRegionType.valueOf(values[fieldsIndexMap.get("regionType")]))
-                    .codingType(TranscriptCodingType.valueOf(values[codingTypeIndex]))
+                    .codingType(TranscriptCodingType.valueOf(values[fieldsIndexMap.get("codingType")]))
                     .biotype(values[fieldsIndexMap.get("biotype")])
                     .exonicBasePhase(Integer.parseInt(values[fieldsIndexMap.get("exonicBasePhase")]))
                     .nextSpliceExonRank(Integer.parseInt(values[fieldsIndexMap.get("nextSpliceExonRank")]))
@@ -123,13 +162,15 @@ public abstract class LinxBreakend
         return new StringJoiner(TSV_DELIM)
                 .add("id")
                 .add("svId")
+                .add("vcfId")
+                .add("coords")
                 .add("isStart")
                 .add("gene")
                 .add("transcriptId")
                 .add("canonical")
                 .add("geneOrientation")
                 .add("disruptive")
-                .add("reportedDisruption")
+                .add("reportedStatus")
                 .add("undisruptedCopyNumber")
                 .add("regionType")
                 .add("codingType")
@@ -149,13 +190,15 @@ public abstract class LinxBreakend
         return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
+                .add(breakend.vcfId())
+                .add(breakend.coords())
                 .add(String.valueOf(breakend.isStart()))
                 .add(String.valueOf(breakend.gene()))
                 .add(String.valueOf(breakend.transcriptId()))
                 .add(String.valueOf(breakend.canonical()))
                 .add(String.valueOf(breakend.geneOrientation()))
                 .add(String.valueOf(breakend.disruptive()))
-                .add(String.valueOf(breakend.reportedDisruption()))
+                .add(String.valueOf(breakend.reportedStatus()))
                 .add(String.format("%.4f", breakend.undisruptedCopyNumber()))
                 .add(String.valueOf(breakend.regionType()))
                 .add(String.valueOf(breakend.codingType()))

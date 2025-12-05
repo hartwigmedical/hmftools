@@ -103,8 +103,8 @@ public class PrepApplication
 
         FragmentLengthBounds fragmentLengthBounds = fragSizeDistribution.calculateFragmentLengthBounds();
 
-        SV_LOGGER.info("fragment length distribution bounds(min={} max={})",
-                fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
+        SV_LOGGER.info("fragment length distribution bounds(min={} max={} median={})",
+                fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound, fragmentLengthBounds.Median);
 
         if(fragmentLengthBounds.isValid())
         {
@@ -112,12 +112,6 @@ public class PrepApplication
                     fragmentLengthBounds.LowerBound,
                     mConfig.MaxFragmentLengthOverride > 0 ? mConfig.MaxFragmentLengthOverride : fragmentLengthBounds.UpperBound);
         }
-
-        if(fragSizeDistribution.maxReadLength() > 0)
-            mConfig.setReadLength(fragSizeDistribution.maxReadLength());
-
-        if(!fragSizeDistribution.hasPairedReads())
-            mConfig.setUnpairedReads(true);
     }
 
     public static void main(@NotNull final String[] args)

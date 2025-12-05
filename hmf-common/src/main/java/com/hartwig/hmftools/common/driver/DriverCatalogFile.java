@@ -17,6 +17,7 @@ import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,22 +25,13 @@ public final class DriverCatalogFile
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
-    // backwards compatibility for v5.32 and earlier
-    private static final String OLD_SOMATIC_EXTENSION = ".driver.catalog.somatic.tsv";
-    private static final String OLD_GERMLINE_EXTENSION = ".driver.catalog.germline.tsv";
-
     private static final String SOMATIC_EXTENSION = ".purple.driver.catalog.somatic.tsv";
     private static final String GERMLINE_EXTENSION = ".purple.driver.catalog.germline.tsv";
 
     public static String generateFilename(final String basePath, final String sample, boolean isSomatic)
     {
         // backwards compatible for reading
-        String filename = basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        return basePath + File.separator + sample + (isSomatic ? OLD_SOMATIC_EXTENSION : OLD_GERMLINE_EXTENSION);
+        return basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
     }
 
     public static String generateFilenameForWriting(final String basePath, final String sample, boolean isSomatic)
@@ -83,6 +75,7 @@ public final class DriverCatalogFile
                 .add("driver")
                 .add("category")
                 .add("likelihoodMethod")
+                .add("reportedStatus")
                 .add("driverLikelihood")
                 .add("missense")
                 .add("nonsense")
@@ -106,6 +99,7 @@ public final class DriverCatalogFile
                 .add(String.valueOf(driverCatalog.driver()))
                 .add(String.valueOf(driverCatalog.category()))
                 .add(String.valueOf(driverCatalog.likelihoodMethod()))
+                .add(String.valueOf(driverCatalog.reportedStatus()))
                 .add(FORMAT.format(driverCatalog.driverLikelihood()))
                 .add(String.valueOf(driverCatalog.missense()))
                 .add(String.valueOf(driverCatalog.nonsense()))
@@ -132,9 +126,13 @@ public final class DriverCatalogFile
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
+        Integer reportedIndex = fieldsIndexMap.get("reportedStatus");
+
         for(String line : lines)
         {
             String[] values = line.split(TSV_DELIM, -1);
+
+            ReportedStatus reportedStatus = reportedIndex != null ? ReportedStatus.valueOf(values[reportedIndex]) : ReportedStatus.REPORTED;
 
             drivers.add(ImmutableDriverCatalog.builder()
                     .chromosome(values[fieldsIndexMap.get("chromosome")])
@@ -146,6 +144,7 @@ public final class DriverCatalogFile
                             Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
                     .driver(checkConvertType(values[fieldsIndexMap.get("driver")]))
                     .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
+                    .reportedStatus(reportedStatus)
                     .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
                     .driverLikelihood(Double.parseDouble(values[fieldsIndexMap.get("driverLikelihood")]))
                     .missense(Integer.parseInt(values[fieldsIndexMap.get("missense")]))

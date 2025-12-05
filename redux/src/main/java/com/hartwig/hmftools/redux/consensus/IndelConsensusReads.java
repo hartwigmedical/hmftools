@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.redux.consensus;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.redux.ReduxConfig.isSbx;
 import static com.hartwig.hmftools.redux.consensus.SbxIndelConsensus.determineIndelConsensus;

@@ -76,8 +76,8 @@ public class AmpDriversTest
 
         double geneMinCopyNumber = 12;
 
-        final DriverCatalog driver = createDriver(geneName, chromosome, AMP, DriverCategory.ONCO, false, geneMinCopyNumber);
-        final GeneCopyNumber geneCopyNumber = createGeneCopyNumber(geneName, chromosome, geneMinCopyNumber, transStart, transEnd);
+        DriverCatalog driver = createDriver(geneName, chromosome, AMP, DriverCategory.ONCO, false, geneMinCopyNumber);
+        GeneCopyNumber geneCopyNumber = createGeneCopyNumber(geneName, chromosome, geneMinCopyNumber, transStart, transEnd);
 
         driverAnnotator.addDriverGene(driver, geneCopyNumber);
 

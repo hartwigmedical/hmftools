@@ -9,7 +9,11 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
+import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
+import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
+import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
@@ -48,6 +52,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PE
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_EXPECTED_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.GERMLINE_HET_MIN_SAMPLING_PROB;
 import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFilterConfig;
+import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MQF_NM_1_THRESHOLD_DEDUCTION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
 
@@ -82,7 +87,7 @@ public class VariantFilters
         JITTER;
     }
 
-    private static final StrandBiasCalcs mStrandBiasCalcs = new StrandBiasCalcs();
+    public static final StrandBiasCalcs STRAND_BIAS_CALCS = new StrandBiasCalcs();
 
     public VariantFilters(final SageConfig config)
     {
@@ -158,7 +163,6 @@ public class VariantFilters
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
             Set<SoftFilter> tumorFilters = Sets.newHashSet();
-
             applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
             if(!mIsGermline)
@@ -232,13 +236,13 @@ public class VariantFilters
 
         if(tier != HOTSPOT)
         {
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
+            if(STRAND_BIAS_CALCS.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasNonAlt()))
             {
                 filters.add(SoftFilter.FRAGMENT_STRAND_BIAS);
             }
 
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasNonAlt())
-            || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
+            if(STRAND_BIAS_CALCS.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasNonAlt())
+            || (primaryTumor.isIndel() && STRAND_BIAS_CALCS.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS);
             }
@@ -277,7 +281,7 @@ public class VariantFilters
 
     private static boolean boostNovelIndel(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return (tier == HOTSPOT || tier == PANEL)
+        return (tier == HOTSPOT || tier == PANEL || isIllumina())
                 && primaryTumor.isIndel() && !primaryTumor.useMsiErrorRate()
                 && primaryTumor.jitter().lengthened() + primaryTumor.jitter().shortened() == 0
                 && (double)primaryTumor.nonAltNmCountTotal() / (primaryTumor.depth() - primaryTumor.altSupport()) < 0.75;
@@ -348,7 +352,12 @@ public class VariantFilters
 
         primaryTumor.setMapQualFactor(mapQualFactor);
 
-        return mapQualFactor < config.MapQualFactor;
+        double threshold = config.MapQualFactor;
+
+        if(isSbx() && primaryTumor.minNumberOfEvents() == 1)
+            threshold -= MQF_NM_1_THRESHOLD_DEDUCTION;
+
+        return mapQualFactor < threshold;
     }
 
     private static double calcMapQualFactor(
@@ -404,9 +413,14 @@ public class VariantFilters
         double readEdgeDistanceThresholdPerc = readEdgeDistanceThreshold(tier);
         double altAvgEdgeDistanceRatio = avgAltEdgeDistance / avgEdgeDistance;
 
-        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc)
+        if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc && !primaryTumor.isLongIndel())
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
+        }
+
+        if(avgAltEdgeDistance >= (isIllumina() ? AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD : AVG_READ_EDGE_DISTANCE_THRESHOLD))
+        {
+            edgeDistancePenalty = 0;
         }
 
         double repeatPenalty = 0;

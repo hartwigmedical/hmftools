@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.CiderUtils.getAdapterDnaTrim
 import com.hartwig.hmftools.cider.layout.LayoutForest
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.utils.Doubles
@@ -124,9 +125,17 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     // apply trim bases and polyG trimming
     private fun determineReadSlice(read: SAMRecord, useReverseComplement: Boolean) : ReadSlice?
     {
-        // work out the slice start and end
-        var sliceStart: Int = trimBases
-        var sliceEnd: Int = read.readLength - trimBases
+        var sliceStart = 0
+        var sliceEnd = read.readLength
+
+        // Trim off any sequencing adapter bases.
+        val adapterTrim = getAdapterDnaTrim(read)
+        sliceStart += adapterTrim.first
+        sliceEnd -= adapterTrim.second
+
+        // Apply constant trimming.
+        sliceStart += trimBases
+        sliceEnd -= trimBases
 
         // now we also want to try poly G tail trimming
         // we want to work out there the tail is.
@@ -154,6 +163,12 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             }
         }
 
+        if ((sliceEnd - sliceStart) < 5)
+        {
+            // if too little left don't bother
+            return null
+        }
+
         // the above logic is before reverse complement, the following logic is after
         // so we swap the start / end here
         if (useReverseComplement)
@@ -161,12 +176,6 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val sliceStartTmp = sliceStart
             sliceStart = read.readLength - sliceEnd
             sliceEnd = read.readLength - sliceStartTmp
-        }
-
-        if ((sliceEnd - sliceStart) < 5)
-        {
-            // if too little left don't bother
-            return null
         }
 
         return ReadSlice(read, useReverseComplement, sliceStart, sliceEnd)

@@ -60,6 +60,12 @@ public final class UltimaBamUtils
         return t0Values;
     }
 
+    public static byte extractT0ValueAtIndex(final SAMRecord record, final int readIndex)
+    {
+        byte[] t0Values = record.getStringAttribute(ULTIMA_T0_TAG).getBytes();
+        return (byte) (t0Values[readIndex] - PHRED_OFFSET);
+    }
+
     public static int extractLowQualCount(final SAMRecord record)
     {
         String qualTag = record.getStringAttribute(ULT_QUAL_TAG);
@@ -80,9 +86,10 @@ public final class UltimaBamUtils
 
         String[] qualItems = qualTag.split(ULT_QUAL_TAG_DELIM, 2);
 
+        int totalLowQual = Integer.parseInt(qualItems[0]);
         String[] qualIndexItems = qualItems[1].split(ULT_QUAL_TAG_INDEX_DELIM);
 
-        List<Integer> lowQualValues = Lists.newArrayList();
+        List<Integer> lowQualValues = Lists.newArrayListWithCapacity(totalLowQual);
 
         for(String qualItem : qualIndexItems)
         {

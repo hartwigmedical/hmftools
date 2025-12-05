@@ -105,15 +105,6 @@ public final class UltimaRoutines
         stripAttributes(record, stats);
     }
 
-    public static void finaliseRead(final RefGenomeInterface refGenome, final SAMRecord record)
-    {
-    /*
-        ConsensusType consensusType = UltimaBamUtils.deriveConsensusType(record);
-        record.setAttribute(CONSENSUS_TYPE_ATTRIBUTE, consensusType.toString());
-        setLowQualTag(record);
-    */
-    }
-
     public static String formLowQualTag(final SAMRecord record)
     {
         // tag has the form: 5=2,4-6,8 where

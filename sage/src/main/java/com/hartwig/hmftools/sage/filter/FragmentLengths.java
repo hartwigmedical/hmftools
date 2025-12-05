@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.filter;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.sage.SageConstants.CHIMERIC_FRAGMENT_LENGTH_MAX;
 
 import htsjdk.samtools.SAMRecord;
@@ -22,7 +23,7 @@ public class FragmentLengths
 
     public void processRead(final SAMRecord read, boolean supportsAlt)
     {
-        int insertSize = abs(read.getInferredInsertSize());
+        int insertSize = inferredInsertSizeAbs(read);
 
         if(insertSize > CHIMERIC_FRAGMENT_LENGTH_MAX)
             return;

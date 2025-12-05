@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -14,12 +15,15 @@ import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTO
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_DRB1_EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.STOP_LOSS_ON_C_ALLELE;
+import static com.hartwig.hmftools.lilac.LilacConstants.V37_HLA_REGION;
+import static com.hartwig.hmftools.lilac.LilacConstants.V38_HLA_REGION;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_H;
 import static com.hartwig.hmftools.lilac.hla.HlaGene.HLA_Y;
 import static com.hartwig.hmftools.lilac.seq.HlaSequenceLoci.buildAminoAcidSequenceFromNucleotides;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -35,6 +39,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -48,10 +53,15 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class ReferenceData
 {
     private final String mResourceDir;
     private final LilacConfig mConfig;
+
+    private static String HLA_REF_BASES = null;
+    private static int HLA_REF_START = 0;
 
     public static GeneCache GENE_CACHE = null;
 
@@ -88,7 +98,7 @@ public class ReferenceData
     // sequence used to printing amino acid sequences to file
     public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
+    private static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
 
     public static Indel STOP_LOSS_ON_C_INDEL = null;
 
@@ -101,16 +111,42 @@ public class ReferenceData
 
         Map<HlaGene, TranscriptData> hlaTranscriptMap = loadHlaTranscripts(config.RefGenVersion, mConfig.Genes);
         if(config.Genes == HLA_DRB1)
-            hlaTranscriptMap = trimDrb1Transcripts(hlaTranscriptMap);
+            trimDrb1Transcripts(hlaTranscriptMap);
 
         HLA_CHR = config.RefGenVersion.is38() ? HLA_CHROMOSOME_V38 : HLA_CHROMOSOME_V37;
+
+        if(!"".equals(mConfig.RefGenome))
+        {
+            IndexedFastaSequenceFile refFastaSeqFile = null;
+            try
+            {
+                refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenome));
+            }
+            catch(FileNotFoundException e)
+            {
+                LL_LOGGER.error("Failed to load ref genome: {}", mConfig.RefGenome);
+                System.exit(1);
+            }
+
+            RefGenomeSource refGenome = new RefGenomeSource(refFastaSeqFile);
+            if(config.RefGenVersion.is38())
+            {
+                HLA_REF_START = V38_HLA_REGION.start();
+                HLA_REF_BASES = refGenome.getBaseString(V38_HLA_REGION.Chromosome, V38_HLA_REGION.start(), V38_HLA_REGION.end());
+            }
+            else
+            {
+                HLA_REF_START = V37_HLA_REGION.start();
+                HLA_REF_BASES = refGenome.getBaseString(V37_HLA_REGION.Chromosome, V37_HLA_REGION.start(), V37_HLA_REGION.end());
+            }
+        }
 
         GENE_CACHE = new GeneCache(hlaTranscriptMap);
 
         if(config.Genes.coversMhcClass1())
             EXCLUDED_ALLELES.addAll(CLASS_1_EXCLUDED_ALLELES);
 
-        if(config.Genes == HLA_DRB1)
+        if(config.Genes.contains(HlaGene.HLA_DRB1))
             EXCLUDED_ALLELES.addAll(HLA_DRB1_EXCLUDED_ALLELES);
 
         // see note above
@@ -141,7 +177,12 @@ public class ReferenceData
         KnownStopLossIndelAlleles = Maps.newHashMap();
     }
 
-    private static Map<HlaGene, TranscriptData> trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
+    public static String refBases(int startPos, int endPos)
+    {
+        return HLA_REF_BASES.substring(startPos - HLA_REF_START, endPos - HLA_REF_START + 1);
+    }
+
+    private static void trimDrb1Transcripts(final Map<HlaGene, TranscriptData> transcripts)
     {
         // restrict to first two exons
         TranscriptData transcript = transcripts.get(HlaGene.HLA_DRB1);
@@ -149,13 +190,19 @@ public class ReferenceData
         exons = exons.subList(exons.size() - 2, exons.size());
 
         // adjust end of exon 2 so that we get a multiple of 3 nucleotide coding bases
-        int trimmedCodingStart = exons.get(0).Start + 1;
+        int nucCount = 0;
+        for(ExonData exon : exons)
+        {
+            int start = max(transcript.CodingStart, exon.Start);
+            int end = min(transcript.CodingEnd, exon.End);
+            nucCount += end - start + 1;
+        }
+
+        int trimmedCodingStart = exons.get(0).Start + (nucCount % 3);
         TranscriptData trimmedTranscript =
                 new TranscriptData(transcript.TransId, transcript.TransName, transcript.GeneId, transcript.IsCanonical, transcript.Strand, transcript.TransStart, transcript.TransEnd, trimmedCodingStart, transcript.CodingEnd, transcript.BioType, transcript.RefSeqId);
         trimmedTranscript.setExons(exons);
-        Map<HlaGene, TranscriptData> trimmedTranscripts = Maps.newHashMap();
-        trimmedTranscripts.put(HlaGene.HLA_DRB1, trimmedTranscript);
-        return trimmedTranscripts;
+        transcripts.put(HlaGene.HLA_DRB1, trimmedTranscript);
     }
 
     private static void setPonIndels(final RefGenomeVersion version)
@@ -479,14 +526,14 @@ public class ReferenceData
             String sequenceStr = items[1];
             HlaSequenceLoci newSequence = HlaSequenceFile.createFromReference(allele, sequenceStr, isProteinFile);
 
-            // restrict to first two exons on HLA-DRB1
-            if(mConfig.Genes == HLA_DRB1)
+            // restrict to first three exons on HLA-DRB1
+            if(allele.Gene == HlaGene.HLA_DRB1)
             {
                 int nucCount = GENE_CACHE.NucleotideLengths.get(HlaGene.HLA_DRB1);
                 int acidCount = nucCount / 3;
                 int trimLength = isProteinFile ? acidCount : nucCount;
-                List<String> trimmedSequence =
-                        Lists.newArrayList(newSequence.getSequences().subList(0, min(trimLength, newSequence.getSequences().size())));
+                List<String> trimmedSequence = Lists.newArrayList(
+                        newSequence.getSequences().subList(0, min(trimLength, newSequence.getSequences().size())));
                 newSequence = new HlaSequenceLoci(allele, trimmedSequence);
             }
 

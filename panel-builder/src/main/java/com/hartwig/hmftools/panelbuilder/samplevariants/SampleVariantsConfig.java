@@ -21,11 +21,14 @@ public record SampleVariantsConfig(
         String purpleDir,
         @Nullable String linxDir,
         @Nullable String linxGermlineDir,
-        int maxProbes
+        int maxProbes,
+        boolean prioritiseSmallIndels
 )
 {
     private static final String CFG_MAX_PROBES = "sample_probes";
     private static final String DESC_MAX_PROBES = "Maximum number of sample variant probes";
+    private static final String CFG_PRIORITISE_SMALL_INDELS = "prefer_small_indel";
+    private static final String DESC_PRIORITISE_SMALL_INDELS = "Within somatic nondriver SNV/MNV, prioritise smaller variants";
 
     private static final Logger LOGGER = LogManager.getLogger(SampleVariantsConfig.class);
 
@@ -37,8 +40,9 @@ public record SampleVariantsConfig(
         String linxDir = configBuilder.getValue(LINX_DIR_CFG);
         String linxGermlineDir = configBuilder.getValue(LINX_GERMLINE_DIR_CFG);
         int maxProbes = configBuilder.getInteger(CFG_MAX_PROBES);
+        boolean prioritiseShortIndels = configBuilder.hasFlag(CFG_PRIORITISE_SMALL_INDELS);
 
-        // If sampleId is present then assume the user wants to generate sample variant probes, otherwise no.
+        // If sampleId is present, then assume the user wants to generate sample variant probes, otherwise no.
         if(sampleId == null)
         {
             return null;
@@ -50,7 +54,7 @@ public record SampleVariantsConfig(
                 LOGGER.error("Required: {}", PURPLE_DIR_CFG);
                 System.exit(1);
             }
-            return new SampleVariantsConfig(sampleId, purpleDir, linxDir, linxGermlineDir, maxProbes);
+            return new SampleVariantsConfig(sampleId, purpleDir, linxDir, linxGermlineDir, maxProbes, prioritiseShortIndels);
         }
     }
 
@@ -61,5 +65,6 @@ public record SampleVariantsConfig(
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addInteger(CFG_MAX_PROBES, DESC_MAX_PROBES, SAMPLE_PROBES_MAX_DEFAULT);
+        configBuilder.addFlag(CFG_PRIORITISE_SMALL_INDELS, DESC_PRIORITISE_SMALL_INDELS);
     }
 }

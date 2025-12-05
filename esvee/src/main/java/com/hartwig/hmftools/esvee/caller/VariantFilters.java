@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
@@ -38,6 +39,9 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM1;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM2;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_MAX_READS;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
@@ -51,6 +55,8 @@ import static com.hartwig.hmftools.esvee.common.FilterType.DEL_SHORT_LOW_VAF;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM;
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
+import static com.hartwig.hmftools.esvee.common.FilterType.UNPAIRED_THREE_PRIME_RANGE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
 
 import java.util.List;
 import java.util.Map;
@@ -124,6 +130,9 @@ public class VariantFilters
 
         if(failsStrandBias(var))
             var.addFilter(STRAND_BIAS);
+
+        if(lowThreePrimePositionRange(var))
+            var.addFilter(UNPAIRED_THREE_PRIME_RANGE);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -284,6 +293,9 @@ public class VariantFilters
 
     private boolean belowMinFragmentLength(final Variant var)
     {
+        if(!hasPairedReads())
+            return false;
+
         if(var.isSgl())
             return false;
 
@@ -371,6 +383,47 @@ public class VariantFilters
             return false;
 
         return !anySamplesAboveAfThreshold(var, DEL_ARTEFACT_MIN_AF);
+    }
+
+    private boolean lowThreePrimePositionRange(final Variant var)
+    {
+        if(hasPairedReads())
+            return false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(var.breakends()[se] == null)
+                continue;
+
+            Breakend breakend = var.breakends()[se];
+
+            int minPositionRange = breakend.minOrientationPositionRange();
+
+            if(minPositionRange < 0)
+                continue;
+
+            int splitFragments = 0;
+            double maxStrandBias = 0;
+
+            for(Genotype genotype : breakend.Context.getGenotypes())
+            {
+                splitFragments += breakend.fragmentCount(genotype, SPLIT_FRAGS);
+
+                double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+                double adjStrandBias = strandBias > 0.5 ? 1 - strandBias : strandBias;
+                maxStrandBias = max(adjStrandBias, maxStrandBias);
+            }
+
+            if(maxStrandBias > 0)
+                continue;
+
+            double maxPermittedRange = min(THREE_PRIME_RANGE_PARAM1 + splitFragments / THREE_PRIME_RANGE_PARAM2, THREE_PRIME_RANGE_MAX_READS);
+
+            if(minPositionRange < maxPermittedRange)
+                return true;
+        }
+
+        return false;
     }
 
     private boolean failsStrandBias(final Variant var)

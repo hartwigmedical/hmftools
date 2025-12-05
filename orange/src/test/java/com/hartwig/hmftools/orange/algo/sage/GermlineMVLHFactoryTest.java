@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
@@ -71,7 +72,10 @@ public class GermlineMVLHFactoryTest
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
                 .reportPGX(false)
                 .build();
-        List<DriverGene> driverGenes = List.of(driverGene1, driverGene2);
+
+        Map<String,DriverGene> driverGenes = Maps.newHashMap();
+        driverGenes.put(driverGene1.gene(), driverGene1);
+        driverGenes.put(driverGene2.gene(), driverGene2);
 
         Map<String, Double> mvlhPerGene = GermlineMVLHFactory.parseMVLHPerGene(geneDepths, driverGenes);
 

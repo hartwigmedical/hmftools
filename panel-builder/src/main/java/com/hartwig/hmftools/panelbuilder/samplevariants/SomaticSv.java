@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
@@ -45,7 +46,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class SomaticSv implements Variant
+public class SomaticSv implements StructuralVariant
 {
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
@@ -92,7 +93,7 @@ public class SomaticSv implements Variant
 
     public boolean isReportedDisruption()
     {
-        return mBreakends.stream().anyMatch(LinxBreakend::reportedDisruption);
+        return mBreakends.stream().anyMatch(x -> x.reportedStatus() == ReportedStatus.REPORTED);
     }
 
     public double vaf()
@@ -113,7 +114,7 @@ public class SomaticSv implements Variant
             return mFusions.get(0).name();
         }
 
-        Optional<LinxBreakend> breakend = mBreakends.stream().filter(LinxBreakend::reportedDisruption).findFirst();
+        Optional<LinxBreakend> breakend = mBreakends.stream().filter(x -> x.reportedStatus() == ReportedStatus.REPORTED).findFirst();
         if(breakend.isPresent())
         {
             return breakend.get().gene();
@@ -128,6 +129,12 @@ public class SomaticSv implements Variant
         return isAmpDriver() || isDelDriver()
                 || mFusions.stream().anyMatch(LinxFusion::reported)
                 || isReportedDisruption();
+    }
+
+    @Override
+    public int insertSequenceLength()
+    {
+        return mVariant.insertSequence().length();
     }
 
     @Override
@@ -261,7 +268,7 @@ public class SomaticSv implements Variant
             }
 
             LinxSvAnnotation annotation = annotations.stream().
-                    filter(a -> a.vcfId().equals(variant.id()))
+                    filter(a -> a.vcfIdStart().equals(variant.id()))
                     .findFirst()
                     .orElse(null);
             if(annotation == null)

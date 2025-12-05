@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -58,7 +59,7 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.CANONICALTRANSCRIPT,
                 SVBREAKEND.GENEORIENTATION,
                 SVBREAKEND.DISRUPTIVE,
-                SVBREAKEND.REPORTEDDISRUPTION,
+                SVBREAKEND.REPORTEDSTATUS,
                 SVBREAKEND.UNDISRUPTEDCOPYNUMBER,
                 SVBREAKEND.REGIONTYPE,
                 SVBREAKEND.CODINGCONTEXT,
@@ -98,7 +99,7 @@ public class StructuralVariantFusionDAO
                     breakend.canonical(),
                     breakend.geneOrientation(),
                     breakend.disruptive(),
-                    breakend.reportedDisruption(),
+                    breakend.reportedStatus().toString(),
                     DatabaseUtil.decimal(breakend.undisruptedCopyNumber()),
                     breakend.regionType(),
                     breakend.codingType(),
@@ -174,7 +175,7 @@ public class StructuralVariantFusionDAO
                         fusion.name(),
                         fusion.reported(),
                         fusion.reportedType(),
-                        DatabaseUtil.checkStringLength(fusion.reportableReasons(), SVFUSION.REPORTEDREASON),
+                        DatabaseUtil.checkStringLength(fusion.reportableReasonsStr(), SVFUSION.REPORTEDREASON),
                         fusion.phased().toString(),
                         fusion.likelihood().toString(),
                         fusion.chainLength(),
@@ -204,9 +205,14 @@ public class StructuralVariantFusionDAO
             LinxFusion fusion = ImmutableLinxFusion.builder()
                     .fivePrimeBreakendId(record.getValue(SVFUSION.FIVEPRIMEBREAKENDID).intValue())
                     .threePrimeBreakendId(record.getValue(SVFUSION.THREEPRIMEBREAKENDID).intValue())
+                    .fivePrimeVcfId("")
+                    .threePrimeVcfId("")
+                    .fivePrimeCoords("")
+                    .threePrimeCoords("")
                     .name(record.getValue(SVFUSION.NAME))
                     .reported(record.getValue(SVFUSION.REPORTED) == 1)
                     .reportedType(record.getValue(SVFUSION.REPORTEDTYPE))
+                    .reportableReasons(LinxFusion.strToReportableReasons(record.getValue(SVFUSION.REPORTEDREASON)))
                     .likelihood(FusionLikelihoodType.valueOf(record.getValue(SVFUSION.LIKELIHOOD)))
                     .phased(FusionPhasedType.valueOf(record.getValue(SVFUSION.PHASED)))
                     .chainLength(record.getValue(SVFUSION.CHAINLENGTH))
@@ -245,13 +251,15 @@ public class StructuralVariantFusionDAO
             LinxBreakend breakend = ImmutableLinxBreakend.builder()
                     .id(record.getValue(SVBREAKEND.ID).intValue())
                     .svId(record.getValue(SVBREAKEND.SVID))
+                    .vcfId("")
+                    .coords("")
                     .isStart(record.getValue(SVBREAKEND.STARTBREAKEND) == 1)
                     .gene(record.getValue(SVBREAKEND.GENE))
                     .transcriptId(record.getValue(SVBREAKEND.TRANSCRIPTID))
                     .canonical(record.getValue(SVBREAKEND.CANONICALTRANSCRIPT) == 1)
                     .geneOrientation(record.getValue(SVBREAKEND.GENEORIENTATION))
                     .disruptive(record.getValue(SVBREAKEND.DISRUPTIVE) == 1)
-                    .reportedDisruption(record.getValue(SVBREAKEND.REPORTEDDISRUPTION) == 1)
+                    .reportedStatus(ReportedStatus.valueOf(record.getValue(SVBREAKEND.REPORTEDSTATUS)))
                     .undisruptedCopyNumber(record.getValue(SVBREAKEND.UNDISRUPTEDCOPYNUMBER))
                     .regionType(TranscriptRegionType.valueOf(record.getValue(SVBREAKEND.REGIONTYPE)))
                     .codingType(TranscriptCodingType.valueOf(record.getValue(SVBREAKEND.CODINGCONTEXT)))

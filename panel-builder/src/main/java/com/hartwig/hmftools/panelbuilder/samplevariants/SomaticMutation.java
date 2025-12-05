@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.panelbuilder.samplevariants;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
@@ -71,7 +70,7 @@ public class SomaticMutation implements Variant
 
     public int indelLength()
     {
-        return abs(mVariantDecorator.alt().length() - mVariantDecorator.ref().length());
+        return max(mVariantDecorator.alt().length(), mVariantDecorator.ref().length());
     }
 
     public GermlineStatus germlineStatus()

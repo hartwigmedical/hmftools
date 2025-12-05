@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
@@ -27,6 +29,7 @@ import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_REGION_MI
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -43,9 +46,11 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 
@@ -53,7 +58,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class GermlineDeletions
 {
-    private final List<DriverGene> mDriverGenes;
+    private final Map<String,DriverGene> mDriverGenes;
     private final EnsemblDataCache mGeneDataCache;
     private final GermlineDeletionFrequency mCohortFrequency;
 
@@ -61,7 +66,7 @@ public class GermlineDeletions
     private final List<DriverCatalog> mDrivers;
 
     public GermlineDeletions(
-            final List<DriverGene> driverGenes, final EnsemblDataCache geneDataCache, final GermlineDeletionFrequency cohortFrequency)
+            final Map<String,DriverGene> driverGenes, final EnsemblDataCache geneDataCache, final GermlineDeletionFrequency cohortFrequency)
     {
         mGeneDataCache = geneDataCache;
         mDriverGenes = driverGenes;
@@ -324,16 +329,10 @@ public class GermlineDeletions
             {
                 overlappingGenes.add(geneData);
 
-                DriverGene driverGene = mDriverGenes.stream().filter(y -> y.gene().equals(geneData.GeneName)).findFirst().orElse(null);
+                DriverGene driverGene = mDriverGenes.get(geneData.GeneName);
 
                 if(driverGene != null)
-                {
-                    // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
-                    if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
-                        driverGenes.add(driverGene);
-                    else if(driverGene.reportGermlineDeletion() == WILDTYPE_LOST && tumorStatus == HOM_DELETION)
-                        driverGenes.add(driverGene);
-                }
+                    driverGenes.add(driverGene);
             }
         }
 
@@ -343,7 +342,7 @@ public class GermlineDeletions
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
                 region.chromosome(), region.start(), region.end(), GERMLINE_DEL_REGION_MATCH_BUFFER);
 
-        final List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency);
+        List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency);
 
         List<GeneData> deletedGenes = Lists.newArrayList();
         List<int[]> deletedExonRanges = Lists.newArrayList();
@@ -396,13 +395,24 @@ public class GermlineDeletions
             GeneData geneData = deletedGenes.get(i);
             int[] deletedExonRange = deletedExonRanges.get(i);
 
-            boolean reportedGene = filters.isEmpty() && driverGenes.stream().anyMatch(x -> x.gene().equals(geneData.GeneName));
+            ReportedStatus reportedStatus = NONE;
+
+            if(filters.isEmpty())
+            {
+                for(DriverGene driverGene : driverGenes)
+                {
+                    if(driverGene.gene().equals(geneData.GeneName) && reportGermlineDeletion(driverGene, tumorStatus))
+                    {
+                        reportedStatus = REPORTED;
+                    }
+                }
+            }
 
             mDeletions.add(new GermlineDeletion(
                     geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1],
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,
-                    filter, cohortFrequency, reportedGene));
+                    filter, cohortFrequency, reportedStatus));
         }
 
         for(TranscriptData transData : transcripts)
@@ -410,10 +420,15 @@ public class GermlineDeletions
             GeneData geneData = overlappingGenes.stream().filter(x -> x.GeneId.equals(transData.GeneId)).findFirst().orElse(null);
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
-            boolean reported = filters.isEmpty() && driverGene != null;
-
-            if(!reported)
+            if(driverGene == null)
                 continue;
+
+            ReportedStatus reportedStatus = NONE;
+
+            if(filters.isEmpty() && driverGene != null && reportGermlineDeletion(driverGene, tumorStatus))
+            {
+                reportedStatus = REPORTED;
+            }
 
             // only create one record even if multiple sections of the gene are deleted
             if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))
@@ -429,6 +444,7 @@ public class GermlineDeletions
                     .driver(DriverType.GERMLINE_DELETION)
                     .category(driverGene.likelihoodType())
                     .driverLikelihood(1)
+                    .reportedStatus(reportedStatus)
                     .missense(0)
                     .nonsense(0)
                     .splice(0)
@@ -442,5 +458,16 @@ public class GermlineDeletions
 
             mDrivers.add(driverCatalog);
         }
+    }
+
+    private static boolean reportGermlineDeletion(final DriverGene driverGene, final GermlineStatus germlineStatus)
+    {
+        // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
+        if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
+            return true;
+        else if(driverGene.reportGermlineDeletion() == WILDTYPE_LOST && germlineStatus == HOM_DELETION)
+            return true;
+        else
+            return false;
     }
 }

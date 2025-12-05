@@ -2,13 +2,17 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.CigarUtils.hasValidCigar;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimIlluminaAdapterBases;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimSbxUncertainBases;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments.markLineSoftClips;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -255,13 +259,30 @@ public class JunctionGroupAssembler extends ThreadTask
         if(mBamReader.currentIsReferenceSample())
             read.markReference();
 
-        if(ReadAdjustments.trimPolyGSequences(read))
+        if(isIllumina() && ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
 
         markLineSoftClips(read);
 
-        if(ReadAdjustments.trimLowQualSoftClipBases(read))
-            ++mReadStats.LowBaseQualTrimmed;
+        if(isIllumina())
+        {
+            if(ReadAdjustments.trimLowQualSoftClipBases(read))
+                ++mReadStats.LowBaseQualTrimmed;
+
+            trimIlluminaAdapterBases(read);
+        }
+        else if(isSbx())
+        {
+            if(trimSbxUncertainBases(read))
+                ++mReadStats.LowBaseQualTrimmed;
+        }
+
+        // read may be invalid after trimming
+        if(read.trimCount() > 0 && !hasValidCigar(read.cigarElements()))
+        {
+            ++mReadStats.LowBaseQualFiltered;
+            return;
+        }
 
         if(IndelBuilder.calcIndelInferredUnclippedPositions(read))
             ++mReadStats.IndelSoftClipConverted;

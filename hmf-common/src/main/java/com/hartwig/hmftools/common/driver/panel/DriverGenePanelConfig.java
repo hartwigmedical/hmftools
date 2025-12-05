@@ -2,8 +2,10 @@ package com.hartwig.hmftools.common.driver.panel;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public final class DriverGenePanelConfig
@@ -31,6 +33,13 @@ public final class DriverGenePanelConfig
         {
             return Lists.newArrayList();
         }
+    }
+
+    public static Map<String,DriverGene> driverGenesToMap(final List<DriverGene> driverGenes)
+    {
+        Map<String,DriverGene> driverGeneMap = Maps.newHashMap();
+        driverGenes.forEach(x -> driverGeneMap.put(x.gene(), x));
+        return driverGeneMap;
     }
 
     public static void addGenePanelOption(final ConfigBuilder configBuilder, boolean isRequired)

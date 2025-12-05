@@ -34,7 +34,7 @@ public class TestGeneCopyNumberDataBuilder
         GeneCopyNumber geneCopyNumber = new GeneCopyNumber("", 0, 0, gene, Strings.EMPTY, true,
                     Strings.EMPTY, maxCopyNumber , minCopyNumber, 0, 1, 1,
                     0, 0, 0, 1.0,
-                    SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.UNKNOWN);
+                    SegmentSupport.BND, SegmentSupport.BND, CopyNumberMethod.UNKNOWN, minCopyNumber / 2);
 
         return new GeneCopyNumberData(geneCopyNumber);
     }

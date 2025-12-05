@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -60,7 +61,7 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
-    public boolean reportable() { return Breakends.stream().anyMatch(x -> x.Breakend.reportedDisruption()); }
+    public boolean reportable() { return Breakends.stream().anyMatch(x -> x.Breakend.reportedStatus() == ReportedStatus.REPORTED); }
 
     @Override
     public boolean isPass() {
@@ -107,10 +108,10 @@ public class DisruptionData implements ComparableItem
                             breakendData.svInfoStr(), breakendData.transcriptStr(), otherBreakendData.transcriptStr()));
                 }
 
-                if(breakend.reportedDisruption() != otherBreakend.reportedDisruption())
+                if(breakend.reportedStatus() != otherBreakend.reportedStatus())
                 {
                     diffs.add(format("breakend(%s reported %s/%s)",
-                            breakendData.svInfoStr(), breakend.reportedDisruption(), otherBreakend.reportedDisruption()));
+                            breakendData.svInfoStr(), breakend.reportedStatus(), otherBreakend.reportedStatus()));
                 }
 
                 breakends.remove(index);

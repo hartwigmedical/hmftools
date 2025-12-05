@@ -471,27 +471,38 @@ public class SbxDuplicateCollapser
 
     private void checkSupplementaryConsistency(final DuplicateGroup duplicateGroup)
     {
+        List<SAMRecord> nonConsensusReads = checkSupplementaryConsistency(duplicateGroup.reads(), mMaxDuplicateDistance);
+
+        if(nonConsensusReads == null)
+            return;
+
+        nonConsensusReads.forEach(x -> duplicateGroup.reads().remove(x));
+        duplicateGroup.addNonConsensusReads(nonConsensusReads);
+    }
+
+    public static List<SAMRecord> checkSupplementaryConsistency(final List<SAMRecord> reads, final int maxDupDistance)
+    {
         // supplementaries are not guaranteed to align, especially if the primaries were grouped with jitter
         // in which case discard any read which is outside the valid jitter range to help with consensus
 
-        List<SAMRecord> suppReads = duplicateGroup.reads().stream().filter(x -> x.getSupplementaryAlignmentFlag()).collect(Collectors.toList());
+        List<SAMRecord> suppReads = reads.stream().filter(x -> x.getSupplementaryAlignmentFlag()).collect(Collectors.toList());
 
         if(suppReads.isEmpty())
-            return;
+            return null;
 
         SAMRecord templateRead;
 
-        if(suppReads.size() == duplicateGroup.reads().size())
+        if(suppReads.size() == reads.size())
         {
             // could instead choose the most common by cigar or frag coords
-            templateRead = duplicateGroup.reads().get(0);
+            templateRead = reads.get(0);
         }
         else
         {
-            templateRead = duplicateGroup.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).findFirst().orElse(null);
+            templateRead = reads.stream().filter(x -> !x.getSupplementaryAlignmentFlag()).findFirst().orElse(null);
 
             if(templateRead == null)
-                templateRead = duplicateGroup.reads().get(0);
+                templateRead = reads.get(0);
         }
 
         // discard from consensus any read not within range of the template read's coords
@@ -499,7 +510,7 @@ public class SbxDuplicateCollapser
 
         List<SAMRecord> nonConsensusReads = null;
 
-        for(SAMRecord read : duplicateGroup.reads())
+        for(SAMRecord read : reads)
         {
             if(read == templateRead)
                 continue;
@@ -508,7 +519,7 @@ public class SbxDuplicateCollapser
 
             if(!SbxDuplicateCollapser.withinRange(
                     templateCoords.PositionLower, templateCoords.PositionUpper, readCoords.PositionLower, readCoords.PositionUpper,
-                    mMaxDuplicateDistance))
+                    maxDupDistance))
             {
                 if(nonConsensusReads == null)
                     nonConsensusReads = Lists.newArrayList();
@@ -517,10 +528,6 @@ public class SbxDuplicateCollapser
             }
         }
 
-        if(nonConsensusReads != null)
-        {
-            nonConsensusReads.forEach(x -> duplicateGroup.reads().remove(x));
-            duplicateGroup.addNonConsensusReads(nonConsensusReads);
-        }
+        return nonConsensusReads;
     }
 }

@@ -27,25 +27,27 @@ You input the genomic features you are interested in and PanelBuilder creates th
 
 ### Optional Arguments
 
-| Argument           | Type    | Default                     | Description                                                                                                                        |
-|--------------------|---------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| ensembl_data_dir   | Path    | (none)                      | Ensembl cache directory.                                                                                                           |
-| bwa_lib            | Path    | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
-| genes              | Path    | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
-| cn_backbone        | Flag    | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
-| cn_backbone_res_kb | Integer | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
-| amber_sites        | Path    | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
-| cdr3               | Flag    | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
-| sample             | String  | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
-| linx_dir           | Path    | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
-| linx_germline_dir  | Path    | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
-| purple_dir         | Path    | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
-| sample_probes      | Integer | 500                         | Maximum number of sample variant probes to produce.                                                                                |
-| custom_regions     | Path    | (none)                      | Path to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                       |
-| custom_svs         | Path    | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
-| output_id          | String  | (none)                      | Prefix for output files.                                                                                                           |
-| verbose_output     | Flag    | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
-| log_level          | String  | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
+| Argument           | Type                         | Default                     | Description                                                                                                                        |
+|--------------------|------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ensembl_data_dir   | Path                         | (none)                      | Ensembl cache directory.                                                                                                           |
+| bwa_lib            | Path                         | Search in current directory | Path to BWA-MEM shared library object.                                                                                             |
+| genes              | Path                         | (none)                      | Path to TSV file containing desired gene features. If not specified, gene probes are not produced.                                 |
+| cn_backbone        | Flag                         | (none)                      | If specified, include copy number backbone probes in the panel.                                                                    |
+| cn_backbone_res_kb | Integer                      | 1000                        | Approximate spacing between copy number backbone probes, in kb.                                                                    |
+| amber_sites        | Path                         | (none)                      | Path to heterozygous sites TSV file for copy number backbone. May be GZIP'd.                                                       |
+| cdr3               | Flag                         | (none)                      | If specified, include CDR3 regions in the panel.                                                                                   |
+| sample             | String                       | (none)                      | ID of sample for sample variant probes. If not specified, sample variant probes are not produced.                                  |
+| linx_dir           | Path                         | (none)                      | Path to Linx somatic output for sample variant probes.                                                                             |
+| linx_germline_dir  | Path                         | (none)                      | Path to Linx germline output for sample variant probes.                                                                            |
+| purple_dir         | Path                         | (none)                      | Path to Purple output for sample variant probes.                                                                                   |
+| sample_probes      | Integer                      | 500                         | Maximum number of sample variant probes to produce.                                                                                |
+| prefer_small_indel | Flag                         | (none)                      | If specified, when selecting nondriver sample variants, prefer variants with lower `IndelLength`.                                  | 
+| custom_regions     | Comma-separated list of path | (none)                      | Path(s) to TSV file containing desired custom regions. If not specified, custom region probes are not produced.                    |
+| custom_svs         | Path                         | (none)                      | Path to TSV file containing the desired custom structural variants. If not specified, custom structural variants are not produced. |
+| threads            | Integer                      | 1                           | Number of threads to use for some parts of the application which support multithreading.                                           |
+| output_id          | String                       | (none)                      | Prefix for output files.                                                                                                           |
+| verbose_output     | Flag                         | (none)                      | If specified, output more information which may be useful for investigation or debugging. Increases run time.                      |
+| log_level          | String                       | `error`                     | `all`/`trace`/`debug`/`info`/`warn`/`error`/`fatal`/`off`                                                                          |
 
 ## Example Usage
 
@@ -121,7 +123,7 @@ Feature methodology:
 | Gene feature               | Probe generation                                                                                                                               | Probe evaluation criteria                               |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
 | Promoter                   | Cover whole region from transcription start to 500b upstream.                                                                                  | `QS>=0.05`                                              |
-| UTR                        | One probe covering centre of exon.                                                                                                             | `QS>=0.05`                                              |
+| UTR                        | One probe covering centre of noncoding exon.                                                                                                   | `QS>=0.05`                                              |
 | Coding                     | Cover whole region of coding exons + 10b of splice region.                                                                                     | `QS>=0.05`                                              |
 | Exon flanks                | Small intron (3-5kb): one probe in 1kb region centered between probes.<br>Large intron (>5kb): probe in each 1-5kb region 1kb away from exons. | `QS>=0.5`, `0.4<=GC<=0.5`. Select closest to `GC=0.45`  |
 | Upstream/downstream flanks | One probe in the 2kb region 1kb upstream/downstream of the gene.                                                                               | `QS>=0.5`, `0.4<=GC<=0.5`. Select closest to `GC=0.45`. |
@@ -202,21 +204,26 @@ This allows capturing of the full V+D+J sequence present in the sample.
 ### Sample Variants
 
 If provided, Linx and Purple output can be used to generate probes covering variants identified in a sample.
-The number of variant probes is controlled by the `sample_probes` argument.
-Variants are selected with a priority scheme, with drivers having the highest priority, and then nondrivers filling the remaining probe quota.
+
+Since there may be many variants in a sample, only a subset of variants is selected.
+Variants are selected to fill a maximum number of probes, controlled by the `sample_probes` argument.
+
+1. Variants are filtered based on the criteria in the table below. Only variants which pass the filters are selected for probe generation.
+2. The selected variants are prioritised. Drivers are given the highest priority, followed by nondrivers.
+3. Generate probes from the selected variants, in order of priority, until the maximum number of accepted probes is reached, or there are no more selected variants. Note that a variant may be selected but its probe rejected.
 
 Methodology per variant category:
 
-| Variant category             | Variant selection criteria                                                                                               | Probe evaluation criteria |
-|------------------------------|--------------------------------------------------------------------------------------------------------------------------|---------------------------|
-| Somatic fusion driver        | (none)                                                                                                                   | `QS>=0.05`                |
-| Somatic amplification driver | Highest JCN variant in cluster only                                                                                      | `QS>=0.05`                |
-| Somatic deletion driver      | For breakends that flank minimum copy number region                                                                      | `QS>=0.05`                |
-| Somatic disruption driver    | `VAF>=0.05`, `AD>=11`                                                                                                    | `QS>=0.05`                |
-| Somatic SNV/INDEL driver     | (none)                                                                                                                   | `QS>=0.05`                |
-| Germline SV driver           | (none)                                                                                                                   | `QS>=0.05`                |
-| Germline SNV/INDEL driver    | (none)                                                                                                                   | `QS>=0.05`                |
-| Somatic SNV/INDEL nondriver  | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
+| Variant category                | Variant selection criteria                                                                                                                                              | Probe evaluation criteria |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|
+| Somatic SV fusion driver        | `InsSeqLength<=60`                                                                                                                                                      | `QS>=0.05`                |
+| Somatic SV amplification driver | `InsSeqLength<=60`, highest JCN variant in cluster only                                                                                                                 | `QS>=0.05`                |
+| Somatic SV deletion driver      | `InsSeqLength<=60`, breakends that flank minimum copy number region                                                                                                     | `QS>=0.05`                |
+| Somatic SV disruption driver    | `InsSeqLength<=60`, `VAF>=0.05`, `AD>=11`                                                                                                                               | `QS>=0.05`                |
+| Somatic SNV/INDEL driver        | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Germline SV driver              | `InsSeqLength<=60`                                                                                                                                                      | `QS>=0.05`                |
+| Germline SNV/INDEL driver       | (none)                                                                                                                                                                  | `QS>=0.05`                |
+| Somatic SNV/INDEL nondriver     | `AD>=11`, `AF>=0.05`, `RC<=3`, `GermlineStatus=DIPLOID`, `IndelLength<=31`. Prioritise lower `IndelLength` (only if configured), then coding, then clonal, then random. | `QS>=0.1`, `0.3<=GC<=0.6` |
 
 Additionally, for all somatic SV drivers, limit variant selection to five breakends per gene.
 
@@ -235,24 +242,27 @@ Regions are covered with the whole region tiling algorithm described in a subseq
 
 Probe evaluation criteria:
 
-- `QS>=0.1`
+- `QS>=QualityScoreMin` (see the file format below)
 
 #### Custom Regions Input File
 
 TSV file with these columns:
 
-| Column        | Type    | Description                                           |
-|---------------|---------|-------------------------------------------------------|
-| Chromosome    | String  | Chromosome name as matching the reference genome.     |
-| PositionStart | Integer | 1-indexed inclusive start of the region.              |
-| PositionEnd   | Integer | 1-indexed inclusive end of the region.                |
-| ExtraInfo     | String  | Arbitrary label which will be included in the output. |
+| Column          | Type    | Default if null | Description                                           |
+|-----------------|---------|-----------------|-------------------------------------------------------|
+| Chromosome      | String  | (N/A)           | Chromosome name as matching the reference genome.     |
+| PositionStart   | Integer | (N/A)           | 1-indexed inclusive start of the region.              |
+| PositionEnd     | Integer | (N/A)           | 1-indexed inclusive end of the region.                |
+| ExtraInfo       | String  | (N/A)           | Arbitrary label which will be included in the output. |
+| QualityScoreMin | Number  | 0.1             | Minimum quality score for probe evaluation criteria.  |
+
+Acceptable null values are `null` and `NULL`. If N/A then that column may not be null.
 
 Example:
 ```text
-Chromosome	PositionStart	PositionEnd	ExtraInfo
-17	7433101	7469631	custom1
-1	30429900	30429950	custom2
+Chromosome	PositionStart	PositionEnd	ExtraInfo	QualityScoreMin
+17	7433101	7469631	custom1	0
+1	30429900	30429950	custom2	NULL
 ```
 
 ### Custom Structural Variants
@@ -261,31 +271,35 @@ Arbitrary structural variants, for which probes are generated in the same manner
 
 Probe evaluation criteria:
 
-- `QS>=0.1`
+- `QS>=QualityScoreMin` (see the file format below)
 
-### Custom Structural Variants Input File
+#### Custom Structural Variants Input File
 
 TSV file with these columns:
 
-| Column           | Type        | Description                                                      |
-|------------------|-------------|------------------------------------------------------------------|
-| ChromosomeStart  | String      | Chromosome name of breakend 1, as matching the reference genome. |
-| PositionStart    | Integer     | 1-indexed position of breakend 1.                                |
-| OrientationStart | `1` or `-1` | Orientation of breakend 1.                                       |
-| ChromosomeEnd    | String      | Chromosome name of breakend 2, as matching the reference genome. |
-| PositionEnd      | Integer     | 1-indexed position of breakend 2.                                |
-| OrientationEnd   | `1` or `-1` | Orientation of breakend 2.                                       |
-| ExtraInfo        | String      | Arbitrary label which will be included in the output.            |
+| Column           | Type        | Default if null | Description                                                      |
+|------------------|-------------|-----------------|------------------------------------------------------------------|
+| ChromosomeStart  | String      | (N/A)           | Chromosome name of breakend 1, as matching the reference genome. |
+| PositionStart    | Integer     | (N/A)           | 1-indexed position of breakend 1.                                |
+| OrientationStart | `1` or `-1` | (N/A)           | Orientation of breakend 1.                                       |
+| ChromosomeEnd    | String      | (N/A)           | Chromosome name of breakend 2, as matching the reference genome. |
+| PositionEnd      | Integer     | (N/A)           | 1-indexed position of breakend 2.                                |
+| OrientationEnd   | `1` or `-1` | (N/A)           | Orientation of breakend 2.                                       |
+| InsertSequence   | String      | (N/A)           | Nucleotide sequence inserted in between the two breakends.       |
+| ExtraInfo        | String      | (N/A)           | Arbitrary label which will be included in the output.            |
+| QualityScoreMin  | Number      | 0.1             | Minimum quality score for probe evaluation criteria.             |
+
+Acceptable null values are `null` and `NULL`. If N/A then that column may not be null.
 
 Example:
 
 ```text
-ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	OrientationEnd	InsertSequence	ExtraInfo
-1	30510000	1	1	30510020	-1		DEL
-1	30600000	-1	1	30600020	1		DUP
-1	30700000	1	1	30700020	1		INV
-1	30800000	1	2	30800000	-1		TRANS
-1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL
+ChromosomeStart	PositionStart	OrientationStart	ChromosomeEnd	PositionEnd	OrientationEnd	InsertSequence	ExtraInfo	QualityScoreMin
+1	30510000	1	1	30510020	-1		DEL	0.05
+1	30600000	-1	1	30600020	1		DUP	0
+1	30700000	1	1	30700020	1		INV	NULL
+1	30800000	1	2	30800000	-1		TRANS	NULL
+1	30900000	1	1	30900100	-1	AGGCTGAC	INDEL	NULL
 ```
 
 ### Whole Region Tiling
@@ -328,15 +342,24 @@ Exceptions:
 
 ## Output
 
-| File                    | Description                                                                                                                                            |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| panel_probes.tsv        | Full information for each probe in the panel.                                                                                                          |
-| panel_probes.fasta      | Base sequences of probes in the panel.                                                                                                                 |
-| panel_probes.bed        | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
-| target_regions.bed      | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
-| rejected_regions.tsv    | Full information for each rejected region not covered by probes. Includes variant probes but only the parts which correspond to the reference genome.  |
-| rejected_regions.bed    | Regions which were rejected. Includes variant probes but only the parts which correspond to the reference genome.                                      |                                                                                                
-| gene_stats.tsv          | Statistics on probes on a per-gene basis. Only relevant if gene features were requested.                                                               |
-| candidate_probes.tsv.gz | All probes evaluated for suitability. May be useful for debugging. Only produced if `verbose_output` is specified.                                     |
+Main outputs:
 
-Output files will be prefixed by `output_id` if specified.
+| File               | Description                                                   |
+|--------------------|---------------------------------------------------------------|
+| panel_probes.tsv   | Full information for each probe in the panel.                 |
+| panel_probes.fasta | Base sequences of probes in the panel.                        |
+| rejections.tsv     | Full information for each uncovered region or rejected probe. |
+
+Informational/visualisation/debugging outputs:
+
+| File                     | Description                                                                                                                                            |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| panel_probes.bed         | Regions of probes which correspond to exact locations in the reference genome. Excludes variant probes.                                                |
+| targeted_regions.bed     | Regions which the probes are targeting (subset of probe regions). Includes variant probes but only the parts which correspond to the reference genome. |
+| rejections.bed           | Regions which were rejected. Excludes variant probes.                                                                                                  |                                                                                                
+| gene_stats.tsv           | Statistics on probes on a per-gene basis. Only produced if gene features were requested.                                                               |
+| sample_variant_info.tsv  | Additional information used in processing on a per-variant basis. Only produced if sample variants probes were requested.                              |
+| candidate_regions.bed.gz | All regions evaluated for suitability.                                                                                                                 |
+| candidate_probes.tsv.gz  | All probes evaluated for suitability. Only produced if `verbose_output` is specified.                                                                  |
+
+All output files will be prefixed by `output_id` if specified.

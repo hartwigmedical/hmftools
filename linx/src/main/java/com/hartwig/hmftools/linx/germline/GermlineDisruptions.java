@@ -48,6 +48,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.linx.LinxDriver;
@@ -65,7 +66,7 @@ public class GermlineDisruptions
 {
     private final EnsemblDataCache mGeneTransCache;
     private final List<GeneData> mDriverGeneDataList;
-    private final List<DriverGene> mDriverGenes;
+    private final Map<String,DriverGene> mDriverGenes;
     private final List<SvDisruptionData> mDisruptions;
 
     private final Set<SvVarData> mReportableSgls;
@@ -82,15 +83,12 @@ public class GermlineDisruptions
     {
         mGeneTransCache = geneTransCache;
 
-        mDriverGenes = Lists.newArrayList();
+        mDriverGenes = config.DriverGenes;
         mDriverGeneDataList = Lists.newArrayList();
 
-        for(DriverGene driverGene : config.DriverGenes)
+        for(String geneName : config.DriverGenes.keySet())
         {
-            if(driverGene.reportGermlineDisruption() != NONE)
-                mDriverGenes.add(driverGene);
-
-            GeneData geneData = geneTransCache.getGeneDataByName(driverGene.gene());
+            GeneData geneData = geneTransCache.getGeneDataByName(geneName);
 
             if(geneData != null)
                 mDriverGeneDataList.add(geneData);
@@ -388,6 +386,28 @@ public class GermlineDisruptions
 
                 // DELs and DUPs which straddle driver genes are not reportable
                 boolean reportable = !mDisruptions.contains(disruptionData) && isReportable(disruptionData);
+                ReportedStatus reportedStatus = ReportedStatus.NONE;
+
+                if(reportable)
+                {
+                    DriverGene driverGene = mDriverGenes.get(disruptionData.Gene.GeneName);
+
+                    if(driverGene != null)
+                    {
+                        if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
+                        {
+                            reportable = false;
+                        }
+                        else if(driverGene.reportGermlineDisruption() == NONE)
+                        {
+                            reportedStatus = ReportedStatus.NOT_REPORTED;
+                        }
+                        else
+                        {
+                            reportedStatus = ReportedStatus.REPORTED;
+                        }
+                    }
+                }
 
                 if(disruptionData.isPseudogeneDeletion())
                 {
@@ -400,6 +420,8 @@ public class GermlineDisruptions
                 ImmutableLinxBreakend.Builder builder = ImmutableLinxBreakend.builder()
                         .id(breakendId++)
                         .svId(var.id())
+                        .vcfId(var.getSvData().vcfIdStart())
+                        .coords(var.coordsStr(disruptionData.IsStart))
                         .isStart(disruptionData.IsStart)
                         .gene(gene.GeneName)
                         .geneOrientation(isUpstream ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
@@ -407,11 +429,11 @@ public class GermlineDisruptions
                         .canonical(transcript.IsCanonical)
                         .biotype(transcript.BioType)
                         .disruptive(false)
-                        .reportedDisruption(reportable)
+                        .reportedStatus(reportedStatus)
                         .undisruptedCopyNumber(disruptionData.UndisruptedCopyNumber)
                         .totalExonCount(transcript.exons().size());
 
-                final BreakendGeneData breakendGene = var.getGenesList(disruptionData.IsStart).stream()
+                BreakendGeneData breakendGene = var.getGenesList(disruptionData.IsStart).stream()
                         .filter(x -> x.geneName().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
 
                 if(breakendGene != null && breakendGene.canonical() != null)
@@ -446,8 +468,7 @@ public class GermlineDisruptions
                 // add at most one driver record per gene
                 if(reportable && drivers.stream().noneMatch(x -> x.gene().equals(gene.GeneName)))
                 {
-                    DriverGene driverGene = mDriverGenes.stream()
-                            .filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+                    DriverGene driverGene = mDriverGenes.get(disruptionData.Gene.GeneName);
 
                     drivers.add(ImmutableDriverCatalog.builder()
                             .driver(driverType)
@@ -459,6 +480,7 @@ public class GermlineDisruptions
                             .chromosomeBand(gene.KaryotypeBand)
                             .likelihoodMethod(LikelihoodMethod.GERMLINE)
                             .driverLikelihood(1.0)
+                            .reportedStatus(ReportedStatus.REPORTED)
                             .missense(0)
                             .nonsense(0)
                             .splice(0)
@@ -508,14 +530,6 @@ public class GermlineDisruptions
         boolean isDelOrDup = var.type() == DEL || var.type() == DUP;
 
         if(disruptionData.CodingType == UTR_3P && !isDelOrDup)
-            return false;
-
-        DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
-
-        if(driverGene == null)
-            return false;
-
-        if(driverGene.reportGermlineDisruption() == VARIANT_NOT_LOST && var.getSvData().junctionCopyNumber() < 0.1)
             return false;
 
         if(disruptionData.isPseudogeneDeletion())

@@ -2,9 +2,9 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.writeSortedBam;
+import static com.hartwig.hmftools.esvee.common.WriteType.PREP_BAM;
+import static com.hartwig.hmftools.esvee.common.WriteType.UNSORTED_BAM;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.PREP_BAM;
-import static com.hartwig.hmftools.esvee.prep.types.WriteType.UNSORTED_BAM;
 
 import java.io.File;
 import java.util.List;

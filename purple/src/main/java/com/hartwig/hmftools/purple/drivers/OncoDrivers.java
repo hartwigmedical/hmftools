@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
-import com.hartwig.hmftools.common.driver.DriverCatalogFactory;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.driver.DriverType;
@@ -19,7 +18,8 @@ import com.hartwig.hmftools.common.driver.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.driver.panel.DriverGenePanel;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -28,9 +28,9 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
 public class OncoDrivers extends SomaticVariantDriverFinder
 {
-    public OncoDrivers(final DriverGenePanel genePanel)
+    public OncoDrivers(final DriverGeneResource driverGeneResource)
     {
-        super(genePanel, DriverCategory.ONCO);
+        super(driverGeneResource, DriverCategory.ONCO);
     }
     
     public List<DriverCatalog> findDrivers(
@@ -39,8 +39,8 @@ public class OncoDrivers extends SomaticVariantDriverFinder
     {
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
 
-        int sampleSNVCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
-        int sampleINDELCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
+        int sampleSnvCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
+        int sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
 
         final Map<String,List<SomaticVariant>> codingVariants = mReportableVariants.stream()
                 .collect(Collectors.groupingBy(SomaticVariant::gene));
@@ -64,7 +64,7 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 {
                     // confirm this variant has a reportable effect against the specific transcript or the gene itself
                     DriverCatalog driverRecord = createOncoDriver(
-                            sampleSNVCount, sampleINDELCount, dndsLikelihood, geneVariants, geneCopyNumber);
+                            sampleSnvCount, sampleIndelCount, dndsLikelihood, geneVariants, geneCopyNumber);
                     driverCatalog.add(driverRecord);
 
                     driverSourceData.add(new DriverSourceData(driverRecord, geneVariants.get(0)));
@@ -103,7 +103,8 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS);
+                .likelihoodMethod(LikelihoodMethod.DNDS)
+                .reportedStatus(ReportedStatus.REPORTED);
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
@@ -122,14 +123,14 @@ public class OncoDrivers extends SomaticVariantDriverFinder
             for(SomaticVariant variant : geneVariants)
             {
                 CodingEffect codingEffect = getWorstReportableCodingEffect(variant.variantImpact());
-                final DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
+                DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
 
-                final DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
+                DndsDriverImpactLikelihood likelihood = geneLikelihood.select(impact);
 
-                final int sampleVariantCount =
-                        impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME ? sampleIndelCount : sampleSNVCount;
+                int sampleVariantCount = (impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME)
+                        ? sampleIndelCount : sampleSNVCount;
 
-                driverLikelihood = Math.max(driverLikelihood, DriverCatalogFactory.probabilityDriverVariant(sampleVariantCount, likelihood));
+                driverLikelihood = Math.max(driverLikelihood, DndsCalculator.probabilityDriverVariant(sampleVariantCount, likelihood));
             }
         }
 

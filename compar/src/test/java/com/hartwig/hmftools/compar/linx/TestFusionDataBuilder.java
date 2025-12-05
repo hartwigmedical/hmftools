@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.linx;
 
+import static java.util.Collections.emptyList;
+
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
@@ -65,7 +67,11 @@ public class TestFusionDataBuilder
                 .junctionCopyNumber(junctionCopyNumber)
                 .fivePrimeBreakendId(-1)
                 .threePrimeBreakendId(-1)
-                .reportableReasons("")
+                .fivePrimeVcfId("")
+                .threePrimeVcfId("")
+                .fivePrimeCoords("")
+                .threePrimeCoords("")
+                .reportableReasons(emptyList())
                 .chainLength(-1)
                 .skippedExonsUp(-1)
                 .skippedExonsDown(-1)

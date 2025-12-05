@@ -8,12 +8,16 @@ import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILE;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTERS;
+import static com.hartwig.hmftools.pave.FilterType.ALL;
+import static com.hartwig.hmftools.pave.FilterType.PASS;
 import static com.hartwig.hmftools.pave.annotation.GnomadAnnotation.GNOMAD_NO_FILTER;
 
 import java.util.List;
@@ -24,6 +28,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.pon.GnomadCache;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
@@ -44,7 +49,7 @@ public class PaveConfig
 
     public final boolean WriteTranscriptFile;
     public final boolean OnlyCanonical;
-    public final boolean ProcessNonPass;
+    public final FilterType Filter;
     public final boolean WritePassOnly;
     public final boolean WriteDetailed;
 
@@ -59,7 +64,8 @@ public class PaveConfig
 
     // optional and debugging config
     private static final String ONLY_CANONCIAL = "only_canonical";
-    private static final String PROCESS_NON_PASS = "process_non_pass";
+    private static final String FILTER_TYPE = "filter_type";
+    private static final String PROCESS_NON_PASS = "process_non_pass"; // to be deprecated
     private static final String WRITE_PASS_ONLY = "write_pass_only";
     private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String WRITE_DETAILED = "write_detailed";
@@ -78,7 +84,20 @@ public class PaveConfig
 
         WriteTranscriptFile = SampleId != null && configBuilder.hasFlag(WRITE_TRANSCRIPT_DATA);
         OnlyCanonical = configBuilder.hasFlag(ONLY_CANONCIAL);
-        ProcessNonPass = configBuilder.hasFlag(PROCESS_NON_PASS);
+
+        if(configBuilder.hasValue(FILTER_TYPE))
+        {
+            Filter = FilterType.valueOf(configBuilder.getValue(FILTER_TYPE));
+        }
+        else if(configBuilder.hasValue(PROCESS_NON_PASS))
+        {
+            Filter = ALL;
+        }
+        else
+        {
+            Filter = PASS;
+        }
+
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
@@ -106,6 +125,8 @@ public class PaveConfig
         }
     }
 
+    public boolean requireIndex() { return VcfFile.endsWith(VCF_ZIP_EXTENSION); }
+
     public boolean isValid()
     {
         if(VcfFile == null)
@@ -132,7 +153,10 @@ public class PaveConfig
 
         configBuilder.addFlag(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
         configBuilder.addFlag(ONLY_CANONCIAL, "Only check canonical transcripts");
-        configBuilder.addFlag(PROCESS_NON_PASS, "Process non-PASS variants");
+
+        configBuilder.addFlag(PROCESS_NON_PASS, "Process all variants from Sage");
+        configBuilder.addConfigItem(FILTER_TYPE, false, enumValueSelectionAsStr(FilterType.values(), "Variant filters"));
+
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
         configBuilder.addFlag(WRITE_DETAILED, "Write detailed transcript impact info");

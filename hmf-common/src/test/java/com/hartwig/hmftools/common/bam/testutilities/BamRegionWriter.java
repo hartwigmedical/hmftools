@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.bam.testutilities;
 import java.util.function.Function;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +15,7 @@ public class BamRegionWriter extends ChrBaseRegion
     private int readLength = 100;
     private int stepLength = 10;
     private int depthAtEachStep = 1;
-    private HumanChromosome chromosomeIndex;
+    private final HumanChromosome chromosomeIndex;
 
     public BamRegionWriter(HumanChromosome chromosome, final int readsStart, final int readsStop)
     {
@@ -39,7 +38,7 @@ public class BamRegionWriter extends ChrBaseRegion
         this.depthAtEachStep = depthAtEachStep;
     }
 
-    public void writeEntries(SAMFileWriter bamWriter, Function<ChromosomeWindow, Pair<BaseRegion, BaseRegion>> basesFromWindow)
+    public void writeEntries(SAMFileWriter bamWriter, Function<ChromosomeWindow, Pair<BasesRegion, BasesRegion>> basesFromWindow)
     {
         var window = new ChromosomeWindow(chromosomeIndex, start(), start() + readLength);
         var readNumber = 0;
@@ -47,7 +46,7 @@ public class BamRegionWriter extends ChrBaseRegion
         {
             for(int i = 0; i < depthAtEachStep; i++)
             {
-                Pair<BaseRegion, BaseRegion> baseRegionPair = basesFromWindow.apply(window);
+                Pair<BasesRegion, BasesRegion> baseRegionPair = basesFromWindow.apply(window);
                 var readName = "A:B:C:" + readNumber;
 
                 Pair<SAMRecord, SAMRecord> reads = new PairedRecordsBuilder(readName, bamWriter.getFileHeader()).build(baseRegionPair);

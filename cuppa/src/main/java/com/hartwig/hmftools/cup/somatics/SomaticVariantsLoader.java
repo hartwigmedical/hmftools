@@ -122,8 +122,7 @@ public class SomaticVariantsLoader
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to load generic variants file({}): {}", filename, e.toString());
-            e.printStackTrace();
+            CUP_LOGGER.error("failed to load generic variants file({}): {}", filename, e);
             System.exit(1);
         }
 

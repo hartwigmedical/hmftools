@@ -83,8 +83,7 @@ public final class SamRecordUtils
         if(record.getReadPairedFlag())
             return record.getInferredInsertSize();
 
-        int insertSize = record.getInferredInsertSize();
-        return insertSize > 0 ? insertSize : record.getReadBases().length;
+        return record.getAlignmentEnd() - record.getAlignmentStart() + 1;
     }
 
     public static int inferredInsertSizeAbs(final SAMRecord record) { return abs(inferredInsertSize(record)); }
@@ -258,6 +257,12 @@ public final class SamRecordUtils
         }
 
         return format("%s1%s2", firstStr, secondStr);
+    }
+
+    public static int getNumEvents(final SAMRecord record)
+    {
+        Integer numEvents = record.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        return numEvents != null ? numEvents : 0;
     }
 
     public static String readToString(final SAMRecord read)

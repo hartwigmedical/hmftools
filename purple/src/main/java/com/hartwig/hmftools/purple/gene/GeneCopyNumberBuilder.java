@@ -47,7 +47,8 @@ public class GeneCopyNumberBuilder
     private double mMinRegionGcContent;
 
     public static List<GeneCopyNumber> createGeneCopyNumbers(
-            final RefGenomeVersion refGenomeVersion, final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> copyNumbers)
+            final RefGenomeVersion refGenomeVersion, final EnsemblDataCache geneTransCache, final List<PurpleCopyNumber> copyNumbers,
+            final double ploidy)
     {
         final List<GeneCopyNumber> result = Lists.newArrayList();
 
@@ -66,11 +67,11 @@ public class GeneCopyNumberBuilder
 
                 for(TranscriptData tranData : transDataList)
                 {
-                    final GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(geneData, tranData, chromosomeCopyNumbers);
-                    GeneCopyNumber geneCopyNumber2 = builder.create();
+                    GeneCopyNumberBuilder builder = new GeneCopyNumberBuilder(geneData, tranData, chromosomeCopyNumbers);
+                    GeneCopyNumber geneCopyNumber = builder.create(ploidy);
 
-                    if(geneCopyNumber2.totalRegions() > 0)
-                        result.add(geneCopyNumber2);
+                    if(geneCopyNumber.totalRegions() > 0)
+                        result.add(geneCopyNumber);
                 }
             }
         }
@@ -105,7 +106,7 @@ public class GeneCopyNumberBuilder
         mMinRegionGcContent = 0;
     }
 
-    public GeneCopyNumber create()
+    public GeneCopyNumber create(final double ploidy)
     {
         int cnIndex = 0;
         int exonIndex = 0;
@@ -127,12 +128,14 @@ public class GeneCopyNumberBuilder
             }
         }
 
+        double relativeMinCopyNumber = ploidy > 0 ? mMinCopyNumber / ploidy : 0;
+
         return new GeneCopyNumber(
                 mGeneData.Chromosome, mGeneData.GeneStart, mGeneData.GeneEnd,
                 mGeneData.GeneName, mTransData.TransName, mTransData.IsCanonical,
                 mGeneData.KaryotypeBand, mMaxCopyNumber, mMinCopyNumber, mMinMinorAllelePloidy, mSomaticCount, mMinRegions,
                 mMinRegionStart, mMinRegionEnd, mDepthWindowCount, mMinRegionGcContent, mMinRegionStartSupport,
-                mMinRegionEndSupport, mMinRegionMethod);
+                mMinRegionEndSupport, mMinRegionMethod, relativeMinCopyNumber);
     }
 
     private void handleCopyNumber(final PurpleCopyNumber copyNumber)

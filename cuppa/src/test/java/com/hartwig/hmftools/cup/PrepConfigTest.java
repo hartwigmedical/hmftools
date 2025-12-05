@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class PrepConfigTest
 {
-    private final String selectedSampleId = "sample_1";
+    private final String selectedSampleId = "SAMPLE_1";
 
     @Test
     public void canParseCommandLineArgsMultiSample()
@@ -20,7 +20,7 @@ public class PrepConfigTest
         String[] args = {
                 // "-sample", sample,
                 "-sample_id_file", TestPrepConfigBuilder.TEST_SAMPLE_ID_FILE,
-                "-categories", "DNA",
+                "-categories", "ALL",
                 "-ref_genome_version", "V37",
 
                 // Wild-cards are required to get subdirs correctly
@@ -29,17 +29,18 @@ public class PrepConfigTest
                 "-linx_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/linx/",
                 "-virus_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/virus_interpreter/",
 
-                "-output_dir", "/tmp/",
-                "-isofox_dir", "/tmp/",
+                "-isofox_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/isofox/",
                 "-ref_alt_sj_sites", TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES,
-                "-threads", TestPrepConfigBuilder.TEST_THREADS.toString(),
 
+                "-output_dir", "/tmp/",
+                "-threads", TestPrepConfigBuilder.TEST_THREADS.toString(),
                 "-write_by_category"
         };
 
         PrepConfig prepConfig = TestPrepConfigBuilder.fromArgs(args);
 
-        assertEquals(2, prepConfig.SampleIds.size());
+        assertEquals(5, prepConfig.SampleIds.size());
+        assertEquals(5, prepConfig.RnaSampleIds.size());
         assertEquals("V37", prepConfig.RefGenVersion.toString());
         assertTrue(prepConfig.WriteByCategory);
         assertEquals((int) TestPrepConfigBuilder.TEST_THREADS, prepConfig.Threads);
@@ -57,6 +58,10 @@ public class PrepConfigTest
         String expectedVirusDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/virus_interpreter/";
         String actualVirusDir = prepConfig.getVirusDataDir(selectedSampleId);
         assertEquals(expectedVirusDir, actualVirusDir);
+
+        String expectedIsofoxDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/isofox/";
+        String actualIsofoxDir = prepConfig.getIsofoxDataDir(selectedSampleId);
+        assertEquals(expectedIsofoxDir, actualIsofoxDir);
     }
 
     @Test
@@ -65,6 +70,7 @@ public class PrepConfigTest
         String[] args = {
                 "-sample_id_file", TestPrepConfigBuilder.TEST_SAMPLE_ID_FILE,
                 "-sample_data_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*",
+                "-output_dir", "/tmp/"
         };
 
         PrepConfig prepConfig = TestPrepConfigBuilder.fromArgs(args);

@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public record CustomSv(
         BasePosition startPosition,
@@ -17,10 +18,12 @@ public record CustomSv(
         Orientation endOrientation,
         String insertSequence,
         // Arbitrary descriptor for the user.
-        String extraInfo
+        String extraInfo,
+        // If null, use the default quality score minimum.
+        @Nullable Double qualityScoreMin
 )
 {
-    private enum FileFields
+    private enum Columns
     {
         ChromosomeStart,
         PositionStart,
@@ -29,7 +32,8 @@ public record CustomSv(
         PositionEnd,
         OrientationEnd,
         InsertSequence,
-        ExtraInfo;
+        ExtraInfo,
+        QualityScoreMin
     }
 
     private static final Logger LOGGER = LogManager.getLogger(CustomSv.class);
@@ -42,17 +46,18 @@ public record CustomSv(
         {
             List<CustomSv> customSvs = reader.stream().map(row ->
             {
-                BasePosition startPosition = new BasePosition(row.get(FileFields.ChromosomeStart), row.getInt(FileFields.PositionStart));
-                Orientation startOrientation = Orientation.fromByteStr(row.get(FileFields.OrientationStart));
-                BasePosition endPosition = new BasePosition(row.get(FileFields.ChromosomeEnd), row.getInt(FileFields.PositionEnd));
-                Orientation endOrientation = Orientation.fromByteStr(row.get(FileFields.OrientationEnd));
-                String insertSequence = row.getOrNull(FileFields.InsertSequence);
+                BasePosition startPosition = new BasePosition(row.getString(Columns.ChromosomeStart), row.getInt(Columns.PositionStart));
+                Orientation startOrientation = Orientation.fromByteStr(row.getString(Columns.OrientationStart));
+                BasePosition endPosition = new BasePosition(row.getString(Columns.ChromosomeEnd), row.getInt(Columns.PositionEnd));
+                Orientation endOrientation = Orientation.fromByteStr(row.getString(Columns.OrientationEnd));
+                String insertSequence = row.getStringOrNull(Columns.InsertSequence);
                 if(insertSequence == null)
                 {
                     insertSequence = "";
                 }
-                String extraInfo = row.get(FileFields.ExtraInfo);
-                return new CustomSv(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo);
+                String extraInfo = row.getString(Columns.ExtraInfo);
+                Double qualityScoreMin = row.getDoubleOrNull(Columns.QualityScoreMin);
+                return new CustomSv(startPosition, startOrientation, endPosition, endOrientation, insertSequence, extraInfo, qualityScoreMin);
             }).toList();
 
             LOGGER.debug("Read {} custom structural variants from {}", customSvs.size(), filePath);
@@ -64,7 +69,7 @@ public record CustomSv(
     {
         LOGGER.debug("Writing custom structural variants to file: {}", filePath);
 
-        try(DelimFileWriter<CustomSv> writer = new DelimFileWriter<>(filePath, FileFields.values(), CustomSv::writeObj))
+        try(DelimFileWriter<CustomSv> writer = new DelimFileWriter<>(filePath, Columns.values(), CustomSv::writeObj))
         {
             customSvs.forEach(writer::writeRow);
         }
@@ -72,13 +77,14 @@ public record CustomSv(
 
     private static void writeObj(final CustomSv sv, final DelimFileWriter.Row row)
     {
-        row.set(FileFields.ChromosomeStart, sv.startPosition().Chromosome);
-        row.set(FileFields.PositionStart, sv.startPosition().Position);
-        row.set(FileFields.OrientationStart, Byte.toString(sv.startOrientation().asByte()));
-        row.set(FileFields.ChromosomeEnd, sv.endPosition().Chromosome);
-        row.set(FileFields.PositionEnd, sv.endPosition().Position);
-        row.set(FileFields.OrientationEnd, Byte.toString(sv.endOrientation().asByte()));
-        row.set(FileFields.InsertSequence, sv.insertSequence());
-        row.set(FileFields.ExtraInfo, sv.extraInfo());
+        row.set(Columns.ChromosomeStart, sv.startPosition().Chromosome);
+        row.set(Columns.PositionStart, sv.startPosition().Position);
+        row.set(Columns.OrientationStart, Byte.toString(sv.startOrientation().asByte()));
+        row.set(Columns.ChromosomeEnd, sv.endPosition().Chromosome);
+        row.set(Columns.PositionEnd, sv.endPosition().Position);
+        row.set(Columns.OrientationEnd, Byte.toString(sv.endOrientation().asByte()));
+        row.set(Columns.InsertSequence, sv.insertSequence());
+        row.set(Columns.ExtraInfo, sv.extraInfo());
+        row.setOrNull(Columns.QualityScoreMin, sv.qualityScoreMin());
     }
 }

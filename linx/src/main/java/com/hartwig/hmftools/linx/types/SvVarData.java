@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
@@ -174,21 +175,33 @@ public class SvVarData
     {
         if(isSglBreakend())
         {
-            return format("id(%s) pos(%s:%d:%d)",
-                    id(), mChr[SE_START], orientation(true), position(true));
+            return format("id(%s) pos(%s)", id(), coordsStr(mChr[SE_START], position(true), orientation(true)));
         }
         else
         {
-            return format("id(%s) pos(%s:%d:%d -> %s:%d:%d)",
-                    id(), mChr[SE_START], orientation(true), position(true),
-                    mChr[SE_END], orientation(false), position(false));
+            return format("id(%s) pos(%s -> %s)",
+                    id(), coordsStr(mChr[SE_START], position(true), orientation(true)),
+                    coordsStr(mChr[SE_END], position(false), orientation(false)));
         }
     }
 
     public String posId(boolean useStart)
     {
-        return format("%s: %s %s:%d:%d",
-                id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
+        return format("%s: %s %s",
+                id(), useStart ? "start" :"end", coordsStr(mChr[seIndex(useStart)], position(useStart), orientation(useStart)));
+    }
+
+    public String coordsStr(boolean useStart)
+    {
+        if(isSglBreakend() && !useStart)
+            return "";
+
+        return coordsStr(chromosome(useStart), position(useStart), orientation(useStart));
+    }
+
+    public static String coordsStr(final String chromosome, final int position, final byte orientation)
+    {
+        return LinxBreakend.coordsStr(chromosome, position, orientation);
     }
 
     public ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
@@ -239,6 +252,11 @@ public class SvVarData
 
     public double jcn() { return mJcn; }
 
+    public int getImpliedJcn()
+    {
+        return max(getMaxAssembledBreakend(), (int) getRoundedJcn(true));
+    }
+
     public double copyNumberChange(boolean isStart)
     {
         if(mDbLink[seIndex(isStart)] != null && mDbLink[seIndex(isStart)].length() == 0)
@@ -264,7 +282,7 @@ public class SvVarData
         return max(getAssembledLinkedPairs(true).size(), getAssembledLinkedPairs(false).size());
     }
 
-    public int getImpliedJcn()
+    public int getyImpliedJcn()
     {
         return max(getMaxAssembledBreakend(), (int) getRoundedJcn(true));
     }

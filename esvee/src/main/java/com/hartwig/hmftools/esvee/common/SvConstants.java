@@ -2,6 +2,9 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -15,6 +18,8 @@ public final class SvConstants
     public static final int MIN_MAP_QUALITY = 20;
 
     public static final int DEFAULT_MAX_CONCORDANT_FRAG_LENGTH = 1000; // default, otherwise set from BAM fragment sampling
+    public static final int DEFAULT_MAX_FRAGMENT_LENGTH = 1100;
+
     public static final int MIN_UPPER_FRAGMENT_LENGTH = 800; // in place for panels to maintain a minimum
 
     public static int maxConcordantFragmentLength(int observedMaxFragmentLength)
@@ -22,8 +27,14 @@ public final class SvConstants
         return max(observedMaxFragmentLength, MIN_UPPER_FRAGMENT_LENGTH);
     }
 
-    // sequencing type
+    // sequencing type - set in config
     public static SequencingType SEQUENCING_TYPE = SequencingType.ILLUMINA;
+
+    public static boolean isIllumina() { return SEQUENCING_TYPE == ILLUMINA; }
+    public static boolean isSbx() { return SEQUENCING_TYPE == SBX; }
+    public static boolean isUltima() { return SEQUENCING_TYPE == ULTIMA; }
+
+    public static boolean hasPairedReads() { return isIllumina(); }
 
     // indels
     public static final int MIN_INDEL_SUPPORT_LENGTH = 3;

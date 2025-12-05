@@ -25,7 +25,7 @@ public class ReadDepthAccumulatorTest
         readDepthCounter.addChromosome(CHROMOSOME, 2000);
 
         // test that it gets the correct windows
-        List<ReadDepth> readDepths = readDepthCounter.getChromosomeReadDepths(CHROMOSOME);
+        List<DepthReading> readDepths = readDepthCounter.getChromosomeReadDepths(CHROMOSOME);
 
         assertNotNull(readDepths);
         assertEquals(2, readDepths.size());
@@ -54,7 +54,7 @@ public class ReadDepthAccumulatorTest
         readDepths = readDepthCounter.getChromosomeReadDepths(CHROMOSOME);
         assertNotNull(readDepths);
         assertEquals(2, readDepths.size());
-        ReadDepth readDepth = readDepths.get(0);
+        DepthReading readDepth = readDepths.get(0);
         assertEquals(1, readDepth.StartPosition);
         assertEquals(0.5, readDepth.ReadDepth, EPSILON);
         // gc percent should be 0.8 as first 400 bases were GC, and next 100 bases were AT

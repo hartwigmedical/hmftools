@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.assembly.AssemblyApplication;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.caller.CallerApplication;
 import com.hartwig.hmftools.esvee.caller.CallerConfig;
 import com.hartwig.hmftools.esvee.depth.DepthAnnotator;

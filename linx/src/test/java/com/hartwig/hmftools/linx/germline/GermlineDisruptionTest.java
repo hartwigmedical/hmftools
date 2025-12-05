@@ -47,7 +47,7 @@ public class GermlineDisruptionTest
     {
         mLinx = new LinxTester(true);
 
-        mLinx.Config.DriverGenes.add(createDriverGene(GENE_NAME_1));
+        mLinx.Config.DriverGenes.put(GENE_NAME_1, createDriverGene(GENE_NAME_1));
 
         mGeneDataCache = createGeneDataCache();
 

@@ -63,6 +63,6 @@ public class MsiSites
 
     private static CustomRegion generateRegion(final BasePosition msiSite)
     {
-        return new CustomRegion(regionCenteredAt(msiSite, REGION_SIZE), EXTRA_INFO);
+        return new CustomRegion(regionCenteredAt(msiSite, REGION_SIZE), EXTRA_INFO, null);
     }
 }

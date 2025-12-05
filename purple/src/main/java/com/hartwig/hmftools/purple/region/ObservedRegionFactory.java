@@ -125,10 +125,10 @@ public class ObservedRegionFactory
             ObservedRegion observedRegion = new ObservedRegion(
                     region.chromosome(), region.start(), region.end(), region.RatioSupport, region.Support, baf.count(), baf.medianBaf(),
                     depthWindowCount, tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
-                    region.SvCluster, tumorMeanContent, region.MinStart, region.MaxStart);
+                    region.SvCluster, tumorMeanContent, region.minStart(), region.maxStart());
 
             if(observedRegion.start() > observedRegion.end()
-            || !positionsWithin(region.MinStart, region.MaxStart, observedRegion.start(), observedRegion.end()))
+            || !positionsWithin(region.minStart(), region.maxStart(), observedRegion.start(), observedRegion.end()))
             {
                 PPL_LOGGER.error("invalid observed region: {}", observedRegion);
             }

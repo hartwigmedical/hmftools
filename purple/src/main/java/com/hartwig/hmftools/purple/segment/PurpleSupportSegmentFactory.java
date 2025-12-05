@@ -79,7 +79,7 @@ public class PurpleSupportSegmentFactory
             PurpleSupportSegment prevSegment = segments.get(i - 1);
             PurpleSupportSegment segment = segments.get(i);
 
-            segment.MinStart = max(segment.MinStart, prevSegment.End + 1);
+            segment.setMinStart(max(segment.minStart(), prevSegment.end() + 1));
         }
 
         return addCentromere(centromere, segments);
@@ -102,7 +102,7 @@ public class PurpleSupportSegmentFactory
                 {
                     if(variant.position() != segment.start())
                     {
-                        segment.End = variant.position() - 1;
+                        segment.setEnd(variant.position() - 1);
                         result.add(segment);
                         segment = createFromCluster(cluster, variant, ratioSupport);
                     }
@@ -120,14 +120,16 @@ public class PurpleSupportSegmentFactory
                 final List<PCFPosition> pcfPositions = cluster.PcfPositions;
 
                 // DO FIRST
-                final GenomePosition firstRatioBreak = pcfPositions.get(0);
-                segment.End = firstRatioBreak.position() - 1;
+                GenomePosition firstRatioBreak = pcfPositions.get(0);
+
+                segment.setEnd(firstRatioBreak.position() - 1);
+
                 result.add(segment);
                 segment = create(firstRatioBreak.chromosome(), firstRatioBreak.position(), pcfPositions);
             }
         }
 
-        segment.End = length.position();
+        segment.setEnd(length.position());
         result.add(segment);
         return result;
     }
@@ -178,14 +180,14 @@ public class PurpleSupportSegmentFactory
                 else
                 {
                     final PurpleSupportSegment start = PurpleSupportSegment.from(segment);
-                    start.End = centromere.position() - 1;
-                    start.MaxStart = min(start.MaxStart, start.End);
+                    start.setEnd(centromere.position() - 1);
+                    start.setMaxStart(min(start.maxStart(), start.end()));
 
                     final PurpleSupportSegment end = PurpleSupportSegment.from(segment);
                     end.Support = SegmentSupport.CENTROMERE;
-                    end.Start = centromere.position();
-                    end.MinStart = centromere.position();
-                    end.MaxStart = centromere.position();
+                    end.setStart(centromere.position());
+                    end.setMinStart(centromere.position());
+                    end.setMaxStart(centromere.position());
 
                     result.add(start);
                     result.add(end);
@@ -208,11 +210,10 @@ public class PurpleSupportSegmentFactory
         {
             PurpleSupportSegment segment = segments.get(i);
 
-            if(!positionsWithin(segment.MinStart, segment.MaxStart, segment.start(), segment.end()))
+            if(!positionsWithin(segment.minStart(), segment.maxStart(), segment.start(), segment.end()))
             {
                 PPL_LOGGER.error("purple segment({}:{}-{}) has invalid min/maxStart({}-{})",
-                        segment.chromosome(), segment.start(), segment.end(),
-                        segment.MinStart, segment.MaxStart);
+                        segment.chromosome(), segment.start(), segment.end(), segment.minStart(), segment.maxStart());
 
                 isValid = false;
             }

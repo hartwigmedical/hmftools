@@ -2,13 +2,15 @@ package com.hartwig.hmftools.panelbuilder;
 
 import static java.util.Collections.emptyList;
 
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.computeUncoveredRegions;
-import static com.hartwig.hmftools.panelbuilder.RegionUtils.isCoveredBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.getSubregion;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.isFullyOverlappedBy;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.mergeOverlapAndAdjacentRegions;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCenteredAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentre;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionCentreFloat;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionEndingAt;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionIntersection;
+import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionNegatedIntersection;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionOverlapsOrAdjacent;
 import static com.hartwig.hmftools.panelbuilder.RegionUtils.regionStartingAt;
 
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -30,116 +33,116 @@ public class RegionUtilsTest
     private static final double EPSILON = 1e-9;
 
     @Test
-    public void testComputeUncoveredRegionsEmptyCovered()
+    public void testRegionNegatedIntersectionEmpty()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, Stream.empty());
+        BaseRegion region = new BaseRegion(1000, 2000);
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, Stream.empty());
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsSingleCoveredBeforeTarget()
+    public void testRegionNegatedIntersectionSingleRegionBeforeTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(new BaseRegion(100, 999));
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(new BaseRegion(100, 999));
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsMultipleCoveredBeforeTarget()
+    public void testRegionNegatedIntersectionMultipleRegionsBeforeTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(100, 150),
                 new BaseRegion(140, 160),
                 new BaseRegion(300, 999));
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsSingleCoveredAfterTarget()
+    public void testRegionNegatedIntersectionSingleRegionAfterTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(new BaseRegion(2001, 4000));
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(new BaseRegion(2001, 4000));
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsMultipleCoveredAfterTarget()
+    public void testRegionNegatedIntersectionMultipleRegionsAfterTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(2001, 3000),
                 new BaseRegion(2500, 2900),
                 new BaseRegion(4000, 5000));
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsCoveredOutsideTarget()
+    public void testRegionNegatedIntersectionRegionsOutsideTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(100, 150),
                 new BaseRegion(140, 160),
                 new BaseRegion(300, 999),
                 new BaseRegion(2001, 3000),
                 new BaseRegion(2500, 2900),
                 new BaseRegion(4000, 5000));
-        List<BaseRegion> expected = List.of(target);
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> expected = List.of(region);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsCoveredOverlapTargetStart()
+    public void testRegionNegatedIntersectionRegionsOverlapTargetStart()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(950, 1050));
         List<BaseRegion> expected = List.of(new BaseRegion(1051, 2000));
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsCoveredOverlapTargetEnd()
+    public void testRegionNegatedIntersectionRegionsOverlapTargetEnd()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(1050, 2050));
         List<BaseRegion> expected = List.of(new BaseRegion(1000, 1049));
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsSingleCoveredWithinTarget()
+    public void testRegionNegatedIntersectionSingleRegionWithinTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(1050, 1080));
         List<BaseRegion> expected = List.of(
                 new BaseRegion(1000, 1049),
                 new BaseRegion(1081, 2000));
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsOverlappingCovered()
+    public void testRegionNegatedIntersectionOverlappingRegions()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 // = start, < end
                 new BaseRegion(1010, 1020),
                 new BaseRegion(1010, 1015),
@@ -167,15 +170,15 @@ public class RegionUtilsTest
                 new BaseRegion(1121, 1124),
                 new BaseRegion(1141, 1144),
                 new BaseRegion(1166, 2000));
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsMixed()
+    public void testRegionNegatedIntersectionMixed()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(100, 200),
                 new BaseRegion(950, 1050),
                 new BaseRegion(1100, 1200),
@@ -187,15 +190,15 @@ public class RegionUtilsTest
                 new BaseRegion(1211, 1399),
                 new BaseRegion(1801, 2000)
         );
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsCoveredWholeTarget()
+    public void testRegionNegatedIntersectionOverlapWholeTarget()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(
                 new BaseRegion(1000, 1100),
                 new BaseRegion(1101, 1300),
                 new BaseRegion(1301, 1400),
@@ -204,30 +207,30 @@ public class RegionUtilsTest
                 new BaseRegion(1801, 2000)
         );
         List<BaseRegion> expected = emptyList();
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testComputeUncoveredRegionsTargetWithinCovered()
+    public void testRegionNegatedIntersectionTargetWithinRegions()
     {
-        BaseRegion target = new BaseRegion(1000, 2000);
-        Stream<BaseRegion> covered = Stream.of(new BaseRegion(100, 3000));
+        BaseRegion region = new BaseRegion(1000, 2000);
+        Stream<BaseRegion> regions = Stream.of(new BaseRegion(100, 3000));
         List<BaseRegion> expected = emptyList();
-        List<BaseRegion> actual = computeUncoveredRegions(target, covered);
+        List<BaseRegion> actual = regionNegatedIntersection(region, regions);
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testIsCoveredByNoCoverage()
+    public void testIsFullyOverlappedByNoOverlap()
     {
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.empty()));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.empty()));
 
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("2", 10, 20))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 9))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 21, 30))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("2", 10, 20))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 9))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 21, 30))));
 
-        assertFalse(isCoveredBy(
+        assertFalse(isFullyOverlappedBy(
                 new ChrBaseRegion("1", 10, 20),
                 Stream.of(
                         new ChrBaseRegion("2", 11, 20),
@@ -239,16 +242,16 @@ public class RegionUtilsTest
     }
 
     @Test
-    public void testIsCoveredByPartialCoverage()
+    public void testIsFullyOverlappedByPartialOverlap()
     {
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 10))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 11))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 19))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 20, 30))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 15, 30))));
-        assertFalse(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 11, 30))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 10))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 11))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 1, 19))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 20, 30))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 15, 30))));
+        assertFalse(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 11, 30))));
 
-        assertFalse(isCoveredBy(
+        assertFalse(isFullyOverlappedBy(
                 new ChrBaseRegion("1", 10, 20),
                 Stream.of(
                         new ChrBaseRegion("1", 19, 30),
@@ -260,12 +263,12 @@ public class RegionUtilsTest
     }
 
     @Test
-    public void testIsCoveredByFullCoverage()
+    public void testIsFullyOverlappedByFullOverlap()
     {
-        assertTrue(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 10, 20))));
-        assertTrue(isCoveredBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 5, 25))));
+        assertTrue(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 10, 20))));
+        assertTrue(isFullyOverlappedBy(new ChrBaseRegion("1", 10, 20), Stream.of(new ChrBaseRegion("1", 5, 25))));
 
-        assertTrue(isCoveredBy(
+        assertTrue(isFullyOverlappedBy(
                 new ChrBaseRegion("1", 10, 20),
                 Stream.of(
                         new ChrBaseRegion("1", 10, 15),
@@ -375,5 +378,58 @@ public class RegionUtilsTest
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(21, 30)));
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(1, 10)));
         assertTrue(regionOverlapsOrAdjacent(new BaseRegion(10, 20), new BaseRegion(1, 9)));
+    }
+
+    @Test
+    public void testMergeOverlapAndAdjacentRegions()
+    {
+        Stream<ChrBaseRegion> regions = Stream.of(
+                // Not overlapped.
+                new ChrBaseRegion("1", 100, 150),
+                // Overlap.
+                new ChrBaseRegion("1", 200, 260),
+                new ChrBaseRegion("1", 250, 290),
+                // Regions contained within others.
+                new ChrBaseRegion("1", 300, 390),
+                new ChrBaseRegion("1", 310, 350),
+                new ChrBaseRegion("1", 320, 340),
+                new ChrBaseRegion("1", 330, 370),
+                // Adjacent without overlap.
+                new ChrBaseRegion("1", 400, 409),
+                new ChrBaseRegion("1", 410, 419),
+                // Different chromosome.
+                new ChrBaseRegion("2", 100, 190),
+                new ChrBaseRegion("2", 200, 290),
+                new ChrBaseRegion("2", 300, 390)
+        );
+        List<ChrBaseRegion> expected = List.of(
+                new ChrBaseRegion("1", 100, 150),
+                new ChrBaseRegion("1", 200, 290),
+                new ChrBaseRegion("1", 300, 390),
+                new ChrBaseRegion("1", 400, 419),
+                new ChrBaseRegion("2", 100, 190),
+                new ChrBaseRegion("2", 200, 290),
+                new ChrBaseRegion("2", 300, 390)
+        );
+        List<ChrBaseRegion> actual = mergeOverlapAndAdjacentRegions(regions);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetSubregionForward()
+    {
+        ChrBaseRegion actual = getSubregion(new ChrBaseRegion("1", 100, 200), Orientation.FORWARD, 40, 78);
+        ChrBaseRegion expected = new ChrBaseRegion("1", 140, 177);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetSubregionReverse()
+    {
+        ChrBaseRegion actual = getSubregion(new ChrBaseRegion("1", 100, 200), Orientation.REVERSE, 5, 10);
+        // 200 199 198 197 196 195 194 193 192 191 190
+        //   0   1   2   3   4   5   6   7   8   9   10
+        ChrBaseRegion expected = new ChrBaseRegion("1", 191, 195);
+        assertEquals(expected, actual);
     }
 }

@@ -94,8 +94,6 @@ public class PurpleApplication
     private final GermlineVariants mGermlineVariants;
     private final Segmentation mSegmentation;
 
-    private static final String VERSION = "version";
-
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
         mPurpleVersion = fromAppName(APP_NAME);
@@ -309,7 +307,7 @@ public class PurpleApplication
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
-                    mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
+                    mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers, bestFit.Fit.ploidy()));
 
             SomaticPurityEnrichment somaticPurityEnrichment = new SomaticPurityEnrichment(purityAdjuster, copyNumbers, fittedRegions);
 
@@ -327,7 +325,6 @@ public class PurpleApplication
 
             FittedPurityRangeFile.write(mConfig.OutputDir, tumorId, bestFit.AllFits);
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
-            GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticStream.peakModelData());
         }
         else
@@ -363,7 +360,7 @@ public class PurpleApplication
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
 
             germlineDeletions = new GermlineDeletions(
-                    mReferenceData.DriverGenes.driverGenes(), mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
+                    mReferenceData.DriverGenes.DriverGeneMap, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
             germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
 
@@ -395,6 +392,8 @@ public class PurpleApplication
         {
             findDrivers(tumorId, purityContext, geneCopyNumbers, somaticStream, germlineDeletions, driverSourceData);
         }
+
+        GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
 
         if(!mConfig.germlineMode() && !mConfig.Charting.Disabled)
         {
@@ -466,7 +465,7 @@ public class PurpleApplication
 
         if(mConfig.runGermline())
         {
-            final GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.driverGenes());
+            GermlineDrivers germlineDrivers = new GermlineDrivers(mReferenceData.DriverGenes.DriverGeneMap);
             germlineDriverCatalog.addAll(germlineDrivers.findDrivers(mGermlineVariants.reportableVariants(), geneCopyNumberMap));
 
             if(germlineDeletions != null)

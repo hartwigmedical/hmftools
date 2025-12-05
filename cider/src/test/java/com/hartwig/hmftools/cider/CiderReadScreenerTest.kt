@@ -123,90 +123,6 @@ class CiderReadScreenerTest
     }
 
     @Test
-    fun testIsRelevantToAnchorLocation1()
-    {
-        val readLength = 150
-        val mappedLength = 100
-
-        // positive strand
-        val anchorRefStart = 10000
-        val anchorRefEnd = 10030
-
-        // this tests the function to work out if a read is potentially near and on the
-        // correct side of the anchor genome location
-        val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.IGHV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
-            VJAnchorGenomeLocation(VJGeneType.IGHJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE))
-        )
-        for (anchorLocation in anchorLocations)
-        {
-            // we should only allow reads that are mapped at lower genome location, i.e.
-            // read ------ anchor ----CDR3
-            // or reads that overlap the anchor by at least 15 bases
-
-            // first try reads that are lower
-            var mappedEnd = anchorRefEnd - readLength + 15
-            var mappedStart = mappedEnd - mappedLength
-            var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-
-            // reads with coords above and not overlapping anchor are not relevant
-            mappedStart = anchorRefEnd + anchorLocation.baseLength()
-            mappedEnd = mappedStart + mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-
-            // reads that overlap with anchor by 15 bases or more are relevant
-            mappedEnd = anchorRefEnd + anchorLocation.baseLength() / 2
-            mappedStart = mappedEnd - mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-        }
-    }
-
-    @Test
-    fun testIsRelevantToAnchorLocation2()
-    {
-        val readLength = 150
-        val mappedLength = 100
-
-        // positive strand
-        val anchorRefStart = 10000
-        val anchorRefEnd = 10030
-
-        // this tests the function to work out if a read is potentially near and on the
-        // correct side of the anchor genome location
-        val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
-            VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD))
-        )
-        for (anchorLocation in anchorLocations)
-        {
-            // we should only allow reads that are mapped at higher genome location, i.e.
-            // CDR3 ------ anchor ----read
-            // or reads that overlap the anchor by at least 15 bases
-
-            // first try reads that are mapped at higher coord
-            var mappedStart = anchorRefStart + readLength - 15
-            var mappedEnd = mappedStart + mappedLength
-            var mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-
-            // reads with coords below and not overlapping anchor are not relevant
-            mappedEnd = anchorRefStart - anchorLocation.baseLength()
-            mappedStart = mappedEnd - mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertFalse(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-
-            // reads that overlap with anchor by 15 bases or more are relevant
-            mappedStart = anchorRefStart - anchorLocation.baseLength() / 2
-            mappedEnd = mappedStart + mappedLength
-            mapped = GenomeRegions.create(anchorLocation.chromosome, mappedStart, mappedEnd)
-            TestCase.assertTrue(CiderReadScreener.isRelevantToAnchorLocation(readLength, mapped, anchorLocation, 30))
-        }
-    }
-
-    @Test
     fun testFindAnchorPositionRNA()
     {
         // read: A00624:61:HVW7TDSXX:4:2344:18674:2018 1/2 151b aligned to 14:106322274-106330832., aligned: 121
@@ -263,7 +179,7 @@ class CiderReadScreenerTest
             VJGeneType.IGHJ,
             GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
         )
-        val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation, true)
+        val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation)
         TestCase.assertNotNull(readCandidate)
         TestCase.assertEquals(68, readCandidate!!.anchorOffsetStart)
         TestCase.assertEquals(98, readCandidate.anchorOffsetEnd)

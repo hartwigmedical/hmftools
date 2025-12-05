@@ -72,6 +72,9 @@ public final class CommonConfig
     public static final String CUPPA_DIR_CFG = toolDirectory("cuppa");
     public static final String CUPPA_DIR_DESC = toolDirectoryDesc("Cuppa");
 
+    public static final String ESVEE_DIR_CFG = toolDirectory("esvee");
+    public static final String ESVEE_DIR_DESC = toolDirectoryDesc("Esvee");
+
     public static final String ISOFOX_DIR_CFG = toolDirectory("isofox");
     public static final String ISOFOX_DIR_DESC = toolDirectoryDesc("Isofox");
 
@@ -99,6 +102,9 @@ public final class CommonConfig
     public static final String PURPLE_PLOT_DIR_CFG = toolDirectory("purple_plot");
     public static final String PURPLE_PLOT_DIR_DESC = toolPlotsDirectoryDesc("Purple");
 
+    public static final String REDUX_DIR_CFG = toolDirectory("redux");
+    public static final String REDUX_DIR_DESC = toolDirectoryDesc("Redux");
+
     public static final String SAGE_DIR_CFG = toolDirectory("sage");
     public static final String SAGE_DIR_DESC = toolDirectoryDesc("Sage");
 
@@ -113,6 +119,9 @@ public final class CommonConfig
 
     public static final String VIRUS_DIR_CFG = toolDirectory("virus");
     public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");
+
+    public static final String V_CHORD_DIR_CFG = toolDirectory("vchord");
+    public static final String V_CHORD_DIR_DESC = toolDirectoryDesc("vChord");
 
     public static final String TUMOR_METRICS_DIR_CFG = "tumor_metrics_dir";
     public static final String TUMOR_METRICS_DIR_DESC = "Path to sample metrics directory";

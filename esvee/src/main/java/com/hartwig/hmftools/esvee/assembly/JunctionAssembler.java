@@ -136,7 +136,7 @@ public class JunctionAssembler
 
         JunctionAssembly firstAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
-                extensionSeqBuilder.repeatInfo());
+                extensionSeqBuilder.repeats());
 
         // filter LINE source-type sites marked by opposition orientation poly A/T sequences
         if(!firstAssembly.indel() && LineUtils.hasLineSourceSequence(firstAssembly))
@@ -351,6 +351,12 @@ public class JunctionAssembler
         if(firstAssembly.hasLineSequence())
             return null;
 
+        int secondSupport = extensionReads.size();
+        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+
+        if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
+            return null;
+
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
         if(!extensionSeqBuilder.isValid())
@@ -358,8 +364,9 @@ public class JunctionAssembler
 
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
-        int secondSupport = assemblySupport.size();
-        double secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
+        // test min support again from actual supporting reads
+        secondSupport = assemblySupport.size();
+        secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
 
         if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
             return null;
@@ -369,7 +376,7 @@ public class JunctionAssembler
 
         JunctionAssembly newAssembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualities(), assemblySupport,
-                extensionSeqBuilder.repeatInfo());
+                extensionSeqBuilder.repeats());
 
         if(newAssembly.extensionLength() < ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
             return null;
@@ -401,25 +408,18 @@ public class JunctionAssembler
             if(assembly.support().stream().anyMatch(x -> x.cachedRead() == read)) // skip those already added
                 continue;
 
-            if(!canAddJunctionRead(assembly, extensionSeqBuilder, read))
+            ReadParseState readInfo = extensionSeqBuilder.checkAddJunctionRead(read);
+            if(readInfo == null || readInfo.mismatched())
+            {
                 ++mismatchReadCount;
+            }
+            else if(extensionSeqBuilder.sufficientQualMatches(readInfo))
+            {
+                assembly.addJunctionSupport(read, JUNCTION, readInfo.startIndex(), readInfo);
+            }
         }
 
         assembly.addMismatchReadCount(mismatchReadCount);
-    }
-
-    private boolean canAddJunctionRead(final JunctionAssembly assembly, final ExtensionSeqBuilder extensionSeqBuilder, final Read read)
-    {
-        ExtReadParseState readParseState = extensionSeqBuilder.checkAddJunctionRead(read);
-
-        if(readParseState == null)
-            return false;
-
-        if(readParseState.exceedsMaxMismatches() || !extensionSeqBuilder.sufficientHighQualMatches(readParseState))
-            return false;
-
-        assembly.addSupport(read, JUNCTION, readParseState.junctionIndex(), readParseState.matchedBases(), readParseState.mismatches());
-        return true;
     }
 
     private boolean meetsMinSupportThreshold(final List<SupportRead> support)

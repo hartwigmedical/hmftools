@@ -17,9 +17,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BreakendEntryFactory
 {
-    @NotNull
-    public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants,
-            @NotNull List<LinxDriver> drivers)
+    public static List<BreakendEntry> create(
+            final List<LinxBreakend> breakends, final List<LinxSvAnnotation> variants, final List<LinxDriver> drivers)
     {
         List<BreakendEntry> entries = Lists.newArrayList();
         for(LinxBreakend breakend : breakends)
@@ -39,9 +38,8 @@ public final class BreakendEntryFactory
         return entries;
     }
 
-    @NotNull
     @VisibleForTesting
-    static String range(@NotNull LinxBreakend breakend)
+    static String range(final LinxBreakend breakend)
     {
         String exonRange = null;
         if(breakend.exonUp() > 0)
@@ -69,7 +67,7 @@ public final class BreakendEntryFactory
         return exonRange + " " + breakend.geneOrientation();
     }
 
-    private static int determineClusterId(@NotNull LinxBreakend breakend, @NotNull List<LinxSvAnnotation> variants)
+    private static int determineClusterId(final LinxBreakend breakend, final List<LinxSvAnnotation> variants)
     {
         for(LinxSvAnnotation variant : variants)
         {
@@ -82,7 +80,7 @@ public final class BreakendEntryFactory
         throw new IllegalStateException("Could not find structural variant that underlies breakend: " + breakend);
     }
 
-    private static double correctUndisruptedCopyNumber(@NotNull LinxBreakend breakend, @NotNull List<LinxDriver> drivers)
+    private static double correctUndisruptedCopyNumber(final LinxBreakend breakend, final List<LinxDriver> drivers)
     {
         if(breakend.type() == LinxBreakendType.DUP)
         {

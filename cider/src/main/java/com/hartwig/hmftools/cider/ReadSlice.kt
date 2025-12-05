@@ -10,7 +10,7 @@ import htsjdk.samtools.util.SequenceUtil
 // us manage times when we need to trim some poly G etc
 // we do reverse complement first before slice if
 // it is used
-class ReadSlice(
+data class ReadSlice(
     private val read: SAMRecord,
     val reverseComplement: Boolean,
     val sliceStart: Int,
@@ -53,23 +53,10 @@ class ReadSlice(
         return bq.sliceArray(sliceStart until sliceEnd)
     }
 
-    val baseQualityString: String get()
-    {
-        var bq = read.baseQualityString
-        if (reverseComplement)
-            bq = bq.reversed()
-        return bq.substring(sliceStart, sliceEnd)
-    }
-
     fun baseAt(slicePos: Int): Char
     {
         val b = read.readString[slicePositionToReadPosition(slicePos)]
         return if (reverseComplement) Nucleotides.complement(b) else b
-    }
-
-    fun baseQualityAt(slicePos: Int): Byte
-    {
-        return read.baseQualities[slicePositionToReadPosition(slicePos)]
     }
 
     fun readPositionToSlicePosition(readPos: Int): Int
@@ -89,17 +76,5 @@ class ReadSlice(
         val start = if (reverseComplement) read.readLength - readRangeEndExclusive else readRangeStart
         val end = if (reverseComplement) read.readLength - readRangeStart else readRangeEndExclusive
         return IntPair(start - sliceStart, end - sliceStart)
-    }
-
-    fun sliceRangeToReadRange(sliceRangeStart: Int, sliceRangeEndExclusive: Int): IntPair
-    {
-        var start = sliceRangeStart + sliceStart
-        var end = sliceRangeEndExclusive + sliceStart
-        if (reverseComplement)
-        {
-            start = read.readLength - end
-            end = read.readLength - start
-        }
-        return IntPair(start, end)
     }
 }

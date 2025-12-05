@@ -70,7 +70,9 @@ public class DriverGeneAnnotator implements CohortFileInterface
         mDataCache = new DriverDataCache(cnDataLoader, mGeneTransCache, config.DriverGenes);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
 
-        Map<String,List<String>> disruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache);
+        Map<String,List<String>> disruptionGeneTranscripts = getDisruptionGeneTranscripts(
+                config.DriverGenes.values(), true, geneTransCache);
+
         mDelDrivers = new DeletionDrivers(disruptionGeneTranscripts, mDataCache);
 
         mVisSampleData = visSampleData;
