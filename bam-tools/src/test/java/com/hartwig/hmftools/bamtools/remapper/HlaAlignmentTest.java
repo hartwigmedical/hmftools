@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.utils.Arrays;
 
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+import org.umccr.java.hellbender.utils.bwa.BwaMemAlignment;
 import org.junit.Assert;
 import org.junit.Test;
 
