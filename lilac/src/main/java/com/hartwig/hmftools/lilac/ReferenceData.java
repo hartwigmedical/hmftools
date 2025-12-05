@@ -97,7 +97,7 @@ public class ReferenceData
     // sequence used to printing amino acid sequences to file
     public static final HlaAllele DEFLATE_TEMPLATE = HlaAllele.fromString("A*01:01");
 
-    public static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
+    private static final List<String> EXCLUDED_ALLELES = Lists.newArrayList();
 
     public static Indel STOP_LOSS_ON_C_INDEL = null;
 
