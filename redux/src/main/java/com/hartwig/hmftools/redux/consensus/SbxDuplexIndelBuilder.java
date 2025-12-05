@@ -101,7 +101,8 @@ public class SbxDuplexIndelBuilder
 
         if(rightAlignmentDuplexIndel)
         {
-            int rightShift = tryRightAligningRepeat(readBaseInfo, repeatBases, duplexIndelIndexEnd);
+            // check if the repeat bases can be shifted right while matching the read
+            int rightShift = findRepeatShiftLength(readBaseInfo, repeatBases, true);
 
             if(rightShift > 0)
             {
@@ -151,11 +152,12 @@ public class SbxDuplexIndelBuilder
 
         int totalInsertedBases = insertRepeatShift + duplexMismatchInsertCount;
 
-        int trimLength = insertRepeatShift > 0 ? min(totalInsertedBases, duplexMismatchLength) : duplexMismatchLength;
+        int trimLength = min(totalInsertedBases, duplexMismatchLength);
 
         int lowBaseQualCount = duplexMismatchLength;
 
-        int trimmedRepeatBaseLength = totalInsertedBases - trimLength;
+        // calculate the number of bases in repeat after trimmimg
+        int trimmedRepeatBaseLength = insertRepeatShift + duplexMismatchLength - trimLength;
 
         // ensure there are enough low-qual bases for symmetry around the repeat
         if(lowBaseQualCount < trimmedRepeatBaseLength && (duplexMismatchLength % 2) == 1)
@@ -259,16 +261,37 @@ public class SbxDuplexIndelBuilder
 
         if(repeatLength > 1)
         {
+            boolean isHomopolymer = true;
+            byte firstBase = repeatBases[0];
+
+            for(int i = 1; i < repeatBases.length; ++i)
+            {
+                if(firstBase != repeatBases[i])
+                {
+                    isHomopolymer = false;
+                    break;
+                }
+            }
+
             // then consider a partial shift
-            int shiftCount = shiftUp ? 1 : -1;
+            int maxPartialShift = 0;
 
             for(int i = 1; i < repeatLength; ++i)
             {
-                if(!canShiftByLength(initialBaseInfo, repeatLength, repeatBases, shiftBases, shiftCount))
-                    break;
+                int partialShift = shiftUp ? i : -i;
 
-                shiftBases += shiftCount;
+                if(!canShiftByLength(initialBaseInfo, repeatLength, repeatBases, shiftBases, partialShift))
+                {
+                    if(isHomopolymer) // no need to check longer partial shifts
+                        break;
+                }
+                else
+                {
+                    maxPartialShift = partialShift;
+                }
             }
+
+            shiftBases += maxPartialShift;
         }
 
         return shiftBases;
@@ -299,12 +322,6 @@ public class SbxDuplexIndelBuilder
         }
 
         return true;
-    }
-
-    private int tryRightAligningRepeat(final ReadBaseInfo initialBaseInfo, final byte[] repeatBases, int duplexIndelIndexEnd)
-    {
-        // check if the repeat bases can be shifted right while matching the read
-        return findRepeatShiftLength(initialBaseInfo, repeatBases, true);
     }
 
     private void buildAdjustedSupplementaryCigar()

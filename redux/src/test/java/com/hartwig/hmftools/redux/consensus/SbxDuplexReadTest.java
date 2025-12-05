@@ -148,6 +148,7 @@ public class SbxDuplexReadTest
 
         //         012345678
         readStr = "CTCTTTACC";
+        // quals   999990999
         cigar = "3M2I4M";
 
         read = createSamRecordUnpaired(
@@ -167,7 +168,7 @@ public class SbxDuplexReadTest
 
         assertEquals("3M1I4M", read.getCigarString());
         assertEquals("CTCTTACC", read.getReadString());
-        checkBaseQuals(read, List.of(3));
+        checkBaseQuals(read, List.of(3, 4));
         assertEquals(1, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
 
         // test 3: 2 low-qual bases and 2-base repeat
@@ -371,17 +372,107 @@ public class SbxDuplexReadTest
         String ycTagStr = "0-7" + "Z".repeat(13) + "4-0";
 
         read.setAttribute(SBX_YC_TAG, ycTagStr);
-        read.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
-        read.setAttribute(ALIGNMENT_SCORE_ATTRIBUTE, 10);
 
         stripDuplexIndels(read);
 
-        /*
-        assertEquals("13M", read.getCigarString());
-        assertEquals("ATGGTTTTTATGG", read.getReadString());
-        checkBaseQuals(read, List.of(3, 6));
-        assertEquals(2, read.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE).intValue());
-        */
+        // the size of the mismatch region was 13, so we should have 7 (13/2 rounded up) qual 0 bases on each side of the final trimmed repeat
+        // however, there are only 3 bases in the trimmed repeat, so we just mark all of them with qual 0
+        assertEquals("11M", read.getCigarString());
+        assertEquals("ATGGTTTATGG", read.getReadString());
+        checkBaseQuals(read, List.of(4, 5, 6));
+
+        // test 2: 7 Ts in read, 4 Ts in ref, 3 low qual Ts, 3 inserted Ts
+        // expected behaviour: totalInsertedBases = 3, trimmedRepeatBaseLength = 4, we assign all 4 bases as low qual
+
+        //         0123     4567890     1234
+        readStr = "ATGG" + "TTTTTTT" + "ATGG";
+        // quals   9999     9999000     9999
+        // cigar   MMMM     IIIMMMM     MMMM
+        cigar = "4M3I8M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+
+        for(int i = 4; i <= 7; ++i)
+        {
+            baseQuals[i] = 0;
+        }
+
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-8" + "Z".repeat(3) + "4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+
+        stripDuplexIndels(read);
+
+        assertEquals("12M", read.getCigarString());
+        assertEquals("ATGGTTTTATGG", read.getReadString());
+        checkBaseQuals(read, List.of(4, 5, 6, 7));
+
+        // test 3: long poly-TC, 3 counts in read, 8 counts in ref, the other counts are low qual and are inserted.
+        // expected behaviour: insertRepeatShift = 6, totalInsertedBases = 10, trimmedRepeatBaseLength = 6
+
+        //         0123     4567890123456789     0123
+        readStr = "ATGG" + "TCTCTCTCTCTCTCTC" + "ATGG";
+        // quals   9999     9999990000000000     9999
+        // cigar   MMMM     IIIIIIIIIIMMMMMM     MMMM
+        cigar = "4M10I10M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+
+        for(int i = 10; i <= 19; ++i)
+        {
+            baseQuals[i] = 0;
+        }
+
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-10" + "Z".repeat(10) + "4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+
+        stripDuplexIndels(read);
+
+        assertEquals("14M", read.getCigarString());
+        assertEquals("ATGGTCTCTCATGG", read.getReadString());
+        checkBaseQuals(read, List.of(4, 5, 6, 7, 8, 9));
+
+        // test 4: only 3 inserted Ts but all 7 Ts are low qual
+        // expected behaviour: 3 bases trimmed, because there are 3 inserted bases, 7 low qual bases, so we want min(3, 7)
+
+        //         0123     4567890     1234
+        readStr = "ATGG" + "TTTTTTT" + "ATGG";
+        // quals   9999     0000000     9999
+        // cigar   MMMM     IIIMMMM     MMMM
+        cigar = "4M3I8M";
+
+        read = createSamRecordUnpaired(
+                TEST_READ_ID, CHR_1, alignmentStart, readStr, cigar, false, false, null);
+
+        baseQuals = buildBaseQuals(readStr.length(), RAW_DUPLEX_QUAL);
+
+        for(int i = 4; i <= 10; ++i)
+        {
+            baseQuals[i] = 0;
+        }
+
+        read.setBaseQualities(baseQuals);
+
+        ycTagStr = "0-4" + "Z".repeat(7) + "4-0";
+
+        read.setAttribute(SBX_YC_TAG, ycTagStr);
+
+        stripDuplexIndels(read);
+
+        assertEquals("12M", read.getCigarString());
+        assertEquals("ATGGTTTTATGG", read.getReadString());
+        checkBaseQuals(read, List.of(4, 5, 6, 7));
     }
 
     @Test
