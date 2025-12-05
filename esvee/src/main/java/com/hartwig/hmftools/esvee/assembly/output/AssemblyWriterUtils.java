@@ -103,8 +103,8 @@ public final class AssemblyWriterUtils
     {
         PhaseGroup phaseGroup = assembly.phaseGroup();
 
-        int phaseGroupId = NO_PHASE_ID;
-        int phaseGroupCount = 0;
+        int phaseGroupId = phaseGroup.id();
+        int phaseGroupCount = phaseGroup.assemblyCount();
         String phaseSetId = String.valueOf(NO_PHASE_ID);
         int phaseSetCount = 0;
         String splitLinkInfo = "";
@@ -115,43 +115,42 @@ public final class AssemblyWriterUtils
         String overlapBases = "";
         String secondaryLinkInfo = "";
 
-        if(phaseGroup != null)
+        PhaseSet phaseSet = assembly.phaseSet();
+
+        if(phaseSet != null)
         {
-            phaseGroupId = phaseGroup.id();
-            phaseGroupCount = phaseGroup.assemblyCount();
+            if(phaseSet.merged())
+                phaseSetId = format("%d_%d", phaseSet.id(), phaseSet.mergedPhaseSetId());
+            else
+                phaseSetId = String.valueOf(phaseSet.id());
 
-            PhaseSet phaseSet = assembly.phaseSet();
+            phaseSetCount = phaseSet.assemblies().size();
 
-            if(phaseSet != null)
+            List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
+
+            List<AssemblyLink> splitLinks = assemblyLinks.stream()
+                    .filter(x -> x.type() == LinkType.SPLIT || x.type() == LinkType.INDEL).collect(Collectors.toList());
+
+            List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
+            splitLinkInfo = assemblyLinksStr(assembly, splitLinks);
+            facingLinkInfo = assemblyLinksStr(assembly, facingLinks);
+
+            if(!splitLinks.isEmpty())
             {
-                if(phaseSet.merged())
-                    phaseSetId = format("%d_%d", phaseSet.id(), phaseSet.mergedPhaseSetId());
-                else
-                    phaseSetId = String.valueOf(phaseSet.id());
-
-                phaseSetCount = phaseSet.assemblies().size();
-
-                List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
-
-                List<AssemblyLink> splitLinks = assemblyLinks.stream()
-                        .filter(x -> x.type() == LinkType.SPLIT || x.type() == LinkType.INDEL).collect(Collectors.toList());
-
-                List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
-                splitLinkInfo = assemblyLinksStr(assembly, splitLinks);
-                facingLinkInfo = assemblyLinksStr(assembly, facingLinks);
-
-                if(!splitLinks.isEmpty())
-                {
-                    AssemblyLink svLink = splitLinks.get(0);
-                    svType = svLink.svType().toString();
-                    svLinkLength = svLink.length();
-                    insertedBases = svLink.insertedBases();
-                    overlapBases = svLink.overlapBases();
-                }
-
-                List<AssemblyLink> secondarySplitLinks = phaseGroup.findSecondarySplitLinks(assembly);
-                secondaryLinkInfo = assemblyLinksStr(assembly, secondarySplitLinks);
+                AssemblyLink svLink = splitLinks.get(0);
+                svType = svLink.svType().toString();
+                svLinkLength = svLink.length();
+                insertedBases = svLink.insertedBases();
+                overlapBases = svLink.overlapBases();
             }
+
+            List<AssemblyLink> secondarySplitLinks = phaseGroup.findSecondarySplitLinks(assembly);
+            secondaryLinkInfo = assemblyLinksStr(assembly, secondarySplitLinks);
+        }
+        else
+        {
+            phaseSetId = String.valueOf(phaseGroup.nextPhaseSetId());
+            phaseSetCount = 1;
         }
 
         sj.add(String.valueOf(phaseGroupId));
