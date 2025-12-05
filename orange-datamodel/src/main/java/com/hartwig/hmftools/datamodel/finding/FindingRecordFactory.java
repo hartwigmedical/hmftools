@@ -119,21 +119,8 @@ public class FindingRecordFactory
 
         if(lilac != null)
         {
-            builder.hlaAlleles(lilac.alleles().stream()
-                    .map(o -> ImmutableHlaAllele.builder()
-                            .findingKey(FindingKeys.hlaAllele(o))
-                            .allele(o.allele())
-                            .tumorCopyNumber(o.tumorCopyNumber())
-                            .refFragments(o.refFragments())
-                            .tumorFragments(o.tumorFragments())
-                            .rnaFragments(o.rnaFragments())
-                            .somaticMissense(o.somaticMissense())
-                            .somaticNonsenseOrFrameshift(o.somaticNonsenseOrFrameshift())
-                            .somaticSplice(o.somaticSplice())
-                            .somaticSynonymous(o.somaticSynonymous())
-                            .somaticInframeIndel(o.somaticInframeIndel())
-                            .build())
-                    .toList());
+            builder.hlaAlleles(HlaAlleleFactory.convertHlaAlleles(lilac, hasReliablePurity, !orangeRecord.tumorOnlyMode(),
+                            orangeRecord.isofox() != null));
         }
 
         return builder.build();

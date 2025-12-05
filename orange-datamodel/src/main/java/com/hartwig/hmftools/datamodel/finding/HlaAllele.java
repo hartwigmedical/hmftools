@@ -11,9 +11,15 @@ import org.jetbrains.annotations.Nullable;
 public interface HlaAllele extends Finding
 {
     @NotNull
+    String gene();
+
+    @NotNull
     String allele();
 
-    double tumorCopyNumber();
+    int germlineCopyNumber();
+
+    @Nullable
+    Double tumorCopyNumber();
 
     @Nullable
     Integer refFragments();
