@@ -41,17 +41,17 @@ AMBER supports both BAM and CRAM file formats.
 
 ### Optional Arguments
 
-| Argument               | Default | Description                                                                                       |
-|------------------------|---------|---------------------------------------------------------------------------------------------------|
-| min_mapping_quality    | 50      | Minimum mapping quality for an alignment to be used                                               |
-| min_base_quality       | 30      | Minimum quality for a base to be considered                                                       |
-| tumor_min_depth        | 8 / 25  | Min tumor depth for a site to be considered, uses 25 in tumor-only mode                           |
-| min_depth_percent      | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
-| max_depth_percent      | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
-| min_het_af_percent     | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                       |
-| max_het_af_percent     | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                       |
-| validation_stringency  | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
-| threads                | 1       | Number of threads to use                                                                          |
+| Argument              | Default | Description                                                                                       |
+|-----------------------|---------|---------------------------------------------------------------------------------------------------|
+| min_map_quality       | 50      | Minimum mapping quality for an alignment to be used                                               |
+| min_base_quality      | 30      | Minimum quality for a base to be considered                                                       |
+| tumor_min_depth       | 8 / 25  | Min tumor depth for a site to be considered, uses 25 in tumor-only mode                           |
+| min_depth_percent     | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
+| max_depth_percent     | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
+| min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                       |
+| max_het_af_percent    | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                       |
+| validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
+| threads               | 1       | Number of threads to use                                                                          |
 
 ### Example Usage
 
