@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -13,6 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_MIN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.JunctionAssembler.minReadThreshold;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.findConsensusLineExtension;
+import static com.hartwig.hmftools.esvee.assembly.LineUtils.hasLineTail;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.NEXT_BASE_CHECK_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.SequenceBuilder.getRepeatCount;
 import static com.hartwig.hmftools.esvee.assembly.SequenceDiffType.BASE;
@@ -92,15 +95,7 @@ public class ExtensionSeqBuilder
         mIsValid = true;
         mRefRepeatCount = 0;
 
-        if(hasLineReads)
-        {
-            int lineExtensionLength = findConsensusLineExtension(reads, mJunction);
-            mHasLineSequence = lineExtensionLength >= LINE_POLY_AT_REQ;
-        }
-        else
-        {
-            mHasLineSequence = false;
-        }
+        mHasLineSequence = hasLineReads ? checkLineSequence() : false;
 
         if(AssemblyConfig.AssemblyBuildDebug)
         {
@@ -417,6 +412,26 @@ public class ExtensionSeqBuilder
     }
 
     public boolean hasLineSequence() { return mHasLineSequence; }
+
+    private boolean checkLineSequence()
+    {
+        List<Read> validLineReads = mSequenceBuilder.reads().stream()
+                .filter(x -> !x.mismatched() && x.read().hasLineTail())
+                .map(x -> x.read()).collect(Collectors.toList());
+
+        if(validLineReads.isEmpty())
+            return false;
+
+        int lineExtensionLength = findConsensusLineExtension(validLineReads, mJunction);
+
+        if(lineExtensionLength >= LINE_POLY_AT_REQ)
+            return true;
+
+        int firstExtIndex = mBuildForwards ? 1 : mSequenceBuilder.baseLength() - 2;
+        byte lineBase = mJunction.isForward() ? LINE_BASE_A : LINE_BASE_T;
+
+        return hasLineTail(mSequenceBuilder.bases(), firstExtIndex, !mBuildForwards, lineBase);
+    }
 
     public String buildInformation()
     {
