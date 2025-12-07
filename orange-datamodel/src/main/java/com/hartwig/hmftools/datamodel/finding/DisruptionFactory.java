@@ -94,6 +94,7 @@ public class DisruptionFactory
                 .chromosome(breakend.chromosome())
                 .chromosomeBand(breakend.chromosomeBand())
                 .gene(breakend.gene())
+                .isCanonical(breakend.isCanonical())
                 .transcript(breakend.transcript())
                 .type(breakend.type())
                 .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)

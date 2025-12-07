@@ -25,6 +25,8 @@ public interface Disruption extends Driver {
     @NotNull
     String transcript();
 
+    boolean isCanonical();
+
     @NotNull LinxBreakendType type();
 
     @Nullable
