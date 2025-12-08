@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Set;
 
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleQCFactory;
 

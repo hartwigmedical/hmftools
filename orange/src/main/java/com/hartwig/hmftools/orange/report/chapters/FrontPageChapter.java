@@ -36,7 +36,7 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;

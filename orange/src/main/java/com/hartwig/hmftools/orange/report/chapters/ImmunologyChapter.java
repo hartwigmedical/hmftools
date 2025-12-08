@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.HLAAlleleTable;
 import com.hartwig.hmftools.orange.report.tables.ImmuneEscapeTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
