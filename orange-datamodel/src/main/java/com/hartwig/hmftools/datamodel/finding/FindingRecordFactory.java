@@ -68,9 +68,10 @@ public class FindingRecordFactory
         }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
+        List<PurpleDriver> purpleGermlineDrivers = orangeRecord.purple().germlineDrivers();
 
-        if(reportableGermlineFullDels != null) {
-            builder.driverGermlineGainDeletions(convertGermlineFullDels(reportableGermlineFullDels, purple.germlineDrivers()));
+        if(reportableGermlineFullDels != null && purpleGermlineDrivers != null) {
+            builder.driverGermlineGainDeletions(convertGermlineFullDels(reportableGermlineFullDels, purpleGermlineDrivers));
         }
 
         LinxRecord linx = orangeRecord.linx();
