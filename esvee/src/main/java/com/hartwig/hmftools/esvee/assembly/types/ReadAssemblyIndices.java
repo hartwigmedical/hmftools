@@ -62,7 +62,7 @@ public class ReadAssemblyIndices
             {
                 // allow reads to start before the assembly's ref boundaries but will cull the bases used
                 // TODO: is this to handle minor diffs due to soft-clips or if not, why didn't these reads extend the ref position?
-                // TODO: suggest removing this allowance
+                // suggest removing this allowance
                 int readIndex = refBasePosition - alignmentStart + leftSoftClipOffset;
                 return new ReadAssemblyIndices(readIndex, readIndexEnd, 0);
             }

@@ -52,7 +52,8 @@ public final class AssemblyConstants
 
     // consensus building and read mismatches
     public static final double READ_MISMATCH_PENALTY = 1;
-    public static final double READ_MISMATCH_MED_QUAL_PENALTY = 0.25;
+    public static final double READ_MISMATCH_MED_QUAL_SNV_PENALTY = 0.3;
+    public static final double READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY = 0.2;
     public static final double READ_MAX_MISMATCH_RATE = 0.33; // max rate of mismatches per read even if zero penalty
     public static final int READ_MISMATCH_RATE_MIN_BASE = MIN_VARIANT_LENGTH;
 
@@ -60,9 +61,9 @@ public final class AssemblyConstants
 
     // penalty factors as function of read extension base length
     public static final int READ_MISMATCH_PENALTY_LENGTH_1 = 5;
-    public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_1 = 0; // ie overlap 1-5 allows zero penalty
     public static final int READ_MISMATCH_PENALTY_LENGTH_2 = 15;
-    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.2;
+    public static final double READ_MISMATCH_PENALTY_PENALTY_2 = 0.3; // ie overlap 6-15 allows 0.3
     public static final int READ_MISMATCH_PENALTY_LENGTH_3 = 49;
     public static final double READ_MISMATCH_PENALTY_PENALTY_3 = 1;
     public static final int READ_MISMATCH_PENALTY_LENGTH_4 = 99;

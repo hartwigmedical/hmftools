@@ -242,6 +242,7 @@ public class AlignmentFragments
             final SupportRead firstRead, final SupportRead secondRead, boolean inPrimaryAssembly,
             final List<ReadBreakendMatch> firstBreakendMatches, final List<ReadBreakendMatch> secondBreakendMatches)
     {
+        // paired reads where both R1 and R2 have been assigned
         int lowerIndex = min(firstRead.fullAssemblyIndexStart(), secondRead.fullAssemblyIndexStart());
         int upperIndex = max(firstRead.fullAssemblyIndexEnd(), secondRead.fullAssemblyIndexEnd());
 
@@ -359,6 +360,7 @@ public class AlignmentFragments
 
     private void processSoloRead(final SupportRead read, boolean inPrimaryAssembly, final List<ReadBreakendMatch> readBreakendMatches)
     {
+        // either for unpaired reads, or where one of R1 or R2 was not associated with the breakend(s)
         int forwardReads = 0;
         int reverseReads = 0;
 

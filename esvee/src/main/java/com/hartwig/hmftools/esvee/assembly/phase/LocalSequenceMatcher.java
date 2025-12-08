@@ -64,23 +64,7 @@ public class LocalSequenceMatcher
         if(assemblySeqIndexInRef >= 0)
         {
             // simple sequence match, so can form a link between these 2 assemblies
-
-            // TODO: check for other matches..
-            /*
-            List<AssemblyLink> candidateLinks = Lists.newArrayList(formLocalLink(assembly, localRegionStart, assemblySeqIndexInRef));
-
-            int assemblySeqIndexInRefNext = assemblySeqIndexInRef;
-            while(true)
-            {
-                assemblySeqIndexInRefNext = localRefSeq.FullSequence.indexOf(assemblyExtBases, assemblySeqIndexInRefNext + 1);
-
-                if(assemblySeqIndexInRefNext > 0)
-                    candidateLinks.add(formLocalLink(assembly, localRegionStart, assemblySeqIndexInRefNext));
-                else
-                    break;
-            }
-            */
-
+            // could search for other matches too but seems no point
             return formLocalLink(assembly, localRegionStart, assemblySeqIndexInRef);
         }
 

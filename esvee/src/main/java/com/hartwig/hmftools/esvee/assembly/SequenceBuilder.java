@@ -9,13 +9,14 @@ import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.common.utils.Doubles.medianInteger;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MAX_MISMATCH_RATE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_SNV_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_LENGTH_4;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_PENALTY_4;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_RATE_MIN_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_MAX_BASE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_LOW_REPEAT_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY_LENGTH_1;
@@ -973,12 +974,14 @@ public class SequenceBuilder
         if(seqDiffInfo.QualType == LOW)
             return 0;
 
-        if(seqDiffInfo.Type == BASE || seqDiffInfo.Type == INSERT || seqDiffInfo.Type == DELETE)
+        if(seqDiffInfo.Type == BASE)
         {
-            if(seqDiffInfo.QualType == MEDIUM)
-                return READ_MISMATCH_MED_QUAL_PENALTY;
-            else
-                return READ_MISMATCH_PENALTY;
+            return seqDiffInfo.QualType == MEDIUM ? READ_MISMATCH_MED_QUAL_SNV_PENALTY : READ_MISMATCH_PENALTY;
+        }
+
+        if(seqDiffInfo.Type == INSERT || seqDiffInfo.Type == DELETE)
+        {
+            return seqDiffInfo.QualType == MEDIUM ? READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY : READ_MISMATCH_PENALTY;
         }
 
         // repeat adjustments
@@ -1003,7 +1006,7 @@ public class SequenceBuilder
         }
 
         if(seqDiffInfo.QualType == BaseQualType.MEDIUM)
-            return penaltyCount * READ_MISMATCH_MED_QUAL_PENALTY;
+            return penaltyCount * READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY;
 
         return penaltyCount;
     }

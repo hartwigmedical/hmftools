@@ -7,7 +7,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isLowBaseQual;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_PENALTY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_MED_QUAL_SNV_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.READ_MISMATCH_PENALTY;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_2_DIFF_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.REPEAT_3_DIFF_COUNT;
@@ -196,7 +197,7 @@ public final class SequenceCompare
                 }
 
 
-                mismatchPenalty += calcMismatchPenalty(firstQualType, secondQualType);
+                mismatchPenalty += calcNonSnvMismatchPenalty(firstQualType, secondQualType);
                 continue; // check the next base again
             }
 
@@ -224,13 +225,13 @@ public final class SequenceCompare
                     int secondRangeEnd = checkForwards ? secondIndex + skipCount : secondIndex;
                     BaseQualType secondQualType = rangeQualType(secondBaseQuals, secondRangeStart, secondRangeEnd);
 
-                    mismatchPenalty += calcMismatchPenalty(firstQualType, secondQualType);
+                    mismatchPenalty += calcNonSnvMismatchPenalty(firstQualType, secondQualType);
                 }
 
                 continue; // check the next base again
             }
 
-            mismatchPenalty += calcMismatchPenalty(firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]);
+            mismatchPenalty += calcSnvMismatchPenalty(firstBaseQuals[firstIndex], secondBaseQuals[secondIndex]);
 
             if(maxMismatchPenalty >= 0 && mismatchPenalty > maxMismatchPenalty)
                 return mismatchPenalty;
@@ -242,23 +243,23 @@ public final class SequenceCompare
         return mismatchPenalty;
     }
 
-    private static double calcMismatchPenalty(final BaseQualType firstQualType, final BaseQualType secondQualType)
+    private static double calcNonSnvMismatchPenalty(final BaseQualType firstQualType, final BaseQualType secondQualType)
     {
         BaseQualType lowerType = BaseQualType.selectLower(firstQualType, secondQualType);
 
         if(lowerType == LOW)
             return 0;
 
-        return lowerType == MEDIUM ? READ_MISMATCH_MED_QUAL_PENALTY : READ_MISMATCH_PENALTY;
+        return lowerType == MEDIUM ? READ_MISMATCH_MED_QUAL_NON_SNV_PENALTY : READ_MISMATCH_PENALTY;
     }
 
-    private static double calcMismatchPenalty(final byte firstQual, final byte secondQual)
+    private static double calcSnvMismatchPenalty(final byte firstQual, final byte secondQual)
     {
         if(isLowBaseQual(firstQual) || isLowBaseQual(secondQual))
             return 0;
 
         if(isMediumBaseQual(firstQual) || isMediumBaseQual(secondQual))
-            return READ_MISMATCH_MED_QUAL_PENALTY;
+            return READ_MISMATCH_MED_QUAL_SNV_PENALTY;
 
         return READ_MISMATCH_PENALTY;
     }
