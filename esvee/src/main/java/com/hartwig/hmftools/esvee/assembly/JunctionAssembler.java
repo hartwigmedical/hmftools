@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensio
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.recordSoftClipsAtJunction;
@@ -23,6 +24,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegion
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 
 import java.util.Collections;
@@ -466,6 +468,9 @@ public class JunctionAssembler
     {
         if(mJunction.Hotspot)
             return true;
+
+        if(isSbx() && !passSbxDistinctPrimePositionsFilter(support))
+            return false;
 
         Set<Integer> readPositions = Sets.newHashSet();
         Set<Integer> readEndPositions = null;

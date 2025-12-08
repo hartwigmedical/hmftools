@@ -1,21 +1,28 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
+
+import java.util.List;
 
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 public final class SeqTechUtils
 {
-    public static final int READ_MISMATCH_MEDIUM_REPEAT_COUNT_ULTIMA = 7;
-    public static final int READ_MISMATCH_LONG_REPEAT_COUNT_ULTIMA = 11;
+    public static final int ULTIMA_READ_MISMATCH_MEDIUM_REPEAT_COUNT = 7;
+    public static final int ULTIMA_READ_MISMATCH_LONG_REPEAT_COUNT = 11;
+
+    public static final int SBX_PRIME_POSITION_RANGE_THRESHOLD = 6;
 
     public static void setSeqTechSpecifics()
     {
         if(isUltima())
         {
-            AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT = READ_MISMATCH_MEDIUM_REPEAT_COUNT_ULTIMA;
-            AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT = READ_MISMATCH_LONG_REPEAT_COUNT_ULTIMA;
+            AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT = ULTIMA_READ_MISMATCH_MEDIUM_REPEAT_COUNT;
+            AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT = ULTIMA_READ_MISMATCH_LONG_REPEAT_COUNT;
         }
     }
 
@@ -96,5 +103,41 @@ public final class SeqTechUtils
         }
 
         return trimCountStart > 0 || trimCountEnd > 0;
+    }
+
+    public static boolean passSbxDistinctPrimePositionsFilter(final List<SupportRead> support)
+    {
+        // filter the 5' and 3' ranges are too tight
+        int minFivePrimePos = -1;
+        int maxFivePrimePos = -1;
+        int minThreePrimePos = -1;
+        int maxThreePrimePos = -1;
+
+        for(SupportRead read : support)
+        {
+            int fivePrimePos, threePrimePos;
+
+            if(read.orientation().isForward())
+            {
+                fivePrimePos = read.untrimmedStart();
+                threePrimePos = read.untrimmedEnd();
+            }
+            else
+            {
+                threePrimePos = read.untrimmedStart();
+                fivePrimePos = read.untrimmedEnd();
+            }
+
+            if(minFivePrimePos < 0 || fivePrimePos < minFivePrimePos)
+                minFivePrimePos = fivePrimePos;
+
+            if(minThreePrimePos < 0 || threePrimePos < minThreePrimePos)
+                minThreePrimePos = threePrimePos;
+
+            maxFivePrimePos = max(maxFivePrimePos, fivePrimePos);
+            maxThreePrimePos = max(maxThreePrimePos, threePrimePos);
+        }
+
+        return (maxFivePrimePos - minFivePrimePos) + (maxThreePrimePos - minThreePrimePos) > SBX_PRIME_POSITION_RANGE_THRESHOLD;
     }
 }

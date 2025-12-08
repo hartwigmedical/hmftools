@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setSbxSequencing;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.trimSbxUncertainBases;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isHigherBaseQualCategory;
 
@@ -14,10 +15,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.sequencing.SbxBamUtils;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import org.junit.After;
 import org.junit.Test;
@@ -103,5 +112,53 @@ public class SbxAssemblyTest
 
         assertEquals(0, read.trimCountStart());
         assertEquals(80, read.trimCountEnd());
+    }
+
+    @Test
+    public void testReadPrimeRange()
+    {
+        String readBases = REF_BASES_RANDOM_100;
+
+        String cigar = "60M40S";
+
+        List<Read> reads = Lists.newArrayList(
+                createRead(TEST_READ_ID, 100, readBases, cigar),
+                createRead(TEST_READ_ID, 101, readBases, cigar),
+                createRead(TEST_READ_ID, 102, readBases, cigar));
+
+        int juncReadDistance = 60; // irrelevant for this test
+        int matchMismatch = 0;
+
+        List<SupportRead> supportReads = reads.stream()
+                .map(x -> new SupportRead(x, SupportType.JUNCTION, juncReadDistance, matchMismatch, matchMismatch))
+                .collect(Collectors.toList());
+
+        assertFalse(passSbxDistinctPrimePositionsFilter(supportReads));
+
+        Read read = createRead(TEST_READ_ID, 104, readBases, cigar);
+        supportReads.add(new SupportRead(read, SupportType.JUNCTION, juncReadDistance, matchMismatch, matchMismatch ));
+
+        assertTrue(passSbxDistinctPrimePositionsFilter(supportReads));
+
+        // test reverse orientation reads
+        cigar = "40S60M";
+        reads = Lists.newArrayList(
+                createRead(TEST_READ_ID, 102, readBases, cigar),
+                createRead(TEST_READ_ID, 101, readBases, cigar),
+                createRead(TEST_READ_ID, 100, readBases, cigar));
+
+        reads.forEach(x -> x.bamRecord().setReadNegativeStrandFlag(true));
+
+        supportReads = reads.stream()
+                .map(x -> new SupportRead(x, SupportType.JUNCTION, juncReadDistance, matchMismatch, matchMismatch))
+                .collect(Collectors.toList());
+
+        assertFalse(passSbxDistinctPrimePositionsFilter(supportReads));
+
+        read = createRead(TEST_READ_ID, 98, readBases, cigar);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        supportReads.add(new SupportRead(read, SupportType.JUNCTION, juncReadDistance, matchMismatch, matchMismatch ));
+
+        assertTrue(passSbxDistinctPrimePositionsFilter(supportReads));
     }
 }

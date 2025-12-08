@@ -58,7 +58,7 @@ public class VcfWriter
     public static final String UNFILTERED_VCF_ID = "unfiltered";
 
     public VcfWriter(
-            final CallerConfig config, final VCFHeader vcfHeader, final String gripssVersion, final GenotypeIds genotypeIds,
+            final CallerConfig config, final VCFHeader vcfHeader, final String esveeVersion, final GenotypeIds genotypeIds,
             final SvDataCache dataCache)
     {
         mConfig = config;
@@ -68,12 +68,12 @@ public class VcfWriter
         String fileSampleId = config.fileSampleId();
 
         String unfilteredVcf = formVcfFilename(fileSampleId, UNFILTERED_VCF_ID);
-        mUnfilteredWriter = initialiseWriter(vcfHeader, gripssVersion, unfilteredVcf);
+        mUnfilteredWriter = initialiseWriter(vcfHeader, esveeVersion, unfilteredVcf);
 
         if(mConfig.hasTumor())
         {
             String somaticVcf = formVcfFilename(fileSampleId, SOMATIC_VCF_ID);
-            mSomaticWriter = initialiseWriter(vcfHeader, gripssVersion, somaticVcf);
+            mSomaticWriter = initialiseWriter(vcfHeader, esveeVersion, somaticVcf);
         }
         else
         {
@@ -83,7 +83,7 @@ public class VcfWriter
         if(mConfig.hasReference())
         {
             String germlineVcf = formVcfFilename(fileSampleId, GERMLINE_VCF_ID);
-            mGermlineWriter = initialiseWriter(vcfHeader, gripssVersion, germlineVcf);
+            mGermlineWriter = initialiseWriter(vcfHeader, esveeVersion, germlineVcf);
         }
         else
         {
