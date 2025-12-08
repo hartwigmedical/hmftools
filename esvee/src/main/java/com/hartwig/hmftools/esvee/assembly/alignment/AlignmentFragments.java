@@ -250,25 +250,6 @@ public class AlignmentFragments
         firstRead.setInferredFragmentLength(fragmentLength);
         secondRead.setInferredFragmentLength(fragmentLength);
 
-        int forwardReads = 0;
-        int reverseReads = 0;
-
-        if(firstRead.type() == SupportType.JUNCTION)
-        {
-            if(firstRead.orientation().isForward())
-                ++forwardReads;
-            else
-                ++reverseReads;
-        }
-
-        if(secondRead.type() == SupportType.JUNCTION)
-        {
-            if(secondRead.orientation().isForward())
-                ++forwardReads;
-            else
-                ++reverseReads;
-        }
-
         Set<Breakend> breakends = Sets.newHashSet();
 
         // add each breakend and its pair only once to ensure they are both updated with the same split/discordant status
@@ -288,7 +269,9 @@ public class AlignmentFragments
 
         for(Breakend breakend : breakends)
         {
-            breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+            breakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport);
+            breakend.updateBreakendReadStrand(firstRead.sampleIndex(), firstRead);
+            breakend.updateBreakendReadStrand(firstRead.sampleIndex(), secondRead);
             breakend.addInferredFragmentLength(fragmentLength, true);
 
             if(!inPrimaryAssembly)
@@ -297,7 +280,9 @@ public class AlignmentFragments
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
-                otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+                otherBreakend.updateBreakendSupport(firstRead.sampleIndex(), isSplitSupport);
+                otherBreakend.updateBreakendReadStrand(firstRead.sampleIndex(), firstRead);
+                otherBreakend.updateBreakendReadStrand(firstRead.sampleIndex(), secondRead);
                 otherBreakend.addInferredFragmentLength(fragmentLength, true);
 
                 if(!inPrimaryAssembly)
@@ -346,6 +331,7 @@ public class AlignmentFragments
 
     private static void addUniqueBreakends(final Set<Breakend> breakends, final List<ReadBreakendMatch> readBreakendMatches)
     {
+        // keeps only 1 of a paired of SV breakends to ensure processing of a pair is consistent
         for(ReadBreakendMatch breakendMatch : readBreakendMatches)
         {
             if(breakends.contains(breakendMatch.Breakend))
@@ -361,17 +347,6 @@ public class AlignmentFragments
     private void processSoloRead(final SupportRead read, boolean inPrimaryAssembly, final List<ReadBreakendMatch> readBreakendMatches)
     {
         // either for unpaired reads, or where one of R1 or R2 was not associated with the breakend(s)
-        int forwardReads = 0;
-        int reverseReads = 0;
-
-        if(read.type() == SupportType.JUNCTION)
-        {
-            if(read.orientation().isForward())
-                ++forwardReads;
-            else
-                ++reverseReads;
-        }
-
         Set<Breakend> breakends = Sets.newHashSet();
         addUniqueBreakends(breakends, readBreakendMatches);
 
@@ -425,7 +400,8 @@ public class AlignmentFragments
 
         for(Breakend breakend : breakends)
         {
-            breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+            breakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport);
+            breakend.updateBreakendReadStrand(read.sampleIndex(), read);
             breakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
 
             if(!inPrimaryAssembly)
@@ -434,7 +410,9 @@ public class AlignmentFragments
             if(!breakend.isSingle())
             {
                 Breakend otherBreakend = breakend.otherBreakend();
-                otherBreakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport, forwardReads, reverseReads);
+
+                otherBreakend.updateBreakendSupport(read.sampleIndex(), isSplitSupport);
+                otherBreakend.updateBreakendReadStrand(read.sampleIndex(), read);
                 otherBreakend.addInferredFragmentLength(inferredFragmentLength, setValidFragmentLength);
 
                 if(!inPrimaryAssembly)
@@ -607,10 +585,17 @@ public class AlignmentFragments
         return breakendMatches;
     }
 
+    protected static boolean readAlignmentSpansJunction(final Breakend breakend, final SupportRead read)
+    {
+        // first an aligned junction read
+        return breakend.Chromosome.equals(read.chromosome())
+            && read.unclippedStart() < breakend.Position && read.unclippedEnd() > breakend.Position;
+    }
+
     private boolean readSpansJunction(final Breakend breakend, final SupportRead read)
     {
         // first an aligned junction read
-        if(read.unclippedStart() < breakend.Position && read.unclippedEnd() > breakend.Position)
+        if(readAlignmentSpansJunction(breakend, read))
             return true;
 
         // next a misaligned junction read - crossing the segment boundary

@@ -490,6 +490,9 @@ public final class CigarUtils
 
     public static boolean hasValidCigar(final List<CigarElement> cigarElements)
     {
+        if(cigarElements.isEmpty())
+            return false;
+        
         int cigarCount = cigarElements.size();
 
         if(cigarCount > 1)

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvUtils.formSvType;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_QUAL_BOOST;
+import static com.hartwig.hmftools.esvee.assembly.alignment.AlignmentFragments.readAlignmentSpansJunction;
 import static com.hartwig.hmftools.esvee.assembly.alignment.HomologyData.NO_HOMOLOGY;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
@@ -24,6 +25,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvUtils;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -162,7 +165,7 @@ public class Breakend implements Comparable<Breakend>
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 
-    public void updateBreakendSupport(int sampleIndex, boolean isSplitFragment, int forwardReads, int reverseReads)
+    public void updateBreakendSupport(int sampleIndex, boolean isSplitFragment)
     {
         if(sampleIndex < mBreakendSupport.size())
         {
@@ -172,9 +175,22 @@ public class Breakend implements Comparable<Breakend>
                 ++breakendSupport.SplitFragments;
             else
                 ++breakendSupport.DiscordantFragments;
+        }
+    }
 
-            breakendSupport.ForwardReads += forwardReads;
-            breakendSupport.ReverseReads += reverseReads;
+    public void updateBreakendReadStrand(int sampleIndex, final SupportRead read)
+    {
+        if(read.type() != SupportType.JUNCTION || !readAlignmentSpansJunction(this, read))
+            return;
+
+        if(sampleIndex < mBreakendSupport.size())
+        {
+            BreakendSupport breakendSupport = mBreakendSupport.get(sampleIndex);
+
+            if(read.orientation().isForward())
+                ++breakendSupport.ForwardReads;
+            else
+                ++breakendSupport.ReverseReads;
         }
     }
 
