@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.datamodel.finding;
 
 import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDisruptions;
+import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.convertGermlineFullDels;
+import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticGainsDelsFromDrivers;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +17,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -38,6 +41,7 @@ public class FindingRecordFactory
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
                 .driverSomaticSmallVariants(SmallVariantFactory.create(
                         FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers()))
+                .driverSomaticGainDeletions(somaticGainsDelsFromDrivers(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
                 .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, FindingKeys.SampleType.SOMATIC)).toList())
                 .microsatelliteStability(
@@ -61,6 +65,12 @@ public class FindingRecordFactory
         if (germlineVariants != null && germlineDrivers != null) {
             builder.driverGermlineSmallVariants(SmallVariantFactory.create(
                     FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers));
+        }
+
+        List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
+
+        if(reportableGermlineFullDels != null) {
+            builder.driverGermlineGainDeletions(convertGermlineFullDels(reportableGermlineFullDels, purple.germlineDrivers()));
         }
 
         LinxRecord linx = orangeRecord.linx();
