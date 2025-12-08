@@ -482,6 +482,8 @@ public class PhaseSetBuilder
         Collections.sort(remainingCandidates, new ExtensionCandidate.StandardComparator());
 
         Set<JunctionAssembly> primaryLinkedAssemblies = Sets.newHashSet(mLocallyLinkedAssemblies);
+        mSplitLinks.forEach(x -> primaryLinkedAssemblies.add(x.first()));
+        mSplitLinks.forEach(x -> primaryLinkedAssemblies.add(x.second()));
 
         Set<JunctionAssembly> newlyExtendedAssemblies = Sets.newHashSet();
 
