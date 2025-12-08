@@ -216,7 +216,7 @@ An accurate estimation of VAF at each breakend also allows PURPLE to infer copy 
 
 A VCF with germline structural variants can also be provided. PURPLE can annotate such variants with purity adjusted local and variant copy number estimations in the tumor. Also, this information can be used to make calling of germline deletions more accurate.
 
-For these purposes, PURPLE provides full support and integration with the structural variant caller [ESVEE](https://github.com/hartwigmedical/hmftools/tree/53f14f3651bd3026a76095a835b9c2ea6c6dc149/esvee) and legacy support for [GRIDSS](https://github.com/PapenfussLab/gridss). 
+For these purposes, PURPLE provides full support and integration with the structural variant caller [ESVEE](https://github.com/hartwigmedical/hmftools/tree/53f14f3651bd3026a76095a835b9c2ea6c6dc149/esvee). 
 
 
 ### Small Variant Input VCFs (optional)
