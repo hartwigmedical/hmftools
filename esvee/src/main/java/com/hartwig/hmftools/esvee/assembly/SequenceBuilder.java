@@ -930,9 +930,9 @@ public class SequenceBuilder
         double mismatchPenalty = read.mismatchPenalty();
 
         int readOverlapLength = read.overlapBaseCount();
-        int readLength = maxReadLength > 0 ? min(maxReadLength, readOverlapLength) : readOverlapLength;
+        int cappedReadOverlap = maxReadLength > 0 ? min(maxReadLength, readOverlapLength) : readOverlapLength;
 
-        double permittedPenalty = permittedReadMismatches(readLength);
+        double permittedPenalty = permittedReadMismatches(cappedReadOverlap);
         if(mismatchPenalty > permittedPenalty)
             return true;
 
