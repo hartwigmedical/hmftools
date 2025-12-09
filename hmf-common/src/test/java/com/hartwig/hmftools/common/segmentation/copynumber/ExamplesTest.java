@@ -6,8 +6,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -20,6 +22,33 @@ public class ExamplesTest extends SegmentationTestBase
         PiecewiseConstantFit pcf = pcfForFile("amber1.tsv", 100.0, true, "tumorModifiedBAF");
         PiecewiseConstantFit expected = new PiecewiseConstantFit(new int[] { 5, 5, 5 }, new int[] { 0, 5, 10 }, d(0.515, 0.962, 0.511));
         assertEquals(expected, pcf);
+    }
+
+    @Test
+    public void amber2()
+    {
+        double[] rounded = readDoubles("amber2.tsv", "tumorModifiedBAF");
+        final double penalty = 0.036533517458912736;
+        PenaltyCalculator penaltyCalculator = new FixedPenalty(penalty);
+        Segmenter calculation = new Segmenter(rounded, penaltyCalculator);
+        // calculation.leastCostSegmentation.cost(0.036533517458912736) = 0.225
+        //        Segmentation fromR = new Segmentation()
+        List<double[]> rIntervals = splitIntoListOfSubArraysOfGivenLengths(List.of(1, 1, 108, 1, 19), rounded);
+        Segmentation rResult = new Segmentation(rIntervals);
+        double rCost = rResult.cost(penalty);
+        Assert.assertTrue(calculation.leastCostSegmentation.cost(penalty) < rCost);
+    }
+
+    private static List<double[]> splitIntoListOfSubArraysOfGivenLengths(List<Integer> lengths, double[] doubles)
+    {
+        List<double[]> result = new ArrayList<>();
+        int cursor = 0;
+        for(int length : lengths)
+        {
+            result.add(Arrays.copyOfRange(doubles, cursor, cursor + length));
+            cursor += length;
+        }
+        return result;
     }
 
     @Test
