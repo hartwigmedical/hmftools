@@ -51,4 +51,7 @@ public final class SvConstants
     public static final double LINE_REF_BASE_REPEAT_FACTOR = 1.5;
     public static final int LINE_INDEL_MAX_OVERLAP = 40;
     public static final int LINE_INDEL_MAX_GAP = 30;
+
+    public static final String ASSEMBLY_INFO_DELIM = "_";
+    public static final String JUNCTION_COORD_DELIM = ":";
 }

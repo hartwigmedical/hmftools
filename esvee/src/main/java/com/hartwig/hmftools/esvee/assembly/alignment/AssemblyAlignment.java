@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker.isAssembl
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
+import static com.hartwig.hmftools.esvee.common.SvConstants.ASSEMBLY_INFO_DELIM;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -20,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -120,12 +122,24 @@ public class AssemblyAlignment
         return mAssemblies.stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(ITEM_DELIM));
     }
 
-    public String info()
+    public String info() { return info(-1); }
+
+    public String info(int limit)
     {
         if(mAssemblies.size() == 1)
             return mAssemblies.get(0).junction().coordsTyped(true);
 
-        return mAssemblies.stream().map(x -> x.junction().coordsTyped(true)).collect(Collectors.joining("_"));
+        StringJoiner sj = new StringJoiner(ASSEMBLY_INFO_DELIM);
+
+        for(int i = 0; i < mAssemblies.size(); ++i)
+        {
+            if(limit > 0 && i >= limit)
+                break;
+
+            sj.add(mAssemblies.get(i).junction().coordsTyped(true));
+        }
+
+        return sj.toString();
     }
 
     private enum LinkType

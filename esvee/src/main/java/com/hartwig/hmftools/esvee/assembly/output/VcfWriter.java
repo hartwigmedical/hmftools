@@ -326,7 +326,7 @@ public class VcfWriter implements AutoCloseable
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 
         builder.attribute(ASM_ID, assemblyAlignment.id());
-        builder.attribute(ASM_INFO, assemblyAlignment.info());
+        builder.attribute(ASM_INFO, assemblyAlignment.info(10));
         builder.attribute(ASM_LENGTH, assemblyAlignment.fullSequenceLength());
 
         if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())

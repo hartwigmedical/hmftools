@@ -340,7 +340,7 @@ public class FiltersTest
 
         assertTrue(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
 
-        commonAttributes.put(ASM_INFO, "1:100:1;2:2000:-1"); // not a single assembly
+        commonAttributes.put(ASM_INFO, "1:100:1_2:2000:-1"); // not a single assembly
 
         var = createSv(
                 "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",

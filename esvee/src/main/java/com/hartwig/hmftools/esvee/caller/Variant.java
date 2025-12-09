@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.esvee.common.SvConstants.ASSEMBLY_INFO_DELIM;
+import static com.hartwig.hmftools.esvee.common.SvConstants.JUNCTION_COORD_DELIM;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -216,12 +218,13 @@ public class Variant
         if(assemblyInfoStr.isEmpty())
             return Collections.emptyList();
 
-        String[] assemblyStrs = assemblyInfoStr.split(ITEM_DELIM, -1);
+        // chr10:87940542:1_chr10:87952584:-1
+        String[] assemblyStrs = assemblyInfoStr.split(ASSEMBLY_INFO_DELIM, -1);
         List<Junction> junctions = Lists.newArrayListWithCapacity(assemblyStrs.length);
 
         for(String assemblyStr : assemblyStrs)
         {
-            String[] items = assemblyStr.split(":");
+            String[] items = assemblyStr.split(JUNCTION_COORD_DELIM);
 
             if(items.length < 3)
                 continue;

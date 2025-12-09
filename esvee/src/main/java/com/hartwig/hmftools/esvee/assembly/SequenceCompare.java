@@ -269,6 +269,9 @@ public final class SequenceCompare
     {
         boolean hasMedium = false;
 
+        rangeStart = max(0, rangeStart);
+        rangeEnd = min(rangeEnd, baseQuals.length - 1);
+
         for(int i = rangeStart; i <= rangeEnd; ++i)
         {
             if(isLowBaseQual(baseQuals[i]))
