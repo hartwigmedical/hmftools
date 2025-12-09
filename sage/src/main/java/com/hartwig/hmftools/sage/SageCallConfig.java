@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DE
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.common.NumberEvents.setRecomputeNumMutations;
 
 import java.io.File;
 import java.util.Arrays;
@@ -62,6 +63,8 @@ public class SageCallConfig
             Arrays.stream(configBuilder.getValue(TUMOR_BAM, Strings.EMPTY).split(SAMPLE_DELIM))
                     .forEach(x -> TumorBams.add(Common.SampleDataDir + x));
         }
+
+        setRecomputeNumMutations(TumorBams);
 
         mResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR, ""));
         PanelBed = getReferenceFile(configBuilder, PANEL_BED);

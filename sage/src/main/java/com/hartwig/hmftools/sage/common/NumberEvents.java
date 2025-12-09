@@ -5,8 +5,11 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
+
+import static htsjdk.samtools.util.FileExtensions.CRAM;
+
+import java.util.List;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -14,9 +17,18 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int calc(final SAMRecord record, final RefSequence refSequence)
+    public static boolean RECOMPUTE_MISSING_NM = false;
+
+    public static void setRecomputeNumMutations(final List<String> bamFiles)
     {
-        int nm = getNumEvents(record);
+        // assumption is that CRAMs have dropped NM for compression and if missing it needs to be recomputed
+        if(bamFiles.stream().anyMatch(x -> x.endsWith(CRAM)))
+            RECOMPUTE_MISSING_NM = true;
+    }
+
+    public static int calcAdjustedNumMutations(final SAMRecord record, final RefSequence refSequence)
+    {
+        int nm = getOrCalcNm(record, refSequence);
 
         int additionalIndels = 0;
 
@@ -32,6 +44,20 @@ public final class NumberEvents
         }
 
         return nm - additionalIndels;
+    }
+
+    private static int getOrCalcNm(final SAMRecord record, final RefSequence refSequence)
+    {
+        Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+        if(nm == null && !RECOMPUTE_MISSING_NM)
+            return 0;
+
+        if(nm instanceof Integer)
+            return (int) nm;
+
+        int offset = refSequence.Start - 1;
+        return SequenceUtil.calculateSamNmTag(record, refSequence.Bases, offset);
     }
 
     public static double calcSoftClipAdjustment(final SAMRecord record)

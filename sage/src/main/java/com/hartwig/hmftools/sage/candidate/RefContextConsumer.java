@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.NO_POSITION_INFO;
 import static com.hartwig.hmftools.common.bam.CigarUtils.getPositionFromReadIndex;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.isImproperPair;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
@@ -16,6 +14,7 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_REF_TEST_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.common.Microhomology.findLeftHomologyShift;
+import static com.hartwig.hmftools.sage.common.NumberEvents.calcAdjustedNumMutations;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.calcEventPenalty;
 
 import java.util.List;
@@ -233,8 +232,6 @@ public class RefContextConsumer
     {
         ReadInfo readInfo = new ReadInfo();
 
-        int additionalIndels = 0;
-
         for(CigarElement cigarElement : record.getCigar())
         {
             switch(cigarElement.getOperator())
@@ -246,17 +243,12 @@ public class RefContextConsumer
                 case S:
                     readInfo.SoftClipLength += cigarElement.getLength();
                     break;
-
-                case D:
-                case I:
-                    additionalIndels += cigarElement.getLength() - 1;
-                    break;
             }
         }
 
         if(!record.getSupplementaryAlignmentFlag())
         {
-            readInfo.NumberOfEvents = max(getNumEvents(record) - additionalIndels, 0);
+            readInfo.NumberOfEvents = calcAdjustedNumMutations(record, mRefSequence);
         }
 
         return readInfo;
