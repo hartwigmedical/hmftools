@@ -511,7 +511,6 @@ public class AssemblyAligner extends ThreadTask
                     read.baseLength() - read.junctionReadStartDistance() : read.junctionReadStartDistance();
 
             extensionLengths.add(extensionLength);
-
         }
 
         double maxLongReadCount = min(max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, 1.0), WEAK_ASSEMBLY_UNPAIRED_MAX_READS);

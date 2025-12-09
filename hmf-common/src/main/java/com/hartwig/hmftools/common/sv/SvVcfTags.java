@@ -32,6 +32,9 @@ public final class SvVcfTags
     public static final String ASM_ID = "ASMID";
     public static final String ASM_ID_DESC = "Unique id(s) of assembly(s) containing the breakend";
 
+    public static final String ASM_INFO = "ASMINFO";
+    public static final String ASM_INFO_DESC = "Original junction coordinates";
+
     public static final String ASM_LENGTH = "ASMLEN";
     public static final String ASM_LENGTH_DESC = "Assembly sequence length";
 

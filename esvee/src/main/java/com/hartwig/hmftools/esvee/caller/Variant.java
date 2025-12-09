@@ -10,20 +10,26 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvUtils.hasShortIndelLength;
 import static com.hartwig.hmftools.common.sv.SvUtils.isIndel;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
 import com.hartwig.hmftools.esvee.common.FilterType;
 
@@ -201,6 +207,33 @@ public class Variant
             if(filterType != null)
                 mFilters.add(filterType);
         }
+    }
+
+    public List<Junction> originalAssemblies()
+    {
+        String assemblyInfoStr = mBreakends[0].Context.getAttributeAsString(ASM_INFO, "");
+
+        if(assemblyInfoStr.isEmpty())
+            return Collections.emptyList();
+
+        String[] assemblyStrs = assemblyInfoStr.split(ITEM_DELIM, -1);
+        List<Junction> junctions = Lists.newArrayListWithCapacity(assemblyStrs.length);
+
+        for(String assemblyStr : assemblyStrs)
+        {
+            String[] items = assemblyStr.split(":");
+
+            if(items.length < 3)
+                continue;
+
+            String chromosome = items[0];
+            int position = Integer.parseInt(items[1]);
+            Orientation orientation = Orientation.fromByteStr(items[2]);
+
+            junctions.add(new Junction(chromosome, position, orientation));
+        }
+
+        return junctions;
     }
 
     public String toString()

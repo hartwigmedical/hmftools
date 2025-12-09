@@ -89,9 +89,9 @@ public class FilterConstants
     public static final double INV_SHORT_FRAGMENT_MIN_AF = 0.05;
     public static final int INV_SHORT_FRAGMENT_AF_RATIO = 50;
 
-    public static final double THREE_PRIME_RANGE_PARAM1 = 5;
-    public static final double THREE_PRIME_RANGE_PARAM2 = 2;
-    public static final int THREE_PRIME_RANGE_MAX_READS = 10;
+    public static final int PRIME_MAX_PERMITTED_RANGE = 50;
+    public static final int PRIME_MAX_BASE_FACTOR = 10;
+    public static final int PRIME_MAX_SGL_FACTOR = 5;
 
     public static final int INV_ADJACENT_LENGTH = 100;
     public static final int INV_ADJACENT_MIN_UPS = 4;

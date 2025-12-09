@@ -39,9 +39,9 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_FWD_STRAND_2;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_1;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_STRAND_2;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM1;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_PARAM2;
-import static com.hartwig.hmftools.esvee.caller.FilterConstants.THREE_PRIME_RANGE_MAX_READS;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_BASE_FACTOR;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_PERMITTED_RANGE;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_SGL_FACTOR;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
@@ -63,6 +63,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -390,6 +391,10 @@ public class VariantFilters
         if(hasPairedReads())
             return false;
 
+        List<Junction> originalAssemblies = var.originalAssemblies();
+
+        int splitFragmentFactor = originalAssemblies.size() == 1 ? PRIME_MAX_SGL_FACTOR : 1;
+
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(var.breakends()[se] == null)
@@ -417,7 +422,7 @@ public class VariantFilters
             if(maxStrandBias > 0)
                 continue;
 
-            double maxPermittedRange = min(THREE_PRIME_RANGE_PARAM1 + splitFragments / THREE_PRIME_RANGE_PARAM2, THREE_PRIME_RANGE_MAX_READS);
+            double maxPermittedRange = min(PRIME_MAX_BASE_FACTOR + splitFragments * splitFragmentFactor, PRIME_MAX_PERMITTED_RANGE);
 
             if(minPositionRange < maxPermittedRange)
                 return true;

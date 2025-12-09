@@ -492,7 +492,7 @@ public final class CigarUtils
     {
         if(cigarElements.isEmpty())
             return false;
-        
+
         int cigarCount = cigarElements.size();
 
         if(cigarCount > 1)

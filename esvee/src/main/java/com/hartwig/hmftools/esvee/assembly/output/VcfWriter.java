@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALTALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LENGTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_SEG_INDEX;
@@ -194,6 +196,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(LINE_SITE, 1, VCFHeaderLineType.Flag, LINE_SITE_DESC));
 
         metaData.add(new VCFInfoHeaderLine(ASM_ID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASM_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASM_INFO, 1, VCFHeaderLineType.String, ASM_INFO_DESC));
         metaData.add(new VCFInfoHeaderLine(ASM_LENGTH, 1, VCFHeaderLineType.Integer, ASM_LENGTH_DESC));
         metaData.add(new VCFInfoHeaderLine(ASM_SEG_INDEX, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASM_SEG_INDEX_DESC));
         metaData.add(new VCFInfoHeaderLine(BE_ASM_POS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BE_ASM_POS_DESC));
@@ -323,6 +326,7 @@ public class VcfWriter implements AutoCloseable
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 
         builder.attribute(ASM_ID, assemblyAlignment.id());
+        builder.attribute(ASM_INFO, assemblyAlignment.info());
         builder.attribute(ASM_LENGTH, assemblyAlignment.fullSequenceLength());
 
         if(assemblyAlignment.assemblies().stream().anyMatch(x -> x.hasLineSequence())

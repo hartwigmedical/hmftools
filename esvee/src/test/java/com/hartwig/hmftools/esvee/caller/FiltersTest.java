@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_INFO;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
@@ -9,6 +10,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNIQUE_FRAG_POSITIONS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -21,6 +24,7 @@ import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.createSv;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.INV_ADJACENT_MIN_UPS;
 import static com.hartwig.hmftools.esvee.caller.SvDataCache.buildBreakendMap;
+import static com.hartwig.hmftools.esvee.common.SvConstants.SEQUENCING_TYPE;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +35,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.esvee.common.FilterType;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantFragType;
@@ -310,6 +315,52 @@ public class FiltersTest
 
         assertTrue(inv6.filters().contains(FilterType.INV_SHORT_ISOLATED));
         assertTrue(inv7.filters().contains(FilterType.INV_SHORT_ISOLATED));
+    }
+
+    @Test
+    public void testPrimeRangeStrandBias()
+    {
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+
+        commonAttributes = Maps.newHashMap();
+        commonAttributes.put(THREE_PRIME_RANGE, new int[] { 3, 5});
+        commonAttributes.put(ASM_INFO, "1:100:1");
+
+        Map<String, Object> tumorAttributes = Maps.newHashMap();
+        tumorAttributes.put(SPLIT_FRAGS, 4);
+        tumorAttributes.put(STRAND_BIAS, 1);
+
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        SEQUENCING_TYPE = SequencingType.SBX;
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
+
+        commonAttributes.put(ASM_INFO, "1:100:1;2:2000:-1"); // not a single assembly
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
+
+        commonAttributes.put(THREE_PRIME_RANGE, new int[] { 20, 30});
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
+
+        SEQUENCING_TYPE = SequencingType.ILLUMINA;
     }
 
     @Test
