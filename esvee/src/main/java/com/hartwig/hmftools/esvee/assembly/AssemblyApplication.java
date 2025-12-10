@@ -149,7 +149,8 @@ public class AssemblyApplication
 
             writeVariants(assemblyAlignments, breakends);
 
-            runVisualiser(assemblyAlignments);
+            if(mConfig.RunVisualiser)
+                runVisualiser(assemblyAlignments);
 
             if(mConfig.PerfDebug)
             {
