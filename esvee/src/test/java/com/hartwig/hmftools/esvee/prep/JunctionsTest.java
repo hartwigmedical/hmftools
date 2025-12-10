@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -371,7 +374,7 @@ public class JunctionsTest
         ReadGroup readGroup2 = new ReadGroup(supp2, readIdTrimmer.trim(supp2.id()));
         readGroupsMap.put(readGroup2.id(), readGroup2);
 
-        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer, 0);
         assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
         assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
 
@@ -382,7 +385,7 @@ public class JunctionsTest
         readGroup2 = new ReadGroup(primary2, readIdTrimmer.trim(primary2.id()));
         readGroupsMap.put(readGroup2.id(), readGroup2);
 
-        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer, 0);
         assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
         assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
 
@@ -396,7 +399,7 @@ public class JunctionsTest
         readGroup2 = new ReadGroup(supp2, readIdTrimmer.trim(supp2.id()));
         readGroupsMap.put(readGroup2.id(), readGroup2);
 
-        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer, 0);
         assertEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
         assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
 
@@ -406,9 +409,65 @@ public class JunctionsTest
         readGroup2 = new ReadGroup(primary2, readIdTrimmer.trim(primary2.id()));
         readGroupsMap.put(readGroup2.id(), readGroup2);
 
-        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer);
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer, 0);
         assertEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
         assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
+    }
+
+    @Test
+    public void testSbxPrimarySupplementaryDuplicates()
+    {
+        String readBases = REF_BASES.substring(0, 50);
+
+        String lowerCigar1 = "20S30M";
+        String upperCigar1 = "20M30S";
+
+        String lowerCigar2 = "20S31M";
+        String upperCigar2 = "20M31S";
+
+        SupplementaryReadData suppDataUpper = new SupplementaryReadData(
+                CHR_3, 1000, SupplementaryReadData.SUPP_POS_STRAND, upperCigar1, DEFAULT_MAP_QUAL);
+
+        PrepRead primary1 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1000, readBases, lowerCigar1, NO_CHROMOSOME_NAME, NO_POSITION, false,
+                false, suppDataUpper, false, NO_CIGAR));
+        primary1.record().setReadPairedFlag(false);
+        primary1.setReadType(JUNCTION);
+
+        SupplementaryReadData suppDataLower = new SupplementaryReadData(
+                CHR_1, 1001, SupplementaryReadData.SUPP_POS_STRAND, lowerCigar1, DEFAULT_MAP_QUAL);
+
+        PrepRead supp1 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                primary1.id(), CHR_3, 1000, readBases, upperCigar1, NO_CHROMOSOME_NAME, NO_POSITION, false,
+                true, suppDataLower, false, NO_CIGAR));
+        supp1.record().setReadPairedFlag(false);
+        supp1.setReadType(CANDIDATE_SUPPORT);
+
+        PrepRead supp2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1001, readBases, lowerCigar1, NO_CHROMOSOME_NAME, NO_POSITION, false,
+                true, suppDataUpper, false, NO_CIGAR));
+        supp2.record().setReadPairedFlag(false);
+        supp2.setReadType(JUNCTION);
+
+        PrepRead primary2 = PrepRead.from(SamRecordTestUtils.createSamRecord(
+                supp2.id(), CHR_3, 1001, readBases, upperCigar1, NO_CHROMOSOME_NAME, NO_POSITION, false,
+                false, suppDataLower, true, NO_CIGAR));
+        primary2.record().setReadPairedFlag(false);
+        primary2.setReadType(CANDIDATE_SUPPORT);
+
+        ReadIdTrimmer readIdTrimmer = new ReadIdTrimmer(true);
+
+        Map<String,ReadGroup> readGroupsMap = Maps.newHashMap();
+
+        ReadGroup readGroup1 = new ReadGroup(primary1, readIdTrimmer.trim(primary1.id()));
+        readGroupsMap.put(readGroup1.id(), readGroup1);
+
+        ReadGroup readGroup2 = new ReadGroup(supp2, readIdTrimmer.trim(supp2.id()));
+        readGroupsMap.put(readGroup2.id(), readGroup2);
+
+        JunctionUtils.markSupplementaryDuplicates(readGroupsMap, readIdTrimmer, 2);
+        assertNotEquals(ReadGroupStatus.DUPLICATE, readGroup1.groupStatus());
+        assertEquals(ReadGroupStatus.DUPLICATE, readGroup2.groupStatus());
     }
 
     @Test

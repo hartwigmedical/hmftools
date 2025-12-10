@@ -7,8 +7,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.XS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_MAX_DUPLICATE_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.belowMinQual;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_SCORE_DIFF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_CALC_ALIGNMENT_LOWER_SCORE;
@@ -474,7 +476,8 @@ public final class JunctionUtils
         return xsScore != null && asScore - xsScore >= MIN_ALIGNMENT_SCORE_DIFF;
     }
 
-    public static int markSupplementaryDuplicates(final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer)
+    public static int markSupplementaryDuplicates(
+            final Map<String,ReadGroup> readGroupMap, final ReadIdTrimmer readIdTrimmer, int permittedPositionDiff)
     {
         Map<Integer,List<PrepRead>> initialPositionMap = Maps.newHashMap();
 
@@ -489,7 +492,10 @@ public final class JunctionUtils
             // require paired reads with a supplementary read
             for(PrepRead read : readGroup.reads())
             {
-                if(!read.isMateMapped() || !read.hasSuppAlignment())
+                if(!read.hasSuppAlignment())
+                    continue;
+
+                if(read.isPaired() && !read.isMateMapped())
                     continue;
 
                 if(read.readType() != ReadType.JUNCTION && read.readType() != ReadType.CANDIDATE_SUPPORT)
@@ -497,7 +503,23 @@ public final class JunctionUtils
 
                 int unclippedPosition = unclippedPosition(read);
 
-                List<PrepRead> matchingGroups = initialPositionMap.get(unclippedPosition);
+                List<PrepRead> matchingGroups = null;
+
+                if(permittedPositionDiff == 0)
+                {
+                    matchingGroups = initialPositionMap.get(unclippedPosition);
+                }
+                else
+                {
+                    for(Map.Entry<Integer,List<PrepRead>> entry : initialPositionMap.entrySet())
+                    {
+                        if(abs(entry.getKey() - unclippedPosition) <= permittedPositionDiff)
+                        {
+                            matchingGroups = entry.getValue();
+                            break;
+                        }
+                    }
+                }
 
                 if(matchingGroups == null)
                 {
@@ -544,8 +566,19 @@ public final class JunctionUtils
                 {
                     FragmentData nextFrag = fragments.get(j);
 
-                    if(!firstFrag.matches(nextFrag) || firstFrag.IsPrimary == nextFrag.IsPrimary)
+                    if(firstFrag.IsPrimary == nextFrag.IsPrimary)
                         continue;
+
+                    if(permittedPositionDiff == 0)
+                    {
+                        if(!firstFrag.matches(nextFrag))
+                            continue;
+                    }
+                    else
+                    {
+                        if(!firstFrag.withinPositionRange(nextFrag, permittedPositionDiff))
+                            continue;
+                    }
 
                     // the supp will be removed if it is the lower coordinate of the 2, or its supplementary is likewise
                     // but favour consensus reads over non-consensus

@@ -34,6 +34,7 @@ import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_ADJA
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_MISMATCH_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_DUPLEX_READ_INDEX_TAG;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_MAX_DUPLICATE_DISTANCE;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_SIMPLEX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_YC_TAG;
 import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.RAW_SIMPLEX_QUAL;
@@ -83,7 +84,7 @@ public final class SbxRoutines
 
     public static int SBX_CONSENSUS_MAX_DEPTH = 20;
 
-    public static final int DEFAULT_SBX_MAX_DUPLICATE_DISTANCE = 2;
+    public static final int DEFAULT_SBX_MAX_DUPLICATE_DISTANCE = SBX_MAX_DUPLICATE_DISTANCE;
 
     public static void prepProcessRead(final SAMRecord record)
     {
@@ -389,12 +390,16 @@ public final class SbxRoutines
     {
         List<CigarElement> cigarElements = cigarElementsFromStr(suppData.Cigar);
         int lastIndex = cigarElements.size() - 1;
-        if(cigarElements.get(0).getOperator() == S)
+
+        int leftSoftClipLength = cigarElements.get(0).getOperator() == S ? cigarElements.get(0).getLength() : 0;
+        int rightSoftClipLength = cigarElements.get(lastIndex).getOperator() == S ? cigarElements.get(lastIndex).getLength() : 0;
+
+        if(leftSoftClipLength > rightSoftClipLength)
         {
             CigarElement softClip = cigarElements.get(0);
             cigarElements.set(0, new CigarElement(softClip.getLength() - softClipReduction, S));
         }
-        else if(cigarElements.get(lastIndex).getOperator() == S)
+        else if(rightSoftClipLength > leftSoftClipLength)
         {
             CigarElement softClip = cigarElements.get(lastIndex);
             cigarElements.set(lastIndex, new CigarElement(softClip.getLength() - softClipReduction, S));

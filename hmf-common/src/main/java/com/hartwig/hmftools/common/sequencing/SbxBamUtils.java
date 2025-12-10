@@ -29,6 +29,8 @@ public class SbxBamUtils
     public static final String SBX_YC_TAG = "YC";
     public static final String SBX_DUPLEX_READ_INDEX_TAG = "YX";
 
+    public static final int SBX_MAX_DUPLICATE_DISTANCE = 2;
+
     public static boolean isHighBaseQual(final byte qual)
     {
         return qual > SBX_MEDIUM_QUAL_UPPER;

@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sequencing.SbxBamUtils.SBX_MAX_DUPLICATE_DISTANCE;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.INVALID_JUNC_INDEX;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.SIMPLE_SEARCH_COUNT;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.findJunctionMatchIndex;
@@ -224,7 +226,9 @@ public class JunctionTracker
 
         perfCounterStart(PerfCounters.InitJunctions);
 
-        int duplicateGroups = markSupplementaryDuplicates(mReadGroupMap, mReadIdTrimmer);
+        int permittedPositionDiff = isSbx() ? SBX_MAX_DUPLICATE_DISTANCE : 0; // matching Redux
+
+        int duplicateGroups = markSupplementaryDuplicates(mReadGroupMap, mReadIdTrimmer, permittedPositionDiff);
 
         if(duplicateGroups > 100)
         {
