@@ -149,7 +149,7 @@ public final class AssemblyWriterUtils
         }
         else
         {
-            phaseSetId = String.valueOf(phaseGroup.nextPhaseSetId());
+            phaseSetId = String.valueOf(assembly.nonPhaseSetId());
             phaseSetCount = 1;
         }
 

@@ -65,6 +65,7 @@ public class JunctionAssembly
     private final List<RemoteRegion> mRemoteRegions;
 
     private PhaseGroup mPhaseGroup;
+    private int mNonPhasedId;
     private AssemblyOutcome mOutcome;
     private String mAssemblyAlignmentInfo;
 
@@ -131,6 +132,7 @@ public class JunctionAssembly
         mRemoteRegions = Lists.newArrayList();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
+        mNonPhasedId = -1;
         mOutcome = UNSET;
         mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
@@ -639,6 +641,9 @@ public class JunctionAssembly
         // can only be a part of one and could add a reference but for now is retrieved
         return mPhaseGroup != null ? mPhaseGroup.findPhaseSet(this) : null;
     }
+
+    public int nonPhaseSetId() { return mNonPhasedId; }
+    public void setNonPhaseSetId(int id) { mNonPhasedId = id; }
 
     public AssemblyOutcome outcome() { return mOutcome; }
 

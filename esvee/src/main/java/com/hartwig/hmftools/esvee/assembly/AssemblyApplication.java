@@ -413,6 +413,9 @@ public class AssemblyApplication
         for(JunctionAssembly assembly : allAssemblies)
         {
             assembly.setId(assemblyId++);
+
+            if(assembly.phaseSet() == null)
+                assembly.setNonPhaseSetId(assembly.phaseGroup().nextPhaseSetId());
         }
 
         int assemblyAlignmentId = 0;

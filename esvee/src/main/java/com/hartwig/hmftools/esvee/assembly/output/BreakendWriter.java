@@ -30,6 +30,7 @@ import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.assembly.types.InsertionType;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.WriteType;
 
 public class BreakendWriter
@@ -129,13 +130,16 @@ public class BreakendWriter
 
             Map<Breakend,String> closestAssemblyMap = Maps.newHashMap();
 
+            JunctionAssembly firstAssembly = assemblyAlignment.assemblies().get(0);
+            PhaseGroup phaseGroup = firstAssembly.phaseGroup();
+
             for(Breakend breakend : assemblyAlignment.breakends())
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
 
                 sj.add(String.valueOf(breakend.id()));
-                sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
-                sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : -1));
+                sj.add(String.valueOf(firstAssembly.id()));
+                sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : firstAssembly.nonPhaseSetId()));
                 sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(!breakend.isSingle() ? String.valueOf(breakend.otherBreakend().id()) : "");
                 sj.add(assemblyInfo);
@@ -150,7 +154,6 @@ public class BreakendWriter
                     sj.add(String.valueOf(breakend.otherBreakend().Position));
                     sj.add(String.valueOf(breakend.otherBreakend().Orient));
                     sj.add(String.valueOf(breakend.svLength()));
-
                 }
                 else
                 {
