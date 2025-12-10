@@ -1,79 +1,90 @@
 package com.hartwig.hmftools.esvee.assembly.vis;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
+import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
+import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
 import static j2html.TagCreator.body;
+import static j2html.TagCreator.div;
 import static j2html.TagCreator.html;
+import static j2html.TagCreator.rawHtml;
+import static j2html.TagCreator.span;
+import static j2html.TagCreator.td;
+import static j2html.TagCreator.tr;
 
 import java.awt.Color;
-import java.io.BufferedReader;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.StringJoiner;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
-import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.SimpleVariant;
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
-import com.hartwig.hmftools.common.vis.BaseViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
-import com.hartwig.hmftools.common.vis.GeneRegionViewModel;
-import com.hartwig.hmftools.common.vis.SvgRender;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
-import com.hartwig.hmftools.esvee.prep.types.FragmentData;
+import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.jfree.svg.SVGGraphics2D;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.variant.variantcontext.VariantContext;
 import j2html.tags.DomContent;
-import j2html.tags.specialized.TdTag;
 
 public class AssemblyVisualiser
 {
     private final AssemblyConfig mConfig;
+    private final AssemblyAlignment mAssemblyAlignment;
 
-    public AssemblyVisualiser(final AssemblyConfig config)
+    private final List<BaseSeqViewModel> mRefViewModel;
+
+    public AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
         mConfig = config;
+        mAssemblyAlignment = assemblyAlignment;
+        mRefViewModel = getRefViewModel_(assemblyAlignment);
     }
 
-    public void writeVisFiles(final AssemblyAlignment assemblyAlignment)
+    public void writeVisFiles()
     {
-        String info = assemblyAlignment.info();
+        String info = mAssemblyAlignment.info();
         String filename = getFilename(info);
+
+        CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
+        CssBuilder verticalSpacerStyle = CssBuilder.EMPTY.height(CssSize.em(1));
+
+        DomContent verticalSpacer = div().withStyle(verticalSpacerStyle.toString());
+        DomContent variantInfo = renderVariantInfo();
+
+        List<DomContent> readTableRows = renderReadTable();
+        DomContent readTable = div(styledTable(readTableRows, readTableStyle));
 
         // TODO: JavaScript
         String htmlStr = html(
-                body("Hello world!").withStyle(BASE_FONT_STYLE.toString())).render();
+                body(
+                        variantInfo,
+                        verticalSpacer,
+                        readTable
+                ).withStyle(BASE_FONT_STYLE.toString())).render();
 
         // TODO: configure vis dir
         // TODO: make sure dir path exists
@@ -93,6 +104,182 @@ public class AssemblyVisualiser
             SV_LOGGER.error("failed to write output file({}): {}", filePath, e.toString());
             System.exit(1);
         }
+    }
+
+    private DomContent renderVariantInfo()
+    {
+        CssBuilder strongStyle = CssBuilder.EMPTY.fontWeight("bold");
+
+        StringJoiner infoJoiner = new StringJoiner(" ");
+        infoJoiner.add(format("%s[normal: %s]", mConfig.TumorIds.get(0), mConfig.ReferenceIds.get(0)));
+        infoJoiner.add(mAssemblyAlignment.toString());
+        return div(infoJoiner.toString()).withStyle(strongStyle.toString());
+    }
+
+    private List<DomContent> renderReadTable()
+    {
+        CssBuilder lightGrayBgStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY);
+        CssBuilder verticalHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).writingMode("vertical-rl");
+        CssBuilder headerStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).textAlign("right");
+        CssBuilder matchTypeBorderStyle = CssBuilder.EMPTY.borderBottom(CssSize.px(2), "solid", Color.BLACK);
+        CssBuilder matchTypeStyle = verticalHeaderStyle.merge(matchTypeBorderStyle).textAlign("center").padding(CssSize.px(4));
+        CssBuilder tableInfoCellStyle = CssBuilder.EMPTY.fontSizePt((int) Math.round(2.0 / 3.0 * READ_HEIGHT_PX)).fontWeight("bold");
+        CssBuilder verticalSpacerDivStyle = CssBuilder.EMPTY.height(CssSize.em(1)).padding(CssSize.ZERO).margin(CssSize.ZERO);
+
+        List<DomContent> tableRows = Lists.newArrayList();
+
+        // header row
+        List<DomContent> headerCols = Lists.newArrayList();
+
+        headerCols.add(td(""));
+        headerCols.add(td("XXX"));
+        // TODO: headerCols.add(td(rawHtml(renderCoords(READ_HEIGHT_PX, mViewRegion, mVariant.position(), DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
+        DomContent headerRow = tr().with(headerCols);
+        tableRows.add(headerRow);
+
+        // ref row
+        DomContent refRow = tr(td("ref").withStyle(headerStyle.toString()), td(renderRef()));
+        tableRows.add(refRow);
+//
+//        // context row
+//        DomContent contextRow =
+//                tr(td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderContext()));
+//        tableRows.add(contextRow);
+//
+//        for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
+//        {
+//            List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
+//            if(records == null || records.isEmpty())
+//            {
+//                continue;
+//            }
+//
+//            Collections.sort(records);
+//            DomContent typeColContent = rawHtml(
+//                    format("%s<br>(%d/%d)", matchType.name(), records.size(), mReadCountByType.getOrDefault(matchType, 0)));
+//
+//            for(int i = 0; i < records.size(); ++i)
+//            {
+//                ReadEvidenceRecord record = records.get(i);
+//                boolean isLastOfType = i == records.size() - 1;
+//
+//                List<DomContent> cols = Lists.newArrayList();
+//                if(i == 0)
+//                {
+//                    cols.add(td(typeColContent).attr("rowspan", records.size()).withStyle(matchTypeStyle.toString()));
+//                }
+//
+//                for(ReadTableColumn column : columns)
+//                {
+//                    ContentAndStyle contentAndStyle = column.getContentAndStyle(record);
+//                    CssBuilder style = tableInfoCellStyle.merge(contentAndStyle.Style);
+//                    if(isLastOfType)
+//                    {
+//                        style = style.merge(matchTypeBorderStyle);
+//                    }
+//
+//                    cols.add(contentAndStyle.Content.withStyle(style.toString()));
+//                }
+//
+//                if(isLastOfType)
+//                {
+//                    cols.add(td(renderRead(record)).withStyle(matchTypeBorderStyle.toString()));
+//                }
+//                else
+//                {
+//                    cols.add(td(renderRead(record)));
+//                }
+//
+//                tableRows.add(tr().with(cols));
+//            }
+//        }
+
+        return tableRows;
+    }
+
+    private static List<BaseSeqViewModel> getRefViewModel_(final AssemblyAlignment assemblyAlignment)
+    {
+        String refSeq = assemblyAlignment.fullSequence();
+
+        // TODO: remove
+        if(refSeq.length() != assemblyAlignment.fullSequenceLength())
+            throw new RuntimeException("refSeq.length() != assemblyAlignment.fullSequenceLength()");
+
+        List<AlignData> segments = assemblyAlignment.breakends().stream()
+                .flatMap(x -> x.segments().stream())
+                .map(x -> x.Alignment)
+                .toList();
+
+        List<BaseSeqViewModel> refViewModel = Lists.newArrayList();
+        List<Integer> linkIndices = assemblyAlignment.linkIndices();
+
+        // TODO: remove
+        if(linkIndices.size() + 1 != segments.size())
+            throw new RuntimeException("linkIndices.size() + 1 != segments.size()");
+
+        int refIdx = 0;
+        for(int i = 0; i < segments.size(); i++)
+        {
+            AlignData segment = segments.get(i);
+
+            String chromosome = segment.chromosome();
+            int posStart = segment.positionStart();
+            int posEnd = segment.positionEnd();
+            int length = posEnd - posStart + 1;
+
+            // TODO:
+            if(refIdx + length > refSeq.length())
+                throw new RuntimeException("refIdx + length > refSeq.length()");
+
+            BaseSeqViewModel segmentViewModel = fromStr(refSeq.substring(refIdx, refIdx + length), chromosome, posStart);
+            refViewModel.add(segmentViewModel);
+
+            // TODO:
+            if(i < segments.size() - 1)
+                refIdx = linkIndices.get(i);
+            else
+                // TODO: remove this and use cigar
+                refIdx += length;
+        }
+
+        // TODO:
+        if(refIdx != refSeq.length())
+            throw new RuntimeException("refIdx != refSeq.length()");
+
+        return refViewModel;
+    }
+
+    // TODO:
+//    public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
+//            boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
+//    {
+//        SVGGraphics2D svgCanvas = new SVGGraphics2D(
+//                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
+//        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases);
+//        return svgCanvas;
+//    }
+//
+//    public static void renderBaseSeq(final SVGGraphics2D svgCanvas_, final Point2D.Double boxOffset, double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
+//            boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
+
+    private DomContent renderRef()
+    {
+        int totalBoxWidth = 0;
+        for(BaseSeqViewModel viewModel : mRefViewModel)
+            totalBoxWidth += viewModel.LastBasePos - viewModel.FirstBasePos + 1 + 2 * BOX_PADDING;
+
+        SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
+        AffineTransform initTransform = svgCanvas.getTransform();
+        double xBoxOffset = 0d;
+        for(BaseSeqViewModel viewModel : mRefViewModel)
+        {
+            BaseRegion viewRegion = new BaseRegion(viewModel.FirstBasePos, viewModel.LastBasePos);
+            svgCanvas.setTransform(initTransform);
+            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0d), READ_HEIGHT_PX, viewRegion, viewModel, false, Maps.newHashMap(), null);
+            xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+        }
+
+        return rawHtml(svgCanvas.getSVGElement());
     }
 
     private String getFilename(final String info)

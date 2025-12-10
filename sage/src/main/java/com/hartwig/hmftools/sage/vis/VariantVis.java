@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.ColorUtil.DARK_BLUE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderCoords;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderGeneData;
@@ -45,7 +46,7 @@ import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.AA_VARIANT_TYPE_IDX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
@@ -61,7 +62,6 @@ import static j2html.TagCreator.html;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.script;
 import static j2html.TagCreator.span;
-import static j2html.TagCreator.table;
 import static j2html.TagCreator.td;
 import static j2html.TagCreator.tr;
 
@@ -280,11 +280,6 @@ public class VariantVis
         }
 
         return new BaseSeqViewModel(bases, posStart, null, null);
-    }
-
-    private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
-    {
-        return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
     }
 
     public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,

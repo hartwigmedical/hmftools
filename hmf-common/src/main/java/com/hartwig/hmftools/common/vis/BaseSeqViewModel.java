@@ -12,6 +12,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class BaseSeqViewModel
 {
+    public final String Chromosome;
     public final Boolean LeftIsForwardStrand;
     public final Boolean RightIsForwardStrand;
     public final int FirstBasePos;
@@ -23,7 +24,14 @@ public class BaseSeqViewModel
     public BaseSeqViewModel(final List<BaseViewModel> bases, int posStart, @Nullable final Boolean leftIsForwardStrand,
             @Nullable final Boolean rightIsForwardStrand)
     {
+        this(bases, null, posStart, leftIsForwardStrand, rightIsForwardStrand);
+    }
+
+    public BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart, @Nullable final Boolean leftIsForwardStrand,
+            @Nullable final Boolean rightIsForwardStrand)
+    {
         mBases = bases;
+        Chromosome = chromosome;
         mPosStart = posStart;
         LeftIsForwardStrand = leftIsForwardStrand;
         RightIsForwardStrand = rightIsForwardStrand;
@@ -51,13 +59,18 @@ public class BaseSeqViewModel
 
     public static BaseSeqViewModel fromStr(final String baseStr, int posStart)
     {
+        return fromStr(baseStr, null, posStart);
+    }
+
+    public static BaseSeqViewModel fromStr(final String baseStr, @Nullable final String chromosome, int posStart)
+    {
         List<BaseViewModel> bases = Lists.newArrayList();
         for(int i = 0; i < baseStr.length(); ++i)
         {
             bases.add(new BaseViewModel(baseStr.charAt(i)));
         }
 
-        return new BaseSeqViewModel(bases, posStart, null, null);
+        return new BaseSeqViewModel(bases, chromosome, posStart, null, null);
     }
 
     public static BaseSeqViewModel fromRead(final SAMRecord read)
