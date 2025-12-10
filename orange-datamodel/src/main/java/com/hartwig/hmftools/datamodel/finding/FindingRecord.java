@@ -45,19 +45,19 @@ public interface FindingRecord
     @Nullable
     List<GainDeletion> driverGermlineGainDeletions();
 
-    @Nullable
+    @NotNull
     List<Fusion> driverSomaticFusions();
 
-    @Nullable
+    @NotNull
     default List<Fusion> driverSomaticFusions(ReportedStatus reportedStatus)
     {
         return filterReported(driverSomaticFusions(), reportedStatus);
     }
 
-    @Nullable
+    @NotNull
     List<Disruption> driverSomaticDisruptions();
 
-    @Nullable
+    @NotNull
     default List<Disruption> driverSomaticDisruptions(ReportedStatus reportedStatus)
     {
         return filterReported(driverSomaticDisruptions(), reportedStatus);

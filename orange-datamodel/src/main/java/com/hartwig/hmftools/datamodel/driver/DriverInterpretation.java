@@ -7,10 +7,12 @@ import org.jetbrains.annotations.NotNull;
 public enum DriverInterpretation
 {
     // must be listed from low to high for comparison
+    NONE,
     LOW,
     MEDIUM,
     HIGH;
 
+    // TODO remove this function
     @NotNull
     public static DriverInterpretation interpret(double driverLikelihood)
     {

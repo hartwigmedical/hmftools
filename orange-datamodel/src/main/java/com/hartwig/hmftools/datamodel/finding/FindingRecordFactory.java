@@ -21,6 +21,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.apache.logging.log4j.LogManager;
@@ -116,14 +117,7 @@ public class FindingRecordFactory
 
         if(virusInterpreter != null)
         {
-            builder.driverViruses(virusInterpreter.reportableViruses().stream()
-                    .map(v -> ImmutableVirus.builder()
-                            .findingKey(FindingKeys.virus(v))
-                            .reportedStatus(ReportedStatus.REPORTED)
-                            .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
-                            .interpreterEntry(v)
-                            .build()
-                    ).toList());
+            builder.driverViruses(convertViruses(virusInterpreter.allViruses()));
         }
 
         LilacRecord lilac = orangeRecord.lilac();
@@ -169,8 +163,22 @@ public class FindingRecordFactory
     {
         return switch (likelihood) {
             case HIGH -> DriverInterpretation.HIGH;
-            case LOW, NA -> DriverInterpretation.LOW;
+            case LOW -> DriverInterpretation.LOW;
+            case NA -> DriverInterpretation.NONE;
         };
+    }
+
+    @NotNull
+    private static List<? extends Virus> convertViruses(List<VirusInterpreterEntry> viruses)
+    {
+        return viruses.stream()
+                .map(v -> ImmutableVirus.builder()
+                        .findingKey(FindingKeys.virus(v))
+                        .reportedStatus(v.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
+                        .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
+                        .interpreterEntry(v)
+                        .build()
+                ).toList();
     }
 
     @NotNull
@@ -180,7 +188,7 @@ public class FindingRecordFactory
         {
             case LOW -> DriverInterpretation.LOW;
             case HIGH -> DriverInterpretation.HIGH;
-            default -> throw new IllegalStateException("Unexpected virus likelihood type: " + virusLikelihoodType);
+            case UNKNOWN -> DriverInterpretation.NONE;
         };
     }
 }
