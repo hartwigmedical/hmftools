@@ -44,6 +44,7 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_PERMIT
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_SGL_FACTOR;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
+import static com.hartwig.hmftools.esvee.common.FilterType.LINE_SOURCE;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_ANCHOR_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
@@ -134,6 +135,9 @@ public class VariantFilters
 
         if(lowThreePrimePositionRange(var))
             var.addFilter(UNPAIRED_THREE_PRIME_RANGE);
+
+        if(isRemoteLineSource(var))
+            var.addFilter(LINE_SOURCE);
     }
 
     private void applyExistingFilters(final Breakend breakend)
@@ -391,7 +395,7 @@ public class VariantFilters
         if(hasPairedReads())
             return false;
 
-        List<Junction> originalAssemblies = var.originalAssemblies();
+        List<Junction> originalAssemblies = var.originalJunctions();
 
         int splitFragmentFactor = originalAssemblies.size() == 1 ? PRIME_MAX_SGL_FACTOR : 1;
 
@@ -429,6 +433,11 @@ public class VariantFilters
         }
 
         return false;
+    }
+
+    private boolean isRemoteLineSource(final Variant var)
+    {
+        return var.breakendStart().isLineRemoteSourceSite() || (var.breakendEnd() != null && var.breakendEnd().isLineRemoteSourceSite());
     }
 
     private boolean failsStrandBias(final Variant var)

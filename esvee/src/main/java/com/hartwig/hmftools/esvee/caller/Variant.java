@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ASSEMBLY_INFO_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.JUNCTION_COORD_DELIM;
@@ -54,6 +53,8 @@ public class Variant
     private RepeatMaskAnnotation mRmAnnotation;
     private final Set<FilterType> mFilters;
 
+    private List<Junction> mOriginalJunctions;
+
     public Variant(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
         if(isIndel(sv.type()))
@@ -89,6 +90,7 @@ public class Variant
         mIsHotspot = false;
         mGermline = false;
         mRmAnnotation = null;
+        mOriginalJunctions = null;
     }
 
     public String chromosomeStart() { return mBreakends[SE_START].Chromosome; }
@@ -211,32 +213,39 @@ public class Variant
         }
     }
 
-    public List<Junction> originalAssemblies()
+    public List<Junction> originalJunctions()
     {
+        if(mOriginalJunctions != null)
+            return mOriginalJunctions;
+
         String assemblyInfoStr = mBreakends[0].Context.getAttributeAsString(ASM_INFO, "");
 
         if(assemblyInfoStr.isEmpty())
-            return Collections.emptyList();
-
-        // chr10:87940542:1_chr10:87952584:-1
-        String[] assemblyStrs = assemblyInfoStr.split(ASSEMBLY_INFO_DELIM, -1);
-        List<Junction> junctions = Lists.newArrayListWithCapacity(assemblyStrs.length);
-
-        for(String assemblyStr : assemblyStrs)
         {
-            String[] items = assemblyStr.split(JUNCTION_COORD_DELIM);
+            mOriginalJunctions = Collections.emptyList();
+        }
+        else
+        {
+            // chr10:87940542:1_chr10:87952584:-1
+            String[] assemblyStrs = assemblyInfoStr.split(ASSEMBLY_INFO_DELIM, -1);
+            mOriginalJunctions = Lists.newArrayListWithCapacity(assemblyStrs.length);
 
-            if(items.length < 3)
-                continue;
+            for(String assemblyStr : assemblyStrs)
+            {
+                String[] items = assemblyStr.split(JUNCTION_COORD_DELIM);
 
-            String chromosome = items[0];
-            int position = Integer.parseInt(items[1]);
-            Orientation orientation = Orientation.fromByteStr(items[2]);
+                if(items.length < 3)
+                    continue;
 
-            junctions.add(new Junction(chromosome, position, orientation));
+                String chromosome = items[0];
+                int position = Integer.parseInt(items[1]);
+                Orientation orientation = Orientation.fromByteStr(items[2]);
+
+                mOriginalJunctions.add(new Junction(chromosome, position, orientation));
+            }
         }
 
-        return junctions;
+        return mOriginalJunctions;
     }
 
     public String toString()

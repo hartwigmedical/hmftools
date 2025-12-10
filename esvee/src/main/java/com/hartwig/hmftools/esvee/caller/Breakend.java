@@ -47,6 +47,7 @@ public class Breakend
     private final Genotype mTumorGenotype;
 
     private Breakend mLineSiteBreakend;
+    private boolean mLineRemoteSourceSite;
 
     public Breakend(
             final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
@@ -82,6 +83,7 @@ public class Breakend
         }
 
         mLineSiteBreakend = null;
+        mLineRemoteSourceSite = false;
     }
 
     public static Breakend from(
@@ -144,6 +146,9 @@ public class Breakend
     public boolean isLine() { return IsLineInsertion || Context.hasAttribute(LINE_SITE); }
     public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
     public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
+
+    public void markLineRemoteSourceSite() { mLineRemoteSourceSite = true; }
+    public boolean isLineRemoteSourceSite() { return mLineRemoteSourceSite; }
 
     public boolean inChainedAssembly() { return Context.hasAttribute(ASM_LINKS); }
 
