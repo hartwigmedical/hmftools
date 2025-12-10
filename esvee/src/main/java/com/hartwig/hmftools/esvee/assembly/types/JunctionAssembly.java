@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.ReadParseState;
 import com.hartwig.hmftools.esvee.assembly.RefBaseSeqBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -582,6 +583,9 @@ public class JunctionAssembly
 
     public void clearSupportCachedReads()
     {
+        if(!AssemblyConfig.CLEAR_CACHED_READ)
+            return;
+
         for(SupportRead read : mSupport)
         {
             if(read.cachedRead() != null)

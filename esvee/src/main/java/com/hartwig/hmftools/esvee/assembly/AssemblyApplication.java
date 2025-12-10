@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formDiscordantStatsFilename;
 import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
-import static com.hartwig.hmftools.esvee.common.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.common.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.common.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -48,10 +47,10 @@ import com.hartwig.hmftools.esvee.assembly.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
+import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.assembly.output.AssemblyWriter;
-import com.hartwig.hmftools.esvee.assembly.output.BamWriter;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetTask;
 import com.hartwig.hmftools.esvee.common.WriteType;
@@ -150,9 +149,7 @@ public class AssemblyApplication
 
             writeVariants(assemblyAlignments, breakends);
 
-            // note this is written after the VCF since writing reassigns the reads to the output BAM, there-by removing their association
-            // with the BAM they were read from (ie as used in tumor vs ref counts)
-            writeAssemblyBam(finalAssemblies);
+            runVisualiser(assemblyAlignments);
 
             if(mConfig.PerfDebug)
             {
@@ -446,20 +443,11 @@ public class AssemblyApplication
         }
     }
 
-    private void writeAssemblyBam(final List<JunctionAssembly> assemblies)
+    private void runVisualiser(final List<AssemblyAlignment> assemblyAlignments)
     {
-        // write BAM records
-        if(mConfig.WriteTypes.contains(ASSEMBLY_BAM) && mResultsWriter.bamWriter().isValid())
-        {
-            SV_LOGGER.debug("writing assembly BAM");
+        AssemblyVisualiser visualiser = new AssemblyVisualiser(mConfig);
 
-            BamWriter bamWriter = mResultsWriter.bamWriter();
-
-            for(JunctionAssembly assembly : assemblies)
-            {
-                bamWriter.writeAssembly(assembly);
-            }
-        }
+        assemblyAlignments.forEach(x -> visualiser.writeVisFiles(x));
     }
 
     private void writeVariants(final List<AssemblyAlignment> assemblyAlignments, final List<Breakend> breakends)

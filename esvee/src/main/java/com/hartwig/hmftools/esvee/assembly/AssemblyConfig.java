@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
@@ -24,7 +25,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.config.ConfigItem.enumValueSelectionAsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -100,6 +100,9 @@ public class AssemblyConfig
 
     public final int Threads;
 
+    public final String PurpleDir;
+    public final boolean RunVisualiser;
+
     // default value overrides
     public static int PhaseProcessingLimit;
     public final int AssemblyMapQualThreshold;
@@ -123,6 +126,9 @@ public class AssemblyConfig
     public static double PerfLogTime;
 
     public final boolean ApplyRemotePhasingReadCheckThreshold;
+
+    private static final String RUN_ASSEMBLY_VIS = "run_assembly_vis";
+    public static boolean CLEAR_CACHED_READ = true;
 
     private static final String DECOY_GENOME = "decoy_genome";
 
@@ -274,6 +280,8 @@ public class AssemblyConfig
         setSequencingType(configBuilder);
         setSeqTechSpecifics();
 
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         AssemblyMapQualThreshold = configBuilder.getInteger(ASSEMBLY_MAP_QUAL_THRESHOLD);
@@ -298,6 +306,11 @@ public class AssemblyConfig
             SV_LOGGER.debug("loaded {} specific junctions", SpecificJunctions.size());
             Collections.sort(SpecificJunctions);
         }
+
+        RunVisualiser = configBuilder.hasFlag(RUN_ASSEMBLY_VIS) && !SpecificJunctions.isEmpty();
+
+        if(RunVisualiser || PurpleDir != null)
+            CLEAR_CACHED_READ = false;
 
         boolean hasFilters = SpecificChrRegions.hasFilters() || !SpecificJunctions.isEmpty();
 
@@ -409,6 +422,9 @@ public class AssemblyConfig
 
         configBuilder.addDecimal(DISC_RATE_INCREMENT, "Discordant rate increment", DEFAULT_DISC_RATE_INCREMENT);
 
+        configBuilder.addPath(PURPLE_DIR_CFG, false, "Purple data directory for event visualisation");
+        configBuilder.addFlag(RUN_ASSEMBLY_VIS, "Run visualiser on specific junctions");
+
         BamToolName.addConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
@@ -442,6 +458,8 @@ public class AssemblyConfig
         OutputDir = null;
         OutputId = null;
         BamToolPath = null;
+        PurpleDir = null;
+        RunVisualiser = false;
 
         SpecificChrRegions = new SpecificRegions();
         SpecificJunctions = Collections.emptyList();

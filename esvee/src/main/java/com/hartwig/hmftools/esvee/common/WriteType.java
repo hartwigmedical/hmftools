@@ -26,7 +26,6 @@ public enum WriteType
     DISCORDANT_STATS(PREP_DISC_STATS_FILE_ID, true),
 
     // assembly routine
-    ASSEMBLY_BAM("assembly.bam", false),
     JUNC_ASSEMBLY("assembly.tsv", false),
     ASSEMBLY_READ("assembly_read.tsv", false),
     BREAKEND("breakend.tsv", false),

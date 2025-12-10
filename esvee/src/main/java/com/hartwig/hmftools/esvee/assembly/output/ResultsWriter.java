@@ -14,7 +14,6 @@ public class ResultsWriter
     private final BreakendWriter mBreakendWriter;
     private final AssemblyReadWriter mReadWriter;
     private final PhaseGroupBuildWriter mPhaseGroupBuildWriter;
-    private final BamWriter mBamWriter;
 
     public ResultsWriter(final AssemblyConfig config)
     {
@@ -22,7 +21,6 @@ public class ResultsWriter
         mBreakendWriter = new BreakendWriter(config);
         mReadWriter = new AssemblyReadWriter(config);
         mPhaseGroupBuildWriter = new PhaseGroupBuildWriter(config);
-        mBamWriter = new BamWriter(config);
         mDecoyMatchWriter = AlignmentChecker.initialiseWriter(config);
     }
 
@@ -31,7 +29,6 @@ public class ResultsWriter
     public BreakendWriter breakendWriter() { return mBreakendWriter; }
     public AssemblyReadWriter readWriter() { return mReadWriter; }
     public PhaseGroupBuildWriter phaseGroupBuildWriter() { return mPhaseGroupBuildWriter; }
-    public BamWriter bamWriter() { return mBamWriter; }
 
     public void close()
     {
@@ -39,7 +36,6 @@ public class ResultsWriter
         mBreakendWriter.close();
         mReadWriter.close();
         mPhaseGroupBuildWriter.close();
-        mBamWriter.close();
         closeBufferedWriter(mDecoyMatchWriter);
     }
 }
