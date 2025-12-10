@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -6,12 +6,9 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
-import com.hartwig.hmftools.esvee.vcfcompare.CompareConfig;
 
 import org.jetbrains.annotations.Nullable;
 

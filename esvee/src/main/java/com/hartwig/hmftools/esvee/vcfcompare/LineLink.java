@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.esvee.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static java.lang.String.format;
-
-import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
 
 public class LineLink
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.vcfcompare.line;
+package com.hartwig.hmftools.esvee.vcfcompare;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.hartwig.hmftools.esvee.vcfcompare.Breakend;
 
 public class LineLinker
 {

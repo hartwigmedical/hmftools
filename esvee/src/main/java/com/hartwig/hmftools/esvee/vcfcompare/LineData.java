@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
-import com.hartwig.hmftools.esvee.vcfcompare.line.LineLink;
-
 public class LineData
 {
     public final boolean HasPolyAT;
