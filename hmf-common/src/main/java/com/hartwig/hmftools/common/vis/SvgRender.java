@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.sage.vis;
+package com.hartwig.hmftools.common.vis;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
-import static com.hartwig.hmftools.sage.vis.ColorUtil.lighten;
-import static com.hartwig.hmftools.sage.vis.SvgUtil.drawStringFromCenter;
-import static com.hartwig.hmftools.sage.vis.SvgUtil.getStringBounds;
+import static com.hartwig.hmftools.common.vis.ColorUtil.PURPLE;
+import static com.hartwig.hmftools.common.vis.ColorUtil.lighten;
+import static com.hartwig.hmftools.common.vis.SvgUtil.drawStringFromCenter;
+import static com.hartwig.hmftools.common.vis.SvgUtil.getStringBounds;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

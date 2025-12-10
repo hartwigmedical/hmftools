@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.vis;
+package com.hartwig.hmftools.common.vis;
 
 import java.awt.Font;
 import java.awt.FontMetrics;

@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.sage.vis;
+package com.hartwig.hmftools.common.vis;
 
 import java.util.List;
 
-import com.hartwig.hmftools.sage.common.VariantReadContext;
-
 import com.google.common.collect.Lists;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
@@ -56,60 +55,6 @@ public class BaseSeqViewModel
         for(int i = 0; i < baseStr.length(); ++i)
         {
             bases.add(new BaseViewModel(baseStr.charAt(i)));
-        }
-
-        return new BaseSeqViewModel(bases, posStart, null, null);
-    }
-
-    public static BaseSeqViewModel fromVariant(final VariantReadContext readContext, final String ref, final String alt)
-    {
-        String rawBases = readContext.readBases();
-        int posStart = readContext.variant().Position - readContext.VarIndex;
-        if(ref.length() == alt.length())
-        {
-            return fromStr(rawBases, posStart);
-        }
-
-        // del
-        if(ref.length() > alt.length())
-        {
-            int delLen = ref.length() - alt.length();
-
-            // alt is single char
-            List<BaseViewModel> bases = Lists.newArrayList();
-            for(int i = 0; i <= readContext.VarIndex; ++i)
-            {
-                bases.add(new BaseViewModel(rawBases.charAt(i)));
-            }
-
-            for(int i = 0; i < delLen; ++i)
-            {
-                bases.add(BaseViewModel.createDelBase());
-            }
-
-            for(int i = readContext.VarIndex + 1; i < readContext.totalLength(); ++i)
-            {
-                bases.add(new BaseViewModel(rawBases.charAt(i)));
-            }
-
-            return new BaseSeqViewModel(bases, posStart, null, null);
-        }
-
-        // ins
-        int insLen = alt.length() - ref.length();
-
-        // ref is single char
-        List<BaseViewModel> bases = Lists.newArrayList();
-        for(int i = 0; i <= readContext.VarIndex; ++i)
-        {
-            bases.add(new BaseViewModel(rawBases.charAt(i)));
-        }
-
-        bases.get(bases.size() - 1).incRightInsertCount(insLen);
-
-        for(int i = readContext.VarIndex + insLen + 1; i < readContext.totalLength(); ++i)
-        {
-            bases.add(new BaseViewModel(rawBases.charAt(i)));
         }
 
         return new BaseSeqViewModel(bases, posStart, null, null);

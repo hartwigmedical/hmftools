@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.vis.GeneRegionViewModel;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 public final class AminoAcidUtil
