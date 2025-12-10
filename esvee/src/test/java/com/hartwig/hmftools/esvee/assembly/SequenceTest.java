@@ -529,19 +529,19 @@ public class SequenceTest
 
         byte[] secondBaseQuals = buildDefaultBaseQuals(secondBases.length());
 
-        int mismatches = SequenceCompare.compareSequences(
+        double mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(2, mismatches);
+        assertEquals(2, mismatchPenalty, 0.1);
 
-        mismatches = SequenceCompare.compareSequences(
+        mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(2, mismatches);
+        assertEquals(2, mismatchPenalty, 0.1);
     }
 
         @Test
@@ -570,19 +570,19 @@ public class SequenceTest
 
         // diffs are extra Ts in the second, the 'CT' repeat in first, then extra 'GG' in first then extra 'G' in second
 
-        int mismatches = SequenceCompare.compareSequences(
+        double mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(4, mismatches);
+        assertEquals(4, mismatchPenalty, 0.1);
 
-        mismatches = SequenceCompare.compareSequences(
+        mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(4, mismatches);
+        assertEquals(4, mismatchPenalty, 0.1);
 
         // a single SNV at the start of a start of a homopolymer can look like two 1-based INDELs or a repeat count diff
         // but only count this as one mismatch if it can be explained by a single SNV
@@ -595,19 +595,19 @@ public class SequenceTest
         firstBaseQuals = buildDefaultBaseQuals(secondBases.length());
         secondBaseQuals = firstBaseQuals;
 
-        mismatches = SequenceCompare.compareSequences(
+        mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(1, mismatches);
+        assertEquals(1, mismatchPenalty, 0.1);
 
-        mismatches = SequenceCompare.compareSequences(
+        mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(1, mismatches);
+        assertEquals(1, mismatchPenalty, 0.1);
     }
 
     @Test
@@ -633,19 +633,19 @@ public class SequenceTest
 
         byte[] secondBaseQuals = buildDefaultBaseQuals(secondBases.length());
 
-        int mismatches = SequenceCompare.compareSequences(
+        double mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(8, mismatches);
+        assertEquals(8, mismatchPenalty, 0.1);
 
-        mismatches = SequenceCompare.compareSequences(
+        mismatchPenalty = SequenceCompare.compareSequences(
                 firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats,
                 NO_MISMATCH_LIMIT);
 
-        assertEquals(8, mismatches);
+        assertEquals(8, mismatchPenalty, 0.1);
     }
 
     @Test

@@ -393,7 +393,7 @@ public final class AssemblyLinker
             return null;
 
         int topMatchLength = 0;
-        int topMatchMismatches = 0;
+        double topMatchMismatchPenalty = 0;
         int[] topMatchIndices = null;
 
         Set<Integer> testedOffsets = Sets.newHashSet();
@@ -431,15 +431,15 @@ public final class AssemblyLinker
             if(overlapLength < minOverlapLength)
                 continue;
 
-            int mismatchCount = SequenceCompare.compareSequences(
+            double mismatchPenalty = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
                     secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
                     PRIMARY_ASSEMBLY_MERGE_MISMATCH);
 
-            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+            if(mismatchPenalty > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
-            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
+            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchPenalty < topMatchMismatchPenalty))
             {
                 // check that the matching section covers each sequence's ref bases as well as the extension bases
                 int minRefOverlapLength = MIN_VARIANT_LENGTH / 2;
@@ -460,7 +460,7 @@ public final class AssemblyLinker
 
             topMatchLength = overlapLength;
             topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
-            topMatchMismatches = mismatchCount;
+            topMatchMismatchPenalty = mismatchPenalty;
         }
 
         return topMatchIndices;
@@ -473,7 +473,7 @@ public final class AssemblyLinker
             return null;
 
         int topMatchLength = 0;
-        int topMatchMismatches = 0;
+        double topMatchMismatchPenalty = 0;
         int[] topMatchIndices = null;
 
         Set<Integer> testedOffsets = Sets.newHashSet();
@@ -526,12 +526,12 @@ public final class AssemblyLinker
             if(overlapLength < minOverlapLength)
                 continue;
 
-            int mismatchCount = SequenceCompare.compareSequences(
+            double mismatchPenalty = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
                     secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
                     PRIMARY_ASSEMBLY_MERGE_MISMATCH);
 
-            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+            if(mismatchPenalty > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
                 continue;
 
             // try to extend the matched sequence in both directions
@@ -542,11 +542,11 @@ public final class AssemblyLinker
             secondIndexStart -= matchExtensions[0];
             overlapLength += matchExtensions[0] + matchExtensions[1];
 
-            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchCount < topMatchMismatches))
+            if(overlapLength > topMatchLength || (overlapLength == topMatchLength && mismatchPenalty < topMatchMismatchPenalty))
             {
                 topMatchLength = overlapLength;
                 topMatchIndices = new int[] {firstIndexStart, secondIndexStart, 0};
-                topMatchMismatches = mismatchCount;
+                topMatchMismatchPenalty = mismatchPenalty;
             }
         }
 

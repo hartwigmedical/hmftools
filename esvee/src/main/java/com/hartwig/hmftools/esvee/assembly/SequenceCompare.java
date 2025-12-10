@@ -111,11 +111,11 @@ public final class SequenceCompare
         int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
         double maxMismatchPenalty = max(permittedReadMismatches(overlapLength), PRIMARY_ASSEMBLY_MERGE_MISMATCH);
 
-        int mismatchCount = compareSequences(
+        double mismatchPenalty = compareSequences(
                 first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
                 second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), maxMismatchPenalty);
 
-        if(mismatchCount <= maxMismatchPenalty)
+        if(mismatchPenalty <= maxMismatchPenalty)
             return true;
 
         // no attempt for a subsequence match - assumes this is been determined prior to this function call
@@ -123,14 +123,14 @@ public final class SequenceCompare
         return false;
     }
 
-    public static int compareSequences(
+    public static double compareSequences(
             final byte[] firstBases, final byte[] firstBaseQuals, int firstIndexStart, int firstIndexEnd, final List<RepeatInfo> firstRepeats,
             final byte[] secondBases, final byte[] secondBaseQuals, int secondIndexStart, int secondIndexEnd, final List<RepeatInfo> secondRepeats,
             double maxMismatchPenalty)
     {
-        return (int)round(compareSequencesMismatchSpec(
+        return compareSequencesMismatchSpec(
                 firstBases, firstBaseQuals, firstIndexStart, firstIndexEnd, firstRepeats, secondBases, secondBaseQuals, secondIndexStart,
-                secondIndexEnd, secondRepeats, maxMismatchPenalty, true, true));
+                secondIndexEnd, secondRepeats, maxMismatchPenalty, true, true);
     }
 
     private static double compareSequencesMismatchSpec(

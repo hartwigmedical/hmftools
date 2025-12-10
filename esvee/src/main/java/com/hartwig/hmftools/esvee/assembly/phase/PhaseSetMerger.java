@@ -172,11 +172,11 @@ public final class PhaseSetMerger
 
             int permittedMismatches = mismatchesPerComparisonLength(overlapLength);
 
-            int mismatchCount = SequenceCompare.compareSequences(
+            double mismatchPenalty = SequenceCompare.compareSequences(
                     firstBases, firstBaseQuals, firstMatchIndexStart, firstMatchIndexEnd, firstRepeats,
                     secondBases, secondBaseQuals, secondMatchIndexStart, secondMatchIndexEnd, secondRepeats, permittedMismatches);
 
-            if(mismatchCount > permittedMismatches)
+            if(mismatchPenalty > permittedMismatches)
                 continue;
 
             if(!canMergePhaseSets(

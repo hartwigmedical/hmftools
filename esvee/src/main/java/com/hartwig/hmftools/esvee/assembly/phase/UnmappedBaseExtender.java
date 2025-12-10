@@ -558,17 +558,18 @@ public class UnmappedBaseExtender
         public final int ReadSeqStart;
         public final int ExtensionBaseSeqStart;
         public final int Overlap;
-        public final int Mismatches; // vs the existing extension bases
+        public final double MismatchPenalty; // vs the existing extension bases
 
         public int ConsensusMismatches; // from extension the sequence
 
-        public ReadSequenceMatch(final Read read, final int readSeqStart, final int extensionBaseSeqStart, final int overlap, int mismatches)
+        public ReadSequenceMatch(
+                final Read read, final int readSeqStart, final int extensionBaseSeqStart, final int overlap, double mismatchPenalty)
         {
             Read = read;
             ReadSeqStart = readSeqStart;
             ExtensionBaseSeqStart = extensionBaseSeqStart;
             Overlap = overlap;
-            Mismatches = mismatches;
+            MismatchPenalty = mismatchPenalty;
             ConsensusMismatches = 0;
         }
 
@@ -592,16 +593,16 @@ public class UnmappedBaseExtender
             if(Overlap != other.Overlap)
                 return Overlap > other.Overlap ? -1 : 1;
 
-            if(Mismatches != other.Mismatches)
-                return Mismatches < other.Mismatches ? -1 : 1;
+            if(MismatchPenalty != other.MismatchPenalty)
+                return MismatchPenalty < other.MismatchPenalty ? -1 : 1;
 
             return 0;
         }
 
         public String toString()
         {
-            return format("id(%s) index(read=%d ext=%d) overlap(%d) mismatches(%d consensus=%d)",
-                    Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap, Mismatches, ConsensusMismatches);
+            return format("id(%s) index(read=%d ext=%d) overlap(%d) mismatches(%.1f consensus=%d)",
+                    Read.id(), ReadSeqStart, ExtensionBaseSeqStart, Overlap, MismatchPenalty, ConsensusMismatches);
         }
     }
 
@@ -689,12 +690,12 @@ public class UnmappedBaseExtender
 
         int permittedMismatches = permittedReadMismatches(totalOverlap);
 
-        int mismatchCount = compareSequences(
+        double mismatchPenalty = compareSequences(
                 mBases, mBaseQuals, extBaseIndexStart, extBaseIndexEnd, mRepeats,
                 readBases, readBaseQuals, readIndexStart, readIndexEnd, Collections.emptyList(), permittedMismatches);
 
-        return mismatchCount <= permittedMismatches ?
-                new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchCount) : null;
+        return mismatchPenalty <= permittedMismatches ?
+                new ReadSequenceMatch(read, readIndexStart, extBaseIndexStart, totalOverlap, mismatchPenalty) : null;
     }
 
     private int permittedReadMismatches(int readBaseOverlap)
