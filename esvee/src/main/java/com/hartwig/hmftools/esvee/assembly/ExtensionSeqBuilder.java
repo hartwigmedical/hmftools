@@ -421,7 +421,7 @@ public class ExtensionSeqBuilder
                 .filter(x -> !x.mismatched() && x.read().hasLineTail(mBuildForwards))
                 .map(x -> x.read()).collect(Collectors.toList());
 
-        if(validLineReads.size() <= validReadCount * 0.5) // must be the majority of reads
+        if(validLineReads.size() < validReadCount * 0.5) // must be the majority of reads
             return false;
 
         int lineExtensionLength = findConsensusLineExtension(validLineReads, mJunction);
