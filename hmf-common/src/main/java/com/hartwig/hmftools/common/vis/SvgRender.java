@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
 import static com.hartwig.hmftools.common.vis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.common.vis.ColorUtil.lighten;
 import static com.hartwig.hmftools.common.vis.SvgUtil.drawStringFromCenter;
@@ -26,7 +27,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
@@ -62,7 +65,7 @@ public final class SvgRender
 	    AMINO_ACID_MISMATCH_LIGHT_BG, AMINO_ACID_MISMATCH_DARK_BG);
 
     public static final int BOX_PADDING = 1;
-    private static final double BASE_BOX_SIZE = 30.0;
+    public static final double BASE_BOX_SIZE = 30.0;
     private static final double DEL_CONNECTOR_BOX_PROPORTION = 0.2;
     private static final double BOUNDARY_BOX_PROPORTION = 0.2;
 
@@ -72,7 +75,7 @@ public final class SvgRender
     private static final int COORD_FONT_SIZE = 30;
     private static final Font INDEL_FONT = new Font("SansSerif", Font.PLAIN, INDEL_FONT_SIZE);
     private static final Font BASE_FONT = new Font("SansSerif", Font.PLAIN, BASE_FONT_SIZE);
-    private static final Font COORD_FONT = new Font("SansSerif", Font.PLAIN, COORD_FONT_SIZE);
+    public static final Font COORD_FONT = new Font("SansSerif", Font.PLAIN, COORD_FONT_SIZE);
 
     private static final int MAX_BASEQ_SHADING_CUTTOFF = 37;
 
@@ -363,9 +366,7 @@ public final class SvgRender
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
         List<Rectangle2D> stringBounds = Lists.newArrayList();
         for(int i = renderRegion.start(); i <= renderRegion.end(); ++i)
-        {
             stringBounds.add(getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)));
-        }
 
         double maxStringWidth = stringBounds.stream().mapToDouble(Rectangle2D::getWidth).max().getAsDouble();
 
@@ -374,27 +375,23 @@ public final class SvgRender
                 scalingFactor * (maxStringWidth + 2 * charWidth));
         Point2D.Double canvasSize = new Point2D.Double(svgCanvas.getWidth(), svgCanvas.getHeight());
 
-        renderCoords(svgCanvas, ZERO_2D, canvasSize, baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord);
+        renderCoords(svgCanvas, ZERO_2D, canvasSize, baseBoxSizePx, renderRegion, centerPosition, displayEveryNthCoord, maxStringWidth);
         return svgCanvas;
     }
 
     public static void renderCoords(final SVGGraphics2D svgCanvas_, final Point2D.Double boxOffset, final Point2D.Double canvasSize, double baseBoxSizePx, final BaseRegion renderRegion, int centerPosition,
-            int displayEveryNthCoord)
+            int displayEveryNthCoord, double maxStringWidth)
     {
         double scalingFactor = baseBoxSizePx / BASE_BOX_SIZE;
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
-        List<Rectangle2D> stringBounds = Lists.newArrayList();
+        List<Rectangle2D> stringBounds_ = Lists.newArrayList();
         for(int i = renderRegion.start(); i <= renderRegion.end(); ++i)
-        {
-            stringBounds.add(getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)));
-        }
-
-        double maxStringWidth = stringBounds.stream().mapToDouble(Rectangle2D::getWidth).max().getAsDouble();
+            stringBounds_.add(getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)));
 
         svgCanvas_.setFont(COORD_FONT);
 
         Rectangle2D.Double backgroundRect = new Rectangle2D.Double(
-                0.0, 0.0, canvasSize.x + baseBoxSizePx * boxOffset.x, canvasSize.y + baseBoxSizePx * boxOffset.y);
+                baseBoxSizePx * boxOffset.x, baseBoxSizePx * boxOffset.y, canvasSize.x + baseBoxSizePx * boxOffset.x, canvasSize.y + baseBoxSizePx * boxOffset.y);
         svgCanvas_.setColor(Color.LIGHT_GRAY);
         svgCanvas_.fill(backgroundRect);
 
@@ -427,12 +424,33 @@ public final class SvgRender
                     1.5 * charWidth);
             svgCanvas_.fill(largeTick);
 
-            Rectangle2D stringBound = stringBounds.get(i - renderRegion.start());
+            Rectangle2D stringBound_ = stringBounds_.get(i - renderRegion.start());
 
             svgCanvas_.rotate(Math.PI / 2);
-            svgCanvas_.translate(maxStringWidth - 0.5 * stringBound.getWidth() + BASE_BOX_SIZE * boxOffset.y, -BASE_BOX_SIZE * (boxIdx + 0.5 + boxOffset.x));
+            svgCanvas_.translate(maxStringWidth - 0.5 * stringBound_.getWidth() + BASE_BOX_SIZE * boxOffset.y, -BASE_BOX_SIZE * (boxIdx + 0.5 + boxOffset.x));
             drawStringFromCenter(svgCanvas_, format(Locale.US, "%,d", i), 0, 0);
         }
+    }
+
+    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, List<ChrBaseRegion> regions)
+    {
+        int startIdx = regions.get(0).start();
+        int endIdx = regions.get(regions.size() - 1).end();
+        int boxLength = endIdx - startIdx + 1;
+        SVGGraphics2D svgCanvas = new SVGGraphics2D(baseBoxSizePx * boxLength, baseBoxSizePx);
+
+        // work in units of BASE_BOX_SIZE
+        svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
+
+        svgCanvas.setFont(BASE_FONT);
+        for(ChrBaseRegion region : regions)
+        {
+            String chromosome = enforceChrPrefix(region.chromosome());
+            double boxCenterX = region.start() + 0.5d * region.baseLength();
+            renderText(svgCanvas, ZERO_2D, boxCenterX, 0.5, svgCanvas.getFont(), Color.BLACK, chromosome, null, 1.0);
+        }
+
+        return svgCanvas;
     }
 
     private static void drawForwardArrow(final SVGGraphics2D svgCanvas_, final Point2D.Double offset, double left, double top, double width, double height)

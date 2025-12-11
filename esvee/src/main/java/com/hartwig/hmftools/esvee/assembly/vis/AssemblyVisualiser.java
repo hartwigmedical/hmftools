@@ -2,14 +2,19 @@ package com.hartwig.hmftools.esvee.assembly.vis;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
+import static com.hartwig.hmftools.common.vis.SvgRender.BASE_BOX_SIZE;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
+import static com.hartwig.hmftools.common.vis.SvgRender.COORD_FONT;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
+import static com.hartwig.hmftools.common.vis.SvgUtil.getStringBounds;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.DISPLAY_EVERY_NTH_COORD;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
 import static j2html.TagCreator.body;
@@ -23,12 +28,14 @@ import static j2html.TagCreator.tr;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,10 +47,12 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
+import com.hartwig.hmftools.common.vis.SvgRender;
 import com.hartwig.hmftools.esvee.assembly.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.alignment.AlignData;
 import com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.assembly.alignment.BreakendSegment;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.jfree.svg.SVGGraphics2D;
@@ -132,10 +141,13 @@ public class AssemblyVisualiser
         List<DomContent> headerCols = Lists.newArrayList();
 
         headerCols.add(td(""));
-        headerCols.add(td("XXX"));
-        // TODO: headerCols.add(td(rawHtml(renderCoords(READ_HEIGHT_PX, mViewRegion, mVariant.position(), DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
+        headerCols.add(td(renderCoords()).withStyle(lightGrayBgStyle.toString()));
         DomContent headerRow = tr().with(headerCols);
         tableRows.add(headerRow);
+
+        // chr label row
+        DomContent chrLabelRow = tr(td("chr").withStyle(headerStyle.toString()), td(renderChomosomeLabels()));
+        tableRows.add(chrLabelRow);
 
         // ref row
         DomContent refRow = tr(td("ref").withStyle(headerStyle.toString()), td(renderRef()));
@@ -249,19 +261,6 @@ public class AssemblyVisualiser
         return refViewModel;
     }
 
-    // TODO:
-//    public static SVGGraphics2D renderBaseSeq(double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
-//            boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
-//    {
-//        SVGGraphics2D svgCanvas = new SVGGraphics2D(
-//                baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
-//        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases);
-//        return svgCanvas;
-//    }
-//
-//    public static void renderBaseSeq(final SVGGraphics2D svgCanvas_, final Point2D.Double boxOffset, double baseBoxSizePx, final BaseRegion renderRegion, final BaseSeqViewModel bases,
-//            boolean shadeQuals, final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
-
     private DomContent renderRef()
     {
         int totalBoxWidth = 0;
@@ -279,6 +278,58 @@ public class AssemblyVisualiser
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
         }
 
+        return rawHtml(svgCanvas.getSVGElement());
+    }
+
+    private DomContent renderCoords()
+    {
+        double scalingFactor = READ_HEIGHT_PX / BASE_BOX_SIZE;
+        double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
+        List<Rectangle2D> stringBounds = Lists.newArrayList();
+        int totalBoxWidth = 0;
+        for(BaseSeqViewModel viewModel : mRefViewModel)
+        {
+            totalBoxWidth += viewModel.LastBasePos - viewModel.FirstBasePos + 1 + 2 * BOX_PADDING;
+            for(int i = viewModel.FirstBasePos; i <= viewModel.LastBasePos; i++)
+                stringBounds.add(getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)));
+        }
+
+        double maxStringWidth = stringBounds.stream().mapToDouble(Rectangle2D::getWidth).max().getAsDouble();
+
+        SVGGraphics2D svgCanvas = new SVGGraphics2D(
+                scalingFactor * BASE_BOX_SIZE * totalBoxWidth,
+                scalingFactor * (maxStringWidth + 2 * charWidth));
+        AffineTransform initTransform = svgCanvas.getTransform();
+        double xBoxOffset = 0d;
+        for(int i = 0; i < mRefViewModel.size(); i++)
+        {
+            BaseSeqViewModel viewModel = mRefViewModel.get(i);
+            Junction junction = mAssemblyAlignment.assemblies().get(i).junction();
+
+            BaseRegion viewRegion = new BaseRegion(viewModel.FirstBasePos, viewModel.LastBasePos);
+            svgCanvas.setTransform(initTransform);
+
+            int centerPosition = junction.Orient == FORWARD ? viewRegion.end() : viewRegion.start();
+            Point2D.Double canvasSize = new Point2D.Double(scalingFactor * BASE_BOX_SIZE * (viewRegion.baseLength() + 2 * BOX_PADDING), svgCanvas.getHeight());
+            SvgRender.renderCoords(svgCanvas, new Point2D.Double(xBoxOffset, 0d), canvasSize, READ_HEIGHT_PX, viewRegion, centerPosition, DISPLAY_EVERY_NTH_COORD, maxStringWidth);
+            xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+        }
+
+        return rawHtml(svgCanvas.getSVGElement());
+    }
+
+    private DomContent renderChomosomeLabels()
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+        int xBoxOffset = 0;
+        for(BaseSeqViewModel viewModel : mRefViewModel)
+        {
+            int length = viewModel.LastBasePos - viewModel.FirstBasePos + 1 + 2 * BOX_PADDING;
+            regions.add(new ChrBaseRegion(viewModel.Chromosome, xBoxOffset, xBoxOffset + length - 1));
+            xBoxOffset += length;
+        }
+
+        SVGGraphics2D svgCanvas = SvgRender.renderChrLabels(READ_HEIGHT_PX, regions);
         return rawHtml(svgCanvas.getSVGElement());
     }
 
