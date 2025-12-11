@@ -23,6 +23,33 @@ public final class LineChecker
             for(int i = 0; i < breakends.size() - 1; ++i)
             {
                 Breakend breakend = breakends.get(i);
+
+                // first search for likely remote line source sites
+                for(int j = i + 1; j < breakends.size(); ++j)
+                {
+                    Breakend nextBreakend = breakends.get(j);
+
+                    if(abs(breakend.Position - nextBreakend.Position) > maxProximateLineDistance)
+                        break;
+
+                    if(breakend.otherBreakend() == nextBreakend)
+                        continue;
+
+                    if(!breakend.isLine() && !nextBreakend.isLine())
+                        continue;
+
+                    // mark remote source sites
+                    if(!breakend.sv().isLineSite() && !closeToOriginalJunction(breakend, maxProximateLineDistance))
+                    {
+                        breakend.markLineRemoteSourceSite();
+                    }
+                    else if(!nextBreakend.sv().isLineSite() && !closeToOriginalJunction(nextBreakend, maxProximateLineDistance))
+                    {
+                        nextBreakend.markLineRemoteSourceSite();
+                    }
+                }
+
+                // otherwise check for pairs of line and the other insertion breakend
                 Breakend nextBreakend = breakends.get(i + 1);
 
                 if(breakend.otherBreakend() == nextBreakend)
@@ -31,27 +58,23 @@ public final class LineChecker
                 if(!breakend.isLine() && !nextBreakend.isLine())
                     continue;
 
+                if(breakend.isLineRemoteSourceSite() || nextBreakend.isLineRemoteSourceSite())
+                    continue;
+
                 if(!withinLineProximity(breakend.Position, nextBreakend.Position, breakend.Orient, nextBreakend.Orient))
                     continue;
-
-                // mark remote source sites
-                if(!breakend.sv().isLineSite() && !closeToOriginalJunction(breakend, maxProximateLineDistance))
-                {
-                    breakend.markLineRemoteSourceSite();
-                    continue;
-                }
-
-                if(!nextBreakend.sv().isLineSite() && !closeToOriginalJunction(nextBreakend, maxProximateLineDistance))
-                {
-                    nextBreakend.markLineRemoteSourceSite();
-                    continue;
-                }
 
                 // mark if either site is line
                 breakend.setLineSiteBreakend(nextBreakend);
                 nextBreakend.setLineSiteBreakend(breakend);
             }
         }
+    }
+
+    private static boolean closeToOriginalJunction(final Variant variant, int maxProximateLineDistance)
+    {
+        return closeToOriginalJunction(variant.breakendStart(), maxProximateLineDistance)
+            || (variant.breakendEnd() != null && closeToOriginalJunction(variant.breakendEnd(), maxProximateLineDistance));
     }
 
     private static boolean closeToOriginalJunction(final Breakend breakend, int maxProximateLineDistance)
