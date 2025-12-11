@@ -65,9 +65,9 @@ public final class ReadAdjustments
 
             int softClipIndex = fromStart ? scBaseCount - 1 : read.basesLength() - scBaseCount;
 
-            if(hasLineTail(read.getBases(), softClipIndex, fromStart, lineBase))
+            if(hasLineTail(read.getBases(), softClipIndex, fromStart, lineBase, read.getBaseQuality()))
             {
-                read.markLineTail();
+                read.markLineTail(fromStart);
                 return;
             }
         }
@@ -102,7 +102,9 @@ public final class ReadAdjustments
 
             byte lineBase = fromStart ? LINE_BASE_A : LINE_BASE_T;
 
-            if(read.hasLineTail())
+            boolean hasLineTail = fromStart ? read.hasLineTailStart() : read.hasLineTailEnd();
+
+            if(hasLineTail)
             {
                 lineExclusionLength = lineTestLength;
 

@@ -101,7 +101,7 @@ public class JunctionAssembler
                 {
                     int softClipJunctionExtension = readJunctionExtensionLength(read, mJunction);
 
-                    if(read.hasLineTail())
+                    if(read.hasLineTail(mJunction.isForward()))
                     {
                         hasMinLengthSoftClipRead |= softClipJunctionExtension >= LINE_MIN_EXTENSION_LENGTH;
 

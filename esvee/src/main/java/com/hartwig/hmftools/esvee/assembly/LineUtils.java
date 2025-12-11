@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBaseQual;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_T;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_CHAR_A;
@@ -19,6 +20,8 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -108,14 +111,15 @@ public final class LineUtils
 
             int softClipIndex = fromStart ? scBaseCount - 1 : record.getReadBases().length - scBaseCount;
 
-            if(hasLineTail(record.getReadBases(), softClipIndex, fromStart, lineBase))
+            if(hasLineTail(record.getReadBases(), softClipIndex, fromStart, lineBase, record.getBaseQualities()))
                 return true;
         }
 
         return false;
     }
 
-    public static boolean hasLineTail(final byte[] bases, final int softClipIndex, boolean leftClipped, final byte lineBase)
+    public static boolean hasLineTail(
+            final byte[] bases, final int softClipIndex, boolean leftClipped, final byte lineBase, @Nullable final byte[] baseQuals)
     {
         int scLength = leftClipped ? softClipIndex + 1 : bases.length - softClipIndex;
 
@@ -131,19 +135,22 @@ public final class LineUtils
         {
             ++totalBaseCount;
 
-            if(bases[index] != lineBase)
+            if(baseQuals == null || !isUncertainBaseQual(baseQuals[index]))
             {
-                ++nonLineBaseCount;
+                if(bases[index] != lineBase)
+                {
+                    ++nonLineBaseCount;
 
-                if(totalBaseCount > LINE_POLY_AT_TEST_LEN)
-                    break;
+                    if(totalBaseCount > LINE_POLY_AT_TEST_LEN)
+                        break;
 
-                if(nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
-                    return false;
-            }
-            else
-            {
-                ++lineBaseCount;
+                    if(nonLineBaseCount > LINE_POLY_AT_TEST_LEN - LINE_POLY_AT_REQ)
+                        return false;
+                }
+                else
+                {
+                    ++lineBaseCount;
+                }
             }
 
             index += leftClipped ? -1 : 1;
@@ -191,7 +198,7 @@ public final class LineUtils
 
         for(Read read : reads)
         {
-            if(!read.hasLineTail())
+            if(!read.hasLineTail(isForward))
                 continue;
 
             if(fivePrimeOnly)

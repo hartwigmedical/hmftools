@@ -127,7 +127,7 @@ public class SupportRead
         mMapQual = read.mappingQuality();
         mHasIndel = read.indelCoords() != null;
         mIndelCoords = read.indelCoords() != null && read.indelCoords().Length >= MIN_INDEL_LENGTH ? read.indelCoords() : null;
-        mHasLineTail = read.hasLineTail();
+        mHasLineTail = read.hasLineTailStart() || read.hasLineTailEnd();
 
         mExtBaseMatches = matches;
         mExtBaseMismatches = mismatches;

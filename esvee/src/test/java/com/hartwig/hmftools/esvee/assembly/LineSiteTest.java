@@ -136,7 +136,14 @@ public class LineSiteTest
         List<Read> reads = List.of(read1, read1b, read2, read3, read4);
         reads.forEach(x -> ReadAdjustments.markLineSoftClips(x));
 
-        assertFalse(read4.hasLineTail());
+        assertTrue(read1.hasLineTailEnd());
+        assertTrue(read2.hasLineTailEnd());
+        assertTrue(read3.hasLineTailEnd());
+
+        assertFalse(read1.hasLineTailStart());
+
+        assertFalse(read4.hasLineTailStart());
+        assertFalse(read4.hasLineTailEnd());
 
         JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
 

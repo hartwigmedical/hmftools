@@ -72,7 +72,7 @@ public class ExtensionSeqBuilder
             if(readJunctionIndex == INVALID_INDEX)
                 continue;
 
-            hasLineReads |= read.hasLineTail();
+            hasLineReads |= read.hasLineTail(mBuildForwards);
 
             // calculate how many bases beyond the junction the read extends
             // for positive orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 3
@@ -415,11 +415,13 @@ public class ExtensionSeqBuilder
 
     private boolean checkLineSequence()
     {
+        int validReadCount = (int)mSequenceBuilder.reads().stream().filter(x -> !x.mismatched()).count();
+
         List<Read> validLineReads = mSequenceBuilder.reads().stream()
-                .filter(x -> !x.mismatched() && x.read().hasLineTail())
+                .filter(x -> !x.mismatched() && x.read().hasLineTail(mBuildForwards))
                 .map(x -> x.read()).collect(Collectors.toList());
 
-        if(validLineReads.isEmpty())
+        if(validLineReads.size() <= validReadCount * 0.5) // must be the majority of reads
             return false;
 
         int lineExtensionLength = findConsensusLineExtension(validLineReads, mJunction);
@@ -430,7 +432,7 @@ public class ExtensionSeqBuilder
         int firstExtIndex = mBuildForwards ? 1 : mSequenceBuilder.baseLength() - 2;
         byte lineBase = mJunction.isForward() ? LINE_BASE_A : LINE_BASE_T;
 
-        return hasLineTail(mSequenceBuilder.bases(), firstExtIndex, !mBuildForwards, lineBase);
+        return hasLineTail(mSequenceBuilder.bases(), firstExtIndex, !mBuildForwards, lineBase, null);
     }
 
     public String buildInformation()

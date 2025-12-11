@@ -70,7 +70,8 @@ public class Read
     private Integer mIndelInferredUnclippedEnd;
 
     private boolean mIsReference;
-    private boolean mHasLineTail;
+    private boolean mHasLineTailStart;
+    private boolean mHasLineTailEnd;
     private int mTrimCountStart;
     private int mTrimCountEnd;
     private boolean mLowQualTrimmed;
@@ -102,7 +103,8 @@ public class Read
         mIndelInferredUnclippedEnd = null;
         mInvalidIndel = false;
 
-        mHasLineTail = false;
+        mHasLineTailStart = false;
+        mHasLineTailEnd = false;
         mTrimCountStart = 0;
         mTrimCountEnd = 0;
         mLowQualTrimmed = false;
@@ -353,9 +355,18 @@ public class Read
     public boolean isReference() { return mIsReference; }
     public void markReference() { mIsReference = true; }
 
-    public boolean hasLineTail() { return mHasLineTail; }
-    public void markLineTail() { mHasLineTail = true; }
+    public boolean hasLineTailStart() { return mHasLineTailStart; }
+    public boolean hasLineTailEnd() { return mHasLineTailEnd; }
 
+    public boolean hasLineTail(boolean isForwardJunction) { return isForwardJunction ? mHasLineTailEnd : mHasLineTailStart; }
+
+    public void markLineTail(boolean isStart)
+    {
+        if(isStart)
+            mHasLineTailStart = true;
+        else
+            mHasLineTailEnd = true;
+    }
 
     @VisibleForTesting
     public String getBasesString() { return bytesToString(getBases()); }

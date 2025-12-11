@@ -283,38 +283,40 @@ public class ReadAdjustmentsTest
         String softClipBases = nonLineSequence + lineSequence;
         String readBases = softClipBases + REF_BASES_RANDOM_100;
 
-        assertTrue(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A));
+        byte[] defaultQuals = buildDefaultBaseQuals(readBases.length());
+
+        assertTrue(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A, defaultQuals));
 
         lineSequence = "AAAAAAGAAAAAATAAAA";
         softClipBases = nonLineSequence + lineSequence;
         readBases = softClipBases + REF_BASES_RANDOM_100;
 
-        assertTrue(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A));
+        assertTrue(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A, defaultQuals));
 
         // too many non-line bases
         lineSequence = "AAAAAAGAAACAATAAAA";
         softClipBases = nonLineSequence + lineSequence;
         readBases = softClipBases + REF_BASES_RANDOM_100;
 
-        assertFalse(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A));
+        assertFalse(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A, defaultQuals));
 
         // an extension of a local repeat
         lineSequence = "AAAAAAAAAAAAAAAA";
         softClipBases = nonLineSequence + lineSequence;
         readBases = softClipBases + "AAAAAAAAAA" + REF_BASES_RANDOM_100;
 
-        assertFalse(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A));
+        assertFalse(hasLineTail(readBases.getBytes(), softClipBases.length() - 1, true, LINE_BASE_A, defaultQuals));
 
         // reverse side
         lineSequence = "TTTTTCTTTTTTTGTTTT";
         softClipBases = lineSequence + nonLineSequence;
         readBases = REF_BASES_RANDOM_100 + softClipBases;
 
-        assertTrue(hasLineTail(readBases.getBytes(), REF_BASES_RANDOM_100.length(), false, LINE_BASE_T));
+        assertTrue(hasLineTail(readBases.getBytes(), REF_BASES_RANDOM_100.length(), false, LINE_BASE_T, defaultQuals));
 
         readBases = REF_BASES_RANDOM_100 + "TTTTTTTTTT" + softClipBases;
 
-        assertFalse(hasLineTail(readBases.getBytes(), REF_BASES_RANDOM_100.length() + 10, false, LINE_BASE_T));
+        assertFalse(hasLineTail(readBases.getBytes(), REF_BASES_RANDOM_100.length() + 10, false, LINE_BASE_T, defaultQuals));
     }
 
     @Test
@@ -363,8 +365,8 @@ public class ReadAdjustmentsTest
         read.bamRecord().setReadNegativeStrandFlag(true);
 
         ReadAdjustments.markLineSoftClips(read);
-        assertFalse(read.hasLineTail());
-
+        assertFalse(read.hasLineTailStart());
+        assertFalse(read.hasLineTailEnd());
 
         // test the other orientation
         lineSequence = Nucleotides.reverseComplementBases(lineSequence);
@@ -391,9 +393,12 @@ public class ReadAdjustmentsTest
         // expansion of local repeat
         readBases = REF_BASES_RANDOM_100 + lineSequence + softClipBases;
         read = createRead(TEST_READ_ID, 101, readBases, makeCigarString(readBases, 0, softClipBases.length()));
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
         read.bamRecord().setBaseQualities(baseQualities);
 
         ReadAdjustments.markLineSoftClips(read);
-        assertFalse(read.hasLineTail());
+        assertFalse(read.hasLineTailStart());
+        assertFalse(read.hasLineTailEnd());
     }
 }
