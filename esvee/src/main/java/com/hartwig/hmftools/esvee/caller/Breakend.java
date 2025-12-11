@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.caller;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
@@ -40,12 +39,12 @@ public class Breakend
     public final String InsertSequence;
     public final Interval ConfidenceInterval;
     public final Interval InexactHomology;
-    public final boolean IsLineInsertion;
 
     private final Variant mVariant;
     private final Genotype mRefGenotype;
     private final Genotype mTumorGenotype;
 
+    private final boolean mIsLineInsertion;
     private Breakend mLineSiteBreakend;
     private boolean mLineRemoteSourceSite;
 
@@ -70,7 +69,7 @@ public class Breakend
         VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
         InsertSequence = altInsertCoords.InsertSequence;
 
-        IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
+        mIsLineInsertion = Context.hasAttribute(LINE_SITE);
 
         if(context.hasAttribute(IHOMPOS))
         {
@@ -143,7 +142,7 @@ public class Breakend
     public boolean isSgl() { return mVariant.isSgl(); }
     public StructuralVariantType type() { return mVariant.type(); }
 
-    public boolean isLine() { return IsLineInsertion || Context.hasAttribute(LINE_SITE); }
+    public boolean isLine() { return mIsLineInsertion; }
     public void setLineSiteBreakend(final Breakend breakend) { mLineSiteBreakend = breakend; }
     public Breakend lineSiteBreakend() { return mLineSiteBreakend; }
 

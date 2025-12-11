@@ -71,12 +71,6 @@ public final class LineChecker
         }
     }
 
-    private static boolean closeToOriginalJunction(final Variant variant, int maxProximateLineDistance)
-    {
-        return closeToOriginalJunction(variant.breakendStart(), maxProximateLineDistance)
-            || (variant.breakendEnd() != null && closeToOriginalJunction(variant.breakendEnd(), maxProximateLineDistance));
-    }
-
     private static boolean closeToOriginalJunction(final Breakend breakend, int maxProximateLineDistance)
     {
         List<Junction> originalJunctions = breakend.sv().originalJunctions();
