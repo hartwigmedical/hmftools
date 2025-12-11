@@ -1,13 +1,20 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 public final class SeqTechUtils
@@ -139,5 +146,82 @@ public final class SeqTechUtils
         }
 
         return (maxFivePrimePos - minFivePrimePos) + (maxThreePrimePos - minThreePrimePos) > SBX_PRIME_POSITION_RANGE_THRESHOLD;
+    }
+
+    private static boolean withinLikelyDuplicateRange(final Read first, final Read second)
+    {
+        if(first.orientation() != second.orientation())
+            return false;
+
+        int firstStart = first.unclippedStart() - first.trimCountStart();
+        int firstEnd = first.unclippedEnd() + first.trimCountEnd();
+        int secondStart = second.unclippedStart() - second.trimCountStart();
+        int secondEnd = second.unclippedEnd() + second.trimCountEnd();
+
+        return abs(firstStart - secondStart) + abs(firstEnd - secondEnd) <= SBX_PRIME_POSITION_RANGE_THRESHOLD;
+    }
+
+    public static List<Read> findSbxPossibleDuplicates(final Junction junction, final List<Read> reads)
+    {
+        List<Integer> extensionLengths = Lists.newArrayListWithCapacity(reads.size());
+
+        for(Read read : reads)
+        {
+            extensionLengths.add(readJunctionExtensionLength(read, junction));
+        }
+
+        // look for a group of reads with significantly longer extension lengths and likely duplicates of each other
+        List<Integer> sortedLengths = Lists.newArrayList(extensionLengths);
+        Collections.sort(sortedLengths, Collections.reverseOrder());
+
+        int minLongLength = -1;
+        int readsAboveLongLength = 0;
+        for(int i = 0; i < sortedLengths.size() - 1; ++i)
+        {
+            int extLength = sortedLengths.get(i);
+            int nextLength = sortedLengths.get(i + 1);
+
+            if(extLength > nextLength * WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR)
+            {
+                minLongLength = extLength;
+                readsAboveLongLength = i + 1;
+                break;
+            }
+        }
+
+        if(readsAboveLongLength < 2)
+            return Collections.emptyList();
+
+        List<Read> candidateDuplicates = Lists.newArrayListWithCapacity(readsAboveLongLength);
+
+        for(int r = 0; r < reads.size(); ++r)
+        {
+            if(extensionLengths.get(r) >= minLongLength)
+            {
+                candidateDuplicates.add(reads.get(r));
+            }
+        }
+
+        List<Read> likelyDuplicates = Lists.newArrayListWithCapacity(readsAboveLongLength - 1);
+
+        for(int i = 0; i < candidateDuplicates.size() - 1; ++i)
+        {
+            Read read = candidateDuplicates.get(i);
+
+            if(likelyDuplicates.contains(read))
+                continue;
+
+            for(int j = i + 1; j < candidateDuplicates.size(); ++j)
+            {
+                Read nextRead = candidateDuplicates.get(j);
+
+                if(withinLikelyDuplicateRange(read, nextRead))
+                {
+                    likelyDuplicates.add(nextRead);
+                }
+            }
+        }
+
+        return likelyDuplicates;
     }
 }

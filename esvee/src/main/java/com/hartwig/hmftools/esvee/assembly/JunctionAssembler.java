@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensio
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasIndelJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.LineUtils.isLineWithLocalAlignedInsert;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.addOrCreateMateRemoteRegion;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.findSbxPossibleDuplicates;
 import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.passSbxDistinctPrimePositionsFilter;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readSoftClipsAndCrossesJunction;
@@ -123,6 +124,10 @@ public class JunctionAssembler
 
         if(!hasMinLengthSoftClipRead || !aboveMinReadThreshold(extensionReads))
             return Collections.emptyList();
+
+        List<Read> duplicateLongExtensionReads = isSbx() ? findSbxPossibleDuplicates(mJunction, extensionReads) : Collections.emptyList();
+        duplicateLongExtensionReads.forEach(x -> extensionReads.remove(x));
+        duplicateLongExtensionReads.forEach(x -> junctionReads.remove(x));
 
         ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads);
 
