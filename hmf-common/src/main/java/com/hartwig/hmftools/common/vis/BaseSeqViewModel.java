@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.vis;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 import com.google.common.collect.Lists;
 
@@ -75,13 +76,24 @@ public class BaseSeqViewModel
 
     public static BaseSeqViewModel fromRead(final SAMRecord read)
     {
-        return fromConsensusFragment(read, null, null);
+        return fromRead(read, OptionalInt.empty());
+    }
+
+    public static BaseSeqViewModel fromRead(final SAMRecord read, final OptionalInt unclippedStartOverride)
+    {
+        return fromConsensusFragment(read, null, null, unclippedStartOverride);
     }
 
     public static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
             @Nullable final BaseSeqViewModel second)
     {
-        int unclippedStart = consensusRead.getUnclippedStart();
+        return fromConsensusFragment(consensusRead, first, second, OptionalInt.empty());
+    }
+
+    public static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
+            @Nullable final BaseSeqViewModel second, final OptionalInt unclippedStartOverride)
+    {
+        int unclippedStart = unclippedStartOverride.orElse(consensusRead.getUnclippedStart());
         String readString = consensusRead.getReadString();
         byte[] baseQuals = consensusRead.getBaseQualities();
 

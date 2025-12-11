@@ -128,7 +128,7 @@ public class AssemblyConfig
     public final boolean ApplyRemotePhasingReadCheckThreshold;
 
     private static final String RUN_ASSEMBLY_VIS = "run_assembly_vis";
-    public static boolean CLEAR_CACHED_READ = true;
+    public static boolean CLEAR_CACHED_READ_ = true;
 
     private static final String DECOY_GENOME = "decoy_genome";
 
@@ -310,7 +310,7 @@ public class AssemblyConfig
         RunVisualiser = configBuilder.hasFlag(RUN_ASSEMBLY_VIS) && !SpecificJunctions.isEmpty();
 
         if(RunVisualiser || PurpleDir != null)
-            CLEAR_CACHED_READ = false;
+            CLEAR_CACHED_READ_ = false;
 
         boolean hasFilters = SpecificChrRegions.hasFilters() || !SpecificJunctions.isEmpty();
 

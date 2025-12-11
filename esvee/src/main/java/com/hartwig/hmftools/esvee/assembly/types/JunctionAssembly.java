@@ -585,7 +585,7 @@ public class JunctionAssembly
 
     public void clearSupportCachedReads()
     {
-        if(!AssemblyConfig.CLEAR_CACHED_READ)
+        if(!AssemblyConfig.CLEAR_CACHED_READ_)
             return;
 
         for(SupportRead read : mSupport)
