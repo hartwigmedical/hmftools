@@ -40,6 +40,7 @@ public class FindingRecordFactory
         PurpleRecord purple = orangeRecord.purple();
 
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
+                .refGenomeVersion(orangeRecord.refGenomeVersion())
                 .driverSomaticSmallVariants(SmallVariantFactory.create(
                         FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers()))
                 .driverSomaticGainDeletions(somaticGainsDelsFromDrivers(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
