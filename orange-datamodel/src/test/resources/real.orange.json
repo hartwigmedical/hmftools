@@ -112,6 +112,14 @@
         "driverLikelihood": 1.0,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": true
+      },
+      {
+        "driverLikelihood": 1.0,
+        "gene": "PTEN",
+        "isCanonical": true,
+        "likelihoodMethod": "DEL",
+        "transcript": "ENST00000371953",
+        "type": "DEL"
       }
     ],
     "germlineDrivers": [],
