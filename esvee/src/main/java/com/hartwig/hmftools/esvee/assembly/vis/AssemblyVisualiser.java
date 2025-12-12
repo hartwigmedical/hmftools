@@ -8,6 +8,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.JQUERY_SCRIPT;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.getJavascript_;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BASE_BOX_SIZE;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
@@ -20,6 +23,7 @@ import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
+import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.td;
@@ -52,7 +56,6 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.SAMRecord;
@@ -87,14 +90,13 @@ public class AssemblyVisualiser
 
         List<DomContent> readTableRows = renderReadTable();
         DomContent readTable = div(styledTable(readTableRows, readTableStyle));
-
-        // TODO: JavaScript
         String htmlStr = html(
+                header(JQUERY_SCRIPT),
                 body(
                         variantInfo,
                         verticalSpacer,
-                        readTable
-                ).withStyle(BASE_FONT_STYLE.toString())).render();
+                        readTable,
+                        getJavascript_()).withStyle(BASE_FONT_STYLE.toString())).render();
 
         // TODO: configure vis dir
         // TODO: make sure dir path exists
@@ -269,17 +271,10 @@ public class AssemblyVisualiser
 
         DomContent svgEl = rawHtml(svgCanvas.getSVGElement());
         DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
-        DomContent containerDiv = div(svgDiv).withStyle(baseDivStyle.toString());
+        DomContent readInfoDiv = renderReadInfoTable(record, null);
+        DomContent containerDiv = div(svgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
 
         return containerDiv;
-
-        // TODO:
-//        DomContent svgEl = renderBases(readViewModel, true, true);
-//        DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
-//        DomContent readInfoDiv = renderReadInfoTable(firstRead, secondRead);
-//
-//        DomContent containerDiv;
-//      containerDiv = div(svgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
     }
 
     // TODO: rewrite, and clean up. Just use junctions?
