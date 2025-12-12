@@ -423,7 +423,8 @@ Data key: SampleId, Gene
 | maxCopyNumer  | Threshold [0.5, 15%]    |
 
 ## Version History and Download Links
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.3)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.4.0)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.3.4)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)
