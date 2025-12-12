@@ -13,6 +13,23 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface Disruption extends Driver {
+
+    enum Type
+    {
+        SOMATIC_DISRUPTION,
+        SOMATIC_HOM_DUP_DISRUPTION,
+        SOMATIC_HOM_DEL_DISRUPTION,
+        GERMLINE_DISRUPTION,
+        GERMLINE_HOM_DUP_DISRUPTION;
+
+        boolean isSomatic() { return this == SOMATIC_DISRUPTION || this == SOMATIC_HOM_DUP_DISRUPTION || this == SOMATIC_HOM_DEL_DISRUPTION; }
+        boolean isGermline() { return this == GERMLINE_DISRUPTION || this == GERMLINE_HOM_DUP_DISRUPTION; }
+        boolean isHomozygous() { return this == SOMATIC_HOM_DEL_DISRUPTION; }
+    }
+
+    @NotNull
+    Type type();
+
     @NotNull
     String chromosome();
 
@@ -27,7 +44,7 @@ public interface Disruption extends Driver {
 
     boolean isCanonical();
 
-    @NotNull LinxBreakendType type();
+    @NotNull LinxBreakendType breakendType();
 
     @Nullable
     Double disruptedCopies();

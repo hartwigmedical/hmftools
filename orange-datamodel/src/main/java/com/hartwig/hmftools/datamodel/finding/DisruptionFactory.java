@@ -11,7 +11,9 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,16 +24,81 @@ import org.jetbrains.annotations.Nullable;
 // create Disruption findings from Linx breakends
 public class DisruptionFactory
 {
+    // when can we move to kotlin
+    @FunctionalInterface
+    private interface DisruptionTypeFinder {
+        Disruption.Type apply(String gene, String transcript, boolean isCanonical);
+    }
+
     public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
 
     private record Pair<A, B>(@Nullable A left, @Nullable B right) {}
 
+    // for the types of disruptions, see hmftools.common.driver.DriverType, they are:
+    // germline: GERMLINE_DISRUPTION, GERMLINE_HOM_DUP_DISRUPTION
+    // somatic: HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION, DISRUPTION
+
+    // we can work out which disruption type it was by the following logic:
+    // Somatic:
+    //  1. check if the disruption exists in the drivers list, and if it is, use the driver type if the type is HOM_DUP_DISRUPTION or HOM_DEL_DISRUPTION.
+    //  2. if not, use SOMATIC_DISRUPTION as the type.
+    // Germline:
+    //  1. check if the disruption exists in the homozygous disruption list, if it is, then type is GERMLINE_HOM_DUP_DISRUPTION.
+    //  2. if not, then type is GERMLINE_DISRUPTION.
+
+    // more note on Homozygous disruptions:
+    // right now it is created from linx driver catalog entries instead of the linx breakends.
+    // It select HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION and GERMLINE_HOM_DUP_DISRUPTION. Unfortunately there is no foolproof way to link
+    // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
+    // We can do it for the backport version if that makes it easier.
+
     @NotNull
-    public static List<Disruption> createDisruptions(
-            @NotNull FindingKeys.SampleType sampleType,
+    public static List<Disruption> createGermlineDisruptions(
             @NotNull Collection<LinxBreakend> breakends,
             @NotNull Collection<LinxSvAnnotation> structuralVariants,
+            @NotNull List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
+    {
+        DisruptionTypeFinder findDisruptionType = (gene, transcript, isCanonical) -> {
+            return germlineHomozygousDisruptions.stream()
+                .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.isCanonical() == isCanonical)
+                ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
+                : Disruption.Type.GERMLINE_DISRUPTION;
+        };
+
+        return createDisruptions(FindingKeys.SampleType.GERMLINE, breakends, structuralVariants, true, findDisruptionType);
+    }
+
+    @NotNull
+    public static List<Disruption> createSomaticDisruptions(
+            @NotNull Collection<LinxBreakend> breakends,
+            @NotNull Collection<LinxSvAnnotation> structuralVariants,
+            @NotNull List<LinxDriver> linxDrivers,
             boolean hasReliablePurity)
+    {
+        Map<String, Disruption.Type> geneDriverTypeMap = new HashMap<>();
+        for(LinxDriver linxDriver : linxDrivers)
+        {
+            Disruption.Type disruptionType = switch (linxDriver.type())
+            {
+                case HOM_DUP_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DUP_DISRUPTION;
+                case HOM_DEL_DISRUPTION -> Disruption.Type.SOMATIC_HOM_DEL_DISRUPTION;
+                default -> Disruption.Type.SOMATIC_DISRUPTION;
+            };
+            geneDriverTypeMap.put(linxDriver.gene(), disruptionType);
+        }
+        DisruptionTypeFinder findDisruptionType = (gene, transcript, isCanonical) ->
+            geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
+
+        return createDisruptions(FindingKeys.SampleType.GERMLINE, breakends, structuralVariants, hasReliablePurity, findDisruptionType);
+    }
+
+    @NotNull
+    private static List<Disruption> createDisruptions(
+                @NotNull FindingKeys.SampleType sampleType,
+                @NotNull Collection<LinxBreakend> breakends,
+                @NotNull Collection<LinxSvAnnotation> structuralVariants,
+                boolean hasReliablePurity,
+                DisruptionTypeFinder disruptionTypeFinder)
     {
         List<Disruption> reportableDisruptions = new ArrayList<>();
         Map<SvAndTranscriptKey, Pair<LinxBreakend, LinxBreakend>> pairedMap = mapBreakendsPerStructuralVariant(breakends);
@@ -40,6 +107,8 @@ public class DisruptionFactory
         {
             LinxBreakend primarybreakendStart = pairedBreakend.left();
             LinxBreakend primarybreakendEnd = pairedBreakend.right();
+
+            LinxBreakend breakend = primarybreakendStart == null ? primarybreakendEnd : primarybreakendStart;
 
             double undisruptedCopyNumber;
             if(primarybreakendStart != null && primarybreakendEnd != null)
@@ -55,11 +124,14 @@ public class DisruptionFactory
             }
             else
             {
-                LinxBreakend breakend = primarybreakendStart == null ? primarybreakendEnd : primarybreakendStart;
                 undisruptedCopyNumber = breakend.undisruptedCopyNumber();
             }
+
+            Disruption.Type disruptionType = disruptionTypeFinder.apply(primarybreakendStart.gene(), primarybreakendStart.transcript(), primarybreakendStart.isCanonical());
+
             reportableDisruptions.add(createDisruption(
                     sampleType,
+                    disruptionType,
                     primarybreakendStart,
                     primarybreakendEnd,
                     undisruptedCopyNumber,
@@ -72,6 +144,7 @@ public class DisruptionFactory
     @NotNull
     public static Disruption createDisruption(
             @NotNull FindingKeys.SampleType sampleType,
+            @NotNull Disruption.Type disruptionType,
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
             double undisruptedCopyNumber,
@@ -91,12 +164,13 @@ public class DisruptionFactory
                 .findingKey(FindingKeys.disruption(sampleType, breakend))
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
+                .type(disruptionType)
                 .chromosome(breakend.chromosome())
                 .chromosomeBand(breakend.chromosomeBand())
                 .gene(breakend.gene())
                 .isCanonical(breakend.isCanonical())
                 .transcript(breakend.transcript())
-                .type(breakend.type())
+                .breakendType(breakend.type())
                 .disruptedCopies(hasReliablePurity ? breakend.junctionCopyNumber() : null)
                 .undisruptedCopies(hasReliablePurity ? undisruptedCopyNumber : null)
                 .clusterId(determineClusterId(structuralVariants, breakend))

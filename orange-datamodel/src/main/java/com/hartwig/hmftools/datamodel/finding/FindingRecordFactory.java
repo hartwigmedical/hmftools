@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDisruptions;
+import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createGermlineDisruptions;
+import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createSomaticDisruptions;
 import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.germlineDriverGainDels;
 import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticDriverGainDels;
 
@@ -46,14 +47,19 @@ public class FindingRecordFactory
         LinxRecord linx = orangeRecord.linx();
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
 
-        builder.driverSomaticDisruptions(createDisruptions(FindingKeys.SampleType.SOMATIC, linx.reportableSomaticBreakends(),
-                linx.allSomaticStructuralVariants(), hasReliablePurity));
+        builder.driverSomaticDisruptions(createSomaticDisruptions(
+                linx.reportableSomaticBreakends(),
+                linx.allSomaticStructuralVariants(),
+                linx.somaticDrivers(),
+                hasReliablePurity));
 
         if(linx.allGermlineStructuralVariants() != null)
         {
-            builder.driverGermlineDisruptions(createDisruptions(FindingKeys.SampleType.GERMLINE,
-                    Objects.requireNonNull(linx.reportableGermlineBreakends()),
-                    Objects.requireNonNull(linx.allGermlineStructuralVariants()), hasReliablePurity));
+            builder.driverGermlineDisruptions(
+                    createGermlineDisruptions(
+                            Objects.requireNonNull(linx.reportableGermlineBreakends()),
+                            Objects.requireNonNull(linx.allGermlineStructuralVariants()),
+                            Objects.requireNonNull(linx.germlineHomozygousDisruptions())));
         }
 
         CuppaData cuppa = orangeRecord.cuppa();
