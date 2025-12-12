@@ -46,6 +46,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
+import com.hartwig.hmftools.common.vis.BaseViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
 import com.hartwig.hmftools.common.vis.SvgRender;
@@ -56,6 +57,7 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.SAMRecord;
@@ -227,16 +229,17 @@ public class AssemblyVisualiser
         return tableRows;
     }
 
-    private DomContent renderRead(final JunctionAssembly assembly, final SupportRead read)
+    // TODO: cleanup
+    private DomContent renderRead(final JunctionAssembly assembly_, final SupportRead read)
     {
-        Junction junction = assembly.junction();
+//        Junction junction = assembly.junction();
 
-        int alignmentStart = assembly.junction().Position - read.junctionReadStartDistance();
+//        int unclippedStart = assembly.junction().Position - read.junctionReadStartDistance();
         SAMRecord record = read.cachedRead().bamRecord();
-        int leftClipSize = record.getAlignmentStart() - record.getUnclippedStart();
-        int unclippedStart = alignmentStart - leftClipSize;
-
-        BaseSeqViewModel readViewModel = BaseSeqViewModel.fromRead(record, OptionalInt.of(unclippedStart));
+        BaseRegion recordAlignedRegion = new BaseRegion(record.getAlignmentStart(), record.getAlignmentEnd());
+        // TODO:
+//        int leftClipSize = record.getAlignmentStart() - record.getUnclippedStart();
+        // int unclippedStart = alignmentStart - leftClipSize;
 
         int totalBoxWidth = 0;
         for(RefJunctionViewModel junctionViewModel : mRefViewModel)
@@ -248,23 +251,82 @@ public class AssemblyVisualiser
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0d;
-        for(RefJunctionViewModel junctionViewModel : mRefViewModel)
+        Junction readJunction = null;
+        int readJunctionIndex = -1;
+        BaseSeqViewModel readViewModel = null;
+        for(int i = 0; i < mRefViewModel.size(); i++)
         {
-            Junction refJunction = junctionViewModel.assembly.junction();
-            if(!refJunction.Chromosome.equals(junction.Chromosome))
-                continue;
-
-            if(refJunction.Orient != junction.Orient)
-                continue;
-
-            if(refJunction.Position != junction.Position)
-                continue;
+            RefJunctionViewModel junctionViewModel = mRefViewModel.get(i);
 
             BaseSeqViewModel refViewModel = junctionViewModel.viewModel;
             BaseRegion viewRegion = new BaseRegion(refViewModel.FirstBasePos, refViewModel.LastBasePos);
+
+            if(!record.getContig().equals(junctionViewModel.assembly.junction().Chromosome))
+            {
+                xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
+            BaseRegion refRegion = new BaseRegion(junctionViewModel.viewModel.FirstBasePos, junctionViewModel.viewModel.LastBasePos);
+            if(!recordAlignedRegion.overlaps(refRegion))
+            {
+                xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
+            // TODO: remove this
+            if(readJunction != null)
+                throw new RuntimeException("Multiple junctions match the read");
+
+            readJunction = junctionViewModel.assembly.junction();
+            readJunctionIndex = i;
+            int unclippedStart = readJunction.Position - read.junctionReadStartDistance();
+            readViewModel = BaseSeqViewModel.fromRead(record, OptionalInt.of(unclippedStart));
+
             svgCanvas.setTransform(initTransform);
             renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0d), READ_HEIGHT_PX, viewRegion, readViewModel, true, Maps.newHashMap(), refViewModel);
+
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+        }
+
+        // TODO: remove this
+        if(readJunction == null)
+            throw new RuntimeException("No junctions match the read");
+
+        Junction otherReadJunction = (readJunctionIndex == 0) ? mRefViewModel.get(1).assembly.junction() : mRefViewModel.get(0).assembly.junction();
+        List<BaseViewModel> baseViewModels = Lists.newArrayList();
+        if(readJunction.Orient == FORWARD)
+        {
+            for(int pos = readJunction.Position + 1; pos <= readViewModel.LastBasePos; pos++)
+            {
+                BaseViewModel baseViewModel = readViewModel.getBase(pos);
+                baseViewModels.add(baseViewModel);
+            }
+        }
+        else
+        {
+            for(int pos = readViewModel.FirstBasePos; pos < readJunction.Position; pos++)
+            {
+                BaseViewModel baseViewModel = readViewModel.getBase(pos);
+                baseViewModels.add(baseViewModel);
+            }
+        }
+
+        BaseSeqViewModel otherReadViewModel;
+        if(otherReadJunction.Orient == REVERSE)
+        {
+            otherReadViewModel = new BaseSeqViewModel(baseViewModels, otherReadJunction.Chromosome, otherReadJunction.Position, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
+        }
+        else
+        {
+            int posStart = otherReadJunction.Position - baseViewModels.size() + 1;
+            otherReadViewModel = new BaseSeqViewModel(baseViewModels, otherReadJunction.Chromosome, posStart, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
+        }
+
+        // TODO: HERE
+        if(true)
+        {
+            throw new NotImplementedException("TODO");
         }
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
@@ -352,6 +414,10 @@ public class AssemblyVisualiser
         // TODO:
         if(refIdx != refSeq.length())
             throw new RuntimeException("refIdx != refSeq.length()");
+
+        // TODO: assumption?
+        if(refViewModel.size() != 2)
+            throw new RuntimeException("Number of segments is not 2");
 
         return refViewModel;
     }
