@@ -144,6 +144,14 @@ public final class Doubles
         return Math.round(value * logValue) / logValue;
     }
 
+    public static double clamp(double val, double min, double max)
+    {
+        // TODO: remove this after java 21, use Math.clamp instead
+        if (val < min) return min;
+        else if (val > max) return max;
+        else return val;
+    }
+
     public static double interpolatedMedian(Collection<Double> input)
     {
         if(input.isEmpty())
