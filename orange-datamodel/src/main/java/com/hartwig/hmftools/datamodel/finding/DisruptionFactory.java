@@ -105,21 +105,22 @@ public class DisruptionFactory
 
         for(Pair<LinxBreakend, LinxBreakend> pairedBreakend : pairedMap.values())
         {
-            LinxBreakend primarybreakendStart = pairedBreakend.left();
-            LinxBreakend primarybreakendEnd = pairedBreakend.right();
+            LinxBreakend primaryBreakendStart = pairedBreakend.left();
+            LinxBreakend primaryBreakendEnd = pairedBreakend.right();
 
-            LinxBreakend breakend = primarybreakendStart == null ? primarybreakendEnd : primarybreakendStart;
+            LinxBreakend breakend = primaryBreakendStart == null ? primaryBreakendEnd : primaryBreakendStart;
+            assert breakend != null;
 
             double undisruptedCopyNumber;
-            if(primarybreakendStart != null && primarybreakendEnd != null)
+            if(primaryBreakendStart != null && primaryBreakendEnd != null)
             {
-                undisruptedCopyNumber = Math.min(primarybreakendStart.undisruptedCopyNumber(), primarybreakendEnd.undisruptedCopyNumber());
+                undisruptedCopyNumber = Math.min(primaryBreakendStart.undisruptedCopyNumber(), primaryBreakendEnd.undisruptedCopyNumber());
 
-                double copyNumberLeft = primarybreakendStart.junctionCopyNumber();
-                double copyNumberRight = primarybreakendEnd.junctionCopyNumber();
+                double copyNumberLeft = primaryBreakendStart.junctionCopyNumber();
+                double copyNumberRight = primaryBreakendEnd.junctionCopyNumber();
                 if (!Doubles.equal(copyNumberLeft, copyNumberRight))
                 {
-                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primarybreakendStart.gene());
+                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryBreakendStart.gene());
                 }
             }
             else
@@ -127,13 +128,13 @@ public class DisruptionFactory
                 undisruptedCopyNumber = breakend.undisruptedCopyNumber();
             }
 
-            Disruption.Type disruptionType = disruptionTypeFinder.apply(primarybreakendStart.gene(), primarybreakendStart.transcript(), primarybreakendStart.isCanonical());
+            Disruption.Type disruptionType = disruptionTypeFinder.apply(breakend.gene(), breakend.transcript(), breakend.isCanonical());
 
             reportableDisruptions.add(createDisruption(
                     sampleType,
                     disruptionType,
-                    primarybreakendStart,
-                    primarybreakendEnd,
+                    primaryBreakendStart,
+                    primaryBreakendEnd,
                     undisruptedCopyNumber,
                     structuralVariants,
                     hasReliablePurity));
