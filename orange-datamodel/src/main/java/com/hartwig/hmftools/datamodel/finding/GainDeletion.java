@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -12,9 +11,18 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GainDeletion extends Driver {
+public interface GainDeletion extends Driver
+{
+    enum Type
+    {
+        GERMLINE_DEL_HOM_IN_TUMOR,
+        GERMLINE_DEL_HET_IN_TUMOR,
+        SOMATIC_GAIN,
+        SOMATIC_DEL
+    }
 
-    @Nullable PurpleDriver driver();
+    @NotNull
+    Type type();
 
     @NotNull
     CopyNumberInterpretation interpretation();

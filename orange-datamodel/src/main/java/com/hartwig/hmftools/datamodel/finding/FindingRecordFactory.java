@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.datamodel.finding;
 
 import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDisruptions;
-import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.convertGermlineFullDels;
-import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticGainsDelsFromDrivers;
+import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.germlineDriverGainDels;
+import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticDriverGainDels;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +18,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -37,44 +38,10 @@ public class FindingRecordFactory
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord)
     {
 
-        PurpleRecord purple = orangeRecord.purple();
-
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
-                .refGenomeVersion(orangeRecord.refGenomeVersion())
-                .driverSomaticSmallVariants(SmallVariantFactory.create(
-                        FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers()))
-                .driverSomaticGainDeletions(somaticGainsDelsFromDrivers(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
-                .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
-                        .map(o -> convertFusion(o, FindingKeys.SampleType.SOMATIC)).toList())
-                .microsatelliteStability(
-                        ImmutableMicrosatelliteStability.builder()
-                                .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                                .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
-                                .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                                .build())
-                .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
-                        .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
-                                purple.characteristics().tumorMutationalLoadStatus()))
-                        .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
-                        .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
-                        .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
-                        .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
-                        .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
-                        .build());
+                .refGenomeVersion(orangeRecord.refGenomeVersion());
 
-        List<PurpleVariant> germlineVariants = orangeRecord.purple().reportableGermlineVariants();
-        List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
-        if (germlineVariants != null && germlineDrivers != null) {
-            builder.driverGermlineSmallVariants(SmallVariantFactory.create(
-                    FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers));
-        }
-
-        List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
-        List<PurpleDriver> purpleGermlineDrivers = orangeRecord.purple().germlineDrivers();
-
-        if(reportableGermlineFullDels != null && purpleGermlineDrivers != null) {
-            builder.driverGermlineGainDeletions(convertGermlineFullDels(reportableGermlineFullDels, purpleGermlineDrivers));
-        }
+        builder = addPurpleFindings(builder, orangeRecord);
 
         LinxRecord linx = orangeRecord.linx();
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
@@ -132,6 +99,48 @@ public class FindingRecordFactory
         return builder.build();
     }
 
+    @NotNull
+    private static ImmutableFindingRecord.Builder addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord) {
+        PurpleRecord purple = orangeRecord.purple();
+
+        builder.driverSomaticSmallVariants(SmallVariantFactory.create(
+                        FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers()))
+                .driverSomaticGainDeletions(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
+                .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
+                        .map(o -> convertFusion(o, FindingKeys.SampleType.SOMATIC)).toList())
+                .microsatelliteStability(
+                        ImmutableMicrosatelliteStability.builder()
+                                .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
+                                .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
+                                .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                                .build())
+                .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
+                        .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
+                                purple.characteristics().tumorMutationalLoadStatus()))
+                        .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
+                        .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
+                        .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
+                        .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
+                        .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
+                        .build());
+
+        List<PurpleVariant> germlineVariants = orangeRecord.purple().reportableGermlineVariants();
+        List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
+        if (germlineVariants != null && germlineDrivers != null) {
+            builder.driverGermlineSmallVariants(SmallVariantFactory.create(
+                    FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers));
+        }
+
+        List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
+        List<PurpleLossOfHeterozygosity> reportableGermlineLohs = orangeRecord.purple().reportableGermlineLossOfHeterozygosities();
+        List<PurpleDriver> purpleGermlineDrivers = orangeRecord.purple().germlineDrivers();
+
+        if(reportableGermlineFullDels != null && reportableGermlineLohs != null && purpleGermlineDrivers != null) {
+            builder.driverGermlineGainDeletions(germlineDriverGainDels(reportableGermlineFullDels, reportableGermlineLohs, purpleGermlineDrivers));
+        }
+        return builder;
+    }
+
     public static Fusion convertFusion(LinxFusion fusion, FindingKeys.SampleType sampleType)
     {
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
@@ -165,7 +174,7 @@ public class FindingRecordFactory
         return switch (likelihood) {
             case HIGH -> DriverInterpretation.HIGH;
             case LOW -> DriverInterpretation.LOW;
-            case NA -> DriverInterpretation.NONE;
+            case NA -> DriverInterpretation.UNKNOWN;
         };
     }
 
@@ -189,7 +198,7 @@ public class FindingRecordFactory
         {
             case LOW -> DriverInterpretation.LOW;
             case HIGH -> DriverInterpretation.HIGH;
-            case UNKNOWN -> DriverInterpretation.NONE;
+            case UNKNOWN -> DriverInterpretation.UNKNOWN;
         };
     }
 }
