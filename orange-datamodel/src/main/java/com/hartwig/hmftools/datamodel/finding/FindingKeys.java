@@ -3,6 +3,7 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
+import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -21,26 +22,21 @@ import org.jetbrains.annotations.Nullable;
 
 public class FindingKeys
 {
-    public enum SampleType
-    {
-        GERMLINE, SOMATIC
-    }
-
-    public static String smallVariant(@NotNull SampleType sampleType, @NotNull PurpleVariant variant,
+    public static String smallVariant(@NotNull DriverSource sampleType, @NotNull PurpleVariant variant,
             @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
     {
         return String.format("smallVariant[%s %s %s]", sampleType, geneTranscriptLabel(variant.gene(), isCanonical,
                 transcriptImpact.transcript()), impact(transcriptImpact));
     }
 
-    public static String gainDeletion(@NotNull SampleType sampleType, String gene, CopyNumberInterpretation copyNumberInterpretation,
+    public static String gainDeletion(@NotNull DriverSource sampleType, String gene, CopyNumberInterpretation copyNumberInterpretation,
             boolean isCanonical, String transcriptId)
     {
         return String.format("gainDeletion[%s %s %s]", sampleType, geneTranscriptLabel(gene, isCanonical, transcriptId),
                 copyNumberInterpretation.name());
     }
 
-    public static String disruption(@NotNull SampleType sampleType, LinxBreakend breakend)
+    public static String disruption(@NotNull DriverSource sampleType, LinxBreakend breakend)
     {
         return String.format("disruption[%s %s %d]",
                 sampleType,
@@ -48,7 +44,7 @@ public class FindingKeys
                 breakend.svId());
     }
 
-    public static String fusion(@NotNull SampleType sampleType, LinxFusion fusion)
+    public static String fusion(@NotNull DriverSource sampleType, LinxFusion fusion)
     {
         return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
     }

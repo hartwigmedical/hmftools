@@ -6,9 +6,14 @@ import org.jetbrains.annotations.NotNull;
 
 public interface Driver extends Finding
 {
-    @NotNull ReportedStatus reportedStatus();
+    @NotNull
+    DriverSource driverSource();
 
-    @NotNull DriverInterpretation driverInterpretation();
+    @NotNull
+    ReportedStatus reportedStatus();
+
+    @NotNull
+    DriverInterpretation driverInterpretation();
 
     default boolean isReportable()
     {

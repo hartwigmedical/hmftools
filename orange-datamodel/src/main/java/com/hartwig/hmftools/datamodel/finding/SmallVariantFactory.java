@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -17,7 +18,7 @@ public final class SmallVariantFactory
 {
     @NotNull
     public static List<SmallVariant> create(
-            @NotNull FindingKeys.SampleType sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers,
+            @NotNull DriverSource sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers,
             @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         List<SmallVariant> entries = new ArrayList<>();
@@ -48,7 +49,7 @@ public final class SmallVariantFactory
 
     @NotNull
     private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver,
-            @NotNull FindingKeys.SampleType sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
+            @NotNull DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         PurpleTranscriptImpact transcriptImpact;
 

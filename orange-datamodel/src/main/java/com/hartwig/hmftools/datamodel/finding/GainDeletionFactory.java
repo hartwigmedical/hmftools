@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -29,7 +30,7 @@ public class GainDeletionFactory {
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("No driver found for germline full del gene " + fullDels.gene()));
 
-            driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, FindingKeys.SampleType.GERMLINE));
+            driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
@@ -71,7 +72,7 @@ public class GainDeletionFactory {
                 case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.SOMATIC_DEL;
             };
 
-            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, FindingKeys.SampleType.SOMATIC));
+            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC));
         }
         return somaticGainsDels;
     }
@@ -79,13 +80,14 @@ public class GainDeletionFactory {
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
             final PurpleDriver driver,
             GainDeletion.Type type,
-            FindingKeys.SampleType sampleType) {
+            DriverSource sourceSample) {
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(sampleType,
+                .findingKey(FindingKeys.gainDeletion(sourceSample,
                         driver.gene(),
                         purpleGainDeletion.interpretation(),
                         driver.isCanonical(),
                         driver.transcript()))
+                .driverSource(sourceSample)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .type(type)
@@ -109,11 +111,12 @@ public class GainDeletionFactory {
         };
 
         return ImmutableGainDeletion.builder()
-                .findingKey(FindingKeys.gainDeletion(FindingKeys.SampleType.GERMLINE,
+                .findingKey(FindingKeys.gainDeletion(DriverSource.GERMLINE,
                         driver.gene(),
                         copyNumberInterpretation,
                         driver.isCanonical(),
                         driver.transcript()))
+                .driverSource(DriverSource.GERMLINE)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .type(GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR)

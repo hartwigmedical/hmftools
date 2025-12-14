@@ -13,6 +13,7 @@ import java.util.Objects;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptFile;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
@@ -120,11 +121,11 @@ public class FindingRecordFactory {
         PurpleRecord purple = orangeRecord.purple();
 
         builder.driverSomaticSmallVariants(SmallVariantFactory.create(
-                        FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers(),
+                        DriverSource.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers(),
                         clinicalTranscriptsModel))
                 .driverSomaticGainDeletions(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
                 .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
-                        .map(o -> convertFusion(o, FindingKeys.SampleType.SOMATIC)).toList())
+                        .map(o -> convertFusion(o, DriverSource.SOMATIC)).toList())
                 .microsatelliteStability(
                         ImmutableMicrosatelliteStability.builder()
                                 .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
@@ -145,7 +146,7 @@ public class FindingRecordFactory {
         List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
         if (germlineVariants != null && germlineDrivers != null) {
             builder.driverGermlineSmallVariants(SmallVariantFactory.create(
-                    FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel));
+                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel));
         }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
@@ -158,12 +159,13 @@ public class FindingRecordFactory {
         return builder;
     }
 
-    public static Fusion convertFusion(LinxFusion fusion, FindingKeys.SampleType sampleType)
+    public static Fusion convertFusion(LinxFusion fusion, DriverSource sampleType)
     {
         DriverInterpretation driverInterpretation = toDriverInterpretation(fusion.driverLikelihood());
 
         return ImmutableFusion.builder()
                 .findingKey(FindingKeys.fusion(sampleType, fusion))
+                .driverSource(sampleType)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(driverInterpretation)
                 .geneStart(fusion.geneStart())
@@ -201,6 +203,7 @@ public class FindingRecordFactory {
         return viruses.stream()
                 .map(v -> ImmutableVirus.builder()
                         .findingKey(FindingKeys.virus(v))
+                        .driverSource(DriverSource.SOMATIC)
                         .reportedStatus(v.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED)
                         .driverInterpretation(virusDriverInterpretation(v.driverLikelihood()))
                         .interpreterEntry(v)

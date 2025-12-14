@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
+import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
@@ -27,7 +28,7 @@ public class DisruptionFactory
     // when can we move to kotlin
     @FunctionalInterface
     private interface DisruptionTypeFinder {
-        Disruption.Type apply(String gene, String transcript, boolean isCanonical);
+        Disruption.Type apply(String gene, String transcript);
     }
 
     public static final Logger LOGGER = LogManager.getLogger(DisruptionFactory.class);
@@ -58,14 +59,13 @@ public class DisruptionFactory
             @NotNull Collection<LinxSvAnnotation> structuralVariants,
             @NotNull List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
     {
-        DisruptionTypeFinder findDisruptionType = (gene, transcript, isCanonical) -> {
-            return germlineHomozygousDisruptions.stream()
-                .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.isCanonical() == isCanonical)
+        DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
+            germlineHomozygousDisruptions.stream()
+                .anyMatch(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
                 ? Disruption.Type.GERMLINE_HOM_DUP_DISRUPTION
                 : Disruption.Type.GERMLINE_DISRUPTION;
-        };
 
-        return createDisruptions(FindingKeys.SampleType.GERMLINE, breakends, structuralVariants, true, findDisruptionType);
+        return createDisruptions(DriverSource.GERMLINE, breakends, structuralVariants, true, findDisruptionType);
     }
 
     @NotNull
@@ -86,15 +86,15 @@ public class DisruptionFactory
             };
             geneDriverTypeMap.put(linxDriver.gene(), disruptionType);
         }
-        DisruptionTypeFinder findDisruptionType = (gene, transcript, isCanonical) ->
+        DisruptionTypeFinder findDisruptionType = (gene, transcript) ->
             geneDriverTypeMap.getOrDefault(gene, Disruption.Type.SOMATIC_DISRUPTION);
 
-        return createDisruptions(FindingKeys.SampleType.GERMLINE, breakends, structuralVariants, hasReliablePurity, findDisruptionType);
+        return createDisruptions(DriverSource.SOMATIC, breakends, structuralVariants, hasReliablePurity, findDisruptionType);
     }
 
     @NotNull
     private static List<Disruption> createDisruptions(
-                @NotNull FindingKeys.SampleType sampleType,
+                @NotNull DriverSource sampleType,
                 @NotNull Collection<LinxBreakend> breakends,
                 @NotNull Collection<LinxSvAnnotation> structuralVariants,
                 boolean hasReliablePurity,
@@ -128,7 +128,7 @@ public class DisruptionFactory
                 undisruptedCopyNumber = breakend.undisruptedCopyNumber();
             }
 
-            Disruption.Type disruptionType = disruptionTypeFinder.apply(breakend.gene(), breakend.transcript(), breakend.isCanonical());
+            Disruption.Type disruptionType = disruptionTypeFinder.apply(breakend.gene(), breakend.transcript());
 
             reportableDisruptions.add(createDisruption(
                     sampleType,
@@ -144,7 +144,7 @@ public class DisruptionFactory
 
     @NotNull
     public static Disruption createDisruption(
-            @NotNull FindingKeys.SampleType sampleType,
+            @NotNull DriverSource sourceSample,
             @NotNull Disruption.Type disruptionType,
             @Nullable LinxBreakend breakendStart,
             @Nullable LinxBreakend breakendEnd,
@@ -162,7 +162,8 @@ public class DisruptionFactory
         ReportedStatus reportedStatus = breakend.reported() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
 
         return ImmutableDisruption.builder()
-                .findingKey(FindingKeys.disruption(sampleType, breakend))
+                .findingKey(FindingKeys.disruption(sourceSample, breakend))
+                .driverSource(sourceSample)
                 .reportedStatus(reportedStatus)
                 .driverInterpretation(DriverInterpretation.HIGH) // TODOHWL: fix
                 .type(disruptionType)
