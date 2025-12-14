@@ -28,7 +28,7 @@ public interface SmallVariant extends Driver
     @NotNull
     PurpleTranscriptImpact transcriptImpact();
 
-    @NotNull
+    @Nullable
     PurpleTranscriptImpact otherImpact();
 
     @NotNull
