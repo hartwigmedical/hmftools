@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createSom
 import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.germlineDriverGainDels;
 import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticDriverGainDels;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,6 +14,8 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptFile;
+import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -29,20 +33,25 @@ import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // to reduce duplication, the findings are collected from
 // various part of the orange record
-public class FindingRecordFactory
-{
+public class FindingRecordFactory {
     public static final Logger LOGGER = LogManager.getLogger(FindingRecordFactory.class);
 
-    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord)
-    {
+    public static FindingRecord fromOrangeRecordWithTranscriptFile(OrangeRecord orangeRecord, @NotNull Path clinicalTranscriptsTsv) throws IOException {
+        ClinicalTranscriptsModel clinicalTranscriptsModel =
+                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv);
+        return fromOrangeRecord(orangeRecord, clinicalTranscriptsModel);
+    }
 
+    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
+    {
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
                 .refGenomeVersion(orangeRecord.refGenomeVersion());
 
-        builder = addPurpleFindings(builder, orangeRecord);
+        builder = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel);
 
         LinxRecord linx = orangeRecord.linx();
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
@@ -106,11 +115,13 @@ public class FindingRecordFactory
     }
 
     @NotNull
-    private static ImmutableFindingRecord.Builder addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord) {
+    private static ImmutableFindingRecord.Builder addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel) {
         PurpleRecord purple = orangeRecord.purple();
 
         builder.driverSomaticSmallVariants(SmallVariantFactory.create(
-                        FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers()))
+                        FindingKeys.SampleType.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers(),
+                        clinicalTranscriptsModel))
                 .driverSomaticGainDeletions(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
                 .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, FindingKeys.SampleType.SOMATIC)).toList())
@@ -134,7 +145,7 @@ public class FindingRecordFactory
         List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
         if (germlineVariants != null && germlineDrivers != null) {
             builder.driverGermlineSmallVariants(SmallVariantFactory.create(
-                    FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers));
+                    FindingKeys.SampleType.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel));
         }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();

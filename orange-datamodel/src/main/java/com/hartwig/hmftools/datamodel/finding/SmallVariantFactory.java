@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
+import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -16,7 +17,8 @@ public final class SmallVariantFactory
 {
     @NotNull
     public static List<SmallVariant> create(
-            @NotNull FindingKeys.SampleType sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+            @NotNull FindingKeys.SampleType sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers,
+            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
@@ -27,7 +29,7 @@ public final class SmallVariantFactory
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
                 if(driver != null)
                 {
-                    entries.add(toSmallVariant(variant, driver, sampleType));
+                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel));
                 }
             }
         }
@@ -37,7 +39,7 @@ public final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel));
             }
         }
 
@@ -46,7 +48,7 @@ public final class SmallVariantFactory
 
     @NotNull
     private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver,
-            @NotNull FindingKeys.SampleType sampleType)
+            @NotNull FindingKeys.SampleType sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -58,6 +60,9 @@ public final class SmallVariantFactory
 
         boolean isCanonical = driver.transcript().equals(variant.canonicalImpact().transcript());
 
+        PurpleTranscriptImpact otherImpact = isCanonical && clinicalTranscriptsModel != null ? findOtherImpactClinical(variant, clinicalTranscriptsModel)
+                : null;
+
         return ImmutableSmallVariant.builder()
                 .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
                 .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
@@ -65,6 +70,7 @@ public final class SmallVariantFactory
                 .purpleVariant(variant)
                 .driver(driver)
                 .transcriptImpact(transcriptImpact)
+                .otherImpact(otherImpact)
                 .isCanonical(isCanonical)
                 .build();
     }
@@ -107,6 +113,15 @@ public final class SmallVariantFactory
             return variant.canonicalImpact();
         }
 
+        return findOtherTranscriptImpact(variant, transcriptToFind);
+    }
+
+    @Nullable
+    static PurpleTranscriptImpact findOtherTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind)
+    {
+        // ADQ: Recommended implementation:
+        //return variant.otherImpacts().stream().filter(o -> o.transcript().equals(transcriptToFind)).findFirst().orElse(null);
+
         for(PurpleTranscriptImpact otherImpact : variant.otherImpacts())
         {
             if(otherImpact.transcript().equals(transcriptToFind))
@@ -115,6 +130,24 @@ public final class SmallVariantFactory
             }
         }
 
+        return null;
+    }
+
+    @Nullable
+    private static PurpleTranscriptImpact findOtherImpactClinical(@NotNull PurpleVariant variant, @NotNull ClinicalTranscriptsModel clinicalTranscriptsModel)
+    {
+        String transcriptOverride = clinicalTranscriptsModel.findCanonicalTranscriptForGene(variant.gene());
+        if (transcriptOverride != null)
+        {
+            PurpleTranscriptImpact otherImpactClinical = findOtherTranscriptImpact(variant, transcriptOverride);
+            if (otherImpactClinical != null)
+            {
+                otherImpactClinical = !otherImpactClinical.hgvsCodingImpact().equals(variant.canonicalImpact().hgvsCodingImpact())
+                        ? otherImpactClinical
+                        : null;
+            }
+            return otherImpactClinical;
+        }
         return null;
     }
 

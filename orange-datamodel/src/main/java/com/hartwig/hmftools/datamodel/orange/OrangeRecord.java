@@ -104,6 +104,6 @@ public interface OrangeRecord
     @NotNull
     default FindingRecord findingRecord()
     {
-        return FindingRecordFactory.fromOrangeRecord(this);
+        return FindingRecordFactory.fromOrangeRecord(this, null);
     }
 }

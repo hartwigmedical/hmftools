@@ -29,6 +29,9 @@ public interface SmallVariant extends Driver
     PurpleTranscriptImpact transcriptImpact();
 
     @NotNull
+    PurpleTranscriptImpact otherImpact();
+
+    @NotNull
     default String gene()
     {
         return purpleVariant().gene();
