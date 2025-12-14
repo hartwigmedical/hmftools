@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pavereverse.protein;
 
 import java.util.Objects;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.pavereverse.BaseSequenceChange;
 import com.hartwig.hmftools.pavereverse.aminoacids.AminoAcidSequence;
 
@@ -22,8 +23,13 @@ public class ChangeResult
         AltBases = altBases;
     }
 
-    public BaseSequenceChange asChange(String chromosome)
+    public BaseSequenceChange asChange(String chromosome, final RefGenomeInterface refGenome)
     {
+        if (RefBases.isEmpty() || AltBases.isEmpty()){
+            final int anchorPosition = Location - 1;
+            String anchorBase = refGenome.getBase(chromosome, anchorPosition);
+            return new BaseSequenceChange(anchorBase + RefBases, anchorBase + AltBases, chromosome, anchorPosition);
+        }
         return new BaseSequenceChange(RefBases, AltBases, chromosome, Location);
     }
 

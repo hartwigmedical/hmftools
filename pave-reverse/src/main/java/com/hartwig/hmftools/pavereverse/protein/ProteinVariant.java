@@ -156,7 +156,7 @@ public abstract class ProteinVariant extends HgvsVariant
     {
         Collection<ChangeResult> changes = findLeftmostApplicableChanges(refGenome);
         Collection<ChangeResult> changesToReport = selectChangesToReport(changes);
-        Set<BaseSequenceChange> hotspots = changesToReport.stream().map(cr -> cr.asChange(chromosome())).collect(toSet());
+        Set<BaseSequenceChange> hotspots = changesToReport.stream().map(cr -> cr.asChange(chromosome(), refGenome)).collect(toSet());
         return new BaseSequenceVariants(transcriptData(), chromosome(), hotspots);
     }
 

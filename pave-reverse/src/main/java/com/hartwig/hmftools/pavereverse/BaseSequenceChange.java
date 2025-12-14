@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.pavereverse;
 
+import static com.hartwig.hmftools.pavereverse.util.Checks.isNucleotideSequence;
+
 import java.util.Objects;
+
+import com.google.common.base.Preconditions;
 
 public final class BaseSequenceChange
 {
@@ -11,6 +15,9 @@ public final class BaseSequenceChange
 
     public BaseSequenceChange(String ref, String alt, String chromosome, final int position)
     {
+        Preconditions.checkArgument(position >= 1);
+        Preconditions.checkArgument(isNucleotideSequence(ref));
+        Preconditions.checkArgument(isNucleotideSequence(alt));
         Ref = ref;
         Alt = alt;
         Chromosome = chromosome;

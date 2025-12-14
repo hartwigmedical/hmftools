@@ -97,7 +97,7 @@ public class CachedRefGenome implements RefGenomeInterface
     }
 
     @Override
-    public byte getBase(final String chromosome, int pos)
+    public String getBase(final String chromosome, int pos)
     {
         if(mSafeChecks)
             runSafeChecks(chromosome, pos);
@@ -107,7 +107,7 @@ public class CachedRefGenome implements RefGenomeInterface
         byte[] block = getBlock(chromosome, blockIdx);
         int blockStart = blockIdx * mBlockSize + chrStartPos;
         int idx = pos - blockStart;
-        return block[idx];
+        return Character.toString((char) block[idx]);
     }
 
     @Override

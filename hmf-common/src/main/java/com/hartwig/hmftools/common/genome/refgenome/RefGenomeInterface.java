@@ -13,7 +13,7 @@ public interface RefGenomeInterface
 
     byte[] getBases(final String chromosome, int posStart, int posEnd);
 
-    default byte getBase(final String chromosome, int pos) { return getBases(chromosome, pos, pos)[0]; }
+    default String getBase(final String chromosome, int pos) { return getBaseString(chromosome, pos, pos); }
 
     Map<String,Integer> chromosomeLengths();
 

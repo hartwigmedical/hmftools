@@ -85,7 +85,7 @@ Note that there can be legitimate reasons for a match not being found:
 ```commandline
 java -jar .pave-reverse-jar.jar 
 -mode serve_json 
--vcf_input /path-to-pave-output-vcf-file/ 
+-serve_json_input /path-to-serve-json-file/ 
 -tsv_output /path-to-output-file/ 
 -ref_genome /path-to-fasta-file/ 
 -ref_genome_version V37 
