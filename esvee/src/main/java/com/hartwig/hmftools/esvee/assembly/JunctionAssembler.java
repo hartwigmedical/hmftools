@@ -158,6 +158,17 @@ public class JunctionAssembler
 
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
 
+        /*
+        if(!mJunction.indelBased() && !mJunction.DiscordantOnly)
+        {
+            List<Read> candidateIndelReads = rawReads.stream()
+                    .filter(x -> x.indelCoords() != null && !extensionReads.contains(x)).collect(Collectors.toList());
+
+            int matchingIndelReads = checkMatchesLocalIndelReads(candidateIndelReads, mJunction, extensionSeqBuilder.extensionBases());
+            firstAssembly.stats().MatchedNearbyIndels = matchingIndelReads;
+        }
+        */
+
         if(firstAssembly.hasLineSequence())
         {
             if(isLineWithLocalAlignedInsert(firstAssembly))

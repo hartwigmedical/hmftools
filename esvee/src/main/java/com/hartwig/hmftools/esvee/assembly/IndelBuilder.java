@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_INDEL_PERC;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_INDEL_UNLINKED_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_READ_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
@@ -226,6 +230,138 @@ public final class IndelBuilder
 
         return "";
     }
+
+    public static int checkMatchesLocalIndelReads(final List<Read> reads, final Junction junction, final byte[] extensionBases)
+    {
+        Map<String,List<Read>> indelReadsMap = Maps.newHashMap();
+
+        for(Read read : reads)
+        {
+            if(read.indelCoords() == null)
+                continue;
+
+            if(read.leftClipLength() > 0 || read.rightClipLength() > 0)
+                continue;
+
+            IndelCoords indelCoords = read.indelCoords();
+
+            // indel must be on the ref-base side of the junction
+            if((junction.isForward() && indelCoords.PosEnd > junction.Position)
+            || (junction.isReverse() && indelCoords.PosStart < junction.Position))
+            {
+                continue;
+            }
+
+            String indelCoordsStr = read.indelCoords().toString();
+            List<Read> indelReads = indelReadsMap.get(indelCoordsStr);
+
+            if(indelReads == null)
+            {
+                indelReads = Lists.newArrayList();
+                indelReadsMap.put(indelCoordsStr, indelReads);
+            }
+
+            indelReads.add(read);
+        }
+
+        if(indelReadsMap.isEmpty())
+            return 0;
+
+        String topIndelCoordsStr = null;
+        int topFrequency = 0;
+
+        for(Map.Entry<String,List<Read>> entry : indelReadsMap.entrySet())
+        {
+            if(entry.getValue().size() > topFrequency)
+            {
+                topFrequency = entry.getValue().size();
+                topIndelCoordsStr = entry.getKey();
+            }
+        }
+
+        int totalIndelReads = indelReadsMap.values().stream().mapToInt(x -> x.size()).sum();
+
+        if(topFrequency < totalIndelReads * 0.5)
+            return 0;
+
+        List<Read> indelReads = indelReadsMap.get(topIndelCoordsStr);
+
+        int matchingReadCount = 0;
+
+        for(Read read : indelReads)
+        {
+            if(readHasExtensionSequence(read, junction, extensionBases))
+                ++matchingReadCount;
+        }
+
+        return matchingReadCount;
+    }
+
+    private static boolean readHasExtensionSequence(final Read read, final Junction junction, final byte[] extensionBases)
+    {
+        IndelCoords indelCoords = read.indelCoords();
+
+        // test whether the read's bases including the indel match the extension sequence
+
+        // eg indel coords are 90-91 with a 5-base insert and the junction is at 100
+        // without the insert, the read's index that matches the soft-clip would at 100, ie bases bases beyond the start of the insert
+        // but factoring in the insert, it is at read index 95
+
+        boolean isForward = junction.isForward();
+
+        int indelPosition = isForward ? indelCoords.PosStart : indelCoords.PosEnd;
+        int indelReadIndex = getReadIndexAtReferencePosition(read, indelPosition, false);
+        int indelJunctionDistance = abs(indelPosition - junction.Position);
+
+        int impliedJunctionReadIndex;
+
+        if(isForward)
+        {
+            impliedJunctionReadIndex = indelReadIndex + indelJunctionDistance;
+
+            if(indelCoords.isInsert())
+                impliedJunctionReadIndex -= indelCoords.Length;
+            else
+                impliedJunctionReadIndex += indelCoords.Length;
+        }
+        else
+        {
+            impliedJunctionReadIndex = indelReadIndex - indelJunctionDistance;
+
+            if(indelCoords.isInsert())
+                impliedJunctionReadIndex += indelCoords.Length;
+            else
+                impliedJunctionReadIndex -= indelCoords.Length;
+        }
+
+        int overlapBases = 0;
+        int extSeqIndex = isForward ? 0 : extensionBases.length - 1;
+
+        for(int readIndex = impliedJunctionReadIndex; readIndex >= 0 && readIndex < read.basesLength();)
+        {
+            if(read.getBases()[readIndex] != extensionBases[extSeqIndex])
+                break;
+
+            ++overlapBases;
+
+            if(overlapBases >= ASSEMBLY_READ_OVERLAP_BASES)
+                return true;
+
+            if(isForward)
+            {
+                ++extSeqIndex;
+                ++readIndex;
+            }
+            else
+            {
+                --extSeqIndex;
+                --readIndex;
+            }
+        }
+
+        return false;
+    }
+
 
     public static boolean isWeakIndelBasedUnlinkedAssembly(final JunctionAssembly assembly)
     {

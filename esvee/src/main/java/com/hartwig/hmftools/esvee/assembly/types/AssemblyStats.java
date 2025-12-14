@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.StringJoiner;
 
@@ -72,7 +73,9 @@ public class AssemblyStats
 
         if(supportRead.type().isSplitSupport())
         {
-            if(supportRead.type() == INDEL || supportRead.hasIndel())
+            if(supportRead.type() == INDEL)
+                ++IndelReads;
+            else if(junction.indelBased() && supportRead.indelCoords() != null && supportRead.indelCoords().Length >= MIN_VARIANT_LENGTH)
                 ++IndelReads;
 
             if(supportRead.isSupplementary())
