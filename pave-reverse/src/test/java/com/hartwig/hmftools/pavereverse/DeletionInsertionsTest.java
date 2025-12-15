@@ -278,7 +278,7 @@ public final class DeletionInsertionsTest extends ReversePaveTestBase
 
         Set<BaseSequenceChange> hotspots = record.changes();
         assertEquals(2, hotspots.size());
-        assertTrue(hotspots.contains(basesChange("AAT", "", "chr5", 68_293_761)));
+        assertTrue(hotspots.contains(basesChange("GAAT", "G", "chr5", 68_293_760)));
         assertTrue(hotspots.contains(basesChange("ATAT", "C", "chr5", 68_293_762)));
     }
 
@@ -287,7 +287,7 @@ public final class DeletionInsertionsTest extends ReversePaveTestBase
     {
         BaseSequenceVariants variant = reversePave.calculateProteinVariant("BRAF", "N486_T491delinsK");
         checkChanges(variant,
-                basesChange("GTAGGTGCTGTCACA", "", "chr7", 140778036),
+                basesChange("TGTAGGTGCTGTCACA", "T", "chr7", 140778035),
                 basesChange("TGTAGGTGCTGTCACA", "C", "chr7", 140778035)
         );
     }

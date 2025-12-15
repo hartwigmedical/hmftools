@@ -45,16 +45,19 @@ The category PANEL is equivalent to PURITY, DRIVER, SOMATIC_VARIANT, FUSION, DIS
 
 ### Optional configuration
 
-| Argument                                                | Description                                                                                                   |
-|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                          |
-| output_id                                               | Outfile file suffix                                                                                           |
-| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons |
-| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                      |
-| write_detailed                                          | Write a file per compared category                                                                            |
-| somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                 |
-| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)      |
-| include_matches                                         | Also include matching entries in output file(s)                                                               |
+| Argument                                                | Description                                                                                                                                  |
+|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| germline_sample                                         | Germline sample ID. Defaults to tumor sample ID with "-ref" appended                                                                         |
+| output_id                                               | Outfile file suffix                                                                                                                          |
+| driver_gene_panel                                       | Used to check alternate transcript changes and to limit analysis of somatics and gene copy number comparisons                                |
+| restrict_to_drivers                                     | Limit analysis to genes within the panel                                                                                                     |
+| write_detailed                                          | Write a file per compared category                                                                                                           |
+| somatic_unfiltered_vcf_ref & somatic_unfiltered_vcf_new | VCF of unfiltered somatic variants (i.e. SAGE) for detecting filtering reason                                                                |
+| liftover                                                | Apply liftover to relevant fields for pipeline run comparison across reference genome versions (V37/V38)                                     |
+| include_matches                                         | Also include matching entries in output file(s)                                                                                              |
+| pipeline_format_ref & pipeline_format_new               | Format for default tool directory derivation from sample directory. Default: OA_V2_3. Options: OA_V2_0, OA_V2_2, OA_V2_3, PIP5_V6_0, DB_V6_0 |
+| pipeline_format_file_ref & pipeline_format_file_new     | Config file for default tool directory derivation from sample directory.                                                                     |
+
 
 ### Sample ID Mappings
 If the same patient has different sample IDs for different runs and these are used for all filenames, then specify these mappings in the sample ID file, eg:
@@ -107,8 +110,12 @@ Example 2
 "purple_new=/path_to_purple_data/run_02/*/purple/"
 ```
 
-will load run 01 data Purple data from /path_to_sample_data/run_01/SAMPLE_ID/purple/ 
+will load run 01 data Purple data from /path_to_sample_data/run_01/SAMPLE_ID/purple/.
 
+It's possible to control the assumed pipeline output format for deriving the default tool paths from the sample data directories.
+The `pipeline_format_ref` and/or `pipeline_format_new` arguments can be set to an older version of OncoAnalyser (e.g. `OA_V2_0`), our legacy pipeline5 WiGiTS implementation (`PIP5_V6_0`) or the format of the Hartwig Medical Database (`DB_V6_0`).
+Alternatively, this format can be set in a config file such as [this](../hmf-common/src/test/resources/pipeline/completeToolDirectoryConfig.tsv) or [this](../hmf-common/src/test/resources/pipeline/partialToolDirectoryConfig.tsv)
+by using the `pipeline_format_file_ref` and/or `pipeline_format_file_new` arguments.
 
 ### Database Sourced Data
 Specify 'db_sources' config with a comma-separated list of the follow:
@@ -416,7 +423,8 @@ Data key: SampleId, Gene
 | maxCopyNumer  | Threshold [0.5, 15%]    |
 
 ## Version History and Download Links
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.3)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.4.0)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.3.4)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)

@@ -41,6 +41,12 @@ public class DeletionInsertion extends ProteinVariant
     }
 
     @Override
+    int numberOfLeftShiftsToTry(final ChangeContext changeContext)
+    {
+        return 2;
+    }
+
+    @Override
     Set<ChangeResult> applyChange(ChangeContext context)
     {
         SplitCodonSequence seq = context.basesForProteinChange(positionOfFirstAlteredCodon(), RefLength);
