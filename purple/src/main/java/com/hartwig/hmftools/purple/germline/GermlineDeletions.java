@@ -68,27 +68,20 @@ public class GermlineDeletions
         TranscriptData getTranscriptData(String geneId);
     }
 
-    private static class EnsemblDataSupplier implements GeneDataSupplier
-    {
-        private final EnsemblDataCache mCache;
-
-        private EnsemblDataSupplier(final EnsemblDataCache mCache)
+    private record EnsemblDataSupplier(EnsemblDataCache mCache) implements GeneDataSupplier
         {
-            this.mCache = mCache;
-        }
+            @Override
+            public List<GeneData> getGeneData(final String chromosome)
+            {
+                return mCache.getChrGeneDataMap().getOrDefault(chromosome, List.of());
+            }
 
-        @Override
-        public List<GeneData> getGeneData(final String chromosome)
-        {
-            return mCache.getChrGeneDataMap().getOrDefault(chromosome, List.of());
+            @Override
+            public TranscriptData getTranscriptData(final String geneId)
+            {
+                return mCache.getTranscriptData(geneId, "");
+            }
         }
-
-        @Override
-        public TranscriptData getTranscriptData(final String geneId)
-        {
-            return mCache.getTranscriptData(geneId, "");
-        }
-    }
 
     private final Map<String, DriverGene> mDriverGenes;
     private final GeneDataSupplier mGeneDataCache;
@@ -455,20 +448,7 @@ public class GermlineDeletions
         }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
-
-        String filter;
-
-        if(filters.isEmpty())
-        {
-            filter = PASS;
-        }
-        else
-        {
-            StringJoiner sj = new StringJoiner(";");
-            filters.forEach(x -> sj.add(x));
-            filter = sj.toString();
-        }
-
+        String filter = filters.isEmpty() ? PASS : String.join(";", filters);
         for(int i = 0; i < deletedGenes.size(); ++i)
         {
             GeneData geneData = deletedGenes.get(i);

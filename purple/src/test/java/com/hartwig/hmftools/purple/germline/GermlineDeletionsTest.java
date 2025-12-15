@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_CN_INCONSISTENCY;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_COHORT_FREQ;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_REGION_LENGTH;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -159,7 +163,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(1, deletions.size());
-        assertEquals(GermlineDeletions.FILTER_REGION_LENGTH, deletions.get(0).Filter);
+        assertEquals(FILTER_REGION_LENGTH, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
     }
 
@@ -171,7 +175,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
-        assertEquals(GermlineDeletions.FILTER_CN_INCONSISTENCY, deletions.get(0).Filter);
+        assertEquals(FILTER_CN_INCONSISTENCY, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
     }
 
@@ -190,7 +194,27 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(1, deletions.size());
-        assertEquals(GermlineDeletions.FILTER_COHORT_FREQ, deletions.get(0).Filter);
+        assertEquals(FILTER_COHORT_FREQ, deletions.get(0).Filter);
+        assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
+    }
+
+    @Test
+    public void multipleFilters()
+    {
+        mGermlineDeletionFrequency = Mockito.mock(GermlineDeletionFrequency.class);
+        Mockito.when(mGermlineDeletionFrequency.getRegionFrequency(any(String.class), any(Integer.class), any(Integer.class), any(Integer.class))).thenReturn(5);
+        Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1);
+        mEnsemblDataCache.transcriptData = List.of(td1_1);
+        mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
+        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+
+        final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
+        final ObservedRegion or1 = or(chr1, 1201, 1500, GermlineStatus.HOM_DELETION, 1201, 1201, 4, 0.5);
+        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        assertEquals(1, deletions.size());
+        String expectedFilter = String.format("%s;%s;%s", FILTER_REGION_LENGTH, FILTER_CN_INCONSISTENCY, FILTER_COHORT_FREQ);
+        assertEquals(expectedFilter, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
     }
 
