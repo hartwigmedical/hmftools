@@ -66,6 +66,7 @@ public final class SmallVariantFactory
 
         return ImmutableSmallVariant.builder()
                 .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
+                .driverSource(sampleType)
                 .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .purpleVariant(variant)
