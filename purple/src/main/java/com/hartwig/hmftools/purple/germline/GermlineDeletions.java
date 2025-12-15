@@ -2,23 +2,21 @@ package com.hartwig.hmftools.purple.germline;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
-import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
-import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.VARIANT_NOT_LOST;
 import static com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.NONE;
+import static com.hartwig.hmftools.common.purple.ReportedStatus.REPORTED;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
-import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_COHORT_FREQ;
@@ -27,6 +25,8 @@ import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_NORMAL_RA
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_REGION_MATCH_BUFFER;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_REGION_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
 
 import java.util.List;
 import java.util.Map;
@@ -43,30 +43,69 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 
 import org.jetbrains.annotations.Nullable;
 
 public class GermlineDeletions
 {
-    private final Map<String,DriverGene> mDriverGenes;
-    private final EnsemblDataCache mGeneDataCache;
+    static final String FILTER_CN_INCONSISTENCY = "INCONSISTENT_CN";
+    static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
+    static final String FILTER_REGION_LENGTH = "MIN_LENGTH";
+
+    public interface GeneDataSupplier
+    {
+        List<GeneData> getGeneData(String chromosome);
+
+        TranscriptData getTranscriptData(String geneId);
+    }
+
+    private static class EnsemblDataSupplier implements GeneDataSupplier
+    {
+        private final EnsemblDataCache mCache;
+
+        private EnsemblDataSupplier(final EnsemblDataCache mCache)
+        {
+            this.mCache = mCache;
+        }
+
+        @Override
+        public List<GeneData> getGeneData(final String chromosome)
+        {
+            return mCache.getChrGeneDataMap().getOrDefault(chromosome, List.of());
+        }
+
+        @Override
+        public TranscriptData getTranscriptData(final String geneId)
+        {
+            return mCache.getTranscriptData(geneId, "");
+        }
+    }
+
+    private final Map<String, DriverGene> mDriverGenes;
+    private final GeneDataSupplier mGeneDataCache;
     private final GermlineDeletionFrequency mCohortFrequency;
 
     private final List<GermlineDeletion> mDeletions;
     private final List<DriverCatalog> mDrivers;
 
     public GermlineDeletions(
-            final Map<String,DriverGene> driverGenes, final EnsemblDataCache geneDataCache, final GermlineDeletionFrequency cohortFrequency)
+            final Map<String, DriverGene> driverGenes, final EnsemblDataCache geneDataCache,
+            final GermlineDeletionFrequency cohortFrequency)
+    {
+        this(driverGenes, new EnsemblDataSupplier(geneDataCache), cohortFrequency);
+    }
+
+    public GermlineDeletions(final Map<String, DriverGene> driverGenes, final GeneDataSupplier geneDataCache,
+            final GermlineDeletionFrequency cohortFrequency)
     {
         mGeneDataCache = geneDataCache;
         mDriverGenes = driverGenes;
@@ -76,8 +115,15 @@ public class GermlineDeletions
         mDrivers = Lists.newArrayList();
     }
 
-    public List<GermlineDeletion> getDeletions() { return mDeletions; }
-    public List<DriverCatalog> getDrivers() { return mDrivers; }
+    public List<GermlineDeletion> getDeletions()
+    {
+        return mDeletions;
+    }
+
+    public List<DriverCatalog> getDrivers()
+    {
+        return mDrivers;
+    }
 
     public void findDeletions(
             final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions, final List<StructuralVariant> germlineSVs)
@@ -89,13 +135,17 @@ public class GermlineDeletions
             ObservedRegion region = fittedRegions.get(i);
 
             if(region.germlineStatus() != HOM_DELETION && region.germlineStatus() != HET_DELETION)
+            {
                 continue;
+            }
 
             PurpleCopyNumber matchedCopyNumber = findMatchingCopyNumber(region, copyNumbers, copyNumberSearchState);
 
             ObservedRegion nextRegion = i < fittedRegions.size() - 1 ? fittedRegions.get(i + 1) : null;
             if(nextRegion != null && !nextRegion.chromosome().equals(region.chromosome()))
+            {
                 nextRegion = null;
+            }
 
             MatchedStructuralVariant[] matchingSVs = findMatchingGermlineSVs(region, nextRegion, germlineSVs);
 
@@ -103,7 +153,7 @@ public class GermlineDeletions
         }
     }
 
-    private class MatchedStructuralVariant
+    private static class MatchedStructuralVariant
     {
         public final StructuralVariant Variant;
         public final boolean IsStart;
@@ -114,10 +164,13 @@ public class GermlineDeletions
             IsStart = isStart;
         }
 
-        public int position() { return Variant.position(IsStart); }
+        public int position()
+        {
+            return Variant.position(IsStart);
+        }
     }
 
-    public MatchedStructuralVariant[] findMatchingGermlineSVs(
+    private MatchedStructuralVariant[] findMatchingGermlineSVs(
             final ObservedRegion region, @Nullable final ObservedRegion nextRegion, final List<StructuralVariant> germlineSVs)
     {
         MatchedStructuralVariant[] matchingSVs = new MatchedStructuralVariant[] { null, null };
@@ -162,13 +215,17 @@ public class GermlineDeletions
                     StructuralVariantLeg leg = isStart ? variant.start() : variant.end();
 
                     if(leg == null)
+                    {
                         continue;
+                    }
 
                     if(!legMatchesRegion(leg, region.chromosome(), regionStart, regionEnd, requiredOrientation))
+                    {
                         continue;
+                    }
 
                     if(matchingSVs[se] == null
-                    || (matchingSVs[se] != null && selectNewBySvType(variant.type(), matchingSVs[se].Variant.type())))
+                            || (matchingSVs[se] != null && selectNewBySvType(variant.type(), matchingSVs[se].Variant.type())))
                     {
                         matchingSVs[se] = new MatchedStructuralVariant(variant, isStart);
                     }
@@ -180,7 +237,7 @@ public class GermlineDeletions
     }
 
     private static boolean legMatchesRegion(
-            final StructuralVariantLeg leg, final String regionChr, int regionStart, int regionEnd,  byte requiredOrientation)
+            final StructuralVariantLeg leg, final String regionChr, int regionStart, int regionEnd, byte requiredOrientation)
     {
         return leg.chromosome().equals(regionChr) && positionWithin(leg.position(), regionStart, regionEnd)
                 && leg.orientation() == requiredOrientation;
@@ -189,25 +246,31 @@ public class GermlineDeletions
     private static boolean selectNewBySvType(final StructuralVariantType newType, final StructuralVariantType existingType)
     {
         if(existingType == DEL)
+        {
             return false;
+        }
 
         return newType == DEL;
     }
 
-    private class CopyNumberSearchState
+    private static class CopyNumberSearchState
     {
         public int ChrStartIndex = 0;
         public int ChrEndIndex = 0;
         public String CurrentChromosome = "";
 
-        public CopyNumberSearchState() {}
+        public CopyNumberSearchState()
+        {
+        }
     }
 
     private PurpleCopyNumber findMatchingCopyNumber(
             final ObservedRegion region, final List<PurpleCopyNumber> copyNumbers, final CopyNumberSearchState searchState)
     {
         if(copyNumbers.isEmpty())
+        {
             return null;
+        }
 
         PurpleCopyNumber matchedCopyNumber = null;
 
@@ -237,14 +300,18 @@ public class GermlineDeletions
         }
 
         if(searchState.ChrEndIndex < searchState.ChrStartIndex)
+        {
             searchState.ChrEndIndex = copyNumbers.size() - 1;
+        }
 
         for(int index = searchState.ChrStartIndex; index <= searchState.ChrEndIndex; ++index)
         {
             PurpleCopyNumber copyNumber = copyNumbers.get(index);
 
             if(!copyNumber.chromosome().equals(chromosome))
+            {
                 break;
+            }
 
             if(positionsOverlap(copyNumber.start(), copyNumber.end(), regionStart, regionEnd))
             {
@@ -256,11 +323,7 @@ public class GermlineDeletions
         return matchedCopyNumber;
     }
 
-    private static final String FILTER_CN_INCONSISTENCY = "INCONSISTENT_CN";
-    private static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
-    private static final String FILTER_REGION_LENGTH = "MIN_LENGTH";
-
-    private List<String> checkFilters(final ObservedRegion region, final PurpleCopyNumber copyNumber, int cohortFrequency)
+    private static List<String> checkFilters(final ObservedRegion region, final PurpleCopyNumber copyNumber, int cohortFrequency)
     {
         final List<String> filters = Lists.newArrayList();
 
@@ -298,10 +361,12 @@ public class GermlineDeletions
             final ObservedRegion region, final PurpleCopyNumber matchedCopyNumber, final MatchedStructuralVariant[] matchingSVs)
     {
         // now find genes
-        List<GeneData> geneDataList = mGeneDataCache.getChrGeneDataMap().get(region.chromosome());
+        List<GeneData> geneDataList = mGeneDataCache.getGeneData(region.chromosome());
 
         if(geneDataList == null)
+        {
             return;
+        }
 
         int adjustPosStart = matchingSVs[SE_START] != null ? matchingSVs[SE_START].position() : region.start();
         int adjustPosEnd = matchingSVs[SE_END] != null ? matchingSVs[SE_END].position() : region.end();
@@ -320,10 +385,14 @@ public class GermlineDeletions
         for(GeneData geneData : geneDataList)
         {
             if(regionLowerPos > geneData.GeneEnd)
+            {
                 continue;
+            }
 
             if(regionHighPos < geneData.GeneStart)
+            {
                 break;
+            }
 
             if(positionsOverlap(geneData.GeneStart, geneData.GeneEnd, regionLowerPos, regionHighPos))
             {
@@ -332,12 +401,16 @@ public class GermlineDeletions
                 DriverGene driverGene = mDriverGenes.get(geneData.GeneName);
 
                 if(driverGene != null)
+                {
                     driverGenes.add(driverGene);
+                }
             }
         }
 
         if(overlappingGenes.isEmpty())
+        {
             return;
+        }
 
         int cohortFrequency = mCohortFrequency.getRegionFrequency(
                 region.chromosome(), region.start(), region.end(), GERMLINE_DEL_REGION_MATCH_BUFFER);
@@ -349,17 +422,21 @@ public class GermlineDeletions
 
         for(GeneData geneData : overlappingGenes)
         {
-            TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, "");
+            TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId);
 
             if(transData == null)
+            {
                 continue;
+            }
 
             List<ExonData> overlappedExons = transData.exons().stream()
                     .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
                     .collect(Collectors.toList());
 
             if(overlappedExons.isEmpty())
+            {
                 continue;
+            }
 
             PPL_LOGGER.trace("region({}: {}-{}) overlaps gene({}) exons({})",
                     region.chromosome(), region.start(), region.end(), geneData.GeneName, overlappedExons.size());
@@ -369,11 +446,13 @@ public class GermlineDeletions
 
             transcripts.add(transData);
             deletedGenes.add(geneData);
-            deletedExonRanges.add(new int[] {exonRankMin, exonRankMax} );
+            deletedExonRanges.add(new int[] { exonRankMin, exonRankMax });
         }
 
         if(transcripts.isEmpty())
+        {
             return;
+        }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
 
@@ -421,18 +500,22 @@ public class GermlineDeletions
             DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
 
             if(driverGene == null)
+            {
                 continue;
+            }
 
             ReportedStatus reportedStatus = NONE;
 
-            if(filters.isEmpty() && driverGene != null && reportGermlineDeletion(driverGene, tumorStatus))
+            if(filters.isEmpty() && reportGermlineDeletion(driverGene, tumorStatus))
             {
                 reportedStatus = REPORTED;
             }
 
             // only create one record even if multiple sections of the gene are deleted
             if(mDrivers.stream().anyMatch(x -> x.gene().equals(geneData.GeneName) && x.transcript().equals(transData.TransName)))
+            {
                 continue;
+            }
 
             // create a driver record for reportable genes
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
