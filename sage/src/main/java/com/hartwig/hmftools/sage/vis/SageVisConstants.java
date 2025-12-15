@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.vis;
 import java.util.EnumMap;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 public final class SageVisConstants
@@ -12,10 +11,6 @@ public final class SageVisConstants
 
     // sizes
     public static final double READ_HEIGHT_PX = 12.0;
-    private static final int BASE_FONT_SIZE = 10;
-
-    // styles
-    public static final CssBuilder BASE_FONT_STYLE = CssBuilder.EMPTY.fontSizePt(BASE_FONT_SIZE).fontFamily("sans-serif");
 
     // config
     public static final int READ_EXTEND_LENGTH = 75;

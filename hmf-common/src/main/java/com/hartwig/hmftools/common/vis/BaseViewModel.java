@@ -13,6 +13,16 @@ public class BaseViewModel
 
     private int mRightInsertCount;
 
+    private BaseViewModel(final Character base, int baseQ, boolean isSoftClip, boolean isOverlapped, int rightInsertCount, final SpecialBase specialBase)
+    {
+        mCharBase = base;
+        mBaseQ = baseQ;
+        IsSoftClip = isSoftClip;
+        IsOverlapped = isOverlapped;
+        mRightInsertCount = rightInsertCount;
+        mSpecialBase = specialBase;
+    }
+
     public BaseViewModel(char base)
     {
         mCharBase = base;
@@ -59,6 +69,11 @@ public class BaseViewModel
     public static BaseViewModel createDelBase(boolean isOverlapped)
     {
         return new BaseViewModel(SpecialBase.DEL, isOverlapped);
+    }
+
+    public BaseViewModel clearSoftClip()
+    {
+        return new BaseViewModel(mCharBase, mBaseQ, false, IsOverlapped, mRightInsertCount, mSpecialBase);
     }
 
     public char charBase()

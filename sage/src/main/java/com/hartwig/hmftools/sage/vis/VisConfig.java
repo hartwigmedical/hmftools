@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.vis;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.REPORTED_KEY;
 
 import java.io.File;
 import java.util.List;
@@ -50,7 +51,7 @@ public class VisConfig
                 while(iter.hasNext())
                 {
                     VariantContext variant = iter.next();
-                    Object reported = variant.getAttribute("REPORTED");
+                    Object reported = variant.getAttribute(REPORTED_KEY);
                     if(reported != null && (boolean) reported)
                     {
                         String contig = variant.getContig();

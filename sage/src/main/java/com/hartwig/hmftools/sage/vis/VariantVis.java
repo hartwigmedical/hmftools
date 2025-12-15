@@ -6,15 +6,6 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getNumEvents;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -25,6 +16,11 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.vis.BaseSeqViewModel.fromStr;
 import static com.hartwig.hmftools.common.vis.ColorUtil.DARK_BLUE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.JQUERY_SCRIPT;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.getJavascript;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
+import static com.hartwig.hmftools.common.vis.HtmlUtil.styledTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderCoords;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderGeneData;
@@ -45,7 +41,6 @@ import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.SEQ_TECH_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.AA_VARIANT_TYPE_IDX;
-import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.GENE_NAME_IDX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.HGVS_INDEX;
@@ -59,19 +54,14 @@ import static j2html.TagCreator.div;
 import static j2html.TagCreator.header;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.rawHtml;
-import static j2html.TagCreator.script;
 import static j2html.TagCreator.span;
-import static j2html.TagCreator.table;
 import static j2html.TagCreator.td;
 import static j2html.TagCreator.tr;
 
 import java.awt.Color;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,7 +74,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -125,11 +114,6 @@ import j2html.tags.specialized.TdTag;
 
 public class VariantVis
 {
-    private static final AtomicReference<DomContent> JAVASCRIPT = new AtomicReference<>(null);
-
-    private static final DomContent JQUERY_SCRIPT =
-            rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
-
     private static final List<ReadContextMatch> SORTED_MATCH_TYPES = Arrays.stream(ReadContextMatch.values())
             .sorted(Comparator.comparingInt(VariantVis::visSortKey))
             .toList();
@@ -282,11 +266,6 @@ public class VariantVis
         return new BaseSeqViewModel(bases, posStart, null, null);
     }
 
-    private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
-    {
-        return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
-    }
-
     public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> referenceIds,
             final VisConfig config, @Nullable final ReferenceData refData)
     {
@@ -348,11 +327,11 @@ public class VariantVis
         DomContent variantInfo = firstVis.renderVariantInfo(tumorIds, referenceIds);
         DomContent sampleInfo = styledTable(List.of(tr(
                 td(renderSampleSummaryAndCountsTable(tumorReadCounters, refReadCounters))
-		        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
-                        .toString()),
+                        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
+                                .toString()),
                 td(renderSampleQualAndSiteInfo(tumorReadCounters, refReadCounters, firstCounter))
-		        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
-                        .toString()),
+                        .withStyle(CssBuilder.EMPTY.verticalAlign("top")
+                                .toString()),
                 td(firstVis.renderVariantInfoTable(
                         (int) (-10 * firstCounter.logTqp()),
                         round(round(firstCounter.mapQualFactor() * 10.0d) / 10.0d),
@@ -655,22 +634,6 @@ public class VariantVis
         return div(table);
     }
 
-    private static DomContent getJavascript()
-    {
-        return JAVASCRIPT.updateAndGet((final DomContent currentRef) ->
-        {
-            if(currentRef != null)
-            {
-                return currentRef;
-            }
-
-            InputStream inputStream = VariantVis.class.getResourceAsStream("/vis/sagevis.js");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String scriptContent = reader.lines().collect(Collectors.joining("\n"));
-            return script(rawHtml(scriptContent)).attr("type", "text/javascript");
-        });
-    }
-
     private String getFilename(final String sampleId, @Nullable final String geneName, @Nullable final String variantType)
     {
         String filename = mVariantKey;
@@ -854,7 +817,7 @@ public class VariantVis
             aaEvents = Collections.emptyList();
 
         SvgRender.RenderedGeneData renderedGeneData = renderAminoAcids(
-		viewRegion, transcriptExons, transcriptAminoAcids, aaEvents, refGenome, sageVariant);
+                viewRegion, transcriptExons, transcriptAminoAcids, aaEvents, refGenome, sageVariant);
 
         String geneRegionLabel = getGeneRegionLabel(transcriptExons, sageVariant.position());
         return new AminoAcidElements(
@@ -907,7 +870,7 @@ public class VariantVis
 
             // predicted amino acids row
             DomContent aaPredictedRow = tr(
-		    td("predicted").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aaElements.alt));
+                    td("predicted").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(aaElements.alt));
             tableRows.add(aaPredictedRow);
 
             // gene name row
@@ -989,68 +952,6 @@ public class VariantVis
         return renderBases(mContextViewModel, false, true);
     }
 
-    private int getReadNM(final SAMRecord read) { return getNumEvents(read); }
-
-    private DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
-    {
-        CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
-        CssBuilder readInfoStyle = baseDivStyle.display("none");
-
-        List<DomContent> readInfoRows = Lists.newArrayList();
-
-        readInfoRows.add(tr(td("Read name:"), td(firstRead.getReadName())));
-
-        String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
-        String mateAlignmentStr = "unmapped";
-        if(firstRead.getReadPairedFlag() && !firstRead.getMateUnmappedFlag())
-        {
-            String mateChromosome = firstRead.getMateReferenceName();
-            int mateAlignmentStart = firstRead.getMateAlignmentStart();
-            int mateAlignmentEnd = getMateAlignmentEnd(firstRead);
-            String mateAlignmentEndStr = mateAlignmentEnd == NO_POSITION ? "?" : String.valueOf(mateAlignmentEnd);
-            mateAlignmentStr = format("%s:%d-%s", mateChromosome, mateAlignmentStart, mateAlignmentEndStr);
-        }
-        readInfoRows.add(tr(td("Alignment:"), td(alignmentStr + ", " + mateAlignmentStr)));
-
-        String mateCigarStr = firstRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        if(mateCigarStr == null)
-        {
-            mateCigarStr = "missing";
-        }
-
-        readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
-        int insertSize = inferredInsertSizeAbs(firstRead);
-        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(insertSize))));
-        readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
-
-        String firstMapQStr = String.valueOf(firstRead.getMappingQuality());
-        String secondMapQStr = secondRead == null ? "" : String.valueOf(secondRead.getMappingQuality());
-        String mapQStr = secondRead == null ? firstMapQStr : firstMapQStr + ", " + secondMapQStr;
-        readInfoRows.add(tr(td("MapQ:"), td(mapQStr)));
-
-        String firstNumMutationsStr = String.valueOf(getReadNM(firstRead));
-        String secondNumMutationsStr = secondRead == null ? "" : String.valueOf(getReadNM(secondRead));
-        String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
-        readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
-
-        String umiTypeStr = firstRead.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
-        if(umiTypeStr != null)
-        {
-            readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));
-        }
-
-        String dupCountStr = "0";
-        if(firstRead.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-        {
-            dupCountStr = firstRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE).split(CONSENSUS_INFO_DELIM, 2)[0];
-        }
-
-        readInfoRows.add(tr(td("Dup count:"), td(dupCountStr)));
-
-        DomContent readInfoTable = styledTable(readInfoRows, CssBuilder.EMPTY);
-        return div(readInfoTable).withClass("read-info").withStyle(readInfoStyle.toString());
-    }
-
     private DomContent renderRead(final ReadEvidenceRecord readEvidence)
     {
         BaseSeqViewModel readViewModel;
@@ -1110,7 +1011,7 @@ public class VariantVis
         List<GeneRegionViewModel> geneRegions = getGeneRegions(transcriptExons);
         List<GeneRegionViewModel> refViewModels = getRefGeneRegionViewModels(transcriptExons, transcriptAminoAcids, geneRegions);
         List<GeneRegionViewModel> altViewModels = getAltGeneRegionViewModels(
-		transcriptExons, transcriptAminoAcids, geneRegions, events, viewRegion, refGenome, variant);
+                transcriptExons, transcriptAminoAcids, geneRegions, events, viewRegion, refGenome, variant);
         return renderGeneData(READ_HEIGHT_PX, viewRegion, posStrand, refViewModels, altViewModels);
     }
 

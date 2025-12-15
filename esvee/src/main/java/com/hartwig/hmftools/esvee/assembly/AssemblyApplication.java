@@ -149,7 +149,8 @@ public class AssemblyApplication
 
             writeVariants(assemblyAlignments, breakends);
 
-            runVisualiser(assemblyAlignments);
+            if(mConfig.RunVisualiser)
+                runVisualiser(assemblyAlignments);
 
             if(mConfig.PerfDebug)
             {
@@ -448,9 +449,11 @@ public class AssemblyApplication
 
     private void runVisualiser(final List<AssemblyAlignment> assemblyAlignments)
     {
-        AssemblyVisualiser visualiser = new AssemblyVisualiser(mConfig);
-
-        assemblyAlignments.forEach(x -> visualiser.writeVisFiles(x));
+        for(AssemblyAlignment assembly : assemblyAlignments)
+        {
+            AssemblyVisualiser visualiser = new AssemblyVisualiser(mConfig, assembly);
+            visualiser.writeVisFiles();
+        }
     }
 
     private void writeVariants(final List<AssemblyAlignment> assemblyAlignments, final List<Breakend> breakends)
