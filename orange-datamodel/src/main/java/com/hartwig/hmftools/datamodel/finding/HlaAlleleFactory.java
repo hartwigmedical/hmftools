@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +21,19 @@ public class HlaAlleleFactory
 {
     private static final Logger LOGGER = LogManager.getLogger(HlaAlleleFactory.class);
 
+    private static final String PASS = "PASS";
+
     private HlaAlleleFactory() {
+    }
+
+    public static Findings<HlaAllele> createHlaAllelesFinding(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
+    {
+        LilacRecord lilac = orangeRecord.lilac();
+        return ImmutableFindings.<HlaAllele>builder()
+                .findingsStatus(lilac != null ? lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE : FindingsStatus.NOT_AVAILABLE)
+                .findings(lilac != null ? HlaAlleleFactory.convertHlaAlleles(lilac, hasReliablePurity, !orangeRecord.tumorOnlyMode(),
+                        orangeRecord.isofox() != null) : List.of())
+                .build();
     }
 
     @NotNull

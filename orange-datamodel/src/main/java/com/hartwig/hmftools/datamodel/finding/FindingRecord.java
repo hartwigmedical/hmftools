@@ -84,8 +84,8 @@ public interface FindingRecord
         return filterReported(driverViruses(), reportedStatus);
     }
 
-    @Nullable
-    List<HlaAllele> hlaAlleles();
+    @NotNull
+    Findings<HlaAllele> hlaFindings();
 
     @Nullable
     MicrosatelliteStability microsatelliteStability();
