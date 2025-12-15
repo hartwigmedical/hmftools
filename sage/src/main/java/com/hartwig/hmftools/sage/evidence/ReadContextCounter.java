@@ -165,11 +165,20 @@ public class ReadContextCounter
         mConfig = config;
 
         mReadContext = readContext;
-        mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
         mVariant = readContext.variant();
 
-        mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
-                ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
+        if(mReadContext.markedInvalid())
+        {
+            mMatcher = null;
+            mVariantVis = null;
+        }
+        else
+        {
+            mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
+
+            mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
+                    ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
+        }
 
         // set local state to avoid testing on each read
         mIsMnv = mVariant.isMNV();
@@ -231,7 +240,7 @@ public class ReadContextCounter
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
 
-        mUltimaData = isUltima() ? new UltimaVariantData(mReadContext) : null;
+        mUltimaData = isUltima() && !mReadContext.markedInvalid() ? new UltimaVariantData(mReadContext) : null;
     }
 
     public int id() { return mId; }

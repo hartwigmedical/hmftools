@@ -8,12 +8,6 @@ public final class VcfTags
     public static final String READ_CONTEXT_INFO = "RC_INFO";
     public static final String READ_CONTEXT_INFO_DESC = "Read context: alignment start, variant index, left-flank, core, right-flank, read cigar";
 
-    // v3.4 and earlier
-    public static final String READ_CONTEXT_CORE = "RC";
-    public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
-    public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
-    public static final String READ_CONTEXT_INDEX = "RC_IDX";
-
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     public static final String READ_CONTEXT_JITTER_DESC = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 

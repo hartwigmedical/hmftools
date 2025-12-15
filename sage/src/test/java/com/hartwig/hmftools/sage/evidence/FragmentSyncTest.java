@@ -198,11 +198,7 @@ public class FragmentSyncTest
         SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
 
         VariantReadContext readContext = createReadContext(
-                variant, REF_BASES.substring(position - 2, position), REF_BASES.substring(position + 1, position + 2));
-
-        final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
-
-        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MSI_JITTER_CALCS);
+                variant, REF_BASES.substring(position - 2, position), REF_BASES.substring(position + 1, position + 3));
 
         ReadContextCounter readContextCounter = createReadCounter(readContext);
 

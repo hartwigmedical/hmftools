@@ -4,16 +4,10 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
@@ -66,8 +60,6 @@ public class CandidateSerialisationTest
 
         assertTrue(recreatedContext.matches(readContext));
 
-        testCandidateCreationOldVersions(readContext, candidate);
-
         // a delete
         position = 17;
         var = new SimpleVariant(CHR_1, position, "ACCC", "A");
@@ -92,8 +84,6 @@ public class CandidateSerialisationTest
         recreatedContext = recreatedCandidate.readContext();
         assertTrue(recreatedContext.matches(readContext));
 
-        testCandidateCreationOldVersions(readContext, candidate);
-
         // an insert
         position = 21;
         var = new SimpleVariant(CHR_1, position, "A", "ACCC");
@@ -117,31 +107,6 @@ public class CandidateSerialisationTest
         assertNotNull(recreatedCandidate);
 
         recreatedContext = recreatedCandidate.readContext();
-        assertTrue(recreatedContext.matches(readContext));
-
-        testCandidateCreationOldVersions(readContext, candidate);
-    }
-
-    private void testCandidateCreationOldVersions(final VariantReadContext readContext, final Candidate candidate)
-    {
-        VariantContextBuilder variantContextBuilder = CandidateSerialisation.toContext(candidate);
-
-        variantContextBuilder.getAttributes().remove(READ_CONTEXT_INFO);
-
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_LEFT_FLANK, readContext.leftFlankStr());
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_CORE, readContext.coreStr());
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_RIGHT_FLANK, readContext.rightFlankStr());
-
-        int varIndexInCore = readContext.VarIndex - readContext.leftFlankLength();
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_INDEX, varIndexInCore);
-
-        VariantContext variantContext = variantContextBuilder.make();
-
-        Candidate recreatedCandidate = CandidateSerialisation.toCandidate(variantContext, REF_SEQUENCE);
-        assertNotNull(recreatedCandidate);
-
-        VariantReadContext recreatedContext = recreatedCandidate.readContext();
-
         assertTrue(recreatedContext.matches(readContext));
     }
 }
