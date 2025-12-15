@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.germlin
 import static com.hartwig.hmftools.datamodel.finding.GainDeletionFactory.somaticDriverGainDels;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -41,18 +43,29 @@ import org.jetbrains.annotations.Nullable;
 public class FindingRecordFactory {
     public static final Logger LOGGER = LogManager.getLogger(FindingRecordFactory.class);
 
-    public static FindingRecord fromOrangeRecordWithTranscriptFile(OrangeRecord orangeRecord, @NotNull Path clinicalTranscriptsTsv) throws IOException {
+    @NotNull
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @NotNull Path clinicalTranscriptsTsv) throws IOException {
+        try (Reader reader = Files.newBufferedReader(orangeJson)) {
+            OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
+            return fromOrangeRecordWithTranscriptFile(orangeRecord, clinicalTranscriptsTsv);
+        }
+    }
+
+    @NotNull
+    public static FindingRecord fromOrangeRecordWithTranscriptFile(@NotNull OrangeRecord orangeRecord, @NotNull Path clinicalTranscriptsTsv) throws IOException {
         ClinicalTranscriptsModel clinicalTranscriptsModel =
                 ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv);
         return fromOrangeRecord(orangeRecord, clinicalTranscriptsModel);
     }
 
-    public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
+    @NotNull
+    public static FindingRecord fromOrangeRecord(@NotNull OrangeRecord orangeRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
                 .refGenomeVersion(orangeRecord.refGenomeVersion())
                 .experimentType(orangeRecord.experimentType())
-                .pipelineVersion(orangeRecord.pipelineVersion());
+                .pipelineVersion(orangeRecord.pipelineVersion())
+                .purpleFit(orangeRecord.purple().fit());
 
         builder = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel);
 

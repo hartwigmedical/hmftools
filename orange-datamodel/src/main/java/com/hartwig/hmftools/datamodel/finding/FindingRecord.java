@@ -6,6 +6,7 @@ import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -106,6 +107,9 @@ public interface FindingRecord
 
     @Nullable
     String pipelineVersion();
+
+    @NotNull
+    PurpleFit purpleFit();
 
     private static <T extends Driver> List<T> filterReported(List<T> drivers, ReportedStatus reportedStatus)
     {
