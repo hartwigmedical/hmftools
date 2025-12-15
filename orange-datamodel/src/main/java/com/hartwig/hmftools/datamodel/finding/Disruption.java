@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.util.Set;
+
 import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
@@ -22,9 +24,12 @@ public interface Disruption extends Driver {
         GERMLINE_DISRUPTION,
         GERMLINE_HOM_DUP_DISRUPTION;
 
-        boolean isSomatic() { return this == SOMATIC_DISRUPTION || this == SOMATIC_HOM_DUP_DISRUPTION || this == SOMATIC_HOM_DEL_DISRUPTION; }
-        boolean isGermline() { return this == GERMLINE_DISRUPTION || this == GERMLINE_HOM_DUP_DISRUPTION; }
-        boolean isHomozygous() { return this == SOMATIC_HOM_DEL_DISRUPTION; }
+        private static final Set<Type> SOMATIC_TYPES = Set.of(SOMATIC_DISRUPTION, SOMATIC_HOM_DUP_DISRUPTION, SOMATIC_HOM_DEL_DISRUPTION);
+        private static final Set<Type> HOMOZYGOUS_TYPES = Set.of(SOMATIC_HOM_DUP_DISRUPTION, SOMATIC_HOM_DEL_DISRUPTION, GERMLINE_HOM_DUP_DISRUPTION);
+
+        public boolean isSomatic() { return SOMATIC_TYPES.contains(this); }
+        public boolean isGermline() { return !SOMATIC_TYPES.contains(this); }
+        public boolean isHomozygous() { return HOMOZYGOUS_TYPES.contains(this); }
     }
 
     @NotNull
