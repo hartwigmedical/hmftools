@@ -27,6 +27,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
@@ -149,6 +150,12 @@ public class FindingRecordFactory {
                         .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
                         .build());
 
+        List<PurpleVariant> germlineVariants = orangeRecord.purple().reportableGermlineVariants();
+        List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
+        if (germlineVariants != null && germlineDrivers != null) {
+            builder.driverGermlineSmallVariants(SmallVariantFactory.create(
+                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel));
+        }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
         List<PurpleLossOfHeterozygosity> reportableGermlineLohs = orangeRecord.purple().reportableGermlineLossOfHeterozygosities();
