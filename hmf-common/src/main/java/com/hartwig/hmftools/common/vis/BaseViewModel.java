@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.common.vis;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
+import org.jetbrains.annotations.Nullable;
+
 public class BaseViewModel
 {
     private static final int MISSING_BASEQ = 0;
@@ -11,17 +17,9 @@ public class BaseViewModel
     private final SpecialBase mSpecialBase;
     private final int mBaseQ;
 
+    private List<Character> mRightInsertBases;
+    private List<Integer> mRightInsertBaseQs;
     private int mRightInsertCount;
-
-    private BaseViewModel(final Character base, int baseQ, boolean isSoftClip, boolean isOverlapped, int rightInsertCount, final SpecialBase specialBase)
-    {
-        mCharBase = base;
-        mBaseQ = baseQ;
-        IsSoftClip = isSoftClip;
-        IsOverlapped = isOverlapped;
-        mRightInsertCount = rightInsertCount;
-        mSpecialBase = specialBase;
-    }
 
     public BaseViewModel(char base)
     {
@@ -31,7 +29,14 @@ public class BaseViewModel
         IsSoftClip = false;
         IsOverlapped = false;
 
+        mRightInsertBases = Lists.newArrayList();
+        mRightInsertBaseQs = Lists.newArrayList();
         mRightInsertCount = 0;
+    }
+
+    public BaseViewModel(char base, int baseQ)
+    {
+        this(base, baseQ, false, false);
     }
 
     public BaseViewModel(char base, int baseQ, boolean isSoftClip, boolean isOverlapped)
@@ -42,6 +47,8 @@ public class BaseViewModel
         IsSoftClip = isSoftClip;
         IsOverlapped = isOverlapped;
 
+        mRightInsertBases = Lists.newArrayList();
+        mRightInsertBaseQs = Lists.newArrayList();
         mRightInsertCount = 0;
     }
 
@@ -53,6 +60,8 @@ public class BaseViewModel
         IsSoftClip = false;
         IsOverlapped = isOverlapped;
 
+        mRightInsertBases = Lists.newArrayList();
+        mRightInsertBaseQs = Lists.newArrayList();
         mRightInsertCount = 0;
     }
 
@@ -69,11 +78,6 @@ public class BaseViewModel
     public static BaseViewModel createDelBase(boolean isOverlapped)
     {
         return new BaseViewModel(SpecialBase.DEL, isOverlapped);
-    }
-
-    public BaseViewModel clearSoftClip()
-    {
-        return new BaseViewModel(mCharBase, mBaseQ, false, IsOverlapped, mRightInsertCount, mSpecialBase);
     }
 
     public char charBase()
@@ -106,14 +110,34 @@ public class BaseViewModel
         return mRightInsertCount;
     }
 
-    public void incRightInsertCount()
+    @Nullable
+    public List<Character> rightInsertBases() { return mRightInsertBases; }
+    @Nullable
+    public List<Integer> rightInsertBaseQs() { return mRightInsertBaseQs; }
+
+    public void incRightInsertCount(char base, int baseQ)
     {
+        if(mRightInsertBases != null)
+        {
+            mRightInsertBases.add(base);
+            mRightInsertBaseQs.add(baseQ);
+        }
+
         ++mRightInsertCount;
     }
 
     public void incRightInsertCount(int count)
     {
+        mRightInsertBases = null;
+        mRightInsertBaseQs = null;
         mRightInsertCount += count;
+    }
+
+    public void resetRightInsert()
+    {
+        mRightInsertBases = Lists.newArrayList();
+        mRightInsertBaseQs = Lists.newArrayList();
+        mRightInsertCount = 0;
     }
 
     private boolean hasSpecialBase()

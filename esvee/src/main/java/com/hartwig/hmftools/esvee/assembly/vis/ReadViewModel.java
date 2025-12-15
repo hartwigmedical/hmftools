@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
+import static htsjdk.samtools.CigarOperator.I;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.rawHtml;
 
@@ -28,6 +29,7 @@ import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.RefSegmentView
 
 import org.jfree.svg.SVGGraphics2D;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
 import j2html.tags.DomContent;
 
@@ -44,7 +46,8 @@ public final class ReadViewModel
         mSegmentViewModels = segmentViewModels;
     }
 
-    public static ReadViewModel create(final List<RefSegmentViewModel> refViewModel, final JunctionAssembly assembly, final SupportRead read)
+    public static ReadViewModel create(final Cigar sequenceCigar, final List<RefSegmentViewModel> refViewModel,
+            final JunctionAssembly assembly, final SupportRead read)
     {
         Junction junction = assembly.junction();
         int unclippedStart = junction.Position - read.junctionReadStartDistance();
@@ -87,10 +90,50 @@ public final class ReadViewModel
         int remoteStart = junction.Orient == FORWARD ? junction.Position + 1 : readViewModel.FirstBasePos;
         int remoteEnd = junction.Orient == FORWARD ? readViewModel.LastBasePos : junction.Position - 1;
         List<BaseViewModel> remoteBaseViewModels = Lists.newArrayList();
+        if(junction.Orient == FORWARD)
+        {
+            BaseViewModel baseViewModel = readViewModel.getBase(junction.Position);
+            if(baseViewModel.hasCharBase())
+            {
+                List<Character> rightInsertBases = baseViewModel.rightInsertBases();
+                List<Integer> rightInsertBaseQs = baseViewModel.rightInsertBaseQs();
+                for(int i = 0; i < rightInsertBases.size(); i++)
+                    remoteBaseViewModels.add(new BaseViewModel(rightInsertBases.get(i), rightInsertBaseQs.get(i)));
+
+                baseViewModel.resetRightInsert();
+            }
+        }
+
         for(int pos = remoteStart; pos <= remoteEnd; pos++)
         {
-            BaseViewModel baseViewModel = readViewModel.getBase(pos).clearSoftClip();
-            remoteBaseViewModels.add(baseViewModel);
+            BaseViewModel baseViewModel = readViewModel.getBase(pos);
+            if(!baseViewModel.hasCharBase())
+                continue;
+
+            remoteBaseViewModels.add(new BaseViewModel(baseViewModel.charBase(), baseViewModel.baseQ()));
+            List<Character> rightInsertBases = baseViewModel.rightInsertBases();
+            List<Integer> rightInsertBaseQs = baseViewModel.rightInsertBaseQs();
+            for(int i = 0; i < rightInsertBases.size(); i++)
+                remoteBaseViewModels.add(new BaseViewModel(rightInsertBases.get(i), rightInsertBaseQs.get(i)));
+        }
+
+        int insertLength = 0;
+        if(sequenceCigar.getCigarElements().size() == 3)
+        {
+            if(sequenceCigar.getCigarElements().get(1).getOperator() == I)
+                insertLength = sequenceCigar.getCigarElements().get(1).getLength();
+        }
+
+        if(remoteBaseViewModels.size() <= insertLength)
+        {
+            remoteBaseViewModels.clear();
+        }
+        else
+        {
+            if(junction.Orient == FORWARD)
+                remoteBaseViewModels = remoteBaseViewModels.subList(insertLength, remoteBaseViewModels.size());
+            else
+                remoteBaseViewModels = remoteBaseViewModels.subList(0, remoteBaseViewModels.size() - insertLength);
         }
 
         Junction remoteJunction = remoteSegmentViewModel.assembly().junction();
