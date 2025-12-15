@@ -50,7 +50,9 @@ public class FindingRecordFactory {
     public static FindingRecord fromOrangeRecord(OrangeRecord orangeRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
     {
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
-                .refGenomeVersion(orangeRecord.refGenomeVersion());
+                .refGenomeVersion(orangeRecord.refGenomeVersion())
+                .experimentType(orangeRecord.experimentType())
+                .pipelineVersion(orangeRecord.pipelineVersion());
 
         builder = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel);
 
