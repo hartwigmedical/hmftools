@@ -148,9 +148,6 @@ public class SageConstants
     public static final int CORE_AF_MIN = 3;
     public static final double CORE_AF_FULL_RATIO = 0.25;
 
-    // defaults when in high-depth mode
-    public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
-
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final double DEFAULT_MAX_GERMLINE_VAF = 0.05;

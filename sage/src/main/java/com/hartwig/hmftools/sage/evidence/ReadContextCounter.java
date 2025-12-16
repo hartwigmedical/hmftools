@@ -651,7 +651,7 @@ public class ReadContextCounter
 
     private boolean belowQualThreshold(double calcBaseQuality)
     {
-        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
+        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && !isHighBaseQual(calcBaseQuality);
     }
 
     private void registerReadSupport(

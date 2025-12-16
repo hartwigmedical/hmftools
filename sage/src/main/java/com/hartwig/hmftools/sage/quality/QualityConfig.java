@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
@@ -22,7 +21,6 @@ public class QualityConfig
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
     public final boolean HighDepthMode;
-    public final int HighBaseQualLimit;
 
     public static final String HIGH_DEPTH_MODE = "high_depth_mode";
 
@@ -32,7 +30,6 @@ public class QualityConfig
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
     private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
-    private static final String HIGH_DEPTH_BASE_QUAL_LIMIT = "high_depth_base_qual";
     private static final String POLYMORPHIC_GENES_MAX_QUALITY = "polymorphic_gene_max_qual";
 
     public QualityConfig(final ConfigBuilder configBuilder)
@@ -48,8 +45,6 @@ public class QualityConfig
 
         MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
 
-        HighBaseQualLimit = HighDepthMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
-
         if(configBuilder.hasValue(POLYMORPHIC_GENES_MAX_QUALITY))
             SageConstants.HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = configBuilder.getInteger(POLYMORPHIC_GENES_MAX_QUALITY);
     }
@@ -64,7 +59,6 @@ public class QualityConfig
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
 
         HighDepthMode = highDepthMode;
-        HighBaseQualLimit = HighDepthMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -87,7 +81,6 @@ public class QualityConfig
         configBuilder.addDecimal(MAP_QUAL_RATIO_FACTOR, "Map quality ratio factor (0 = disabled)", DEFAULT_MQ_RATIO_FACTOR);
 
         configBuilder.addFlag(HIGH_DEPTH_MODE, "Enable high-depth mode");
-        configBuilder.addInteger(HIGH_DEPTH_BASE_QUAL_LIMIT, "High-depth mode min base qual", DEFAULT_HIGH_DEPTH_BASE_QUAL);
 
         configBuilder.addInteger(
                 POLYMORPHIC_GENES_MAX_QUALITY, "Polymorphic gene max quality", DEFAULT_HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY);
