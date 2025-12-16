@@ -1,22 +1,29 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_LOW_MOD_MQ_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_ADJUST_ALIGN_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_MIN_MOD_MAP_QUAL_NO_XA;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_PROXIMATE_DISTANCE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ALIGNMENT_RECOVERY_MAX_MD_ERRORS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.PMS2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_GENE_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_MAX_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V37;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.SSX2_REGIONS_V38;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isSimpleIndelAssembly;
 import static com.hartwig.hmftools.esvee.assembly.alignment.BreakendBuilder.segmentOrientation;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PMS2CL_V37;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PMS2CL_V38;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PMS2_V37;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.PMS2_V38;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -417,6 +424,12 @@ public final class AlignmentFilters
 
     private static void checkSpecificLowMapPairings(final List<AlignData> alignments)
     {
+        checkSsx2LowMapPairings(alignments);
+        checkPms2LowMapPairings(alignments);
+    }
+
+    private static void checkSsx2LowMapPairings(final List<AlignData> alignments)
+    {
         // handle the specific case of SSX2 with poor mappability, but selecting its alt alignment if paired with a remote alignment
         if(alignments.size() < 2)
             return;
@@ -471,5 +484,59 @@ public final class AlignmentFilters
             return false;
 
         return ssx2Regions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
+    }
+
+    private static void checkPms2LowMapPairings(final List<AlignData> alignments)
+    {
+        /*
+        - for each alignment in the BWA output, if the alignment itself is entirely contained with the PMS2 gene with MapQ < 10,
+        OR the alignment is entirely contained within PMS2CL with MapQ < 10 AND at least one alt alignment is entirely contained within PMS2 with MapQ < 10,
+        then we set a selected low map qual alt alignment corresponding to the identified PMS2 alignment, with a modified MapQ of 10 (so it passes alignment filters)
+        */
+
+        ChrBaseRegion pms2 = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2_V38:  PMS2_V37;
+        ChrBaseRegion pms2cl = alignments.get(0).refLocation().Chromosome.startsWith(CHR_PREFIX) ? PMS2CL_V38:  PMS2CL_V37;
+
+        for(AlignData alignment : alignments)
+        {
+            if(alignment.mapQual() >= ALIGNMENT_MIN_MOD_MAP_QUAL)
+                continue;
+
+            if(matchesPms2Region(pms2, alignment.chromosome(), alignment.positionStart(), alignment.positionEnd()))
+            {
+                alignment.setModifiedMapQual(ALIGNMENT_MIN_MOD_MAP_QUAL);
+            }
+            else if(matchesPms2Region(pms2cl, alignment.chromosome(), alignment.positionStart(), alignment.positionEnd()))
+            {
+                // swap out for a PMS2 alignment if it exists
+                for(AlternativeAlignment altAlignment : alignment.rawAltAlignments())
+                {
+                    if(matchesPms2Region(pms2, altAlignment.Chromosome, altAlignment.Position, altAlignment.positionEnd()))
+                    {
+                        if(altAlignment.MapQual >= ALIGNMENT_MIN_MOD_MAP_QUAL)
+                        {
+                            alignment.setSelectedLowMapQualAltAlignment(altAlignment);
+                        }
+                        else
+                        {
+                            AlternativeAlignment minQualAltAlignment = new AlternativeAlignment(
+                                    altAlignment.Chromosome, altAlignment.Position, altAlignment.Orient, altAlignment.Cigar,
+                                    ALIGNMENT_MIN_MOD_MAP_QUAL);
+
+                            alignment.setSelectedLowMapQualAltAlignment(minQualAltAlignment);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean matchesPms2Region(
+            final ChrBaseRegion pms2Region, final String chromosome, final int positionStart, final int positionEnd)
+    {
+        return pms2Region.Chromosome.equals(chromosome)
+            && positionsWithin(positionStart, positionEnd, pms2Region.start(), pms2Region.end());
     }
 }

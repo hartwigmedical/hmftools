@@ -102,6 +102,9 @@ public class FilterConstants
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
+    public static final ChrBaseRegion PMS2CL_V37 = new ChrBaseRegion("7", 6759759, 6803493);
+    public static final ChrBaseRegion PMS2CL_V38 = new ChrBaseRegion("chr7", 6725305, 6761392);
+
     public static final String PON_INS_SEQ_FWD_STRAND_1 = "GCCGTATCATTAAAAA";
     public static final String PON_INS_SEQ_FWD_STRAND_2 = "GTAGATCTCGGTGGTC";
 

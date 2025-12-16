@@ -156,4 +156,6 @@ public final class AssemblyConstants
     public static final Orientation SSX2_GENE_ORIENT = Orientation.REVERSE;
     public static final int SSX2_MAX_MAP_QUAL = 20;
 
+    public static final int PMS2_MAX_MAP_QUAL = 10;
+
 }
