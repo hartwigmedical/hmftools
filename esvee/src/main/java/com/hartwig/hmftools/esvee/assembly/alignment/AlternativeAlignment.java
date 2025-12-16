@@ -8,7 +8,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -38,7 +37,7 @@ public class AlternativeAlignment
     public int positionEnd()
     {
         if(mPositionEnd == null)
-            mPositionEnd = SamRecordUtils.getMateAlignmentEnd(Position, Cigar);
+            mPositionEnd = SamRecordUtils.getAlignmentEndFromCigar(Position, Cigar);
 
         return mPositionEnd;
     }

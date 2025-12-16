@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignments;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
@@ -20,6 +18,7 @@ import static com.hartwig.hmftools.esvee.prep.ReadFilters.filterLowQualRead;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -162,7 +161,7 @@ public final class RemoteRegionFinder
             if(suppData == null || !HumanChromosome.contains(suppData.Chromosome))
                 continue;
 
-            int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
+            int remotePosEnd = SamRecordUtils.getAlignmentEndFromCigar(suppData.Position, suppData.Cigar);
 
             if(read.chromosome().equals(suppData.Chromosome)
             && positionsOverlap(read.alignmentStart(), read.alignmentEnd(), suppData.Position, remotePosEnd))
