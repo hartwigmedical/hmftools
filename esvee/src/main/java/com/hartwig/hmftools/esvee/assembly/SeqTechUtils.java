@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.readJunctionExtensionLength;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isMediumBaseQual;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isUltima;
 
 import java.util.Collections;
@@ -23,6 +24,7 @@ public final class SeqTechUtils
     public static final int ULTIMA_READ_MISMATCH_LONG_REPEAT_COUNT = 11;
 
     public static final int SBX_PRIME_POSITION_RANGE_THRESHOLD = 6;
+    public static final int SBX_MEDIUM_QUAL_DESYNC_COUNT = 150;
 
     public static void setSeqTechSpecifics()
     {
@@ -223,5 +225,18 @@ public final class SeqTechUtils
         }
 
         return likelyDuplicates;
+    }
+
+    public static int setSbxMediumQualCount(final Read read)
+    {
+        int mediumCount = 0;
+
+        for(int i = 0; i < read.getBaseQuality().length; ++i)
+        {
+            if(isMediumBaseQual(read.getBaseQuality()[i]))
+                ++mediumCount;
+        }
+
+        return mediumCount;
     }
 }
