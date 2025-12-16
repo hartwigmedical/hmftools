@@ -432,7 +432,7 @@ public class JunctionAssemblyTest
         assertEquals(3, supportReads.stream().filter(x -> x.extensionBaseMismatches() == 0).count());
 
         String buildInfo = extSeqBuilder.buildInformation();
-        assertEquals("RC=5;EM=2;LQ=1;MM=0;SNV=0;HP=0;OR=1;ID=0;REP:4xCAG", buildInfo);
+        assertEquals("RC=5;EM=2;LQ=1;OR=1;REP:4xCAG", buildInfo);
 
         // test a forward orientation junction
         junction = new Junction(CHR_1, junctionPosition, FORWARD);

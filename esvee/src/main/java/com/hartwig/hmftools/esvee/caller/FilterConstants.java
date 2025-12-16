@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -103,8 +104,9 @@ public class FilterConstants
 
     public static final String PON_INS_SEQ_FWD_STRAND_1 = "GCCGTATCATTAAAAA";
     public static final String PON_INS_SEQ_FWD_STRAND_2 = "GTAGATCTCGGTGGTC";
-    public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
-    public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
+
+    public static final String PON_INS_SEQ_REV_STRAND_1 = Nucleotides.reverseComplementBases(PON_INS_SEQ_FWD_STRAND_1);
+    public static final String PON_INS_SEQ_REV_STRAND_2 = Nucleotides.reverseComplementBases(PON_INS_SEQ_FWD_STRAND_2);
 
     public static final int PANEL_INCLUSION_BUFFER = 1000;
 

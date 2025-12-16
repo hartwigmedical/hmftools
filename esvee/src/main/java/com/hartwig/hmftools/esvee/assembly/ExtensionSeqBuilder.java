@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_BASE_A;
@@ -30,6 +31,8 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_EXTENSION_L
 import static com.hartwig.hmftools.esvee.common.SvConstants.LINE_MIN_SOFT_CLIP_SECONDARY_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -502,15 +505,41 @@ public class ExtensionSeqBuilder
 
         sj.add(format("RC=%d", mReads.size()));
         sj.add(format("EM=%d", exactMatch));
-        sj.add(format("LQ=%d", lowQualMismatches));
-        sj.add(format("MM=%d", mismatchedReads));
-        sj.add(format("SNV=%d", snvs));
-        sj.add(format("HP=%d", homopolymers));
-        sj.add(format("OR=%d", otherRepeats));
-        sj.add(format("ID=%d", indels));
 
-        for(RepeatInfo repeat : mSequenceBuilder.repeats())
+        if(lowQualMismatches > 0)
+            sj.add(format("LQ=%d", lowQualMismatches));
+
+        if(mismatchedReads > 0)
+            sj.add(format("MM=%d", mismatchedReads));
+
+        if(snvs > 0)
+            sj.add(format("SNV=%d", snvs));
+
+        if(homopolymers > 0)
+            sj.add(format("HP=%d", homopolymers));
+
+        if(otherRepeats > 0)
+            sj.add(format("OR=%d", otherRepeats));
+
+        if(indels > 0)
+            sj.add(format("ID=%d", indels));
+
+        List<RepeatInfo> repeats;
+
+        // take at most top 5 longest repeats
+        if(mSequenceBuilder.repeats().size() > 5)
         {
+            repeats = Lists.newArrayList(mSequenceBuilder.repeats());
+            Collections.sort(repeats, Comparator.comparingInt(x -> -x.Count));
+        }
+        else
+        {
+            repeats = mSequenceBuilder.repeats();
+        }
+
+        for(int i = 0; i < min(repeats.size(), 5); ++i)
+        {
+            RepeatInfo repeat = repeats.get(i);
             sj.add(format("REP:%dx%s", repeat.Count, repeat.Bases));
         }
 
