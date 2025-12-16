@@ -30,8 +30,6 @@ import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBE
 
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -157,7 +155,7 @@ public class GermlineDeletions
             IsStart = isStart;
         }
 
-        public int position()
+        public Integer position()
         {
             return Variant.position(IsStart);
         }
@@ -424,7 +422,7 @@ public class GermlineDeletions
 
             List<ExonData> overlappedExons = transData.exons().stream()
                     .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
-                    .collect(Collectors.toList());
+                    .toList();
 
             if(overlappedExons.isEmpty())
             {
@@ -526,11 +524,8 @@ public class GermlineDeletions
     private static boolean reportGermlineDeletion(final DriverGene driverGene, final GermlineStatus germlineStatus)
     {
         // check requirements on the germline disruption field: WILDTYPE_LOST - requires an LOH for the deletion to be reportable
-        if(driverGene.reportGermlineDeletion() == ANY || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST)
-            return true;
-        else if(driverGene.reportGermlineDeletion() == WILDTYPE_LOST && germlineStatus == HOM_DELETION)
-            return true;
-        else
-            return false;
+        return driverGene.reportGermlineDeletion() == ANY 
+            || driverGene.reportGermlineDeletion() == VARIANT_NOT_LOST
+            || (driverGene.reportGermlineDeletion() == WILDTYPE_LOST && germlineStatus == HOM_DELETION);
     }
 }
