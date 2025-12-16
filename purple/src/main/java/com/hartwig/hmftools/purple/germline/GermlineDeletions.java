@@ -215,8 +215,7 @@ public class GermlineDeletions
                         continue;
                     }
 
-                    if(matchingSVs[se] == null
-                            || (matchingSVs[se] != null && selectNewBySvType(variant.type(), matchingSVs[se].Variant.type())))
+                    if(matchingSVs[se] == null || selectNewBySvType(variant.type(), matchingSVs[se].Variant.type()))
                     {
                         matchingSVs[se] = new MatchedStructuralVariant(variant, isStart);
                     }
