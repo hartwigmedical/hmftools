@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.any;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.hartwig.hmftools.common.driver.DriverCategory;
@@ -26,6 +25,8 @@ import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleTestUtils;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
@@ -313,6 +314,46 @@ public class GermlineDeletionsTest
         assertEquals(2, deletions.size());
         assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
+    }
+
+    @Test
+    public void singleDeletionStructuralVariant()
+    {
+        final PurpleCopyNumber pcn0 = pcn(chr1, 1, 1000, 2);
+        final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
+        final PurpleCopyNumber pcn2 = pcn(chr1, 2001, 3000, 2);
+        final ObservedRegion or0 = or(chr1, 1, 1000, GermlineStatus.DIPLOID, 1, 1, 1, 0.5);
+        final ObservedRegion or1 = or(chr1, 1001, 2000, GermlineStatus.HOM_DELETION, 1001, 1001, 1, 0.5);
+        final ObservedRegion or2 = or(chr1, 2001, 3000, GermlineStatus.DIPLOID, 2001, 2001, 1, 0.5);
+        final StructuralVariant sv = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.DEL, 0.5, 0.5).build();
+        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
+        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        assertEquals(1, deletions.size());
+        assertEquals(sv.start().position(), deletions.get(0).RegionStart);
+        assertEquals(Objects.requireNonNull(sv.end()).position(), deletions.get(0).RegionEnd);
+    }
+
+    @Test
+    public void singleInversionStructuralVariant()
+    {
+        final PurpleCopyNumber pcn0 = pcn(chr1, 1, 1000, 2);
+        final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
+        final PurpleCopyNumber pcn2 = pcn(chr1, 2001, 3000, 2);
+        final ObservedRegion or0 = or(chr1, 1, 1000, GermlineStatus.DIPLOID, 1, 1, 1, 0.5);
+        final ObservedRegion or1 = or(chr1, 1001, 2000, GermlineStatus.HOM_DELETION, 1001, 1001, 1, 0.5);
+        final ObservedRegion or2 = or(chr1, 2001, 3000, GermlineStatus.DIPLOID, 2001, 2001, 1, 0.5);
+        final StructuralVariant sv = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.INV, 0.5, 0.5).build();
+        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
+        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        assertEquals(2, deletions.size());
+        assertEquals(sv.start().position(), deletions.get(0).RegionStart);
+        assertEquals(or1.end(), deletions.get(0).RegionEnd);
+        assertEquals(gd1_1.GeneName, deletions.get(0).GeneName);
+        assertEquals(gd1_1.KaryotypeBand, deletions.get(0).ChromosomeBand);
+        assertEquals(sv.start().position(), deletions.get(1).RegionStart);
+        assertEquals(or1.end(), deletions.get(1).RegionEnd);
+        assertEquals(gd1_2.GeneName, deletions.get(1).GeneName);
+        assertEquals(gd1_2.KaryotypeBand, deletions.get(1).ChromosomeBand);
     }
 
     private PurpleCopyNumber pcn(String chromosome, int start, int end, double majorAlleleCopyNumber)
