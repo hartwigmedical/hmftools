@@ -24,6 +24,7 @@ public enum FilterType
     DEL_SHORT_LOW_VAF("delShortLowVaf", "Short low-VAF DEL artefacts with homology", false),
     UNPAIRED_THREE_PRIME_RANGE("unpairedPositionRange", "Unpaired position range", false),
     LINE_SOURCE("lineSource", "Remote LINE source", false),
+    SBX_STRAND_BIAS("sbxStrandBias", "SBX strand-bias", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;

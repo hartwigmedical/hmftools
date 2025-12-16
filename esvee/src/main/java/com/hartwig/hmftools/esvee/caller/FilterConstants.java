@@ -94,6 +94,8 @@ public class FilterConstants
     public static final int PRIME_MAX_BASE_FACTOR = 10;
     public static final int PRIME_MAX_SGL_FACTOR = 5;
 
+    public static final int SBX_STRAND_BIAS_NON_BND_MIN_FRAGS = 10;
+
     public static final int INV_ADJACENT_LENGTH = 100;
     public static final int INV_ADJACENT_MIN_UPS = 4;
     public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
