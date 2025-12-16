@@ -288,7 +288,7 @@ public final class ReadUtils
 
     public static int calcTrimmedReadBaseLength(final Read read, int indexStart, int indexEnd)
     {
-        byte[] readBases = Arrays.copyOfRange(read.getBases(), max(indexStart, 0), min(indexEnd, read.basesLength()));
+        byte[] readBases = Arrays.copyOfRange(read.getBases(), max(indexStart, 0), min(indexEnd + 1, read.basesLength()));
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(readBases);
         return calcTrimmedBaseLength(0, readBases.length - 1, repeats);
     }
