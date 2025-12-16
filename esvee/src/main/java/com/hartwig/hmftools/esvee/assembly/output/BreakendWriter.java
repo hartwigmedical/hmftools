@@ -138,7 +138,7 @@ public class BreakendWriter
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
 
                 sj.add(String.valueOf(breakend.id()));
-                sj.add(String.valueOf(firstAssembly.id()));
+                sj.add(String.valueOf(phaseGroup.id()));
                 sj.add(String.valueOf(assemblyAlignment.phaseSet() != null ? assemblyAlignment.phaseSet().id() : firstAssembly.nonPhaseSetId()));
                 sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(!breakend.isSingle() ? String.valueOf(breakend.otherBreakend().id()) : "");
