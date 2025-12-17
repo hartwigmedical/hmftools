@@ -61,6 +61,8 @@ import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import org.jfree.svg.SVGGraphics2D;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.TextCigarCodec;
 import j2html.tags.DomContent;
 
 public class AssemblyVisualiser
@@ -69,6 +71,7 @@ public class AssemblyVisualiser
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;
+    private final Cigar mSequenceCigar;
 
     private final List<RefSegmentViewModel> mRefViewModel;
 
@@ -77,6 +80,7 @@ public class AssemblyVisualiser
         mConfig = config;
         mAssemblyAlignment = assemblyAlignment;
         mRefViewModel = getRefViewModel(assemblyAlignment);
+        mSequenceCigar = TextCigarCodec.decode(assemblyAlignment.assemblyCigar());
     }
 
     public void writeVisFiles()
@@ -160,7 +164,7 @@ public class AssemblyVisualiser
                 if(read.isSupplementary())
                     continue;
 
-                readViewModels.add(ReadViewModel.create(mRefViewModel, assembly, read));
+                readViewModels.add(ReadViewModel.create(mSequenceCigar, mRefViewModel, assembly, read));
             }
         }
 

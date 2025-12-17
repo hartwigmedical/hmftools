@@ -89,7 +89,7 @@ public class BaseSeqViewModel
         return fromConsensusFragment(consensusRead, first, second, null);
     }
 
-    public static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
+    private static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
             @Nullable final BaseSeqViewModel second, @Nullable final Integer unclippedStartOverride)
     {
         int unclippedStart = unclippedStartOverride == null ? consensusRead.getUnclippedStart() : unclippedStartOverride;
@@ -122,9 +122,7 @@ public class BaseSeqViewModel
                         break;
                     case I:
                         if(!indexedBases.isEmpty())
-                        {
-                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount();
-                        }
+                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount(readString.charAt(baseIdx), baseQuals[baseIdx]);
 
                         baseIdx++;
                         break;
@@ -154,9 +152,7 @@ public class BaseSeqViewModel
     {
         int baseIdx = pos - mPosStart;
         if(baseIdx < 0 || baseIdx >= mBases.size())
-        {
             return BaseViewModel.createMissingBase();
-        }
 
         return mBases.get(baseIdx);
     }
