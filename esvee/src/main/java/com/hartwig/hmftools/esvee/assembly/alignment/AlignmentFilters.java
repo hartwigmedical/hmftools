@@ -488,6 +488,9 @@ public final class AlignmentFilters
 
     private static void checkPms2LowMapPairings(final List<AlignData> alignments)
     {
+        if(alignments.isEmpty())
+            return;
+
         /*
         - for each alignment in the BWA output, if the alignment itself is entirely contained with the PMS2 gene with MapQ < 10,
         OR the alignment is entirely contained within PMS2CL with MapQ < 10 AND at least one alt alignment is entirely contained within PMS2 with MapQ < 10,
