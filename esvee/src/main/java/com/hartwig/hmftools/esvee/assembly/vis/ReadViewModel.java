@@ -141,13 +141,13 @@ public final class ReadViewModel
         if(remoteJunction.Orient == REVERSE)
         {
             remoteReadViewModel = new BaseSeqViewModel(
-		    remoteBaseViewModels, remoteJunction.Chromosome, remoteJunction.Position, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
+                    remoteBaseViewModels, remoteJunction.Chromosome, remoteJunction.Position, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
         }
         else
         {
             int posStart = remoteJunction.Position - remoteBaseViewModels.size() + 1;
             remoteReadViewModel = new BaseSeqViewModel(
-		    remoteBaseViewModels, remoteJunction.Chromosome, posStart, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
+                    remoteBaseViewModels, remoteJunction.Chromosome, posStart, readViewModel.LeftIsForwardStrand, readViewModel.RightIsForwardStrand);
         }
 
         segmentViewModels.set(remoteViewModelIdx, new SegmentViewModel(remoteSegmentViewModel.viewRegion(), remoteReadViewModel, remoteSegmentViewModel.viewModel()));
