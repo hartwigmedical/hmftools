@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
@@ -23,6 +24,7 @@ import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
@@ -119,6 +121,31 @@ public class FindingRecordFactory {
         }
 
         builder.hlaFindings(HlaAlleleFactory.createHlaAllelesFinding(orangeRecord, hasReliablePurity));
+
+        Set<PeachGenotype> peachGenotypes = orangeRecord.peach();
+
+        if(peachGenotypes != null)
+        {
+            builder.pharmocoGenotypes(ImmutableFindings.<PharmocoGenotype>builder()
+                    .findingsStatus(FindingsStatus.OK)
+                    .findings(peachGenotypes.stream().map(o ->
+                            ImmutablePharmocoGenotype.builder()
+                                    .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
+                                    .gene(o.gene())
+                                    .allele(o.allele())
+                                    .alleleCount(o.alleleCount())
+                                    .function(o.function())
+                                    .linkedDrugs(o.linkedDrugs())
+                                    .urlPrescriptionInfo(o.urlPrescriptionInfo())
+                                    .build()).toList())
+                    .build());
+        }
+        else
+        {
+            builder.pharmocoGenotypes(ImmutableFindings.<PharmocoGenotype>builder()
+                    .findingsStatus(FindingsStatus.NOT_AVAILABLE)
+                    .build());
+        }
 
         return builder.build();
     }

@@ -79,6 +79,10 @@ public class FindingKeys
         return String.format("chrArmCopyNumber[%s]", chromosome);
     }
 
+    public static String pharmacoGenotype(@NotNull String gene, @NotNull String allele) {
+        return String.format("pharmacoGenotype[%s:%s]", gene, allele);
+    }
+
     // only show transcript ID for non canonical transcripts
     private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId) {
         return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);

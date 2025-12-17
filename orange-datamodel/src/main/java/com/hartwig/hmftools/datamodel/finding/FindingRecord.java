@@ -90,6 +90,9 @@ public interface FindingRecord
     @NotNull
     Findings<HlaAllele> hlaFindings();
 
+    @NotNull
+    Findings<PharmocoGenotype> pharmocoGenotypes();
+
     @Nullable
     MicrosatelliteStability microsatelliteStability();
 
