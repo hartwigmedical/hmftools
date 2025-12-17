@@ -26,6 +26,8 @@ public final class SeqTechUtils
     public static final int SBX_PRIME_POSITION_RANGE_THRESHOLD = 6;
     public static final int SBX_MEDIUM_QUAL_DESYNC_COUNT = 150;
 
+    public static final int UNPAIRED_READ_PROXIMATE_JUNCTION_DISTANCE = 100; // rather than BAM sampling for now
+
     public static void setSeqTechSpecifics()
     {
         if(isUltima())
@@ -33,6 +35,8 @@ public final class SeqTechUtils
             AssemblyConstants.READ_MISMATCH_MEDIUM_REPEAT_COUNT = ULTIMA_READ_MISMATCH_MEDIUM_REPEAT_COUNT;
             AssemblyConstants.READ_MISMATCH_LONG_REPEAT_COUNT = ULTIMA_READ_MISMATCH_LONG_REPEAT_COUNT;
         }
+
+        AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE = UNPAIRED_READ_PROXIMATE_JUNCTION_DISTANCE;
     }
 
     public static void trimIlluminaAdapterBases(final Read read)
