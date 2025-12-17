@@ -75,6 +75,9 @@ public interface FindingRecord
         return filterReported(driverGermlineDisruptions(), reportedStatus);
     }
 
+    @NotNull
+    List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
+
     @Nullable
     List<Virus> driverViruses();
 

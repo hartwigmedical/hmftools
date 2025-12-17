@@ -75,6 +75,10 @@ public class FindingKeys
         return String.format("predictedTumorOrigin[%s]", cancerType);
     }
 
+    public static String chromosomeArmCopyNumber(@NotNull String chromosome) {
+        return String.format("chrArmCopyNumber[%s]", chromosome);
+    }
+
     // only show transcript ID for non canonical transcripts
     private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId) {
         return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);

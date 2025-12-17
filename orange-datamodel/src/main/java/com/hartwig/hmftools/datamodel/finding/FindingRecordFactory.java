@@ -164,6 +164,10 @@ public class FindingRecordFactory {
         if(reportableGermlineFullDels != null && reportableGermlineLohs != null && purpleGermlineDrivers != null) {
             builder.driverGermlineGainDeletions(germlineDriverGainDels(reportableGermlineFullDels, reportableGermlineLohs, purpleGermlineDrivers));
         }
+
+        builder.chromosomeArmCopyNumbers(
+                ChromosomeArmCopyNumberFactory.extractCnPerChromosomeArm(purple.allSomaticCopyNumbers(), orangeRecord.refGenomeVersion()));
+
         return builder;
     }
 

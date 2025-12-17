@@ -22,4 +22,9 @@ public class Doubles {
     public static boolean greaterOrEqual(double value, double reference) {
         return value - reference > -EPSILON;
     }
+
+    public static double round(double value, int decimals) {
+        double scale = Math.pow(10, decimals);
+        return Math.round(value * scale) / scale;
+    }
 }
