@@ -20,6 +20,10 @@ public interface PharmocoGenotype extends Finding {
     @NotNull
     String function();
 
+    @Deprecated
+    @NotNull
+    String haplotype();
+
     @NotNull
     String linkedDrugs();
 
