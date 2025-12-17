@@ -16,9 +16,6 @@ public class ChromosomeArmCopyNumberFactory
     {
     }
 
-    private static final List<String> CHROMOSOMES = List.of(
-       "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "Y");
-
     @NotNull
     public static List<ChromosomeArmCopyNumber> extractCnPerChromosomeArm(@NotNull Iterable<PurpleCopyNumber> copyNumbers,
             @NotNull final OrangeRefGenomeVersion refGenomeVersion)
@@ -27,7 +24,7 @@ public class ChromosomeArmCopyNumberFactory
         RefGenomeCoordinates refGenomeCoordinates = RefGenomeCoordinates.refGenomeCoordinates(refGenomeVersion);
 
         List<ChromosomeArmCopyNumber> cnPerChromosomeArmData = new ArrayList<>();
-        for(String chromosome : CHROMOSOMES)
+        for(String chromosome : refGenomeCoordinates.Lengths.keySet())
         {
             Map<ChromosomeArmCopyNumber.ChromosomeArm, GenomeRegion> genomeRegion = determineArmRegions(chromosome, refGenomeCoordinates);
 
@@ -184,30 +181,30 @@ public class ChromosomeArmCopyNumberFactory
         private static Map<String, Integer> v38Lengths()
         {
             Map<String, Integer> lengths = new HashMap<>();
-            lengths.put("1", 248956422);
-            lengths.put("2", 242193529);
-            lengths.put("3", 198295559);
-            lengths.put("4", 190214555);
-            lengths.put("5", 181538259);
-            lengths.put("6", 170805979);
-            lengths.put("7", 159345973);
-            lengths.put("8", 145138636);
-            lengths.put("9", 138394717);
-            lengths.put("10", 133797422);
-            lengths.put("11", 135086622);
-            lengths.put("12", 133275309);
-            lengths.put("13", 114364328);
-            lengths.put("14", 107043718);
-            lengths.put("15", 101991189);
-            lengths.put("16", 90338345);
-            lengths.put("17", 83257441);
-            lengths.put("18", 80373285);
-            lengths.put("19", 58617616);
-            lengths.put("20", 64444167);
-            lengths.put("21", 46709983);
-            lengths.put("22", 50818468);
-            lengths.put("X", 156040895);
-            lengths.put("Y", 57227415);
+            lengths.put("chr1", 248956422);
+            lengths.put("chr2", 242193529);
+            lengths.put("chr3", 198295559);
+            lengths.put("chr4", 190214555);
+            lengths.put("chr5", 181538259);
+            lengths.put("chr6", 170805979);
+            lengths.put("chr7", 159345973);
+            lengths.put("chr8", 145138636);
+            lengths.put("chr9", 138394717);
+            lengths.put("chr10", 133797422);
+            lengths.put("chr11", 135086622);
+            lengths.put("chr12", 133275309);
+            lengths.put("chr13", 114364328);
+            lengths.put("chr14", 107043718);
+            lengths.put("chr15", 101991189);
+            lengths.put("chr16", 90338345);
+            lengths.put("chr17", 83257441);
+            lengths.put("chr18", 80373285);
+            lengths.put("chr19", 58617616);
+            lengths.put("chr20", 64444167);
+            lengths.put("chr21", 46709983);
+            lengths.put("chr22", 50818468);
+            lengths.put("chrX", 156040895);
+            lengths.put("chrY", 57227415);
             return lengths;
         }
 
@@ -244,30 +241,30 @@ public class ChromosomeArmCopyNumberFactory
         private static Map<String, Integer> v38centromeres()
         {
             Map<String, Integer> lengths = new HashMap<>();
-            lengths.put("1", 123605523);
-            lengths.put("2", 93139351);
-            lengths.put("3", 92214016);
-            lengths.put("4", 50726026);
-            lengths.put("5", 48272854);
-            lengths.put("6", 59191911);
-            lengths.put("7", 59498944);
-            lengths.put("8", 44955505);
-            lengths.put("9", 44377363);
-            lengths.put("10", 40640102);
-            lengths.put("11", 52751711);
-            lengths.put("12", 35977330);
-            lengths.put("13", 17025624);
-            lengths.put("14", 17086762);
-            lengths.put("15", 18362627);
-            lengths.put("16", 37295920);
-            lengths.put("17", 24849830);
-            lengths.put("18", 18161053);
-            lengths.put("19", 25844927);
-            lengths.put("20", 28237290);
-            lengths.put("21", 11890184);
-            lengths.put("22", 14004553);
-            lengths.put("X", 60509061);
-            lengths.put("Y", 10430492);
+            lengths.put("chr1", 123605523);
+            lengths.put("chr2", 93139351);
+            lengths.put("chr3", 92214016);
+            lengths.put("chr4", 50726026);
+            lengths.put("chr5", 48272854);
+            lengths.put("chr6", 59191911);
+            lengths.put("chr7", 59498944);
+            lengths.put("chr8", 44955505);
+            lengths.put("chr9", 44377363);
+            lengths.put("chr10", 40640102);
+            lengths.put("chr11", 52751711);
+            lengths.put("chr12", 35977330);
+            lengths.put("chr13", 17025624);
+            lengths.put("chr14", 17086762);
+            lengths.put("chr15", 18362627);
+            lengths.put("chr16", 37295920);
+            lengths.put("chr17", 24849830);
+            lengths.put("chr18", 18161053);
+            lengths.put("chr19", 25844927);
+            lengths.put("chr20", 28237290);
+            lengths.put("chr21", 11890184);
+            lengths.put("chr22", 14004553);
+            lengths.put("chrX", 60509061);
+            lengths.put("chrY", 10430492);
             return lengths;
         }
     }
