@@ -446,6 +446,9 @@ public class JunctionTracker
         JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, FORWARD);
         JunctionData junctionEnd = getOrCreateJunction(read, indelCoords.PosEnd, REVERSE);
 
+        junctionStart.setLinkedIndel(junctionEnd);
+        junctionEnd.setLinkedIndel(junctionStart);
+
         junctionStart.markInternalIndel();
         junctionStart.addJunctionReadGroup(readGroup);
         junctionStart.addReadType(read, ReadType.JUNCTION);
@@ -735,9 +738,15 @@ public class JunctionTracker
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionHasSupport(junctionData))
+            junctionData.setDepth(mDepthTracker.calcDepth(junctionData.Position));
+
+            boolean junctionHasSupport = junctionHasSupport(junctionData);
+
+            if(!junctionHasSupport && junctionData.hasLinkedIndel())
+                junctionHasSupport = junctionHasSupport(junctionData.linkedIndel());
+
+            if(junctionHasSupport)
             {
-                junctionData.setDepth(mDepthTracker.calcDepth(junctionData.Position));
                 ++index;
             }
             else
@@ -818,7 +827,7 @@ public class JunctionTracker
     private boolean junctionAboveMinAF(final JunctionData junctionData)
     {
         // sites with an AF below 0.5% (1% for discordant) are filtered
-        double regionDepth = mDepthTracker.calcDepth(junctionData.Position);
+        int regionDepth = junctionData.depth();
         int regionReadCount = mDepthTracker.windowReadCount(junctionData.Position);
 
         if(regionReadCount < DEPTH_MIN_READ_COUNT || regionDepth < DEPTH_MIN_CHECK)
