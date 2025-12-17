@@ -45,7 +45,7 @@ public class FindingRecordFactory {
     public static final Logger LOGGER = LogManager.getLogger(FindingRecordFactory.class);
 
     @NotNull
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @NotNull Path clinicalTranscriptsTsv) throws IOException {
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv) throws IOException {
         try (Reader reader = Files.newBufferedReader(orangeJson)) {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
             return fromOrangeRecordWithTranscriptFile(orangeRecord, clinicalTranscriptsTsv);
@@ -53,9 +53,9 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    public static FindingRecord fromOrangeRecordWithTranscriptFile(@NotNull OrangeRecord orangeRecord, @NotNull Path clinicalTranscriptsTsv) throws IOException {
-        ClinicalTranscriptsModel clinicalTranscriptsModel =
-                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv);
+    public static FindingRecord fromOrangeRecordWithTranscriptFile(@NotNull OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv) throws IOException {
+        ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
+                ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
         return fromOrangeRecord(orangeRecord, clinicalTranscriptsModel);
     }
 
@@ -135,6 +135,7 @@ public class FindingRecordFactory {
                                     .allele(o.allele())
                                     .alleleCount(o.alleleCount())
                                     .function(o.function())
+                                    .haplotype(o.haplotype())
                                     .linkedDrugs(o.linkedDrugs())
                                     .urlPrescriptionInfo(o.urlPrescriptionInfo())
                                     .build()).toList())
