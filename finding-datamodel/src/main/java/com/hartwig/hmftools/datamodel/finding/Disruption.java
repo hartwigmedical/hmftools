@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
