@@ -10,9 +10,14 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
+import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
@@ -45,30 +50,28 @@ public class FindingRecordFactory {
     public static final Logger LOGGER = LogManager.getLogger(FindingRecordFactory.class);
 
     @NotNull
-    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv) throws IOException {
+    public static FindingRecord fromOrangeJsonWithTranscriptFile(@NotNull Path orangeJson, @Nullable Path clinicalTranscriptsTsv,
+            @Nullable Path driverGeneTsv) throws IOException {
         try (Reader reader = Files.newBufferedReader(orangeJson)) {
             OrangeRecord orangeRecord = com.hartwig.hmftools.datamodel.OrangeJson.getInstance().read(reader);
-            return fromOrangeRecordWithTranscriptFile(orangeRecord, clinicalTranscriptsTsv);
+            return fromOrangeRecord(orangeRecord, clinicalTranscriptsTsv, driverGeneTsv);
         }
     }
 
     @NotNull
-    public static FindingRecord fromOrangeRecordWithTranscriptFile(@NotNull OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv) throws IOException {
+    public static FindingRecord fromOrangeRecord(@NotNull OrangeRecord orangeRecord, @Nullable Path clinicalTranscriptsTsv,
+            @Nullable Path driverGeneTsv) throws IOException {
         ClinicalTranscriptsModel clinicalTranscriptsModel = clinicalTranscriptsTsv != null ?
                 ClinicalTranscriptFile.buildFromTsv(orangeRecord.refGenomeVersion(), clinicalTranscriptsTsv) : null;
-        return fromOrangeRecord(orangeRecord, clinicalTranscriptsModel);
-    }
+        Map<String, DriverGene> driverGenes = driverGenesMap(driverGeneTsv);
 
-    @NotNull
-    public static FindingRecord fromOrangeRecord(@NotNull OrangeRecord orangeRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
-    {
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
                 .refGenomeVersion(orangeRecord.refGenomeVersion())
                 .experimentType(orangeRecord.experimentType())
                 .pipelineVersion(orangeRecord.pipelineVersion())
                 .purpleFit(orangeRecord.purple().fit());
 
-        builder = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel);
+        builder = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         LinxRecord linx = orangeRecord.linx();
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
@@ -153,12 +156,12 @@ public class FindingRecordFactory {
 
     @NotNull
     private static ImmutableFindingRecord.Builder addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
-            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel) {
+            final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
         PurpleRecord purple = orangeRecord.purple();
 
         builder.driverSomaticSmallVariants(SmallVariantFactory.create(
                         DriverSource.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers(),
-                        clinicalTranscriptsModel))
+                        clinicalTranscriptsModel, driverGenes))
                 .driverSomaticGainDeletions(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
                 .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).toList())
@@ -182,7 +185,7 @@ public class FindingRecordFactory {
         List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
         if (germlineVariants != null && germlineDrivers != null) {
             builder.driverGermlineSmallVariants(SmallVariantFactory.create(
-                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel));
+                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGenes));
         }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
@@ -260,5 +263,9 @@ public class FindingRecordFactory {
             case HIGH -> DriverInterpretation.HIGH;
             case UNKNOWN -> DriverInterpretation.UNKNOWN;
         };
+    }
+
+    private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException {
+        return driverGeneTsv != null ? DriverGeneFile.read(driverGeneTsv).stream().collect(Collectors.toMap(DriverGene::gene, Function.identity())) : Map.of();
     }
 }
