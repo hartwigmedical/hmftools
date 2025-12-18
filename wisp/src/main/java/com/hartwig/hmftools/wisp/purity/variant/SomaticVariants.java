@@ -558,7 +558,7 @@ public class SomaticVariants
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
             sj.add(format("%.6f", sampleFragData.bqrErrorRate()));
-            sj.add(format("%d", sampleFragData.averageReadDistance()));
+            sj.add(format("%.2f", sampleFragData.averageReadDistance()));
 
             writer.write(sj.toString());
 
