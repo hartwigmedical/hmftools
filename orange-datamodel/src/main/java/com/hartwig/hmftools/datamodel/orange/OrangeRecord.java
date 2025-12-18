@@ -8,8 +8,6 @@ import java.util.Set;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
-import com.hartwig.hmftools.datamodel.finding.FindingRecordFactory;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.immuno.ImmuneEscapeRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -99,11 +97,5 @@ public interface OrangeRecord
     default boolean tumorOnlyMode()
     {
         return refSample() == null;
-    }
-
-    @NotNull
-    default FindingRecord findingRecord()
-    {
-        return FindingRecordFactory.fromOrangeRecord(this, null);
     }
 }

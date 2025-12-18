@@ -14,7 +14,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class SmallVariantFactory
+final class SmallVariantFactory
 {
     @NotNull
     public static List<SmallVariant> create(

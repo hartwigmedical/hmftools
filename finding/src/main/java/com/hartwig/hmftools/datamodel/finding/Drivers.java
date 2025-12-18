@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Drivers
+final class Drivers
 {
     private static final Set<PurpleDriverType> MUTATION_DRIVER_TYPES =
             Set.of(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);

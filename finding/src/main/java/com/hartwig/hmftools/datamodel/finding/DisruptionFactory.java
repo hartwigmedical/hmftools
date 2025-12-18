@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 // create Disruption findings from Linx breakends
-public class DisruptionFactory
+final class DisruptionFactory
 {
     // when can we move to kotlin
     @FunctionalInterface

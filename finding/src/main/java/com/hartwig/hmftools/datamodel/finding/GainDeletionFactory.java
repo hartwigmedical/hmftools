@@ -12,7 +12,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 
-public class GainDeletionFactory {
+final class GainDeletionFactory {
 
     // in orange data, HOM_DELS are stored as germline full dels, HET_DELS are stored in LOH, they do not overlap.
     // all the reportable ones are in purple drivers. Other types are not reportable, we can ignore them

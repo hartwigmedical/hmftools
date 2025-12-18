@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-public class Doubles {
+final class Doubles {
     private static final double EPSILON = 1e-10;
 
     public static boolean equal(double first, double second) {

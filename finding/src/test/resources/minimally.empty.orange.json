@@ -1,0 +1,154 @@
+{
+  "sampleId": "TEST",
+  "experimentType": "WHOLE_GENOME",
+  "samplingDate": {
+    "year": 2022,
+    "month": 1,
+    "day": 20
+  },
+  "refGenomeVersion": "V37",
+  "tumorSample": {
+    "metrics": {
+      "meanCoverage": 0,
+      "sdCoverage": 0,
+      "medianCoverage": 0,
+      "madCoverage": 0,
+      "pctExcAdapter": 0,
+      "pctExcMapQ": 0,
+      "pctExcDupe": 0,
+      "pctExcUnpaired": 0,
+      "pctExcBaseQ": 0,
+      "pctExcOverlap": 0,
+      "pctExcCapped": 0,
+      "pctExcTotal": 0,
+      "coverage1xPercentage": 0,
+      "coverage10xPercentage": 0,
+      "coverage20xPercentage": 0,
+      "coverage30xPercentage": 0,
+      "coverage60xPercentage": 0
+    },
+    "flagstat": {
+      "uniqueReadCount": 0,
+      "secondaryCount": 0,
+      "supplementaryCount": 0,
+      "duplicateProportion": 0,
+      "mappedProportion": 0,
+      "pairedInSequencingProportion": 0,
+      "properlyPairedProportion": 0,
+      "withItselfAndMateMappedProportion": 0,
+      "singletonProportion": 0
+    }
+  },
+  "purple": {
+    "fit": {
+      "qc": {
+        "status": [
+        ],
+        "totalCopyNumberSegments": 0,
+        "unsupportedCopyNumberSegments": 0,
+        "deletedGenes": 0,
+        "contamination": 0,
+        "amberMeanDepth": 0
+      },
+      "fittedPurityMethod": "NORMAL",
+      "purity": 0,
+      "minPurity": 0,
+      "maxPurity": 0,
+      "ploidy": 0,
+      "minPloidy": 0,
+      "maxPloidy": 0
+    },
+    "tumorStats": {
+      "maxDiploidProportion": 0,
+      "hotspotMutationCount": 0,
+      "hotspotStructuralVariantCount": 0,
+      "smallVariantAlleleReadCount": 0,
+      "structuralVariantTumorFragmentCount": 0,
+      "bafCount": 0
+    },
+    "characteristics": {
+      "wholeGenomeDuplication": true,
+      "microsatelliteIndelsPerMb": 0,
+      "microsatelliteStatus": "MSS",
+      "tumorMutationalBurdenPerMb": 0,
+      "tumorMutationalBurdenStatus": "UNKNOWN",
+      "tumorMutationalLoad": 0,
+      "tumorMutationalLoadStatus": "UNKNOWN",
+      "svTumorMutationalBurden": 0
+    },
+    "somaticDrivers": [],
+    "germlineDrivers": null,
+    "allSomaticVariants": [],
+    "reportableSomaticVariants": [],
+    "allGermlineVariants": null,
+    "reportableGermlineVariants": null,
+    "allSomaticCopyNumbers": [],
+    "allSomaticGeneCopyNumbers": [],
+    "allSomaticGainsDels": [],
+    "reportableSomaticGainsDels": [],
+    "suspectGeneCopyNumbersWithLOH": [],
+    "chromosomalRearrangements": {
+      "hasTrisomy1q": false,
+      "hasCodeletion1p19q": false
+    }
+  },
+  "linx": {
+    "allSomaticStructuralVariants": [],
+    "allSomaticFusions": [],
+    "reportableSomaticFusions": [],
+    "allSomaticBreakends": [],
+    "reportableSomaticBreakends": [],
+    "somaticHomozygousDisruptions": [],
+    "additionalSuspectSomaticBreakends": [],
+    "additionalSuspectSomaticFusions": [],
+    "additionalViableSomaticFusions": []
+  },
+  "virusInterpreter": {
+    "allViruses": [],
+    "reportableViruses": []
+  },
+  "chord": {
+    "hrdValue": 0,
+    "hrStatus": "HR_PROFICIENT",
+    "BRCA1Value": 0,
+    "BRCA2Value": 0,
+    "hrdType": ""
+  },
+  "peach": [],
+  "cuppa": {
+    "mode" : "WGS",
+    "predictions": [
+    ],
+    "bestPrediction": {
+      "cancerType": "cancer",
+      "likelihood": 0
+    },
+    "simpleDups32To200B": 0,
+    "maxComplexSize": 0,
+    "telomericSGLs": 0,
+    "LINECount": 0
+  },
+  "lilac": {
+    "qc": "FAIL",
+    "alleles": [
+    ]
+  },
+  "immuneEscape": {
+    "hasHlaEscape": false,
+    "hasAntigenPresentationPathwayEscape": false,
+    "hasIFNGammaPathwayEscape": false,
+    "hasPDL1OverexpressionEscape": false,
+    "hasCD58InactivationEscape": false,
+    "hasEpigeneticSETDB1Escape": false
+  },
+  "plots": {
+    "purpleFinalCircosPlot": "plot/empty.circos.png",
+    "sageTumorBQRPlot": "",
+    "purpleInputPlot": "",
+    "purpleClonalityPlot": "",
+    "purpleCopyNumberPlot": "",
+    "purpleVariantCopyNumberPlot": "",
+    "purplePurityRangePlot": "",
+    "purpleKataegisPlot": ""
+  }
+}

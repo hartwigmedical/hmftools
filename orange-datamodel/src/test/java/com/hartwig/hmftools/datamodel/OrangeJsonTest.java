@@ -20,7 +20,6 @@ import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.finding.FindingRecord;
 import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.hla.LilacAllele;
@@ -86,11 +85,6 @@ public class OrangeJsonTest
     {
         OrangeRecord orangeRecord = OrangeJson.getInstance().read(REAL_ORANGE_JSON);
         assertNotNull(orangeRecord);
-
-        // create the findings
-        FindingRecord findingRecord = orangeRecord.findingRecord();
-
-        assertNotNull(findingRecord);
 
         /* GsonBuilder gsonBuilder = new GsonBuilder().setPrettyPrinting();
         for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {

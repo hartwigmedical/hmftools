@@ -10,7 +10,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ChromosomeArmCopyNumberFactory
+final class ChromosomeArmCopyNumberFactory
 {
     private ChromosomeArmCopyNumberFactory()
     {

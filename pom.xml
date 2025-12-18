@@ -19,6 +19,8 @@
         <module>cuppa</module>
         <module>esvee</module>
         <module>fastq-tools</module>
+        <module>finding</module>
+        <module>finding-datamodel</module>
         <module>gene-utils</module>
         <module>health-checker</module>
         <module>hmf-common</module>
@@ -71,6 +73,8 @@
         <cuppa.version>2.3</cuppa.version>
         <esvee.version>1.1</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
+        <finding.version>1.0</finding.version>
+        <finding-datamodel.version>1.0</finding-datamodel.version>
         <gene-utils.version>1.2</gene-utils.version>
         <health-checker.version>3.6</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
@@ -226,6 +230,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>finding-datamodel</artifactId>
+                <version>${finding-datamodel.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FindingKeys
+final class FindingKeys
 {
     public static String smallVariant(@NotNull DriverSource sampleType, @NotNull PurpleVariant variant,
             @NotNull PurpleTranscriptImpact transcriptImpact, boolean isCanonical)
