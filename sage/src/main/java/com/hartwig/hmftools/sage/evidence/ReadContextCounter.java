@@ -55,7 +55,7 @@ import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDe
 import static com.hartwig.hmftools.sage.evidence.Realignment.realignedReadIndexPosition;
 import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
-import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.sage.filter.FilterUtils.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.MsiJitterCalcs.getImpliedAltChange;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isHighBaseQual;
@@ -877,7 +877,7 @@ public class ReadContextCounter
         mLocalPhaseSets = null;
         mLpsCounts = null;
         mConsensusTypeCounts = null;
-        mFragmentLengthData = null;
+        mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
         mFragmentLengths = new FragmentLengths();
         mAdjustedRefVaf = 0;
