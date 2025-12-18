@@ -109,14 +109,17 @@ public final class CandidateSerialisation
 
         VariantReadContext readContext = builder.createContext(variant, record, readContextVcfInfo.VarIndex, refSequence);
 
-        if(readContext == null)
+        if(readContext == null || !readContext.isValid())
         {
             SG_LOGGER.warn("variant({}) failed to recreate read context from VCF info({})", variant, readContextVcfInfo);
 
-            readContext = new VariantReadContext(
-                    variant, readContextVcfInfo.AlignmentStart, 0, null, readContextVcfInfo.readBases().getBytes(),
-                    Collections.emptyList(), 0, readContextVcfInfo.VarIndex, 0, null, null,
-                    Collections.emptyList(), 0, 0);
+            if(readContext == null)
+            {
+                readContext = new VariantReadContext(
+                        variant, readContextVcfInfo.AlignmentStart, 0, null, readContextVcfInfo.readBases().getBytes(),
+                        Collections.emptyList(), 0, readContextVcfInfo.VarIndex, 0, null, null,
+                        Collections.emptyList(), 0, 0);
+            }
 
             readContext.markInvalid();
         }

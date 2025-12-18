@@ -356,6 +356,9 @@ public class ReadContextCounter
 
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
+        if(mReadContext.markedInvalid() || mMatcher == null)
+            return UNRELATED;
+
         if(exceedsMaxCoverage())
             return MAX_COVERAGE;
 
@@ -823,4 +826,64 @@ public class ReadContextCounter
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
     public ReadSupportCounts readSupportCounts() { return mCounts; }
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
+
+    public ReadContextCounter(
+            final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
+            final SageConfig config, final String sampleId)
+    {
+        mId = id;
+
+        mTier = tier;
+        mMaxCoverage = maxCoverage;
+        mMinNumberOfEvents = minNumberOfEvents;
+        mSample = sampleId;
+        mQualityCalculator = null;
+        mConfig = config;
+
+        mReadContext = readContext;
+        mVariant = readContext.variant();
+
+        mMatcher = null;
+        mVariantVis = null;
+
+        mIsMnv = mVariant.isMNV();
+        mIsIndel = mVariant.isIndel();
+        mQualCache = null;
+
+        mQualities = new ReadSupportCounts();
+        mCounts = new ReadSupportCounts();
+        mSimpleAltMatches = 0;
+        mHighQualStrongSupport = 0;
+        mMediumQualStrongSupport = 0;
+
+        mAllowUncertainCoreBases = false;
+        mUncertainCoreBaseCount = 0;
+
+        mJitterData = new JitterData();
+
+        mAltFragmentStrandBias = new StrandBiasData(true);
+        mNonAltFragmentStrandBias = new StrandBiasData(false);
+        mAltReadStrandBias = new StrandBiasData(true);
+        mNonAltReadStrandBias = new StrandBiasData(false);
+
+        mImproperPairCount = 0;
+
+        mQualCounters = new QualCounters();
+        mMaxCandidateDeleteLength = 0;
+        mMaxPositionVsReadStart = mVariant.isDelete() ? mVariant.Position + abs(mVariant.indelLength()) : mVariant.Position;
+
+        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), variant().indelLengthAbs() + 1));
+
+        mLocalPhaseSets = null;
+        mLpsCounts = null;
+        mConsensusTypeCounts = null;
+        mFragmentLengthData = null;
+        mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
+        mFragmentLengths = new FragmentLengths();
+        mAdjustedRefVaf = 0;
+
+        mTumorQualProbability = 0;
+        mMapQualFactor = 0;
+        mUltimaData = null;
+    }
 }
