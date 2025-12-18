@@ -828,9 +828,8 @@ public class JunctionTracker
     {
         // sites with an AF below 0.5% (1% for discordant) are filtered
         int regionDepth = junctionData.depth();
-        int regionReadCount = mDepthTracker.windowReadCount(junctionData.Position);
 
-        if(regionReadCount < DEPTH_MIN_READ_COUNT || regionDepth < DEPTH_MIN_CHECK)
+        if(regionDepth < DEPTH_MIN_CHECK)
             return true;
 
         double requiredSupportRatio = junctionData.discordantGroup() ? DEPTH_MIN_SUPPORT_RATIO_DISCORDANT : DEPTH_MIN_SUPPORT_RATIO;
@@ -840,7 +839,7 @@ public class JunctionTracker
         if(junctionData.discordantGroup())
             junctionSupport += junctionData.supportingFragmentCount();
 
-        double requiredSupport = max(regionDepth, regionReadCount) * requiredSupportRatio;
+        double requiredSupport = regionDepth * requiredSupportRatio;
 
         return junctionSupport >= requiredSupport;
     }
