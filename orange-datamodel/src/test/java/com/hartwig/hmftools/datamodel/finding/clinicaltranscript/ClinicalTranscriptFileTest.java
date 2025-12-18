@@ -6,14 +6,13 @@ import static org.junit.Assert.assertNull;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.junit.Test;
 
 public class ClinicalTranscriptFileTest {
 
-    private static final String CLINICAL_TRANSCRIPT_TSV = Resources.getResource("clinicaltranscript/clinical_transcripts.tsv").getPath();
+    private static final String CLINICAL_TRANSCRIPT_TSV = ClinicalTranscriptsModelTest.class.getClassLoader().getResource("clinicaltranscript/clinical_transcripts.tsv").getPath();
 
     @Test
     public void canReadClinicalTranscriptsTsvHG37() throws IOException {

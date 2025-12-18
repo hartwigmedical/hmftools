@@ -3,10 +3,10 @@ package com.hartwig.hmftools.datamodel.finding.clinicaltranscript;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +27,7 @@ public final class ClinicalTranscriptFile {
             @NotNull Path path) throws IOException {
 
         if (orangeRefGenomeVersion == OrangeRefGenomeVersion.V37) {
-            Map<String, String> clinicalTranscriptEntries = Maps.newHashMap();
+            Map<String, String> clinicalTranscriptEntries = new HashMap<>();
             List<String> lines = Files.readAllLines(path);
             String columnNameGene = "Gene";
             String columnNameTranscript = "Transcript";
