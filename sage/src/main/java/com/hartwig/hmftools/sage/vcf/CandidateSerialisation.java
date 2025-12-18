@@ -125,7 +125,6 @@ public final class CandidateSerialisation
         }
 
         return new Candidate(
-                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0),
-                0, 0, 0);
+                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0, 0);
     }
 }

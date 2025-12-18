@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
 
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
