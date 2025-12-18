@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxUnreportableReason;
