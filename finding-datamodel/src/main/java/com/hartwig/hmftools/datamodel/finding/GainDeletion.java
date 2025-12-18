@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.datamodel.finding;
 
-import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 
 import org.immutables.gson.Gson;

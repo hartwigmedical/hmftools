@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.driver.Driver;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
