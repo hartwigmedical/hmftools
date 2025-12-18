@@ -24,6 +24,9 @@ public interface SmallVariant extends Driver
 
     @NotNull PurpleDriver driver();
 
+    @Nullable
+    DriverCategory driverLikelihoodType();
+
     @NotNull
     PurpleTranscriptImpact transcriptImpact();
 

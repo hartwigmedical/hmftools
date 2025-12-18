@@ -2,7 +2,9 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
@@ -19,7 +21,8 @@ final class SmallVariantFactory
     @NotNull
     public static List<SmallVariant> create(
             @NotNull DriverSource sampleType, @NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers,
-            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
+            @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+            @NotNull Map<String, DriverGene> driverGeneMap)
     {
         List<SmallVariant> entries = new ArrayList<>();
         for(PurpleVariant variant : variants)
@@ -30,7 +33,7 @@ final class SmallVariantFactory
                 PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
                 if(driver != null)
                 {
-                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel));
+                    entries.add(toSmallVariant(variant, driver, sampleType, clinicalTranscriptsModel, driverGeneMap));
                 }
             }
         }
@@ -40,7 +43,7 @@ final class SmallVariantFactory
             List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
             for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
-                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel));
+                entries.add(toSmallVariant(nonCanonicalVariant, nonCanonicalDriver, sampleType, clinicalTranscriptsModel, driverGeneMap));
             }
         }
 
@@ -49,7 +52,7 @@ final class SmallVariantFactory
 
     @NotNull
     private static SmallVariant toSmallVariant(@NotNull PurpleVariant variant, @NotNull PurpleDriver driver,
-            @NotNull DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel)
+            @NotNull DriverSource sampleType, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGeneMap)
     {
         PurpleTranscriptImpact transcriptImpact;
 
@@ -64,9 +67,12 @@ final class SmallVariantFactory
         PurpleTranscriptImpact otherImpact = isCanonical && clinicalTranscriptsModel != null ? findOtherImpactClinical(variant, clinicalTranscriptsModel)
                 : null;
 
+        DriverGene driverGene = driverGeneMap.get(variant.gene());
+        DriverCategory driverCategory = driverGene != null ? driverLikelihoodType(driverGene.likelihoodType()) : null;
         return ImmutableSmallVariant.builder()
                 .findingKey(FindingKeys.smallVariant(sampleType, variant, transcriptImpact, isCanonical))
                 .driverSource(sampleType)
+                .driverLikelihoodType(driverCategory)
                 .reportedStatus(ReportedStatus.REPORTED) // all drivers here are reported
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .purpleVariant(variant)
@@ -156,5 +162,12 @@ final class SmallVariantFactory
     private static boolean hasCanonicalImpact(@NotNull PurpleVariant variant)
     {
         return !variant.canonicalImpact().transcript().isEmpty();
+    }
+
+    private static DriverCategory driverLikelihoodType(@NotNull com.hartwig.hmftools.common.driver.DriverCategory driverLikelihoodType) {
+        return switch (driverLikelihoodType) {
+            case ONCO -> DriverCategory.ONCO;
+            case TSG -> DriverCategory.TSG;
+        };
     }
 }
