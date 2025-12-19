@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletionUtils.findMatchingCopyNumber;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletionUtils.findOverlappingExons;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletionUtils.findOverlappingGenes;
+import static com.hartwig.hmftools.purple.germline.GermlineDeletionUtils.loadPurpleDataForGermline;
 import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDeletionData;
 import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDeletionDetails;
 
@@ -15,6 +20,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -93,9 +99,7 @@ public class SampleGermlineGeneTask implements Callable<Void>
                     continue;
 
                 // find the overlapping / matching copy number region
-                PurpleCopyNumber matchedCopyNumber = copyNumbers.stream()
-                        .filter(x -> positionsOverlap(x.start(), x.end(), region.start(), region.end()))
-                        .findFirst().orElse(null);
+                PurpleCopyNumber matchedCopyNumber = findMatchingCopyNumber(region, copyNumbers);
 
                 if(matchedCopyNumber == null)
                 {
@@ -104,26 +108,23 @@ public class SampleGermlineGeneTask implements Callable<Void>
                     continue;
                 }
 
-                int regionLowerPos = region.start() - 500;
-                int regionHighPos = region.end() + 500;
+                final int BUFFER = 500;
 
                 // now find genes
-                List<GeneData> overlappingGenes = geneDataList.stream()
-                        .filter(x -> positionsOverlap(x.GeneStart, x.GeneEnd, regionLowerPos, regionHighPos))
-                        .collect(Collectors.toList());
+                List<GeneData> overlappingGenes = findOverlappingGenes(
+                        region.chromosome(), region.start(), region.end(), BUFFER, geneDataList);
 
                 StringJoiner geneNames = new StringJoiner(";");
 
                 for(GeneData geneData : overlappingGenes)
                 {
-                    TranscriptData transData = mGeneDataCache.getTranscriptData(geneData.GeneId, "");
+                    TranscriptData transData = mGeneDataCache.getCanonicalTranscriptData(geneData.GeneId);
 
                     if(transData == null)
                         continue;
 
-                    List<ExonData> overlappedExons = transData.exons().stream()
-                            .filter(x -> positionsOverlap(x.Start, x.End, regionLowerPos, regionHighPos))
-                            .collect(Collectors.toList());
+                    List<ExonData> overlappedExons = findOverlappingExons(
+                            transData, region.start(), region.end(), BUFFER);
 
                     if(overlappedExons.isEmpty())
                         continue;
@@ -151,40 +152,47 @@ public class SampleGermlineGeneTask implements Callable<Void>
             final String sampleId, final Map<String, List<PurpleCopyNumber>> copyNumberMap,
             final Map<String, List<ObservedRegion>> fittedRegionMap)
     {
-        String samplePurpleDir = mPurpleDir.contains("*") ? mPurpleDir.replaceAll("\\*", sampleId) : mPurpleDir;
+        // Call the utility method with all required parameters
+        loadPurpleDataForGermline(sampleId, mPurpleDir, copyNumberMap, fittedRegionMap);
+    }
+}
+class GeneAmplification
+{
+    private final List<ExonData> AllExons;
+    private final List<ExonData> OverlappingExons;
 
-        try
+    GeneAmplification(List<ExonData> allExons, int start, int end)
+    {
+        Preconditions.checkArgument(!allExons.isEmpty());
+        Preconditions.checkArgument(start < end);
+        AllExons = allExons;
+        OverlappingExons = allExons.stream().filter(x -> positionsOverlap(x.Start, x.End, start, end)).collect(Collectors.toList());
+    }
+
+    public boolean isCompleteAmplification()
+    {
+        return OverlappingExons.size() == AllExons.size();
+    }
+
+    public boolean hasNoTranscriptionEffect()
+    {
+        if (OverlappingExons.isEmpty())
         {
-            List<PurpleCopyNumber> allCopyNumbers = PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDir, sampleId));
-
-            List<PurpleSegment> segments = PurpleSegment.read(PurpleSegment.generateFilename(samplePurpleDir, sampleId)).stream()
-                    .filter(x -> x.GermlineState == HET_DELETION || x.GermlineState == HOM_DELETION)
-                    .collect(Collectors.toList());
-
-            for(PurpleSegment segment : segments)
-            {
-                List<ObservedRegion> regions = fittedRegionMap.get(segment.Chromosome);
-
-                if(regions == null)
-                {
-                    regions = Lists.newArrayList();
-                    fittedRegionMap.put(segment.Chromosome, regions);
-
-                    copyNumberMap.put(
-                            segment.Chromosome,
-                            allCopyNumbers.stream().filter(x -> x.chromosome().equals(segment.Chromosome)).collect(Collectors.toList()));
-                }
-
-                regions.add(ObservedRegion.fromSegment(segment));
-            }
-
-            PPL_LOGGER.debug("sample({}) read {} het-hom deletion regions",
-                    sampleId, fittedRegionMap.values().stream().mapToInt(x -> x.size()).sum());
+            return true;
         }
-        catch(IOException e)
+        if (isCompleteAmplification())
         {
-            PPL_LOGGER.error("sample({}) failed to load purple files form {}: {}", sampleId, samplePurpleDir, e.toString());
+            return false;
         }
+        if (OverlappingExons.get(0).equals(AllExons.get(0)))
+        {
+            return true;
+        }
+        return OverlappingExons.get(OverlappingExons.size() - 1).equals(AllExons.get(AllExons.size() - 1));
+    }
+
+    public int numberOfAffectedExons()
+    {
+        return OverlappingExons.size();
     }
 }

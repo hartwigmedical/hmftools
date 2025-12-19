@@ -306,6 +306,31 @@ public class GermlineDeletionsTest
     }
 
     @Test
+    public void homozygousDeletionCutoff()
+    {
+        DriverGene driverGene1 = driverGene(gd1_1.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
+        DriverGene driverGene2 = driverGene(gd2_1.GeneName, DriverGeneGermlineReporting.WILDTYPE_LOST);
+        Map<String, DriverGene> driverMap = Map.of(gd1_1.GeneName, driverGene1, gd2_1.GeneName, driverGene2);
+        mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
+        mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1), chr2, List.of(gd2_1));
+        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+
+        final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
+        final PurpleCopyNumber pcn2 = pcn(chr2, 1001, 2000, 1);
+        final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 0.499, 0.5);
+        final ObservedRegion or2 = or(chr2, 1000, 2001, GermlineStatus.HET_DELETION, 1000, 1000, 0.501, 0.5);
+        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
+        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        assertEquals(2, deletions.size());
+        assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
+        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
+        assertEquals(driver2_1.gene(), deletions.get(1).GeneName);
+        assertEquals(CommonVcfTags.PASS, deletions.get(1).Filter);
+        assertEquals(ReportedStatus.NONE, deletions.get(1).Reported);
+    }
+
+    @Test
     public void reportedDeletion()
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
