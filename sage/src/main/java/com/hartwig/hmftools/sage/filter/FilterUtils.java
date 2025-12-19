@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.CHIMERIC_FRAGMENT_LENGTH_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.NEAR_INDEL_MIN_VAF;
+import static com.hartwig.hmftools.sage.SageConstants.NEAR_INDEL_PROXIMITY;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.TUMOR_FILTERS;
 
 import java.util.List;
@@ -56,8 +57,8 @@ public final class FilterUtils
             if(af < NEAR_INDEL_MIN_VAF)
                 continue;
 
-            int indelStart = variant.position();
-            int indelEnd = variant.variant().positionEnd();
+            int indelStart = variant.position() - NEAR_INDEL_PROXIMITY;
+            int indelEnd = variant.variant().positionEnd() + NEAR_INDEL_PROXIMITY;
 
             for(int i = 0; i <= 1; ++i)
             {

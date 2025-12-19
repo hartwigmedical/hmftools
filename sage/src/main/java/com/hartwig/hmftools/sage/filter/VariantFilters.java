@@ -423,19 +423,6 @@ public class VariantFilters
                 edgeDistancePenalty = min(edgeDistancePenalty, 10);
         }
 
-        if(avgAltEdgeDistance >= (isIllumina() ? AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD : AVG_READ_EDGE_DISTANCE_THRESHOLD))
-        {
-            // for non-SBX techs, we cap the edge distance penalty in calcMapQualFactor at 10 for variants NOT near such an indel
-            if(!isSbx() && !variant.nearMultiBaseIndel())
-            {
-                edgeDistancePenalty = min(edgeDistancePenalty, 10);
-            }
-            else
-            {
-                edgeDistancePenalty = 0;
-            }
-        }
-
         double repeatPenalty = 0;
 
         if(primaryTumor.readContext().MaxRepeat != null && primaryTumor.readContext().MaxRepeat.repeatLength() > 1

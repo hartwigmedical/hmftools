@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -102,7 +103,7 @@ public final class CandidateSerialisation
 
         for(int i = 0; i < minBaseQuals.length; ++i)
         {
-            minBaseQuals[i] = BASE_QUAL_MINIMUM + 1;
+            minBaseQuals[i] = (byte)40; // maximum across technologies
         }
 
         record.setBaseQualities(minBaseQuals);

@@ -19,7 +19,7 @@ public class IlluminaUtils
                 return false;
 
             int coreIndexStart = max(variantReadIndex - readContext.leftCoreLength(), 0);
-            int coreIndexEnd = min(variantReadIndex + readContext.leftCoreLength(), read.getBaseQualities().length - 1);
+            int coreIndexEnd = min(variantReadIndex + readContext.rightCoreLength(), read.getBaseQualities().length - 1);
 
             for(int i = coreIndexStart; i <= coreIndexEnd; ++i)
             {
