@@ -158,7 +158,10 @@ public class PartitionSlicer
         boolean hasLineTail = hasLineTail(record);
 
         if(mReadFilters.ignoreRead(record, hasLineTail))
+        {
+            mDepthTracker.processRead(record);
             return;
+        }
 
         record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, mCurrentSampleId);
 

@@ -43,14 +43,14 @@ public class DepthTracker
         int readStart = read.getAlignmentStart();
         int readEnd = read.getAlignmentEnd();
 
-        int indexStart = windowIndex(readStart);
+        int windowIndex = windowIndex(readStart);
 
-        if(indexStart == INVALID_INDEX || indexStart >= mWindowDepth.length)
+        if(windowIndex == INVALID_INDEX || windowIndex >= mWindowDepth.length)
             return;
 
         // apply the read's bases across all applicable windows
         // int windowStart = readStart;
-        int windowStart = mRegion.start() + indexStart * mWindowSize;;
+        int windowStart = mRegion.start() + windowIndex * mWindowSize;;
         int windowEnd = windowStart + mWindowSize - 1;
 
         while(true)
@@ -60,18 +60,18 @@ public class DepthTracker
             if(windowRange < 0 || windowRange > mWindowSize)
             {
                 SV_LOGGER.error("depth range failed: read({}-{}) window(idx={} {}-{}) read range({})",
-                        readStart, readEnd, indexStart, windowStart, windowEnd, windowRange);
+                        readStart, readEnd, windowIndex, windowStart, windowEnd, windowRange);
                 return;
             }
 
-            mWindowDepth[indexStart] += windowRange;
+            mWindowDepth[windowIndex] += windowRange;
 
             if(readEnd <= windowEnd)
                 break;
 
-            ++indexStart;
+            ++windowIndex;
 
-            if(indexStart >= mWindowDepth.length)
+            if(windowIndex >= mWindowDepth.length)
                 break;
 
             windowStart = windowEnd + 1;

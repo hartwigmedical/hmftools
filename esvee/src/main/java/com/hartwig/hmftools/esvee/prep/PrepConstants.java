@@ -52,6 +52,7 @@ public final class PrepConstants
     // depth tracking and filter
     public static final int DEPTH_WINDOW_SIZE = 200;
     public static final double DEPTH_MIN_SUPPORT_RATIO = 0.005;
+    public static final double NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO = 0.02;
     public static final double DEPTH_MIN_SUPPORT_RATIO_DISCORDANT = 0.01;
     public static final int DEPTH_MIN_CHECK = 100;
 
