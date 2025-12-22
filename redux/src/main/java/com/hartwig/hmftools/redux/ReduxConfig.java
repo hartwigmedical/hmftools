@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_DUPLEX_UMI_DELIM
 import static com.hartwig.hmftools.redux.ReduxConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.redux.ReduxConstants.FILE_ID;
 import static com.hartwig.hmftools.redux.ReduxConstants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.redux.ReduxConstants.loadExpectedValidContigs;
 import static com.hartwig.hmftools.redux.write.ReadOutput.NONE;
 
 import java.util.Arrays;
@@ -221,6 +222,7 @@ public class ReduxConfig
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
+        loadExpectedValidContigs(RefGenVersion);
 
         // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         RD_LOGGER.info("output({})", OutputDir);
