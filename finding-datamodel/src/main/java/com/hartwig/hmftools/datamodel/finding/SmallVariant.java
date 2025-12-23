@@ -8,6 +8,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -33,6 +34,14 @@ public interface SmallVariant extends Driver
     @Nullable
     PurpleTranscriptImpact otherImpact();
 
+    boolean isCanonical();
+
+    @NotNull
+    default PurpleVariantType type()
+    {
+        return purpleVariant().type();
+    }
+
     @NotNull
     default String gene()
     {
@@ -55,7 +64,13 @@ public interface SmallVariant extends Driver
         return purpleVariant().reported();
     }
 
-    boolean isCanonical();
+    default String ref() {
+        return purpleVariant().ref();
+    }
+
+    default String alt() {
+        return purpleVariant().alt();
+    }
 
     @Nullable
     default Integer affectedCodon()
@@ -63,10 +78,17 @@ public interface SmallVariant extends Driver
         return transcriptImpact().affectedCodon();
     }
 
+    @Nullable
+    default Integer affectedExon()
+    {
+        return transcriptImpact().affectedExon();
+    }
+
     default double variantCopyNumber()
     {
-        PurpleVariant v = purpleVariant();
-        return v.adjustedCopyNumber() * Math.max(0, Math.min(1, v.adjustedVAF()));
+//        PurpleVariant v = purpleVariant();
+//        return v.adjustedCopyNumber() * Math.max(0, Math.min(1, v.adjustedVAF()));
+        return purpleVariant().variantCopyNumber();
     }
 
     default double totalCopyNumber()
