@@ -26,7 +26,7 @@ public class HlaAlleleFactory
     private HlaAlleleFactory() {
     }
 
-    public static Findings<HlaAllele> createHlaAllelesFinding(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
+    public static Findings<HlaAllele> createHlaAllelesFindings(@NotNull OrangeRecord orangeRecord, boolean hasReliablePurity)
     {
         LilacRecord lilac = orangeRecord.lilac();
         return ImmutableFindings.<HlaAllele>builder()
