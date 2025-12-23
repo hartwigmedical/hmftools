@@ -75,22 +75,16 @@ public interface FindingRecord
     }
 
     @NotNull
-    List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
-
-    @Nullable
-    List<Virus> driverViruses();
-
-    @Nullable
-    default List<Virus> driverViruses(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverViruses(), reportedStatus);
-    }
+    DriverFindings<Virus> viruses();
 
     @NotNull
-    Findings<HlaAllele> hlaFindings();
+    Findings<HlaAllele> hla();
 
     @NotNull
     Findings<PharmocoGenotype> pharmocoGenotypes();
+
+    @NotNull
+    List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
 
     @Nullable
     MicrosatelliteStability microsatelliteStability();

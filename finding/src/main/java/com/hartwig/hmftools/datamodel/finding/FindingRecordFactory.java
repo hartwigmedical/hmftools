@@ -116,42 +116,10 @@ public class FindingRecordFactory {
                     .build());
         }
 
-        VirusInterpreterData virusInterpreter = orangeRecord.virusInterpreter();
-
-        if(virusInterpreter != null)
-        {
-            builder.driverViruses(convertViruses(virusInterpreter.allViruses()));
-        }
-
-        builder.hlaFindings(HlaAlleleFactory.createHlaAllelesFinding(orangeRecord, hasReliablePurity));
-
-        Set<PeachGenotype> peachGenotypes = orangeRecord.peach();
-
-        if(peachGenotypes != null)
-        {
-            builder.pharmocoGenotypes(ImmutableFindings.<PharmocoGenotype>builder()
-                    .findingsStatus(FindingsStatus.OK)
-                    .findings(peachGenotypes.stream().map(o ->
-                            ImmutablePharmocoGenotype.builder()
-                                    .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
-                                    .gene(o.gene())
-                                    .allele(o.allele())
-                                    .alleleCount(o.alleleCount())
-                                    .function(o.function())
-                                    .haplotype(o.haplotype())
-                                    .linkedDrugs(o.linkedDrugs())
-                                    .urlPrescriptionInfo(o.urlPrescriptionInfo())
-                                    .build()).toList())
-                    .build());
-        }
-        else
-        {
-            builder.pharmocoGenotypes(ImmutableFindings.<PharmocoGenotype>builder()
-                    .findingsStatus(FindingsStatus.NOT_AVAILABLE)
-                    .build());
-        }
-
-        return builder.build();
+        return builder.viruses(createVirusFindings(orangeRecord.virusInterpreter()))
+                .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
+                .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach()))
+                .build();
     }
 
     @NotNull
@@ -241,6 +209,21 @@ public class FindingRecordFactory {
     }
 
     @NotNull
+    private static DriverFindings<Virus> createVirusFindings(@Nullable VirusInterpreterData virusInterpreter){
+        if (virusInterpreter != null) {
+            return ImmutableDriverFindings.<Virus>builder()
+                    .findingsStatus(FindingsStatus.OK)
+                    .findings(convertViruses(virusInterpreter.allViruses()))
+                    .build();
+
+        } else {
+            return ImmutableDriverFindings.<Virus>builder()
+                    .findingsStatus(FindingsStatus.NOT_APPLICABLE)
+                    .build();
+        }
+    }
+
+    @NotNull
     private static List<? extends Virus> convertViruses(List<VirusInterpreterEntry> viruses)
     {
         return viruses.stream()
@@ -263,6 +246,32 @@ public class FindingRecordFactory {
             case HIGH -> DriverInterpretation.HIGH;
             case UNKNOWN -> DriverInterpretation.UNKNOWN;
         };
+    }
+
+    private static Findings<PharmocoGenotype> createPharmcoGenotypesFindings(@Nullable Set<PeachGenotype> peachGenotypes) {
+        if(peachGenotypes != null)
+        {
+            return ImmutableFindings.<PharmocoGenotype>builder()
+                    .findingsStatus(FindingsStatus.OK)
+                    .findings(peachGenotypes.stream().map(o ->
+                            ImmutablePharmocoGenotype.builder()
+                                    .findingKey(FindingKeys.pharmacoGenotype(o.gene(), o.allele()))
+                                    .gene(o.gene())
+                                    .allele(o.allele())
+                                    .alleleCount(o.alleleCount())
+                                    .function(o.function())
+                                    .haplotype(o.haplotype())
+                                    .linkedDrugs(o.linkedDrugs())
+                                    .urlPrescriptionInfo(o.urlPrescriptionInfo())
+                                    .build()).toList())
+                    .build();
+        }
+        else
+        {
+            return ImmutableFindings.<PharmocoGenotype>builder()
+                    .findingsStatus(FindingsStatus.NOT_AVAILABLE)
+                    .build();
+        }
     }
 
     private static Map<String, DriverGene> driverGenesMap(@Nullable Path driverGeneTsv) throws IOException {
