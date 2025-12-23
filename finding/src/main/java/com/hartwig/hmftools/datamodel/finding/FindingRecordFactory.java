@@ -34,7 +34,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
@@ -127,9 +126,7 @@ public class FindingRecordFactory {
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
         PurpleRecord purple = orangeRecord.purple();
 
-        builder.driverSomaticSmallVariants(SmallVariantFactory.create(
-                        DriverSource.SOMATIC, purple.reportableSomaticVariants(), orangeRecord.purple().somaticDrivers(),
-                        clinicalTranscriptsModel, driverGenes))
+        builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, clinicalTranscriptsModel, driverGenes))
                 .driverSomaticGainDeletions(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()))
                 .driverSomaticFusions(orangeRecord.linx().reportableSomaticFusions().stream()
                         .map(o -> convertFusion(o, DriverSource.SOMATIC)).toList())
@@ -148,13 +145,6 @@ public class FindingRecordFactory {
                         .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
                         .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
                         .build());
-
-        List<PurpleVariant> germlineVariants = orangeRecord.purple().reportableGermlineVariants();
-        List<PurpleDriver> germlineDrivers = orangeRecord.purple().germlineDrivers();
-        if (germlineVariants != null && germlineDrivers != null) {
-            builder.driverGermlineSmallVariants(SmallVariantFactory.create(
-                    DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGenes));
-        }
 
         List<PurpleGainDeletion> reportableGermlineFullDels = orangeRecord.purple().reportableGermlineFullDels();
         List<PurpleLossOfHeterozygosity> reportableGermlineLohs = orangeRecord.purple().reportableGermlineLossOfHeterozygosities();
