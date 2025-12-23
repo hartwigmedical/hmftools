@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.TRUTHSET_FILE_ID;
-import static com.hartwig.hmftools.esvee.vcfcompare.CompareConfig.registerConfig;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.EXACT;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.NONE;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.determineMatchType;
@@ -20,15 +18,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.perf.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.variant.vcf.VCFHeader;
 
 public class VcfComparer
 {
@@ -47,159 +50,223 @@ public class VcfComparer
 
     public void run()
     {
-        // establish sample info from VCFs
-
-        // SV_LOGGER.info("comparing VCFs for sample: " + mSampleId);
-        VariantCache oldVariants = new VariantCache(mConfig.OldVcf);
-        VariantCache newVariants = new VariantCache(mConfig.NewVcf);
-
-        mWriter = initialiseWriter(oldVariants.genotypeIds().TumorId);
-
-        VariantCache oldFilteredVariants = new VariantCache(mConfig.OldUnfilteredVcf);
-        VariantCache newFilteredVariants = new VariantCache(mConfig.NewUnfilteredVcf);
-
-        Set<String> combinedChromosomes = Sets.newHashSet(oldVariants.getBreakendMap().keySet());
-        combinedChromosomes.addAll(newVariants.getBreakendMap().keySet());
-
-        // begin matching routine, looping by chromosome
-        for(String chromosome : combinedChromosomes)
+        if(mConfig.SampleIds == null)
         {
-            List<Breakend> oldBreakends = oldVariants.getChromosomeBreakends(chromosome);
-            List<Breakend> newBreakends = newVariants.getChromosomeBreakends(chromosome);
-            List<Breakend> oldFilteredBreakends = oldFilteredVariants.getChromosomeBreakends(chromosome);
-            List<Breakend> newFilteredBreakends = newFilteredVariants.getChromosomeBreakends(chromosome);
+            String sampleId = extractVcfSampleId(mConfig.OldVcf);
+            mWriter = initialiseWriter(sampleId);
 
-            // first exact only from the main lists
-            // boolean noFiltersOnTruthset = mConfig.OldVcf.contains(TRUTHSET_FILE_ID);
-            findBreakendMatches(oldBreakends, newBreakends, true);
+            SampleProcessor sampleProcessor = new SampleProcessor(sampleId);
+            sampleProcessor.call();
+        }
+        else
+        {
+            mWriter = initialiseWriter(null);
 
-            // then inexact from the main list
-            findBreakendMatches(oldBreakends, newBreakends, false);
+            List<SampleProcessor> sampleTasks = Lists.newArrayList();
 
-            // then search for old in the filtered new list
-            findBreakendMatches(oldBreakends, newFilteredBreakends, true);
-
-            // and vice versa
-            findBreakendMatches(newBreakends, oldFilteredBreakends, false);
-
-            // finally log unmatched breakends
-            for(Breakend breakend : oldBreakends)
+            for(String sampleId : mConfig.SampleIds)
             {
-                if(breakend.isFiltered() && !mConfig.IncludeNonPass)
-                    continue;
-
-                if(!breakend.matched())
-                    writeVariantComparison(NONE, breakend.sv(), null, Collections.emptyList());
+                SampleProcessor sampleProcessor = new SampleProcessor(sampleId);
+                sampleTasks.add(sampleProcessor);
             }
 
-            for(Breakend breakend : newBreakends)
-            {
-                if(breakend.isFiltered() && !mConfig.IncludeNonPass)
-                    continue;
-
-                if(!breakend.matched())
-                    writeVariantComparison(NONE, null, breakend.sv(), Collections.emptyList());
-            }
+            final List<Callable<Void>> callableList = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, mConfig.Threads);
         }
 
         closeBufferedWriter(mWriter);
 
         SV_LOGGER.info("VCF comparison complete");
+
     }
 
-    private class BreakendMatch
+    private static String extractVcfSampleId(final String vcfFilename)
     {
-        public final Breakend Breakend;
-        public final CoordMatchType MatchType;
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFilename);
+        VCFHeader vcfHeader = vcfFileReader.vcfHeader();
+        List<String> vcfSampleNames = vcfHeader.getGenotypeSamples();
+        return vcfSampleNames.size() > 1 ? vcfSampleNames.get(1) :  vcfSampleNames.get(0);
+    }
 
-        public BreakendMatch(final Breakend breakend, final CoordMatchType matchType)
+    private class SampleProcessor implements Callable<Void>
+    {
+        private final String mSampleId;
+
+        public SampleProcessor(final String sampleId)
         {
-            Breakend = breakend;
-            MatchType = matchType;
+            mSampleId = sampleId;
         }
-    }
 
-    private void findBreakendMatches(final List<Breakend> breakends, final List<Breakend> otherBreakends, boolean exactOnly)
-    {
-        for(Breakend breakend : breakends)
+        private static String formFilename(final String sampleId, final String filename)
         {
-            if(breakend.matched())
-                continue;
-
-            if(breakend.isFiltered() && !mConfig.IncludeNonPass)
-                continue;
-
-            BreakendMatch match = findBreakendMatch(breakend, otherBreakends);
-
-            if(match == null)
-                continue;
-
-            if(exactOnly && match.MatchType != EXACT)
-                continue;
-
-            breakend.setCoordMatchType(match.MatchType);
-            match.Breakend.setCoordMatchType(match.MatchType);
-
-            compareBreakends(breakend, match.Breakend, match.MatchType);
+            return filename.replaceAll("\\*", sampleId);
         }
-    }
 
-    private BreakendMatch findBreakendMatch(final Breakend breakend, final List<Breakend> otherBreakends)
-    {
-        CoordMatchType topMatchType = NONE;
-        Breakend topBreakend = null;
-
-        for(Breakend otherBreakend : otherBreakends)
+        @Override
+        public Void call()
         {
-            if(otherBreakend.matched())
-                continue;
+           // SV_LOGGER.info("comparing VCFs for sample: " + mSampleId);
+            VariantCache oldVariants = new VariantCache(formFilename(mSampleId, mConfig.OldVcf));
+            VariantCache newVariants = new VariantCache(formFilename(mSampleId, mConfig.NewVcf));
 
-            CoordMatchType matchType = determineMatchType(breakend, otherBreakend);
+            VariantCache oldFilteredVariants = new VariantCache(formFilename(mSampleId, mConfig.OldUnfilteredVcf));
+            VariantCache newFilteredVariants = new VariantCache(formFilename(mSampleId, mConfig.NewUnfilteredVcf));
 
-            if(matchType.ordinal() < topMatchType.ordinal())
+            Set<String> combinedChromosomes = Sets.newHashSet(oldVariants.getBreakendMap().keySet());
+            combinedChromosomes.addAll(newVariants.getBreakendMap().keySet());
+
+            // begin matching routine, looping by chromosome
+            for(String chromosome : combinedChromosomes)
             {
-                topMatchType = matchType;
-                topBreakend = otherBreakend;
+                List<Breakend> oldBreakends = oldVariants.getChromosomeBreakends(chromosome);
+                List<Breakend> newBreakends = newVariants.getChromosomeBreakends(chromosome);
+                List<Breakend> oldFilteredBreakends = oldFilteredVariants.getChromosomeBreakends(chromosome);
+                List<Breakend> newFilteredBreakends = newFilteredVariants.getChromosomeBreakends(chromosome);
+
+                // first exact only from the passing breakeands
+                findBreakendMatches(oldBreakends, newBreakends, true);
+
+                // then inexact from the main lists
+                findBreakendMatches(oldBreakends, newBreakends, false);
+
+                // then search for old in the filtered new list and vice versa - again first exact then inexact matches
+                findBreakendMatches(oldBreakends, newFilteredBreakends, true);
+                findBreakendMatches(newBreakends, oldFilteredBreakends, true);
+                findBreakendMatches(oldBreakends, newFilteredBreakends, false);
+                findBreakendMatches(newBreakends, oldFilteredBreakends, false);
+
+                // finally log unmatched breakends
+                for(Breakend breakend : oldBreakends)
+                {
+                    if(breakend.isFiltered() && !mConfig.IncludeNonPass)
+                        continue;
+
+                    if(!breakend.matched())
+                        writeVariantComparison(mSampleId, NONE, breakend.sv(), null, Collections.emptyList());
+                }
+
+                for(Breakend breakend : newBreakends)
+                {
+                    if(breakend.isFiltered() && !mConfig.IncludeNonPass)
+                        continue;
+
+                    if(!breakend.matched())
+                        writeVariantComparison(mSampleId, NONE, null, breakend.sv(), Collections.emptyList());
+                }
+            }
+
+            if(mConfig.isMultiSample())
+                SV_LOGGER.debug("sample({}) comparison complete", mSampleId);
+
+            return null;
+        }
+
+        private class BreakendMatch
+        {
+            public final Breakend Breakend;
+            public final CoordMatchType MatchType;
+
+            public BreakendMatch(final Breakend breakend, final CoordMatchType matchType)
+            {
+                Breakend = breakend;
+                MatchType = matchType;
             }
         }
 
-        return topBreakend != null ? new BreakendMatch(topBreakend, topMatchType) : null;
+        private void findBreakendMatches(
+                final List<Breakend> breakends, final List<Breakend> otherBreakends, boolean exactOnly)
+        {
+            for(Breakend breakend : breakends)
+            {
+                if(breakend.matched())
+                    continue;
+
+                if(breakend.isFiltered() && !mConfig.IncludeNonPass)
+                    continue;
+
+                BreakendMatch match = findBreakendMatch(breakend, otherBreakends);
+
+                if(match == null)
+                    continue;
+
+                if(exactOnly && match.MatchType != EXACT)
+                    continue;
+
+                breakend.setCoordMatchType(match.MatchType);
+                match.Breakend.setCoordMatchType(match.MatchType);
+
+                compareBreakends(breakend, match.Breakend, match.MatchType);
+            }
+        }
+
+        private BreakendMatch findBreakendMatch(final Breakend breakend, final List<Breakend> otherBreakends)
+        {
+            CoordMatchType topMatchType = NONE;
+            Breakend topBreakend = null;
+
+            for(Breakend otherBreakend : otherBreakends)
+            {
+                if(otherBreakend.matched())
+                    continue;
+
+                CoordMatchType matchType = determineMatchType(breakend, otherBreakend);
+
+                if(matchType.ordinal() < topMatchType.ordinal())
+                {
+                    topMatchType = matchType;
+                    topBreakend = otherBreakend;
+                }
+            }
+
+            return topBreakend != null ? new BreakendMatch(topBreakend, topMatchType) : null;
+        }
+
+        private void compareBreakends(final Breakend oldBreakend, final Breakend newBreakend, final CoordMatchType coordMatchType)
+        {
+            List<String> diffs = Lists.newArrayList();
+
+            checkValueDifference(diffs, "Type", oldBreakend.type().toString(), newBreakend.type().toString());
+
+            checkValueDifference(diffs, "Coords", oldBreakend.sv().svString(), newBreakend.sv().svString());
+
+            checkValueDifference(
+                    diffs, "TumorFrags", oldBreakend.tumorFragmentCount(), newBreakend.tumorFragmentCount());
+
+            checkValueDifference(
+                    diffs, "RefFrags", oldBreakend.referenceFragmentCount(), newBreakend.referenceFragmentCount());
+
+            checkValueDifference(diffs, "Qual", oldBreakend.sv().qual(), newBreakend.sv().qual());
+
+            checkValueDifference(diffs, "Passing", oldBreakend.isPass(), newBreakend.isPass());
+
+            checkValueDifference(diffs, "InsSeqLength", oldBreakend.InsertSequence.length(), newBreakend.InsertSequence.length());
+
+            checkValueDifference(diffs, "InexactHom", oldBreakend.InexactHomology.length(), newBreakend.InexactHomology.length());
+
+            checkValueDifference(diffs, "Chained", oldBreakend.sv().inChainedAssembly(), newBreakend.sv().inChainedAssembly());
+
+            checkValueDifference(diffs, "LINE", oldBreakend.sv().isLineSite(), newBreakend.sv().isLineSite());
+
+            writeVariantComparison(mSampleId, coordMatchType, oldBreakend.sv(), newBreakend.sv(), diffs);
+        }
     }
 
-    private void compareBreakends(final Breakend oldBreakend, final Breakend newBreakend, final CoordMatchType coordMatchType)
-    {
-        List<String> diffs = Lists.newArrayList();
-
-        checkValueDifference(diffs, "Type", oldBreakend.type().toString(), newBreakend.type().toString());
-
-        checkValueDifference(diffs, "Coords", oldBreakend.sv().svString(), newBreakend.sv().svString());
-
-        checkValueDifference(
-                diffs, "TumorFrags", oldBreakend.tumorFragmentCount(), newBreakend.tumorFragmentCount());
-
-        checkValueDifference(
-                diffs, "RefFrags", oldBreakend.referenceFragmentCount(), newBreakend.referenceFragmentCount());
-
-        checkValueDifference(diffs, "Qual", oldBreakend.sv().qual(), newBreakend.sv().qual());
-
-        checkValueDifference(diffs, "Passing", oldBreakend.isPass(), newBreakend.isPass());
-
-        checkValueDifference(diffs, "InsSeqLength", oldBreakend.InsertSequence.length(), newBreakend.InsertSequence.length());
-
-        checkValueDifference(diffs, "InexactHom", oldBreakend.InexactHomology.length(), newBreakend.InexactHomology.length());
-
-        checkValueDifference(diffs, "Chained", oldBreakend.sv().inChainedAssembly(), newBreakend.sv().inChainedAssembly());
-
-        checkValueDifference(diffs, "LINE", oldBreakend.sv().isLineSite(), newBreakend.sv().isLineSite());
-
-        writeVariantComparison(coordMatchType, oldBreakend.sv(), newBreakend.sv(), diffs);
-    }
-
-    private BufferedWriter initialiseWriter(final String sampleId)
+    private BufferedWriter initialiseWriter(@Nullable final String sampleId)
     {
         try
         {
-            String fileName = mConfig.OutputDir + sampleId + "." + ESVEE_FILE_ID + ".vcf_compare";
+            String fileName = mConfig.OutputDir;
+
+            if(sampleId != null)
+            {
+                fileName += sampleId;
+            }
+            else
+            {
+                fileName = "cohort";
+            }
+
+            fileName += "." + ESVEE_FILE_ID + ".vcf_compare";
 
             if(mConfig.OutputId != null)
                 fileName += "." + mConfig.OutputId;
@@ -210,12 +277,31 @@ public class VcfComparer
 
             BufferedWriter writer = FileWriterUtils.createBufferedWriter(fileName, false);
 
-            String header = String.join(
-                    TSV_DELIM,
-                    "SvCoords", "CoordMatch", "Diffs", "OldVcfId", "NewVcfId",
-                    "OldTumorFrags",  "NewTumorFrags", "OldNormalFrags","NewNormalFrags", "OldQual", "NewQual", "OldFilters", "NewFilters");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write(header);
+            if(sampleId == null)
+            {
+                sj.add("SampleId");
+            }
+
+            sj.add("SvType");
+            sj.add("SvLength");
+
+            sj.add("SvCoords");
+            sj.add("CoordMatch");
+            sj.add("Diffs");
+            sj.add("OldVcfId");
+            sj.add("NewVcfId");
+            sj.add("OldTumorFrags");
+            sj.add("NewTumorFrags");
+            sj.add("OldNormalFrags");
+            sj.add("NewNormalFrags");
+            sj.add("OldQual");
+            sj.add("NewQual");
+            sj.add("OldFilters");
+            sj.add("NewFilters");
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -228,9 +314,9 @@ public class VcfComparer
         }
     }
 
-    private void writeVariantComparison(
-            final CoordMatchType coordMatchType, @Nullable final Variant oldVariant, @Nullable final Variant newVariant,
-            final List<String> diffs)
+    private synchronized void writeVariantComparison(
+            final String sampleId, final CoordMatchType coordMatchType, @Nullable final Variant oldVariant,
+            @Nullable final Variant newVariant, final List<String> diffs)
     {
         if(diffs.isEmpty() && coordMatchType == EXACT && !mConfig.WriteMatches)
             return;
@@ -240,9 +326,19 @@ public class VcfComparer
         {
             return;
         }
-        else if((oldVariant != null && oldVariant.isFiltered()) || (newVariant != null && newVariant.isFiltered()))
+        else if(oldVariant != null && oldVariant.isFiltered())
         {
             return;
+        }
+        else if(newVariant != null && newVariant.isFiltered())
+        {
+            return;
+        }
+
+        if(!mConfig.WritePonBreakends)
+        {
+            if((oldVariant == null || oldVariant.isPonOnly()) && (newVariant == null || newVariant.isPonOnly()))
+                return;
         }
 
         if(oldVariant != null)
@@ -265,10 +361,16 @@ public class VcfComparer
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
+            if(mConfig.isMultiSample())
+                sj.add(sampleId);
+
             String matchType, varCoords ;
 
             if(oldVariant != null && newVariant != null)
             {
+                sj.add(String.valueOf(oldVariant.type()));
+                sj.add(String.valueOf(oldVariant.length()));
+
                 if(diffs.isEmpty())
                     matchType =  coordMatchType.toString();
                 else
@@ -278,11 +380,17 @@ public class VcfComparer
             }
             else if(oldVariant != null)
             {
+                sj.add(String.valueOf(oldVariant.type()));
+                sj.add(String.valueOf(oldVariant.length()));
+
                 matchType = "OLD_ONLY";
                 varCoords = oldVariant.svString();
             }
             else
             {
+                sj.add(String.valueOf(newVariant.type()));
+                sj.add(String.valueOf(newVariant.length()));
+
                 matchType = "NEW_ONLY";
                 varCoords = newVariant.svString();
             }

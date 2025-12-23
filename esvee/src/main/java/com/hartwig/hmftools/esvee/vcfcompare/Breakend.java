@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ASM_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LINE_SITE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
@@ -72,7 +73,7 @@ public class Breakend
         final VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
         InsertSequence = altInsertCoords.InsertSequence;
 
-        IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
+        IsLineInsertion = Context.hasAttribute(LINE_SITE);
 
         if(context.hasAttribute(IHOMPOS))
         {
@@ -152,7 +153,8 @@ public class Breakend
     }
 
     public boolean isPass() { return Filters.isEmpty(); }
-    public boolean isFiltered() { return !isPass(); }
+    public boolean isFiltered() { return !isPass() && !isPonOnly(); }
+    public boolean isPonOnly() { return Filters.size() == 1 && Filters.contains(PON_FILTER_PON); }
 
     public void setCoordMatchType(final CoordMatchType type) { mCoordMatchType = type; }
     public CoordMatchType coordMatchType() { return mCoordMatchType; }
