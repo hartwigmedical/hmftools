@@ -18,22 +18,7 @@ import org.jetbrains.annotations.Nullable;
 public interface FindingRecord
 {
     @NotNull
-    List<SmallVariant> driverSomaticSmallVariants();
-
-    @NotNull
-    default List<SmallVariant> driverSomaticSmallVariants(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverSomaticSmallVariants(), reportedStatus);
-    }
-
-    @Nullable
-    List<SmallVariant> driverGermlineSmallVariants();
-
-    @Nullable
-    default List<SmallVariant> driverGermlineSmallVariants(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverGermlineSmallVariants(), reportedStatus);
-    }
+    DriverFindings<SmallVariant> smallVariants();
 
     @NotNull
     List<GainDeletion> driverSomaticGainDeletions();
