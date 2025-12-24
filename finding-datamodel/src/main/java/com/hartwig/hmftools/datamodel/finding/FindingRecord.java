@@ -2,7 +2,6 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -21,43 +20,13 @@ public interface FindingRecord
     DriverFindings<SmallVariant> smallVariants();
 
     @NotNull
-    List<GainDeletion> driverSomaticGainDeletions();
+    DriverFindings<GainDeletion> gainDeletions();
 
     @NotNull
-    default List<GainDeletion> driverSomaticGainDeletions(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverSomaticGainDeletions(), reportedStatus);
-    }
-
-    @Nullable
-    List<GainDeletion> driverGermlineGainDeletions();
+    DriverFindings<Fusion> fusions();
 
     @NotNull
-    List<Fusion> driverSomaticFusions();
-
-    @NotNull
-    default List<Fusion> driverSomaticFusions(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverSomaticFusions(), reportedStatus);
-    }
-
-    @NotNull
-    List<Disruption> driverSomaticDisruptions();
-
-    @NotNull
-    default List<Disruption> driverSomaticDisruptions(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverSomaticDisruptions(), reportedStatus);
-    }
-
-    @Nullable
-    List<Disruption> driverGermlineDisruptions();
-
-    @Nullable
-    default List<Disruption> driverGermlineDisruptions(ReportedStatus reportedStatus)
-    {
-        return filterReported(driverGermlineDisruptions(), reportedStatus);
-    }
+    DriverFindings<Disruption> disruptions();
 
     @NotNull
     DriverFindings<Virus> viruses();
@@ -94,10 +63,4 @@ public interface FindingRecord
 
     @NotNull
     PurpleFit purpleFit();
-
-    private static <T extends Driver> List<T> filterReported(List<T> drivers, ReportedStatus reportedStatus)
-    {
-        if (drivers == null) { return null; }
-        return drivers.stream().filter(o -> o.reportedStatus() == reportedStatus).toList();
-    }
 }
