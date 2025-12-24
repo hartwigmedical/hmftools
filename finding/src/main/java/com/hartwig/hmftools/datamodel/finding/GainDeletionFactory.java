@@ -11,8 +11,26 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+
+import org.jetbrains.annotations.NotNull;
 
 final class GainDeletionFactory {
+
+    public static DriverFindings<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple, @NotNull FindingsStatus findingsStatus) {
+        List<GainDeletion> allGainDels = new ArrayList<>();
+        List<PurpleGainDeletion> germlineFullDels = purple.reportableGermlineFullDels();
+        List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
+        List<PurpleDriver> purpleGermlineDrivers = purple.germlineDrivers();
+        if (germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null) {
+            allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers()));
+        }
+        allGainDels.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()));
+        return ImmutableDriverFindings.<GainDeletion>builder()
+                .status(findingsStatus)
+                .all(allGainDels)
+                .build();
+    }
 
     // in orange data, HOM_DELS are stored as germline full dels, HET_DELS are stored in LOH, they do not overlap.
     // all the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
@@ -25,10 +43,7 @@ final class GainDeletionFactory {
         for(PurpleGainDeletion fullDels : reportableGermlineFullDels)
         {
             // find the purple driver object, it should be there
-            PurpleDriver driver = germlineDrivers.stream()
-                    .filter(o -> o.gene().equals(fullDels.gene()) && o.transcript().equals(fullDels.transcript()) && o.type().equals(PurpleDriverType.GERMLINE_DELETION))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No driver found for germline full del gene " + fullDels.gene()));
+            PurpleDriver driver = findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION);
 
             driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE));
         }
@@ -36,10 +51,7 @@ final class GainDeletionFactory {
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
         {
             // find the purple driver object, it should be there
-            PurpleDriver driver = germlineDrivers.stream()
-                    .filter(o -> o.gene().equals(loh.gene()) && o.transcript().equals(loh.transcript()) && o.type().equals(PurpleDriverType.GERMLINE_DELETION))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No driver found for germline loh gene " + loh.gene()));
+            PurpleDriver driver = findDriver(germlineDrivers, loh.gene(), loh.transcript(), PurpleDriverType.GERMLINE_DELETION);
 
             driverGainDels.add(toGainDel(loh, driver));
         }
@@ -61,10 +73,7 @@ final class GainDeletionFactory {
                 case FULL_DEL, PARTIAL_DEL -> PurpleDriverType.DEL;
             };
 
-            PurpleDriver driver = drivers.stream()
-                    .filter(o -> o.gene().equals(gainDeletion.gene()) && o.transcript().equals(gainDeletion.transcript()) && o.type().equals(purpleDriverType))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No driver found for somatic gain del gene " + gainDeletion.gene()));
+            PurpleDriver driver = findDriver(drivers, gainDeletion.gene(), gainDeletion.transcript(), purpleDriverType);
 
             final GainDeletion.Type type = switch(gainDeletion.interpretation())
             {
@@ -77,24 +86,32 @@ final class GainDeletionFactory {
         return somaticGainsDels;
     }
 
+    private static PurpleDriver findDriver(final List<PurpleDriver> drivers, final String gene, final String transcript,
+            final PurpleDriverType purpleDriverType) {
+        return drivers.stream()
+                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript) && o.type().equals(purpleDriverType))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No driver found for " + gene + " transcript " + transcript + " type " + purpleDriverType));
+    }
+
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
             final PurpleDriver driver,
             GainDeletion.Type type,
             DriverSource sourceSample) {
         return ImmutableGainDeletion.builder()
                 .findingKey(FindingKeys.gainDeletion(sourceSample,
-                        driver.gene(),
+                        purpleGainDeletion.gene(),
                         purpleGainDeletion.interpretation(),
                         driver.isCanonical(),
-                        driver.transcript()))
+                        purpleGainDeletion.transcript()))
                 .driverSource(sourceSample)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .type(type)
                 .chromosome(purpleGainDeletion.chromosome())
                 .chromosomeBand(purpleGainDeletion.chromosomeBand())
-                .gene(driver.gene())
-                .transcript(driver.transcript())
+                .gene(purpleGainDeletion.gene())
+                .transcript(purpleGainDeletion.transcript())
                 .isCanonical(driver.isCanonical())
                 .interpretation(purpleGainDeletion.interpretation())
                 .minCopies(purpleGainDeletion.minCopies())
@@ -112,18 +129,18 @@ final class GainDeletionFactory {
 
         return ImmutableGainDeletion.builder()
                 .findingKey(FindingKeys.gainDeletion(DriverSource.GERMLINE,
-                        driver.gene(),
+                        loh.gene(),
                         copyNumberInterpretation,
                         driver.isCanonical(),
-                        driver.transcript()))
+                        loh.transcript()))
                 .driverSource(DriverSource.GERMLINE)
                 .reportedStatus(ReportedStatus.REPORTED)
                 .driverInterpretation(DriverInterpretation.interpret(driver.driverLikelihood()))
                 .type(GainDeletion.Type.GERMLINE_DEL_HET_IN_TUMOR)
                 .chromosome(loh.chromosome())
                 .chromosomeBand(loh.chromosomeBand())
-                .gene(driver.gene())
-                .transcript(driver.transcript())
+                .gene(loh.gene())
+                .transcript(loh.transcript())
                 .isCanonical(driver.isCanonical())
                 .interpretation(copyNumberInterpretation)
                 .minCopies(loh.minCopies())
