@@ -13,8 +13,8 @@ import org.jetbrains.annotations.Nullable;
 public interface Findings<T extends Finding> {
 
     @NotNull
-    FindingsStatus findingsStatus();
+    FindingsStatus status();
 
     @NotNull
-    List<T> findings();
+    List<T> all();
 }

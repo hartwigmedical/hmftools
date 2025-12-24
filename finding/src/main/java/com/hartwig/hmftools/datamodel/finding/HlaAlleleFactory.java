@@ -30,8 +30,8 @@ public class HlaAlleleFactory
     {
         LilacRecord lilac = orangeRecord.lilac();
         return ImmutableFindings.<HlaAllele>builder()
-                .findingsStatus(lilac != null ? lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE : FindingsStatus.NOT_AVAILABLE)
-                .findings(lilac != null ? HlaAlleleFactory.convertHlaAlleles(lilac, hasReliablePurity, !orangeRecord.tumorOnlyMode(),
+                .status(lilac != null ? lilac.qc().equals(PASS) ? FindingsStatus.OK : FindingsStatus.NOT_RELIABLE : FindingsStatus.NOT_AVAILABLE)
+                .all(lilac != null ? HlaAlleleFactory.convertHlaAlleles(lilac, hasReliablePurity, !orangeRecord.tumorOnlyMode(),
                         orangeRecord.isofox() != null) : List.of())
                 .build();
     }

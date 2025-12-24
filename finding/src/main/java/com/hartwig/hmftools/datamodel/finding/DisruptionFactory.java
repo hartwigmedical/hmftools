@@ -15,6 +15,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxDriver;
 import com.hartwig.hmftools.datamodel.linx.LinxGeneOrientation;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
 import org.apache.logging.log4j.LogManager;
@@ -52,6 +53,28 @@ final class DisruptionFactory
     // It select HOM_DUP_DISRUPTION, HOM_DEL_DISRUPTION and GERMLINE_HOM_DUP_DISRUPTION. Unfortunately there is no foolproof way to link
     // back to the breakends, it probably will work by just selecting first reportable disruption with the same gene / transcript.
     // We can do it for the backport version if that makes it easier.
+
+    public static DriverFindings<Disruption> createDisruptionsFindings(@NotNull LinxRecord linx, boolean hasReliablePurity) {
+        List<Disruption> allDisruptions = new ArrayList<>();
+        List<LinxBreakend> germlineBreakends = linx.reportableGermlineBreakends();
+        List<LinxSvAnnotation> germlineStructuralVariants = linx.allGermlineStructuralVariants();
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = linx.germlineHomozygousDisruptions();
+
+        if (germlineBreakends != null && germlineStructuralVariants != null && germlineHomozygousDisruptions != null) {
+            allDisruptions.addAll(createGermlineDisruptions(germlineBreakends, germlineStructuralVariants, germlineHomozygousDisruptions));
+        }
+
+        allDisruptions.addAll(createSomaticDisruptions(
+                linx.reportableSomaticBreakends(),
+                linx.allSomaticStructuralVariants(),
+                linx.somaticDrivers(),
+                hasReliablePurity));
+
+        return ImmutableDriverFindings.<Disruption>builder()
+                .status(FindingsStatus.OK)
+                .all(allDisruptions)
+                .build();
+    }
 
     @NotNull
     public static List<Disruption> createGermlineDisruptions(

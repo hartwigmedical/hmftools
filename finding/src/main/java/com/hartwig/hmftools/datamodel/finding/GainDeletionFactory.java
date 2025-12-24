@@ -11,8 +11,26 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+
+import org.jetbrains.annotations.NotNull;
 
 final class GainDeletionFactory {
+
+    public static DriverFindings<GainDeletion> gainDeletionFindings(@NotNull PurpleRecord purple, @NotNull FindingsStatus findingsStatus) {
+        List<GainDeletion> allGainDels = new ArrayList<>();
+        List<PurpleGainDeletion> germlineFullDels = purple.reportableGermlineFullDels();
+        List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
+        List<PurpleDriver> purpleGermlineDrivers = purple.germlineDrivers();
+        if (germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null) {
+            allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers()));
+        }
+        allGainDels.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()));
+        return ImmutableDriverFindings.<GainDeletion>builder()
+                .status(findingsStatus)
+                .all(allGainDels)
+                .build();
+    }
 
     // in orange data, HOM_DELS are stored as germline full dels, HET_DELS are stored in LOH, they do not overlap.
     // all the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
