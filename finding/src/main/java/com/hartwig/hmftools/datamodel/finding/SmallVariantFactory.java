@@ -3,7 +3,6 @@ package com.hartwig.hmftools.datamodel.finding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.panel.DriverGene;
@@ -12,7 +11,6 @@ import com.hartwig.hmftools.datamodel.driver.DriverSource;
 import com.hartwig.hmftools.datamodel.driver.ReportedStatus;
 import com.hartwig.hmftools.datamodel.finding.clinicaltranscript.ClinicalTranscriptsModel;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -22,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 final class SmallVariantFactory
 {
-    public static DriverFindings<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
+    public static DriverFindings<SmallVariant> smallVariantFindings(@NotNull PurpleRecord purpleRecord, @NotNull FindingsStatus findingsStatus, @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel,
             @NotNull Map<String, DriverGene> driverGeneMap) {
         List<SmallVariant> allSmallVariants = Lists.newArrayList();
         allSmallVariants.addAll(SmallVariantFactory.create(
@@ -37,13 +35,9 @@ final class SmallVariantFactory
                     DriverSource.GERMLINE, germlineVariants, germlineDrivers, clinicalTranscriptsModel, driverGeneMap));
         }
         return ImmutableDriverFindings.<SmallVariant>builder()
-                .findingsStatus(purpleStatus(purpleRecord))
-                .findings(allSmallVariants)
+                .status(findingsStatus)
+                .all(allSmallVariants)
                 .build();
-    }
-
-    private static FindingsStatus purpleStatus(PurpleRecord purpleRecord) {
-        return purpleRecord.fit().qc().status().equals(Set.of(PurpleQCStatus.PASS)) ? FindingsStatus.OK : FindingsStatus.NOT_AVAILABLE;
     }
 
     @NotNull
