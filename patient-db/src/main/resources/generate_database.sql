@@ -297,7 +297,6 @@ CREATE TABLE `somaticVariant`
     `mappability` DOUBLE PRECISION NOT NULL,
     `germlineStatus` VARCHAR(50) NOT NULL,
     `minorAlleleCopyNumber` DOUBLE PRECISION NOT NULL,
-    `recovered` TINYINT(1) NOT NULL,
     `kataegis` VARCHAR(20) NOT NULL,
     `referenceAlleleReadCount` INT,
     `referenceTotalReadCount` INT,
