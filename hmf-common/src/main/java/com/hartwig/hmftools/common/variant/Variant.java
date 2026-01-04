@@ -119,20 +119,12 @@ public interface Variant extends GenomePosition
     @Nullable
     List<Integer> localPhaseSets();
 
-    default Integer topLocalPhaseSet()
-    {
-        return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null;
-    }
-
     default String localPhaseSetsStr()
     {
-        return SomaticVariantFactory.localPhaseSetsStr(localPhaseSets());
+        return SageVcfTags.localPhaseSetsStr(localPhaseSets());
     }
 
-    default boolean hasLocalPhaseSets()
-    {
-        return localPhaseSets() != null && !localPhaseSets().isEmpty();
-    }
+    // default boolean hasLocalPhaseSets() { return localPhaseSets() != null && !localPhaseSets().isEmpty(); }
 
     @Nullable
     String clinvarInfo();

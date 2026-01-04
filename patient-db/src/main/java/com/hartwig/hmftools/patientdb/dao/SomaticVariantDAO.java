@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.dao;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.localPhaseSetsStringToList;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.byteToBoolean;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO.checkTrimHgsvString;
@@ -137,7 +138,7 @@ public class SomaticVariantDAO
                 .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
                 .rnaDepth(rnaAllelicDepth)
                 .qual(record.get(SOMATICVARIANT.QUAL))
-                .localPhaseSets(SomaticVariantFactory.localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
+                .localPhaseSets(localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
                 .genotypeStatus(UNKNOWN)
                 .build();
 

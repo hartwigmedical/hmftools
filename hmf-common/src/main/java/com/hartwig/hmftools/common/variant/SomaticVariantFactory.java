@@ -201,35 +201,6 @@ public class SomaticVariantFactory implements VariantContextFilter
 
     public static final String LPS_DELIM = ";";
 
-    public static List<Integer> localPhaseSetsStringToList(@Nullable final String localPhaseSetStr)
-    {
-        if(localPhaseSetStr == null || localPhaseSetStr.isEmpty())
-        {
-            return null;
-        }
-
-        List<Integer> localPhaseSets = Lists.newArrayList();
-        Arrays.stream(localPhaseSetStr.split(LPS_DELIM)).forEach(x -> localPhaseSets.add(Integer.valueOf(x)));
-        return localPhaseSets;
-    }
-
-    public static String localPhaseSetsStr(@Nullable final List<Integer> localPhaseSets)
-    {
-        if(localPhaseSets == null || localPhaseSets.isEmpty())
-        {
-            return "";
-        }
-
-        if(localPhaseSets.size() == 1)
-        {
-            return String.valueOf(localPhaseSets.get(0));
-        }
-
-        StringJoiner sj = new StringJoiner(LPS_DELIM);
-        localPhaseSets.forEach(x -> sj.add(String.valueOf(x)));
-        return sj.toString();
-    }
-
     private static boolean sampleInFile(final String sample, final VCFHeader header)
     {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));

@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.Arrays;
@@ -204,7 +203,7 @@ public class VariantContextDecorator implements GenomePosition
     public String localPhaseSetsToString()
     {
         List<Integer> localPhaseSets = mContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0);
-        return localPhaseSetsStr(localPhaseSets);
+        return SageVcfTags.localPhaseSetsStr(localPhaseSets);
     }
 
     @Nullable
