@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.common.FileCommon.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.FileCommon.FILE_NAME_DELIM;
@@ -119,7 +119,7 @@ public class VcfWriter
 
         newHeader.addMetaDataLine(new VCFHeaderLine("esveeVersion", esveeVersion));
 
-        newHeader.addMetaDataLine(new VCFFilterHeaderLine(PASS, "Variant passes all filters"));
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(PASS_FILTER, "Variant passes all filters"));
 
         for(FilterType filter : FilterType.values())
         {
@@ -242,7 +242,7 @@ public class VcfWriter
         builder.getFilters().clear();
 
         if(filters.isEmpty())
-            builder.filter(PASS);
+            builder.filter(PASS_FILTER);
         else
             filters.forEach(x -> builder.filter(x.vcfTag()));
 

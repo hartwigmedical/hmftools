@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.sv;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -112,6 +112,6 @@ public interface StructuralVariant
     default boolean isFiltered()
     {
         String filter = filter();
-        return filter != null && !filter.equals(PASS);
+        return filter != null && !filter.equals(PASS_FILTER);
     }
 }

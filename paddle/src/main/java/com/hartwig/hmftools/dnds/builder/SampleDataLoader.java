@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.dnds.builder;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.dnds.DndsCommon.DN_LOGGER;
 import static com.hartwig.hmftools.dnds.DndsCommon.MAX_REPEAT_COUNT;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.byteToBoolean;
@@ -127,7 +127,7 @@ public class SampleDataLoader
                         SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.REPEATCOUNT)
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.SAMPLEID.eq(sample))
-                .and(SOMATICVARIANT.FILTER.eq(PASS))
+                .and(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.GENE.ne(""))
                 .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(maxRepeatCount))
                 .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))

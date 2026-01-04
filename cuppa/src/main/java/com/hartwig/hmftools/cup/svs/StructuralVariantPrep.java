@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.cup.common.CupConstants.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
@@ -96,7 +96,7 @@ public class StructuralVariantPrep implements CategoryPrep
 
         // ensure only filtered SVs are considered
         final List<StructuralVariantData> svDataList = allSVs.stream()
-                .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS))
+                .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS_FILTER))
                 .collect(Collectors.toList());
 
         int telomericSgls = (int)svDataList.stream()

@@ -37,8 +37,6 @@ public class SomaticVariantFactory implements VariantContextFilter
     public static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
-    public static final String PASS_FILTER = "PASS";
-
     private final CompoundFilter mFilter;
     private int mCreatedCount;
     private int mFilteredCount;

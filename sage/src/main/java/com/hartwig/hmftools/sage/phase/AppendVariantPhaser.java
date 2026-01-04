@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.phase;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LPS_APPEND_INFO;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -172,7 +172,7 @@ public class AppendVariantPhaser implements VariantPhaser
         {
             VariantContext variantContext = variantContexts.get(i);
 
-            if(variantContext.isFiltered() && !variantContext.getFilters().contains(PASS))
+            if(variantContext.isFiltered() && !variantContext.getFilters().contains(PASS_FILTER))
                 continue;
 
             if(!variantContext.hasAttribute(LOCAL_PHASE_SET))

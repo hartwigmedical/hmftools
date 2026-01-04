@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromD
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -255,9 +255,9 @@ public class SomaticVariantData implements ComparableItem
         {
             // if ones side is filtered, suggests was filtered downstream of Sage (eg Pave or Purple) so indicate this
             if(IsFromUnfilteredVcf && !otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS));
+                diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS_FILTER));
             else if(!IsFromUnfilteredVcf && otherVar.IsFromUnfilteredVcf)
-                diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
+                diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS_FILTER, "FILTERED"));
         }
         return diffs;
     }

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.GnomadCache.PON_GNOMAD_FILTER;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_FILTER;
 import static com.hartwig.hmftools.pave.FilterType.PANEL;
@@ -159,9 +158,9 @@ public class ChromosomeTask implements Callable<Void>
 
         VariantData variant = VariantData.fromContext(variantContext);
 
-        boolean isPass = variantContext.getFilters().isEmpty() || variantContext.getFilters().contains(PASS_FILTER);
+        boolean isPass = variantContext.getFilters().isEmpty() || variantContext.getFilters().contains(PASS);
 
-        if(mConfig.Filter == PASS)
+        if(mConfig.Filter == FilterType.PASS)
         {
             if(!isPass)
                 return;

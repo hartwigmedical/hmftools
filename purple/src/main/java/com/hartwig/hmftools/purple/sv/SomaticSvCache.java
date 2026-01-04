@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_TYPE;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
@@ -32,7 +32,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.purple.PurpleConfig;
 import com.hartwig.hmftools.purple.fitting.PurityAdjuster;
@@ -326,7 +325,7 @@ public class SomaticSvCache
     {
         return (int) mVariantCollection.variants()
                 .stream()
-                .filter(x -> x.filter() == null || Objects.equals(x.filter(), PASS))
+                .filter(x -> x.filter() == null || Objects.equals(x.filter(), PASS_FILTER))
                 .filter(x -> !x.type().equals(StructuralVariantType.INF))
                 .filter(x -> !x.type().equals(StructuralVariantType.SGL))
                 .count();

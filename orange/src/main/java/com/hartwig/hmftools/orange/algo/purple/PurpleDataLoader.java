@@ -140,7 +140,7 @@ public final class PurpleDataLoader
                 allGermlineVariants.clear();
 
             allGermlineDeletions = GermlineDeletion.read(germlineDeletionTsv).stream()
-                    .filter(x -> x.Filter.equals(CommonVcfTags.PASS)).collect(Collectors.toList());
+                    .filter(x -> x.Filter.equals(CommonVcfTags.PASS_FILTER)).collect(Collectors.toList());
 
             panelGermlineDeletions = allGermlineDeletions.stream().filter(x -> driverGenes.containsKey(x.GeneName)).collect(Collectors.toList());
 

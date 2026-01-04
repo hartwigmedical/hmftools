@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -68,7 +70,7 @@ public interface Variant extends GenomePosition
 
     default boolean isFiltered()
     {
-        return !filter().equals(SomaticVariantFactory.PASS_FILTER);
+        return !filter().equals(PASS_FILTER);
     }
 
     default boolean isSnp()

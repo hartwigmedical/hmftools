@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -299,7 +299,7 @@ public class SyntheticVcfWriter
         VariantContextBuilder builder = CandidateSerialisation.toContext(candidate)
                 .log10PError(0)
                 .genotypes(genotype)
-                .filters(PASS);
+                .filters(PASS_FILTER);
 
         VariantContext variantContext = builder.make();
 

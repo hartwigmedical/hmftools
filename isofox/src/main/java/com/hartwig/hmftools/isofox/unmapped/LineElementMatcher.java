@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
 import java.io.IOException;
@@ -130,7 +130,7 @@ public class LineElementMatcher
 
             StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter()).stream()
                     .filter(x -> lineVcfIds.contains(x.id()))
-                    .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS) || x.filter().equals(INFERRED))
+                    .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS_FILTER) || x.filter().equals(INFERRED))
                     .forEach(x -> variants.add(x));
 
             ISF_LOGGER.info("sample({}) loaded {} line variants", sampleId, variants.size());

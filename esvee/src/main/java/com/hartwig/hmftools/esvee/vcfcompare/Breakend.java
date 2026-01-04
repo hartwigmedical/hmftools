@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEG_REPEAT_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.vcfcompare.CoordMatchType.NONE;
 
@@ -89,7 +89,7 @@ public class Breakend
 
         for(String filterStr : context.getFilters())
         {
-            if(!filterStr.equals(PASS))
+            if(!filterStr.equals(PASS_FILTER))
                 Filters.add(filterStr);
         }
 

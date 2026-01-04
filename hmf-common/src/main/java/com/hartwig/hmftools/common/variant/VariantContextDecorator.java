@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.AllelicDepth.NO_DEPTH;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
@@ -83,7 +84,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean isPass()
     {
-        return mFilter.equals(SomaticVariantFactory.PASS_FILTER);
+        return mFilter.equals(PASS_FILTER);
     }
 
     public PathogenicSummary clinvarPathogenicSummary()
@@ -319,7 +320,7 @@ public class VariantContextDecorator implements GenomePosition
         }
         else
         {
-            return SomaticVariantFactory.PASS_FILTER;
+            return PASS_FILTER;
         }
     }
 
