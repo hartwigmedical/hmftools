@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANS
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
@@ -270,7 +270,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public double mappability()
     {
-        return mContext.getAttributeAsDouble(MAPPABILITY_TAG, 0);
+        return mContext.getAttributeAsDouble(MAPPABILITY, 0);
     }
 
     public boolean reported()

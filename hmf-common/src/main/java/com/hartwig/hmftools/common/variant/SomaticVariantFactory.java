@@ -34,9 +34,6 @@ public class SomaticVariantFactory implements VariantContextFilter
         return new SomaticVariantFactory(new PassingVariantFilter());
     }
 
-    public static final String MAPPABILITY_TAG = "MAPPABILITY";
-    private static final String RECOVERED_FLAG = "RECOVERED";
-
     private final CompoundFilter mFilter;
     private int mCreatedCount;
     private int mFilteredCount;
@@ -197,7 +194,6 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .variant(VariantBuilderUtils.createVariantBuilder(allelicDepth, context, reference, rna).build())
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
-                .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
                 .gnomadFrequency(context.getAttributeAsDouble(GNOMAD_FREQ, 0))
                 .somaticLikelihood(SomaticLikelihood.valueOf(
                         context.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString())));

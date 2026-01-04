@@ -143,7 +143,6 @@ public class SomaticVariantDAO
 
         return ImmutableSomaticVariantImpl.builder()
                 .variant(variant)
-                .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                 .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                 .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
                 .referenceDepth(referenceAllelicDepth)
@@ -261,7 +260,7 @@ public class SomaticVariantDAO
                 DatabaseUtil.decimal(variant.mappability()),
                 variant.germlineStatus(),
                 DatabaseUtil.decimal(variant.minorAlleleCopyNumber()),
-                variant.recovered(),
+                false,
                 variant.kataegis(),
                 variant.tier().toString(),
                 Optional.ofNullable(variant.referenceDepth() != null ? variant.referenceDepth().AlleleReadCount : null),

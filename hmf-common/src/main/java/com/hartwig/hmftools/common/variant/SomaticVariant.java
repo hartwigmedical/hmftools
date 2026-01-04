@@ -5,8 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 public interface SomaticVariant extends VariantDelegate
 {
-    boolean recovered();
-
     @NotNull
     String kataegis();
 

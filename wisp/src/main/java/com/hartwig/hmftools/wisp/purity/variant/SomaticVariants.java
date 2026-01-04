@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.NEARBY_INDEL_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
@@ -45,7 +44,6 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.AVG_EDGE_DIS
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GERMLINE_AF;
@@ -66,6 +64,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.RExecutor;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
+import com.hartwig.hmftools.common.variant.PaveVcfTags;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
@@ -77,6 +76,8 @@ import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
+
+import org.apache.commons.math3.ode.events.FilterType;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -389,8 +390,8 @@ public class SomaticVariants
         if(variant.type() != VariantType.SNP)
             filters.add(NON_SNV);
 
-        if(variant.context().hasAttribute(MAPPABILITY_TAG) && variant.mappability() < 1)
-            filters.add(MAPPABILITY);
+        if(variant.context().hasAttribute(PaveVcfTags.MAPPABILITY) && variant.mappability() < 1)
+            filters.add(FilterReason.MAPPABILITY);
 
         if(variant.tier() == VariantTier.LOW_CONFIDENCE)
             filters.add(LOW_CONFIDENCE);
