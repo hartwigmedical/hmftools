@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.lilac.variant;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacUtils.calcNucelotideLocus;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
@@ -15,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.lilac.LilacConfig;
@@ -217,7 +217,7 @@ public class SomaticVariantAnnotation
 
             for(VariantContext variantContext : vcfReader.iterator())
             {
-                if(variantContext.isFiltered() && !variantContext.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
+                if(variantContext.isFiltered() && !variantContext.getFilters().contains(PASS_FILTER))
                     continue;
 
                 VariantContextDecorator variant = new VariantContextDecorator(variantContext);

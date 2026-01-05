@@ -18,20 +18,20 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class SomaticVariantFactoryTest
+public class SmallVariantFactoryTest
 {
     private static final String SAMPLE = "sample";
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("variant/somatics.vcf").getPath();
 
     private static final double EPSILON = 1.0e-10;
 
-    private SomaticVariantFactory victim;
+    private SmallVariantFactory victim;
     private VCFCodec codec;
 
     @Before
     public void setup()
     {
-        victim = new SomaticVariantFactory();
+        victim = new SmallVariantFactory();
         codec = createTestCodec();
     }
 
@@ -47,10 +47,10 @@ public class SomaticVariantFactoryTest
     @Test
     public void canLoadSomaticSimpleVCFFromFile() throws IOException
     {
-        final List<SomaticVariant> unfiltered = new SomaticVariantFactory().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
+        List<SmallVariant> unfiltered = SmallVariantFactory.loadVariants("sample", SOMATIC_VARIANT_FILE);
         assertEquals(3, unfiltered.size());
 
-        final List<SomaticVariant> filtered = SomaticVariantFactory.passOnlyInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
+        List<SmallVariant> filtered = SmallVariantFactory.passOnlyInstance().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
         assertEquals(2, filtered.size());
     }
 
@@ -59,7 +59,7 @@ public class SomaticVariantFactoryTest
     {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:59,60:120";
 
-        final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
+        final SmallVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("15", variant.chromosome());
         assertEquals(12345678, variant.position());
         assertEquals(VariantType.SNP, variant.type());
@@ -75,7 +75,7 @@ public class SomaticVariantFactoryTest
     public void handleZeroReadCount()
     {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:0";
-        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
+        final Optional<SmallVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
         assertFalse(missingAFVariant.isPresent());
     }
 
@@ -84,16 +84,16 @@ public class SomaticVariantFactoryTest
     {
         final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:DP\t0/1:21";
 
-        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
+        final Optional<SmallVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
         assertFalse(missingAFVariant.isPresent());
 
         final String missingRefCovLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60:121";
-        final Optional<SomaticVariant> missingRefCovVariant = victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
+        final Optional<SmallVariant> missingRefCovVariant = victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
         assertFalse(missingRefCovVariant.isPresent());
     }
 
     @NotNull
-    private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant)
+    private static SmallVariant assertedGet(@NotNull Optional<SmallVariant> variant)
     {
         assert variant.isPresent();
         return variant.get();

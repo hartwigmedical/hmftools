@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findEndIndex;
 import static com.hartwig.hmftools.linx.analysis.ClusterMetrics.findStartIndex;
@@ -411,7 +411,7 @@ public class GermlineDisruptions
 
                 if(disruptionData.isPseudogeneDeletion())
                 {
-                    allFilters.remove(PASS);
+                    allFilters.remove(PASS_FILTER);
                     allFilters.add(FILTER_PSEUDOGENE);
                 }
 
@@ -521,7 +521,7 @@ public class GermlineDisruptions
     {
         SvVarData var = disruptionData.Var;
 
-        if(!var.getSvData().filter().equals(PASS))
+        if(!var.getSvData().filter().equals(PASS_FILTER))
             return false;
 
         if(var.getSvData().ponCount() > MAX_PON_COUNT)

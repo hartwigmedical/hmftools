@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ASSEMBLY_INFO_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.JUNCTION_COORD_DELIM;
 
@@ -203,7 +203,7 @@ public class Variant
         // keep any non-pass filters from assembly
         for(String filterStr : variantContext.getFilters())
         {
-            if(filterStr.equals(PASS))
+            if(filterStr.equals(PASS_FILTER))
                 continue;
 
             FilterType filterType = Arrays.stream(FilterType.values()).filter(x -> x.vcfTag().equals(x)).findFirst().orElse(null);

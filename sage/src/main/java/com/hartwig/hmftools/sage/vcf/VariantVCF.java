@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
@@ -208,7 +208,7 @@ public class VariantVCF implements AutoCloseable
             header.addMetaDataLine(new VCFFilterHeaderLine(filter.filterName(), filter.vcfDescription()));
         }
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PASS_FILTER, "All filters passed"));
 
         if(runTinc)
         {

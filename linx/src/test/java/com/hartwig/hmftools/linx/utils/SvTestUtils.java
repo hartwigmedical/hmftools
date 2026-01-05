@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 
@@ -106,7 +106,7 @@ public class SvTestUtils
     {
         return createTestSv(
                 varId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, type,
-                cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS, "", "");
+                cnStart, cnEnd, cnChgStart, cnChgEnd, ploidy, insertSeq, PASS_FILTER, "", "");
     }
 
     public static SvVarData createTestSv(

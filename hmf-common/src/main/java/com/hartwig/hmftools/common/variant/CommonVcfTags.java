@@ -7,7 +7,7 @@ import htsjdk.variant.variantcontext.Genotype;
 public final class CommonVcfTags
 {
     // common
-    public static final String PASS = "PASS";
+    public static final String PASS_FILTER = "PASS";
 
     public static final String QUAL = "QUAL";
     public static final String QUAL_DESC = "Variant quality";

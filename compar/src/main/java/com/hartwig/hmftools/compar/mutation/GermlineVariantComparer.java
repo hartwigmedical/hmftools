@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -16,8 +16,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -79,7 +79,7 @@ public class GermlineVariantComparer implements ItemComparer
         final List<ComparableItem> variants = Lists.newArrayList();
         for (Record record : result)
         {
-            GermlineVariant variant = GermlineVariantDAO.buildFromRecord(record);
+            SmallVariant variant = GermlineVariantDAO.buildFromRecord(record);
             BasePosition comparisonPosition = determineComparisonGenomePosition(
                     variant.chromosome(), variant.position(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
             variants.add(new GermlineVariantData(variant, comparisonPosition));
@@ -97,8 +97,8 @@ public class GermlineVariantComparer implements ItemComparer
 
         try
         {
-            List<GermlineVariant> variants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
-            for(GermlineVariant variant : variants)
+            List<SmallVariant> variants = SmallVariantFactory.loadVariants(sampleId, vcfFile);
+            for(SmallVariant variant : variants)
             {
                 if(!variant.isFiltered())
                 {

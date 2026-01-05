@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -66,7 +66,7 @@ public class SigIndelLoader
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
             String sampleId = mConfig.SampleIds.get(sampleIndex);
-            final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.INDEL);
+            final List<SmallVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.INDEL);
 
             LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
 
@@ -108,11 +108,11 @@ public class SigIndelLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SomaticVariant variant : variants)
+        for(final SmallVariant variant : variants)
         {
             if(variant.isFiltered())
                 continue;
@@ -139,7 +139,7 @@ public class SigIndelLoader
     private static final String SUBTYPE_DEL = "DEL";
     private static final String SUBTYPE_INS = "INS";
 
-    private String convertToBucket(final SomaticVariant variant)
+    private String convertToBucket(final SmallVariant variant)
     {
         int refLength = variant.ref().length();
         int altLength = variant.alt().length();

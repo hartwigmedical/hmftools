@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.parseIntegerList;
@@ -329,8 +329,8 @@ public class SageCompareVcfs
 
         if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
         {
-            String origFiltersStr = origVar.filters().isEmpty() ? PASS : filtersStr(origFilterDiffs);
-            String newFiltersStr = newVar.filters().isEmpty() ? PASS : filtersStr(newFilterDiffs);
+            String origFiltersStr = origVar.filters().isEmpty() ? PASS_FILTER : filtersStr(origFilterDiffs);
+            String newFiltersStr = newVar.filters().isEmpty() ? PASS_FILTER : filtersStr(newFilterDiffs);
             writeDiffs(origVar, newVar, "FILTERS", origFiltersStr, newFiltersStr);
         }
 

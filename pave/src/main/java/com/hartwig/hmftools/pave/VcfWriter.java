@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.config.VersionInfo.fromAppName;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact.VAR_TRANS_IMPACT_DELIM;
 import static com.hartwig.hmftools.common.variant.pon.PonCache.PON_COUNT;
@@ -143,11 +143,11 @@ public class VcfWriter
         if(!variant.filters().isEmpty())
         {
             builder.getFilters().addAll(variant.filters());
-            builder.getFilters().remove(PASS);
+            builder.getFilters().remove(PASS_FILTER);
         }
 
         if(builder.getFilters().isEmpty())
-            builder.getFilters().add(PASS);
+            builder.getFilters().add(PASS_FILTER);
 
         VariantContext newContext = builder.make();
 

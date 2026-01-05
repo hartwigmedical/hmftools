@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
@@ -29,7 +29,7 @@ public class GermlineRescueLowVAF
             if(germlineDepth.AlleleReadCount >= MIN_ALLELE_READ_COUNT && Doubles.greaterOrEqual(variant.copyNumber(), MIN_VCN))
             {
                 variant.filters().clear();
-                variant.filters().add(PASS);
+                variant.filters().add(PASS_FILTER);
             }
         }
     }

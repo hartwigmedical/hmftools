@@ -2,6 +2,8 @@ package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY_DESC;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.BufferedReader;
@@ -26,9 +28,6 @@ public class Mappability extends AnnotationData implements Callable<Void>
     private boolean mHasValidData;
 
     public static final String MAPPABILITY_BED = "mappability_bed";
-
-    public static final String MAPPABILITY = "MAPPABILITY";
-    public static final String MAPPABILITY_DESC = "GEM mappability in 150 base window";
 
     public Mappability(final ConfigBuilder configBuilder)
     {

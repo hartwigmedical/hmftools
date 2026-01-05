@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -128,7 +128,7 @@ public class SineBreakendFinder
 
     private void checkVariant(final String sampleId, final StructuralVariantData svData)
     {
-        if(!(svData.filter().isEmpty() || svData.filter().equals(PASS) || svData.filter().equals(INFERRED)))
+        if(!(svData.filter().isEmpty() || svData.filter().equals(PASS_FILTER) || svData.filter().equals(INFERRED)))
             return;
 
         for(int se = SE_START; se <= SE_END; ++se)

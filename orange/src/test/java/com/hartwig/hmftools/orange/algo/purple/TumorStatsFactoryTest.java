@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.ImmutableTumorStats;
@@ -172,7 +171,7 @@ public class TumorStatsFactoryTest
     private static PurpleVariantContext purpleVariantContext(VariantType variantType, boolean reported, int alleleReadCount)
     {
         return TestPurpleVariantFactory.contextBuilder()
-                .variant(TestPurpleVariantFactory.variantBuilder()
+                .from(TestPurpleVariantFactory.variantBuilder()
                         .type(variantType)
                         .allelicDepth(new AllelicDepth(100, alleleReadCount))
                         .reported(reported)
@@ -184,7 +183,7 @@ public class TumorStatsFactoryTest
     private static PurpleVariantContext purpleVariantContext(VariantTier variantTier, boolean reported)
     {
         return TestPurpleVariantFactory.contextBuilder()
-                .variant(TestPurpleVariantFactory.variantBuilder()
+                .from(TestPurpleVariantFactory.variantBuilder()
                         .tier(variantTier)
                         .reported(reported)
                         .build()

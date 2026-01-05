@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -45,7 +45,7 @@ public enum FilterType
     public static String filtersAsStr(final Set<FilterType> filters)
     {
         if(filters.isEmpty())
-            return PASS;
+            return PASS_FILTER;
 
         return filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(";"));
     }

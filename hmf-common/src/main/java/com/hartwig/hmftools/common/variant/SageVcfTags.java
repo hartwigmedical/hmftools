@@ -2,7 +2,14 @@ package com.hartwig.hmftools.common.variant;
 
 import static java.lang.String.format;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.ConsensusType;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
@@ -72,7 +79,37 @@ public final class SageVcfTags
 
     public static final String TINC_LEVEL = "tincLevel";
 
+    public static final String LPS_DELIM = ";";
     public static final String LIST_SEPARATOR = ",";
+
+    public static List<Integer> localPhaseSetsStringToList(@Nullable final String localPhaseSetStr)
+    {
+        if(localPhaseSetStr == null || localPhaseSetStr.isEmpty())
+        {
+            return null;
+        }
+
+        List<Integer> localPhaseSets = Lists.newArrayList();
+        Arrays.stream(localPhaseSetStr.split(LPS_DELIM)).forEach(x -> localPhaseSets.add(Integer.valueOf(x)));
+        return localPhaseSets;
+    }
+
+    public static String localPhaseSetsStr(@Nullable final List<Integer> localPhaseSets)
+    {
+        if(localPhaseSets == null || localPhaseSets.isEmpty())
+        {
+            return "";
+        }
+
+        if(localPhaseSets.size() == 1)
+        {
+            return String.valueOf(localPhaseSets.get(0));
+        }
+
+        StringJoiner sj = new StringJoiner(LPS_DELIM);
+        localPhaseSets.forEach(x -> sj.add(String.valueOf(x)));
+        return sj.toString();
+    }
 
     public static void writeTincLevel(final VCFHeader vcfHeader, final double tincLevel)
     {

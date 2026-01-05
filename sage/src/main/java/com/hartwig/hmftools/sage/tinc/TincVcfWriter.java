@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.tinc;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.TINC_RECOVERED_FLAG;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
@@ -83,7 +83,7 @@ public class TincVcfWriter
                 if(variant.recovered())
                 {
                     newContext.getCommonInfo().putAttribute(TINC_RECOVERED_FLAG, true);
-                    newContext.getCommonInfo().addFilter(PASS);
+                    newContext.getCommonInfo().addFilter(PASS_FILTER);
                 }
                 else
                 {

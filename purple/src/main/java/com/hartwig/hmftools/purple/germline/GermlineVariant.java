@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.Set;
@@ -50,7 +50,7 @@ public class GermlineVariant
 
     public VariantType type() { return mDecorator.type(); }
 
-    public boolean isPass() { return mFilters.isEmpty() || (mFilters.size() == 1 && mFilters.contains(PASS)); }
+    public boolean isPass() { return mFilters.isEmpty() || (mFilters.size() == 1 && mFilters.contains(PASS_FILTER)); }
 
     public boolean isHotspot() { return mContext.hasAttribute(HOTSPOT_FLAG); }
     public String gene() { return mDecorator.variantImpact().GeneName; }

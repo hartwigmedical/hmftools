@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
 import static com.hartwig.hmftools.common.variant.AllelicDepth.NO_DEPTH;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_PROB;
@@ -12,11 +13,11 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANS
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -83,7 +84,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean isPass()
     {
-        return mFilter.equals(SomaticVariantFactory.PASS_FILTER);
+        return mFilter.equals(PASS_FILTER);
     }
 
     public PathogenicSummary clinvarPathogenicSummary()
@@ -181,12 +182,19 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean biallelic()
     {
-        return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+        return biallelic(mContext);
     }
 
-    public double biallelicProbability()
+    public static boolean biallelic(final VariantContext context)
     {
-        return mContext.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, biallelic() ? 1 : 0);
+        return context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+    }
+
+    public double biallelicProbability() { return biallelicProbability(mContext, biallelic()); }
+
+    public static double biallelicProbability(final VariantContext context, final boolean biallelic)
+    {
+        return context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, biallelic ? 1 : 0);
     }
 
     public double minorAlleleCopyNumber()
@@ -203,7 +211,7 @@ public class VariantContextDecorator implements GenomePosition
     public String localPhaseSetsToString()
     {
         List<Integer> localPhaseSets = mContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0);
-        return localPhaseSetsStr(localPhaseSets);
+        return SageVcfTags.localPhaseSetsStr(localPhaseSets);
     }
 
     @Nullable
@@ -269,7 +277,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public double mappability()
     {
-        return mContext.getAttributeAsDouble(MAPPABILITY_TAG, 0);
+        return mContext.getAttributeAsDouble(MAPPABILITY, 0);
     }
 
     public boolean reported()
@@ -306,7 +314,8 @@ public class VariantContextDecorator implements GenomePosition
             String reportableTransStr = mContext.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
             return Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1)).toList();
         }
-        return null;
+
+        return Collections.emptyList();
     }
 
     private static String displayFilter(final VariantContext context)
@@ -319,7 +328,7 @@ public class VariantContextDecorator implements GenomePosition
         }
         else
         {
-            return SomaticVariantFactory.PASS_FILTER;
+            return PASS_FILTER;
         }
     }
 

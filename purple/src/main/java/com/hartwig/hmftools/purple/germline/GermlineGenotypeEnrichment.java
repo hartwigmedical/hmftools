@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.util.List;
 
@@ -94,7 +94,7 @@ public class GermlineGenotypeEnrichment
         if(status.equals(GermlineGenotypeStatus.LOW_VAF))
         {
             builder.filter(LOW_VAF_FILTER);
-            variant.filters().remove(PASS);
+            variant.filters().remove(PASS_FILTER);
             variant.filters().add(LOW_VAF_FILTER);
         }
 
