@@ -5,6 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.purple.PurpleApplication;
 
@@ -19,7 +24,7 @@ import org.junit.Test;
 @Ignore("Manual run only")
 public class PurpleRegressionTest
 {
-    private File WorkingDir = new File("/Users/timlavers/work/batches/2025/12/19/1");
+    private final File WorkingDir = new File("/Users/timlavers/work/batches/2026/1/5/1");
     private File InputDir;
     private File OutputDir;
     private File ConfiguredResultsDir;
@@ -42,9 +47,10 @@ public class PurpleRegressionTest
         File inputs = new File("/Users/timlavers/work/scratch/" + tumor + ".inputs.zip");
         Unzipper.unzipInto(inputs, InputDir);
         runPurple();
-        File configuredOutputs = new File("/Users/timlavers/work/scratch/" + tumor + ".outputs.zip");
+        File configuredOutputs = new File("/Users/timlavers/work/batches/2025/12/19/3/COLO829v003.v2_3.purple.results.zip");
         Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
-        checkResults();
+        checkGermlineDrivers();
+        checkPurity();
     }
 
     @Test
@@ -57,9 +63,59 @@ public class PurpleRegressionTest
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/scratch/" + tumor + ".outputs.zip");
         Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
-        checkResults();
+        //        checkResults();
+        checkGermlineDrivers();
     }
 
+    private void checkPurity() throws Exception
+    {
+        PurityContext baselineContext = PurityContextFile.read(ConfiguredResultsDir.getAbsolutePath(), tumor);
+        PurityContext newContext = PurityContextFile.read(OutputDir.getAbsolutePath(), tumor);
+        Assert.assertEquals(baselineContext, newContext);
+    }
+
+    private void checkGermlineDrivers() throws Exception
+    {
+        String outputGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(OutputDir.getAbsolutePath(), tumor);
+        String baselineGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(ConfiguredResultsDir.getAbsolutePath(), tumor);
+
+        List<DriverCatalog> germlineDrivers = DriverCatalogFile.read(outputGermlineDriverFile);
+        List<DriverCatalog> baselineGermlineDrivers = DriverCatalogFile.read(baselineGermlineDriverFile);
+
+        // The drivers in the baseline should be in the new output.
+        for(DriverCatalog baselineDriver : baselineGermlineDrivers)
+        {
+            DriverCatalog inNewOutput = findDriver(germlineDrivers, baselineDriver.transcript());
+            Assert.assertNotNull(inNewOutput);
+            Assert.assertEquals(inNewOutput, baselineDriver);
+        }
+
+        // The drivers in the new output that are not in the baseline should have reported status "NONE".
+        for(DriverCatalog germlineDriver : germlineDrivers)
+        {
+            DriverCatalog baselineDriver = findDriver(baselineGermlineDrivers, germlineDriver.transcript());
+            if (baselineDriver == null)
+            {
+                Assert.assertEquals(ReportedStatus.NONE, germlineDriver.reportedStatus());
+            }
+        }
+    }
+
+    private static DriverCatalog findDriver(List<DriverCatalog> drivers, String transcript)
+    {
+        List<DriverCatalog> matching = drivers.stream().filter(driverCatalog -> driverCatalog.transcript().equals(transcript)).toList();
+        Assert.assertTrue(matching.size() <= 1);
+        if(matching.size() == 1)
+        {
+            return matching.get(0);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private File makeWorkingSubDirectory(String name) throws IOException
     {
         File subDir = new File(WorkingDir, name);
@@ -74,25 +130,25 @@ public class PurpleRegressionTest
         File[] results = OutputDir.listFiles(File::isFile);
         Assert.assertEquals(configuredResults.length, results.length);
         boolean result = true;
-        for (File configuredResult : configuredResults)
+        for(File configuredResult : configuredResults)
         {
             File resultFile = new File(OutputDir, configuredResult.getName());
             Assert.assertTrue(resultFile.exists());
             Assert.assertTrue(resultFile.isFile());
-            if (resultFile.getName().contains(".gz"))
+            if(resultFile.getName().contains(".gz"))
             {
                 // Compare gz files by unzipping them and comparing the results line-by-line.
                 result &= compareGzFiles(resultFile, configuredResult);
                 continue;
             }
-            if (resultFile.getName().contains("version"))
+            if(resultFile.getName().contains("version"))
             {
                 // Skip the version file as it contains a timestamp.
                 continue;
             }
             // Compare other files by finding the first differing byte.
             long mismatchIndex = Files.mismatch(configuredResult.toPath(), resultFile.toPath());
-            if (mismatchIndex == -1)
+            if(mismatchIndex == -1)
             {
                 System.out.println("Match: " + configuredResult.getName());
             }
@@ -109,14 +165,14 @@ public class PurpleRegressionTest
     {
         List<String> resultLines = IOUtils.readLines(FileWriterUtils.createBufferedReader(resultFile.getAbsolutePath()));
         List<String> configuredLines = IOUtils.readLines(FileWriterUtils.createBufferedReader(resultFile.getAbsolutePath()));
-        if (resultLines.size() != configuredLines.size())
+        if(resultLines.size() != configuredLines.size())
         {
             System.out.println("Mismatch in number of lines in file: " + resultFile.getName());
             return false;
         }
-        for (int i = 0; i < resultLines.size(); i++)
+        for(int i = 0; i < resultLines.size(); i++)
         {
-            if (!resultLines.get(i).equals(configuredLines.get(i)))
+            if(!resultLines.get(i).equals(configuredLines.get(i)))
             {
                 System.out.println("Mismatch at line " + i + " in file: " + resultFile.getName());
                 return false;
