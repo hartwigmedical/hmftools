@@ -43,28 +43,6 @@ public class LinxBreakendInterpreterTest
     }
 
     @Test
-    public void canFallbackWhenNoSvAnnotation()
-    {
-        List<LinxSvAnnotation> linxSvAnnotations = List.of();
-        List<LinxBreakend> breakends = createBreakends();
-
-        LinxBreakendInterpreter interpreter = createInterpreter(linxSvAnnotations);
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend left = interpreter.interpret(breakends.get(0));
-        assertEquals("", left.chromosome());
-        assertEquals("q34", left.chromosomeBand());
-        assertEquals(LinxBreakendType.BND, left.type());
-        assertEquals(0, left.orientation());
-        assertEquals(0D, left.junctionCopyNumber(), EPSILON);
-
-        com.hartwig.hmftools.datamodel.linx.LinxBreakend right = interpreter.interpret(breakends.get(1));
-        assertEquals("", right.chromosome());
-        assertEquals("q34", right.chromosomeBand());
-        assertEquals(LinxBreakendType.BND, right.type());
-        assertEquals(0, right.orientation());
-        assertEquals(0D, right.junctionCopyNumber(), EPSILON);
-    }
-
-    @Test
     public void canComputeJunctionCopyNumber()
     {
         LinxSvAnnotation svAnnotation = createSvAnnotation();

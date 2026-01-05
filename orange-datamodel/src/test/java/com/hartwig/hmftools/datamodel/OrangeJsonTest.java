@@ -97,7 +97,7 @@ public class OrangeJsonTest
         assertPlots(record.plots());
     }
 
-    private static void assertPurple(@NotNull PurpleRecord purple)
+    private static void assertPurple(final PurpleRecord purple)
     {
         assertEquals(1, purple.fit().qc().status().size());
         assertTrue(purple.fit().qc().status().contains(PurpleQCStatus.PASS));
@@ -128,8 +128,7 @@ public class OrangeJsonTest
         assertEquals(PurpleDriverType.GERMLINE_MUTATION, germlineDriver1.type());
         assertEquals(0.8, germlineDriver1.driverLikelihood(), EPSILON);
 
-        // assertEquals(1, purple.otherSomaticVariants().size());
-        PurpleVariant somaticVariant = findVariantByGene(purple.driverSomaticVariants(), "SF3B1");
+        PurpleVariant somaticVariant = findVariantByGene(purple.somaticVariants(), "SF3B1");
         assertTrue(somaticVariant.reported());
         assertEquals(PurpleVariantType.SNP, somaticVariant.type());
         assertEquals("2", somaticVariant.chromosome());
@@ -158,11 +157,10 @@ public class OrangeJsonTest
         assertEquals(PurpleCodingEffect.MISSENSE, somaticVariant.canonicalImpact().codingEffect());
         assertTrue(somaticVariant.otherImpacts().isEmpty());
 
-        assertEquals(1, purple.driverSomaticVariants().size());
-        assertEquals(somaticVariant, purple.driverSomaticVariants().iterator().next());
+        assertEquals(1, purple.somaticVariants().size());
+        assertEquals(somaticVariant, purple.somaticVariants().iterator().next());
 
-        assertEquals(1, purple.otherGermlineVariants().size());
-        PurpleVariant germlineVariant = findVariantByGene(purple.otherGermlineVariants(), "BRCA1");
+        PurpleVariant germlineVariant = findVariantByGene(purple.germlineVariants(), "BRCA1");
         assertTrue(germlineVariant.reported());
         assertEquals(PurpleVariantType.SNP, germlineVariant.type());
         assertEquals("17", germlineVariant.chromosome());
@@ -194,8 +192,8 @@ public class OrangeJsonTest
         assertEquals(PurpleCodingEffect.SPLICE, germlineVariant.canonicalImpact().codingEffect());
         assertTrue(germlineVariant.otherImpacts().isEmpty());
 
-        assertEquals(1, purple.driverGermlineVariants().size());
-        assertEquals(germlineVariant, purple.driverGermlineVariants().iterator().next());
+        assertEquals(1, purple.germlineVariants().size());
+        assertEquals(germlineVariant, purple.germlineVariants().iterator().next());
 
         assertEquals(1, purple.somaticCopyNumbers().size());
         PurpleCopyNumber copyNumber = purple.somaticCopyNumbers().iterator().next();
@@ -212,11 +210,11 @@ public class OrangeJsonTest
         assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);
         assertEquals(0.4, geneCopyNumber.minMinorAlleleCopyNumber(), EPSILON);
 
-        assertEquals(1, purple.driverSomaticGainsDels().size());
+        assertEquals(1, purple.somaticGainsDels().size());
     }
 
     @NotNull
-    private static PurpleDriver findDriverByGene(@NotNull Iterable<PurpleDriver> drivers, @NotNull String geneToFind)
+    private static PurpleDriver findDriverByGene(final Iterable<PurpleDriver> drivers, final String geneToFind)
     {
         for(PurpleDriver driver : drivers)
         {
@@ -230,7 +228,7 @@ public class OrangeJsonTest
     }
 
     @NotNull
-    private static PurpleVariant findVariantByGene(@NotNull Iterable<PurpleVariant> variants, @NotNull String geneToFind)
+    private static PurpleVariant findVariantByGene(final Iterable<PurpleVariant> variants, final String geneToFind)
     {
         for(PurpleVariant variant : variants)
         {
@@ -242,10 +240,10 @@ public class OrangeJsonTest
         throw new IllegalStateException("Could not find variant for gene: " + geneToFind);
     }
 
-    private static void assertLinx(@NotNull LinxRecord linx)
+    private static void assertLinx(final LinxRecord linx)
     {
-        assertEquals(1, linx.allSomaticStructuralVariants().size());
-        LinxSvAnnotation structuralVariant = linx.allSomaticStructuralVariants().iterator().next();
+        assertEquals(1, linx.somaticStructuralVariants().size());
+        LinxSvAnnotation structuralVariant = linx.somaticStructuralVariants().iterator().next();
         assertEquals("id", structuralVariant.vcfId());
         assertEquals(1, structuralVariant.svId());
         assertEquals(2, structuralVariant.clusterId());
@@ -274,8 +272,8 @@ public class OrangeJsonTest
         assertEquals("ENST00000358273", homozygousDisruption.transcript());
         assertTrue(homozygousDisruption.isCanonical());
 
-        assertEquals(1, linx.otherSomaticBreakends().size());
-        LinxBreakend breakend = linx.otherSomaticBreakends().iterator().next();
+        assertEquals(1, linx.somaticBreakends().size());
+        LinxBreakend breakend = linx.somaticBreakends().iterator().next();
         assertFalse(breakend.reportedStatus() == ReportedStatus.REPORTED);
         assertFalse(breakend.disruptive());
         assertEquals(1, breakend.svId());
@@ -294,11 +292,8 @@ public class OrangeJsonTest
         assertEquals(TranscriptRegionType.EXONIC, breakend.regionType());
         assertEquals(TranscriptCodingType.UTR_3P, breakend.codingType());
 
-        assertEquals(1, linx.driverSomaticBreakends().size());
-        assertEquals(breakend, linx.driverSomaticBreakends().iterator().next());
-
-        assertEquals(1, linx.allSomaticFusions().size());
-        LinxFusion fusion = linx.allSomaticFusions().iterator().next();
+        assertEquals(1, linx.fusions().size());
+        LinxFusion fusion = linx.fusions().iterator().next();
         assertTrue(fusion.reported());
         assertEquals(LinxFusionType.KNOWN_PAIR, fusion.reportedType());
         assertEquals(LinxUnreportableReason.NONE, fusion.unreportedReasons().iterator().next());
@@ -315,12 +310,9 @@ public class OrangeJsonTest
         assertEquals(FusionLikelihoodType.HIGH, fusion.driverLikelihood());
         assertEquals(FusionPhasedType.INFRAME, fusion.phased());
         assertEquals(1.1, fusion.junctionCopyNumber(), EPSILON);
-
-        assertEquals(1, linx.reportableSomaticFusions().size());
-        assertEquals(fusion, linx.reportableSomaticFusions().iterator().next());
     }
 
-    private static void assertPeach(@NotNull Collection<PeachGenotype> peach)
+    private static void assertPeach(final Collection<PeachGenotype> peach)
     {
         assertEquals(1, peach.size());
         PeachGenotype entry = peach.iterator().next();
@@ -335,7 +327,7 @@ public class OrangeJsonTest
         assertEquals("1.7", entry.repoVersion());
     }
 
-    private static void assertCuppa(@NotNull CuppaData cuppa)
+    private static void assertCuppa(final CuppaData cuppa)
     {
         assertEquals(1, cuppa.predictions().size());
         CuppaPrediction prediction = cuppa.predictions().iterator().next();
@@ -348,7 +340,7 @@ public class OrangeJsonTest
         assertNull(prediction.expressionPairwiseClassifier());
     }
 
-    private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter)
+    private static void assertVirusInterpreter(final VirusInterpreterData virusInterpreter)
     {
         assertEquals(2, virusInterpreter.allViruses().size());
         VirusInterpreterEntry virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
@@ -371,8 +363,7 @@ public class OrangeJsonTest
         assertEquals(virus1, virusInterpreter.reportableViruses().iterator().next());
     }
 
-    @NotNull
-    private static VirusInterpreterEntry findVirusByName(@NotNull Iterable<VirusInterpreterEntry> entries, @NotNull String nameToFind)
+    private static VirusInterpreterEntry findVirusByName(final Iterable<VirusInterpreterEntry> entries, final String nameToFind)
     {
         for(VirusInterpreterEntry entry : entries)
         {
@@ -384,7 +375,7 @@ public class OrangeJsonTest
         throw new IllegalStateException("Could not find virus with name: " + nameToFind);
     }
 
-    private static void assertLilac(@NotNull LilacRecord lilac)
+    private static void assertLilac(final LilacRecord lilac)
     {
         assertEquals("PASS", lilac.qc());
 
@@ -399,13 +390,13 @@ public class OrangeJsonTest
         assertEquals(1.0, allele.somaticInframeIndel(), EPSILON);
     }
 
-    private static void assertChord(@NotNull ChordRecord chord)
+    private static void assertChord(final ChordRecord chord)
     {
         assertEquals(0.01, chord.hrdValue(), EPSILON);
         assertEquals(ChordStatus.HR_PROFICIENT, chord.hrStatus());
     }
 
-    private static void assertPlots(@NotNull OrangePlots plots)
+    private static void assertPlots(final OrangePlots plots)
     {
         assertEquals("plot/empty.circos.png", plots.purpleFinalCircosPlot());
     }

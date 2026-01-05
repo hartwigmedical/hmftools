@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverType;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
@@ -49,41 +48,36 @@ public class PurpleInterpreter
     {
         LOGGER.info("Analysing purple data");
 
-        List<PurpleVariant> allSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
+        List<PurpleVariant> driverSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.somaticVariants());
 
-        List<PurpleVariant> driverSomaticVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverSomaticVariants());
-
-        List<PurpleVariant> allGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
-        List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.driverGermlineVariants());
+        List<PurpleVariant> driverGermlineVariants = mPurpleVariantFactory.fromPurpleVariantContext(purple.germlineVariants());
 
         List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
-        List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
-
-        List<PurpleGainDeletion> allGermlineFullDels = null;
         List<PurpleGainDeletion> driverGermlineDeletions = null;
-        List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities = null;
-        List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
+        // List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
 
-        if(allGermlineDeletions != null)
+        if(purple.germlineDeletions() != null)
         {
             Map<PurpleGainDeletion, Boolean> fullDelToReportability = mGermlineGainDelFactory.getReportabilityMap(
-                    allGermlineDeletions, purple.somaticGeneCopyNumbers());
+                    purple.germlineDeletions(), purple.somaticGeneCopyNumbers());
 
-            allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
+            List<PurpleGainDeletion> allGermlineFullDels = Lists.newArrayList(fullDelToReportability.keySet());
             driverGermlineDeletions = selectReportablegainDels(fullDelToReportability);
 
             LOGGER.info(" Resolved {} germline deletions of which {} are reportable",
                     allGermlineFullDels.size(), driverGermlineDeletions.size());
 
-            Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability =
-                    mGermlineLossOfHeterozygosityFactory.getReportabilityMap(allGermlineDeletions, purple.somaticGeneCopyNumbers());
+            Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability = mGermlineLossOfHeterozygosityFactory.getReportabilityMap(
+                    purple.germlineDeletions(), purple.somaticGeneCopyNumbers());
 
+            /*
             allGermlineLossOfHeterozygosities = Lists.newArrayList(lossOfHeterozygosityToReportability.keySet());
             reportableGermlineLossOfHeterozygosities = selectReportableLossOfHeterozygosities(lossOfHeterozygosityToReportability);
 
             LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable",
                     allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
+            */
         }
 
         return ImmutablePurpleRecord.builder()
@@ -92,17 +86,12 @@ public class PurpleInterpreter
                 .characteristics(createCharacteristics(purple))
                 .somaticDrivers(ConversionUtil.mapToIterable(purple.somaticDrivers(), PurpleConversion::convert))
                 .germlineDrivers(ConversionUtil.mapToIterable(purple.germlineDrivers(), PurpleConversion::convert))
-                .otherSomaticVariants(allSomaticVariants)
-                .driverSomaticVariants(driverSomaticVariants)
-                .otherGermlineVariants(allGermlineVariants)
-                .driverGermlineVariants(driverGermlineVariants)
+                .somaticVariants(driverSomaticVariants)
+                .germlineVariants(driverGermlineVariants)
                 .somaticCopyNumbers(ConversionUtil.mapToIterable(purple.somaticCopyNumbers(), PurpleConversion::convert))
                 .somaticGeneCopyNumbers(ConversionUtil.mapToIterable(purple.somaticGeneCopyNumbers(), PurpleConversion::convert))
-                .driverSomaticGainsDels(driverSomaticGainsDels)
-                .otherGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
-                .driverGermlineDeletions(driverGermlineDeletions)
-                .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
-                .driverGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
+                .somaticGainsDels(driverSomaticGainsDels)
+                .germlineGainsDels(driverGermlineDeletions)
                 .build();
     }
 
@@ -116,22 +105,6 @@ public class PurpleInterpreter
             if(reported)
             {
                 reportable.add(gainDel);
-            }
-        }
-        return reportable;
-    }
-
-    private static List<PurpleLossOfHeterozygosity> selectReportableLossOfHeterozygosities(
-            final Map<PurpleLossOfHeterozygosity, Boolean> lossOfHeterozygosityToReportability)
-    {
-        List<PurpleLossOfHeterozygosity> reportable = Lists.newArrayList();
-        for(Map.Entry<PurpleLossOfHeterozygosity, Boolean> entry : lossOfHeterozygosityToReportability.entrySet())
-        {
-            PurpleLossOfHeterozygosity lossOfHeterozygosity = entry.getKey();
-            boolean reported = entry.getValue();
-            if(reported)
-            {
-                reportable.add(lossOfHeterozygosity);
             }
         }
         return reportable;

@@ -78,30 +78,17 @@
     },
     "somaticDrivers": [],
     "germlineDrivers": null,
-    "allSomaticVariants": [],
-    "reportableSomaticVariants": [],
-    "allGermlineVariants": null,
-    "reportableGermlineVariants": null,
-    "allSomaticCopyNumbers": [],
-    "allSomaticGeneCopyNumbers": [],
-    "allSomaticGainsDels": [],
-    "reportableSomaticGainsDels": [],
-    "suspectGeneCopyNumbersWithLOH": [],
-    "chromosomalRearrangements": {
-      "hasTrisomy1q": false,
-      "hasCodeletion1p19q": false
-    }
+    "somaticVariants": [],
+    "germlineVariants": null,
+    "somaticCopyNumbers": [],
+    "somaticGeneCopyNumbers": [],
+    "somaticGainsDels": []
   },
   "linx": {
-    "allSomaticStructuralVariants": [],
-    "allSomaticFusions": [],
-    "reportableSomaticFusions": [],
-    "allSomaticBreakends": [],
-    "reportableSomaticBreakends": [],
-    "somaticHomozygousDisruptions": [],
-    "additionalSuspectSomaticBreakends": [],
-    "additionalSuspectSomaticFusions": [],
-    "additionalViableSomaticFusions": []
+    "somaticStructuralVariants": [],
+    "fusions": [],
+    "somaticBreakends": [],
+    "somaticHomozygousDisruptions": []
   },
   "virusInterpreter": {
     "allViruses": [],

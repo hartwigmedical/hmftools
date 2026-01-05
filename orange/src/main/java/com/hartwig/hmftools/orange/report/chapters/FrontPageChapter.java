@@ -298,7 +298,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return variantDriverString(report.purple().driverSomaticVariants(), report.purple().somaticDrivers());
+        return variantDriverString(report.purple().somaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
@@ -309,7 +309,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleVariant> reportableGermlineVariants = report.purple().driverGermlineVariants();
+        List<PurpleVariant> reportableGermlineVariants = report.purple().germlineVariants();
         List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if(reportableGermlineVariants != null && germlineDrivers != null)
         {
@@ -350,7 +350,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        return copyNumberDriverString(report.purple().driverSomaticGainsDels());
+        return copyNumberDriverString(report.purple().somaticGainsDels());
     }
 
     @NotNull
@@ -361,7 +361,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<PurpleGainDeletion> germlineGainsDels = report.purple().driverGermlineDeletions();
+        List<PurpleGainDeletion> germlineGainsDels = report.purple().germlineGainsDels();
         if(germlineGainsDels == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -436,17 +436,17 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        if(report.linx().reportableSomaticFusions().isEmpty())
+        if(report.linx().fusions().isEmpty())
         {
             return NONE;
         }
 
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-        for(LinxFusion fusion : report.linx().reportableSomaticFusions())
+        for(LinxFusion fusion : report.linx().fusions())
         {
             fusions.add(fusion.display());
         }
-        return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
+        return report.linx().fusions().size() + " (" + concat(fusions) + ")";
     }
 
     @NotNull

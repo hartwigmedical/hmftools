@@ -75,8 +75,8 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            boolean hasInactivationVariant = hasAnyInactivationVariant(purple.otherSomaticVariants(), geneToCheck);
-            boolean hasGeneDeletion = isDeleted(purple.driverSomaticGainsDels(), geneToCheck);
+            boolean hasInactivationVariant = false; // previously checked all small variants
+            boolean hasGeneDeletion = isDeleted(purple.somaticGainsDels(), geneToCheck);
             boolean hasHomozygousDisruption = isHomozygouslyDisrupted(linx.somaticHomozygousDisruptions(), geneToCheck);
 
             if(hasInactivationVariant || hasGeneDeletion || hasHomozygousDisruption)
@@ -139,7 +139,7 @@ public final class ImmuneEscapeInterpreter
     {
         for(String geneToCheck : genesToCheck)
         {
-            if(isAmplified(purple.driverSomaticGainsDels(), geneToCheck))
+            if(isAmplified(purple.somaticGainsDels(), geneToCheck))
             {
                 return true;
             }

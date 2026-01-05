@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
-
-import static org.apache.commons.math3.util.Precision.EPSILON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -11,10 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.driver.DriverCategory;
-import com.hartwig.hmftools.common.driver.panel.DriverGene;
-import com.hartwig.hmftools.common.driver.panel.DriverGeneGermlineReporting;
-import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
@@ -25,12 +17,9 @@ import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
@@ -60,9 +49,7 @@ public class PurpleInterpreterTest
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
-        assertEquals(1, interpreted.driverGermlineDeletions().size());
-        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(1, interpreted.driverGermlineLossOfHeterozygosities().size());
+        assertEquals(1, interpreted.germlineGainsDels().size());
     }
 
     @Test
@@ -77,9 +64,7 @@ public class PurpleInterpreterTest
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
         // assertEquals(1, interpreted.otherGermlineDeletions().size());
-        assertEquals(1, interpreted.driverGermlineDeletions().size());
-        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(0, interpreted.driverGermlineLossOfHeterozygosities().size());
+        assertEquals(1, interpreted.germlineGainsDels().size());
     }
 
     @Test
@@ -94,9 +79,7 @@ public class PurpleInterpreterTest
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
         // assertEquals(1, interpreted.otherGermlineDeletions(). size());
-        assertEquals(0, interpreted.driverGermlineDeletions().size());
-        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
-        assertEquals(0, interpreted.driverGermlineLossOfHeterozygosities().size());
+        assertEquals(0, interpreted.germlineGainsDels().size());
     }
 
 
@@ -106,9 +89,8 @@ public class PurpleInterpreterTest
         return ImmutablePurpleData.builder()
                 .from(PurpleTestFactory.createMinimalTestPurpleData())
                 .addSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.createGeneCopyNumber("1", TEST_GENE, 0, 0))
-                .allPassingGermlineStructuralVariants(Lists.newArrayList())
-                .allGermlineDeletions(allGermlineDeletions)
-                .driverGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
+                .addAllGermlineDeletions(allGermlineDeletions)
+                .germlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported == ReportedStatus.REPORTED).collect(Collectors.toList()))
                 .build();
     }
 

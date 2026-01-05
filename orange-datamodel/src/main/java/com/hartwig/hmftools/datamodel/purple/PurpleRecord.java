@@ -28,16 +28,10 @@ public interface PurpleRecord
     List<PurpleDriver> germlineDrivers();
 
     @NotNull
-    List<PurpleVariant> driverSomaticVariants();
-
-    @NotNull
-    List<PurpleVariant> otherSomaticVariants();
+    List<PurpleVariant> somaticVariants();
 
     @Nullable
-    List<PurpleVariant> driverGermlineVariants();
-
-    @Nullable
-    List<PurpleVariant> otherGermlineVariants();
+    List<PurpleVariant> germlineVariants();
 
     @NotNull
     List<PurpleCopyNumber> somaticCopyNumbers();
@@ -46,17 +40,8 @@ public interface PurpleRecord
     List<PurpleGeneCopyNumber> somaticGeneCopyNumbers();
 
     @NotNull
-    List<PurpleGainDeletion> driverSomaticGainsDels();
+    List<PurpleGainDeletion> somaticGainsDels();
 
     @Nullable
-    List<PurpleGermlineDeletion> otherGermlineDeletions();
-
-    @Nullable
-    List<PurpleGainDeletion> driverGermlineDeletions();
-
-    @Nullable
-    List<PurpleLossOfHeterozygosity> driverGermlineLossOfHeterozygosities();
-
-    @Nullable
-    List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities();
+    List<PurpleGainDeletion> germlineGainsDels();
 }

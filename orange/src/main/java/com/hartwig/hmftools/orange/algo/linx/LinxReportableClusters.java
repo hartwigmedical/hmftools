@@ -20,7 +20,7 @@ public final class LinxReportableClusters
     {
         Set<Integer> clusterIds = new HashSet<>(linx.fusionClusterIds());
 
-        List<LinxBreakend> breakends = linx.driverSomaticBreakends();
+        List<LinxBreakend> breakends = linx.somaticBreakends();
         List<Integer> svIds = breakends.stream().map(LinxBreakend::svId).collect(toList());
 
         Map<Integer, Integer> svToCluster = linx.svIdToClusterId();

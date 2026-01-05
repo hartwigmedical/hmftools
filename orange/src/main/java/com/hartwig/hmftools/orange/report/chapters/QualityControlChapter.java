@@ -274,17 +274,19 @@ public class QualityControlChapter implements ReportChapter
         tumorStats.addCell(cells.createContent("Number of hotspot mutations"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotMutationCount())));
 
-        tumorStats.addCell(cells.createContent("Number of hotspot structural variants"));
-        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
-
         tumorStats.addCell(cells.createContent("Sum of small variant allele read counts"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().smallVariantAlleleReadCount())));
+
+        /* SV and segment information no longer available
+        tumorStats.addCell(cells.createContent("Number of hotspot structural variants"));
+        tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().hotspotStructuralVariantCount())));
 
         tumorStats.addCell(cells.createContent("Sum of structural variant tumor fragment counts (excluding single breakends)"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().structuralVariantTumorFragmentCount())));
 
         tumorStats.addCell(cells.createContent("Sum of B-allele frequency points in germline diploid regions with tumor ratio < 0.8 OR > 1.2"));
         tumorStats.addCell(cells.createContent(String.valueOf(report.purple().tumorStats().bafCount())));
+        */
 
         document.add(new Tables(reportResources).createWrapping(tumorStats, "Tumor Detection Statistics"));
     }
