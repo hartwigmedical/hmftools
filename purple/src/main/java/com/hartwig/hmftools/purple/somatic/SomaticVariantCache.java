@@ -10,9 +10,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.purple.PurpleConfig;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -52,7 +52,7 @@ public class SomaticVariantCache
     public int indelCount() { return mIndelCount; }
     public double tincLevel() { return mTincLevel; }
 
-    public void loadSomatics(final String somaticVcf, final ListMultimap<Chromosome,VariantHotspot> somaticHotspots)
+    public void loadSomatics(final String somaticVcf, final ListMultimap<Chromosome, SimpleVariant> somaticHotspots)
     {
         if(somaticVcf.isEmpty())
             return;

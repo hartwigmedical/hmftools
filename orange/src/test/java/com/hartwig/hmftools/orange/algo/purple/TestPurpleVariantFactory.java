@@ -4,11 +4,10 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
@@ -33,7 +32,7 @@ public final class TestPurpleVariantFactory
                 .alt(Strings.EMPTY)
                 .worstCodingEffect(PurpleCodingEffect.UNDEFINED)
                 .canonicalImpact(impactBuilder().build())
-                .hotspot(HotspotType.NON_HOTSPOT)
+                .hotspot(com.hartwig.hmftools.datamodel.purple.HotspotType.NON_HOTSPOT)
                 .tumorDepth(depthBuilder().build())
                 .rnaDepth(null)
                 .adjustedCopyNumber(0)
@@ -99,7 +98,7 @@ public final class TestPurpleVariantFactory
                 .otherReportedEffects(Strings.EMPTY)
                 .worstCodingEffect(CodingEffect.UNDEFINED)
                 .tier(VariantTier.UNKNOWN)
-                .hotspot(Hotspot.NON_HOTSPOT)
+                .hotspot(HotspotType.NON_HOTSPOT)
                 .reported(false)
                 .adjustedCopyNumber(0)
                 .adjustedVAF(0)

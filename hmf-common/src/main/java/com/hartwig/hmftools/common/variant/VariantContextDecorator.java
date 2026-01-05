@@ -260,14 +260,14 @@ public class VariantContextDecorator implements GenomePosition
         return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE, Strings.EMPTY);
     }
 
-    public Hotspot hotspot()
+    public HotspotType hotspot()
     {
-        return Hotspot.fromVariant(mContext);
+        return HotspotType.fromVariant(mContext);
     }
 
     public boolean isHotspot()
     {
-        return hotspot() == Hotspot.HOTSPOT;
+        return hotspot() == HotspotType.HOTSPOT;
     }
 
     public String trinucleotideContext()

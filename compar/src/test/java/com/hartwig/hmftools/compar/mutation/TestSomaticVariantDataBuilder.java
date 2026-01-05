@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.compar.TestComparableItemBuilder;
@@ -18,7 +18,7 @@ public class TestSomaticVariantDataBuilder
     public VariantType type = VariantType.SNP;
     public String gene = "BRAF";
     public boolean reported = true;
-    public Hotspot hotspotStatus = Hotspot.HOTSPOT;
+    public HotspotType hotspotStatus = HotspotType.HOTSPOT;
     public VariantTier tier = VariantTier.HOTSPOT;
     public boolean biallelic = false;
     public String canonicalEffect = "missense_variant";
@@ -48,7 +48,7 @@ public class TestSomaticVariantDataBuilder
         b.type = VariantType.INDEL;
         b.gene = "BRCA1";
         b.reported = false;
-        b.hotspotStatus = Hotspot.NEAR_HOTSPOT;
+        b.hotspotStatus = HotspotType.NEAR_HOTSPOT;
         b.tier = VariantTier.PANEL;
         b.biallelic = true;
         b.canonicalEffect = "synonymous_variant";

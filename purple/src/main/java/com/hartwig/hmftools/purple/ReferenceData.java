@@ -35,7 +35,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
 import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
@@ -59,8 +59,8 @@ public class ReferenceData
     public final Map<String, List<String>> OtherReportableTranscripts;
     public final GermlineDeletionFrequency CohortGermlineDeletions;
 
-    public final ListMultimap<Chromosome, VariantHotspot> SomaticHotspots;
-    public final ListMultimap<Chromosome, VariantHotspot> GermlineHotspots;
+    public final ListMultimap<Chromosome,SimpleVariant> SomaticHotspots;
+    public final ListMultimap<Chromosome, SimpleVariant> GermlineHotspots;
 
     public final String GcProfileFilename;
     public final TargetRegionsData TargetRegions;
@@ -178,10 +178,10 @@ public class ReferenceData
         try
         {
             SomaticHotspots.putAll(somaticHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(somaticHotspotVcf));
+                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotVcf(somaticHotspotVcf));
 
             GermlineHotspots.putAll(germlineHotspotVcf.equals(Strings.EMPTY) ?
-                    ArrayListMultimap.create() : VariantHotspotFile.readFromVCF(germlineHotspotVcf));
+                    ArrayListMultimap.create() : VariantHotspotFile.loadHotspotVcf(germlineHotspotVcf));
         }
         catch(IOException e)
         {

@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
 import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -409,7 +409,7 @@ public class GermlineVariantDAO
                 .microhomology(record.getValue(GERMLINEVARIANT.MICROHOMOLOGY))
                 .repeatSequence(record.getValue(GERMLINEVARIANT.REPEATSEQUENCE))
                 .repeatCount(record.getValue(GERMLINEVARIANT.REPEATCOUNT))
-                .hotspot(Hotspot.valueOf(record.getValue(GERMLINEVARIANT.HOTSPOT)))
+                .hotspot(HotspotType.valueOf(record.getValue(GERMLINEVARIANT.HOTSPOT)))
                 .mappability(record.getValue(GERMLINEVARIANT.MAPPABILITY))
                 .minorAlleleCopyNumber(record.getValue(GERMLINEVARIANT.MINORALLELECOPYNUMBER))
                 .tier(VariantTier.fromString(record.get(GERMLINEVARIANT.TIER)))

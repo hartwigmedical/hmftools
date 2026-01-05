@@ -2,12 +2,13 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Multimaps;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.test.VariantContextFromString;
-import com.hartwig.hmftools.common.variant.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -18,41 +19,38 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class HotspotEnrichmentTest
 {
-
     @Test
     public void testOverlap()
     {
         final String hotspotRef = "GATTACA";
         final String variantRef = "T";
 
-        final VariantHotspot hotspot =
-                ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
+        final SimpleVariant hotspot = new SimpleVariant("11", 100, hotspotRef, "A");
         // Max should be 100 + 7 - 1 + 5
         // Min should be 100 - 1 + 1 - 5
 
-        assertOverlap(Hotspot.NON_HOTSPOT, hotspot, 93, variantRef);
-        assertOverlap(Hotspot.NON_HOTSPOT, hotspot, 94, variantRef);
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 95, variantRef);
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 96, variantRef);
+        assertOverlap(HotspotType.NON_HOTSPOT, hotspot, 93, variantRef);
+        assertOverlap(HotspotType.NON_HOTSPOT, hotspot, 94, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 95, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 96, variantRef);
 
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 99, variantRef);
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 100, variantRef);
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 101, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 99, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 100, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 101, variantRef);
 
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 110, variantRef);
-        assertOverlap(Hotspot.NEAR_HOTSPOT, hotspot, 111, variantRef);
-        assertOverlap(Hotspot.NON_HOTSPOT, hotspot, 112, variantRef);
-        assertOverlap(Hotspot.NON_HOTSPOT, hotspot, 113, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 110, variantRef);
+        assertOverlap(HotspotType.NEAR_HOTSPOT, hotspot, 111, variantRef);
+        assertOverlap(HotspotType.NON_HOTSPOT, hotspot, 112, variantRef);
+        assertOverlap(HotspotType.NON_HOTSPOT, hotspot, 113, variantRef);
     }
 
     @Test
     public void testExactMatch()
     {
-        final String hotspotRef = "GATTACA";
+        String hotspotRef = "GATTACA";
 
-        final VariantHotspot hotspot =
-                ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
-        assertOverlap(Hotspot.HOTSPOT, hotspot, 100, hotspotRef);
+        SimpleVariant hotspot = new SimpleVariant("11", 100, hotspotRef, "A");
+        assertOverlap(HotspotType.HOTSPOT, hotspot, 100, hotspotRef);
     }
 
     @Test
@@ -60,13 +58,14 @@ public class HotspotEnrichmentTest
     {
         VariantContext variant = createNonHotspotV37(1, "G");
         VariantContext nonHotspot = new VariantContextBuilder(variant).attribute("HOTSPOT", false).make();
-        Assert.assertEquals(Hotspot.NON_HOTSPOT, Hotspot.fromVariant(nonHotspot));
+        Assert.assertEquals(HotspotType.NON_HOTSPOT, HotspotType.fromVariant(nonHotspot));
     }
 
-    private static void assertOverlap(Hotspot expected, VariantHotspot hotspot, int variantStart, String variantRef)
+    private static void assertOverlap(HotspotType expected, SimpleVariant hotspot, int variantStart, String variantRef)
     {
-        final HotspotEnrichment enrichment =
-                new HotspotEnrichment(Multimaps.fromPositions(Lists.newArrayList(hotspot)), true);
+        ListMultimap<Chromosome,SimpleVariant> hotspotMap = ArrayListMultimap.create();
+        hotspotMap.put(HumanChromosome.fromString(hotspot.chromosome()), hotspot);
+        HotspotEnrichment enrichment = new HotspotEnrichment(hotspotMap, true);
 
         VariantContext v37Variant = createNonHotspotV37(variantStart, variantRef);
         VariantContext v38Variant = createNonHotspotV38(variantStart, variantRef);
@@ -74,8 +73,8 @@ public class HotspotEnrichmentTest
         enrichment.processVariant(v37Variant);
         enrichment.processVariant(v38Variant);
 
-        assertEquals(expected, Hotspot.fromVariant(v37Variant));
-        assertEquals(expected, Hotspot.fromVariant(v38Variant));
+        assertEquals(expected, HotspotType.fromVariant(v37Variant));
+        assertEquals(expected, HotspotType.fromVariant(v38Variant));
     }
 
     @NotNull

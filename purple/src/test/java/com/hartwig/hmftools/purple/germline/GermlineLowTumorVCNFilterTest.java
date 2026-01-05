@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_HOTSPOT;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_OTHER;

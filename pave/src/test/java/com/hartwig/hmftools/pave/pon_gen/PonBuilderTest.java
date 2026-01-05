@@ -10,8 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 
 import org.junit.Test;
 
@@ -47,13 +46,13 @@ public class PonBuilderTest
     @Test
     public void testHotspotCache()
     {
-        VariantHotspot hotspot1 = ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(100).ref("A").alt("C").build();
-        VariantHotspot hotspot2 = ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(100).ref("A").alt("AA").build();
-        VariantHotspot hotspot3 = ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(100).ref("A").alt("G").build();
-        VariantHotspot hotspot4 = ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(105).ref("A").alt("C").build();
-        VariantHotspot hotspot5 = ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(110).ref("A").alt("C").build();
+        SimpleVariant hotspot1 = new SimpleVariant(CHR_1, 100, "A", "C");
+        SimpleVariant hotspot2 = new SimpleVariant(CHR_1, 100, "A", "AA");
+        SimpleVariant hotspot3 = new SimpleVariant(CHR_1, 100, "A", "G");
+        SimpleVariant hotspot4 = new SimpleVariant(CHR_1, 105, "A", "C");
+        SimpleVariant hotspot5 = new SimpleVariant(CHR_1, 110, "A", "C");
 
-        List<VariantHotspot> hotspots = Lists.newArrayList(hotspot1, hotspot2, hotspot3, hotspot4, hotspot5);
+        List<SimpleVariant> hotspots = Lists.newArrayList(hotspot1, hotspot2, hotspot3, hotspot4, hotspot5);
 
         HotspotRegionCache hotspotCache = new HotspotRegionCache(hotspots);
 

@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_AMP
 import static com.hartwig.hmftools.common.purple.PurpleCommon.DEFAULT_DRIVER_HET_DELETION_THRESHOLD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
-import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.HotspotType.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.toVcfData;

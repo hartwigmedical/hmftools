@@ -13,11 +13,10 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
-import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -64,7 +63,7 @@ public class PurpleVariantFactoryTest
                         .spliceRegion(true)
                         .worstCodingEffect(CodingEffect.UNDEFINED)
                         .tier(VariantTier.HOTSPOT)
-                        .hotspot(Hotspot.HOTSPOT)
+                        .hotspot(HotspotType.HOTSPOT)
                         .reported(true)
                         .rnaDepth(null)
                         .adjustedCopyNumber(3.84)
@@ -115,7 +114,7 @@ public class PurpleVariantFactoryTest
         assertNull(purpleOtherImpact.affectedCodon());
         assertNull(purpleOtherImpact.affectedExon());
 
-        assertEquals(HotspotType.HOTSPOT, purpleVariant.hotspot());
+        assertEquals(com.hartwig.hmftools.datamodel.purple.HotspotType.HOTSPOT, purpleVariant.hotspot());
         assertTrue(purpleVariant.reported());
         assertEquals(80, purpleVariant.tumorDepth().alleleReadCount());
         assertEquals(153, purpleVariant.tumorDepth().totalReadCount());

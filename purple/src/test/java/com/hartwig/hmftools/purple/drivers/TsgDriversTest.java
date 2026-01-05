@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
-import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
-import static com.hartwig.hmftools.common.variant.Hotspot.NON_HOTSPOT;
+import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT;
+import static com.hartwig.hmftools.common.variant.HotspotType.NON_HOTSPOT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
 import static com.hartwig.hmftools.purple.drivers.OncoDriversTest.createGeneCopyNumber;
 

@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.perf.StringCache;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.VariantHotspot;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
 
@@ -54,7 +54,7 @@ public class RegionPonTask
             chrClinvarData.entries().stream().filter(x -> mRegion.containsPosition(x.Position)).forEach(x -> mClinvarData.addEntry(x));
         }
 
-        List<VariantHotspot> somaticHotspots = hotspotCache.getChromosomeSomaticHotspots(mRegion.Chromosome);
+        List<SimpleVariant> somaticHotspots = hotspotCache.getChromosomeSomaticHotspots(mRegion.Chromosome);
 
         if(somaticHotspots != null)
         {
@@ -66,7 +66,7 @@ public class RegionPonTask
             mSomaticHotspots = new HotspotRegionCache(Collections.emptyList());
         }
 
-        List<VariantHotspot> germlineHotspots = hotspotCache.getChromosomeGermlineHotspots(mRegion.Chromosome);
+        List<SimpleVariant> germlineHotspots = hotspotCache.getChromosomeGermlineHotspots(mRegion.Chromosome);
 
         if(germlineHotspots != null)
         {

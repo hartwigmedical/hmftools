@@ -78,7 +78,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 import com.hartwig.hmftools.purple.targeted.TargetRegionDataBuilder;
-import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
 
 import org.apache.logging.log4j.Level;

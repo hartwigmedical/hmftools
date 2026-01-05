@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
@@ -77,7 +77,7 @@ public class PurpleVariantContextLoaderTest
         // Assertions above already imply it, but explicitly assert the canonical impact isn't included in the otherImpacts field
         assertFalse(otherImpacts.stream().anyMatch(impact -> impact.Transcript.equals(variant.canonicalTranscript())));
 
-        assertEquals(Hotspot.NON_HOTSPOT, variant.hotspot());
+        assertEquals(HotspotType.NON_HOTSPOT, variant.hotspot());
         assertFalse(variant.reported());
         assertNull(variant.rnaDepth());
         assertEquals(3.84, variant.adjustedCopyNumber(), 0);

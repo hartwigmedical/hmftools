@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.HotspotType;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -225,7 +225,7 @@ public class SomaticVariantComparer implements ItemComparer
             final AllelicDepth tumorAllelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sourceSampleId));
             return new SomaticVariantData(
                     context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
-                    "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
+                    "", false, HotspotType.fromVariant(context), VariantTier.fromContext(context),
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
                     0, context.getFilters(), 0, 0,
