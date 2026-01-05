@@ -12,6 +12,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class BaseSeqViewModel
 {
+    public final String Chromosome;
     public final Boolean LeftIsForwardStrand;
     public final Boolean RightIsForwardStrand;
     public final int FirstBasePos;
@@ -23,7 +24,14 @@ public class BaseSeqViewModel
     public BaseSeqViewModel(final List<BaseViewModel> bases, int posStart, @Nullable final Boolean leftIsForwardStrand,
             @Nullable final Boolean rightIsForwardStrand)
     {
+        this(bases, null, posStart, leftIsForwardStrand, rightIsForwardStrand);
+    }
+
+    public BaseSeqViewModel(final List<BaseViewModel> bases, @Nullable final String chromosome, int posStart,
+            @Nullable final Boolean leftIsForwardStrand, @Nullable final Boolean rightIsForwardStrand)
+    {
         mBases = bases;
+        Chromosome = chromosome;
         mPosStart = posStart;
         LeftIsForwardStrand = leftIsForwardStrand;
         RightIsForwardStrand = rightIsForwardStrand;
@@ -51,24 +59,40 @@ public class BaseSeqViewModel
 
     public static BaseSeqViewModel fromStr(final String baseStr, int posStart)
     {
+        return fromStr(baseStr, null, posStart);
+    }
+
+    public static BaseSeqViewModel fromStr(final String baseStr, @Nullable final String chromosome, int posStart)
+    {
         List<BaseViewModel> bases = Lists.newArrayList();
         for(int i = 0; i < baseStr.length(); ++i)
         {
             bases.add(new BaseViewModel(baseStr.charAt(i)));
         }
 
-        return new BaseSeqViewModel(bases, posStart, null, null);
+        return new BaseSeqViewModel(bases, chromosome, posStart, null, null);
     }
 
     public static BaseSeqViewModel fromRead(final SAMRecord read)
     {
-        return fromConsensusFragment(read, null, null);
+        return fromRead(read, null);
+    }
+
+    public static BaseSeqViewModel fromRead(final SAMRecord read, @Nullable final Integer unclippedStartOverride)
+    {
+        return fromConsensusFragment(read, null, null, unclippedStartOverride);
     }
 
     public static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
             @Nullable final BaseSeqViewModel second)
     {
-        int unclippedStart = consensusRead.getUnclippedStart();
+        return fromConsensusFragment(consensusRead, first, second, null);
+    }
+
+    private static BaseSeqViewModel fromConsensusFragment(final SAMRecord consensusRead, @Nullable final BaseSeqViewModel first,
+            @Nullable final BaseSeqViewModel second, @Nullable final Integer unclippedStartOverride)
+    {
+        int unclippedStart = unclippedStartOverride == null ? consensusRead.getUnclippedStart() : unclippedStartOverride;
         String readString = consensusRead.getReadString();
         byte[] baseQuals = consensusRead.getBaseQualities();
 
@@ -98,9 +122,7 @@ public class BaseSeqViewModel
                         break;
                     case I:
                         if(!indexedBases.isEmpty())
-                        {
-                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount();
-                        }
+                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount(readString.charAt(baseIdx), baseQuals[baseIdx]);
 
                         baseIdx++;
                         break;
@@ -130,9 +152,7 @@ public class BaseSeqViewModel
     {
         int baseIdx = pos - mPosStart;
         if(baseIdx < 0 || baseIdx >= mBases.size())
-        {
             return BaseViewModel.createMissingBase();
-        }
 
         return mBases.get(baseIdx);
     }

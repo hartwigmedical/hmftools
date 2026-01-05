@@ -2,11 +2,14 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_FLANK;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_FLANK;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -14,9 +17,13 @@ import static junit.framework.TestCase.assertNotNull;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
+import com.hartwig.hmftools.sage.common.RegionTaskTester;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
 
@@ -115,5 +122,64 @@ public class CandidateCreationTest
 
         ReadContextCandidate snvInsert = altContexts.stream().filter(x -> x.ref().equals(variant.ref()) && x.alt().equals("GT")).findFirst().orElse(null);
         assertNotNull(snvInsert);
+    }
+
+    @Test
+    public void testIlluminaLowQualCoreVariants()
+    {
+        String refBuffer = "A".repeat(10);
+
+        // index / pos                                   0123456789012345
+        String refBases = refBuffer + TEST_LEFT_FLANK + "ACGTACGCAGCTGTCA" + TEST_RIGHT_FLANK + refBuffer;
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        SimpleVariant variant1 = new SimpleVariant(CHR_1, 25, "C", "A");
+        SimpleVariant variant2 = new SimpleVariant(CHR_1, 30, "C", "A");
+
+        ChrBaseRegion region = new ChrBaseRegion(CHR_1, 0, 200);
+        RefContextCache refContextCache = new RefContextCache(TEST_CONFIG, Collections.emptyList(), Collections.emptyList());
+        RefContextConsumer refContextConsumer = new RefContextConsumer(TEST_CONFIG, region, refSequence, refContextCache, Collections.emptyList());
+
+        // send through a read with the SNV, then another with the SNV also immediately followed by an insert
+        String readBases = refBases.substring(1, 25) + variant1.alt() + refBases.substring(26, 30) + variant2.alt() + refBases.substring(31);
+        String cigar = buildCigarString(readBases.length());
+
+        // the read's alignment start with the first base of the read context
+        SAMRecord read = buildSamRecord(1, cigar, readBases);
+        read.getBaseQualities()[24] = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+
+        SAMRecord read2 = buildSamRecord(1, cigar, readBases);
+        read2.getBaseQualities()[24] = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read2);
+
+        List<ReadContextCandidate> altContexts = refContextCache.altCandidates();
+        assertEquals(1, altContexts.size());
+        assertEquals(30, altContexts.get(0).position());
+
+        refContextCache.clear();
+
+        // test indels
+        variant1 = new SimpleVariant(CHR_1, 25, "C", "CA");
+        variant2 = new SimpleVariant(CHR_1, 30, "CT", "C");
+
+        readBases = refBases.substring(1, 25) + variant1.alt() + refBases.substring(26, 30) + variant2.alt() + refBases.substring(32, 52);
+        cigar = "25M1I5M1D20M";
+
+        // the read's alignment start with the first base of the read context
+        read = buildSamRecord(1, cigar, readBases);
+        read.getBaseQualities()[24] = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+
+        read2 = buildSamRecord(1, cigar, readBases);
+        read2.getBaseQualities()[25] = BaseQualAdjustment.LOW_BASE_QUAL_THRESHOLD;
+
+        refContextConsumer.processRead(read);
+        refContextConsumer.processRead(read2);
+
+        altContexts = refContextCache.altCandidates();
+        assertEquals(1, altContexts.size());
+        assertEquals(30, altContexts.get(0).position());
+
     }
 }

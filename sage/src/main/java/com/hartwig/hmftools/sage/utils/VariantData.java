@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.utils;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.util.Set;
 
@@ -47,7 +47,7 @@ public class VariantData
         if(mContext.getFilters().isEmpty())
             return true;
 
-        return mContext.getFilters().stream().anyMatch(x -> x.equals(PASS));
+        return mContext.getFilters().stream().anyMatch(x -> x.equals(PASS_FILTER));
     }
 
     public String toString() { return String.format("%s:%d %s>%s tier(%s) qual(%.0f)",

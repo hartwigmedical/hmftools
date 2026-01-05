@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -12,6 +13,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.ASSEMBLY_UNL
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_LONG_EXT_FACTOR;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_MAX_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConstants.WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.SBX_MEDIUM_QUAL_DESYNC_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.SBX_PRIME_POSITION_RANGE_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.alignment.Alignment.writeAssemblyData;
 import static com.hartwig.hmftools.esvee.assembly.alignment.AssemblyAlignment.isLocalIndelAssembly;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
@@ -507,15 +510,34 @@ public class AssemblyAligner extends ThreadTask
             if(read.type() != SupportType.JUNCTION)
                 continue;
 
-            int extensionLength = assemblyOrientation.isForward() ?
-                    read.baseLength() - read.junctionReadStartDistance() : read.junctionReadStartDistance();
+            int extensionLength = read.extensionLength(assemblyOrientation);
 
             extensionLengths.add(extensionLength);
         }
 
-        double maxLongReadCount = min(max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, 1.0), WEAK_ASSEMBLY_UNPAIRED_MAX_READS);
-
         Collections.sort(extensionLengths, Collections.reverseOrder());
+
+        int minLongReadCount = 1;
+
+        if(extensionLengths.size() > 2)
+        {
+            int secondLongestLength = extensionLengths.get(1);
+
+            List<SupportRead> topReads = reads.stream()
+                    .filter(x -> x.type() == SupportType.JUNCTION && x.extensionLength(assemblyOrientation) >= secondLongestLength)
+                    .collect(Collectors.toList());
+
+            SupportRead read1 = topReads.get(0);
+            SupportRead read2 = topReads.get(1);
+
+            if(readsCloseMatch(read1, read2)
+            && (read1.mediumQualCount() >= SBX_MEDIUM_QUAL_DESYNC_COUNT || read2.mediumQualCount() >= SBX_MEDIUM_QUAL_DESYNC_COUNT))
+            {
+                minLongReadCount = 2;
+            }
+        }
+
+        double maxLongReadCount = min(max(reads.size() / WEAK_ASSEMBLY_UNPAIRED_READ_FACTOR, minLongReadCount), WEAK_ASSEMBLY_UNPAIRED_MAX_READS);
 
         for(int i = 0; i < extensionLengths.size() - 1; ++i)
         {
@@ -532,5 +554,16 @@ public class AssemblyAligner extends ThreadTask
         }
 
         return false;
+    }
+
+    private static boolean readsCloseMatch(final SupportRead read1, final SupportRead read2)
+    {
+        if(read1.orientation() != read2.orientation())
+            return false;
+
+        int threePrime1 = read1.orientation().isForward() ? read1.untrimmedEnd() : read1.untrimmedStart();
+        int threePrime2 = read2.orientation().isForward() ? read2.untrimmedEnd() : read2.untrimmedStart();
+
+        return abs(threePrime1 - threePrime2) <= SBX_PRIME_POSITION_RANGE_THRESHOLD;
     }
 }

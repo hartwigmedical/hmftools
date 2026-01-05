@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.AVG_RECALIBRATED_BASE_QUAL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MAP_QUAL_FACTOR;
@@ -117,7 +117,7 @@ public final class VariantContextFactory
         final VariantContext context = builder.make();
         if(context.isNotFiltered())
         {
-            context.getCommonInfo().addFilter(PASS);
+            context.getCommonInfo().addFilter(PASS_FILTER);
         }
 
         return context;

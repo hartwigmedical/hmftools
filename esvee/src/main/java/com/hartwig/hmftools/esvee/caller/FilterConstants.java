@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -93,6 +94,8 @@ public class FilterConstants
     public static final int PRIME_MAX_BASE_FACTOR = 10;
     public static final int PRIME_MAX_SGL_FACTOR = 5;
 
+    public static final int SBX_STRAND_BIAS_NON_BND_MIN_FRAGS = 10;
+
     public static final int INV_ADJACENT_LENGTH = 100;
     public static final int INV_ADJACENT_MIN_UPS = 4;
     public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
@@ -101,10 +104,14 @@ public class FilterConstants
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
+    public static final ChrBaseRegion PMS2CL_V37 = new ChrBaseRegion("7", 6759759, 6803493);
+    public static final ChrBaseRegion PMS2CL_V38 = new ChrBaseRegion("chr7", 6725305, 6761392);
+
     public static final String PON_INS_SEQ_FWD_STRAND_1 = "GCCGTATCATTAAAAA";
     public static final String PON_INS_SEQ_FWD_STRAND_2 = "GTAGATCTCGGTGGTC";
-    public static final String PON_INS_SEQ_REV_STRAND_1 = "TTTTTAATGATACGGC";
-    public static final String PON_INS_SEQ_REV_STRAND_2 = "GACCACCGAGATCTAC";
+
+    public static final String PON_INS_SEQ_REV_STRAND_1 = Nucleotides.reverseComplementBases(PON_INS_SEQ_FWD_STRAND_1);
+    public static final String PON_INS_SEQ_REV_STRAND_2 = Nucleotides.reverseComplementBases(PON_INS_SEQ_FWD_STRAND_2);
 
     public static final int PANEL_INCLUSION_BUFFER = 1000;
 

@@ -1,29 +1,41 @@
 package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_SAMPLE;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
+import static com.hartwig.hmftools.sage.vcf.CandidateSerialisation.toCandidate;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.common.test.MockRefGenome;
+import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.sage.vcf.ReadContextVcfInfo;
 
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
@@ -59,14 +71,12 @@ public class CandidateSerialisationTest
 
         VariantContext variantContext = variantContextBuilder.make();
 
-        Candidate recreatedCandidate = CandidateSerialisation.toCandidate(variantContext, REF_SEQUENCE);
+        Candidate recreatedCandidate = toCandidate(variantContext, REF_SEQUENCE);
         assertNotNull(recreatedCandidate);
 
         VariantReadContext recreatedContext = recreatedCandidate.readContext();
 
         assertTrue(recreatedContext.matches(readContext));
-
-        testCandidateCreationOldVersions(readContext, candidate);
 
         // a delete
         position = 17;
@@ -86,13 +96,11 @@ public class CandidateSerialisationTest
 
         variantContext = variantContextBuilder.make();
 
-        recreatedCandidate = CandidateSerialisation.toCandidate(variantContext, REF_SEQUENCE);
+        recreatedCandidate = toCandidate(variantContext, REF_SEQUENCE);
         assertNotNull(recreatedCandidate);
 
         recreatedContext = recreatedCandidate.readContext();
         assertTrue(recreatedContext.matches(readContext));
-
-        testCandidateCreationOldVersions(readContext, candidate);
 
         // an insert
         position = 21;
@@ -113,35 +121,42 @@ public class CandidateSerialisationTest
 
         variantContext = variantContextBuilder.make();
 
-        recreatedCandidate = CandidateSerialisation.toCandidate(variantContext, REF_SEQUENCE);
+        recreatedCandidate = toCandidate(variantContext, REF_SEQUENCE);
         assertNotNull(recreatedCandidate);
 
         recreatedContext = recreatedCandidate.readContext();
         assertTrue(recreatedContext.matches(readContext));
-
-        testCandidateCreationOldVersions(readContext, candidate);
     }
 
-    private void testCandidateCreationOldVersions(final VariantReadContext readContext, final Candidate candidate)
+    @Test
+    public void testCreateFromVariantContext()
     {
-        VariantContextBuilder variantContextBuilder = CandidateSerialisation.toContext(candidate);
+        // public static Candidate toCandidate(final VariantContext context, final RefSequence refSequence)
+        GenotypeBuilder genotypeBuilder = new GenotypeBuilder(TEST_SAMPLE);
+        genotypeBuilder.AD(new int[] { 10, 10 });
+        genotypeBuilder.DP(100);
+        genotypeBuilder.alleles(Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL));
+        genotypeBuilder.attribute(ALLELE_FREQUENCY_KEY, 0.1);
+        Genotype genotype = genotypeBuilder.make();
 
-        variantContextBuilder.getAttributes().remove(READ_CONTEXT_INFO);
+        SimpleVariant variant = new SimpleVariant(CHR_1, 17, "AAAAAT", "A");
 
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_LEFT_FLANK, readContext.leftFlankStr());
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_CORE, readContext.coreStr());
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_RIGHT_FLANK, readContext.rightFlankStr());
+        List<Allele> alleles = List.of(Allele.create(variant.Ref, true), Allele.create(variant.Alt, false));
 
-        int varIndexInCore = readContext.VarIndex - readContext.leftFlankLength();
-        variantContextBuilder.getAttributes().put(READ_CONTEXT_INDEX, varIndexInCore);
+        VariantContextBuilder builder = new VariantContextBuilder();
+        builder.chr(variant.Chromosome).start(variant.Position);
+        builder.alleles(alleles);
+        builder.computeEndFromAlleles(alleles, variant.Position);
 
-        VariantContext variantContext = variantContextBuilder.make();
+        builder.genotypes(List.of(genotype));
 
-        Candidate recreatedCandidate = CandidateSerialisation.toCandidate(variantContext, REF_SEQUENCE);
-        assertNotNull(recreatedCandidate);
+        // index                                   0123456789 012345678901234567890 1234567890
+        builder.attribute(READ_CONTEXT_INFO, "1-13-TTCAGGTTTG-GAAAAAAATATATATATATAA-GTGCATGAAA-17M5D24M");
 
-        VariantReadContext recreatedContext = recreatedCandidate.readContext();
+        VariantContext variantContext = builder.make();
 
-        assertTrue(recreatedContext.matches(readContext));
+        Candidate candidate = toCandidate(variantContext, REF_SEQUENCE);
+        assertNotNull(candidate);
+        assertNotNull(candidate.readContext().toString());
     }
 }

@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
@@ -17,26 +13,20 @@ import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.common.variant.VariantTier.LOW_CONFIDENCE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INFO;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.redux.BaseQualAdjustment;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.common.variant.VariantTier;
-
-import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.Allele;
@@ -45,8 +35,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialisation
 {
-    public static final int PRE_v3_5_FLANK_EXTENSION_LENGTH = 50;
-
     public static VariantContextBuilder toContext(final Candidate candidate)
     {
         final List<Allele> alleles = createAlleles(candidate.variant());
@@ -101,18 +89,7 @@ public final class CandidateSerialisation
 
         VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, LOW_CONFIDENCE.toString()));
 
-        ReadContextVcfInfo readContextVcfInfo = null;
-        boolean buildFromOldTags = !context.hasAttribute(READ_CONTEXT_INFO);
-
-        if(buildFromOldTags)
-        {
-            // support for versions 3.0 -> 3.4
-            readContextVcfInfo = buildReadContextFromOldVcfTags(variant, context, refSequence);
-        }
-        else
-        {
-            readContextVcfInfo = ReadContextVcfInfo.fromVcfTag(context.getAttributeAsString(READ_CONTEXT_INFO, ""));
-        }
+        ReadContextVcfInfo readContextVcfInfo = ReadContextVcfInfo.fromVcfTag(context.getAttributeAsString(READ_CONTEXT_INFO, ""));
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
@@ -126,85 +103,29 @@ public final class CandidateSerialisation
 
         for(int i = 0; i < minBaseQuals.length; ++i)
         {
-            minBaseQuals[i] = BASE_QUAL_MINIMUM + 1;
+            minBaseQuals[i] = (byte)40; // maximum across technologies
         }
 
         record.setBaseQualities(minBaseQuals);
 
         VariantReadContext readContext = builder.createContext(variant, record, readContextVcfInfo.VarIndex, refSequence);
 
-        if(readContext == null)
+        if(readContext == null || !readContext.isValid())
         {
-            SG_LOGGER.warn("variant({}) failed to recreate read context, setting invalid", variant);
-            String refBases = "NNN";
+            SG_LOGGER.warn("variant({}) failed to recreate read context from VCF info({})", variant, readContextVcfInfo);
 
-            readContext = new VariantReadContext(
-                    variant, readContextVcfInfo.AlignmentStart, 0, refBases.getBytes(), readContextVcfInfo.readBases().getBytes(),
-                    Collections.emptyList(), 0, readContextVcfInfo.VarIndex, 0, null, null,
-                    Collections.emptyList(), 0, 0);
+            if(readContext == null)
+            {
+                readContext = new VariantReadContext(
+                        variant, readContextVcfInfo.AlignmentStart, 0, null, readContextVcfInfo.readBases().getBytes(),
+                        Collections.emptyList(), 0, readContextVcfInfo.VarIndex, 0, null, null,
+                        Collections.emptyList(), 0, 0);
+            }
+
+            readContext.markInvalid();
         }
 
         return new Candidate(
-                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0),
-                0, 0, 0);
-    }
-
-    @VisibleForTesting
-    public static ReadContextVcfInfo buildReadContextFromOldVcfTags(
-            final SimpleVariant variant, final VariantContext context, final RefSequence refSequence)
-    {
-        String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
-        String core = context.getAttributeAsString(READ_CONTEXT_CORE, Strings.EMPTY);
-        String rightFlank = context.getAttributeAsString(READ_CONTEXT_RIGHT_FLANK, Strings.EMPTY);
-
-        int varCoreIndex = context.getAttributeAsInt(READ_CONTEXT_INDEX, 0);
-
-        // variant index is defined as the variant's index in the core
-        int varReadIndex = varCoreIndex + leftFlank.length();
-
-        // eg position = 112, left flank = 10 bases, core = 5 bases, variant core index = 2
-        // ie left flank = 100-109, index 0-9, core = 110-114, index 10-14, var read index = 12
-
-        int readBaseLength = leftFlank.length() + core.length() + rightFlank.length();
-
-        int alignmentStart = variant.Position - varReadIndex;
-        int alignmentEnd = alignmentStart + readBaseLength - 1 - variant.indelLength();
-
-        // build a buffer around the flanks to allow for any need to expand the core for repeats and homology
-        int refBaseBuffer = PRE_v3_5_FLANK_EXTENSION_LENGTH;
-
-        int extendedAlignmentStart = max(alignmentStart - refBaseBuffer, 1);
-        String extendedLeft = refSequence.positionBases(extendedAlignmentStart, alignmentStart - 1);
-        String extendedRight = refSequence.positionBases(alignmentEnd + 1, alignmentEnd + refBaseBuffer);
-        int varIndexOffset = alignmentStart - extendedAlignmentStart;
-
-        varReadIndex += varIndexOffset;
-        leftFlank = extendedLeft + leftFlank;
-        rightFlank = rightFlank + extendedRight;
-
-        int newReadBaseLength = leftFlank.length() + core.length() + rightFlank.length();
-
-        String readCigar = "";
-
-        if(variant.isInsert())
-        {
-            // read bases = 10 + 2 + insert of 5 + 2 + 10 = 29, var index = 11, bases after insert = 12
-            int preInsertBaseLength = varReadIndex + 1;
-            int postInsertBaseLength = newReadBaseLength - varReadIndex - variant.altLength() - 1;
-            readCigar = format("%dM%dI%dM", preInsertBaseLength, variant.indelLength(), postInsertBaseLength);
-        }
-        else if(variant.isDelete())
-        {
-            // read bases = 10 + 2 + del of 5 + 2 + 10 = 24, var index = 11, bases after insert = 12
-            int preInsertBaseLength = varReadIndex + 1;
-            int postInsertBaseLength = newReadBaseLength - varReadIndex - 1;
-            readCigar = format("%dM%dD%dM", preInsertBaseLength, abs(variant.indelLength()), postInsertBaseLength);
-        }
-        else
-        {
-            readCigar = format("%dM", newReadBaseLength);
-        }
-
-        return new ReadContextVcfInfo(extendedAlignmentStart, varReadIndex, leftFlank, core, rightFlank, readCigar);
+                tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0, 0);
     }
 }

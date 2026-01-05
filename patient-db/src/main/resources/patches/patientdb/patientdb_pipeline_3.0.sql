@@ -14,3 +14,6 @@ ALTER TABLE svBreakend
     DROP COLUMN svBreakendGermline,
     ADD COLUMN reportedStatus varchar(50) NULL after disruptive;
 
+ALTER TABLE somaticVariant
+    DROP COLUMN recovered;
+

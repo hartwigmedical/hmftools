@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BasePosition;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -36,13 +36,13 @@ import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineVariantData implements ComparableItem
 {
-    public final GermlineVariant Variant;
+    public final SmallVariant Variant;
     public final Set<String> Filters;
     public final BasePosition mComparisonPosition;
 
     public static final String FILTER_DELIMITER = ";";
 
-    public GermlineVariantData(final GermlineVariant variant, final BasePosition comparisonPosition)
+    public GermlineVariantData(final SmallVariant variant, final BasePosition comparisonPosition)
     {
         Variant = variant;
         Filters = Arrays.stream(variant.filter().split(FILTER_DELIMITER, -1)).collect(Collectors.toSet());
@@ -116,7 +116,7 @@ public class GermlineVariantData implements ComparableItem
     }
 
     private static List<String> findVariantDiffs(
-            final GermlineVariant refVar, final GermlineVariant otherVar, final DiffThresholds thresholds)
+            final SmallVariant refVar, final SmallVariant otherVar, final DiffThresholds thresholds)
     {
         final List<String> diffs = Lists.newArrayList();
 
@@ -140,7 +140,7 @@ public class GermlineVariantData implements ComparableItem
         return diffs;
     }
 
-    protected static void addDisplayValues(final GermlineVariant variant, final List<String> values)
+    protected static void addDisplayValues(final SmallVariant variant, final List<String> values)
     {
         values.add(String.format("%s", variant.reported()));
         values.add(String.format("%s", variant.hotspot()));

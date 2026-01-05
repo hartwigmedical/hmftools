@@ -8,6 +8,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
@@ -21,6 +22,8 @@ public class AlternativeAlignment
     public final String Cigar;
     public final int MapQual;
 
+    private Integer mPositionEnd;
+
     public AlternativeAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar, final int mapQual)
     {
         Chromosome = chromosome;
@@ -28,6 +31,15 @@ public class AlternativeAlignment
         Orient = orientation;
         Cigar = cigar;
         MapQual = mapQual;
+        mPositionEnd = null;
+    }
+
+    public int positionEnd()
+    {
+        if(mPositionEnd == null)
+            mPositionEnd = SamRecordUtils.getAlignmentEndFromCigar(Position, Cigar);
+
+        return mPositionEnd;
     }
 
     private static final String MAPPING_DELIM = ";";

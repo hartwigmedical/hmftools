@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.isUncertainBa
 import static com.hartwig.hmftools.common.redux.BaseQualAdjustment.maxQual;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
+import static com.hartwig.hmftools.redux.ReduxConstants.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.redux.consensus.BaseQualPair.NO_BASE;
 import static com.hartwig.hmftools.redux.consensus.ConsensusState.setReadPositionStartOffsets;
 import static com.hartwig.hmftools.redux.consensus.IlluminaRoutines.isDualStrandAndIsFirstInPair;
@@ -72,6 +73,7 @@ public class BaseBuilder
             {
                 // on reverse strand, say base length = 10 (so 0-9 for longest read), if a read has length 8 then it will
                 locationBases[r] = NO_BASE;
+                locationQuals[r] = INVALID_BASE_QUAL;
 
                 int readIndex = baseIndex - readPositionStartOffsets[r];
 

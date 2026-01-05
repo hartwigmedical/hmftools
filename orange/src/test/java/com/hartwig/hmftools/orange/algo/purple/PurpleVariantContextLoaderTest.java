@@ -89,7 +89,7 @@ public class PurpleVariantContextLoaderTest
         assertEquals(2, variant.repeatCount());
         assertEquals(0, variant.subclonalLikelihood(), 0);
         assertEquals(ImmutableList.builder().add(3666).build(), variant.localPhaseSets());
-        assertEquals(ImmutableList.builder().add("ENST00000504228").add("ENST00000264229").build(), variant.reportableTranscripts());
+        assertEquals(ImmutableList.builder().add("ENST00000504228").add("ENST00000264229").build(), variant.reportableTranscriptsOrEmpty());
     }
 
     private static void assertVariantTranscriptImpactEquals(VariantTranscriptImpact first, VariantTranscriptImpact second)

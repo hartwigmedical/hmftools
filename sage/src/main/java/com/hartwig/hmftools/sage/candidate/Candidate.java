@@ -13,30 +13,28 @@ public class Candidate
     private int mMinNumberOfEvents;
     private int mFullMatchSupport;
     private int mCoreMatchSupport;
-    private int mLowQualInCoreCount;
 
     public Candidate(
             final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int fullMatchSupport,
-            int coreMatchSupport, int lowQualInCoreCount)
+            int coreMatchSupport)
     {
         mTier = tier;
         mReadContext = readContext;
         mMinNumberOfEvents = minNumberOfEvents;
         mFullMatchSupport = fullMatchSupport;
         mCoreMatchSupport = coreMatchSupport;
-        mLowQualInCoreCount = lowQualInCoreCount;
     }
 
     public Candidate(final VariantTier tier, final VariantReadContext readContext)
     {
-        this(tier, readContext, 0, 0, 0, 0);
+        this(tier, readContext, 0, 0, 0);
     }
 
     public static Candidate fromAltCandidate(final VariantTier tier, final ReadContextCandidate readContextCandidate)
     {
         Candidate candidate = new Candidate(
                 tier, readContextCandidate.readContext(), readContextCandidate.MinNumberOfEvents, readContextCandidate.FullMatch,
-                readContextCandidate.CoreMatch, readContextCandidate.LowQualInCoreCount);
+                readContextCandidate.CoreMatch);
 
         return candidate;
     }
@@ -61,13 +59,12 @@ public class Candidate
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
     public int fullMatchSupport() { return mFullMatchSupport; }
     public int coreMatchSupport() { return mCoreMatchSupport; }
-    public int lowQualInCoreCount() { return mLowQualInCoreCount; }
 
     public String toString() { return String.format("var(%s) tier(%s)", mReadContext.variant(), mTier); }
 
     @VisibleForTesting
     public Candidate(final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int fullMatchSupport)
     {
-        this(tier, readContext, minNumberOfEvents, fullMatchSupport, 0, 0);
+        this(tier, readContext, minNumberOfEvents, fullMatchSupport, 0);
     }
 }

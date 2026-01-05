@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_ID;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
@@ -59,6 +63,17 @@ public class Variant
     public Breakend breakendStart() { return mBreakends[SE_START]; }
     public Breakend breakendEnd() { return mBreakends[SE_END]; }
 
+    public int length()
+    {
+        if(mType == SGL || mType == BND)
+            return -1;
+
+        if(mType == INS)
+            return 1;
+
+        return abs(mBreakends[SE_START].Position - mBreakends[SE_END].Position);
+    }
+
     public VariantContext contextStart() { return mBreakends[SE_START].Context; }
     public VariantContext contextEnd() { return !isSgl() ? mBreakends[SE_END].Context : null; }
 
@@ -87,7 +102,8 @@ public class Variant
     }
 
     public boolean isPass() { return mBreakends[0].isPass(); }
-    public boolean isFiltered() { return !isPass(); }
+    public boolean isPonOnly() { return mBreakends[0].isPonOnly(); }
+    public boolean isFiltered() { return !isPass() && !isPonOnly(); }
 
     public String svString()
     {

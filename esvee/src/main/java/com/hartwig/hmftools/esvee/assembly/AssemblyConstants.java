@@ -84,7 +84,7 @@ public final class AssemblyConstants
     public static final int DEFAULT_ASSEMBLY_MAP_QUAL_THRESHOLD = 10;
 
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
-    public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
+    public static int PROXIMATE_JUNCTION_DISTANCE = 50;
 
     // discordant fragment max upper bound is dynamically set from the fragment distribution
     public static int MAX_OBSERVED_CONCORDANT_FRAG_LENGTH = DEFAULT_MAX_CONCORDANT_FRAG_LENGTH;
@@ -155,5 +155,7 @@ public final class AssemblyConstants
 
     public static final Orientation SSX2_GENE_ORIENT = Orientation.REVERSE;
     public static final int SSX2_MAX_MAP_QUAL = 20;
+
+    public static final int PMS2_MAX_MAP_QUAL = 10;
 
 }

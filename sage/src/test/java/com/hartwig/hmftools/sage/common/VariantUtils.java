@@ -145,7 +145,7 @@ public final class VariantUtils
 
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, tumorCounters.get(0).readContext(),
-                1, 1, 0, 0);
+                1, 1, 0);
 
         return new SageVariant(candidate, Collections.emptyList(), tumorCounters);
     }
@@ -154,7 +154,7 @@ public final class VariantUtils
     {
         Candidate candidate = new Candidate(
                 VariantTier.HIGH_CONFIDENCE, readContextCounter.readContext(),
-                1, 1, 0, 0);
+                1, 1, 0);
 
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
     }

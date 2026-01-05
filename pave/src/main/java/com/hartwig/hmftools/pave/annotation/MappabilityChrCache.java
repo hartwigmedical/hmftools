@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
-import static com.hartwig.hmftools.pave.annotation.Mappability.MAPPABILITY;
+import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 
 import java.util.List;
 

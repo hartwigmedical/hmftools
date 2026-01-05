@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.driver;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 public enum DriverImpact
@@ -13,7 +13,7 @@ public enum DriverImpact
     FRAMESHIFT,
     UNKNOWN;
 
-    public static DriverImpact select(SomaticVariant variant)
+    public static DriverImpact select(final SmallVariant variant)
     {
         return select(variant.type(), variant.canonicalCodingEffect());
     }
@@ -44,27 +44,27 @@ public enum DriverImpact
         return UNKNOWN;
     }
 
-    public static boolean isFrameshift(SomaticVariant variant)
+    public static boolean isFrameshift(final SmallVariant variant)
     {
         return isFrameshift(variant.type(), variant.canonicalCodingEffect());
     }
 
-    public static boolean isNonsense(SomaticVariant variant)
+    public static boolean isNonsense(final SmallVariant variant)
     {
         return isNonsense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    public static boolean isMissense(SomaticVariant variant)
+    public static boolean isMissense(final SmallVariant variant)
     {
         return isMissense(variant.type(), variant.canonicalCodingEffect());
     }
 
-    public static boolean isInframe(SomaticVariant variant)
+    public static boolean isInframe(final SmallVariant variant)
     {
         return isInframe(variant.type(), variant.canonicalCodingEffect());
     }
 
-    public static boolean isSplice(SomaticVariant variant)
+    public static boolean isSplice(final SmallVariant variant)
     {
         return isSplice(variant.canonicalCodingEffect());
     }

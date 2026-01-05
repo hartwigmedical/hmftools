@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_COHORT_FREQ;
@@ -347,7 +347,20 @@ public class GermlineDeletions
         }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
-        String filter = filters.isEmpty() ? PASS : String.join(";", filters);
+
+        String filter;
+
+        if(filters.isEmpty())
+        {
+            filter = PASS;
+        }
+        else
+        {
+            StringJoiner sj = new StringJoiner(";");
+            filters.forEach(x -> sj.add(x));
+            filter = sj.toString();
+        }
+
         for(int i = 0; i < deletedGenes.size(); ++i)
         {
             GeneData geneData = deletedGenes.get(i);

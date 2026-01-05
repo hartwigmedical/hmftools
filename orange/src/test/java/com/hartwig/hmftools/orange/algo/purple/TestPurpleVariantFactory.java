@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.datamodel.purple.HotspotType;
@@ -71,14 +71,14 @@ public final class TestPurpleVariantFactory
     public static ImmutablePurpleVariantContext.Builder contextBuilder()
     {
         return ImmutablePurpleVariantContext.builder()
-                .variant(variantBuilder().build())
-                .biallelicProbability(0.)
+                .from(variantBuilder().build())
+                .biallelicProbability(0)
                 .subclonalLikelihood(0);
     }
 
-    @NotNull static ImmutableVariantImpl.Builder variantBuilder()
+    @NotNull static ImmutableSmallVariantImpl.Builder variantBuilder()
     {
-        return ImmutableVariantImpl.builder()
+        return ImmutableSmallVariantImpl.builder()
                 .chromosome(Strings.EMPTY)
                 .position(0)
                 .allelicDepth(new AllelicDepth(0, 0))
@@ -111,6 +111,9 @@ public final class TestPurpleVariantFactory
                 .trinucleotideContext(Strings.EMPTY)
                 .microhomology(Strings.EMPTY)
                 .repeatSequence(Strings.EMPTY)
-                .repeatCount(0);
+                .repeatCount(0)
+                .subclonalLikelihood(0)
+                .gnomadFrequency(0)
+                .pathogenic(false);
     }
 }

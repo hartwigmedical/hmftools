@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConfig.AppendMode;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.setReadContextUltimaModels;
 
@@ -14,6 +15,8 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+
+import org.apache.logging.log4j.Level;
 
 public class ReadContextCounterFactory
 {
@@ -52,10 +55,26 @@ public class ReadContextCounterFactory
             }
             catch(Exception e)
             {
-                SG_LOGGER.error("var({}) error building counter from readContext: {}",
+                Level logLevel = AppendMode ? Level.WARN : Level.ERROR;
+
+                SG_LOGGER.log(logLevel, "var({}) error building counter from readContext: {}",
                         candidate.readContext().variant(), candidate.readContext());
-                e.printStackTrace();
-                System.exit(1);
+
+                if(AppendMode)
+                {
+                    candidate.readContext().markedInvalid();
+
+                    ReadContextCounter readContextCounter = new ReadContextCounter(
+                            readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
+                            config, sampleId);
+
+                    readCounters.add(readContextCounter);
+                }
+                else
+                {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
         }
 

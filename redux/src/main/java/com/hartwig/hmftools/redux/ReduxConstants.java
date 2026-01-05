@@ -1,5 +1,14 @@
 package com.hartwig.hmftools.redux;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V37;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V38;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
 public class ReduxConstants
 {
     public static final String FILE_ID = "redux";
@@ -53,4 +62,16 @@ public class ReduxConstants
     // duplicate group collapsing
     public static final int SINGLE_END_JITTER_COLLAPSE_DISTANCE = 10;
 
+    public static final List<String> EXPECTED_VALID_CONTIGS = Lists.newArrayListWithExpectedSize(30);
+
+    public static void loadExpectedValidContigs(final RefGenomeVersion refGenomeVersion)
+    {
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            EXPECTED_VALID_CONTIGS.add(refGenomeVersion.versionedChromosome(chromosome.toString()));
+        }
+
+        EXPECTED_VALID_CONTIGS.add(refGenomeVersion.is37() ? MT_CHR_V37 : MT_CHR_V38);
+        EXPECTED_VALID_CONTIGS.add(refGenomeVersion.versionedChromosome("EBV"));
+    }
 }

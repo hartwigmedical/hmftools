@@ -103,8 +103,9 @@ public final class AssemblyWriterUtils
     {
         PhaseGroup phaseGroup = assembly.phaseGroup();
 
-        int phaseGroupId = phaseGroup.id();
-        int phaseGroupCount = phaseGroup.assemblyCount();
+        // phase group can be null for decoy-matched assemblies
+        int phaseGroupId = phaseGroup != null ? phaseGroup.id() : -1;
+        int phaseGroupCount = phaseGroup != null ? phaseGroup.assemblyCount() : 1;
         String phaseSetId = String.valueOf(NO_PHASE_ID);
         int phaseSetCount = 0;
         String splitLinkInfo = "";

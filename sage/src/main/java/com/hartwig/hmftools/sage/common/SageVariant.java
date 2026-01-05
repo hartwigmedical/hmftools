@@ -27,6 +27,7 @@ public class SageVariant
 
     private int mMixedImpact;
     private boolean mNearIndel;
+    private boolean mNearMultiBaseIndel;
 
     public SageVariant(
             final Candidate candidate,  final List<ReadContextCounter> referenceCounters, final List<ReadContextCounter> tumorReadCounters)
@@ -36,6 +37,7 @@ public class SageVariant
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
         mNearIndel = false;
+        mNearMultiBaseIndel = false;
     }
 
     public Candidate candidate()
@@ -161,6 +163,9 @@ public class SageVariant
 
     public void setNearIndel() { mNearIndel = true; }
     public boolean nearIndel() { return mNearIndel; }
+
+    public void setNearMultiBaseIndel() { mNearMultiBaseIndel = true; }
+    public boolean nearMultiBaseIndel() { return mNearMultiBaseIndel; }
 
     public SimpleVariant variant() { return mCandidate.variant(); }
 

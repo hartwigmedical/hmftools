@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.output.BreakendWriter.FLD_BREAKEND_INS_SEQ;
 import static com.hartwig.hmftools.esvee.assembly.output.BreakendWriter.FLD_BREAKEND_MATE_CHR;
@@ -191,7 +191,7 @@ public class BreakendWriter
         sj.add(String.valueOf(breakend.sv().isGermline()));
 
         Set<FilterType> filters = breakend.sv().filters();
-        String filtersStr = filters.isEmpty() ? PASS : filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(ITEM_DELIM));
+        String filtersStr = filters.isEmpty() ? PASS_FILTER : filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(ITEM_DELIM));
 
         sj.add(filtersStr);
 

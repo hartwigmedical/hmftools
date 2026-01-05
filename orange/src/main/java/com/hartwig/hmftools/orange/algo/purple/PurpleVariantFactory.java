@@ -46,7 +46,7 @@ public class PurpleVariantFactory
         List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
                 context.otherImpacts()
                         .stream()
-                        .map(x -> PurpleConversion.convert(x, context.reportableTranscripts().contains(x.Transcript)))
+                        .map(x -> PurpleConversion.convert(x, context.reportableTranscriptsOrEmpty().contains(x.Transcript)))
                         .collect(Collectors.toList());
         PurpleAllelicDepth rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
 
@@ -96,13 +96,13 @@ public class PurpleVariantFactory
 
     private boolean isCanonicalTranscriptReported(final PurpleVariantContext purpleContext)
     {
-        if(purpleContext.reportableTranscripts().isEmpty())
+        if(purpleContext.reportableTranscriptsOrEmpty().isEmpty())
         {
             return purpleContext.reported();
         }
         else
         {
-            return purpleContext.reportableTranscripts().contains(purpleContext.canonicalTranscript());
+            return purpleContext.reportableTranscriptsOrEmpty().contains(purpleContext.canonicalTranscript());
         }
     }
 }

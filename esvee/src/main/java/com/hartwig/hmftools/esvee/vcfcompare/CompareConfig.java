@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.esvee.vcfcompare;
 
+import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.esvee.caller.VcfWriter.GERMLINE_VCF_ID;
 import static com.hartwig.hmftools.esvee.caller.VcfWriter.SOMATIC_VCF_ID;
@@ -7,6 +12,7 @@ import static com.hartwig.hmftools.esvee.caller.VcfWriter.UNFILTERED_VCF_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -16,6 +22,7 @@ import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 public class CompareConfig
 {
+    public final List<String> SampleIds;
     public final String OldVcf;
     public final String NewVcf;
 
@@ -26,7 +33,10 @@ public class CompareConfig
     public final String OutputId;
 
     public final boolean IncludeNonPass;
+    public final boolean WritePonBreakends;
     public final boolean WriteMatches;
+
+    public final int Threads;
 
     public static final String OLD_VCF = "old_vcf";
     public static final String NEW_VCF = "new_vcf";
@@ -36,6 +46,7 @@ public class CompareConfig
 
     private static final String INCLUDE_NON_PASS = "include_non_pass";
     private static final String WRITE_MATCHES = "write_matches";
+    private static final String WRITE_PON_BREAKENDS = "write_pon";
 
     private static final String RUN_LINE_ROUTINE = "compare_line";
 
@@ -43,6 +54,8 @@ public class CompareConfig
 
     public CompareConfig(final ConfigBuilder configBuilder)
     {
+        SampleIds = configBuilder.hasValue(SAMPLE_ID_FILE) ? loadSampleIdsFile(configBuilder) : null;
+
         OldVcf = configBuilder.getValue(OLD_VCF);
         NewVcf = configBuilder.getValue(NEW_VCF);
 
@@ -54,7 +67,12 @@ public class CompareConfig
 
         IncludeNonPass = configBuilder.hasFlag(INCLUDE_NON_PASS);
         WriteMatches = configBuilder.hasFlag(WRITE_MATCHES);
+        WritePonBreakends = configBuilder.hasFlag(WRITE_PON_BREAKENDS);
+
+        Threads = parseThreads(configBuilder);
     }
+
+    public boolean isMultiSample() { return SampleIds != null; }
 
     private static String getUnfilteredVcfFilename(final String unfilteredVcfConfig, final String mainVcfConfig)
     {
@@ -73,14 +91,6 @@ public class CompareConfig
         return null;
     }
 
-    /*
-    public String formFilename(final String fileType)
-    {
-        String appStage = ESVEE_FILE_ID + FILE_NAME_DELIM + "compare" + FILE_NAME_DELIM + fileType;
-        return formOutputFile(OutputDir, SampleId, appStage, "tsv", OutputId);
-    }
-    */
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(OLD_VCF, true, "Path to the old VCF file");
@@ -91,6 +101,10 @@ public class CompareConfig
 
         configBuilder.addFlag(INCLUDE_NON_PASS, "Show variants not PASSing in both old nor new VCF files");
         configBuilder.addFlag(WRITE_MATCHES, "Write exact matches to output");
+        configBuilder.addFlag(WRITE_PON_BREAKENDS, "Write PON breakend matches");
+
+        addThreadOptions(configBuilder);
+        addSampleIdFile(configBuilder, false);
 
         FileWriterUtils.addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

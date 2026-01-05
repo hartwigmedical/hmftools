@@ -70,7 +70,10 @@ public class PhaseSetTask extends ThreadTask
                 PhaseGroup phaseGroup = (PhaseGroup)mPhaseGroups.removeItem();
 
                 if(mConfig.PhaseProcessingLimit > 0 && phaseGroup.assemblyCount() > mConfig.PhaseProcessingLimit)
+                {
+                    SV_LOGGER.debug("phase group({}) above processing limited, skipped", phaseGroup);
                     continue;
+                }
 
                 mPerfCounter.start();
 

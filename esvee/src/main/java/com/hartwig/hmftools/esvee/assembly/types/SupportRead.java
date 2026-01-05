@@ -10,8 +10,10 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSize;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.inferredInsertSizeAbs;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.esvee.assembly.SeqTechUtils.setSbxMediumQualCount;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 
 import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
 import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
@@ -81,6 +83,7 @@ public class SupportRead
     // those past the junction
     private int mExtBaseMatches;
     private int mExtBaseMismatches;
+    private int mMediumQualCount;
     private Integer mRefBaseMismatches;
     private String mMismatchInfo;
 
@@ -133,6 +136,7 @@ public class SupportRead
         mExtBaseMismatches = mismatches;
         mRefBaseMismatches =  null;
         mMismatchInfo = "";
+        mMediumQualCount = isSbx() && type == SupportType.JUNCTION ? setSbxMediumQualCount(read) : 0;
 
         mJunctionReadStartDistance = junctReadStartDistance;
         mFullAssemblyIndex = -1;
@@ -193,6 +197,7 @@ public class SupportRead
 
     public int extensionBaseMismatches() { return mExtBaseMismatches; }
     public int extensionBaseMatches() { return mExtBaseMatches; }
+    public int mediumQualCount() { return mMediumQualCount; }
 
     public int referenceMismatches() { return mRefBaseMismatches != null ? mRefBaseMismatches : -1; }
     public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
@@ -208,6 +213,14 @@ public class SupportRead
     public void clearCachedRead() { mRead = null; }
 
     public int junctionReadStartDistance() { return mJunctionReadStartDistance; }
+
+    public int extensionLength(final Orientation junctionOrientation)
+    {
+        if(mType != SupportType.JUNCTION)
+            return 0;
+
+        return junctionOrientation.isForward() ? baseLength() - mJunctionReadStartDistance : mJunctionReadStartDistance;
+    }
 
     public void setFullAssemblyInfo(int assemblyIndex, final Orientation orientation)
     {
@@ -249,16 +262,6 @@ public class SupportRead
     public static boolean hasFragmentOtherRead(final List<SupportRead> support, final Read read)
     {
         return support.stream().anyMatch(x -> x.matchesFragment(read, false));
-    }
-
-    public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final SupportRead read)
-    {
-        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
-    }
-
-    public static boolean hasMatchingFragmentRead(final List<SupportRead> support, final Read read)
-    {
-        return support.stream().anyMatch(x -> x.matchesFragment(read, true));
     }
 
     public String toString()

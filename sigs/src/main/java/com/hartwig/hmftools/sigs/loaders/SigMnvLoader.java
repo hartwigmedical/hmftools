@@ -11,7 +11,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -90,7 +90,7 @@ public class SigMnvLoader
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
             String sampleId = mConfig.SampleIds.get(sampleIndex);
-            final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.MNP);
+            final List<SmallVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.MNP);
 
             LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
 
@@ -132,11 +132,11 @@ public class SigMnvLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SomaticVariant variant : variants)
+        for(final SmallVariant variant : variants)
         {
             if(variant.isFiltered() || variant.type() != VariantType.MNP)
                 continue;
@@ -189,7 +189,7 @@ public class SigMnvLoader
         return ref + ">" + alt;
     }
 
-    private String mutationType(final SomaticVariant variant)
+    private String mutationType(final SmallVariant variant)
     {
         int altLength = variant.alt().length();
 

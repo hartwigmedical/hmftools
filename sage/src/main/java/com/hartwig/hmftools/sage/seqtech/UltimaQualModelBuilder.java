@@ -28,6 +28,10 @@ public class UltimaQualModelBuilder
     public static void setReadContextUltimaModels(final RefGenomeInterface refGenome, final ReadContextCounter readContextCounter)
     {
         VariantReadContext readContext = readContextCounter.readContext();
+
+        if(readContext.markedInvalid())
+            return;
+
         UltimaQualModelBuilder qualModelBuilder = new UltimaQualModelBuilder(refGenome);
 
         byte[] straddlingReadBases = getStraddlingReadBases(readContext.variant(), readContext.ReadBases, readContext.VarIndex);

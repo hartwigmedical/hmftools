@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -9,7 +11,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Variant extends GenomePosition
+public interface SmallVariant extends GenomePosition
 {
     @NotNull
     VariantType type();
@@ -68,7 +70,7 @@ public interface Variant extends GenomePosition
 
     default boolean isFiltered()
     {
-        return !filter().equals(SomaticVariantFactory.PASS_FILTER);
+        return !filter().equals(PASS_FILTER);
     }
 
     default boolean isSnp()
@@ -117,21 +119,29 @@ public interface Variant extends GenomePosition
     @Nullable
     List<Integer> localPhaseSets();
 
-    default Integer topLocalPhaseSet()
-    {
-        return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null;
-    }
-
     default String localPhaseSetsStr()
     {
-        return SomaticVariantFactory.localPhaseSetsStr(localPhaseSets());
-    }
-
-    default boolean hasLocalPhaseSets()
-    {
-        return localPhaseSets() != null && !localPhaseSets().isEmpty();
+        return SageVcfTags.localPhaseSetsStr(localPhaseSets());
     }
 
     @Nullable
     String clinvarInfo();
+
+    @Nullable
+    String kataegis();
+
+    double subclonalLikelihood();
+
+    @Nullable
+    AllelicDepth referenceDepth();
+
+    double gnomadFrequency();
+
+    @Nullable
+    SomaticLikelihood somaticLikelihood();
+
+    @Nullable
+    String pathogenicity();
+
+    boolean pathogenic();
 }

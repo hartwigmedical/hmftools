@@ -156,6 +156,7 @@ public class JunctionAssembler
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(firstAssembly);
 
+        int initialAssemblySupport = assemblySupport.size();
         addJunctionReads(firstAssembly, extensionSeqBuilder, junctionReads);
 
         if(firstAssembly.hasLineSequence())
@@ -173,7 +174,12 @@ public class JunctionAssembler
         JunctionAssembly secondAssembly = checkSecondAssembly(extensionSeqBuilder.mismatchReads(), firstAssembly, junctionReads);
 
         if(secondAssembly != null)
+        {
             assemblies.add(secondAssembly);
+
+            if(!keepSecondAssembly(secondAssembly, initialAssemblySupport))
+                assemblies.remove(firstAssembly);
+        }
 
         for(JunctionAssembly assembly : assemblies)
         {
@@ -372,10 +378,7 @@ public class JunctionAssembler
         List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
         // test min support again from actual supporting reads
-        secondSupport = assemblySupport.size();
-        secondSupportPerc = secondSupport / (double)firstAssembly.supportCount();
-
-        if(secondSupport < ASSEMBLY_SPLIT_MIN_READ_SUPPORT || secondSupportPerc < PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC)
+        if(!keepSecondAssembly(firstAssembly, assemblySupport.size()))
             return null;
 
         if(!passDistinctFragmentsFilter(assemblySupport))
@@ -402,6 +405,13 @@ public class JunctionAssembler
         addJunctionReads(newAssembly, extensionSeqBuilder, junctionReads);
 
         return newAssembly;
+    }
+
+    public boolean keepSecondAssembly(final JunctionAssembly firstAssembly, final int secondSupportCount)
+    {
+        double secondSupportPerc = secondSupportCount / (double)firstAssembly.supportCount();
+
+        return secondSupportCount >= ASSEMBLY_SPLIT_MIN_READ_SUPPORT && secondSupportPerc >= PRIMARY_ASSEMBLY_SPLIT_MIN_READ_SUPPORT_PERC;
     }
 
     private void addJunctionReads(

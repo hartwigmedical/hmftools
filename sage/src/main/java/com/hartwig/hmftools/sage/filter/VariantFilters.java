@@ -163,7 +163,7 @@ public class VariantFilters
         for(ReadContextCounter tumorReadContextCounter : variant.tumorReadCounters())
         {
             Set<SoftFilter> tumorFilters = Sets.newHashSet();
-            applyTumorFilters(tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
+            applyTumorFilters(variant, tier, softFilterConfig, tumorReadContextCounter, tumorFilters);
 
             if(!mIsGermline)
             {
@@ -188,14 +188,15 @@ public class VariantFilters
 
     // tumor-only tests
     public void applyTumorFilters(
-            final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor, final Set<SoftFilter> filters)
+            final SageVariant variant, final VariantTier tier, final SoftFilterConfig config, final ReadContextCounter primaryTumor,
+            final Set<SoftFilter> filters)
     {
         if(!skipMinTumorQualTest(tier, primaryTumor))
         {
             if(belowMinTumorQual(config, tier, primaryTumor, mIsGermline))
                 filters.add(SoftFilter.MIN_TUMOR_QUAL);
 
-            if(belowMinMapQualFactor(config, tier, primaryTumor))
+            if(belowMinMapQualFactor(variant, config, tier, primaryTumor))
                 filters.add(SoftFilter.MIN_MAP_QUAL_FACTOR);
 
             if(belowMinTumorVaf(config, primaryTumor))
@@ -340,7 +341,7 @@ public class VariantFilters
     }
 
     private static boolean belowMinMapQualFactor(
-            final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
+            final SageVariant variant, final SoftFilterConfig config, final VariantTier tier, final ReadContextCounter primaryTumor)
     {
         int depth = primaryTumor.depth();
         int altSupport = primaryTumor.altSupport();
@@ -348,7 +349,7 @@ public class VariantFilters
         if(depth == 0 || altSupport == 0)
             return false;
 
-        double mapQualFactor = calcMapQualFactor(tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
+        double mapQualFactor = calcMapQualFactor(variant, tier, primaryTumor, depth, altSupport, primaryTumor.strongAltSupport());
 
         primaryTumor.setMapQualFactor(mapQualFactor);
 
@@ -361,7 +362,8 @@ public class VariantFilters
     }
 
     private static double calcMapQualFactor(
-            final VariantTier tier, final ReadContextCounter primaryTumor, int depth, int altSupport, int strongSupport)
+            final SageVariant variant, final VariantTier tier, final ReadContextCounter primaryTumor,
+            int depth, int altSupport, int strongSupport)
     {
         double avgAltFinalMapQuality = primaryTumor.qualCounters().altFinalMapQualityTotal() / (double)strongSupport;
 
@@ -416,11 +418,9 @@ public class VariantFilters
         if(!highlyPolymorphicSite && altAvgEdgeDistanceRatio < 2 * readEdgeDistanceThresholdPerc && !primaryTumor.isLongIndel())
         {
             edgeDistancePenalty = 10 * altSupport * log10(avgEdgeDistance / max(avgAltEdgeDistance, 0.001));
-        }
 
-        if(avgAltEdgeDistance >= (isIllumina() ? AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD : AVG_READ_EDGE_DISTANCE_THRESHOLD))
-        {
-            edgeDistancePenalty = 0;
+            if(!isSbx() && !variant.nearMultiBaseIndel())
+                edgeDistancePenalty = min(edgeDistancePenalty, 10);
         }
 
         double repeatPenalty = 0;

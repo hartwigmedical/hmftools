@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.VariantDelegate;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import org.immutables.value.Value;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleVariantContext extends VariantDelegate
+public interface PurpleVariantContext extends SmallVariant
 {
     @NotNull
     List<VariantTranscriptImpact> otherImpacts();
@@ -21,11 +21,10 @@ public interface PurpleVariantContext extends VariantDelegate
 
     double subclonalLikelihood();
 
-    @Override
     @NotNull
-    default List<String> reportableTranscripts()
+    default List<String> reportableTranscriptsOrEmpty()
     {
-        List<String> transcripts = variant().reportableTranscripts();
+        List<String> transcripts = reportableTranscripts();
         return transcripts != null ? transcripts : Collections.emptyList();
     }
 }

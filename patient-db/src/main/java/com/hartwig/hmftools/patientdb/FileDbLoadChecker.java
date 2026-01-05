@@ -49,8 +49,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -235,11 +235,11 @@ public class FileDbLoadChecker
                 return;
             }
 
-            SomaticVariantFactory somaticVariantFactory = new SomaticVariantFactory();
+            SmallVariantFactory somaticVariantFactory = new SmallVariantFactory();
 
             try
             {
-                List<SomaticVariant> somaticVariants = somaticVariantFactory.fromVCFFile(sampleId, somaticVcf);
+                List<SmallVariant> somaticVariants = somaticVariantFactory.fromVCFFile(sampleId, somaticVcf);
                 checkFileVsDatabase(sampleId, "SomaticVariant", somaticVariants.size(), "somaticVariant");
 
                 final String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);

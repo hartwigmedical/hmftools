@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -24,6 +24,7 @@ public enum FilterType
     DEL_SHORT_LOW_VAF("delShortLowVaf", "Short low-VAF DEL artefacts with homology", false),
     UNPAIRED_THREE_PRIME_RANGE("unpairedPositionRange", "Unpaired position range", false),
     LINE_SOURCE("lineSource", "Remote LINE source", false),
+    SBX_STRAND_BIAS("sbxStrandBias", "SBX strand-bias", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;
@@ -44,7 +45,7 @@ public enum FilterType
     public static String filtersAsStr(final Set<FilterType> filters)
     {
         if(filters.isEmpty())
-            return PASS;
+            return PASS_FILTER;
 
         return filters.stream().map(x -> x.vcfTag()).collect(Collectors.joining(";"));
     }

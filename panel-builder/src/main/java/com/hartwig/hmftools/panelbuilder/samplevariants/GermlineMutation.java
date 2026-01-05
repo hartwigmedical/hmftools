@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildIndelProbe;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.panelbuilder.SequenceDefinition;
 import com.hartwig.hmftools.panelbuilder.TargetMetadata;
 
@@ -19,9 +19,9 @@ import org.apache.logging.log4j.Logger;
 // Germline SNV or INDEL.
 public class GermlineMutation implements Variant
 {
-    private final GermlineVariant mVariant;
+    private final SmallVariant mVariant;
 
-    private GermlineMutation(final GermlineVariant variant)
+    private GermlineMutation(final SmallVariant variant)
     {
         mVariant = variant;
     }
@@ -70,10 +70,10 @@ public class GermlineMutation implements Variant
     {
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
-        List<GermlineVariant> germlineVariants;
+        List<SmallVariant> germlineVariants;
         try
         {
-            germlineVariants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
+            germlineVariants = SmallVariantFactory.loadVariants(sampleId, vcfFile);
         }
         catch(Exception e)
         {

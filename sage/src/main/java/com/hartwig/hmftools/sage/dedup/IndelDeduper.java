@@ -201,8 +201,18 @@ public class IndelDeduper
 
                 if(!indel.Variant.isPassing())
                 {
-                    indel.Variant.filters().forEach(x->variant.Variant.filters().add(x));
+                    indel.Variant.filters().forEach(x -> variant.Variant.filters().add(x));
                 }
+            }
+            else if(isDedupCandidate(indel, variant, true) && !indel.Variant.isPassing())
+            {
+                // the indel context in the tumor contains a necessary other variant
+                ReadContextCounter indelRefCounter = indel.Variant.referenceReadCounters().get(0);
+                int refFullSupport = indelRefCounter.counts()[0];
+                int refMismatchSupport = indelRefCounter.simpleAltMatches() + indelRefCounter.counts()[2];
+
+                if(refFullSupport > refMismatchSupport)  // the necessary other variant is also in the germline
+                    indel.Variant.filters().forEach(x -> variant.Variant.filters().add(x));
             }
             else if(indel.Variant.isPassing() && recoverFilteredVariant(variant.Variant, nonDedupedVariants))
             {

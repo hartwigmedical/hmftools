@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.clustering;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.CONSEC_BREAKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringReason.LOH_CHAIN;
@@ -312,10 +312,10 @@ public class ComplexMergeRuleTest
 
         // foldbacks clustered due to the foldback rule
         SvVarData var0 = createTestSv(tester.nextVarId(), "1", "0", 500, -1, 1, 0, SGL,
-                2, 0, 1, 0, 1, "", PASS, SGL_CENTRO_SATELLITE, "SAR");
+                2, 0, 1, 0, 1, "", PASS_FILTER, SGL_CENTRO_SATELLITE, "SAR");
 
         SvVarData var1 = createTestSv(tester.nextVarId(), "1", "0", 50000, -1, -1, 0, SGL,
-                2, 0, 1, 0, 1, "", PASS, "", "SAR");
+                2, 0, 1, 0, 1, "", PASS_FILTER, "", "SAR");
 
         tester.AllVariants.add(var0);
         tester.AllVariants.add(var1);

@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.linx.LinxGermlineDisruption;
 import com.hartwig.hmftools.common.metrics.BamFlagStats;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.common.teal.TelomereLength;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
 import com.hartwig.hmftools.patientdb.amber.AmberSample;
@@ -40,7 +41,6 @@ import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
@@ -342,7 +342,7 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public List<SomaticVariant> readSomaticVariants(final String sample, VariantType type)
+    public List<SmallVariant> readSomaticVariants(final String sample, VariantType type)
     {
         return somaticVariantDAO.read(sample, type);
     }
@@ -471,7 +471,7 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public BufferedWriter<SomaticVariant> somaticVariantWriter(final String sampleId)
+    public BufferedWriter<SmallVariant> somaticVariantWriter(final String sampleId)
     {
         return somaticVariantDAO.writer(sampleId);
     }

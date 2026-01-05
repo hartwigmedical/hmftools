@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.calculations;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._2;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._3;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -127,7 +128,7 @@ public class WindowStatusesTest extends CalculationsTestBase
 
     private DiploidStatus ds(Chromosome chromosome, int position, boolean status)
     {
-        return new DiploidStatus(chromosome.contig(), position, position + 999, status);
+        return new DiploidStatus(V38.versionedChromosome(chromosome), position, position + 999, status);
     }
 
     private void checkExcluded(Chromosome chromosome, int position)

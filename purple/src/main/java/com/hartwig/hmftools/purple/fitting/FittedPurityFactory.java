@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.FittedPurity;
@@ -31,7 +32,7 @@ public class FittedPurityFactory
 {
     private final PurpleConfig mConfig;
     private final double mSomaticPenaltyWeight;
-    private final Map<String, Double> mObservedRatioMap;
+    private final Map<HumanChromosome, Double> mObservedRatioMap;
 
     private final int mTotalBAFCount;
     private final double mAverageFittingRatio;
@@ -58,7 +59,7 @@ public class FittedPurityFactory
 
         mRegionFitCalculator = regionFitCalculator;
         mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
-                .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
+                .collect(Collectors.toMap(CobaltChromosome::humanChromosome, CobaltChromosome::actualRatio));
 
         mPloidyRange = ploidyRange(mConfig.Fitting.MinPloidy, mConfig.Fitting.MaxPloidy);
 

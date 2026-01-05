@@ -27,7 +27,7 @@ import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAK
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_STR;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
@@ -388,11 +388,11 @@ public class StructuralVariantFactory
         if(filters.size() > 1)
         {
             // Doesn't pass if a filter is applied to either of the two records
-            filters.remove(PASS);
+            filters.remove(PASS_FILTER);
         }
         if(filters.size() == 0)
         {
-            filters.add(PASS);
+            filters.add(PASS_FILTER);
         }
         return filters.stream().sorted().collect(Collectors.joining(";"));
     }

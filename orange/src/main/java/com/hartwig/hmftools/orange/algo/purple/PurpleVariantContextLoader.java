@@ -1,28 +1,22 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static java.util.Collections.emptyList;
-
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.VariantContextDecorator.biallelic;
+import static com.hartwig.hmftools.common.variant.VariantContextDecorator.biallelicProbability;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.VariantBuilderUtils;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.util.VariantTranscriptImpactCleaner;
 
@@ -118,22 +112,24 @@ public class PurpleVariantContextLoader
     private PurpleVariantContext createPurpleVariantContext(
             final VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference, @Nullable String rna)
     {
-        VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
+        VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variantContext);
 
-        final VariantImpact variantImpact = contextDecorator.variantImpact();
-
-        final List<VariantTranscriptImpact> allImpacts = VariantTranscriptImpact.fromVariantContext(variantContext)
+        List<VariantTranscriptImpact> allImpacts = VariantTranscriptImpact.fromVariantContext(variantContext)
                 .stream()
                 .map(VariantTranscriptImpactCleaner::cleanFields)
                 .collect(Collectors.toList());
 
-        final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
+        List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
+
+        SmallVariant variant = SmallVariantFactory.createVariantBuilder(tumorDepth, variantContext, reference, rna).build();
+
+        double biallelicProbability = biallelicProbability(variantContext, biallelic(variantContext));
 
         return ImmutablePurpleVariantContext.builder()
-                .variant(VariantBuilderUtils.createVariantBuilder(tumorDepth, variantContext, reference, rna).build())
+                .from(variant)
                 .otherImpacts(otherImpacts)
-                .biallelicProbability(contextDecorator.biallelicProbability())
-                .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
+                .biallelicProbability(biallelicProbability)
+                .subclonalLikelihood(variant.subclonalLikelihood())
                 .build();
     }
 

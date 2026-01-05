@@ -83,11 +83,9 @@ public class CandidateWriter
 
                 sj.add(candidate.readContext().coreStr());
                 sj.add(candidate.readContext().readCigar());
-                // sj.add(readContextInfo(candidate.readContext()));
 
                 sj.add(String.valueOf(candidate.fullMatchSupport()));
                 sj.add(String.valueOf(candidate.coreMatchSupport()));
-                sj.add(String.valueOf(candidate.lowQualInCoreCount()));
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();

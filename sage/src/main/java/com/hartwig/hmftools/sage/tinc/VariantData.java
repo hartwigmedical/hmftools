@@ -4,14 +4,13 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.tinc.TincConstants.RECOVERY_FILTERS;
 
 import java.util.Arrays;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -121,7 +120,7 @@ public class VariantData
         if(Context == null)
             return true; // loaded from file, ignore existing filter status
 
-        return !Context.isFiltered() || Context.getFilters().size() == 1 && Context.getFilters().contains(PASS);
+        return !Context.isFiltered() || Context.getFilters().size() == 1 && Context.getFilters().contains(PASS_FILTER);
     }
 
     public void setPonFiltered() { mPonFiltered = true;}

@@ -216,7 +216,7 @@ public class MsiJitterCalcs
 
     public RepeatInfo findRepeat(final VariantReadContext readContext)
     {
-        if(!readContext.variant().isIndel())
+        if(readContext.markedInvalid() || !readContext.variant().isIndel())
             return null;
 
         int repeatIndexStart = readContext.variantRefIndex() + 1;

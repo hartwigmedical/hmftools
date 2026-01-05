@@ -44,6 +44,8 @@ public class VariantReadContext
     private RepeatInfo mMaxRefRepeat; // maximum repeat in the reference, only written to the VCF for downstream usage (ie repeat sites)
     private byte[] mExtendedRefBases;
 
+    private boolean mMarkedInvalid;
+
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
             final byte[] readBases, final List<CigarElement> readCigar, final int coreIndexStart, final int varIndex, final int coreIndexEnd,
@@ -72,6 +74,7 @@ public class VariantReadContext
         mExtendedRefBases = null;
 
         mIlluminaArtefactContext = null;
+        mMarkedInvalid = false;
     }
 
     // read context methods
@@ -93,6 +96,9 @@ public class VariantReadContext
 
     public boolean isValid()
     {
+        if(mMarkedInvalid)
+            return false;
+
         if(CoreIndexStart <= 0 || CoreIndexEnd >= ReadBases.length - 1)
             return false; // implies no flank
 
@@ -108,6 +114,9 @@ public class VariantReadContext
 
         return true;
     }
+
+    public void markInvalid() { mMarkedInvalid = true; }
+    public boolean markedInvalid() { return mMarkedInvalid; }
 
     public String coreStr() { return new String(ReadBases, CoreIndexStart, coreLength()); }
     public String leftFlankStr() { return new String(ReadBases, 0, leftFlankLength()); }

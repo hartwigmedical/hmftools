@@ -337,6 +337,8 @@ public class AlignData
         mSoftClipRight = mSoftClipLeft = 0;
     }
 
+    public void setModifiedMapQual(int mapQual) { mModifiedMapQual = mapQual; }
+
     public List<AlternativeAlignment> unselectedAltAlignments()
     {
         return mUnselectedAltAlignments != null ? mUnselectedAltAlignments : Collections.emptyList();

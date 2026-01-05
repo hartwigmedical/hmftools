@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -42,6 +43,7 @@ import static com.hartwig.hmftools.esvee.caller.FilterConstants.PON_INS_SEQ_REV_
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_BASE_FACTOR;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_PERMITTED_RANGE;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.PRIME_MAX_SGL_FACTOR;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.SBX_STRAND_BIAS_NON_BND_MIN_FRAGS;
 import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_ISOLATED;
 import static com.hartwig.hmftools.esvee.common.FilterType.LINE_SOURCE;
@@ -50,6 +52,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
+import static com.hartwig.hmftools.esvee.common.FilterType.SBX_STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
 import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_FRAG_LOW_VAF;
 import static com.hartwig.hmftools.esvee.common.FilterType.DEL_SHORT_LOW_VAF;
@@ -58,11 +61,13 @@ import static com.hartwig.hmftools.esvee.common.FilterType.INV_SHORT_LOW_VAF_HOM
 import static com.hartwig.hmftools.esvee.common.FilterType.STRAND_BIAS;
 import static com.hartwig.hmftools.esvee.common.FilterType.UNPAIRED_THREE_PRIME_RANGE;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
@@ -135,6 +140,9 @@ public class VariantFilters
 
         if(lowThreePrimePositionRange(var))
             var.addFilter(UNPAIRED_THREE_PRIME_RANGE);
+
+        if(failsSbxStrandBias(var))
+            var.addFilter(SBX_STRAND_BIAS);
 
         if(isRemoteLineSource(var))
             var.addFilter(LINE_SOURCE);
@@ -470,6 +478,43 @@ public class VariantFilters
             return true;
 
         return false;
+    }
+
+    private boolean failsSbxStrandBias(final Variant var)
+    {
+        if(!isSbx())
+            return false;
+
+        if(var.type() != BND && var.type() != INV && var.type() != StructuralVariantType.SGL)
+            return false;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(var.breakends()[se] == null)
+                continue;
+
+            Breakend breakend = var.breakends()[se];
+
+            int splitFragments = 0;
+            double maxStrandBias = 0;
+
+            for(Genotype genotype : breakend.Context.getGenotypes())
+            {
+                splitFragments += breakend.fragmentCount(genotype, SPLIT_FRAGS);
+
+                double strandBias = getGenotypeAttributeAsDouble(genotype, SvVcfTags.STRAND_BIAS, 0.5);
+                double adjStrandBias = strandBias > 0.5 ? 1 - strandBias : strandBias;
+                maxStrandBias = max(adjStrandBias, maxStrandBias);
+            }
+
+            if(maxStrandBias > 0)
+                return false;
+
+            if(var.type() != BND && splitFragments < SBX_STRAND_BIAS_NON_BND_MIN_FRAGS)
+                return false;
+        }
+
+        return true;
     }
 
     public void applyAdjacentFilters(final Map<String,List<Breakend>> chromosomeBreakends)

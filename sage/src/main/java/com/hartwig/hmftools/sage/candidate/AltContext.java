@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD;
+import static com.hartwig.hmftools.sage.seqtech.IlluminaUtils.lowQualInVariantCore;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.lowQualInReadContextCore;
-import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.lowQualInReadCore;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,9 +40,9 @@ public class AltContext extends SimpleVariant
     private boolean mAboveMinAltSupport;
     private final Set<String> mUniqueReadIds;
 
-    private Boolean mCheckHighQualCoreSupport;
-    private int mHighQualCoreSupport;
-    private boolean mHasHighQualCoreSupport;
+    private Boolean mCheckCoreQualSupport;
+    private boolean mHasSufficientQualCoreSupport;
+    private int mHighQualCoreSupport; // only tracked for Ultima
 
     private ReadContextCandidate mCandidate;
     private ReadContextCandidate mSecondCandidate; // relevant if has a different read context and sufficient support
@@ -54,12 +55,34 @@ public class AltContext extends SimpleVariant
         mReadContextCandidates = Lists.newArrayList();
         mUniqueReadIds = Sets.newHashSet();
         mAboveMinAltSupport = false;
-        mHighQualCoreSupport = 0;
         mCandidate = null;
         mSecondCandidate = null;
 
-        mCheckHighQualCoreSupport = isUltima() && ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD > 0 ? null : false;
-        mHasHighQualCoreSupport = mCheckHighQualCoreSupport != null;
+        if(isIllumina())
+        {
+            mCheckCoreQualSupport = true;
+            mHasSufficientQualCoreSupport = false;
+        }
+        else if(isUltima())
+        {
+            if(ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD > 0)
+            {
+                mCheckCoreQualSupport = null; // will be set on the first read
+                mHasSufficientQualCoreSupport = false;
+            }
+            else
+            {
+                mCheckCoreQualSupport = false;
+                mHasSufficientQualCoreSupport = true;
+            }
+        }
+        else
+        {
+            mCheckCoreQualSupport = false;
+            mHasSufficientQualCoreSupport = true;
+        }
+
+        mHighQualCoreSupport = 0;
     }
 
     public VariantReadContext readContext() { return mCandidate.readContext(); }
@@ -69,7 +92,7 @@ public class AltContext extends SimpleVariant
     public String ref() { return Ref; }
     public String alt() { return Alt; }
 
-    public boolean hasMinAltSupport() { return mAboveMinAltSupport && mHasHighQualCoreSupport; }
+    public boolean hasMinAltSupport() { return mAboveMinAltSupport && mHasSufficientQualCoreSupport; }
 
     public boolean hasValidCandidate() { return mCandidate != null; }
     public ReadContextCandidate candidate() { return mCandidate; }
@@ -84,19 +107,22 @@ public class AltContext extends SimpleVariant
         int fullMatchCount = 0;
         ReadContextCandidate fullMatchCandidate = null;
 
-        if(mCheckHighQualCoreSupport == null)
-        {
-            // check if this variant ought to check low-qual bases for this and subsequent reads
-            mCheckHighQualCoreSupport = !UltimaUtils.hasLongHomopolymerInContext(this, read, variantReadIndex);
-            mHasHighQualCoreSupport = !mCheckHighQualCoreSupport;
-        }
-
         List<Integer> lowQualIndices = null;
 
-        if(mCheckHighQualCoreSupport && (!mHasHighQualCoreSupport || SageCallConfig.LogCandidates))
+        if(isUltima())
         {
-            // only extract Ultima low-qual bases if they are required
-            lowQualIndices = UltimaBamUtils.extractLowQualIndices(read);
+            if(mCheckCoreQualSupport == null)
+            {
+                // check if this variant ought to check low-qual bases for this and subsequent reads
+                mCheckCoreQualSupport = !UltimaUtils.hasLongHomopolymerInContext(this, read, variantReadIndex);
+                mHasSufficientQualCoreSupport = !mCheckCoreQualSupport;
+            }
+
+            if(mCheckCoreQualSupport && !mHasSufficientQualCoreSupport)
+            {
+                // only extract Ultima low-qual bases if they are still required to determine if the variant will meet HQ thresholds
+                lowQualIndices = UltimaBamUtils.extractLowQualIndices(read);
+            }
         }
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
@@ -119,13 +145,18 @@ public class AltContext extends SimpleVariant
                     break;
             }
 
-            if(lowQualIndices != null && (matchInfo.MatchType == FULL || matchInfo.MatchType == CORE))
+            if(mCheckCoreQualSupport && (matchInfo.MatchType == FULL || matchInfo.MatchType == CORE))
             {
-                // skip checking if not required for candidate logging
-                if(UltimaUtils.lowQualInReadContextCore(variantReadIndex, lowQualIndices, candidate.readContext()))
-                    ++candidate.LowQualInCoreCount;
-                else
-                    ++mHighQualCoreSupport;
+                if(lowQualIndices != null)
+                {
+                    // Ultima-only: skip checking if not required for candidate logging
+                    if(!UltimaUtils.lowQualInReadContextCore(variantReadIndex, lowQualIndices, candidate.readContext()))
+                        ++mHighQualCoreSupport;
+                }
+                else if(isIllumina())
+                {
+                    checkIlluminaSufficientQualStatus(candidate.readContext(), variantReadIndex, read);
+                }
             }
         }
 
@@ -133,8 +164,11 @@ public class AltContext extends SimpleVariant
         {
             VariantReadContext readContext = null;
 
-            // skip creating candidates if this variant checks low-quals in core and finds them present
-            if(!mCheckHighQualCoreSupport || !UltimaUtils.lowQualInReadCore(this, variantReadIndex, lowQualIndices))
+            // Ultima-only: skip creating candidates if this variant checks low-quals in core and finds them present
+            boolean skipContextCreation = isUltima() && mCheckCoreQualSupport
+                    && UltimaUtils.lowQualInReadCore(this, variantReadIndex, lowQualIndices);
+
+            if(!skipContextCreation)
             {
                 readContext = readContextBuilder.createContext(this, read, variantReadIndex, refSequence);
 
@@ -144,13 +178,20 @@ public class AltContext extends SimpleVariant
 
             boolean hasValidCore = readContext != null;
 
-            if(hasValidCore && lowQualIndices != null)
+            if(hasValidCore)
             {
                 // now the core has been established, check again
-                if(lowQualInReadContextCore(variantReadIndex, lowQualIndices, readContext))
-                    hasValidCore = false;
-                else
-                    ++mHighQualCoreSupport;
+                if(lowQualIndices != null)
+                {
+                    if(lowQualInReadContextCore(variantReadIndex, lowQualIndices, readContext))
+                        hasValidCore = false;
+                    else
+                        ++mHighQualCoreSupport;
+                }
+                else if(isIllumina())
+                {
+                    checkIlluminaSufficientQualStatus(readContext, variantReadIndex, read);
+                }
             }
 
             if(hasValidCore)
@@ -174,13 +215,27 @@ public class AltContext extends SimpleVariant
             }
         }
 
-        if(!mHasHighQualCoreSupport)
-            mHasHighQualCoreSupport = mHighQualCoreSupport >= ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD;
+        if(isUltima() && !mHasSufficientQualCoreSupport)
+        {
+            mHasSufficientQualCoreSupport = mHighQualCoreSupport >= ULTIMA_CANDIDATE_MIN_HIGH_BQ_THRESHOLD;
+        }
+    }
+
+    private void checkIlluminaSufficientQualStatus(final VariantReadContext readContext, final int variantReadIndex, final SAMRecord read)
+    {
+        if(mHasSufficientQualCoreSupport)
+            return;
+
+        if(!lowQualInVariantCore(variantReadIndex, readContext, read))
+        {
+            mCheckCoreQualSupport = false;
+            mHasSufficientQualCoreSupport = true;
+        }
     }
 
     public void selectCandidates()
     {
-        if(isUltima() && !mHasHighQualCoreSupport)
+        if(!mHasSufficientQualCoreSupport)
         {
             mReadContextCandidates.clear();
             return;

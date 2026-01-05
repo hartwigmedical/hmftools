@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.hasPairedReads;
+import static com.hartwig.hmftools.esvee.common.SvConstants.isIllumina;
 import static com.hartwig.hmftools.esvee.common.SvConstants.isSbx;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.INVALID_JUNC_INDEX;
 import static com.hartwig.hmftools.esvee.prep.JunctionUtils.SIMPLE_SEARCH_COUNT;
@@ -28,6 +29,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RA
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.types.DiscordantStats.isDiscordantUnpairedReadGroup;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -446,6 +448,9 @@ public class JunctionTracker
         JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, FORWARD);
         JunctionData junctionEnd = getOrCreateJunction(read, indelCoords.PosEnd, REVERSE);
 
+        junctionStart.setLinkedIndel(junctionEnd);
+        junctionEnd.setLinkedIndel(junctionStart);
+
         junctionStart.markInternalIndel();
         junctionStart.addJunctionReadGroup(readGroup);
         junctionStart.addReadType(read, ReadType.JUNCTION);
@@ -735,9 +740,15 @@ public class JunctionTracker
         {
             JunctionData junctionData = mJunctions.get(index);
 
-            if(junctionHasSupport(junctionData))
+            junctionData.setDepth(mDepthTracker.calcDepth(junctionData.Position));
+
+            boolean junctionHasSupport = junctionHasSupport(junctionData);
+
+            if(!junctionHasSupport && junctionData.hasLinkedIndel())
+                junctionHasSupport = junctionHasSupport(junctionData.linkedIndel());
+
+            if(junctionHasSupport)
             {
-                junctionData.setDepth(mDepthTracker.calcDepth(junctionData.Position));
                 ++index;
             }
             else
@@ -818,20 +829,20 @@ public class JunctionTracker
     private boolean junctionAboveMinAF(final JunctionData junctionData)
     {
         // sites with an AF below 0.5% (1% for discordant) are filtered
-        double regionDepth = mDepthTracker.calcDepth(junctionData.Position);
-        int regionReadCount = mDepthTracker.windowReadCount(junctionData.Position);
+        int regionDepth = junctionData.depth();
 
-        if(regionReadCount < DEPTH_MIN_READ_COUNT || regionDepth < DEPTH_MIN_CHECK)
+        if(regionDepth < DEPTH_MIN_CHECK)
             return true;
 
-        double requiredSupportRatio = junctionData.discordantGroup() ? DEPTH_MIN_SUPPORT_RATIO_DISCORDANT : DEPTH_MIN_SUPPORT_RATIO;
+        double requiredSupportRatio = junctionData.discordantGroup() ? DEPTH_MIN_SUPPORT_RATIO_DISCORDANT :
+                (isIllumina() ? DEPTH_MIN_SUPPORT_RATIO : NON_ILLUMINA_X_DEPTH_MIN_SUPPORT_RATIO);
 
         int junctionSupport = junctionData.junctionFragmentCount() + junctionData.exactSupportFragmentCount();
 
         if(junctionData.discordantGroup())
             junctionSupport += junctionData.supportingFragmentCount();
 
-        double requiredSupport = max(regionDepth, regionReadCount) * requiredSupportRatio;
+        double requiredSupport = regionDepth * requiredSupportRatio;
 
         return junctionSupport >= requiredSupport;
     }

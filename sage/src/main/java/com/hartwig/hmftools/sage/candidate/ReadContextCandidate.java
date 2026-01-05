@@ -15,7 +15,6 @@ public class ReadContextCandidate implements Comparable<ReadContextCandidate>
     public int FullMatch;
     public int CoreMatch;
     public int MinNumberOfEvents;
-    public int LowQualInCoreCount;
 
     ReadContextCandidate(int numberOfEvents, final VariantReadContext readContext)
     {
@@ -24,7 +23,6 @@ public class ReadContextCandidate implements Comparable<ReadContextCandidate>
         MinNumberOfEvents = numberOfEvents;
         FullMatch = 0;
         CoreMatch = 0;
-        LowQualInCoreCount = 0;
     }
 
     public void incrementFull(int count, int numberOfEvents)

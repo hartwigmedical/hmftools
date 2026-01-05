@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -21,7 +20,6 @@ public class ReadEdgeDistance
     private double mMaxDistanceFromEdge; // includes any soft-clipped bases
     private double mMaxDistanceFromEdgeAlt;
 
-    // captures edge distance percentage in a sided-way, where 0.1 is 10% from left edge, nad 0.9 is 10% from the right
     private double mTotalDistanceFromEdge;
     private double mTotalDistanceFromEdgeAlt;
     private int mUpdates;
@@ -47,16 +45,8 @@ public class ReadEdgeDistance
     public double maxAltDistanceFromEdge() { return mMaxDistanceFromEdgeAlt; }
     public double maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
 
-    public double avgDistanceFromEdge() { return calcAdjustedAvgEdge(false); }
-    public double avgAltDistanceFromEdge() { return calcAdjustedAvgEdge(true); }
-
-    private double calcAdjustedAvgEdge(boolean useAlt)
-    {
-        double totalDistance = useAlt ? mTotalDistanceFromEdgeAlt : mTotalDistanceFromEdge;
-        int updates = useAlt ? mUpdatesAlt : mUpdates;
-        double average = updates > 0 ? totalDistance / updates : 0;
-        return average <= 0.5 ? average : 1 - average;
-    }
+    public double avgDistanceFromEdge() { return mUpdates > 0 ? mTotalDistanceFromEdge / mUpdates : 0; }
+    public double avgAltDistanceFromEdge() { return mUpdatesAlt > 0 ? mTotalDistanceFromEdgeAlt / mUpdatesAlt : 0; }
 
     public void update(final SAMRecord record, final FragmentData fragmentData, boolean altSupport)
     {
@@ -67,19 +57,19 @@ public class ReadEdgeDistance
         // and for INDELs use the position of the middle base of INDEL
         // take the lowest of the 2 distances for each read, eg 50 and 100 bases, then take 50
 
-        Integer minDistance = null;
+        int minDistance = NO_READ_EDGE_DISTANCE;
 
         if(fragmentData != null)
         {
-            Integer minDistanceFirst = calcDistanceFromReadEdge(mVariantPosition, fragmentData.First);
-            Integer minDistanceSecond = calcDistanceFromReadEdge(mVariantPosition, fragmentData.Second);
+            int minDistanceFirst = calcDistanceFromReadEdge(mVariantPosition, fragmentData.First);
+            int minDistanceSecond = calcDistanceFromReadEdge(mVariantPosition, fragmentData.Second);
 
             // use the fragment bounds if the variant falls within the overlapping section, otherwise just the read it relates to
-            if(minDistanceFirst != null && minDistanceSecond != null)
+            if(minDistanceFirst > NO_READ_EDGE_DISTANCE && minDistanceSecond > NO_READ_EDGE_DISTANCE)
                 minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
-            else if(minDistanceFirst != null)
+            else if(minDistanceFirst > NO_READ_EDGE_DISTANCE)
                 minDistance = minDistanceFirst;
-            else if(minDistanceSecond != null)
+            else if(minDistanceSecond > NO_READ_EDGE_DISTANCE)
                 minDistance = minDistanceSecond;
         }
         else
@@ -87,35 +77,30 @@ public class ReadEdgeDistance
             minDistance = calcDistanceFromReadEdge(mVariantPosition, record);
         }
 
-        if(minDistance == null)
-            return;
-
-        double readLengthPerc = minDistance / (double)record.getReadLength();
-        double readLengthPercAbs = abs(readLengthPerc);
-        double readLengthPercSided = readLengthPerc > 0 ? readLengthPerc : 1 - readLengthPercAbs;
-
+        double readLengthPercentage = minDistance / (double)record.getReadLength();
         ++mUpdates;
-        mMaxDistanceFromEdge = max(readLengthPercAbs, mMaxDistanceFromEdge);
+        mMaxDistanceFromEdge = max(readLengthPercentage, mMaxDistanceFromEdge);
 
         if(altSupport)
         {
-            mMaxDistanceFromEdgeAlt = max(readLengthPercAbs, mMaxDistanceFromEdgeAlt);
-            mTotalDistanceFromEdgeAlt += readLengthPercSided;
+            mMaxDistanceFromEdgeAlt = max(readLengthPercentage, mMaxDistanceFromEdgeAlt);
+            mTotalDistanceFromEdgeAlt += readLengthPercentage;
             ++mUpdatesAlt;
         }
 
-        mTotalDistanceFromEdge += readLengthPercSided;
+        mTotalDistanceFromEdge += readLengthPercentage;
     }
 
-    private static Integer calcDistanceFromReadEdge(final int variantPosition, final SAMRecord record)
+    private static final int NO_READ_EDGE_DISTANCE = -1;
+
+    private static int calcDistanceFromReadEdge(final int variantPosition, final SAMRecord record)
     {
-        // returns null if invalid, otherwise +ve distance if closer to the left, or -ve distance if closer to right read edge
         if(!positionWithin(variantPosition, record.getAlignmentStart(), record.getAlignmentEnd()))
-            return null;
+            return NO_READ_EDGE_DISTANCE;
 
         int distFromStart = variantPosition - record.getAlignmentStart();
         int distFromEnd = record.getAlignmentEnd() - variantPosition;
 
-        return distFromStart < distFromEnd ? distFromStart : -distFromEnd;
+        return min(distFromStart, distFromEnd);
     }
 }

@@ -140,10 +140,10 @@ public final class SamRecordUtils
         if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
             return NO_POSITION;
 
-        return getMateAlignmentEnd(read.getMateAlignmentStart(), mateCigarStr);
+        return getAlignmentEndFromCigar(read.getMateAlignmentStart(), mateCigarStr);
     }
 
-    public static int getMateAlignmentEnd(final int readStart, @NotNull final String cigarStr)
+    public static int getAlignmentEndFromCigar(final int readStart, @NotNull final String cigarStr)
     {
         return getReadBoundaryPosition(readStart, cigarStr, false, false);
     }

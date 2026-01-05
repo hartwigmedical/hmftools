@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.CONSENSUS_TAG_TYPE
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MIN_COORDS_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.vcf.CandidateSerialisation.PRE_v3_5_FLANK_EXTENSION_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_SEQ_TECH_BASE_QUAL;
 
@@ -89,6 +88,8 @@ public class RegionAppendTask implements Callable<Void>
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }
 
+    private static int READ_CONTEXT_EXTENSION_LENGTH = 50;
+
     @Override
     public Void call()
     {
@@ -96,8 +97,8 @@ public class RegionAppendTask implements Callable<Void>
 
         ChrBaseRegion extendedRegion = new ChrBaseRegion(
                 mRegion.Chromosome,
-                max(1, mRegion.start() - PRE_v3_5_FLANK_EXTENSION_LENGTH),
-                mRegion.end() + PRE_v3_5_FLANK_EXTENSION_LENGTH);
+                max(1, mRegion.start() - READ_CONTEXT_EXTENSION_LENGTH),
+                mRegion.end() + READ_CONTEXT_EXTENSION_LENGTH);
 
         RefSequence refSequence = new RefSequence(extendedRegion, mRefGenome);
 

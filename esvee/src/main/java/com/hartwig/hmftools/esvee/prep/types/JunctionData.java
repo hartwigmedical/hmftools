@@ -30,6 +30,8 @@ public class JunctionData
     private boolean mHotspot;
     private int mDepth;
 
+    private JunctionData mLinkedIndel;
+
     public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
         Position = position;
@@ -51,6 +53,7 @@ public class JunctionData
         mInternalIndel = false;
         mDiscordantGroup = false;
         mDepth = 0;
+        mLinkedIndel = null;
     }
 
     public boolean isForward() { return Orient.isForward(); }
@@ -179,6 +182,10 @@ public class JunctionData
 
         mRemoteJunctions.add(remoteJunction);
     }
+
+    public JunctionData linkedIndel() { return mLinkedIndel; }
+    public void setLinkedIndel(final JunctionData junctionData) { mLinkedIndel = junctionData; }
+    public boolean hasLinkedIndel() { return mLinkedIndel != null; }
 
     public String toString()
     {

@@ -289,7 +289,7 @@ public final class UltimaUtils
         if(lowQualIndices == null || lowQualIndices.isEmpty())
             return false;
 
-        int coreIndexStart = variantReadIndex -  MIN_CORE_DISTANCE + (variant.isIndel() ? 1 : 0);
+        int coreIndexStart = variantReadIndex - MIN_CORE_DISTANCE + (variant.isIndel() ? 1 : 0);
         int coreIndexEnd = variantReadIndex + variant.alt().length() - 1 + MIN_CORE_DISTANCE;
 
         for(int index = coreIndexStart; index <= coreIndexEnd; ++index)

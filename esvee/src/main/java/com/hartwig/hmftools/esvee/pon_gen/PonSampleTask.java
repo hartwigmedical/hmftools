@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.pon_gen;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;

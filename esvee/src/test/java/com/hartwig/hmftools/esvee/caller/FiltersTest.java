@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyTestUtils.setIlluminaSequencing;
 import static com.hartwig.hmftools.esvee.caller.CallerApplication.isGermline;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_REF_ID;
 import static com.hartwig.hmftools.esvee.caller.CallerTestUtils.TEST_SAMPLE_ID;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantFragType;
 import com.hartwig.hmftools.esvee.prep.types.DiscordantStats;
 
+import org.junit.After;
 import org.junit.Test;
 
 public class FiltersTest
@@ -50,7 +52,12 @@ public class FiltersTest
     private static final FragmentLengthBounds FRAG_LENGTHS = new FragmentLengthBounds(
             100, 900, 500, 0.1);
 
+    public FiltersTest() {}
+
     private final VariantFilters mVariantFilters = new VariantFilters(FILTER_CONSTANTS, FRAG_LENGTHS, new DiscordantStats());
+
+    @After
+    public void resetSequencingType() { setIlluminaSequencing(); }
 
     @Test
     public void testDeduplication()
@@ -320,6 +327,8 @@ public class FiltersTest
     @Test
     public void testPrimeRangeStrandBias()
     {
+        SEQUENCING_TYPE = SequencingType.SBX;
+
         Map<String, Object> commonAttributes = Maps.newHashMap();
 
         commonAttributes = Maps.newHashMap();
@@ -334,7 +343,6 @@ public class FiltersTest
                 "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
                 commonAttributes, tumorAttributes, tumorAttributes);
 
-        SEQUENCING_TYPE = SequencingType.SBX;
 
         mVariantFilters.applyFilters(var);
 
@@ -359,8 +367,61 @@ public class FiltersTest
         mVariantFilters.applyFilters(var);
 
         assertFalse(var.filters().contains(FilterType.UNPAIRED_THREE_PRIME_RANGE));
+    }
 
-        SEQUENCING_TYPE = SequencingType.ILLUMINA;
+    @Test
+    public void testSbxStrandBias()
+    {
+        SEQUENCING_TYPE = SequencingType.SBX;
+
+        Map<String, Object> commonAttributes = Maps.newHashMap();
+
+        Map<String, Object> tumorAttributes = Maps.newHashMap();
+        tumorAttributes.put(SPLIT_FRAGS, 4);
+        tumorAttributes.put(STRAND_BIAS, 1);
+
+        // too few SF for an INV
+        Variant var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.SBX_STRAND_BIAS));
+
+        // then sufficient
+        tumorAttributes.put(SPLIT_FRAGS, 12);
+
+        var = createSv(
+                "01", CHR_1, CHR_1, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_STRAND_BIAS));
+
+        // any SF for a BND as long as strand bias is 0 or 1
+        tumorAttributes.put(SPLIT_FRAGS, 1);
+        tumorAttributes.put(STRAND_BIAS, 0.95);
+
+        var = createSv(
+                "01", CHR_1, CHR_2, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertFalse(var.filters().contains(FilterType.SBX_STRAND_BIAS));
+
+        tumorAttributes.put(SPLIT_FRAGS, 1);
+        tumorAttributes.put(STRAND_BIAS, 0);
+
+        var = createSv(
+                "01", CHR_1, CHR_2, 100, 150, ORIENT_FWD, ORIENT_FWD, "",
+                commonAttributes, tumorAttributes, tumorAttributes);
+
+        mVariantFilters.applyFilters(var);
+
+        assertTrue(var.filters().contains(FilterType.SBX_STRAND_BIAS));
     }
 
     @Test

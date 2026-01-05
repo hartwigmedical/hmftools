@@ -2,9 +2,9 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.TUMOR_FILTERS;
+import static com.hartwig.hmftools.sage.filter.FilterUtils.setNearByIndelStatusPostFilter;
+import static com.hartwig.hmftools.sage.filter.FilterUtils.setNearByIndelStatusPreFilter;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -162,10 +161,7 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            // combine reference and tumor together to create variants, then apply soft filters
-            Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
-            Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
-
+            // combine reference and tumor together to create variants
             for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
             {
                 Candidate candidate = finalCandidates.get(candidateIndex);
@@ -177,6 +173,19 @@ public class RegionTask
 
                 SageVariant sageVariant = new SageVariant(candidate, refCounters, tumorReadCounters);
                 mSageVariants.add(sageVariant);
+            }
+
+            setNearByIndelStatusPreFilter(mSageVariants);
+
+            Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
+            Set<ReadContextCounter> validTumorReadCounters = Sets.newHashSet(); // those not hard-filtered
+
+            // then apply soft filters
+            for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
+            {
+                List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
+
+                SageVariant sageVariant = mSageVariants.get(candidateIndex);
 
                 // apply filters
                 if(mVariantFilters.enabled())
@@ -188,7 +197,7 @@ public class RegionTask
                 validTumorReadCounters.add(tumorReadCounters.get(0));
             }
 
-            setNearByIndelStatus(mSageVariants);
+            setNearByIndelStatusPostFilter(mSageVariants);
 
             // phase variants now all evidence has been collected and filters applied
             mVariantPhaser.assignLocalPhaseSets(passingTumorReadCounters, validTumorReadCounters);
@@ -204,52 +213,6 @@ public class RegionTask
         }
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
-    }
-
-    @VisibleForTesting
-    public static void setNearByIndelStatus(final List<SageVariant> sageVariants)
-    {
-        // look forward and backwards from this indel and mark other variants which fall within its bounds
-        for(int index = 0; index < sageVariants.size(); ++index)
-        {
-            SageVariant variant = sageVariants.get(index);
-
-            if(!variant.isIndel())
-                continue;
-
-            // ignore if filtered other than by germline-only filters
-            if(!variant.isPassing() && variant.filters().stream().anyMatch(TUMOR_FILTERS::contains))
-                continue;
-
-            for(int i = 0; i <= 1; ++i)
-            {
-                boolean searchUp = (i == 0);
-
-                int otherIndex = searchUp ? index + 1 : index - 1;
-
-                while(otherIndex >= 0 && otherIndex < sageVariants.size())
-                {
-                    SageVariant otherVar = sageVariants.get(otherIndex);
-
-                    if(positionWithin(otherVar.position(), variant.readContext().AlignmentStart, variant.readContext().AlignmentEnd))
-                    {
-                        otherVar.setNearIndel();
-                    }
-                    else
-                    {
-                        if(searchUp && otherVar.position() > variant.readContext().AlignmentEnd)
-                            break;
-                        else if(!searchUp && otherVar.position() < variant.readContext().AlignmentStart)
-                            break;
-                    }
-
-                    if(searchUp)
-                        ++otherIndex;
-                    else
-                        --otherIndex;
-                }
-            }
-        }
     }
 
     private void finaliseResults()

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +15,7 @@ public class PurityAdjuster
     private final double mPurity;
     private final double mNormFactor;
 
-    private final Map<String,Double> mObservedRatioMap;
+    private final Map<HumanChromosome,Double> mObservedRatioMap;
 
     public PurityAdjuster(final double purity, final double normFactor, final CobaltChromosomes cobaltChromosomes)
     {
@@ -22,10 +23,10 @@ public class PurityAdjuster
         mNormFactor = normFactor;
 
         mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
-                .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
+                .collect(Collectors.toMap(CobaltChromosome::humanChromosome, CobaltChromosome::actualRatio));
     }
 
-    public PurityAdjuster(final Map<String,Double> observedRatioMap, final double purity, final double normFactor)
+    public PurityAdjuster(final Map<HumanChromosome,Double> observedRatioMap, final double purity, final double normFactor)
     {
         mPurity = purity;
         mNormFactor = normFactor;
@@ -82,7 +83,7 @@ public class PurityAdjuster
 
     private double germlineRatio(final String chromosome)
     {
-        return mObservedRatioMap.getOrDefault(chromosome, 0d);
+        return mObservedRatioMap.getOrDefault(HumanChromosome.fromString(chromosome), 0d);
     }
 
     double purityAdjustedFrequency(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,

@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
@@ -49,7 +48,7 @@ public class PurpleVariantFactoryTest
                         "", 1, 1));
 
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
-                .variant(TestPurpleVariantFactory.variantBuilder()
+                .from(TestPurpleVariantFactory.variantBuilder()
                         .chromosome("chromosome")
                         .position(57181855)
                         .allelicDepth(new AllelicDepth(153, 80))
@@ -137,7 +136,7 @@ public class PurpleVariantFactoryTest
     public void testReportableTranscripts()
     {
         PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
-                .variant(TestPurpleVariantFactory.variantBuilder()
+                .from(TestPurpleVariantFactory.variantBuilder()
                         .canonicalTranscript("canonical_transcript")
                         .reported(false)
                         .reportableTranscripts(Set.of("canonical_transcript", "other_transcript1"))
@@ -174,7 +173,7 @@ public class PurpleVariantFactoryTest
     public void testCanonicalTranscriptNotReported()
     {
         PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
-                .variant(TestPurpleVariantFactory.variantBuilder()
+                .from(TestPurpleVariantFactory.variantBuilder()
                         .canonicalTranscript("canonical_transcript")
                         .reported(false)
                         .reportableTranscripts(Set.of("other_transcript1"))

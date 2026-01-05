@@ -55,7 +55,7 @@ import static com.hartwig.hmftools.sage.evidence.Realignment.considerRealignedDe
 import static com.hartwig.hmftools.sage.evidence.Realignment.realignedReadIndexPosition;
 import static com.hartwig.hmftools.sage.evidence.SplitReadSegment.formSegment;
 import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
-import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.sage.filter.FilterUtils.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.MsiJitterCalcs.getImpliedAltChange;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.INVALID_BASE_QUAL;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isHighBaseQual;
@@ -165,11 +165,20 @@ public class ReadContextCounter
         mConfig = config;
 
         mReadContext = readContext;
-        mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
         mVariant = readContext.variant();
 
-        mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
-                ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
+        if(mReadContext.markedInvalid())
+        {
+            mMatcher = null;
+            mVariantVis = null;
+        }
+        else
+        {
+            mMatcher = new ReadContextMatcher(mReadContext, true, isReferenceSample);
+
+            mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(mVariant)
+                    ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
+        }
 
         // set local state to avoid testing on each read
         mIsMnv = mVariant.isMNV();
@@ -231,7 +240,7 @@ public class ReadContextCounter
         mTumorQualProbability = 0;
         mMapQualFactor = 0;
 
-        mUltimaData = isUltima() ? new UltimaVariantData(mReadContext) : null;
+        mUltimaData = isUltima() && !mReadContext.markedInvalid() ? new UltimaVariantData(mReadContext) : null;
     }
 
     public int id() { return mId; }
@@ -347,6 +356,9 @@ public class ReadContextCounter
 
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
+        if(mReadContext.markedInvalid() || mMatcher == null)
+            return UNRELATED;
+
         if(exceedsMaxCoverage())
             return MAX_COVERAGE;
 
@@ -642,7 +654,7 @@ public class ReadContextCounter
 
     private boolean belowQualThreshold(double calcBaseQuality)
     {
-        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && calcBaseQuality < mConfig.Quality.HighBaseQualLimit;
+        return mConfig.Quality.HighDepthMode && !mQualCache.usesMsiIndelErrorQual() && !isHighBaseQual(calcBaseQuality);
     }
 
     private void registerReadSupport(
@@ -814,4 +826,64 @@ public class ReadContextCounter
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
     public ReadSupportCounts readSupportCounts() { return mCounts; }
     public FragmentCoords fragmentCoords() { return mFragmentCoords; }
+
+    public ReadContextCounter(
+            final int id, final VariantReadContext readContext, final VariantTier tier, int maxCoverage, int minNumberOfEvents,
+            final SageConfig config, final String sampleId)
+    {
+        mId = id;
+
+        mTier = tier;
+        mMaxCoverage = maxCoverage;
+        mMinNumberOfEvents = minNumberOfEvents;
+        mSample = sampleId;
+        mQualityCalculator = null;
+        mConfig = config;
+
+        mReadContext = readContext;
+        mVariant = readContext.variant();
+
+        mMatcher = null;
+        mVariantVis = null;
+
+        mIsMnv = mVariant.isMNV();
+        mIsIndel = mVariant.isIndel();
+        mQualCache = null;
+
+        mQualities = new ReadSupportCounts();
+        mCounts = new ReadSupportCounts();
+        mSimpleAltMatches = 0;
+        mHighQualStrongSupport = 0;
+        mMediumQualStrongSupport = 0;
+
+        mAllowUncertainCoreBases = false;
+        mUncertainCoreBaseCount = 0;
+
+        mJitterData = new JitterData();
+
+        mAltFragmentStrandBias = new StrandBiasData(true);
+        mNonAltFragmentStrandBias = new StrandBiasData(false);
+        mAltReadStrandBias = new StrandBiasData(true);
+        mNonAltReadStrandBias = new StrandBiasData(false);
+
+        mImproperPairCount = 0;
+
+        mQualCounters = new QualCounters();
+        mMaxCandidateDeleteLength = 0;
+        mMaxPositionVsReadStart = mVariant.isDelete() ? mVariant.Position + abs(mVariant.indelLength()) : mVariant.Position;
+
+        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), variant().indelLengthAbs() + 1));
+
+        mLocalPhaseSets = null;
+        mLpsCounts = null;
+        mConsensusTypeCounts = null;
+        mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
+        mFragmentCoords = new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS_2);
+        mFragmentLengths = new FragmentLengths();
+        mAdjustedRefVaf = 0;
+
+        mTumorQualProbability = 0;
+        mMapQualFactor = 0;
+        mUltimaData = null;
+    }
 }

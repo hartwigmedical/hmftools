@@ -9,7 +9,7 @@ import static java.util.Objects.requireNonNull;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_FWD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.ORIENT_REV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.panelbuilder.PanelBuilderConstants.PROBE_LENGTH;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSglProbe;
 import static com.hartwig.hmftools.panelbuilder.SequenceUtils.buildSvProbe;
@@ -262,7 +262,7 @@ public class SomaticSv implements StructuralVariant
                 continue;
             }
 
-            if(!requireNonNull(variant.filter()).equals(PASS))
+            if(!requireNonNull(variant.filter()).equals(PASS_FILTER))
             {
                 continue;
             }

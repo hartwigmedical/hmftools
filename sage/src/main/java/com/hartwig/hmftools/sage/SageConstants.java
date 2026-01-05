@@ -138,6 +138,9 @@ public class SageConstants
     public static final int MAP_QUAL_INDEL_REPEAT_PENALTY = 18;
     public static final int MAP_QUAL_NON_INDEL_REPEAT_PENALTY = 24;
 
+    public static final double NEAR_INDEL_MIN_VAF = 0.15;
+    public static final int NEAR_INDEL_PROXIMITY = 30;
+
     public static final int DEFAULT_HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = 10;
     public static int HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY = DEFAULT_HIGHLY_POLYMORPHIC_GENES_MAX_QUALITY; // may be set in config
 
@@ -147,9 +150,6 @@ public class SageConstants
 
     public static final int CORE_AF_MIN = 3;
     public static final double CORE_AF_FULL_RATIO = 0.25;
-
-    // defaults when in high-depth mode
-    public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 
     public static final int VIS_VARIANT_BUFFER = 200;
 

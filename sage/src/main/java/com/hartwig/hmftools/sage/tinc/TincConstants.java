@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.tinc;
 
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
@@ -33,5 +33,5 @@ public final class TincConstants
     protected static final double TINC_RECOVERY_GERMLINE_AF_PROB = 0.001;
 
     protected static final List<String> RECOVERY_FILTERS = Lists.newArrayList(
-            MAX_GERMLINE_RELATIVE_QUAL.filterName(), MAX_GERMLINE_VAF.filterName(), MAX_GERMLINE_ALT_SUPPORT.filterName(), PASS);
+            MAX_GERMLINE_RELATIVE_QUAL.filterName(), MAX_GERMLINE_VAF.filterName(), MAX_GERMLINE_ALT_SUPPORT.filterName(), PASS_FILTER);
 }
