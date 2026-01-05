@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.genome.chromosome;
 
 public interface Chromosome {
 
-    String contig();
-
     boolean isAutosome();
 
     boolean isAllosome();

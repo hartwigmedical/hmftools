@@ -5,12 +5,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public record CobaltChromosome(HumanChromosome humanChromosome, double typicalRatio, double actualRatio, boolean mosiac)
         implements Chromosome
 {
-    @Override
-    public String contig()
-    {
-        return humanChromosome().contig();
-    }
-
     public double typicalRatio()
     {
         return typicalRatio;
