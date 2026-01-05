@@ -187,13 +187,21 @@ public final class SvgRender
     {
         SVGGraphics2D svgCanvas = new SVGGraphics2D(
                 baseBoxSizePx * (renderRegion.baseLength() + 2 * BOX_PADDING), baseBoxSizePx);
-        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases);
+        renderBaseSeq(svgCanvas, ZERO_2D, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true);
         return svgCanvas;
     }
 
     public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double baseBoxSizePx,
             final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
             final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases)
+    {
+        renderBaseSeq(svgCanvas, boxOffset, baseBoxSizePx, renderRegion, bases, shadeQuals, posToBordersMap, refBases, true, true);
+    }
+
+    public static void renderBaseSeq(final SVGGraphics2D svgCanvas, final Point2D.Double boxOffset, double baseBoxSizePx,
+            final BaseRegion renderRegion, final BaseSeqViewModel bases, boolean shadeQuals,
+            final Map<Integer, List<BoxBorder>> posToBordersMap, @Nullable final BaseSeqViewModel refBases,
+            boolean renderLeftOrientationMarker, boolean renderRightOrientationMarker)
     {
         // work in units of BASE_BOX_SIZE
         svgCanvas.scale(baseBoxSizePx, baseBoxSizePx);
@@ -340,27 +348,33 @@ public final class SvgRender
             return;
 
         // left orientation indicator
-        if(bases.LeftIsForwardStrand)
+        if(renderLeftOrientationMarker)
         {
-            svgCanvas.setColor(FORWARD_STRAND_COLOR);
-            drawRightBoxBorder(svgCanvas, boxOffset, firstBaseIdx - 1, 0.5);
-        }
-        else
-        {
-            svgCanvas.setColor(REVERSE_STRAND_COLOR);
-            drawReverseArrow(svgCanvas, boxOffset, firstBaseIdx - 0.5, 0.0, 0.5, 1.0);
+            if(bases.LeftIsForwardStrand)
+            {
+                svgCanvas.setColor(FORWARD_STRAND_COLOR);
+                drawRightBoxBorder(svgCanvas, boxOffset, firstBaseIdx - 1, 0.5);
+            }
+            else
+            {
+                svgCanvas.setColor(REVERSE_STRAND_COLOR);
+                drawReverseArrow(svgCanvas, boxOffset, firstBaseIdx - 0.5, 0.0, 0.5, 1.0);
+            }
         }
 
         // right orientation colour
-        if(bases.RightIsForwardStrand)
+        if(renderRightOrientationMarker)
         {
-            svgCanvas.setColor(FORWARD_STRAND_COLOR);
-            drawForwardArrow(svgCanvas, boxOffset, lastBaseIdx + 1, 0.0, 0.5, 1.0);
-        }
-        else
-        {
-            svgCanvas.setColor(REVERSE_STRAND_COLOR);
-            drawLeftBoxBorder(svgCanvas, boxOffset, lastBaseIdx + 1, 0.5);
+            if(bases.RightIsForwardStrand)
+            {
+                svgCanvas.setColor(FORWARD_STRAND_COLOR);
+                drawForwardArrow(svgCanvas, boxOffset, lastBaseIdx + 1, 0.0, 0.5, 1.0);
+            }
+            else
+            {
+                svgCanvas.setColor(REVERSE_STRAND_COLOR);
+                drawLeftBoxBorder(svgCanvas, boxOffset, lastBaseIdx + 1, 0.5);
+            }
         }
     }
 
