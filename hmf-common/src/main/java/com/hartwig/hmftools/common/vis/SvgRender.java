@@ -130,7 +130,7 @@ public final class SvgRender
         svgCanvas.fill(leftTopI);
 
         Rectangle2D leftBottomI = new Rectangle2D.Double(
-		boxIdx + boxOffset.x, 1.0 - BOUNDARY_BOX_PROPORTION + boxOffset.y, 1.0 / 3, BOUNDARY_BOX_PROPORTION);
+                boxIdx + boxOffset.x, 1.0 - BOUNDARY_BOX_PROPORTION + boxOffset.y, 1.0 / 3, BOUNDARY_BOX_PROPORTION);
         svgCanvas.fill(leftBottomI);
     }
 
@@ -454,7 +454,7 @@ public final class SvgRender
         }
     }
 
-    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, List<ChrBaseRegion> regions)
+    public static SVGGraphics2D renderChrLabels(double baseBoxSizePx, final List<ChrBaseRegion> regions)
     {
         int startIdx = regions.get(0).start();
         int endIdx = regions.get(regions.size() - 1).end();
