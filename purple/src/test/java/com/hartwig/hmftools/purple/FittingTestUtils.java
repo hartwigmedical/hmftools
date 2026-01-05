@@ -106,30 +106,30 @@ public class FittingTestUtils
 
     public static PurityAdjuster buildPurityAdjuster(final Gender gender, final double purity, final double normFactor)
     {
-        Map<String, Double> observedRatioMap = Maps.newHashMap();
+        Map<HumanChromosome, Double> observedRatioMap = Maps.newHashMap();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             if(chromosome.isAutosome())
             {
-                observedRatioMap.put(chromosome.toString(), 1.0);
+                observedRatioMap.put(chromosome, 1.0);
             }
             else if(chromosome.equals(HumanChromosome._X))
             {
                 if(gender == Gender.MALE)
                 {
-                    observedRatioMap.put(chromosome.toString(), 0.5);
+                    observedRatioMap.put(chromosome, 0.5);
                 }
                 else
                 {
-                    observedRatioMap.put(chromosome.toString(), 1.0);
+                    observedRatioMap.put(chromosome, 1.0);
                 }
             }
             else if(chromosome.equals(HumanChromosome._Y))
             {
                 if(gender == Gender.MALE)
                 {
-                    observedRatioMap.put(chromosome.toString(), 0.5);
+                    observedRatioMap.put(chromosome, 0.5);
                 }
             }
         }

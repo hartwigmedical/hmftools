@@ -4,13 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum MitochondrialChromosome implements Chromosome
 {
-    MT {
-        @Override
-        public String contig()
-        {
-            return "MT"; // todo test
-        }
-    };
+    MT;
 
     public static final int MT_LENGTH = 16569;
 
