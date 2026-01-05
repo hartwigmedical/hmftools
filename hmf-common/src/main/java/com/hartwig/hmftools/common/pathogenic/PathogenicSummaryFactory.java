@@ -13,9 +13,9 @@ public final class PathogenicSummaryFactory
 
     public static PathogenicSummary fromContext(final VariantContext context)
     {
-        final String clnSig = clnSig(context);
-        final String clnSigConf = clnSigConf(context);
-        final String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
+        String clnSig = clnSig(context);
+        String clnSigConf = clnSigConf(context);
+        String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
 
         final Pathogenicity pathogenicity =
                 context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)

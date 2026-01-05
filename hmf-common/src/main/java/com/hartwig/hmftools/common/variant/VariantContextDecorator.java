@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.MAPPABILITY;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -181,12 +182,19 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean biallelic()
     {
-        return mContext.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+        return biallelic(mContext);
     }
 
-    public double biallelicProbability()
+    public static boolean biallelic(final VariantContext context)
     {
-        return mContext.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, biallelic() ? 1 : 0);
+        return context.getAttributeAsBoolean(PURPLE_BIALLELIC_FLAG, false);
+    }
+
+    public double biallelicProbability() { return biallelicProbability(mContext, biallelic()); }
+
+    public static double biallelicProbability(final VariantContext context, final boolean biallelic)
+    {
+        return context.getAttributeAsDouble(PURPLE_BIALLELIC_PROB, biallelic ? 1 : 0);
     }
 
     public double minorAlleleCopyNumber()
@@ -306,7 +314,8 @@ public class VariantContextDecorator implements GenomePosition
             String reportableTransStr = mContext.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
             return Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1)).toList();
         }
-        return null;
+
+        return Collections.emptyList();
     }
 
     private static String displayFilter(final VariantContext context)

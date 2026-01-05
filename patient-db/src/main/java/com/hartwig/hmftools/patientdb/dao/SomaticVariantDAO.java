@@ -18,12 +18,9 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
+import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.SomaticvariantRecord;
@@ -47,9 +44,9 @@ public class SomaticVariantDAO
         this.context = context;
     }
 
-    public BufferedWriter<SomaticVariant> writer(final String tumorSample)
+    public BufferedWriter<SmallVariant> writer(final String tumorSample)
     {
-        BufferedWriterConsumer<SomaticVariant> consumer = new BufferedWriterConsumer<SomaticVariant>()
+        BufferedWriterConsumer<SmallVariant> consumer = new BufferedWriterConsumer<SmallVariant>()
         {
             @Override
             public void initialise()
@@ -58,7 +55,7 @@ public class SomaticVariantDAO
             }
 
             @Override
-            public void accept(final Timestamp timestamp, final List<SomaticVariant> entries)
+            public void accept(final Timestamp timestamp, final List<SmallVariant> entries)
             {
                 writeAll(timestamp, tumorSample, entries);
             }
@@ -67,9 +64,9 @@ public class SomaticVariantDAO
         return new BufferedWriter<>(consumer, DB_BATCH_INSERT_SIZE);
     }
 
-    public List<SomaticVariant> read(final String sample, final VariantType type)
+    public List<SmallVariant> read(final String sample, final VariantType type)
     {
-        List<SomaticVariant> variants = Lists.newArrayList();
+        List<SmallVariant> variants = Lists.newArrayList();
 
         Result<Record> result = type == VariantType.UNDEFINED
                 ? context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch()
@@ -87,7 +84,7 @@ public class SomaticVariantDAO
         return variants;
     }
 
-    public static SomaticVariant buildFromRecord(final Record record)
+    public static SmallVariant buildFromRecord(final Record record)
     {
         Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
         Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
@@ -100,7 +97,7 @@ public class SomaticVariantDAO
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
                 new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
-        Variant variant = ImmutableVariantImpl.builder()
+        SmallVariant variant = ImmutableSmallVariantImpl.builder()
                 .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
                 .position(record.getValue(SOMATICVARIANT.POSITION))
                 .filter(record.getValue(SOMATICVARIANT.FILTER))
@@ -140,10 +137,6 @@ public class SomaticVariantDAO
                 .qual(record.get(SOMATICVARIANT.QUAL))
                 .localPhaseSets(localPhaseSetsStringToList(record.get(SOMATICVARIANT.LOCALPHASESET)))
                 .genotypeStatus(UNKNOWN)
-                .build();
-
-        return ImmutableSomaticVariantImpl.builder()
-                .variant(variant)
                 .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                 .subclonalLikelihood(record.getValue(SOMATICVARIANT.SUBCLONALLIKELIHOOD))
                 .referenceDepth(referenceAllelicDepth)
@@ -152,10 +145,11 @@ public class SomaticVariantDAO
                         ? SomaticLikelihood.UNKNOWN
                         : SomaticLikelihood.valueOf(record.getValue(SOMATICVARIANT.SOMATICLIKELIHOOD)))
                 .build();
+
+        return variant;
     }
 
-
-    private void writeAll(final Timestamp timestamp, final String sample, final List<SomaticVariant> variants)
+    private void writeAll(final Timestamp timestamp, final String sample, final List<SmallVariant> variants)
     {
         final InsertValuesStepN<SomaticvariantRecord> inserter = context.insertInto(SOMATICVARIANT,
                 SOMATICVARIANT.SAMPLEID,
@@ -207,7 +201,7 @@ public class SomaticVariantDAO
     }
 
     private static void addRecord(
-            final Timestamp timestamp, final InsertValuesStepN<SomaticvariantRecord> inserter, final String sample, final SomaticVariant variant)
+            final Timestamp timestamp, final InsertValuesStepN<SomaticvariantRecord> inserter, final String sample, final SmallVariant variant)
     {
         // append reportable status for each transcript where non-canonical may be reportable
         String otherReportedEffects = variant.otherReportedEffects();

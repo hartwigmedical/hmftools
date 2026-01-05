@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +60,7 @@ public class SnvSigUtils
         }
     }
 
-    public static String contextFromVariant(final SomaticVariant variant)
+    public static String contextFromVariant(final SmallVariant variant)
     {
         return variantContext(variant.ref(), variant.alt(), variant.trinucleotideContext());
     }

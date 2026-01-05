@@ -18,11 +18,9 @@ import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableGermlineVariantImpl;
-import com.hartwig.hmftools.common.variant.ImmutableVariantImpl;
-import com.hartwig.hmftools.common.variant.Variant;
+import com.hartwig.hmftools.common.variant.ImmutableSmallVariantImpl;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -357,9 +355,9 @@ public class GermlineVariantDAO
                 germlineBreakend.totalExonCount());
     }
 
-    public List<GermlineVariant> read(final String sample)
+    public List<SmallVariant> read(final String sample)
     {
-        List<GermlineVariant> variants = Lists.newArrayList();
+        List<SmallVariant> variants = Lists.newArrayList();
 
         Result<Record> result = context.select().from(GERMLINEVARIANT).where(GERMLINEVARIANT.SAMPLEID.eq(sample)).fetch();
 
@@ -371,7 +369,7 @@ public class GermlineVariantDAO
         return variants;
     }
 
-    public static GermlineVariant buildFromRecord(final Record record)
+    public static SmallVariant buildFromRecord(final Record record)
     {
         Integer rnaAlleleReadCount = record.getValue(GERMLINEVARIANT.RNAALLELEREADCOUNT);
         Integer rnaTotalCount = record.getValue(GERMLINEVARIANT.RNATOTALREADCOUNT);
@@ -379,7 +377,7 @@ public class GermlineVariantDAO
         AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ?
                 new AllelicDepth(rnaTotalCount, rnaAlleleReadCount) : null;
 
-        Variant variant = ImmutableVariantImpl.builder()
+        SmallVariant variant = ImmutableSmallVariantImpl.builder()
                 .chromosome(record.getValue(GERMLINEVARIANT.CHROMOSOME))
                 .position(record.getValue(GERMLINEVARIANT.POSITION))
                 .filter(record.getValue(GERMLINEVARIANT.FILTER))
@@ -420,13 +418,10 @@ public class GermlineVariantDAO
                 .genotypeStatus(UNKNOWN)
                 .germlineStatus(GermlineStatus.UNKNOWN)
                 .clinvarInfo(record.get(GERMLINEVARIANT.CLINVARINFO))
-                .build();
-
-        return ImmutableGermlineVariantImpl.builder()
-                .variant(variant)
                 .pathogenicity(record.get(GERMLINEVARIANT.PATHOGENICITY))
                 .pathogenic(record.get(GERMLINEVARIANT.PATHOGENIC).intValue() == 1)
                 .build();
-    }
 
+        return variant;
+    }
 }

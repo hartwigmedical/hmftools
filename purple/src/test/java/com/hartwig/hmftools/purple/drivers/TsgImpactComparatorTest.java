@@ -21,8 +21,8 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TsgImpactComparatorTest {
-
+public class TsgImpactComparatorTest
+{
     private SomaticVariant missense;
     private SomaticVariant nonsense;
     private SomaticVariant spliceIndel;

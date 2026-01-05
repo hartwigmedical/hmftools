@@ -15,15 +15,12 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.SmallVariant;
+import com.hartwig.hmftools.common.variant.SmallVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
@@ -87,7 +84,7 @@ public class SigSnvLoader
         {
             String sampleId = mSampleIds.get(sampleIndex);
 
-            final List<SomaticVariant> variants = vcfFile != null ?
+            final List<SmallVariant> variants = vcfFile != null ?
                     loadSomaticVariants(vcfFile, sampleId) : dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
             SIG_LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
@@ -114,13 +111,13 @@ public class SigSnvLoader
             mPosFreqWriters.forEach(x -> closeBufferedWriter(x));
     }
 
-    private List<SomaticVariant> loadSomaticVariants(final String vcfFile, final String sampleId)
+    private List<SmallVariant> loadSomaticVariants(final String vcfFile, final String sampleId)
     {
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
-        final List<SomaticVariant> variantList = Lists.newArrayList();
+        SmallVariantFactory variantFactory = new SmallVariantFactory(filter);
+        final List<SmallVariant> variantList = Lists.newArrayList();
 
         VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
@@ -129,7 +126,7 @@ public class SigSnvLoader
             if(variant.isFiltered())
                 continue;
 
-            final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+            final SmallVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
 
             if(somaticVariant == null || !somaticVariant.isSnp())
                 continue;
@@ -177,11 +174,11 @@ public class SigSnvLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SmallVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final SomaticVariant variant : variants)
+        for(final SmallVariant variant : variants)
         {
             if(variant.isFiltered() || !variant.isSnp())
                 continue;

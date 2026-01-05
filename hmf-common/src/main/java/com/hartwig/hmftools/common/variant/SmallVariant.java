@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Variant extends GenomePosition
+public interface SmallVariant extends GenomePosition
 {
     @NotNull
     VariantType type();
@@ -124,8 +124,24 @@ public interface Variant extends GenomePosition
         return SageVcfTags.localPhaseSetsStr(localPhaseSets());
     }
 
-    // default boolean hasLocalPhaseSets() { return localPhaseSets() != null && !localPhaseSets().isEmpty(); }
-
     @Nullable
     String clinvarInfo();
+
+    @Nullable
+    String kataegis();
+
+    double subclonalLikelihood();
+
+    @Nullable
+    AllelicDepth referenceDepth();
+
+    double gnomadFrequency();
+
+    @Nullable
+    SomaticLikelihood somaticLikelihood();
+
+    @Nullable
+    String pathogenicity();
+
+    boolean pathogenic();
 }

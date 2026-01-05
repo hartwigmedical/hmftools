@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sigs.loaders;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SmallVariant;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -33,7 +33,7 @@ public class VariantFilters
             return null;
     }
 
-    public boolean passesFilters(final SomaticVariant variant)
+    public boolean passesFilters(final SmallVariant variant)
     {
         if(SubclonalLikelihoodMin != null && variant.subclonalLikelihood() < SubclonalLikelihoodMin)
             return false;
