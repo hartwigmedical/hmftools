@@ -2,25 +2,26 @@ package com.hartwig.hmftools.purple.regression;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.PurpleApplication;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@SuppressWarnings("DataFlowIssue")
 @Ignore("Manual run only")
 public class PurpleRegressionTest
 {
@@ -49,8 +50,7 @@ public class PurpleRegressionTest
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/batches/2025/12/19/3/COLO829v003.v2_3.purple.results.zip");
         Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
-        checkGermlineDrivers();
-        checkPurity();
+        checkResults();
     }
 
     @Test
@@ -63,8 +63,7 @@ public class PurpleRegressionTest
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/scratch/" + tumor + ".outputs.zip");
         Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
-        checkPurity();
-        checkGermlineDrivers();
+        checkResults();
     }
 
     private void checkPurity() throws Exception
@@ -74,31 +73,123 @@ public class PurpleRegressionTest
         Assert.assertEquals(baselineContext, newContext);
     }
 
+    private void checkSomaticDrivers() throws Exception
+    {
+        String outputDrivers = DriverCatalogFile.generateSomaticFilename(OutputDir.getAbsolutePath(), tumor);
+        String baselineDrivers = DriverCatalogFile.generateSomaticFilename(ConfiguredResultsDir.getAbsolutePath(), tumor);
+        checkDrivers(baselineDrivers, outputDrivers);
+    }
+
     private void checkGermlineDrivers() throws Exception
     {
         String outputGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(OutputDir.getAbsolutePath(), tumor);
         String baselineGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(ConfiguredResultsDir.getAbsolutePath(), tumor);
+        checkDrivers(baselineGermlineDriverFile, outputGermlineDriverFile);
+    }
 
-        List<DriverCatalog> germlineDrivers = DriverCatalogFile.read(outputGermlineDriverFile);
-        List<DriverCatalog> baselineGermlineDrivers = DriverCatalogFile.read(baselineGermlineDriverFile);
+    private void checkDeletions() throws Exception
+    {
+        List<GermlineDeletion> outputDeletions =
+                GermlineDeletion.read(GermlineDeletion.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<GermlineDeletion> baselineDeletions =
+                GermlineDeletion.read(GermlineDeletion.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+        Assert.assertEquals(outputDeletions.size(), baselineDeletions.size());
+        for(GermlineDeletion deletion : outputDeletions)
+        {
+            GermlineDeletion baseline = findGermlineDeletion(baselineDeletions, deletion);
+            checkObjectsHaveSameData(baseline, deletion);
+        }
+    }
+
+    private void checkDrivers(String baselineGermlineDriverFile, String outputGermlineDriverFile) throws Exception
+    {
+        List<DriverCatalog> outputDrivers = DriverCatalogFile.read(outputGermlineDriverFile);
+        List<DriverCatalog> baselineDrivers = DriverCatalogFile.read(baselineGermlineDriverFile);
 
         // The drivers in the baseline should be in the new output.
-        for(DriverCatalog baselineDriver : baselineGermlineDrivers)
+        for(DriverCatalog baselineDriver : baselineDrivers)
         {
-            DriverCatalog inNewOutput = findDriver(germlineDrivers, baselineDriver.transcript());
+            DriverCatalog inNewOutput = findDriver(outputDrivers, baselineDriver.transcript());
             Assert.assertNotNull(inNewOutput);
             Assert.assertEquals(inNewOutput, baselineDriver);
+            checkObjectsHaveSameData(baselineDriver, inNewOutput);
         }
 
-        // The drivers in the new output that are not in the baseline should have reported status "NONE".
-        for(DriverCatalog germlineDriver : germlineDrivers)
+        // The drivers in the new output that are not in the baseline should have reported status "NONE" or "NOT_REPORTED.
+        for(DriverCatalog outputDriver : outputDrivers)
         {
-            DriverCatalog baselineDriver = findDriver(baselineGermlineDrivers, germlineDriver.transcript());
-            if (baselineDriver == null)
+            DriverCatalog baselineDriver = findDriver(baselineDrivers, outputDriver.transcript());
+            if(baselineDriver == null)
             {
-                Assert.assertEquals(ReportedStatus.NONE, germlineDriver.reportedStatus());
+                Assert.assertNotEquals(outputDriver.toString(), ReportedStatus.REPORTED, outputDriver.reportedStatus());
             }
         }
+    }
+
+    private void checkSegments() throws Exception
+    {
+        List<PurpleSegment> outputSegments = PurpleSegment.read(PurpleSegment.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<PurpleSegment> baselineSegments =
+                PurpleSegment.read(PurpleSegment.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+        Assert.assertEquals(outputSegments.size(), baselineSegments.size());
+
+        for(PurpleSegment outputSegment : outputSegments)
+        {
+            PurpleSegment baselineSegment = findSegment(baselineSegments, outputSegment);
+            checkObjectsHaveSameData(baselineSegment, outputSegment);
+        }
+    }
+
+    private static PurpleSegment findSegment(List<PurpleSegment> segments, PurpleSegment toMatch)
+    {
+        return segments.stream().filter(segment -> segment.matches(toMatch)).findFirst().orElse(null);
+    }
+
+    private void checkObjectsHaveSameData(Object s, Object t)
+    {
+        for(Field field : s.getClass().getFields())
+        {
+            if(Modifier.isStatic(field.getModifiers()))
+            {
+                continue;
+            }
+            try
+            {
+                Object valS = field.get(s);
+                Object valT = field.get(t);
+                if(field.getType().equals(double.class) || field.getType().equals(Double.class))
+                {
+                    Assert.assertEquals("Field " + field.getName() + " mismatch", (double) valS, (double) valT, 0.001);
+                }
+                else
+                {
+                    Assert.assertEquals("Field " + field.getName() + " mismatch", valS, valT);
+                }
+            }
+            catch(IllegalAccessException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static GermlineDeletion findGermlineDeletion(List<GermlineDeletion> deletions, GermlineDeletion toMatch)
+    {
+        List<GermlineDeletion> matching = deletions.stream().filter(germline -> deletionsMatch(germline, toMatch)).toList();
+        Assert.assertEquals("Deletions matching " + toMatch.GeneName + " has size " + matching.size(), 1, matching.size());
+        return matching.get(0);
+    }
+
+    private static boolean deletionsMatch(GermlineDeletion g, GermlineDeletion h)
+    {
+        return g.GeneName.equals(h.GeneName)
+                && g.Chromosome.equals(h.Chromosome)
+                && g.RegionStart == h.RegionStart
+                && g.RegionEnd == h.RegionEnd
+                && g.NormalStatus == h.NormalStatus
+                && g.TumorStatus == h.TumorStatus
+                && Doubles.equal(g.GermlineCopyNumber, h.GermlineCopyNumber)
+                && Doubles.equal(g.TumorCopyNumber, h.TumorCopyNumber);
     }
 
     private static DriverCatalog findDriver(List<DriverCatalog> drivers, String transcript)
@@ -124,61 +215,13 @@ public class PurpleRegressionTest
         return subDir;
     }
 
-    private void checkResults() throws IOException
+    private void checkResults() throws Exception
     {
-        File[] configuredResults = ConfiguredResultsDir.listFiles(File::isFile);
-        File[] results = OutputDir.listFiles(File::isFile);
-        Assert.assertEquals(configuredResults.length, results.length);
-        boolean result = true;
-        for(File configuredResult : configuredResults)
-        {
-            File resultFile = new File(OutputDir, configuredResult.getName());
-            Assert.assertTrue(resultFile.exists());
-            Assert.assertTrue(resultFile.isFile());
-            if(resultFile.getName().contains(".gz"))
-            {
-                // Compare gz files by unzipping them and comparing the results line-by-line.
-                result &= compareGzFiles(resultFile, configuredResult);
-                continue;
-            }
-            if(resultFile.getName().contains("version"))
-            {
-                // Skip the version file as it contains a timestamp.
-                continue;
-            }
-            // Compare other files by finding the first differing byte.
-            long mismatchIndex = Files.mismatch(configuredResult.toPath(), resultFile.toPath());
-            if(mismatchIndex == -1)
-            {
-                System.out.println("Match: " + configuredResult.getName());
-            }
-            else
-            {
-                System.out.println("Mismatch at position: " + mismatchIndex + " in " + configuredResult.getName());
-                result = false;
-            }
-        }
-        Assert.assertTrue(result);
-    }
-
-    private boolean compareGzFiles(File resultFile, File configuredFile) throws IOException
-    {
-        List<String> resultLines = IOUtils.readLines(FileWriterUtils.createBufferedReader(resultFile.getAbsolutePath()));
-        List<String> configuredLines = IOUtils.readLines(FileWriterUtils.createBufferedReader(resultFile.getAbsolutePath()));
-        if(resultLines.size() != configuredLines.size())
-        {
-            System.out.println("Mismatch in number of lines in file: " + resultFile.getName());
-            return false;
-        }
-        for(int i = 0; i < resultLines.size(); i++)
-        {
-            if(!resultLines.get(i).equals(configuredLines.get(i)))
-            {
-                System.out.println("Mismatch at line " + i + " in file: " + resultFile.getName());
-                return false;
-            }
-        }
-        return true;
+        checkPurity();
+        checkGermlineDrivers();
+        checkSomaticDrivers();
+        checkSegments();
+        checkDeletions();
     }
 
     private void runPurple() throws IOException
