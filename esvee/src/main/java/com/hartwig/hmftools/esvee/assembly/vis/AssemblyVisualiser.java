@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.VIEW_REGION_SIZE;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.VIS_DIR;
 
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.header;
@@ -40,8 +42,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -59,9 +63,11 @@ import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.TextCigarCodec;
 import j2html.tags.DomContent;
 
@@ -73,14 +79,14 @@ public class AssemblyVisualiser
     private final AssemblyAlignment mAssemblyAlignment;
     private final Cigar mSequenceCigar;
 
-    private final List<RefSegmentViewModel> mRefViewModel;
+    private final List<Pair<CigarOperator, RefSegmentViewModel>> mRefViewModel;
 
     public AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
         mConfig = config;
         mAssemblyAlignment = assemblyAlignment;
-        mRefViewModel = getRefViewModel(assemblyAlignment);
         mSequenceCigar = TextCigarCodec.decode(assemblyAlignment.assemblyCigar());
+        mRefViewModel = getRefViewModel(mSequenceCigar, assemblyAlignment);
     }
 
     public void writeVisFiles()
@@ -179,7 +185,8 @@ public class AssemblyVisualiser
         return tableRows;
     }
 
-    private static List<RefSegmentViewModel> getRefViewModel(final AssemblyAlignment assemblyAlignment)
+    private static List<Pair<CigarOperator, RefSegmentViewModel>> getRefViewModel(
+            final Cigar sequenceCigar, final AssemblyAlignment assemblyAlignment)
     {
         String refSeq = assemblyAlignment.fullSequence();
         List<AlignData> segments = assemblyAlignment.breakends().stream()
@@ -187,7 +194,7 @@ public class AssemblyVisualiser
                 .map(x -> x.Alignment)
                 .toList();
 
-        List<RefSegmentViewModel> refViewModel = Lists.newArrayList();
+        List<Pair<CigarOperator, RefSegmentViewModel>> refViewModel = Lists.newArrayList();
         List<Integer> linkIndices = assemblyAlignment.linkIndices();
         int refIdx = 0;
         for(int i = 0; i < segments.size(); i++)
@@ -232,7 +239,15 @@ public class AssemblyVisualiser
                 viewRegion = new BaseRegion(viewRegionStart, viewRegionEnd);
             }
 
-            refViewModel.add(new RefSegmentViewModel(junctionAssembly, viewRegion, segmentViewModel));
+            refViewModel.add(Pair.of(M, new RefSegmentViewModel(junctionAssembly, viewRegion, segmentViewModel)));
+            if(i == 0 && sequenceCigar.getCigarElements().size() == 3 && sequenceCigar.getCigarElements().get(1).getOperator() == I)
+            {
+                int insertLength = sequenceCigar.getCigarElements().get(1).getLength();
+                BaseSeqViewModel insertViewModel = fromStr(refSeq.substring(refIdx + length, refIdx + length + insertLength), 1);
+                viewRegion = new BaseRegion(1, insertLength);
+                refViewModel.add(Pair.of(I, new RefSegmentViewModel(null, viewRegion, insertViewModel)));
+            }
+
             if(i < segments.size() - 1)
                 refIdx = linkIndices.get(i);
         }
@@ -243,14 +258,18 @@ public class AssemblyVisualiser
     private DomContent renderRef()
     {
         int totalBoxWidth = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(Pair<CigarOperator, RefSegmentViewModel> refEl : mRefViewModel)
+        {
+            RefSegmentViewModel segmentViewModel = refEl.getRight();
             totalBoxWidth += segmentViewModel.viewRegion.baseLength() + 2 * BOX_PADDING;
+        }
 
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(Pair<CigarOperator, RefSegmentViewModel> refEl : mRefViewModel)
         {
+            RefSegmentViewModel segmentViewModel = refEl.getRight();
             BaseSeqViewModel viewModel = segmentViewModel.viewModel;
             BaseRegion viewRegion = segmentViewModel.viewRegion;
             svgCanvas.setTransform(initTransform);
@@ -267,10 +286,16 @@ public class AssemblyVisualiser
         double charWidth = getStringBounds(COORD_FONT, "9").getWidth();
         double maxStringWidth = 0.0d;
         int totalBoxWidth = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(Pair<CigarOperator, RefSegmentViewModel> refEl : mRefViewModel)
         {
+            CigarOperator cigarOp = refEl.getLeft();
+            RefSegmentViewModel segmentViewModel = refEl.getRight();
+
             BaseRegion viewRegion = segmentViewModel.viewRegion;
             totalBoxWidth += viewRegion.baseLength() + 2 * BOX_PADDING;
+            if(cigarOp != M)
+                continue;
+
             for(int i = viewRegion.start(); i <= viewRegion.end(); i++)
                 maxStringWidth = max(maxStringWidth, getStringBounds(COORD_FONT, format(Locale.US, "%,d", i)).getWidth());
         }
@@ -280,14 +305,22 @@ public class AssemblyVisualiser
                 scalingFactor * (maxStringWidth + 2 * charWidth));
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
-        for(int i = 0; i < mRefViewModel.size(); i++)
+        Queue<JunctionAssembly> assemblyQueue = new ArrayDeque<>(mAssemblyAlignment.assemblies());
+        for(Pair<CigarOperator, RefSegmentViewModel> refEl : mRefViewModel)
         {
-            RefSegmentViewModel segmentViewModel = mRefViewModel.get(i);
-            Junction junction = mAssemblyAlignment.assemblies().get(i).junction();
+            CigarOperator cigarOp = refEl.getLeft();
+            RefSegmentViewModel segmentViewModel = refEl.getRight();
 
             BaseRegion viewRegion = segmentViewModel.viewRegion;
             svgCanvas.setTransform(initTransform);
 
+            if(cigarOp == I)
+            {
+                xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+                continue;
+            }
+
+            Junction junction = assemblyQueue.poll().junction();
             int centerPosition = junction.Position;
             Point2D.Double canvasSize = new Point2D.Double(
                     scalingFactor * BASE_BOX_SIZE * (viewRegion.baseLength() + 2 * BOX_PADDING), svgCanvas.getHeight());
@@ -302,11 +335,20 @@ public class AssemblyVisualiser
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();
         int xBoxOffset = 0;
-        for(RefSegmentViewModel segmentViewModel : mRefViewModel)
+        for(Pair<CigarOperator, RefSegmentViewModel> refEl : mRefViewModel)
         {
+            CigarOperator cigarOp = refEl.getLeft();
+            RefSegmentViewModel segmentViewModel = refEl.getRight();
+
             BaseSeqViewModel viewModel = segmentViewModel.viewModel;
             BaseRegion viewRegion = segmentViewModel.viewRegion;
             int length = viewRegion.baseLength() + 2 * BOX_PADDING;
+            if(cigarOp != M)
+            {
+                xBoxOffset += length;
+                continue;
+            }
+
             regions.add(new ChrBaseRegion(viewModel.Chromosome, xBoxOffset, xBoxOffset + length - 1));
             xBoxOffset += length;
         }
