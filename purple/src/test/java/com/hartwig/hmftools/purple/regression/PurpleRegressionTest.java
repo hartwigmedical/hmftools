@@ -63,7 +63,7 @@ public class PurpleRegressionTest
         runPurple();
         File configuredOutputs = new File("/Users/timlavers/work/scratch/" + tumor + ".outputs.zip");
         Unzipper.unzipInto(configuredOutputs, ConfiguredResultsDir);
-        //        checkResults();
+        checkPurity();
         checkGermlineDrivers();
     }
 

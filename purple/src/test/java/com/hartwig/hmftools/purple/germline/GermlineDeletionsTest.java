@@ -237,7 +237,7 @@ public class GermlineDeletionsTest
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
         assertEquals(driver2_1.gene(), deletions.get(1).GeneName);
         assertEquals(FILTER_CN_INCONSISTENCY, deletions.get(1).Filter);
@@ -258,7 +258,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(1, deletions.size());
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
     }
 
@@ -276,7 +276,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(1, deletions.size());
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
     }
 
@@ -298,10 +298,10 @@ public class GermlineDeletionsTest
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
         assertEquals(driver2_1.gene(), deletions.get(1).GeneName);
-        assertEquals(CommonVcfTags.PASS, deletions.get(1).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(1).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(1).Reported);
     }
 
@@ -323,10 +323,10 @@ public class GermlineDeletionsTest
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
         assertEquals(driver2_1.gene(), deletions.get(1).GeneName);
-        assertEquals(CommonVcfTags.PASS, deletions.get(1).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(1).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(1).Reported);
     }
 
@@ -338,7 +338,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
     }
 
@@ -497,7 +497,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
         assertEquals(GermlineStatus.HET_DELETION, deletions.get(0).NormalStatus);
     }
@@ -509,7 +509,7 @@ public class GermlineDeletionsTest
         mGermlineDeletions.findDeletions(List.of(), List.of(or1), List.of());
         final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
         assertEquals(2, deletions.size());
-        assertEquals(CommonVcfTags.PASS, deletions.get(0).Filter);
+        assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
     }
 

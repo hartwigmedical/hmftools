@@ -347,20 +347,7 @@ public class GermlineDeletions
         }
 
         double germlineCopyNumber = region.observedNormalRatio() * 2;
-
-        String filter;
-
-        if(filters.isEmpty())
-        {
-            filter = PASS;
-        }
-        else
-        {
-            StringJoiner sj = new StringJoiner(";");
-            filters.forEach(x -> sj.add(x));
-            filter = sj.toString();
-        }
-
+        String filter = filters.isEmpty() ? PASS_FILTER : String.join(";", filters);
         for(int i = 0; i < deletedGenes.size(); ++i)
         {
             GeneData geneData = deletedGenes.get(i);
