@@ -79,17 +79,9 @@ public class FindingRecordFactory {
         }
 
         ChordRecord chord = orangeRecord.chord();
-
         if(chord != null)
         {
-            builder.homologousRecombination(ImmutableHomologousRecombination.builder()
-                    .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
-                    .brca1Value(chord.brca1Value())
-                    .brca2Value(chord.brca2Value())
-                    .hrdValue(chord.hrdValue())
-                    .hrStatus(chord.hrStatus())
-                    .hrdType(chord.hrdType())
-                    .build());
+            builder.homologousRecombination(createHomologousRecombination(chord));
         }
 
         return builder.viruses(createVirusFindings(orangeRecord.virusInterpreter()))
@@ -98,7 +90,6 @@ public class FindingRecordFactory {
                 .build();
     }
 
-    @NotNull
     private static void addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
         PurpleRecord purple = orangeRecord.purple();
@@ -107,12 +98,7 @@ public class FindingRecordFactory {
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(GainDeletionFactory.gainDeletionFindings(purple, findingsStatus))
-                .microsatelliteStability(
-                        ImmutableMicrosatelliteStability.builder()
-                                .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                                .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
-                                .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                                .build())
+                .microsatelliteStability(createMicrosatelliteStability(purple))
                 .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
                         .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
                                 purple.characteristics().tumorMutationalLoadStatus()))
@@ -125,6 +111,27 @@ public class FindingRecordFactory {
 
         builder.chromosomeArmCopyNumbers(
                 ChromosomeArmCopyNumberFactory.extractCnPerChromosomeArm(purple.allSomaticCopyNumbers(), orangeRecord.refGenomeVersion()));
+    }
+
+    @NotNull
+    private static HomologousRecombination createHomologousRecombination(@NotNull ChordRecord chord) {
+        return ImmutableHomologousRecombination.builder()
+                .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
+                .brca1Value(chord.brca1Value())
+                .brca2Value(chord.brca2Value())
+                .hrdValue(chord.hrdValue())
+                .hrStatus(chord.hrStatus())
+                .hrdType(chord.hrdType())
+                .build();
+    }
+
+    @NotNull
+    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple) {
+        return ImmutableMicrosatelliteStability.builder()
+                .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
+                .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
+                .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                .build();
     }
 
     private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord) {
