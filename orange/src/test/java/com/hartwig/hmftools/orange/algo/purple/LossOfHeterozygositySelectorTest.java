@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.Genes;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -24,13 +25,13 @@ public class LossOfHeterozygositySelectorTest
     @Test
     public void canSelectGenesForLOH()
     {
-        String hrdGene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
+        String hrdGene = Genes.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGeneWithLOH =
                 GeneCopyNumberTestFactory.builder().geneName(hrdGene).minMinorAlleleCopyNumber(0D).minCopyNumber(2D).build();
         GeneCopyNumber hrdGeneWithoutLOH =
                 GeneCopyNumberTestFactory.builder().geneName(hrdGene).minMinorAlleleCopyNumber(2D).minCopyNumber(2D).build();
 
-        String msiGene = LossOfHeterozygositySelector.MSI_GENES.iterator().next();
+        String msiGene = Genes.MSI_GENES.iterator().next();
         GeneCopyNumber msiGeneWithLOH =
                 GeneCopyNumberTestFactory.builder().geneName(msiGene).minMinorAlleleCopyNumber(0D).minCopyNumber(2D).build();
         GeneCopyNumber msiGeneWithoutLOH =
@@ -70,7 +71,7 @@ public class LossOfHeterozygositySelectorTest
     @Test
     public void canSelectGeneForLOHBasedOnGermlineDeletion()
     {
-        String gene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
+        String gene = Genes.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGene = GeneCopyNumberTestFactory.builder().geneName(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).maxCopyNumber(2D).build();
 
         GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION, 1);
