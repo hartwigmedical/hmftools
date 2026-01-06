@@ -7,7 +7,9 @@ import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.rawHtml;
 
@@ -27,9 +29,12 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.RefSegmentViewModel;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import j2html.tags.DomContent;
 
@@ -46,12 +51,19 @@ public final class ReadViewModel
         mSegmentViewModels = segmentViewModels;
     }
 
-    public static ReadViewModel create(final Cigar sequenceCigar, final List<RefSegmentViewModel> refViewModel,
+    public static ReadViewModel create(final Cigar sequenceCigar, final List<Pair<CigarOperator, RefSegmentViewModel>> refViewModel,
             final JunctionAssembly assembly, final SupportRead read)
     {
         Junction junction = assembly.junction();
-        int unclippedStart = junction.Position - read.junctionReadStartDistance();
         SAMRecord record = read.cachedRead().bamRecord();
+        int unclippedStart = junction.Position - read.junctionReadStartDistance();
+        for(CigarElement cigarEl : record.getCigar().getCigarElements())
+        {
+            if(cigarEl.getOperator() == I)
+                unclippedStart += cigarEl.getLength();
+            else if(cigarEl.getOperator() == D)
+                unclippedStart -= cigarEl.getLength();
+        }
 
         // find corresponding ref segment and the remote ref segment
         RefSegmentViewModel readSegmentViewModel = null;
@@ -60,7 +72,11 @@ public final class ReadViewModel
         int remoteViewModelIdx = -1;
         for(int i = 0; i < refViewModel.size(); i++)
         {
-            RefSegmentViewModel segmentViewModel = refViewModel.get(i);
+            CigarOperator cigarOp = refViewModel.get(i).getLeft();
+            if(cigarOp != M)
+                continue;
+
+            RefSegmentViewModel segmentViewModel = refViewModel.get(i).getRight();
             Junction segmentJunction = segmentViewModel.assembly().junction();
 
             boolean matches = junction.Chromosome.equals(segmentJunction.Chromosome);
@@ -82,7 +98,9 @@ public final class ReadViewModel
         }
 
         // construct segment view models
-        List<SegmentViewModel> segmentViewModels = Lists.newArrayList(null, null);
+        List<SegmentViewModel> segmentViewModels = Lists.newArrayList();
+        while(segmentViewModels.size() < refViewModel.size())
+            segmentViewModels.add(null);
 
         BaseSeqViewModel readViewModel = BaseSeqViewModel.fromRead(record, unclippedStart);
         segmentViewModels.set(readViewModelIdx, new SegmentViewModel(readSegmentViewModel.viewRegion(), readViewModel, readSegmentViewModel.viewModel()));
@@ -124,16 +142,39 @@ public final class ReadViewModel
                 insertLength = sequenceCigar.getCigarElements().get(1).getLength();
         }
 
+        List<BaseViewModel> insertBaseViewModels = null;
         if(remoteBaseViewModels.size() <= insertLength)
         {
-            remoteBaseViewModels.clear();
+            if(!remoteBaseViewModels.isEmpty())
+                insertBaseViewModels = remoteBaseViewModels;
+
+            remoteBaseViewModels = Lists.newArrayList();
         }
         else
         {
             if(junction.Orient == FORWARD)
+            {
+                if(insertLength > 0)
+                    insertBaseViewModels = remoteBaseViewModels.subList(0, insertLength);
+
                 remoteBaseViewModels = remoteBaseViewModels.subList(insertLength, remoteBaseViewModels.size());
+            }
             else
+            {
+                if(insertLength > 0)
+                    insertBaseViewModels = remoteBaseViewModels.subList(
+			    remoteBaseViewModels.size() - insertLength, remoteBaseViewModels.size());
+
                 remoteBaseViewModels = remoteBaseViewModels.subList(0, remoteBaseViewModels.size() - insertLength);
+            }
+        }
+
+        if(insertBaseViewModels != null)
+        {
+            RefSegmentViewModel insertSegmentViewModel = refViewModel.get(1).getRight();
+            int posStart = readViewModelIdx == 0 ? 1 : 1 + insertLength - insertBaseViewModels.size();
+            BaseSeqViewModel insertReadViewModel = new BaseSeqViewModel(insertBaseViewModels, null, posStart, null, null);
+            segmentViewModels.set(1, new SegmentViewModel(insertSegmentViewModel.viewRegion(), insertReadViewModel, insertSegmentViewModel.viewModel()));
         }
 
         Junction remoteJunction = remoteSegmentViewModel.assembly().junction();
@@ -163,6 +204,7 @@ public final class ReadViewModel
         SVGGraphics2D svgCanvas = new SVGGraphics2D(READ_HEIGHT_PX * totalBoxWidth, READ_HEIGHT_PX);
         AffineTransform initTransform = svgCanvas.getTransform();
         double xBoxOffset = 0.0d;
+        int i = 0;
         for(SegmentViewModel segmentViewModel : mSegmentViewModels)
         {
             BaseRegion viewRegion = segmentViewModel.viewRegion;
@@ -170,9 +212,13 @@ public final class ReadViewModel
             BaseSeqViewModel refViewModel = segmentViewModel.refViewModel;
 
             svgCanvas.setTransform(initTransform);
-            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, readViewModel, true, Maps.newHashMap(), refViewModel);
+
+            boolean renderLeftOrientationMarker = i == 0;
+            boolean renderRightOrientationMarker = i == mSegmentViewModels.size() - 1;
+            renderBaseSeq(svgCanvas, new Point2D.Double(xBoxOffset, 0.0d), READ_HEIGHT_PX, viewRegion, readViewModel, true, Maps.newHashMap(), refViewModel, renderLeftOrientationMarker, renderRightOrientationMarker);
 
             xBoxOffset += viewRegion.baseLength() + 2 * BOX_PADDING;
+            i += 1;
         }
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
