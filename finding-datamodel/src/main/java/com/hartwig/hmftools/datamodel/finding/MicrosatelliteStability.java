@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.finding;
 
+import java.util.List;
+
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 
 import org.immutables.gson.Gson;
@@ -14,4 +16,6 @@ public interface MicrosatelliteStability extends Finding
 {
     double microsatelliteIndelsPerMb();
     @NotNull PurpleMicrosatelliteStatus microsatelliteStatus();
+
+    @NotNull List<LOHCopyNumbers> lohCopyNumbers();
 }
