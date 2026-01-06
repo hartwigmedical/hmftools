@@ -97,57 +97,81 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static TumorMutationStatus createTumorMutationStatus(@NotNull PurpleRecord purple) {
-        return ImmutableTumorMutationStatus.builder()
-                .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
-                        purple.characteristics().tumorMutationalLoadStatus()))
-                .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
-                .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
-                .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
-                .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
+    private static CharacteristicsFinding<TumorMutationStatus> createTumorMutationStatus(@NotNull PurpleRecord purple) {
+        return ImmutableCharacteristicsFinding.<TumorMutationStatus>builder()
+                .status(FindingsStatus.OK)
+                .finding(ImmutableTumorMutationStatus.builder()
+                        .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
+                                purple.characteristics().tumorMutationalLoadStatus()))
+                        .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
+                        .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
+                        .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
+                        .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
+                        .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
+                        .build())
                 .build();
     }
 
-    @Nullable
-    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaData cuppa) {
-        return cuppa != null ? ImmutablePredictedTumorOrigin.builder()
-                .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
-                .cancerType(cuppa.bestPrediction().cancerType())
-                .likelihood(cuppa.bestPrediction().likelihood())
-                .build() : null;
-    }
-
-    @Nullable
-    private static HomologousRecombination createHomologousRecombination(@Nullable ChordRecord chord,
-            @NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx) {
-        return chord != null ? ImmutableHomologousRecombination.builder()
-                .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
-                .brca1Value(chord.brca1Value())
-                .brca2Value(chord.brca2Value())
-                .hrdValue(chord.hrdValue())
-                .hrStatus(chord.hrStatus())
-                .hrdType(chord.hrdType())
-                .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
-                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
-                        purple.reportableSomaticGainsDels(),
-                        linx.germlineHomozygousDisruptions(),
-                        Genes.HRD_GENES))
-                .build() : null;
+    @NotNull
+    private static CharacteristicsFinding<PredictedTumorOrigin> createPredictedTumorOrigin(CuppaData cuppa) {
+        if (cuppa != null) {
+            return ImmutableCharacteristicsFinding.<PredictedTumorOrigin>builder()
+                    .status(FindingsStatus.OK)
+                    .finding( ImmutablePredictedTumorOrigin.builder()
+                            .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
+                            .cancerType(cuppa.bestPrediction().cancerType())
+                            .likelihood(cuppa.bestPrediction().likelihood())
+                            .build())
+                    .build();
+        } else {
+            return ImmutableCharacteristicsFinding.<PredictedTumorOrigin>builder()
+                    .status(FindingsStatus.NOT_AVAILABLE)
+                    .build();
+        }
     }
 
     @NotNull
-    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple, @NotNull LinxRecord linx) {
-        return ImmutableMicrosatelliteStability.builder()
-                .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
-                .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
-                .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
-                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
-                        purple.reportableSomaticGainsDels(),
-                        linx.germlineHomozygousDisruptions(),
-                        Genes.MSI_GENES))
+    private static CharacteristicsFinding<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
+            @NotNull PurpleRecord purple,
+            @NotNull LinxRecord linx) {
+        if (chord != null) {
+            return ImmutableCharacteristicsFinding.<HomologousRecombination>builder()
+                    .status(FindingsStatus.OK)
+                    .finding(ImmutableHomologousRecombination.builder()
+                            .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
+                            .brca1Value(chord.brca1Value())
+                            .brca2Value(chord.brca2Value())
+                            .hrdValue(chord.hrdValue())
+                            .hrStatus(chord.hrStatus())
+                            .hrdType(chord.hrdType())
+                            .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
+                            .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                                    purple.reportableSomaticGainsDels(),
+                                    linx.germlineHomozygousDisruptions(),
+                                    Genes.HRD_GENES))
+                            .build())
+                    .build();
+        } else {
+            return ImmutableCharacteristicsFinding.<HomologousRecombination>builder()
+                    .status(FindingsStatus.NOT_AVAILABLE)
+                    .build();
+        }
+    }
+
+    @NotNull
+    private static CharacteristicsFinding<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple, @NotNull LinxRecord linx) {
+        return ImmutableCharacteristicsFinding.<MicrosatelliteStability>builder()
+                .status(FindingsStatus.OK)
+                .finding(ImmutableMicrosatelliteStability.builder()
+                        .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
+                        .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
+                        .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                        .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
+                        .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                                purple.reportableSomaticGainsDels(),
+                                linx.germlineHomozygousDisruptions(),
+                                Genes.MSI_GENES))
+                        .build())
                 .build();
     }
 
