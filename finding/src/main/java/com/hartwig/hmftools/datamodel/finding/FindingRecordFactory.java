@@ -4,8 +4,11 @@ import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDis
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +29,8 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
+import com.hartwig.hmftools.datamodel.purple.Genes;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -81,7 +86,7 @@ public class FindingRecordFactory {
         ChordRecord chord = orangeRecord.chord();
         if(chord != null)
         {
-            builder.homologousRecombination(createHomologousRecombination(chord));
+            builder.homologousRecombination(createHomologousRecombination(chord, orangeRecord.purple()));
         }
 
         return builder.viruses(createVirusFindings(orangeRecord.virusInterpreter()))
@@ -114,7 +119,8 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static HomologousRecombination createHomologousRecombination(@NotNull ChordRecord chord) {
+    private static HomologousRecombination createHomologousRecombination(@NotNull ChordRecord chord,
+            @NotNull PurpleRecord purple) {
         return ImmutableHomologousRecombination.builder()
                 .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
                 .brca1Value(chord.brca1Value())
@@ -122,6 +128,7 @@ public class FindingRecordFactory {
                 .hrdValue(chord.hrdValue())
                 .hrStatus(chord.hrStatus())
                 .hrdType(chord.hrdType())
+                .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
                 .build();
     }
 
@@ -131,7 +138,30 @@ public class FindingRecordFactory {
                 .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                 .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
                 .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
+                .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
                 .build();
+    }
+
+    @NotNull
+    private static List<LOHCopyNumbers> createGeneCopyNumbers(@NotNull PurpleRecord purpleRecord, Set<String> geneNames) {
+        List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = purpleRecord.suspectGeneCopyNumbersWithLOH();
+        boolean hasReliablePurity = purpleRecord.fit().containsTumorCells();
+        return suspectGeneCopyNumbersWithLOH.stream()
+                .filter(x -> geneNames.contains(x.gene()))
+                .map(lohGene -> ImmutableLOHCopyNumbers.builder()
+                        .findingKey(FindingKeys.lohCopyNumber(lohGene))
+                        .location(lohGene.chromosome() + lohGene.chromosomeBand())
+                        .gene(lohGene.gene())
+                        .tumorCopies(hasReliablePurity ? toInteger(lohGene.minCopyNumber()) : null)
+                        .tumorMinorAlleleCopies(hasReliablePurity ? toInteger(lohGene.minMinorAlleleCopyNumber()) : null)
+                        .build())
+                .sorted(Comparator.comparing(LOHCopyNumbers::gene))
+                .collect(Collectors.toList());
+    }
+
+    private static Integer toInteger(@Nullable Double value) {
+        return value != null ? BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_EVEN) // match DecimalFormat
+                .intValueExact() : null;
     }
 
     private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord) {
