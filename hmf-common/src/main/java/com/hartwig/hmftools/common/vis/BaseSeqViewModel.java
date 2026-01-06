@@ -93,12 +93,26 @@ public class BaseSeqViewModel
             @Nullable final BaseSeqViewModel second, @Nullable final Integer unclippedStartOverride)
     {
         int unclippedStart = unclippedStartOverride == null ? consensusRead.getUnclippedStart() : unclippedStartOverride;
-        String readString = consensusRead.getReadString();
+        List<CigarElement> cigarElements = consensusRead.getCigar().getCigarElements();
+        byte[] bases = consensusRead.getReadBases();
         byte[] baseQuals = consensusRead.getBaseQualities();
+        boolean readNegativeStrandFlag = consensusRead.getReadNegativeStrandFlag();
+        return create(unclippedStart, cigarElements, bases, baseQuals, readNegativeStrandFlag, first, second);
+    }
 
+    public static BaseSeqViewModel create(int unclippedStart, final List<CigarElement> cigarElements, final byte[] bases,
+            final byte[] baseQuals, boolean readNegativeStrandFlag)
+    {
+        return create(unclippedStart, cigarElements, bases, baseQuals, readNegativeStrandFlag, null, null);
+    }
+
+    public static BaseSeqViewModel create(int unclippedStart, final List<CigarElement> cigarElements, final byte[] bases,
+            final byte[] baseQuals, boolean readNegativeStrandFlag, @Nullable final BaseSeqViewModel first,
+            @Nullable final BaseSeqViewModel second)
+    {
         List<BaseViewModel> indexedBases = Lists.newArrayList();
         int baseIdx = 0;
-        for(CigarElement cigarElem : consensusRead.getCigar().getCigarElements())
+        for(CigarElement cigarElem : cigarElements)
         {
             CigarOperator cigarOp = cigarElem.getOperator();
             int elemLen = cigarElem.getLength();
@@ -113,16 +127,16 @@ public class BaseSeqViewModel
                     case M:
                     case EQ:
                     case X:
-                        indexedBases.add(new BaseViewModel(readString.charAt(baseIdx), baseQuals[baseIdx], false, isOverlapped));
+                        indexedBases.add(new BaseViewModel((char) bases[baseIdx], baseQuals[baseIdx], false, isOverlapped));
                         baseIdx++;
                         break;
                     case S:
-                        indexedBases.add(new BaseViewModel(readString.charAt(baseIdx), baseQuals[baseIdx], true, isOverlapped));
+                        indexedBases.add(new BaseViewModel((char) bases[baseIdx], baseQuals[baseIdx], true, isOverlapped));
                         baseIdx++;
                         break;
                     case I:
                         if(!indexedBases.isEmpty())
-                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount(readString.charAt(baseIdx), baseQuals[baseIdx]);
+                            indexedBases.get(indexedBases.size() - 1).incRightInsertCount((char) bases[baseIdx], baseQuals[baseIdx]);
 
                         baseIdx++;
                         break;
@@ -138,10 +152,7 @@ public class BaseSeqViewModel
         }
 
         if(first == null || second == null)
-        {
-            boolean readNegativeStrandFlag = consensusRead.getReadNegativeStrandFlag();
             return new BaseSeqViewModel(indexedBases, unclippedStart, !readNegativeStrandFlag, !readNegativeStrandFlag);
-        }
 
         boolean leftIsForwardStrand = first.FirstBasePos <= second.FirstBasePos ? first.LeftIsForwardStrand : second.LeftIsForwardStrand;
         boolean rightIsForwardStrand = first.LastBasePos >= second.LastBasePos ? first.RightIsForwardStrand : second.RightIsForwardStrand;
