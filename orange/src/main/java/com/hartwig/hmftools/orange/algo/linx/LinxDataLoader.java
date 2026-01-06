@@ -18,7 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.driver.DriverType;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
@@ -73,16 +77,15 @@ public final class LinxDataLoader
             @Nullable String germlineDriverCatalogTsv)
             throws IOException
     {
-        List<LinxSvAnnotation> somaticSvAnnotations = LinxSvAnnotation.read(somaticSvAnnotationFile);
-
         List<LinxDriver> somaticDrivers = LinxDriver.read(somaticDriverTsv);
-
         List<LinxFusion> reportableSomaticFusions = loadReportableFusions(fusionTsv);
-
         List<LinxBreakend> reportableSomaticBreakends = loadReportableBreakends(somaticBreakendTsv);
 
-        List<HomozygousDisruption> somaticHomozygousDisruptions = HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(
-                somaticDriverCatalogTsv);
+        // limit SV annotations to reportable breakends
+        List<LinxSvAnnotation> somaticSvAnnotations = LinxSvAnnotation.read(somaticSvAnnotationFile);
+        restrictToMatchingBreakends(somaticSvAnnotations, reportableSomaticBreakends);
+
+        List<HomozygousDisruption> somaticHomozygousDisruptions = extractHomozygousDisruptions(somaticDriverCatalogTsv);
 
         Set<Integer> fusionClusterIds = loadFusionClusters(somaticVisFusionTsv);
 
@@ -95,25 +98,17 @@ public final class LinxDataLoader
         List<LinxSvAnnotation> germlineSvAnnotations = null;
         List<LinxBreakend> reportableGermlineBreakends = null;
         List<LinxGermlineDisruption> reportableGermlineDisruptions = null;
-        List<HomozygousDisruption> germlineHomozygousDisruptions = null;
+        List<HomozygousDisruption> germlineHomozygousDisruptions = Collections.emptyList();
 
-        // TODO: could cull SV annotations to reportable breakends only
-
-        if(germlineSvAnnotationFile != null && germlineBreakendTsv != null)
+        if(germlineSvAnnotationFile != null && germlineBreakendTsv != null && germlineDisruptionTsv != null)
         {
             germlineSvAnnotations = LinxSvAnnotation.read(germlineSvAnnotationFile);
             reportableGermlineBreakends = loadReportableBreakends(germlineBreakendTsv);
-        }
 
-        if(germlineDisruptionTsv != null)
-        {
+            restrictToMatchingBreakends(germlineSvAnnotations, reportableGermlineBreakends);
+
             List<LinxGermlineDisruption> allGermlineDisruptions = LinxGermlineDisruption.read(germlineDisruptionTsv);
             reportableGermlineDisruptions = selectReportableGermlineSvs(allGermlineDisruptions, reportableGermlineBreakends);
-        }
-
-        if(germlineDriverCatalogTsv != null)
-        {
-            germlineHomozygousDisruptions = Collections.emptyList();
         }
 
         return ImmutableLinxData.builder()
@@ -169,19 +164,70 @@ public final class LinxDataLoader
         List<LinxGermlineDisruption> reportableGermlineSvs = new ArrayList<>();
 
         if(reportableGermlineBreakends == null)
-        {
             return reportableGermlineSvs;
-        }
 
         for(LinxGermlineDisruption germlineSv : germlineSvs)
         {
-
             if(reportableGermlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId))
             {
                 reportableGermlineSvs.add(germlineSv);
             }
         }
         return reportableGermlineSvs;
+    }
+
+    private static void restrictToMatchingBreakends(final List<LinxSvAnnotation> svAnnotations, final List<LinxBreakend> breakends)
+    {
+        int index = 0;
+
+        while(index < svAnnotations.size())
+        {
+            LinxSvAnnotation svAnnotation = svAnnotations.get(index);
+
+            if(breakends.stream().anyMatch(x -> x.svId() == svAnnotation.svId()))
+            {
+                ++index;
+            }
+            else
+            {
+                svAnnotations.remove(index);
+            }
+        }
+    }
+
+    public static List<HomozygousDisruption> extractHomozygousDisruptions(final String driverCatalogTsv)
+            throws IOException
+    {
+        List<DriverCatalog> linxDriversCatalog = DriverCatalogFile.read(driverCatalogTsv);
+
+        List<HomozygousDisruption> homozygousDisruptions = extractSomaticHomozygousDisruptions(linxDriversCatalog);
+        return homozygousDisruptions;
+    }
+
+    private static List<HomozygousDisruption> extractSomaticHomozygousDisruptions(final List<DriverCatalog> driverCatalog)
+    {
+        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+
+        for(DriverCatalog driver : driverCatalog)
+        {
+            if(driver.driver() == DriverType.HOM_DUP_DISRUPTION || driver.driver() == DriverType.HOM_DEL_DISRUPTION)
+            {
+                homozygousDisruptions.add(create(driver));
+            }
+        }
+
+        return homozygousDisruptions;
+    }
+
+    private static HomozygousDisruption create(final DriverCatalog driverCatalog)
+    {
+        return ImmutableHomozygousDisruption.builder()
+                .chromosome(driverCatalog.chromosome())
+                .chromosomeBand(driverCatalog.chromosomeBand())
+                .gene(driverCatalog.gene())
+                .transcript(driverCatalog.transcript())
+                .isCanonical(driverCatalog.isCanonical())
+                .build();
     }
 
     private static Set<Integer> loadFusionClusters(final String filename) throws IOException

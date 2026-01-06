@@ -76,8 +76,7 @@ public final class PurpleDataLoader
         List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
                 .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
 
-        List<PurpleVariantContext> panelSomaticVariants = allSomaticVariants.stream()
-                .filter(x -> x.tier() == VariantTier.PANEL || x.tier() == VariantTier.HOTSPOT).collect(Collectors.toList());
+        List<PurpleVariantContext> panelSomaticVariants = allSomaticVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(geneCopyNumberTsv);
 
@@ -94,8 +93,7 @@ public final class PurpleDataLoader
             List<PurpleVariantContext> germlineVariants = new PurpleVariantContextLoader().fromVCFFile(
                     tumorSample, referenceSample, rnaSample, germlineVariantVcf);
 
-            panelGermlineVariants = germlineVariants.stream()
-                    .filter(x -> x.tier() == VariantTier.PANEL || x.tier() == VariantTier.HOTSPOT).collect(Collectors.toList());
+            panelGermlineVariants = germlineVariants.stream().filter(x -> x.reported()).collect(Collectors.toList());
 
             List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(germlineDeletionTsv).stream()
                     .filter(x -> x.Filter.equals(CommonVcfTags.PASS_FILTER)).collect(Collectors.toList());
