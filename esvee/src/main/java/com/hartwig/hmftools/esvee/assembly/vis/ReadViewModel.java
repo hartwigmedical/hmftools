@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.vis;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
@@ -7,7 +8,6 @@ import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static j2html.TagCreator.div;
@@ -33,7 +33,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import j2html.tags.DomContent;
@@ -51,19 +50,37 @@ public final class ReadViewModel
         mSegmentViewModels = segmentViewModels;
     }
 
+    private static int getUnclippedStart(final List<Pair<CigarOperator, RefSegmentViewModel>> refViewModel, final SupportRead read)
+    {
+        int assemblyIndex = read.fullAssemblyIndexStart();
+        for(int i = 0; i < refViewModel.size(); i++)
+        {
+            CigarOperator cigarOp = refViewModel.get(i).getLeft();
+            RefSegmentViewModel segmentViewModel = refViewModel.get(i).getRight();
+
+            if(assemblyIndex < segmentViewModel.viewRegion().baseLength())
+            {
+                if(cigarOp == I)
+                {
+                    int insertBasesCount = segmentViewModel.viewRegion().baseLength() - assemblyIndex;
+                    int nextSegmentStart = refViewModel.get(i + 1).getRight().viewRegion().start();
+                    return nextSegmentStart - insertBasesCount;
+                }
+
+                return segmentViewModel.viewRegion().start() + assemblyIndex;
+            }
+
+            assemblyIndex -= segmentViewModel.viewRegion().baseLength();
+        }
+
+        throw new RuntimeException("Assembly start index is out of range.");
+    }
+
     public static ReadViewModel create(final Cigar sequenceCigar, final List<Pair<CigarOperator, RefSegmentViewModel>> refViewModel,
             final JunctionAssembly assembly, final SupportRead read)
     {
         Junction junction = assembly.junction();
-        SAMRecord record = read.cachedRead().bamRecord();
-        int unclippedStart = junction.Position - read.junctionReadStartDistance();
-        for(CigarElement cigarEl : record.getCigar().getCigarElements())
-        {
-            if(cigarEl.getOperator() == I)
-                unclippedStart += cigarEl.getLength();
-            else if(cigarEl.getOperator() == D)
-                unclippedStart -= cigarEl.getLength();
-        }
+        int unclippedStart = getUnclippedStart(refViewModel, read);
 
         // find corresponding ref segment and the remote ref segment
         RefSegmentViewModel readSegmentViewModel = null;
@@ -102,7 +119,27 @@ public final class ReadViewModel
         while(segmentViewModels.size() < refViewModel.size())
             segmentViewModels.add(null);
 
-        BaseSeqViewModel readViewModel = BaseSeqViewModel.fromRead(record, unclippedStart);
+        boolean readNegativeStrandFlag = read.cachedRead().bamRecord().getReadNegativeStrandFlag();
+        byte[] readBases = read.cachedRead().getBases();
+        byte[] readBaseQuals = read.cachedRead().getBaseQuality();
+        if(read.fullAssemblyOrientation() == REVERSE)
+        {
+            readBases = reverseComplementBases(readBases);
+
+            int left = 0;
+            int right = readBaseQuals.length - 1;
+            while(left < right)
+            {
+                byte temp = readBaseQuals[left];
+                readBaseQuals[left] = readBaseQuals[right];
+                readBaseQuals[right] = temp;
+                left += 1;
+                right -= 1;
+            }
+        }
+
+        BaseSeqViewModel readViewModel = BaseSeqViewModel.create(
+                unclippedStart, read.cachedRead().cigarElements(), readBases, readBaseQuals, readNegativeStrandFlag);
         segmentViewModels.set(readViewModelIdx, new SegmentViewModel(readSegmentViewModel.viewRegion(), readViewModel, readSegmentViewModel.viewModel()));
 
         int remoteStart = junction.Orient == FORWARD ? junction.Position + 1 : readViewModel.FirstBasePos;
@@ -192,7 +229,7 @@ public final class ReadViewModel
         }
 
         segmentViewModels.set(remoteViewModelIdx, new SegmentViewModel(remoteSegmentViewModel.viewRegion(), remoteReadViewModel, remoteSegmentViewModel.viewModel()));
-        return new ReadViewModel(record, segmentViewModels);
+        return new ReadViewModel(read.cachedRead().bamRecord(), segmentViewModels);
     }
 
     public DomContent render()
