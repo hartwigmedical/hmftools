@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,12 @@ public final class HtmlUtil
     private static int getReadNM(final SAMRecord read) { return getNumEvents(read); }
 
     public static DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
+    {
+        return renderReadInfoTable(firstRead, secondRead, null);
+    }
+
+    public static DomContent renderReadInfoTable(
+            final SAMRecord firstRead, @Nullable final SAMRecord secondRead, @Nullable final Map<String, String> extraInfo)
     {
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
         CssBuilder readInfoStyle = baseDivStyle.display("none");
@@ -124,6 +131,12 @@ public final class HtmlUtil
         }
 
         readInfoRows.add(tr(td("Dup count:"), td(dupCountStr)));
+
+        if(extraInfo != null)
+        {
+            for(Map.Entry<String, String> entry : extraInfo.entrySet())
+                readInfoRows.add(tr(td(entry.getKey()), td(entry.getValue())));
+        }
 
         DomContent readInfoTable = styledTable(readInfoRows, CssBuilder.EMPTY);
         return div(readInfoTable).withClass("read-info").withStyle(readInfoStyle.toString());

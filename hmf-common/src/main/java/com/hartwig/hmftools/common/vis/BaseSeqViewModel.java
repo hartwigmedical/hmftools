@@ -172,4 +172,9 @@ public class BaseSeqViewModel
     {
         return LeftIsForwardStrand != null && RightIsForwardStrand != null;
     }
+
+    public void clearSoftClips()
+    {
+        mBases.forEach(BaseViewModel::clearSoftClip);
+    }
 }
