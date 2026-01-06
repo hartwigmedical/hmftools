@@ -18,4 +18,6 @@ public interface MicrosatelliteStability extends Finding
     @NotNull PurpleMicrosatelliteStatus microsatelliteStatus();
 
     @NotNull List<LOHCopyNumbers> lohCopyNumbers();
+
+    @NotNull List<String> genes();
 }
