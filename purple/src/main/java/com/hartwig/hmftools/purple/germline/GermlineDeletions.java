@@ -128,14 +128,14 @@ public class GermlineDeletions
             {
                 continue;
             }
-            PurpleCopyNumber matchedCopyNumber = findMatchingCopyNumber(region, copyNumbers);
+            PurpleCopyNumber overlappingCopyNumberWithLowestMajorAlleleCopyNumber = findMatchingCopyNumber(region, copyNumbers);
             ObservedRegion nextRegion = i < fittedRegions.size() - 1 ? fittedRegions.get(i + 1) : null;
             if(nextRegion != null && !nextRegion.chromosome().equals(region.chromosome()))
             {
                 nextRegion = null;
             }
             MatchedStructuralVariant[] matchingSVs = findMatchingGermlineSVs(region, nextRegion, germlineSVs);
-            findOverlappingDriverGene(region, matchedCopyNumber, matchingSVs);
+            findOverlappingDriverGene(region, overlappingCopyNumberWithLowestMajorAlleleCopyNumber, matchingSVs);
         }
     }
 
