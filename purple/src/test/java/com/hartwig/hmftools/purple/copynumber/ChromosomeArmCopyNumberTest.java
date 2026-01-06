@@ -41,6 +41,14 @@ public class ChromosomeArmCopyNumberTest
     }
 
     @Test
+    public void fromTsvTest()
+    {
+        ChromosomeArmCopyNumber original = new ChromosomeArmCopyNumber(_1, P_ARM, 0.6633, 0.6000, 0.3201, 0.9000);
+        ChromosomeArmCopyNumber rebuilt = ChromosomeArmCopyNumber.fromTsv(original.toTSV());
+        assertEquals(original, rebuilt);
+    }
+
+    @Test
     public void isReportable()
     {
         assertTrue(cn(_1, P_ARM).includeInReport());

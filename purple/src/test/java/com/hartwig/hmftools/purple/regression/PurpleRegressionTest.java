@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.regression;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -15,6 +17,8 @@ import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.purple.PurpleApplication;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumber;
+import com.hartwig.hmftools.purple.copynumber.ChromosomeArmCopyNumbersFile;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -70,7 +74,7 @@ public class PurpleRegressionTest
     {
         PurityContext baselineContext = PurityContextFile.read(ConfiguredResultsDir.getAbsolutePath(), tumor);
         PurityContext newContext = PurityContextFile.read(OutputDir.getAbsolutePath(), tumor);
-        Assert.assertEquals(baselineContext, newContext);
+        assertEquals(baselineContext, newContext);
     }
 
     private void checkSomaticDrivers() throws Exception
@@ -85,6 +89,28 @@ public class PurpleRegressionTest
         String outputGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(OutputDir.getAbsolutePath(), tumor);
         String baselineGermlineDriverFile = DriverCatalogFile.generateGermlineFilename(ConfiguredResultsDir.getAbsolutePath(), tumor);
         checkDrivers(baselineGermlineDriverFile, outputGermlineDriverFile);
+    }
+
+    private void checkChromosomeArmCopyNumbers() throws Exception
+    {
+        List<ChromosomeArmCopyNumber> armCopyNumbers =
+                ChromosomeArmCopyNumbersFile.read(ChromosomeArmCopyNumbersFile.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<ChromosomeArmCopyNumber> baselineCopyNumbers =
+                ChromosomeArmCopyNumbersFile.read(ChromosomeArmCopyNumbersFile.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+        assertEquals(armCopyNumbers.size(), baselineCopyNumbers.size());
+        for(ChromosomeArmCopyNumber armCopyNumber : armCopyNumbers)
+        {
+            ChromosomeArmCopyNumber baseline = findCopyNumber(baselineCopyNumbers, armCopyNumber);
+            checkObjectsHaveSameData(baseline, armCopyNumber);
+        }
+    }
+
+    private static ChromosomeArmCopyNumber findCopyNumber(List<ChromosomeArmCopyNumber> copyNumbers, ChromosomeArmCopyNumber toMatch)
+    {
+        List<ChromosomeArmCopyNumber> matches =
+                copyNumbers.stream().filter(cn -> cn.chromosome().equals(toMatch.chromosome()) && cn.arm().equals(toMatch.arm())).toList();
+        assertEquals("Copy numbers matching " + toMatch.chromosome() + " " + toMatch.arm() + " has size " + matches.size(), 1, matches.size());
+        return matches.get(0);
     }
 
     private void checkDeletions() throws Exception
@@ -111,7 +137,7 @@ public class PurpleRegressionTest
         {
             DriverCatalog inNewOutput = findDriver(outputDrivers, baselineDriver.transcript());
             Assert.assertNotNull(inNewOutput);
-            Assert.assertEquals(inNewOutput, baselineDriver);
+            assertEquals(inNewOutput, baselineDriver);
             checkObjectsHaveSameData(baselineDriver, inNewOutput);
         }
 
@@ -131,7 +157,7 @@ public class PurpleRegressionTest
         List<PurpleSegment> outputSegments = PurpleSegment.read(PurpleSegment.generateFilename(OutputDir.getAbsolutePath(), tumor));
         List<PurpleSegment> baselineSegments =
                 PurpleSegment.read(PurpleSegment.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
-        Assert.assertEquals(outputSegments.size(), baselineSegments.size());
+        assertEquals(outputSegments.size(), baselineSegments.size());
 
         for(PurpleSegment outputSegment : outputSegments)
         {
@@ -145,38 +171,47 @@ public class PurpleRegressionTest
         return segments.stream().filter(segment -> segment.matches(toMatch)).findFirst().orElse(null);
     }
 
-    private void checkObjectsHaveSameData(Object s, Object t)
+    private static void checkObjectsHaveSameData(Object s, Object t)
     {
-        for(Field field : s.getClass().getFields())
+        Class<?> currentClass = s.getClass();
+        while (currentClass != null && !currentClass.equals(Object.class))
         {
-            if(Modifier.isStatic(field.getModifiers()))
+            for (Field field : currentClass.getDeclaredFields())
             {
-                continue;
-            }
-            try
-            {
-                Object valS = field.get(s);
-                Object valT = field.get(t);
-                if(field.getType().equals(double.class) || field.getType().equals(Double.class))
+                if (Modifier.isStatic(field.getModifiers()))
                 {
-                    Assert.assertEquals("Field " + field.getName() + " mismatch", (double) valS, (double) valT, 0.001);
+                    continue;
                 }
-                else
+                try
                 {
-                    Assert.assertEquals("Field " + field.getName() + " mismatch", valS, valT);
+                    field.setAccessible(true);
+                    Object valS = field.get(s);
+                    Object valT = field.get(t);
+                    if (field.getType().equals(double.class) || field.getType().equals(Double.class))
+                    {
+                        assertEquals("Field " + field.getName() + " mismatch in " + currentClass.getSimpleName(),
+                                (double) valS,
+                                (double) valT,
+                                0.001);
+                    }
+                    else
+                    {
+                        assertEquals("Field " + field.getName() + " mismatch in " + currentClass.getSimpleName(), valS, valT);
+                    }
+                }
+                catch (IllegalAccessException e)
+                {
+                    throw new RuntimeException(e);
                 }
             }
-            catch(IllegalAccessException e)
-            {
-                throw new RuntimeException(e);
-            }
+            currentClass = currentClass.getSuperclass();
         }
     }
 
     private static GermlineDeletion findGermlineDeletion(List<GermlineDeletion> deletions, GermlineDeletion toMatch)
     {
         List<GermlineDeletion> matching = deletions.stream().filter(germline -> deletionsMatch(germline, toMatch)).toList();
-        Assert.assertEquals("Deletions matching " + toMatch.GeneName + " has size " + matching.size(), 1, matching.size());
+        assertEquals("Deletions matching " + toMatch.GeneName + " has size " + matching.size(), 1, matching.size());
         return matching.get(0);
     }
 
@@ -222,6 +257,7 @@ public class PurpleRegressionTest
         checkSomaticDrivers();
         checkSegments();
         checkDeletions();
+        checkChromosomeArmCopyNumbers();
     }
 
     private void runPurple() throws IOException

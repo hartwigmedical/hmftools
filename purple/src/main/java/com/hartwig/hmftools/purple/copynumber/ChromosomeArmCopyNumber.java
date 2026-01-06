@@ -16,6 +16,17 @@ public record ChromosomeArmCopyNumber(
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
+    public static ChromosomeArmCopyNumber fromTsv(String tsv)
+    {
+        String[] fields = tsv.split(TSV_DELIM);
+        return new ChromosomeArmCopyNumber(HumanChromosome.fromString(fields[0]),
+                ChromosomeArm.fromString(fields[1]),
+                Double.parseDouble(fields[2].trim()),
+                Double.parseDouble(fields[3].trim()),
+                Double.parseDouble(fields[4].trim()),
+                Double.parseDouble(fields[5].trim()));
+    }
+
     public static String tsvFileHeader()
     {
         return new StringJoiner("\t")

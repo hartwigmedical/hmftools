@@ -22,4 +22,14 @@ public enum ChromosomeArm
             return UNKNOWN.toString();
     }
 
+    public static ChromosomeArm fromString(final String str)
+    {
+        if(str.equals(CHROMOSOME_ARM_P))
+            return P_ARM;
+        else if(str.equals(CHROMOSOME_ARM_Q))
+            return Q_ARM;
+        else if(str.equals(CENTROMERE.toString()))
+            return CENTROMERE;
+        return UNKNOWN;
+    }
 }
