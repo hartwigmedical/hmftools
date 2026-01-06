@@ -1,27 +1,22 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum DriverInterpretation
 {
     HIGH,
     MEDIUM,
     LOW;
 
-    @NotNull
+    public static final double DRIVER_LIKELIHOOD_LOW_THRESHOLD = 0.2;
+    public static final double DRIVER_LIKELIHOOD_MEDIUM_THRESHOLD = 0.8;
+
     public static DriverInterpretation interpret(double driverLikelihood)
     {
-        if(driverLikelihood > 0.8)
-        {
+        if(driverLikelihood >= DRIVER_LIKELIHOOD_MEDIUM_THRESHOLD)
             return HIGH;
-        }
-        else if(driverLikelihood > 0.2)
-        {
+
+        if(driverLikelihood >= DRIVER_LIKELIHOOD_LOW_THRESHOLD)
             return MEDIUM;
-        }
-        else
-        {
-            return LOW;
-        }
+
+        return LOW;
     }
 }

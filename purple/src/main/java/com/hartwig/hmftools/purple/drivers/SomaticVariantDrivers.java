@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverImpact;
+import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.driver.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -119,7 +121,7 @@ public class SomaticVariantDrivers
         return topCodingEffect;
     }
 
-    public static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
+    private static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
     {
         DriverImpact impact = DriverImpact.select(type, codingEffect);
         return impact != DriverImpact.UNKNOWN;

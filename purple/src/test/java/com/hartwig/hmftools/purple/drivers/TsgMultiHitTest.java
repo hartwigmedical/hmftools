@@ -54,16 +54,16 @@ public class TsgMultiHitTest {
 
         GeneCopyNumber geneCopyNumber = createGeneCopyNumber(GENE_NAME_1);
 
-        DriverCatalog multiFrameshift = TsgDrivers.createTsgDriver(
+        DriverCatalog multiFrameshift = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(frameshift, frameshift), counts, counts, geneCopyNumber, geneLikelihood);
 
         DriverCatalog missenseAndFrameshift =
-                TsgDrivers.createTsgDriver(Lists.newArrayList(missense, frameshift), counts, counts, geneCopyNumber, geneLikelihood);
+                TsgDrivers.createDriverCatalog(Lists.newArrayList(missense, frameshift), counts, counts, geneCopyNumber, geneLikelihood);
 
-        DriverCatalog singleFrameshift = TsgDrivers.createTsgDriver(
+        DriverCatalog singleFrameshift = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(frameshift), counts, counts, geneCopyNumber, geneLikelihood);
 
-        DriverCatalog multiMissense = TsgDrivers.createTsgDriver(
+        DriverCatalog multiMissense = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(missense, missense), counts, counts, geneCopyNumber, geneLikelihood);
 
         assertTrue(Doubles.lessThan(singleFrameshift.driverLikelihood(), missenseAndFrameshift.driverLikelihood()));

@@ -69,11 +69,9 @@ public class DeletionDrivers
                     if(checkQcStatus)
                         continue;
 
-                    if(geneCopyNumber.DepthWindowCount == 1)
-                    {
-                        if(geneCopyNumber.GcContent < SINGLE_DEPTH_GC_MIN || geneCopyNumber.GcContent > SINGLE_DEPTH_GC_MAX)
-                            continue;
-                    }
+                    if(geneCopyNumber.DepthWindowCount == 1
+                    && (geneCopyNumber.GcContent < SINGLE_DEPTH_GC_MIN || geneCopyNumber.GcContent > SINGLE_DEPTH_GC_MAX))
+                        continue;
                 }
             }
             else
@@ -92,8 +90,7 @@ public class DeletionDrivers
             {
                 driverType = DEL;
 
-                if(driverGene.reportDeletion())
-                    reportedStatus = ReportedStatus.REPORTED;
+                reportedStatus = driverGene.reportDeletion() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
             }
             else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
             {
@@ -103,8 +100,7 @@ public class DeletionDrivers
                 {
                     driverType = HET_DEL;
 
-                    if(driverGene.reportHetDeletion())
-                        reportedStatus = ReportedStatus.REPORTED;
+                    reportedStatus = driverGene.reportHetDeletion() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
                 }
             }
 

@@ -64,7 +64,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(5161, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(hotspot, biallelic, missense), counts, counts,
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(Lists.newArrayList(hotspot, biallelic, missense), counts, counts,
                 createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
 
         Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
@@ -76,7 +76,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(5161, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(biallelic, missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
 
         assertEquals(LikelihoodMethod.BIALLELIC, victim.likelihoodMethod());
@@ -88,7 +88,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
@@ -99,7 +99,7 @@ public class TsgDriversTest
     public void testMultiMissense()
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
-        DriverCatalog victim = TsgDrivers.createTsgDriver(
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(
                 Lists.newArrayList(missense, missense), counts, counts, createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.97, victim.driverLikelihood(), 0.01);
@@ -110,7 +110,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(nonsense), counts, counts, createGeneCopyNumber(GENE_NAME_1),
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(Lists.newArrayList(nonsense), counts, counts, createGeneCopyNumber(GENE_NAME_1),
                 geneLikelihood);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
@@ -121,7 +121,7 @@ public class TsgDriversTest
     public void testMixed()
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(missense, nonsense), counts, counts,
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(Lists.newArrayList(missense, nonsense), counts, counts,
                 createGeneCopyNumber(GENE_NAME_1), geneLikelihood);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -132,7 +132,7 @@ public class TsgDriversTest
     {
         Map<VariantType, Integer> counts = countMap(351610, 10000);
 
-        DriverCatalog victim = TsgDrivers.createTsgDriver(Lists.newArrayList(indel), counts, counts, createGeneCopyNumber(GENE_NAME_1),
+        DriverCatalog victim = TsgDrivers.createDriverCatalog(Lists.newArrayList(indel), counts, counts, createGeneCopyNumber(GENE_NAME_1),
                 geneLikelihood);
 
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());

@@ -59,7 +59,7 @@ public class OncoDriversTest
     @Test
     public void favourHotspot()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 10000, 0, likelihood,
                 Lists.newArrayList(frameshiftHotspot, frameshiftNearHotspot, inframe, missense), createGeneCopyNumber(GENE_NAME_1));
         Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
@@ -69,7 +69,7 @@ public class OncoDriversTest
     @Test
     public void doNotFavourNearHotspot()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 10000, 0, likelihood, Lists.newArrayList(frameshiftNearHotspot, inframe, missense),
                 createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
@@ -79,7 +79,7 @@ public class OncoDriversTest
     @Test
     public void favourValidInframe()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 10000, 0, likelihood, Lists.newArrayList(inframe, missense), createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -88,7 +88,7 @@ public class OncoDriversTest
     @Test
     public void favourHighest()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(frameshift, missense), createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
@@ -97,7 +97,7 @@ public class OncoDriversTest
     @Test
     public void ignoreFrameshiftAndInvalidInframe()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(unKnownInframe), createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
@@ -106,7 +106,7 @@ public class OncoDriversTest
     @Test
     public void singleMissense()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(missense),
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(missense),
                 createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
@@ -115,7 +115,7 @@ public class OncoDriversTest
     @Test
     public void multiMissense()
     {
-        DriverCatalog victim = OncoDrivers.createOncoDriver(
+        DriverCatalog victim = OncoDrivers.createDriverCatalog(
                 SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(missense, missense), createGeneCopyNumber(GENE_NAME_1));
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
