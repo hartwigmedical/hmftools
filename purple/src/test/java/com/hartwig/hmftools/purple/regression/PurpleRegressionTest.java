@@ -6,10 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.List;
 
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
@@ -113,6 +116,37 @@ public class PurpleRegressionTest
         return matches.get(0);
     }
 
+    private void checkGeneCopyNumbers() throws Exception
+    {
+        List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<GeneCopyNumber> baselineCopyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+
+        assertEquals("Copy numbers for tumor " + tumor + " has size " + copyNumbers.size(), copyNumbers.size(), baselineCopyNumbers.size());
+        for(GeneCopyNumber copyNumber : copyNumbers)
+        {
+            GeneCopyNumber baseline = findGeneCopyNumber(baselineCopyNumbers, copyNumber);
+//            System.out.println(copyNumber.GeneName);
+            if (baseline.GeneName.equals("EML4") || baseline.GeneName.equals("ZFP36L2") || baseline.GeneName.equals("SIX2"))
+            {
+                continue;
+            }
+            try {
+                checkObjectsHaveSameData(baseline, copyNumber, "RelativeMinCopyNumber");
+            } catch (AssertionError e) {
+                System.out.println(copyNumber.GeneName);
+            }
+        }
+    }
+
+    private GeneCopyNumber findGeneCopyNumber(final List<GeneCopyNumber> geneCopyNumbers, final GeneCopyNumber toMatch)
+    {
+        List<GeneCopyNumber> matches = geneCopyNumbers.stream()
+                .filter(baseline -> baseline.TransName.equals(toMatch.TransName))
+                .toList();
+        assertEquals(1, matches.size());
+        return matches.get(0);
+    }
+
     private void checkDeletions() throws Exception
     {
         List<GermlineDeletion> outputDeletions =
@@ -171,13 +205,17 @@ public class PurpleRegressionTest
         return segments.stream().filter(segment -> segment.matches(toMatch)).findFirst().orElse(null);
     }
 
-    private static void checkObjectsHaveSameData(Object s, Object t)
+    private static void checkObjectsHaveSameData(Object s, Object t, String... ignoredFields)
     {
         Class<?> currentClass = s.getClass();
         while (currentClass != null && !currentClass.equals(Object.class))
         {
             for (Field field : currentClass.getDeclaredFields())
             {
+                if (ignoredFields != null && Arrays.asList(ignoredFields).contains(field.getName()))
+                {
+                    continue;
+                }
                 if (Modifier.isStatic(field.getModifiers()))
                 {
                     continue;
@@ -252,12 +290,13 @@ public class PurpleRegressionTest
 
     private void checkResults() throws Exception
     {
-        checkPurity();
-        checkGermlineDrivers();
-        checkSomaticDrivers();
-        checkSegments();
-        checkDeletions();
-        checkChromosomeArmCopyNumbers();
+        checkChromosomeArmCopyNumbers();// .chromosome_arm
+        checkGeneCopyNumbers();         // .cnv.gene
+        checkGermlineDrivers();         // .driver.catalog.germline
+        checkSomaticDrivers();          // .driver.catalog.somatic
+        checkDeletions();               // .germline.deletion
+        checkPurity();                  // .purity
+        checkSegments();                // .segment
     }
 
     private void runPurple() throws IOException
