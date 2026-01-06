@@ -73,23 +73,9 @@ public class FindingRecordFactory {
 
         addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
-        CuppaData cuppa = orangeRecord.cuppa();
-        if(cuppa != null)
-        {
-            builder.predictedTumorOrigin(ImmutablePredictedTumorOrigin.builder()
-                    .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
-                    .cancerType(cuppa.bestPrediction().cancerType())
-                    .likelihood(cuppa.bestPrediction().likelihood())
-                    .build());
-        }
-
-        ChordRecord chord = orangeRecord.chord();
-        if(chord != null)
-        {
-            builder.homologousRecombination(createHomologousRecombination(chord, orangeRecord.purple()));
-        }
-
-        return builder.viruses(createVirusFindings(orangeRecord.virusInterpreter()))
+        return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), orangeRecord.purple(), linx))
+                .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
                 .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach()))
                 .build();
@@ -103,25 +89,40 @@ public class FindingRecordFactory {
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(GainDeletionFactory.gainDeletionFindings(purple, findingsStatus))
-                .microsatelliteStability(createMicrosatelliteStability(purple))
-                .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
-                        .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
-                                purple.characteristics().tumorMutationalLoadStatus()))
-                        .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
-                        .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
-                        .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
-                        .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
-                        .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
-                        .build());
+                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx()))
+                .tumorMutationStatus(createTumorMutationStatus(purple));
 
         builder.chromosomeArmCopyNumbers(
                 ChromosomeArmCopyNumberFactory.extractCnPerChromosomeArm(purple.allSomaticCopyNumbers(), orangeRecord.refGenomeVersion()));
     }
 
     @NotNull
-    private static HomologousRecombination createHomologousRecombination(@NotNull ChordRecord chord,
-            @NotNull PurpleRecord purple) {
-        return ImmutableHomologousRecombination.builder()
+    private static TumorMutationStatus createTumorMutationStatus(@NotNull PurpleRecord purple) {
+        return ImmutableTumorMutationStatus.builder()
+                .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
+                        purple.characteristics().tumorMutationalLoadStatus()))
+                .tumorMutationalBurdenPerMb(purple.characteristics().tumorMutationalBurdenPerMb())
+                .tumorMutationalBurdenStatus(purple.characteristics().tumorMutationalBurdenStatus())
+                .tumorMutationalLoad(purple.characteristics().tumorMutationalLoad())
+                .tumorMutationalLoadStatus(purple.characteristics().tumorMutationalLoadStatus())
+                .svTumorMutationalBurden(purple.characteristics().svTumorMutationalBurden())
+                .build();
+    }
+
+    @Nullable
+    private static PredictedTumorOrigin createPredictedTumorOrigin(CuppaData cuppa) {
+        return cuppa != null ? ImmutablePredictedTumorOrigin.builder()
+                .findingKey(FindingKeys.predictedTumorOrigin(cuppa.bestPrediction().cancerType()))
+                .cancerType(cuppa.bestPrediction().cancerType())
+                .likelihood(cuppa.bestPrediction().likelihood())
+                .build() : null;
+    }
+
+    @Nullable
+    private static HomologousRecombination createHomologousRecombination(@Nullable ChordRecord chord,
+            @NotNull PurpleRecord purple,
+            @NotNull LinxRecord linx) {
+        return chord != null ? ImmutableHomologousRecombination.builder()
                 .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
                 .brca1Value(chord.brca1Value())
                 .brca2Value(chord.brca2Value())
@@ -129,16 +130,24 @@ public class FindingRecordFactory {
                 .hrStatus(chord.hrStatus())
                 .hrdType(chord.hrdType())
                 .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
-                .build();
+                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsDels(),
+                        linx.germlineHomozygousDisruptions(),
+                        Genes.HRD_GENES))
+                .build() : null;
     }
 
     @NotNull
-    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple) {
+    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple, @NotNull LinxRecord linx) {
         return ImmutableMicrosatelliteStability.builder()
                 .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                 .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
                 .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                 .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
+                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsDels(),
+                        linx.germlineHomozygousDisruptions(),
+                        Genes.MSI_GENES))
                 .build();
     }
 
