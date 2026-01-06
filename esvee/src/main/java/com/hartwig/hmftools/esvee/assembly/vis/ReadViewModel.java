@@ -200,7 +200,7 @@ public final class ReadViewModel
             {
                 if(insertLength > 0)
                     insertBaseViewModels = remoteBaseViewModels.subList(
-			    remoteBaseViewModels.size() - insertLength, remoteBaseViewModels.size());
+                            remoteBaseViewModels.size() - insertLength, remoteBaseViewModels.size());
 
                 remoteBaseViewModels = remoteBaseViewModels.subList(0, remoteBaseViewModels.size() - insertLength);
             }
