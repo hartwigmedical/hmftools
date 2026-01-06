@@ -9,6 +9,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
@@ -49,7 +50,13 @@ final class FindingKeys
         return String.format("fusion[%s %s %s]", sampleType, fusion.geneStart(), fusion.geneEnd());
     }
 
-    public static String virus(VirusInterpreterEntry virus) {
+    public static String lohCopyNumber(PurpleGeneCopyNumber copyNumber)
+    {
+        return String.format("lohCopyNumber[%s %s %s]", copyNumber.gene(), copyNumber.chromosome(), copyNumber.chromosomeBand());
+    }
+
+    public static String virus(VirusInterpreterEntry virus)
+    {
         String label = virus.interpretation() + (virus.interpretation() == VirusInterpretation.HPV ? " (" + virus.name() + ")" : "");
         return String.format("virus[%s]", label);
     }
@@ -59,7 +66,8 @@ final class FindingKeys
         return String.format("hlaAllele[%s]", allele.allele());
     }
 
-    public static String microsatelliteStability(PurpleMicrosatelliteStatus status) {
+    public static String microsatelliteStability(PurpleMicrosatelliteStatus status)
+    {
         return String.format("microsatelliteStability[%s]", status.name());
     }
 
@@ -67,7 +75,8 @@ final class FindingKeys
         return String.format("homologousRecombination[%s]", status.name());
     }
 
-    public static String tumorMutationStatus(PurpleTumorMutationalStatus tmbStatus, PurpleTumorMutationalStatus tmlStatus) {
+    public static String tumorMutationStatus(PurpleTumorMutationalStatus tmbStatus, PurpleTumorMutationalStatus tmlStatus)
+    {
         return String.format("tumorMutationStatus[TMB_%s TML_%s]", tmbStatus, tmlStatus);
     }
 
@@ -79,16 +88,19 @@ final class FindingKeys
         return String.format("chrArmCopyNumber[%s]", chromosome);
     }
 
-    public static String pharmacoGenotype(@NotNull String gene, @NotNull String allele) {
+    public static String pharmacoGenotype(@NotNull String gene, @NotNull String allele)
+    {
         return String.format("pharmacoGenotype[%s:%s]", gene, allele);
     }
 
     // only show transcript ID for non canonical transcripts
-    private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId) {
+    private static String geneTranscriptLabel(String gene, boolean isCanonical, String transcriptId)
+    {
         return isCanonical ? gene : String.format("%s(%s)", gene, transcriptId);
     }
 
-    private static String impact(@NotNull PurpleTranscriptImpact transcriptImpact) {
+    private static String impact(@NotNull PurpleTranscriptImpact transcriptImpact)
+    {
         return determineVariantAnnotation(transcriptImpact.hgvsCodingImpact(),
                 transcriptImpact.hgvsProteinImpact(),
                 transcriptImpact.effects().stream().map(Enum::toString).collect(Collectors.joining("&")),
@@ -98,7 +110,8 @@ final class FindingKeys
 
     @NotNull
     public static String determineVariantAnnotation(@Nullable String hgvsCoding, @Nullable String hgvsProtein, @NotNull String effects,
-            boolean isSplice, boolean isUpstream) {
+            boolean isSplice, boolean isUpstream)
+    {
         if (hgvsProtein != null && !hgvsProtein.isEmpty() && !hgvsProtein.equals("p.?")) {
             return hgvsProtein;
         }
