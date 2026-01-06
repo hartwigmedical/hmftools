@@ -40,17 +40,13 @@ public interface FindingRecord
     @NotNull
     List<ChromosomeArmCopyNumber> chromosomeArmCopyNumbers();
 
-    @Nullable
-    MicrosatelliteStability microsatelliteStability();
+    @NotNull CharacteristicsFinding<MicrosatelliteStability> microsatelliteStability();
 
-    @Nullable
-    TumorMutationStatus tumorMutationStatus();
+    @NotNull CharacteristicsFinding<TumorMutationStatus> tumorMutationStatus();
 
-    @Nullable
-    PredictedTumorOrigin predictedTumorOrigin();
+    @NotNull CharacteristicsFinding<PredictedTumorOrigin> predictedTumorOrigin();
 
-    @Nullable
-    HomologousRecombination homologousRecombination();
+    @NotNull CharacteristicsFinding<HomologousRecombination> homologousRecombination();
 
     @NotNull
     OrangeRefGenomeVersion refGenomeVersion();
