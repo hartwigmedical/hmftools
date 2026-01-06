@@ -25,4 +25,6 @@ public interface HomologousRecombination extends Finding
     String hrdType();
 
     @NotNull List<LOHCopyNumbers> lohCopyNumbers();
+
+    @NotNull List<String> genes();
 }

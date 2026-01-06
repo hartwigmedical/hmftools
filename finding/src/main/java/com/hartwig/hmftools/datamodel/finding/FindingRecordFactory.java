@@ -86,7 +86,7 @@ public class FindingRecordFactory {
         ChordRecord chord = orangeRecord.chord();
         if(chord != null)
         {
-            builder.homologousRecombination(createHomologousRecombination(chord, orangeRecord.purple()));
+            builder.homologousRecombination(createHomologousRecombination(chord, orangeRecord.purple(), linx));
         }
 
         return builder.viruses(createVirusFindings(orangeRecord.virusInterpreter()))
@@ -103,7 +103,7 @@ public class FindingRecordFactory {
 
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
                 .gainDeletions(GainDeletionFactory.gainDeletionFindings(purple, findingsStatus))
-                .microsatelliteStability(createMicrosatelliteStability(purple))
+                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx()))
                 .tumorMutationStatus(ImmutableTumorMutationStatus.builder()
                         .findingKey(FindingKeys.tumorMutationStatus(purple.characteristics().tumorMutationalBurdenStatus(),
                                 purple.characteristics().tumorMutationalLoadStatus()))
@@ -120,7 +120,8 @@ public class FindingRecordFactory {
 
     @NotNull
     private static HomologousRecombination createHomologousRecombination(@NotNull ChordRecord chord,
-            @NotNull PurpleRecord purple) {
+            @NotNull PurpleRecord purple,
+            @NotNull LinxRecord linx) {
         return ImmutableHomologousRecombination.builder()
                 .findingKey(FindingKeys.homologousRecombination(chord.hrStatus()))
                 .brca1Value(chord.brca1Value())
@@ -129,16 +130,24 @@ public class FindingRecordFactory {
                 .hrStatus(chord.hrStatus())
                 .hrdType(chord.hrdType())
                 .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
+                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsDels(),
+                        linx.germlineHomozygousDisruptions(),
+                        Genes.HRD_GENES))
                 .build();
     }
 
     @NotNull
-    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple) {
+    private static MicrosatelliteStability createMicrosatelliteStability(@NotNull PurpleRecord purple, @NotNull LinxRecord linx) {
         return ImmutableMicrosatelliteStability.builder()
                 .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                 .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
                 .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
                 .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
+                .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
+                        purple.reportableSomaticGainsDels(),
+                        linx.germlineHomozygousDisruptions(),
+                        Genes.MSI_GENES))
                 .build();
     }
 
