@@ -75,7 +75,7 @@ public class SupportRead
     // if the read start is before the junction index then the value is positive
     private final int mJunctionReadStartDistance;
 
-    private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) if the read's start position
+    private int mFullAssemblyIndex; // index within this read's full linked assembly sequence (if exists) of the read's start position
     private Orientation mFullAssemblyOrientation;
     private int mInferredFragmentLength;
     private SupportType mBreakendType;
