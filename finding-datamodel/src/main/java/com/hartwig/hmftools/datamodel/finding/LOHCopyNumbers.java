@@ -11,10 +11,13 @@ import org.jetbrains.annotations.Nullable;
 public interface LOHCopyNumbers extends Finding {
 
     @NotNull
-    String location();
+    String gene();
 
     @NotNull
-    String gene();
+    String chromosome();
+
+    @NotNull
+    String chromosomeBand();
 
     @Nullable
     Integer tumorCopies();
