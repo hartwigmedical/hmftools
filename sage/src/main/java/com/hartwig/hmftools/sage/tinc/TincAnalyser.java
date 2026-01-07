@@ -16,8 +16,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEA
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_GERMLINE_ALT_SUPPORT;
-import static com.hartwig.hmftools.sage.SageConstants.LONG_REPEAT_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_REL_RAW_QUAL_RATIO;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_RELATIVE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
@@ -175,7 +173,8 @@ public class TincAnalyser
 
         adjustedRefAltCount = variant.calcReducedAltCount(adjustedRefAltCount);
 
-        if(aboveMaxGermlineVaf(variant.tier(), tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
+        boolean isIndelRepeat = variant.isIndel() && variant.Context.hasAttribute(READ_CONTEXT_REPEAT_COUNT);
+        if(aboveMaxGermlineVaf(variant.tier(), isIndelRepeat, tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
             return;
 
         variant.newFilters().remove(MAX_GERMLINE_VAF);

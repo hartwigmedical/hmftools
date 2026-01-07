@@ -154,6 +154,11 @@ public class SageConstants
     public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final double DEFAULT_MAX_GERMLINE_VAF = 0.05;
+    public static final double MAX_GERMLINE_VAF_THRESHOLD_FACTOR = 2;
+    public static final double MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR = 6;
+
+    public static final double MAX_GERMLINE_VAF_PANEL_VAF_FACTOR = 2;
+    public static final double MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_VAF_FACTOR = 1.5;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 1e-2, -6, 0.01,

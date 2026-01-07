@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.sage.ReferenceData.isHighlyPolymorphic;
 import static com.hartwig.hmftools.sage.SageConfig.isSbx;
 import static com.hartwig.hmftools.sage.SageConfig.isUltima;
 import static com.hartwig.hmftools.sage.SageConfig.isIllumina;
-import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_ILLUMINA_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.AVG_READ_EDGE_DISTANCE_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HIGHLY_POLYMORPHIC_GENES_ALT_MAP_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
@@ -21,12 +19,16 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_NON_INDEL_REPEAT_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.MAP_QUAL_READ_BIAS_CAP;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_VAF_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_PANEL_VAF_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_HET_TUMOR_VAF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_OTHER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_PROB_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_QUAL_RATIO_THRESHOLD_HOTSPOT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_GERMLINE_VAF_THRESHOLD_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
@@ -624,20 +626,38 @@ public class VariantFilters
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        return aboveMaxGermlineVaf(tier, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
+        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(primaryTumor);
+        return aboveMaxGermlineVaf(tier, isPanelIndelRepeat, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
+    }
+
+    public static boolean isPanelIndelRepeatVariant(final ReadContextCounter counter)
+    {
+        return counter.tier() == PANEL && counter.variant().isIndel() && counter.readContext().MaxRepeat != null;
     }
 
     public static boolean aboveMaxGermlineVaf(
-            final VariantTier tier, double tumorVaf, int adjustedRefAltCount, int refTotalReads, double maxGermlineVaf)
+            final VariantTier tier, boolean isPanelIndelRepeat, double tumorVaf, int adjustedRefAltCount, int refTotalReads,
+            double maxGermlineVaf)
     {
         if(tumorVaf == 0)
             return false; // will be handled in tumor filters
 
         if(tier == PANEL || tier == HOTSPOT)
         {
-            double threshold = tier == HOTSPOT ? tumorVaf : tumorVaf / 2;
+            double threshold = tumorVaf;
 
-            maxGermlineVaf = max(min(threshold, maxGermlineVaf * 2), maxGermlineVaf);
+            if(tier == PANEL)
+            {
+                if(isPanelIndelRepeat)
+                    threshold /= MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_VAF_FACTOR;
+                else
+                    threshold /= MAX_GERMLINE_VAF_PANEL_VAF_FACTOR;
+            }
+
+            double minThresholdFactor = isPanelIndelRepeat ?
+                    MAX_GERMLINE_VAF_PANEL_INDEL_REPEAT_THRESHOLD_FACTOR : MAX_GERMLINE_VAF_THRESHOLD_FACTOR;
+
+            maxGermlineVaf = max(min(threshold, maxGermlineVaf * minThresholdFactor), maxGermlineVaf);
         }
 
         double adjustedRefVaf = adjustedRefAltCount / (double)refTotalReads;
@@ -722,7 +742,7 @@ public class VariantFilters
         if(config.Filter.DisableHardFilter)
             return true;
 
-        if(variant.tier() == HOTSPOT)
+        if(variant.tier() == HOTSPOT || variant.tier() == PANEL)
             return true;
 
         // Its not always 100% transparent what's happening with the mixed germline dedup logic unless we keep all the associated records

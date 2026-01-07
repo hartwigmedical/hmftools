@@ -10,10 +10,12 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_S
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
+import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
+import static com.hartwig.hmftools.sage.filter.VariantFilters.isPanelIndelRepeatVariant;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
 import java.io.BufferedReader;
@@ -377,6 +379,11 @@ public final class UltimaUtils
         MIN_HP_QUAL_MAP.put(7, 12.0);
     }
 
+    private static final int HP_MAX_LENGTHS = 5;
+    private static final double MIN_HP_QUAL_MAP_DEFAULT = 10;
+    private static final double HP_THRESHOLD_NON_INDEL_DEDUCTION = 2.5;
+    private static final double HP_THRESHOLD_PANEL_INDEL_REPEAT_DEDUCTION = 10;
+
     public static boolean belowExpectedHpQuals(final ReadContextCounter primaryTumor)
     {
         if(primaryTumor.isSnv() && !primaryTumor.readContext().hasIndelInCore())
@@ -385,20 +392,25 @@ public final class UltimaUtils
         UltimaVariantData ultimaData = primaryTumor.ultimaData();
         List<Integer> homopolymerLengths = ultimaData.paddedHomopolymerLengths();
 
-        // TODO: make constants and generally improve
-        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < 5)
+        if(primaryTumor.isLongIndel() && Collections.max(homopolymerLengths) < HP_MAX_LENGTHS)
             return false;
+
+        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(primaryTumor);
 
         for(int i = 0; i < homopolymerLengths.size(); i++)
         {
             int length = homopolymerLengths.get(i);
 
-            if(length >= 15)
+            if(length >= MAX_HOMOPOLYMER)
                 return true;
 
-            double threshold = MIN_HP_QUAL_MAP.getOrDefault(length, 10.0);
+            double threshold = MIN_HP_QUAL_MAP.getOrDefault(length, MIN_HP_QUAL_MAP_DEFAULT);
+
             if(!primaryTumor.isIndel())
-                threshold -= 2.5;
+                threshold -= HP_THRESHOLD_NON_INDEL_DEDUCTION;
+
+            if(isPanelIndelRepeat)
+                threshold -= HP_THRESHOLD_PANEL_INDEL_REPEAT_DEDUCTION;
 
             double avgQual = ultimaData.homopolymerAvgQuals().get(i);
 
