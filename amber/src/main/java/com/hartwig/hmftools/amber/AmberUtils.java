@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+import static com.hartwig.hmftools.amber.AmberConstants.QUAL_FILTERED_THRESHOLD;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import java.io.BufferedReader;
@@ -42,6 +43,15 @@ public class AmberUtils
         }
 
         return genomeRegions;
+    }
+
+    public static boolean aboveQualFilter(final PositionEvidence posEvidence)
+    {
+        if(posEvidence.ReadDepth == 0)
+            return false;
+
+        double filteredPercent = (posEvidence.BaseQualFiltered + posEvidence.MapQualFiltered) / (double)posEvidence.ReadDepth;
+        return filteredPercent < QUAL_FILTERED_THRESHOLD;
     }
 
     public static AmberBAF fromTumorBaf(final TumorBAF tumor)

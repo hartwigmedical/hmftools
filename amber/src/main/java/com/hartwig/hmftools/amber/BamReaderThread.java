@@ -24,12 +24,11 @@ public class BamReaderThread extends Thread
     private final PerformanceCounter mPerfCounter;
 
     public BamReaderThread(
-            final String bamFile, final SamReaderFactory samReaderFactory, final Queue<RegionTask> inTaskQueue,
-            int minMappingQuality)
+            final String bamFile, final SamReaderFactory samReaderFactory, final Queue<RegionTask> inTaskQueue)
     {
         mTaskQueue = inTaskQueue;
         mSamReader = samReaderFactory.open(new File(bamFile));
-        mBamSlicer = new BamSlicer(minMappingQuality, false, false, false);
+        mBamSlicer = new BamSlicer(0, false, false, false);
         mCurrentTask = null;
         mPerfCounter = new PerformanceCounter("Reads");
     }

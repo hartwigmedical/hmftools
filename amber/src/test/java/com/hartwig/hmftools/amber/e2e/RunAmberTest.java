@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.amber.e2e;
 
 import static com.hartwig.hmftools.amber.AmberConfig.LOCI_FILE;
-import static com.hartwig.hmftools.amber.AmberConfig.USE_NEW_SEGMENTER;
+import static com.hartwig.hmftools.amber.AmberConfig.USE_OLD_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
@@ -145,9 +145,9 @@ public class RunAmberTest
             args[index++] = String.format("-%s", REFERENCE_BAM);
             args[index++] = String.format("%s", ReferenceBamFile.getAbsolutePath());
         }
-        if(useNewSegmenter)
+        if(!useNewSegmenter)
         {
-            args[index] = String.format("-%s", USE_NEW_SEGMENTER);
+            args[index] = String.format("-%s", USE_OLD_SEGMENTER);
         }
 
         AmberApplication.main(args);

@@ -26,7 +26,8 @@ public class PositionEvidence implements GenomePosition
     public int IndelCount;
     public int RefSupport;
     public int AltSupport;
-    public int AltQuality;
+    public int BaseQualFiltered;
+    public int MapQualFiltered;
 
     public PositionEvidence(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -38,7 +39,8 @@ public class PositionEvidence implements GenomePosition
         IndelCount = 0;
         RefSupport = 0;
         AltSupport = 0;
-        AltQuality = 0;
+        BaseQualFiltered = 0;
+        MapQualFiltered = 0;
     }
 
     public static PositionEvidence copy(final PositionEvidence other)

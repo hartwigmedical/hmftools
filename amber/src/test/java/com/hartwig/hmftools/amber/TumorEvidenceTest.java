@@ -15,18 +15,23 @@ public class TumorEvidenceTest
     {
         int minQuality = SamRecordUtils.getBaseQuality('J');
 
-        final SAMRecord lowQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FI");
-        final SAMRecord highQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FJ");
+        SAMRecord lowBaseQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FI");
+        lowBaseQualDel.setMappingQuality(60);
+
+        SAMRecord lowMapQualRead = buildSamRecord(1000, "1M1D1M", "CT", "FJ");
+        lowMapQualRead.setMappingQuality(40);
 
         final PositionEvidence baseDepth = new PositionEvidence("5", 1001, "A", "T");
 
-        PositionEvidenceChecker evidenceChecker = new PositionEvidenceChecker(minQuality);
+        PositionEvidenceChecker evidenceChecker = new PositionEvidenceChecker(50, minQuality);
 
-        evidenceChecker.addEvidence(baseDepth, lowQualDel);
-        assertEquals(0, baseDepth.ReadDepth);
-
-        evidenceChecker.addEvidence(baseDepth, highQualDel);
+        evidenceChecker.addEvidence(baseDepth, lowBaseQualDel);
         assertEquals(1, baseDepth.ReadDepth);
+        assertEquals(1, baseDepth.BaseQualFiltered);
+
+        evidenceChecker.addEvidence(baseDepth, lowMapQualRead);
+        assertEquals(2, baseDepth.ReadDepth);
+        assertEquals(1, baseDepth.MapQualFiltered);
     }
 
     private SAMRecord buildSamRecord(

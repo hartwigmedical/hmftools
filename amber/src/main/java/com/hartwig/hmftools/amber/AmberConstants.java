@@ -4,7 +4,7 @@ public class AmberConstants
 {
     public static final String APP_NAME = "Amber";
 
-    public static final int DEFAULT_MIN_BASE_QUALITY = 30;
+    public static final int DEFAULT_MIN_BASE_QUALITY = 13;
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 50;
     public static final int DEFAULT_TUMOR_ONLY_MIN_SUPPORT = 2;
     public static final double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.025;
@@ -23,6 +23,8 @@ public class AmberConstants
     public static final double THREE_PLUS_READS_SITE_PERC = 0.03;
     public static final double THREE_PLUS_READS_SITE_LOW_VAF_PERC = 0.002;
     public static final double THREE_PLUS_READS_VAF_MIN = 0.05;
+
+    public static final double QUAL_FILTERED_THRESHOLD = 0.15;
 
     public static final int HOMOZYGOUS_REGION_MIN_SIZE = 500_000;
     public static final int HOMOZYGOUS_REGION_MIN_SNP_LOCI_COUNT = 50;
