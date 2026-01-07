@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.purple.tools;
 
-import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -13,12 +12,10 @@ import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDe
 import static com.hartwig.hmftools.purple.tools.GermlineGeneAnalyser.writeGeneDeletionDetails;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -28,8 +25,6 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.common.purple.PurpleSegment;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class SampleGermlineGeneTask implements Callable<Void>
@@ -156,43 +151,65 @@ public class SampleGermlineGeneTask implements Callable<Void>
         loadPurpleDataForGermline(sampleId, mPurpleDir, copyNumberMap, fittedRegionMap);
     }
 }
+
 class GeneAmplification
 {
-    private final List<ExonData> AllExons;
-    private final List<ExonData> OverlappingExons;
+    private final int totalExonCount;
+    private final int overlappingExonCount;
+    private final boolean overlapsFirstExon;
+    private final boolean overlapsLastExon;
 
     GeneAmplification(List<ExonData> allExons, int start, int end)
     {
         Preconditions.checkArgument(!allExons.isEmpty());
         Preconditions.checkArgument(start < end);
-        AllExons = allExons;
-        OverlappingExons = allExons.stream().filter(x -> positionsOverlap(x.Start, x.End, start, end)).collect(Collectors.toList());
+
+        totalExonCount = allExons.size();
+        List<ExonData> overlappingExons = allExons.stream().filter(x -> positionsOverlap(x.Start, x.End, start, end)).toList();
+        overlappingExonCount = overlappingExons.size();
+
+        if (overlappingExonCount > 0)
+        {
+            overlapsFirstExon = overlappingExons.get(0).equals(allExons.get(0));
+            overlapsLastExon = overlappingExons.get(overlappingExonCount - 1).equals(allExons.get(totalExonCount - 1));
+        }
+        else
+        {
+            overlapsFirstExon = false;
+            overlapsLastExon = false;
+        }
     }
 
     public boolean isCompleteAmplification()
     {
-        return OverlappingExons.size() == AllExons.size();
+        return overlappingExonCount == totalExonCount;
     }
 
-    public boolean hasNoTranscriptionEffect()
+    public boolean isOfInterest()
     {
-        if (OverlappingExons.isEmpty())
-        {
-            return true;
-        }
-        if (isCompleteAmplification())
+        if (overlappingExonCount == 0)
         {
             return false;
         }
-        if (OverlappingExons.get(0).equals(AllExons.get(0)))
+        if (isCompleteAmplification())
         {
             return true;
         }
-        return OverlappingExons.get(OverlappingExons.size() - 1).equals(AllExons.get(AllExons.size() - 1));
+        return !overlapsFirstExon && !overlapsLastExon;
+    }
+
+    public boolean isTailAmplification()
+    {
+        return overlappingExonCount > 0 && !isCompleteAmplification() && overlapsLastExon;
+    }
+
+    public boolean isHeadAmplification()
+    {
+        return overlappingExonCount > 0 && !isCompleteAmplification() && overlapsFirstExon;
     }
 
     public int numberOfAffectedExons()
     {
-        return OverlappingExons.size();
+        return overlappingExonCount;
     }
 }
