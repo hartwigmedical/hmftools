@@ -8,16 +8,13 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromD
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -27,7 +24,9 @@ import com.hartwig.hmftools.compar.common.ThresholdType;
 
 public abstract class AbstractImageData implements ComparableItem
 {
-    private final Map<String, ImageRecord> Images;
+    public final String Name;
+    public final String Path;
+    public final BufferedImage Image;
 
     public static final String FLD_DIMENSION_MISMATCH = "DimensionMismatch";
     public static final String FLD_PIXEL_DIFF = "PixelDiff";
@@ -35,29 +34,14 @@ public abstract class AbstractImageData implements ComparableItem
     public static final ThresholdData DEFAULT_PIXEL_DIFF_PERCENT_THRESHOLD = new ThresholdData(
             ThresholdType.PERCENT, Double.NaN, 0);
 
-    public AbstractImageData(Map<String, String> imageNamePathMap)
+    public AbstractImageData(String name, String path)
     {
-        LinkedHashMap<String, ImageRecord> images = Maps.newLinkedHashMap();
-
-        for(String imageName : imageNamePathMap.values())
-        {
-            String imagePath = imageNamePathMap.get(imageName);
-            BufferedImage image = loadImage(imagePath);
-
-            if(image != null)
-            {
-                ImageRecord imageRecord = new ImageRecord(imageName, imagePath, image);
-                images.put(imageName, imageRecord);
-            }
-        }
-
-        Images = images;
+        Name = name;
+        Path = path;
+        Image = loadImage(path);
     }
 
-    public AbstractImageData(String imageName, String imagePath)
-    {
-        this(Map.of(imageName, imagePath));
-    }
+    public String getBasename(){ return new File(Path).getName(); }
 
     @Override
     public boolean reportable() { return true; }
@@ -68,71 +52,54 @@ public abstract class AbstractImageData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        // a single record for each sample
-        return true;
+        final AbstractImageData otherImageData = (AbstractImageData) other;
+        return Name.equals(otherImageData.Name);
     }
 
     @Override
     public List<String> displayValues()
     {
-        List<String> values = Lists.newArrayList();
-
-        for(String imageName : Images.keySet())
-        {
-            BufferedImage image = Images.get(imageName).Image;
-            values.add(format("%s %dx%d", imageName, image.getWidth(), image.getHeight()));
-        }
-
-        return values;
+        return List.of(format("%s %dx%d", Name, Image.getWidth(), Image.getHeight()));
     }
 
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
             final boolean includeMatches)
     {
-        final AbstractImageData otherData = (AbstractImageData) other;
+        final AbstractImageData otherImageData = (AbstractImageData) other;
+        BufferedImage otherImage = otherImageData.Image;
+
+        String basenames = Stream.of(this.getBasename(), otherImageData.getBasename())
+                .distinct()
+                .collect(Collectors.joining(", "));
+
         final List<String> diffs = Lists.newArrayList();
 
-        for(String imageName : Images.keySet())
+        if(Image.getWidth() != otherImage.getWidth() || Image.getHeight() != otherImage.getHeight())
         {
-            BufferedImage image = Images.get(imageName).Image;
-            BufferedImage otherImage = otherData.Images.get(imageName).Image;
+            String diffString = format("Image(%s) Basename(%s) %s(%dx%d/%dx%d)",
+                    Name, basenames,
+                    FLD_DIMENSION_MISMATCH, Image.getWidth(), Image.getHeight(), otherImage.getWidth(), otherImage.getHeight()
+            );
+            diffs.add(diffString);
+        }
+        else
+        {
+            int totalPixels = Image.getWidth() * Image.getHeight();
 
-            String imageBasenames = Stream.of(Images.get(imageName).getBasename(), otherData.Images.get(imageName).getBasename())
-                    .distinct()
-                    .collect(Collectors.joining(", "));
-            String imageMetadata = imageName + ": " + imageBasenames;
+            int absDiff = countDifferingPixels(Image, otherImage);
+            double relDiff = (double) absDiff / totalPixels;
 
-            if(image.getWidth() != otherImage.getWidth() || image.getHeight() != otherImage.getHeight())
+            ThresholdData threshold = thresholds.isFieldRegistered(Name)
+                    ? thresholds.getThreshold(Name)
+                    : DEFAULT_PIXEL_DIFF_PERCENT_THRESHOLD;
+
+            if(hasDiff(absDiff, relDiff, threshold))
             {
-                String diffString = format("Image(%s) %s(%dx%d/%dx%d)",
-                        imageMetadata, FLD_DIMENSION_MISMATCH,
-                        image.getWidth(), image.getHeight(),
-                        otherImage.getWidth(), otherImage.getHeight()
-                );
-
+                String diffString = format("Image(%s) Basename(%s) %s(%.3f=%d/%d)",
+                        Name, basenames,
+                        FLD_PIXEL_DIFF, relDiff, absDiff, totalPixels);
                 diffs.add(diffString);
-            }
-            else
-            {
-                int totalPixels = image.getWidth() * image.getHeight();
-
-                int absDiff = countDifferingPixels(image, otherImage);
-                double relDiff = (double) absDiff / totalPixels;
-
-                ThresholdData threshold = thresholds.isFieldRegistered(imageName)
-                        ? thresholds.getThreshold(imageName)
-                        : DEFAULT_PIXEL_DIFF_PERCENT_THRESHOLD;
-
-                if(hasDiff(absDiff, relDiff, threshold))
-                {
-                    String diffString = format("Image(%s) %s(%.3f=%d/%d)",
-                            imageMetadata,
-                            FLD_PIXEL_DIFF, relDiff, absDiff, totalPixels
-                    );
-
-                    diffs.add(diffString);
-                }
             }
         }
 
