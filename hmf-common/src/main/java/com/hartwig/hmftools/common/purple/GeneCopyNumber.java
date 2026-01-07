@@ -95,24 +95,4 @@ public class GeneCopyNumber implements GenomeRegion
     {
         return SomaticRegions;
     }
-
-    public static Map<String, List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)
-    {
-        final Map<String, List<GeneCopyNumber>> geneCopyNumberMap = Maps.newHashMap();
-
-        for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
-        {
-            List<GeneCopyNumber> geneRegions = geneCopyNumberMap.get(geneCopyNumber.geneName());
-
-            if(geneRegions == null)
-            {
-                geneRegions = Lists.newArrayList();
-                geneCopyNumberMap.put(geneCopyNumber.geneName(), geneRegions);
-            }
-
-            geneRegions.add(geneCopyNumber);
-        }
-
-        return geneCopyNumberMap;
-    }
 }

@@ -166,7 +166,7 @@ public class GermlineVariantDAO
                 decorator.minorAlleleCopyNumber(),
                 pathogenicSummary.ClinvarInfo,
                 pathogenicSummary.Status.toString(),
-                decorator.isPathogenic(),
+                decorator.isGermlinePathogenic(),
                 variantImpact.GeneName,
                 variantImpact.GenesAffected,
                 variantImpact.CanonicalEffect,

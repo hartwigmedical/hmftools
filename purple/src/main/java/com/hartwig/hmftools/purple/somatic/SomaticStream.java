@@ -128,7 +128,7 @@ public class SomaticStream
     }
 
     public List<DriverCatalog> buildDrivers(
-            final Map<String, List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
+            final Map<String,GeneCopyNumber> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         if(mReferenceData.TargetRegions.hasTargetRegions())
         {

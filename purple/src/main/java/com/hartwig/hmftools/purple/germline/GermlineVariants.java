@@ -43,10 +43,7 @@ public class GermlineVariants
         mReportableVariants = Lists.newArrayList();
     }
 
-    public List<GermlineVariant> reportableVariants()
-    {
-        return mReportableVariants;
-    }
+    public List<GermlineVariant> reportableVariants() { return mReportableVariants; }
 
     private void loadGermlineVariants(final String germlineVcf)
     {
@@ -67,10 +64,8 @@ public class GermlineVariants
 
     public void processAndWrite(
             final String referenceId, final String tumorSample, final String germlineVcf, @Nullable final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final Set<String> somaticReportedGenes)
+            final List<PurpleCopyNumber> copyNumbers)
     {
-        mReportableVariants.clear();
-
         if(germlineVcf.isEmpty())
             return;
 
@@ -86,7 +81,7 @@ public class GermlineVariants
 
         GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                 mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
-                mReferenceData.GermlineHotspots, somaticReportedGenes);
+                mReferenceData.GermlineHotspots);
 
         VCFHeader header = vcfReader.getFileHeader();
         enrichment.enrichHeader(header);

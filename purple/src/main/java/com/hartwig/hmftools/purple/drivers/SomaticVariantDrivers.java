@@ -150,7 +150,7 @@ public class SomaticVariantDrivers
         variantContext.getCommonInfo().putAttribute(REPORTABLE_TRANSCRIPTS, reportableTranscripts.toString());
     }
 
-    public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
+    public List<DriverCatalog> buildCatalog(final Map<String,GeneCopyNumber> geneCopyNumberMap, final List<DriverSourceData> driverSourceData)
     {
         final List<DriverCatalog> result = Lists.newArrayList();
 
