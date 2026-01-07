@@ -25,6 +25,8 @@ public class DiffThresholds
 
     public boolean isFieldRegistered(final String field) { return mFieldThresholds.containsKey(field); }
 
+    public ThresholdData getThreshold(final String field) { return mFieldThresholds.get(field); }
+
     public boolean hasDifference(final String field, double value1, double value2)
     {
         ThresholdData thresholdData = mFieldThresholds.get(field);
