@@ -13,10 +13,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
+import com.hartwig.hmftools.common.driver.LikelihoodMethod;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -54,17 +56,21 @@ public class TsgMultiHitTest {
 
         GeneCopyNumber geneCopyNumber = createGeneCopyNumber(GENE_NAME_1);
 
-        DriverCatalog multiFrameshift = TsgDrivers.createDriverCatalog(
-                Lists.newArrayList(frameshift, frameshift), counts, counts, geneCopyNumber, geneLikelihood);
+        DriverCatalog multiFrameshift = TsgDrivers.buildDriverCatalog(
+                Lists.newArrayList(frameshift, frameshift), counts, counts, geneCopyNumber, geneLikelihood,
+                LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
 
-        DriverCatalog missenseAndFrameshift =
-                TsgDrivers.createDriverCatalog(Lists.newArrayList(missense, frameshift), counts, counts, geneCopyNumber, geneLikelihood);
+        DriverCatalog missenseAndFrameshift = TsgDrivers.buildDriverCatalog(
+                        Lists.newArrayList(missense, frameshift), counts, counts, geneCopyNumber, geneLikelihood,
+                        LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
 
-        DriverCatalog singleFrameshift = TsgDrivers.createDriverCatalog(
-                Lists.newArrayList(frameshift), counts, counts, geneCopyNumber, geneLikelihood);
+        DriverCatalog singleFrameshift = TsgDrivers.buildDriverCatalog(
+                Lists.newArrayList(frameshift), counts, counts, geneCopyNumber, geneLikelihood,
+                LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
 
-        DriverCatalog multiMissense = TsgDrivers.createDriverCatalog(
-                Lists.newArrayList(missense, missense), counts, counts, geneCopyNumber, geneLikelihood);
+        DriverCatalog multiMissense = TsgDrivers.buildDriverCatalog(
+                Lists.newArrayList(missense, missense), counts, counts, geneCopyNumber, geneLikelihood,
+                LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
 
         assertTrue(Doubles.lessThan(singleFrameshift.driverLikelihood(), missenseAndFrameshift.driverLikelihood()));
         assertTrue(Doubles.equal(multiMissense.driverLikelihood(), missenseAndFrameshift.driverLikelihood()));

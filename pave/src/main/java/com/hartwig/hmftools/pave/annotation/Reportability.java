@@ -34,12 +34,12 @@ public class Reportability
         if(variantImpact == null)
             return false;
 
-        if(mReportableOncoGenes.isReportable(variantImpact, variant.type(), isHotspot))
+        if(mReportableOncoGenes.isReportable(variantImpact, isHotspot))
         {
             return true;
         }
 
-        if(mReportableTsgGenes.isReportable(variantImpact, variant.type(), isHotspot))
+        if(mReportableTsgGenes.isReportable(variantImpact, isHotspot))
         {
             return true;
         }

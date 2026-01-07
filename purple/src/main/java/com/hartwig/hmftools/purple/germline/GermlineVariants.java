@@ -3,7 +3,6 @@ package com.hartwig.hmftools.purple.germline;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -49,49 +48,21 @@ public class GermlineVariants
         return mReportableVariants;
     }
 
-    public void loadReportableVariants(final String germlineVcf)
-    {
-        loadGermlineVariants(germlineVcf, true);
-    }
-
-    private void loadGermlineVariants(final String germlineVcf, boolean checkReported)
+    private void loadGermlineVariants(final String germlineVcf)
     {
         if(germlineVcf.isEmpty())
             return;
 
         VcfFileReader vcfReader = new VcfFileReader(germlineVcf);
 
-        GermlineReportedEnrichment germlineReportedEnrichment = checkReported ?
-                new GermlineReportedEnrichment(mReferenceData.DriverGenes.DriverGeneList, Collections.emptySet()) : null;
-
         for(VariantContext context : vcfReader.iterator())
         {
             GermlineVariant variant = new GermlineVariant(context);
 
-            if(checkReported)
-            {
-                // re-check status in driver-only mode
-                boolean isReported = context.getAttributeAsBoolean(CommonVcfTags.REPORTED_FLAG, false)
-                        || germlineReportedEnrichment.report(variant.decorator(), Collections.emptySet());
-
-                if(!isReported)
-                    continue;
-            }
-
-            if(checkReported)
-                mReportableVariants.add(variant);
-            else
-                mVariants.add(variant);
+            mVariants.add(variant);
         }
 
-        if(checkReported)
-        {
-            PPL_LOGGER.info("load {} reported germline variants from {}", mReportableVariants.size(), germlineVcf);
-        }
-        else
-        {
-            PPL_LOGGER.info("load {} germline variants from {}", mVariants.size(), germlineVcf);
-        }
+        PPL_LOGGER.info("load {} germline variants from {}", mVariants.size(), germlineVcf);
     }
 
     public void processAndWrite(
@@ -103,9 +74,9 @@ public class GermlineVariants
         if(germlineVcf.isEmpty())
             return;
 
-        final String outputVCF = PurpleCommon.purpleGermlineVcfFile(mConfig.OutputDir, tumorSample);
+        String outputVCF = PurpleCommon.purpleGermlineVcfFile(mConfig.OutputDir, tumorSample);
 
-        loadGermlineVariants(germlineVcf, false);
+        loadGermlineVariants(germlineVcf);
 
         VCFFileReader vcfReader = new VCFFileReader(new File(germlineVcf), false);
 
@@ -113,7 +84,7 @@ public class GermlineVariants
                 .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                 .build();
 
-        final GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
+        GermlineVariantEnrichment enrichment = new GermlineVariantEnrichment(
                 mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
                 mReferenceData.GermlineHotspots, somaticReportedGenes);
 

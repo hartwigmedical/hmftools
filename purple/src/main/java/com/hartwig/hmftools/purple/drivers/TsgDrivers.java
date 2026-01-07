@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByI
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverImpact;
@@ -32,7 +33,17 @@ public class TsgDrivers extends SomaticVariantDriverFinder
     public DriverCatalog createDriverCatalog(
             final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
             final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber,
-            final DndsDriverGeneLikelihood dndsLikelihood)
+            final DndsDriverGeneLikelihood dndsLikelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus)
+    {
+        return buildDriverCatalog(
+                geneVariants, variantTypeCounts, biallelicCounts, geneCopyNumber, dndsLikelihood, likelihoodMethod, reportedStatus);
+    }
+
+    @VisibleForTesting
+    public static DriverCatalog buildDriverCatalog(
+            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
+            final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber,
+            final DndsDriverGeneLikelihood dndsLikelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus)
     {
         geneVariants.sort(new TsgImpactComparator());
 
@@ -45,6 +56,8 @@ public class TsgDrivers extends SomaticVariantDriverFinder
         int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
         int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
+        double impactLikelihood = likelihoodMethod != LikelihoodMethod.SPLICE_REGION ? 1 : 0;
+
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(topVariant.chromosome())
                 .chromosomeBand(geneCopyNumber.ChromosomeBand)
@@ -53,7 +66,7 @@ public class TsgDrivers extends SomaticVariantDriverFinder
                 .isCanonical(geneCopyNumber.IsCanonical)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.TSG)
-                .driverLikelihood(1)
+                .driverLikelihood(impactLikelihood)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)
@@ -62,8 +75,13 @@ public class TsgDrivers extends SomaticVariantDriverFinder
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS)
-                .reportedStatus(ReportedStatus.REPORTED);
+                .likelihoodMethod(likelihoodMethod)
+                .reportedStatus(reportedStatus);
+
+        if(likelihoodMethod == LikelihoodMethod.SPLICE_REGION)
+        {
+            return builder.build();
+        }
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {
@@ -117,7 +135,9 @@ public class TsgDrivers extends SomaticVariantDriverFinder
 
         double combinedResult = Math.max(Math.max(substituteFirst, substituteSecond), substituteBoth);
 
-        return builder.driverLikelihood(combinedResult).build();
+        builder.driverLikelihood(combinedResult);
+
+        return builder.build();
     }
 
     private static double multiHit(int firstVariantTypeCount, int secondVariantTypeCount,

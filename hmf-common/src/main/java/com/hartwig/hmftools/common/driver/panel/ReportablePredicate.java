@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.common.driver.panel;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToList;
 
 import java.util.List;
@@ -10,16 +9,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.driver.DriverCategory;
-import com.hartwig.hmftools.common.driver.DriverImpact;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
 public class ReportablePredicate
 {
-    private final Map<String, DriverGene> mDriverGeneMap;
+    private final Map<String,DriverGene> mDriverGeneMap;
 
     public ReportablePredicate(final DriverCategory type, final List<DriverGene> driverGenes)
     {
@@ -28,26 +25,30 @@ public class ReportablePredicate
                 .collect(Collectors.toMap(DriverGene::gene, x -> x));
     }
 
-    public boolean isReportable(final VariantImpact variantImpact, final VariantType type, boolean isHotspot)
+    public boolean isDriverGene(final String gene) { return mDriverGeneMap.containsKey(gene); }
+
+    public boolean isReportable(final VariantImpact variantImpact, boolean isHotspot)
     {
-        if(isReportable(
-            variantImpact.GeneName, type, isHotspot, variantImpact.CanonicalCodingEffect, variantImpact.CanonicalEffect))
-        {
+        if(isReportable(variantImpact.GeneName, isHotspot, variantImpact.CanonicalEffect))
             return true;
-        }
 
         if(variantImpact.OtherReportableEffects.isEmpty())
             return false;
 
         List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
 
-        return altTransEffects.stream().anyMatch(x ->
-                isReportable(variantImpact.GeneName, type, isHotspot, x.Effect, x.Effects));
+        return altTransEffects.stream().anyMatch(x -> isReportable(variantImpact.GeneName, isHotspot, x.Effects));
     }
 
-    public boolean isReportable(
-            final String gene, final VariantType type, boolean isHotspot,
-            final CodingEffect codingEffect, final String effectsStr)
+    public boolean isCandidateReportable(final VariantImpact variantImpact, boolean isHotspot)
+    {
+        if(!mDriverGeneMap.containsKey(variantImpact.GeneName))
+            return false;
+
+        return isHotspot || hasProteinImpact(variantImpact.CanonicalCodingEffect) || variantImpact.CanonicalSpliceRegion;
+    }
+
+    public boolean isReportable(final String gene, boolean isHotspot, final String effectsStr)
     {
         DriverGene driverGene = mDriverGeneMap.get(gene);
 

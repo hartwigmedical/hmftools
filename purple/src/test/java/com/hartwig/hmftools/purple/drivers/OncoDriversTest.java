@@ -5,8 +5,12 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.variant.HotspotType.HOTSPOT;
 import static com.hartwig.hmftools.purple.MiscTestUtils.createVariant;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
+import static com.hartwig.hmftools.purple.drivers.TsgDriversTest.countMap;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
@@ -17,6 +21,7 @@ import com.hartwig.hmftools.common.driver.dnds.ImmutableDndsDriverImpactLikeliho
 import com.hartwig.hmftools.common.driver.dnds.ModifiableDndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.HotspotType;
@@ -56,12 +61,18 @@ public class OncoDriversTest
         missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, HotspotType.NON_HOTSPOT, 0.5);
     }
 
+    private DriverCatalog buildDriverCatalog(final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts)
+    {
+        return OncoDrivers.buildDriverCatalog(
+                geneVariants, variantTypeCounts, createGeneCopyNumber(GENE_NAME_1), likelihood, LikelihoodMethod.DNDS, ReportedStatus.REPORTED);
+    }
+
     @Test
     public void favourHotspot()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                10000, 0, likelihood,
-                Lists.newArrayList(frameshiftHotspot, frameshiftNearHotspot, inframe, missense), createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(10000, 0);
+        DriverCatalog victim = buildDriverCatalog(
+                Lists.newArrayList(frameshiftHotspot, frameshiftNearHotspot, inframe, missense), counts);
         Assert.assertEquals(LikelihoodMethod.HOTSPOT, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
@@ -69,9 +80,8 @@ public class OncoDriversTest
     @Test
     public void doNotFavourNearHotspot()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                10000, 0, likelihood, Lists.newArrayList(frameshiftNearHotspot, inframe, missense),
-                createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(10000, 0);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(frameshiftNearHotspot, inframe, missense), counts);
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
@@ -79,8 +89,8 @@ public class OncoDriversTest
     @Test
     public void favourValidInframe()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                10000, 0, likelihood, Lists.newArrayList(inframe, missense), createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(10000, 0);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(inframe, missense), counts);
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
     }
@@ -88,8 +98,8 @@ public class OncoDriversTest
     @Test
     public void favourHighest()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(frameshift, missense), createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(frameshift, missense), counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
     }
@@ -97,8 +107,8 @@ public class OncoDriversTest
     @Test
     public void ignoreFrameshiftAndInvalidInframe()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(unKnownInframe), createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(unKnownInframe), counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.001, INDEL_SAMPLE_COUNT, victim.driverLikelihood());
     }
@@ -106,8 +116,8 @@ public class OncoDriversTest
     @Test
     public void singleMissense()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(missense),
-                createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(missense), counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
     }
@@ -115,8 +125,8 @@ public class OncoDriversTest
     @Test
     public void multiMissense()
     {
-        DriverCatalog victim = OncoDrivers.createDriverCatalog(
-                SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT, likelihood, Lists.newArrayList(missense, missense), createGeneCopyNumber(GENE_NAME_1));
+        Map<VariantType, Integer> counts = countMap(SNV_SAMPLE_COUNT, INDEL_SAMPLE_COUNT);
+        DriverCatalog victim = buildDriverCatalog(Lists.newArrayList(missense, missense), counts);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertLikelihood(0.002, SNV_SAMPLE_COUNT, victim.driverLikelihood());
     }

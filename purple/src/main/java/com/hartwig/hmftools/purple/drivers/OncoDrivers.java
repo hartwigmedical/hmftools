@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByI
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 import com.hartwig.hmftools.common.driver.DriverImpact;
@@ -32,7 +33,15 @@ public class OncoDrivers extends SomaticVariantDriverFinder
     public DriverCatalog createDriverCatalog(
             final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts,
             final Map<VariantType,Integer> biallelicCounts, final GeneCopyNumber geneCopyNumber,
-            final DndsDriverGeneLikelihood dndsLikelihood)
+            final DndsDriverGeneLikelihood dndsLikelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus)
+    {
+        return buildDriverCatalog(geneVariants, variantTypeCounts, geneCopyNumber, dndsLikelihood, likelihoodMethod, reportedStatus);
+    }
+
+    @VisibleForTesting
+    public static DriverCatalog buildDriverCatalog(
+            final List<SomaticVariant> geneVariants, final Map<VariantType,Integer> variantTypeCounts, final GeneCopyNumber geneCopyNumber,
+            final DndsDriverGeneLikelihood dndsLikelihood, final LikelihoodMethod likelihoodMethod, final ReportedStatus reportedStatus)
     {
         int sampleSnvCount = variantTypeCounts.getOrDefault(VariantType.SNP, 0);
         int sampleIndelCount = variantTypeCounts.getOrDefault(VariantType.INDEL, 0);
@@ -44,6 +53,8 @@ public class OncoDrivers extends SomaticVariantDriverFinder
         int inframeVariants = variantCounts.getOrDefault(DriverImpact.INFRAME, 0);
         int frameshiftVariants = variantCounts.getOrDefault(DriverImpact.FRAMESHIFT, 0);
 
+        double impactLikelihood = likelihoodMethod != LikelihoodMethod.SPLICE_REGION ? 1 : 0;
+
         final ImmutableDriverCatalog.Builder builder = ImmutableDriverCatalog.builder()
                 .chromosome(geneVariants.get(0).chromosome())
                 .chromosomeBand(geneCopyNumber.ChromosomeBand)
@@ -52,7 +63,7 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 .isCanonical(geneCopyNumber.IsCanonical)
                 .driver(DriverType.MUTATION)
                 .category(DriverCategory.ONCO)
-                .driverLikelihood(1)
+                .driverLikelihood(impactLikelihood)
                 .missense(missenseVariants)
                 .nonsense(nonsenseVariants)
                 .splice(spliceVariants)
@@ -61,8 +72,13 @@ public class OncoDrivers extends SomaticVariantDriverFinder
                 .biallelic(geneVariants.stream().anyMatch(SomaticVariant::biallelic))
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .maxCopyNumber(geneCopyNumber.maxCopyNumber())
-                .likelihoodMethod(LikelihoodMethod.DNDS)
-                .reportedStatus(ReportedStatus.REPORTED);
+                .likelihoodMethod(likelihoodMethod)
+                .reportedStatus(reportedStatus);
+
+        if(likelihoodMethod == LikelihoodMethod.SPLICE_REGION)
+        {
+            return builder.build();
+        }
 
         if(geneVariants.stream().anyMatch(SomaticVariant::isHotspot))
         {

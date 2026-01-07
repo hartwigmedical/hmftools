@@ -8,13 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverImpact;
-import com.hartwig.hmftools.common.driver.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.purple.DriverGeneResource;
 import com.hartwig.hmftools.common.driver.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -82,9 +80,9 @@ public class SomaticVariantDrivers
             mTsgDrivers.addVariant(variant);
     }
 
-    protected static boolean isReportable(final ReportablePredicate predicate, final SomaticVariant variant)
+    protected static boolean isCandidateReportable(final ReportablePredicate predicate, final SomaticVariant variant)
     {
-        return predicate.isReportable(variant.variantImpact(), variant.type(), variant.isHotspot());
+        return predicate.isCandidateReportable(variant.variantImpact(), variant.isHotspot());
     }
 
     public static boolean hasTranscriptCodingEffect(final VariantImpact variantImpact, final VariantType variantType, final String transcript)

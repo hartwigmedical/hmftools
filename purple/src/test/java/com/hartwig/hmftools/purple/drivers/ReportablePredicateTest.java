@@ -65,6 +65,6 @@ public class ReportablePredicateTest
 
         ReportablePredicate predicate = new ReportablePredicate(ONCO, driverGenes);
 
-        assertTrue(predicate.isReportable(impact, VariantType.SNP, false));
+        assertTrue(predicate.isReportable(impact, false));
     }
 }
