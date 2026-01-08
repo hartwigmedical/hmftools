@@ -83,12 +83,13 @@ public class DriverDataCache
 
         try
         {
-            final PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
+            PurityContext purityContext = PurityContextFile.read(purpleDataPath, mSampleId);
             setSamplePurityData(purityContext.bestFit().ploidy(), isMaleSample(purityContext));
 
             mDriverCatalog.addAll(
                     DriverCatalogFile.read(DriverCatalogFile.generateSomaticFilename(purpleDataPath, mSampleId)).stream()
                             .filter(x -> DRIVERS_PURPLE_SOMATIC.contains(x.driver()))
+                            .filter(x -> x.reportedStatus() == ReportedStatus.REPORTED)
                             .collect(Collectors.toList()));
 
             mGeneCopyNumberData.addAll(
