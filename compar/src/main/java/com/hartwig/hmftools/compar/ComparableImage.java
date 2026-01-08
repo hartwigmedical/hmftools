@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.compar;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.awt.image.BufferedImage;
@@ -25,11 +23,10 @@ public abstract class ComparableImage implements ComparableItem
     public final String Path;
     public final BufferedImage Image;
 
-    public static final String FLD_DIMENSION_MISMATCH = "DimensionMismatch";
-    public static final String FLD_PIXEL_MISMATCH = "PixelMismatch";
+    public static final String FLD_DIMENSIONS = "Dimensions";
+    public static final String FLD_PIXELS = "Pixels";
 
-    public static final ThresholdData DEFAULT_IMAGE_THRESHOLD = new ThresholdData(
-            ThresholdType.PERCENT, Double.NaN, 0);
+    public static final ThresholdData DEFAULT_IMAGE_THRESHOLD = new ThresholdData(ThresholdType.PERCENT, Double.NaN, 0);
 
     public ComparableImage(String name, String path)
     {
@@ -74,56 +71,51 @@ public abstract class ComparableImage implements ComparableItem
         final ComparableImage otherImageData = (ComparableImage) other;
         BufferedImage otherImage = otherImageData.Image;
 
-        // Handle null images (failed to load)
+        // Handle image load failures
         if(Image == null && otherImage == null)
-        {
             return new Mismatch(this, other, MismatchType.INVALID_BOTH, List.of());
-        }
-        if(Image == null)
-        {
-            return new Mismatch(this, other, MismatchType.INVALID_REF, List.of());
-        }
-        if(otherImage == null)
-        {
-            return new Mismatch(this, other, MismatchType.INVALID_NEW, List.of());
-        }
 
+        if(Image == null)
+            return new Mismatch(this, other, MismatchType.INVALID_REF, List.of());
+
+        if(otherImage == null)
+            return new Mismatch(this, other, MismatchType.INVALID_NEW, List.of());
+
+        // Check dimensions
         if(Image.getWidth() != otherImage.getWidth() || Image.getHeight() != otherImage.getHeight())
         {
-            String diffString = format("%s(%dx%d/%dx%d)",
-                    FLD_DIMENSION_MISMATCH,
-                    Image.getWidth(), Image.getHeight(),
-                    otherImage.getWidth(), otherImage.getHeight()
-            );
-
+            String diffString = formDimensionMismatchString(Image.getWidth(), Image.getHeight(), otherImage.getWidth(), otherImage.getHeight());
             return new Mismatch(this, other, MismatchType.VALUE, List.of(diffString));
         }
-        else
+
+        // Check pixels
+        int totalPixels = Image.getWidth() * Image.getHeight();
+        int absDiff = countDifferingPixels(Image, otherImage);
+        double relDiff = (double) absDiff / totalPixels;
+        ThresholdData threshold = thresholds.isFieldRegistered(Name) ? thresholds.getThreshold(Name) : DEFAULT_IMAGE_THRESHOLD;
+
+        if(hasDiff(absDiff, relDiff, threshold))
         {
-            int totalPixels = Image.getWidth() * Image.getHeight();
-
-            int absDiff = countDifferingPixels(Image, otherImage);
-            double relDiff = (double) absDiff / totalPixels;
-
-            ThresholdData threshold = thresholds.isFieldRegistered(Name)
-                    ? thresholds.getThreshold(Name)
-                    : DEFAULT_IMAGE_THRESHOLD;
-
-            if(hasDiff(absDiff, relDiff, threshold))
-            {
-                String diffString = format("%s(%.3f=%d/%d)", FLD_PIXEL_MISMATCH, relDiff, absDiff, totalPixels);
-                return new Mismatch(this, other, MismatchType.VALUE, List.of(diffString));
-            }
+            String diffString = formPixelMismatchString(relDiff, absDiff, totalPixels);
+            return new Mismatch(this, other, MismatchType.VALUE, List.of(diffString));
         }
 
         if(includeMatches)
-        {
             return new Mismatch(this, other, MismatchType.FULL_MATCH, List.of());
-        }
-        else
-        {
-            return null;
-        }
+
+        return null;
+    }
+
+    @VisibleForTesting
+    protected static String formDimensionMismatchString(int width, int height, int otherWidth, int otherHeight)
+    {
+        return String.format("%s(%dx%d/%dx%d)", FLD_DIMENSIONS, width, height, otherWidth, otherHeight);
+    }
+
+    @VisibleForTesting
+    protected static String formPixelMismatchString(double relDiff, int absDiff, int totalPixels)
+    {
+        return String.format("%s(%.3f=%d/%d)", FLD_PIXELS, relDiff, absDiff, totalPixels);
     }
 
     public BufferedImage loadImage(String path)
@@ -165,7 +157,7 @@ public abstract class ComparableImage implements ComparableItem
         return diffCount;
     }
 
-    public boolean hasDiff(int absDiff, double relDiff, ThresholdData threshold)
+    private boolean hasDiff(int absDiff, double relDiff, ThresholdData threshold)
     {
         boolean hasAbsDiff = absDiff > threshold.AbsoluteDiff;
         boolean hasRelDiff = relDiff > threshold.PercentDiff;

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.compar.ComparableImage.formDimensionMismatchString;
+import static com.hartwig.hmftools.compar.ComparableImage.formPixelMismatchString;
+
 import static org.junit.Assert.assertEquals;
 
 import java.awt.Color;
@@ -18,14 +21,21 @@ public class ComparableImageTest
 {
     private static final int TEST_IMAGE_WIDTH = 10;
     private static final int TEST_IMAGE_HEIGHT = 10;
+    private static final String TEST_IMAGE_NAME = "test";
     private static final DiffThresholds TEST_THRESHOLDS = new DiffThresholds();
 
     private static class TestImageData extends ComparableImage
     {
-        public TestImageData(String name, BufferedImage image) { super(name, image); }
+        public TestImageData(String name, BufferedImage image)
+        {
+            super(name, image);
+        }
 
         @Override
-        public Category category() { return Category.CUPPA_IMAGE; }
+        public Category category()
+        {
+            return null;
+        }
     }
 
     private TestImageData createTestBlackAndWhiteImage(int width, int height, double blackProportion)
@@ -39,10 +49,10 @@ public class ComparableImageTest
         g2d.fillRect(0, 0, width, blackWhiteHeightMidpoint);
 
         g2d.setColor(Color.BLACK);
-        g2d.fillRect(0, blackWhiteHeightMidpoint, width, height-blackWhiteHeightMidpoint);
+        g2d.fillRect(0, blackWhiteHeightMidpoint, width, height - blackWhiteHeightMidpoint);
 
         g2d.dispose();
-        return new TestImageData("test", image);
+        return new TestImageData(TEST_IMAGE_NAME, image);
     }
 
     private TestImageData createTestBlackAndWhiteImage(double blackProportion)
@@ -59,7 +69,9 @@ public class ComparableImageTest
         Mismatch mismatch = whiteImage1.findMismatch(whiteImage2, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("DimensionMismatch(1x1/2x2)", mismatch.DiffValues().get(0));
+
+        String expectedDiffString = formDimensionMismatchString(1, 1, 2, 2);
+        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
     }
 
     @Test
@@ -82,7 +94,9 @@ public class ComparableImageTest
         Mismatch mismatch = whiteImage.findMismatch(blackImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("PixelMismatch(1.000=100/100)", mismatch.DiffValues().get(0));
+
+        String expectedDiffString = formPixelMismatchString(1.0, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
+        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
     }
 
     @Test
@@ -94,6 +108,26 @@ public class ComparableImageTest
         Mismatch mismatch = whiteImage.findMismatch(mixedImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("PixelMismatch(0.500=50/100)", mismatch.DiffValues().get(0));
+
+        String expectedDiffString = formPixelMismatchString(0.5, 50, TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT);
+        assertEquals(expectedDiffString, mismatch.DiffValues().get(0));
+    }
+
+    @Test
+    public void imageLoadFailureProducesInvalidMismatch()
+    {
+        TestImageData valid = createTestBlackAndWhiteImage(0);
+        TestImageData invalidImage = new TestImageData(TEST_IMAGE_NAME, null);
+
+        Mismatch mismatch;
+
+        mismatch = valid.findMismatch(invalidImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
+        assertEquals(MismatchType.INVALID_NEW, mismatch.MismatchType());
+
+        mismatch = invalidImage.findMismatch(valid, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
+        assertEquals(MismatchType.INVALID_REF, mismatch.MismatchType());
+
+        mismatch = invalidImage.findMismatch(invalidImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
+        assertEquals(MismatchType.INVALID_BOTH, mismatch.MismatchType());
     }
 }
