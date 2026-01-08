@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar.image;
+package com.hartwig.hmftools.compar;
 
 import static java.lang.String.format;
 
@@ -13,14 +13,13 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.compar.common.ThresholdData;
 import com.hartwig.hmftools.compar.common.ThresholdType;
 
-public abstract class AbstractImageData implements ComparableItem
+public abstract class ComparableImage implements ComparableItem
 {
     public final String Name;
     public final String Path;
@@ -32,7 +31,7 @@ public abstract class AbstractImageData implements ComparableItem
     public static final ThresholdData DEFAULT_IMAGE_THRESHOLD = new ThresholdData(
             ThresholdType.PERCENT, Double.NaN, 0);
 
-    public AbstractImageData(String name, String path)
+    public ComparableImage(String name, String path)
     {
         Name = name;
         Path = path;
@@ -50,7 +49,7 @@ public abstract class AbstractImageData implements ComparableItem
     @Override
     public boolean matches(final ComparableItem other)
     {
-        final AbstractImageData otherImageData = (AbstractImageData) other;
+        final ComparableImage otherImageData = (ComparableImage) other;
         return Name.equals(otherImageData.Name);
     }
 
@@ -64,7 +63,7 @@ public abstract class AbstractImageData implements ComparableItem
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
             final boolean includeMatches)
     {
-        final AbstractImageData otherImageData = (AbstractImageData) other;
+        final ComparableImage otherImageData = (ComparableImage) other;
         BufferedImage otherImage = otherImageData.Image;
 
         final List<String> diffs = Lists.newArrayList();
