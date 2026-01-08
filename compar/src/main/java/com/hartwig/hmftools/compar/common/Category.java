@@ -17,6 +17,7 @@ public enum Category
     DISRUPTION,
     GERMLINE_SV,
     CUPPA,
+    CUPPA_IMAGE,
     LILAC,
     CHORD,
     PEACH,

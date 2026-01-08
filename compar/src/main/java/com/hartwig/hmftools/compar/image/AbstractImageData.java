@@ -9,8 +9,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
@@ -31,7 +29,7 @@ public abstract class AbstractImageData implements ComparableItem
     public static final String FLD_DIMENSION_MISMATCH = "DimensionMismatch";
     public static final String FLD_PIXEL_DIFF = "PixelDiff";
 
-    public static final ThresholdData DEFAULT_PIXEL_DIFF_PERCENT_THRESHOLD = new ThresholdData(
+    public static final ThresholdData DEFAULT_IMAGE_THRESHOLD = new ThresholdData(
             ThresholdType.PERCENT, Double.NaN, 0);
 
     public AbstractImageData(String name, String path)
@@ -57,10 +55,10 @@ public abstract class AbstractImageData implements ComparableItem
     }
 
     @Override
-    public List<String> displayValues()
-    {
-        return List.of(format("%s %dx%d", Name, Image.getWidth(), Image.getHeight()));
-    }
+    public String key() { return getBasename(); }
+
+    @Override
+    public List<String> displayValues() { return List.of(); }
 
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
@@ -69,17 +67,14 @@ public abstract class AbstractImageData implements ComparableItem
         final AbstractImageData otherImageData = (AbstractImageData) other;
         BufferedImage otherImage = otherImageData.Image;
 
-        String basenames = Stream.of(this.getBasename(), otherImageData.getBasename())
-                .distinct()
-                .collect(Collectors.joining(", "));
-
         final List<String> diffs = Lists.newArrayList();
 
         if(Image.getWidth() != otherImage.getWidth() || Image.getHeight() != otherImage.getHeight())
         {
-            String diffString = format("Image(%s) Basename(%s) %s(%dx%d/%dx%d)",
-                    Name, basenames,
-                    FLD_DIMENSION_MISMATCH, Image.getWidth(), Image.getHeight(), otherImage.getWidth(), otherImage.getHeight()
+            String diffString = format("%s(%dx%d/%dx%d)",
+                    FLD_DIMENSION_MISMATCH,
+                    Image.getWidth(), Image.getHeight(),
+                    otherImage.getWidth(), otherImage.getHeight()
             );
             diffs.add(diffString);
         }
@@ -92,13 +87,11 @@ public abstract class AbstractImageData implements ComparableItem
 
             ThresholdData threshold = thresholds.isFieldRegistered(Name)
                     ? thresholds.getThreshold(Name)
-                    : DEFAULT_PIXEL_DIFF_PERCENT_THRESHOLD;
+                    : DEFAULT_IMAGE_THRESHOLD;
 
             if(hasDiff(absDiff, relDiff, threshold))
             {
-                String diffString = format("Image(%s) Basename(%s) %s(%.3f=%d/%d)",
-                        Name, basenames,
-                        FLD_PIXEL_DIFF, relDiff, absDiff, totalPixels);
+                String diffString = format("%s(%.3f=%d/%d)", FLD_PIXEL_DIFF, relDiff, absDiff, totalPixels);
                 diffs.add(diffString);
             }
         }

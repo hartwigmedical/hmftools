@@ -35,6 +35,7 @@ import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cider.Cdr3LocusSummaryComparer;
 import com.hartwig.hmftools.compar.cider.CiderVdjComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
+import com.hartwig.hmftools.compar.cuppa.CuppaImageComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;
 import com.hartwig.hmftools.compar.lilac.LilacComparer;
 import com.hartwig.hmftools.compar.linx.DisruptionComparer;
@@ -131,6 +132,9 @@ public class CommonUtils
 
             case CUPPA:
                 return new CuppaComparer(config);
+
+            case CUPPA_IMAGE:
+                return new CuppaImageComparer(config);
 
             case CHORD:
                 return new ChordComparer(config);
