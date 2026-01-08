@@ -7,8 +7,6 @@ import com.hartwig.hmftools.compar.ComparableImage;
 
 public class CuppaImageData extends ComparableImage
 {
-    public static final String FLD_VIS_IMAGE = "cuppa_vis_image";
-
     public CuppaImageData(final String name, final String path)
     {
         super(name, path);
