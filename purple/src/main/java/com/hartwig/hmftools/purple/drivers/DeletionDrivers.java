@@ -2,7 +2,9 @@ package com.hartwig.hmftools.purple.drivers;
 
 import static com.hartwig.hmftools.common.driver.DriverType.DEL;
 import static com.hartwig.hmftools.common.driver.DriverType.HET_DEL;
+import static com.hartwig.hmftools.common.driver.DriverType.LOH;
 import static com.hartwig.hmftools.common.driver.DriverType.UNKNOWN;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.LOH_MINOR_ALLEL_CN;
 
 import java.util.List;
 import java.util.Map;
@@ -89,7 +91,6 @@ public class DeletionDrivers
             if(geneCopyNumber.minCopyNumber() < MAX_COPY_NUMBER_DEL)
             {
                 driverType = DEL;
-
                 reportedStatus = driverGene.reportDeletion() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
             }
             else if(ploidy > 0 && HumanChromosome.fromString(geneCopyNumber.Chromosome).isAutosome())
@@ -99,9 +100,14 @@ public class DeletionDrivers
                 if(adjustedMinCopyNumber < driverGene.hetDeletionThreshold())
                 {
                     driverType = HET_DEL;
-
                     reportedStatus = driverGene.reportHetDeletion() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
                 }
+            }
+
+            if(driverType == UNKNOWN && geneCopyNumber.MinMinorAlleleCopyNumber < LOH_MINOR_ALLEL_CN)
+            {
+                driverType = LOH;
+                reportedStatus = driverGene.reportLoh() ? ReportedStatus.REPORTED : ReportedStatus.NOT_REPORTED;
             }
 
             if(driverType == UNKNOWN)

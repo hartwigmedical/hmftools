@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.algo.wildtype;
 
-import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
+import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.linxHomozygousDisruptionBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -52,6 +52,7 @@ public final class DriverGeneFile
         int spliceIndex = fieldsIndexMap.get("reportSplice");
         int deletionIndex = fieldsIndexMap.get("reportDeletion");
         Integer hetDelIndex = fieldsIndexMap.get("reportHetDeletion");
+        Integer lohIndex = fieldsIndexMap.get("reportLoh");
         Integer hetDelThresholdIndex = fieldsIndexMap.get("hetDeletionThreshold");
         int disruptionIndex = fieldsIndexMap.get("reportDisruption");
         int amplificationIndex = fieldsIndexMap.get("reportAmplification");
@@ -96,6 +97,7 @@ public final class DriverGeneFile
                     .reportSplice(Boolean.parseBoolean(values[spliceIndex]))
                     .reportDeletion(Boolean.parseBoolean(values[deletionIndex]))
                     .reportHetDeletion(hetDelIndex != null ? Boolean.parseBoolean(values[hetDelIndex]) : false)
+                    .reportLoh(lohIndex != null ? Boolean.parseBoolean(values[lohIndex]) : false)
                     .hetDeletionThreshold(hetDelThresholdIndex != null ?
                             Double.parseDouble(values[hetDelThresholdIndex]) : DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                     .reportDisruption(Boolean.parseBoolean(values[disruptionIndex]))
@@ -135,6 +137,7 @@ public final class DriverGeneFile
                 .add("reportSplice")
                 .add("reportDeletion")
                 .add("reportHetDeletion")
+                .add("reportLoh")
                 .add("hetDeletionThreshold")
                 .add("reportDisruption")
                 .add("reportAmplification")
@@ -159,6 +162,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportSplice()))
                 .add(String.valueOf(gene.reportDeletion()))
                 .add(String.valueOf(gene.reportHetDeletion()))
+                .add(String.valueOf(gene.reportLoh()))
                 .add(String.valueOf(gene.hetDeletionThreshold()))
                 .add(String.valueOf(gene.reportDisruption()))
                 .add(String.valueOf(gene.reportAmplification()))

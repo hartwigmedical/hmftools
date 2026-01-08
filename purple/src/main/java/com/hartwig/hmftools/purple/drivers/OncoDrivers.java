@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.purple.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
@@ -97,14 +98,18 @@ public class OncoDrivers extends SomaticVariantDriverFinder
             for(SomaticVariant variant : geneVariants)
             {
                 CodingEffect codingEffect = getWorstReportableCodingEffect(variant.variantImpact());
-                DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
 
-                DndsDriverImpactLikelihood likelihood = dndsLikelihood.select(impact);
+                if(hasProteinImpact(codingEffect))
+                {
+                    DriverImpact impact = DriverImpact.select(variant.type(), codingEffect);
 
-                int sampleVariantCount = (impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME)
-                        ? sampleIndelCount : sampleSnvCount;
+                    DndsDriverImpactLikelihood likelihood = dndsLikelihood.select(impact);
 
-                driverLikelihood = Math.max(driverLikelihood, DndsCalculator.probabilityDriverVariant(sampleVariantCount, likelihood));
+                    int sampleVariantCount = (impact == DriverImpact.FRAMESHIFT || impact == DriverImpact.INFRAME)
+                            ? sampleIndelCount : sampleSnvCount;
+
+                    driverLikelihood = Math.max(driverLikelihood, DndsCalculator.probabilityDriverVariant(sampleVariantCount, likelihood));
+                }
             }
         }
 

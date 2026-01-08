@@ -287,6 +287,7 @@ public class GermlineReportedTest
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(true)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
+                .reportLoh(false)
                 .reportSomaticHotspot(false)
                 .reportSplice(false)
                 .reportGermlineDisruption(ANY)

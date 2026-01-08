@@ -25,6 +25,7 @@ public interface DriverGene extends Comparable<DriverGene>
 
     boolean reportDeletion();
     boolean reportHetDeletion();
+    boolean reportLoh();
     double hetDeletionThreshold();
 
     boolean reportDisruption();

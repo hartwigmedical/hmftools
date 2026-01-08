@@ -53,6 +53,7 @@ public class ReportablePredicateTest
                 .reportAmplification(true)
                 .amplificationRatio(DEFAULT_DRIVER_AMPLIFICATION_PLOIDY_RATIO)
                 .reportHetDeletion(true)
+                .reportLoh(false)
                 .hetDeletionThreshold(DEFAULT_DRIVER_HET_DELETION_THRESHOLD)
                 .reportSomaticHotspot(true)
                 .likelihoodType(ONCO)

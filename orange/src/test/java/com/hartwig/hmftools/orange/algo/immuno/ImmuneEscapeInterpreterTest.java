@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.algo.immuno;
 
-import static com.hartwig.hmftools.orange.algo.linx.HomozygousDisruptionFactoryTest.linxHomozygousDisruptionBuilder;
+import static com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory.linxHomozygousDisruptionBuilder;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
