@@ -77,11 +77,10 @@ final class GainDeletionFactory {
     @NotNull
     private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
             final String gene, final String transcript) {
-        PurpleGeneCopyNumber geneCopyNumber = somaticGeneCopyNumbers.stream()
+        return somaticGeneCopyNumbers.stream()
                 .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
                 .findFirst()
-                .orElseThrow();
-        return geneCopyNumber;
+                .orElseThrow(() -> new IllegalStateException("No gene copy number found for " + gene + " transcript " + transcript));
     }
 
     public static List<GainDeletion> somaticDriverGainDels(
