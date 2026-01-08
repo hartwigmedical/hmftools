@@ -57,6 +57,7 @@ import static com.hartwig.hmftools.sage.filter.SoftFilterConfig.getTieredSoftFil
 import static com.hartwig.hmftools.sage.seqtech.SbxUtils.MQF_NM_1_THRESHOLD_DEDUCTION;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedHpQuals;
 import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.belowExpectedT0Quals;
+import static com.hartwig.hmftools.sage.seqtech.UltimaUtils.isPanelIndelRepeatVariant;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -626,13 +627,8 @@ public class VariantFilters
             adjustedRefAltCount += refCounter.jitter().shortened() + refCounter.jitter().lengthened();
         }
 
-        boolean isPanelIndelRepeat = isPanelIndelRepeatVariant(primaryTumor);
+        boolean isPanelIndelRepeat = isUltima() && isPanelIndelRepeatVariant(primaryTumor);
         return aboveMaxGermlineVaf(tier, isPanelIndelRepeat, tumorVaf, adjustedRefAltCount, refCounter.readCounts().Total, config.MaxGermlineVaf);
-    }
-
-    public static boolean isPanelIndelRepeatVariant(final ReadContextCounter counter)
-    {
-        return counter.tier() == PANEL && counter.variant().isIndel() && counter.readContext().MaxRepeat != null;
     }
 
     public static boolean aboveMaxGermlineVaf(

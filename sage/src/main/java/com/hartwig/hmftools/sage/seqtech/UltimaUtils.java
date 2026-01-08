@@ -10,12 +10,12 @@ import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.HALF_PHRED_S
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_INVALID_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_HP_LEN;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractTpValues;
+import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.common.variant.VariantTier.PANEL;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.FilterConfig.ULTIMA_CANDIDATE_HIGH_BQ_REPEAT_MIN;
-import static com.hartwig.hmftools.sage.filter.VariantFilters.isPanelIndelRepeatVariant;
 import static com.hartwig.hmftools.sage.seqtech.UltimaQualModelBuilder.canSkipRealignedModels;
 
 import java.io.BufferedReader;
@@ -31,6 +31,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SimpleVariant;
 import static com.hartwig.hmftools.sage.filter.VariantFilters.STRAND_BIAS_CALCS;
+
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -217,6 +219,16 @@ public final class UltimaUtils
         }
 
         return false;
+    }
+
+    public static boolean isPanelIndelRepeatVariant(final ReadContextCounter counter)
+    {
+        return isPanelIndelRepeatVariant(counter.tier(), counter.variant().isIndel(), counter.readContext().MaxRepeat != null);
+    }
+
+    public static boolean isPanelIndelRepeatVariant(final VariantTier tier, boolean isIndel, boolean hasRepeat)
+    {
+        return (tier == PANEL || tier == HOTSPOT) && isIndel && hasRepeat;
     }
 
     @VisibleForTesting
