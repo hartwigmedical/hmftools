@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -36,6 +37,14 @@ public abstract class ComparableImage implements ComparableItem
         Name = name;
         Path = path;
         Image = loadImage(path);
+    }
+
+    @VisibleForTesting
+    protected ComparableImage(String name, BufferedImage image)
+    {
+        Name = name;
+        Path = null;
+        Image = image;
     }
 
     public String getBasename(){ return new File(Path).getName(); }
