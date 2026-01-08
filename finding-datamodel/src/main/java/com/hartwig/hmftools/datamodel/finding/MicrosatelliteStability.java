@@ -17,7 +17,7 @@ public interface MicrosatelliteStability extends Finding
     double microsatelliteIndelsPerMb();
     @NotNull PurpleMicrosatelliteStatus microsatelliteStatus();
 
-    @NotNull List<LOHCopyNumbers> lohCopyNumbers();
+    @NotNull List<GainDeletion> lohCopyNumbers();
 
     @NotNull List<String> genes();
 }

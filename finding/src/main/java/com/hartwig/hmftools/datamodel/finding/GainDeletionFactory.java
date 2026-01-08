@@ -2,6 +2,7 @@ package com.hartwig.hmftools.datamodel.finding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.hartwig.hmftools.datamodel.driver.DriverInterpretation;
 import com.hartwig.hmftools.datamodel.driver.DriverSource;
@@ -10,6 +11,7 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
@@ -23,9 +25,14 @@ final class GainDeletionFactory {
         List<PurpleLossOfHeterozygosity> germlineLohs = purple.reportableGermlineLossOfHeterozygosities();
         List<PurpleDriver> purpleGermlineDrivers = purple.germlineDrivers();
         if (germlineFullDels != null && germlineLohs != null && purpleGermlineDrivers != null) {
-            allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers()));
+            allGainDels.addAll(germlineDriverGainDels(germlineFullDels, germlineLohs, purple.germlineDrivers(),
+                    purple.allSomaticGeneCopyNumbers()));
         }
-        allGainDels.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers()));
+        allGainDels.addAll(somaticDriverGainDels(purple.reportableSomaticGainsDels(), purple.somaticDrivers(), purple.allSomaticGeneCopyNumbers()));
+
+        // we are going to add somatic LOH to purple. For this backported version we will reverse engineer how they might look
+        allGainDels.addAll(somaticLoh(purple.suspectGeneCopyNumbersWithLOH()));
+
         return ImmutableDriverFindings.<GainDeletion>builder()
                 .status(findingsStatus)
                 .all(allGainDels)
@@ -36,31 +43,50 @@ final class GainDeletionFactory {
     // all the reportable ones are in purple drivers. Other types are not reportable, we can ignore them
     public static List<GainDeletion> germlineDriverGainDels(List<PurpleGainDeletion> reportableGermlineFullDels,
             List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities,
-            final List<PurpleDriver> germlineDrivers)
+            final List<PurpleDriver> germlineDrivers,
+            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers)
     {
         List<GainDeletion> driverGainDels = new ArrayList<>();
 
         for(PurpleGainDeletion fullDels : reportableGermlineFullDels)
         {
             // find the purple driver object, it should be there
-            PurpleDriver driver = findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION);
+            PurpleDriver driver = Objects.requireNonNull(
+                    findDriver(germlineDrivers, fullDels.gene(), fullDels.transcript(), PurpleDriverType.GERMLINE_DELETION));
 
-            driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE));
+            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, fullDels.gene(), fullDels.transcript());
+
+            driverGainDels.add(toGainDel(fullDels, driver, GainDeletion.Type.GERMLINE_DEL_HOM_IN_TUMOR, DriverSource.GERMLINE, geneCopyNumber));
         }
 
         for(PurpleLossOfHeterozygosity loh : reportableGermlineLossOfHeterozygosities)
         {
             // find the purple driver object, it should be there
-            PurpleDriver driver = findDriver(germlineDrivers, loh.gene(), loh.transcript(), PurpleDriverType.GERMLINE_DELETION);
+            PurpleDriver driver = Objects.requireNonNull(
+                    findDriver(germlineDrivers, loh.gene(), loh.transcript(), PurpleDriverType.GERMLINE_DELETION));
 
-            driverGainDels.add(toGainDel(loh, driver));
+            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, loh.gene(), loh.transcript());
+
+            driverGainDels.add(toGainDel(loh, driver, geneCopyNumber));
         }
 
         // should we sort this?
         return driverGainDels;
     }
 
-    public static List<GainDeletion> somaticDriverGainDels(List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers)
+    @NotNull
+    private static PurpleGeneCopyNumber findPurpleGeneCopyNumber(final List<PurpleGeneCopyNumber> somaticGeneCopyNumbers,
+            final String gene, final String transcript) {
+        PurpleGeneCopyNumber geneCopyNumber = somaticGeneCopyNumbers.stream()
+                .filter(o -> o.gene().equals(gene) && o.transcript().equals(transcript))
+                .findFirst()
+                .orElseThrow();
+        return geneCopyNumber;
+    }
+
+    public static List<GainDeletion> somaticDriverGainDels(
+            List<PurpleGainDeletion> gainDeletions, final List<PurpleDriver> drivers,
+            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers)
     {
         List<GainDeletion> somaticGainsDels = new ArrayList<>();
         for(PurpleGainDeletion gainDeletion : gainDeletions)
@@ -81,7 +107,39 @@ final class GainDeletionFactory {
                 case FULL_DEL, PARTIAL_DEL -> GainDeletion.Type.SOMATIC_DEL;
             };
 
-            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC));
+            final PurpleGeneCopyNumber geneCopyNumber = findPurpleGeneCopyNumber(somaticGeneCopyNumbers, gainDeletion.gene(), gainDeletion.transcript());
+
+            somaticGainsDels.add(toGainDel(gainDeletion, driver, type, DriverSource.SOMATIC, geneCopyNumber));
+        }
+        return somaticGainsDels;
+    }
+
+    public static List<GainDeletion> somaticLoh(List<PurpleGeneCopyNumber> lohGeneCopyNumbers)
+    {
+        List<GainDeletion> somaticGainsDels = new ArrayList<>();
+        for(PurpleGeneCopyNumber geneCopyNumber : lohGeneCopyNumbers)
+        {
+            somaticGainsDels.add(
+                    ImmutableGainDeletion.builder()
+                            .findingKey(FindingKeys.gainDeletion(DriverSource.SOMATIC,
+                                    geneCopyNumber.gene(),
+                                    CopyNumberInterpretation.FULL_DEL,
+                                    geneCopyNumber.isCanonical(),
+                                    geneCopyNumber.transcript()))
+                            .driverSource(DriverSource.SOMATIC)
+                            .reportedStatus(ReportedStatus.REPORTED)
+                            .driverInterpretation(DriverInterpretation.LOW)
+                            .type(GainDeletion.Type.SOMATIC_LOH)
+                            .chromosome(geneCopyNumber.chromosome())
+                            .chromosomeBand(geneCopyNumber.chromosomeBand())
+                            .gene(geneCopyNumber.gene())
+                            .transcript(geneCopyNumber.transcript())
+                            .isCanonical(geneCopyNumber.isCanonical())
+                            .interpretation(CopyNumberInterpretation.FULL_DEL)
+                            .tumorMinCopies(geneCopyNumber.minCopyNumber())
+                            .tumorMaxCopies(geneCopyNumber.maxCopyNumber())
+                            .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
+                            .build());
         }
         return somaticGainsDels;
     }
@@ -97,7 +155,8 @@ final class GainDeletionFactory {
     private static GainDeletion toGainDel(PurpleGainDeletion purpleGainDeletion,
             final PurpleDriver driver,
             GainDeletion.Type type,
-            DriverSource sourceSample) {
+            DriverSource sourceSample,
+            PurpleGeneCopyNumber geneCopyNumber) {
         return ImmutableGainDeletion.builder()
                 .findingKey(FindingKeys.gainDeletion(sourceSample,
                         purpleGainDeletion.gene(),
@@ -114,12 +173,13 @@ final class GainDeletionFactory {
                 .transcript(purpleGainDeletion.transcript())
                 .isCanonical(driver.isCanonical())
                 .interpretation(purpleGainDeletion.interpretation())
-                .minCopies(purpleGainDeletion.minCopies())
-                .maxCopies(purpleGainDeletion.maxCopies())
+                .tumorMinCopies(purpleGainDeletion.minCopies())
+                .tumorMaxCopies(purpleGainDeletion.maxCopies())
+                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
     }
 
-    private static GainDeletion toGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver) {
+    private static GainDeletion toGainDel(PurpleLossOfHeterozygosity loh, final PurpleDriver driver, PurpleGeneCopyNumber geneCopyNumber) {
 
         CopyNumberInterpretation copyNumberInterpretation = switch (loh.geneProportion())
         {
@@ -143,8 +203,9 @@ final class GainDeletionFactory {
                 .transcript(loh.transcript())
                 .isCanonical(driver.isCanonical())
                 .interpretation(copyNumberInterpretation)
-                .minCopies(loh.minCopies())
-                .maxCopies(loh.maxCopies())
+                .tumorMinCopies(loh.minCopies())
+                .tumorMaxCopies(loh.maxCopies())
+                .tumorMinMinorAlleleCopies(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
     }
 }
