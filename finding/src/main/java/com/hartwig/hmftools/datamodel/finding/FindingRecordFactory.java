@@ -30,7 +30,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.Genes;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -71,29 +70,34 @@ public class FindingRecordFactory {
                 .disruptions(createDisruptionsFindings(linx, hasReliablePurity))
                 .fusions(createFusionsFindings(orangeRecord.linx()));
 
-        addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
+        Findings<GainDeletion> gainDeletions = addPurpleFindings(builder, orangeRecord, clinicalTranscriptsModel, driverGenes);
 
         return builder.predictedTumorOrigin(createPredictedTumorOrigin(orangeRecord.cuppa()))
-                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), orangeRecord.purple(), linx))
+                .homologousRecombination(createHomologousRecombination(orangeRecord.chord(), orangeRecord.purple(), linx, gainDeletions))
                 .viruses(createVirusFindings(orangeRecord.virusInterpreter()))
                 .hla(HlaAlleleFactory.createHlaAllelesFindings(orangeRecord, hasReliablePurity))
                 .pharmocoGenotypes(createPharmcoGenotypesFindings(orangeRecord.peach()))
                 .build();
     }
 
-    private static void addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
+    // return the gain deletions cause they are needed by HRD, will see if we can find a better way
+    private static DriverFindings<GainDeletion> addPurpleFindings(ImmutableFindingRecord.Builder builder, final OrangeRecord orangeRecord,
             final @Nullable ClinicalTranscriptsModel clinicalTranscriptsModel, @NotNull Map<String, DriverGene> driverGenes) {
         PurpleRecord purple = orangeRecord.purple();
 
         FindingsStatus findingsStatus = purpleFindingsStatus(purple);
 
+        DriverFindings<GainDeletion> gainDeletions = GainDeletionFactory.gainDeletionFindings(purple, findingsStatus);
+
         builder.smallVariants(SmallVariantFactory.smallVariantFindings(purple, findingsStatus, clinicalTranscriptsModel, driverGenes))
-                .gainDeletions(GainDeletionFactory.gainDeletionFindings(purple, findingsStatus))
-                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx()))
+                .gainDeletions(gainDeletions)
+                .microsatelliteStability(createMicrosatelliteStability(purple, orangeRecord.linx(), gainDeletions))
                 .tumorMutationStatus(createTumorMutationStatus(purple));
 
         builder.chromosomeArmCopyNumbers(
                 ChromosomeArmCopyNumberFactory.extractCnPerChromosomeArm(purple.allSomaticCopyNumbers(), orangeRecord.refGenomeVersion()));
+
+        return gainDeletions;
     }
 
     @NotNull
@@ -133,7 +137,8 @@ public class FindingRecordFactory {
     @NotNull
     private static CharacteristicsFinding<HomologousRecombination> createHomologousRecombination(@Nullable ChordRecord chord,
             @NotNull PurpleRecord purple,
-            @NotNull LinxRecord linx) {
+            @NotNull LinxRecord linx,
+            @NotNull Findings<GainDeletion> gainDeletions) {
         if (chord != null) {
             return ImmutableCharacteristicsFinding.<HomologousRecombination>builder()
                     .status(FindingsStatus.OK)
@@ -144,7 +149,7 @@ public class FindingRecordFactory {
                             .hrdValue(chord.hrdValue())
                             .hrStatus(chord.hrStatus())
                             .hrdType(chord.hrdType())
-                            .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.HRD_GENES ))
+                            .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.HRD_GENES ))
                             .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                     purple.reportableSomaticGainsDels(),
                                     linx.germlineHomozygousDisruptions(),
@@ -159,14 +164,15 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static CharacteristicsFinding<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple, @NotNull LinxRecord linx) {
+    private static CharacteristicsFinding<MicrosatelliteStability> createMicrosatelliteStability(@NotNull PurpleRecord purple,
+            @NotNull LinxRecord linx, @NotNull Findings<GainDeletion> gainDeletions) {
         return ImmutableCharacteristicsFinding.<MicrosatelliteStability>builder()
                 .status(FindingsStatus.OK)
                 .finding(ImmutableMicrosatelliteStability.builder()
                         .findingKey(FindingKeys.microsatelliteStability(purple.characteristics().microsatelliteStatus()))
                         .microsatelliteStatus(purple.characteristics().microsatelliteStatus())
                         .microsatelliteIndelsPerMb(purple.characteristics().microsatelliteIndelsPerMb())
-                        .lohCopyNumbers(createGeneCopyNumbers(purple, Genes.MSI_GENES))
+                        .lohCopyNumbers(filterLohGainDeletions(gainDeletions, Genes.MSI_GENES))
                         .genes(GeneListUtil.genes(purple.reportableSomaticVariants(),
                                 purple.reportableSomaticGainsDels(),
                                 linx.germlineHomozygousDisruptions(),
@@ -176,20 +182,11 @@ public class FindingRecordFactory {
     }
 
     @NotNull
-    private static List<LOHCopyNumbers> createGeneCopyNumbers(@NotNull PurpleRecord purpleRecord, Set<String> geneNames) {
-        List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = purpleRecord.suspectGeneCopyNumbersWithLOH();
-        boolean hasReliablePurity = purpleRecord.fit().containsTumorCells();
-        return suspectGeneCopyNumbersWithLOH.stream()
+    private static List<GainDeletion> filterLohGainDeletions(@NotNull Findings<GainDeletion> gainDeletions, Set<String> geneNames) {
+        return gainDeletions.all().stream()
                 .filter(x -> geneNames.contains(x.gene()))
-                .map(lohGene -> ImmutableLOHCopyNumbers.builder()
-                        .findingKey(FindingKeys.lohCopyNumber(lohGene))
-                        .gene(lohGene.gene())
-                        .chromosome(lohGene.chromosome())
-                        .chromosomeBand(lohGene.chromosomeBand())
-                        .tumorCopies(hasReliablePurity ? toInteger(lohGene.minCopyNumber()) : null)
-                        .tumorMinorAlleleCopies(hasReliablePurity ? toInteger(lohGene.minMinorAlleleCopyNumber()) : null)
-                        .build())
-                .sorted(Comparator.comparing(LOHCopyNumbers::gene))
+                .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
+                .sorted(Comparator.comparing(GainDeletion::gene))
                 .collect(Collectors.toList());
     }
 

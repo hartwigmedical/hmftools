@@ -17,7 +17,8 @@ public interface GainDeletion extends Driver
         GERMLINE_DEL_HOM_IN_TUMOR,
         GERMLINE_DEL_HET_IN_TUMOR,
         SOMATIC_GAIN,
-        SOMATIC_DEL
+        SOMATIC_DEL,
+        SOMATIC_LOH
     }
 
     @NotNull
@@ -40,7 +41,9 @@ public interface GainDeletion extends Driver
 
     boolean isCanonical();
 
-    double minCopies();
+    double tumorMinCopies();
 
-    double maxCopies();
+    double tumorMaxCopies();
+
+    double tumorMinMinorAlleleCopies();
 }
