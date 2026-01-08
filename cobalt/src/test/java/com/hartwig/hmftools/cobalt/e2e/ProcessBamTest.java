@@ -3,7 +3,7 @@ package com.hartwig.hmftools.cobalt.e2e;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.PCF_GAMMA;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TARGET_REGION_NORM_FILE;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR_ONLY_DIPLOID_BED;
-import static com.hartwig.hmftools.cobalt.CobaltConfig.USE_NEW_SEGMENTER;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.USE_OLD_SEGMENTER;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._1;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._15;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._16;
@@ -1261,9 +1261,9 @@ public class ProcessBamTest
             args[index++] = String.format("-%s", TARGET_REGION_NORM_FILE);
             args[index++] = String.format("%s", panelNormalisation.getAbsolutePath());
         }
-        if(useNewSegmenter)
+        if(!useNewSegmenter)
         {
-            args[index++] = String.format("-%s", USE_NEW_SEGMENTER);
+            args[index++] = String.format("-%s", USE_OLD_SEGMENTER);
         }
         if(diploidBedFile != null)
         {
