@@ -3,7 +3,6 @@ package com.hartwig.hmftools.compar;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -13,10 +12,10 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
+import com.hartwig.hmftools.compar.common.MismatchType;
 import com.hartwig.hmftools.compar.common.ThresholdData;
 import com.hartwig.hmftools.compar.common.ThresholdType;
 
@@ -27,7 +26,7 @@ public abstract class ComparableImage implements ComparableItem
     public final BufferedImage Image;
 
     public static final String FLD_DIMENSION_MISMATCH = "DimensionMismatch";
-    public static final String FLD_PIXEL_DIFF = "PixelDiff";
+    public static final String FLD_PIXEL_MISMATCH = "PixelMismatch";
 
     public static final ThresholdData DEFAULT_IMAGE_THRESHOLD = new ThresholdData(
             ThresholdType.PERCENT, Double.NaN, 0);
@@ -75,7 +74,19 @@ public abstract class ComparableImage implements ComparableItem
         final ComparableImage otherImageData = (ComparableImage) other;
         BufferedImage otherImage = otherImageData.Image;
 
-        final List<String> diffs = Lists.newArrayList();
+        // Handle null images (failed to load)
+        if(Image == null && otherImage == null)
+        {
+            return new Mismatch(this, other, MismatchType.INVALID_BOTH, List.of());
+        }
+        if(Image == null)
+        {
+            return new Mismatch(this, other, MismatchType.INVALID_REF, List.of());
+        }
+        if(otherImage == null)
+        {
+            return new Mismatch(this, other, MismatchType.INVALID_NEW, List.of());
+        }
 
         if(Image.getWidth() != otherImage.getWidth() || Image.getHeight() != otherImage.getHeight())
         {
@@ -84,7 +95,8 @@ public abstract class ComparableImage implements ComparableItem
                     Image.getWidth(), Image.getHeight(),
                     otherImage.getWidth(), otherImage.getHeight()
             );
-            diffs.add(diffString);
+
+            return new Mismatch(this, other, MismatchType.VALUE, List.of(diffString));
         }
         else
         {
@@ -99,12 +111,19 @@ public abstract class ComparableImage implements ComparableItem
 
             if(hasDiff(absDiff, relDiff, threshold))
             {
-                String diffString = format("%s(%.3f=%d/%d)", FLD_PIXEL_DIFF, relDiff, absDiff, totalPixels);
-                diffs.add(diffString);
+                String diffString = format("%s(%.3f=%d/%d)", FLD_PIXEL_MISMATCH, relDiff, absDiff, totalPixels);
+                return new Mismatch(this, other, MismatchType.VALUE, List.of(diffString));
             }
         }
 
-        return createMismatchFromDiffs(this, other, diffs, matchLevel, includeMatches);
+        if(includeMatches)
+        {
+            return new Mismatch(this, other, MismatchType.FULL_MATCH, List.of());
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public BufferedImage loadImage(String path)

@@ -82,7 +82,7 @@ public class ComparableImageTest
         Mismatch mismatch = whiteImage.findMismatch(blackImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("PixelDiff(1.000=100/100)", mismatch.DiffValues().get(0));
+        assertEquals("PixelMismatch(1.000=100/100)", mismatch.DiffValues().get(0));
     }
 
     @Test
@@ -94,6 +94,6 @@ public class ComparableImageTest
         Mismatch mismatch = whiteImage.findMismatch(mixedImage, MatchLevel.DETAILED, TEST_THRESHOLDS, true);
 
         assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("PixelDiff(0.500=50/100)", mismatch.DiffValues().get(0));
+        assertEquals("PixelMismatch(0.500=50/100)", mismatch.DiffValues().get(0));
     }
 }
