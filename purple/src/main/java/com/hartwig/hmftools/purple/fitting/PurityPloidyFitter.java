@@ -282,6 +282,10 @@ public class PurityPloidyFitter
 
     private void determineFinalFit()
     {
+        PPL_LOGGER.info("Determining final fit.");
+        PPL_LOGGER.info("    purityFit: {}", mFinalPurityFit);
+        PPL_LOGGER.info("copyNumberFit: {}", mCopyNumberPurityFit);
+        PPL_LOGGER.info("hasChimerism: {}", mHasChimerism);
         if(mHasChimerism)
             return;
 
@@ -290,6 +294,9 @@ public class PurityPloidyFitter
 
         // test the impact on deleted genes from a switch to use the somatic fit
         double deletedPercent = calculateDeletedDepthWindows(mCopyNumbers);
+
+        PPL_LOGGER.info(format("FITTING: %s fit(purity=%.3f ploidy=%.3f) deleted DW percent(%.3f)",
+                mFitMethod.toString().toLowerCase(), mFinalPurityFit.purity(), mFinalPurityFit.ploidy(), deletedPercent));
 
         if(deletedPercent >= MAX_SOMATIC_FIT_DELETED_PERC)
         {
