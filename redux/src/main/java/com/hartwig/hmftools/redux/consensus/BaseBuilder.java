@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.INVALID_BASE_QUAL;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +71,7 @@ public class BaseBuilder
                 SAMRecord read = reads.get(r);
 
                 locationBases[r] = NO_BASE;
+                locationQuals[r] = INVALID_BASE_QUAL;
 
                 int readIndex;
                 if(consensusState.IsForward)

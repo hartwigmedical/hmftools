@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.ALIGNMENT_SCORE_ATT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.BQSR_ORIGINAL_QUALS;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.perf.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.extractTagQualValues;
@@ -14,6 +15,7 @@ import static com.hartwig.hmftools.common.sequencing.SBXBamUtils.stripDuplexInde
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ILLUMINA;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.SBX;
 import static com.hartwig.hmftools.redux.ReduxConfig.RD_LOGGER;
+import static com.hartwig.hmftools.redux.common.Constants.EXPECTED_VALID_CONTIGS;
 import static com.hartwig.hmftools.redux.common.Constants.SUPP_ALIGNMENT_SCORE_MIN;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.redux.common.FilterReadsType.readOutsideSpecifiedRegions;
@@ -190,6 +192,9 @@ public class PartitionReader
         {
             Integer alignmentScore = read.getIntegerAttribute(ALIGNMENT_SCORE_ATTRIBUTE);
             if(alignmentScore != null && alignmentScore < SUPP_ALIGNMENT_SCORE_MIN)
+                return true;
+
+            if(!read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) && !EXPECTED_VALID_CONTIGS.contains(read.getContig()))
                 return true;
         }
 

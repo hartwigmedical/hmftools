@@ -1,5 +1,14 @@
 package com.hartwig.hmftools.redux.common;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V37;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.MT_CHR_V38;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
 public class Constants
 {
     public static final String FILE_ID = "redux";
@@ -27,4 +36,18 @@ public class Constants
 
     // consensus building
     public static int CONSENSUS_MAX_DEPTH = 100;
+
+    public static final List<String> EXPECTED_VALID_CONTIGS = Lists.newArrayListWithExpectedSize(30);
+
+    public static void loadExpectedValidContigs(final RefGenomeVersion refGenomeVersion)
+    {
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            EXPECTED_VALID_CONTIGS.add(refGenomeVersion.versionedChromosome(chromosome.toString()));
+        }
+
+        EXPECTED_VALID_CONTIGS.add(refGenomeVersion.is37() ? MT_CHR_V37 : MT_CHR_V38);
+        EXPECTED_VALID_CONTIGS.add(refGenomeVersion.versionedChromosome("EBV"));
+    }
+
 }
