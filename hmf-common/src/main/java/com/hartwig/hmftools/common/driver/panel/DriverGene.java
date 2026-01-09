@@ -50,6 +50,8 @@ public interface DriverGene extends Comparable<DriverGene>
     @NotNull
     DriverGeneGermlineReporting reportGermlineDisruption();
 
+    boolean reportGermlineAmplification();
+
     List<String> additionalReportedTranscripts();
 
     boolean reportPGX();

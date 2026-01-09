@@ -292,6 +292,7 @@ public class GermlineReportedTest
                 .reportSplice(false)
                 .reportGermlineDisruption(ANY)
                 .reportGermlineDeletion(ANY)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build();
     }

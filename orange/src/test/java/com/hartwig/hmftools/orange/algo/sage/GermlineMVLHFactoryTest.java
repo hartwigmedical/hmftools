@@ -52,8 +52,10 @@ public class GermlineMVLHFactoryTest
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build();
+
         DriverGene driverGene2 = ImmutableDriverGene.builder()
                 .gene(unReliableMVLHGene)
                 .reportMissenseAndInframe(false)
@@ -72,6 +74,7 @@ public class GermlineMVLHFactoryTest
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build();
 

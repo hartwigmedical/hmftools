@@ -61,6 +61,7 @@ public class ReportablePredicateTest
                 .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false)
                 .build());
 

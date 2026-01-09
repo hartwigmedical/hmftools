@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.driver.DriverCategory;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class DriverGeneFile
 {
     private static final String OTHER_TRANS_DELIM = ";";
@@ -65,6 +63,7 @@ public final class DriverGeneFile
         int germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
         int germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
         int germlineDeletionIndex = fieldsIndexMap.get("reportGermlineDeletion");
+        Integer germlineAmpIndex = fieldsIndexMap.get("reportGermlineAmplification");
         int altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
         int reportPGXIndex = fieldsIndexMap.get("reportPGX");
 
@@ -110,6 +109,7 @@ public final class DriverGeneFile
                     .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase()))
                     .reportGermlineDisruption(reportGermlineDisruption)
                     .reportGermlineDeletion(reportGermlineDeletion)
+                    .reportGermlineAmplification(germlineAmpIndex != null ? Boolean.parseBoolean(values[germlineAmpIndex]) : false)
                     .additionalReportedTranscripts(otherReportableTrans)
                     .reportPGX(Boolean.parseBoolean(values[reportPGXIndex]));
 
@@ -148,6 +148,7 @@ public final class DriverGeneFile
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
                 .add("reportGermlineDeletion")
+                .add("reportGermlineAmplification")
                 .add("additionalReportedTranscripts")
                 .add("reportPGX")
                 .toString();
@@ -173,6 +174,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
                 .add(String.valueOf(gene.reportGermlineDeletion()))
+                .add(String.valueOf(gene.reportGermlineAmplification()))
                 .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
                 .add(String.valueOf(gene.reportPGX()))
                 .toString();

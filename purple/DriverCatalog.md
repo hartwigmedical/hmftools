@@ -8,27 +8,28 @@ Running [LINX](https://github.com/hartwigmedical/hmftools/tree/master/linx) enri
 
 The driver gene panel TSV file configures which genes to add to the driver catalog and which mutation types to report in the canonical transcript and any 'additionalReportedTranscripts' specified for each gene.  The format is:
 
-Field | Valid values | Description
-------|--------------|------------
-gene | | HGNC symbol of gene 
-reportMissense | TRUE/FALSE | Report if any missense variant is found in the gene
-reportNonsense | TRUE/FALSE | Report if any nonsense or frameshift variant is found in the gene
-reportSplice | TRUE/FALSE |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE.
-reportAmplification | TRUE/FALSE | Report amplification if min gene copy number > amplificationRatio * sample ploidy and partial amplification if max gene copy number > amplificationRatio * sample ploidy (for genes on chrX for males 1.5x sample ploidy is used). (Note if qcstatus = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV).
-amplificationRatio | {1:N} | minimum copy number ratio relative to ploidy to report amplification for gene.
-reportDeletion | TRUE/FALSE | Report if gene copy number < 0.5 (Note - If qcStatus in {WARN_DELETED_GENES,WARN_HIGH_COPY_NUMBER_NOISE} deletions must also be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases)
-reportHetDeletion | TRUE/FALSE | report deletions of < 0.6x sample ploidy
-reportLoh | TRUE/FALSE | report LOH if minor allele CN < 0.5 and no deletion event is called
-reportDisruption | TRUE/FALSE | LINX will report ‘HOM DISRUPTION' where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain), or simply DISRUPTION for other structural variants which may disrupt the structure of the canonical transcript.
-reportSomaticHotspot | TRUE/FALSE | Report somatic hotspot mutation regardless of other rules
-likelihoodType | ONCO/TSG | Calculate driver likelihood as a tumor suppressor gene or onco gene
+Field | Valid values                               | Description
+------|--------------------------------------------|------------
+gene |                                            | HGNC symbol of gene 
+reportMissense | TRUE/FALSE                                 | Report if any missense variant is found in the gene
+reportNonsense | TRUE/FALSE                                 | Report if any nonsense or frameshift variant is found in the gene
+reportSplice | TRUE/FALSE                                 |  Report if any canonical splice acceptor or donor variant is found in the gene [+1,+2,+5,-1,-2]  Mutations affecting the last exonic base at a donor location as well as N>G variants only at the -3 acceptor base are also treated as SPLICE.
+reportAmplification | TRUE/FALSE                                 | Report amplification if min gene copy number > amplificationRatio * sample ploidy and partial amplification if max gene copy number > amplificationRatio * sample ploidy (for genes on chrX for males 1.5x sample ploidy is used). (Note if qcstatus = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV).
+amplificationRatio | {1:N}                                      | minimum copy number ratio relative to ploidy to report amplification for gene.
+reportDeletion | TRUE/FALSE                                 | Report if gene copy number < 0.5 (Note - If qcStatus in {WARN_DELETED_GENES,WARN_HIGH_COPY_NUMBER_NOISE} deletions must also be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases)
+reportHetDeletion | TRUE/FALSE                                 | report deletions of < 0.6x sample ploidy
+reportLoh | TRUE/FALSE                                 | report LOH if minor allele CN < 0.5 and no deletion event is called
+reportDisruption | TRUE/FALSE                                 | LINX will report ‘HOM DISRUPTION' where the exonic copy number of the gene is > 0.5 but where no intact copies of the gene are predicted to remain), or simply DISRUPTION for other structural variants which may disrupt the structure of the canonical transcript.
+reportSomaticHotspot | TRUE/FALSE                                 | Report somatic hotspot mutation regardless of other rules
+likelihoodType | ONCO/TSG                                   | Calculate driver likelihood as a tumor suppressor gene or onco gene
 reportGermlineVariant	| WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report any germline variants that meet pathogenic criteria based on specified tumor status
 reportGermlineHotspot | WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report hotspot germline pathogenic variants based on specified tumor status
 reportGermlineDisruption | WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report germline structural variant gene disruptions
 reportGermlineDeletion | WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report germline gene deletions
-additionalReportedTranscript | <Ensembl Transcript Stable Id>            | Ensembl transcripts to report on in addition to the ensembl canonical transcript (eg. CDKN2Ap14Arf). Any drivers on the additional transcript will be added to the driver catalog table as a separate record with canonicalTranscript=0. Copy number data for that transcript will also be added to the geneCopyNumber table and any somatic or germline point mutations will report the effect of the variant on the additional transcript in the otherTranscriptEffects column in somaticVariant and germlineVariant tables. Any breakend impacting the additional transcript will also be reported in the svBreakend table
+reportGermlineAmplification | TRUE/FALSE| Report germline gene amplifications
+additionalReportedTranscript | <Ensembl Transcript Stable Id>             | Ensembl transcripts to report on in addition to the ensembl canonical transcript (eg. CDKN2Ap14Arf). Any drivers on the additional transcript will be added to the driver catalog table as a separate record with canonicalTranscript=0. Copy number data for that transcript will also be added to the geneCopyNumber table and any somatic or germline point mutations will report the effect of the variant on the additional transcript in the otherTranscriptEffects column in somaticVariant and germlineVariant tables. Any breakend impacting the additional transcript will also be reported in the svBreakend table
 reportGermlineDeletion | WILDTYPE_LOST, NONE, ANY, VARIANT_NOT_LOST | Report germline gene deletions
-reportPGX | TRUE/FALSE | Report alleles for pharmacogenomics
+reportPGX | TRUE/FALSE                                 | Report alleles for pharmacogenomics
 
 Up to 3 individual driver catalog records may be added per gene per sample if more than 1 type of event is present: 
 * Germline mutations (GERMLINE_MUTATION,GERMLINE_DELETION,GERMLINE_DISRUPTION)

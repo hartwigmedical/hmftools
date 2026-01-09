@@ -167,6 +167,7 @@ public class GeneTestUtils
                 .reportPGX(false)
                 .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
                 .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
+                .reportGermlineAmplification(false)
                 .build();
     }
 

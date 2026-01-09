@@ -30,6 +30,7 @@ public final class DriverGeneTestFactory
                 .likelihoodType(DriverCategory.ONCO)
                 .reportGermlineDisruption(NONE)
                 .reportGermlineDeletion(NONE)
+                .reportGermlineAmplification(false)
                 .reportPGX(false);
     }
 }
