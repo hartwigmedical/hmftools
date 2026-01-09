@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public class LoadCuppa
 {
     private static final String CUPPA_VIS_DATA_TSV = "cuppa_vis_data_tsv";
+    private static final int TOP_N_PROBS = 3;
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
@@ -41,9 +42,7 @@ public class LoadCuppa
             CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
             LOGGER.info("loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
-            int TOP_N_PROBS = 3;
             LOGGER.info("writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
-
             dbWriter.writeCuppa(sample, cuppaPredictions, TOP_N_PROBS);
             LOGGER.info("Complete");
         }
