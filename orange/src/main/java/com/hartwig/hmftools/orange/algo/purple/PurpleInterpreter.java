@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogKey;
 import com.hartwig.hmftools.common.driver.DriverCatalogMap;
 import com.hartwig.hmftools.common.driver.DriverType;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainDeletion;
@@ -58,7 +58,7 @@ public class PurpleInterpreter
 
         List<PurpleGainDeletion> driverSomaticGainsDels = somaticGainsDelsFromDrivers(purple.somaticDrivers());
 
-        List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
+        List<GermlineAmpDel> allGermlineDeletions = purple.allGermlineDeletions();
 
         List<PurpleGainDeletion> allGermlineFullDels = null;
         List<PurpleGainDeletion> driverGermlineDeletions = null;

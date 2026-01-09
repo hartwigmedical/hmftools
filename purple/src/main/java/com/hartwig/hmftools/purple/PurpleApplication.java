@@ -38,7 +38,7 @@ import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
@@ -65,7 +65,7 @@ import com.hartwig.hmftools.purple.fitting.RegionFitCalculator;
 import com.hartwig.hmftools.purple.fittingsnv.PeakModelFile;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
 import com.hartwig.hmftools.purple.germline.ChimerismDetection;
-import com.hartwig.hmftools.purple.germline.GermlineDeletions;
+import com.hartwig.hmftools.purple.germline.GermlineAmpsDels;
 import com.hartwig.hmftools.purple.germline.GermlineDrivers;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.germline.GermlineVariants;
@@ -78,7 +78,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 import com.hartwig.hmftools.purple.targeted.TargetRegionDataBuilder;
-import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumber;
 import com.hartwig.hmftools.purple.targeted.TargetRegionsCopyNumberFile;
 
 import org.apache.logging.log4j.Level;
@@ -349,7 +348,7 @@ public class PurpleApplication
         List<PurpleSegment> segments = fittedRegions.stream().map(ObservedRegion::toSegment).collect(Collectors.toList());
         PurpleSegment.write(PurpleSegment.generateFilename(mConfig.OutputDir, tumorId), segments);
 
-        GermlineDeletions germlineDeletions = null;
+        GermlineAmpsDels germlineDeletions = null;
 
         if(mConfig.runGermline())
         {
@@ -359,12 +358,12 @@ public class PurpleApplication
             germlineSvCache.annotateCopyNumberInfo(fittedRegions, copyNumbers, purityContext);
             germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
 
-            germlineDeletions = new GermlineDeletions(
+            germlineDeletions = new GermlineAmpsDels(
                     mReferenceData.DriverGenes.DriverGeneMap, mReferenceData.GeneTransCache, mReferenceData.CohortGermlineDeletions);
 
-            germlineDeletions.findDeletions(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
+            germlineDeletions.findEvents(copyNumbers, fittedRegions, germlineSvCache.germlineVariants());
 
-            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getDeletions());
+            GermlineAmpDel.write(GermlineAmpDel.generateFilename(mConfig.OutputDir, tumorId), germlineDeletions.getEvents());
         }
 
         if(mConfig.runTumor())
@@ -428,7 +427,7 @@ public class PurpleApplication
 
     private void findDrivers(
             final String tumorSample, final PurityContext purityContext, final List<GeneCopyNumber> geneCopyNumbers,
-            @Nullable final SomaticStream somaticStream, @Nullable GermlineDeletions germlineDeletions,
+            @Nullable final SomaticStream somaticStream, @Nullable GermlineAmpsDels germlineDeletions,
             final List<DriverSourceData> driverSourceData) throws IOException
     {
         List<DriverCatalog> somaticDriverCatalog = Lists.newArrayList();
@@ -558,7 +557,7 @@ public class PurpleApplication
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
             }
 
-            GermlineDeletion.write(GermlineDeletion.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
+            GermlineAmpDel.write(GermlineAmpDel.generateFilename(mConfig.OutputDir, tumorId), Collections.emptyList());
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorId, false), Collections.emptyList());
         }
     }

@@ -16,13 +16,13 @@ import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS_FILTER;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MIN;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_COHORT_FREQ;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_GENE_BUFFER;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_NORMAL_RATIO;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_REGION_MATCH_BUFFER;
-import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_DEL_REGION_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_COHORT_FREQ;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_GENE_BUFFER;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_NORMAL_RATIO;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGION_MATCH_BUFFER;
+import static com.hartwig.hmftools.purple.PurpleConstants.GERMLINE_AMP_DEL_REGION_MIN;
 import static com.hartwig.hmftools.purple.PurpleConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.DeletionDrivers.MAX_COPY_NUMBER_DEL;
@@ -43,7 +43,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -55,7 +55,7 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.Nullable;
 
-public class GermlineDeletions
+public class GermlineAmpsDels
 {
     static final String FILTER_CN_INCONSISTENCY = "INCONSISTENT_CN";
     static final String FILTER_COHORT_FREQ = "COHORT_FREQ";
@@ -87,30 +87,30 @@ public class GermlineDeletions
     private final GeneDataSupplier mGeneDataCache;
     private final GermlineDeletionFrequency mCohortFrequency;
 
-    private final List<GermlineDeletion> mDeletions;
+    private final List<GermlineAmpDel> mEvents;
     private final List<DriverCatalog> mDrivers;
 
-    public GermlineDeletions(
+    public GermlineAmpsDels(
             final Map<String, DriverGene> driverGenes, final EnsemblDataCache geneDataCache,
             final GermlineDeletionFrequency cohortFrequency)
     {
         this(driverGenes, new EnsemblDataSupplier(geneDataCache), cohortFrequency);
     }
 
-    public GermlineDeletions(final Map<String, DriverGene> driverGenes, final GeneDataSupplier geneDataCache,
+    public GermlineAmpsDels(final Map<String, DriverGene> driverGenes, final GeneDataSupplier geneDataCache,
             final GermlineDeletionFrequency cohortFrequency)
     {
         mGeneDataCache = geneDataCache;
         mDriverGenes = driverGenes;
         mCohortFrequency = cohortFrequency;
 
-        mDeletions = Lists.newArrayList();
+        mEvents = Lists.newArrayList();
         mDrivers = Lists.newArrayList();
     }
 
-    public List<GermlineDeletion> getDeletions()
+    public List<GermlineAmpDel> getEvents()
     {
-        return mDeletions;
+        return mEvents;
     }
 
     public List<DriverCatalog> getDrivers()
@@ -118,7 +118,7 @@ public class GermlineDeletions
         return mDrivers;
     }
 
-    public void findDeletions(
+    public void findEvents(
             final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions, final List<StructuralVariant> germlineSVs)
     {
         for(int i = 0; i < fittedRegions.size(); ++i)
@@ -241,7 +241,7 @@ public class GermlineDeletions
     {
         final List<String> filters = Lists.newArrayList();
 
-        if(region.end() - region.start() <= GERMLINE_DEL_REGION_MIN)
+        if(region.end() - region.start() <= GERMLINE_AMP_DEL_REGION_MIN)
         {
             filters.add(FILTER_REGION_LENGTH);
         }
@@ -250,7 +250,7 @@ public class GermlineDeletions
         {
             double cnInconsistency = region.refNormalisedCopyNumber() - copyNumber.majorAlleleCopyNumber();
             double cnLimit =
-                    max(GERMLINE_DEL_CN_CONSISTENCY_MIN, copyNumber.majorAlleleCopyNumber() * GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC);
+                    max(GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN, copyNumber.majorAlleleCopyNumber() * GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC);
 
             if(cnInconsistency > cnLimit)
             {
@@ -258,12 +258,12 @@ public class GermlineDeletions
             }
         }
 
-        if(!filters.contains(FILTER_CN_INCONSISTENCY) && region.observedNormalRatio() > GERMLINE_DEL_NORMAL_RATIO)
+        if(!filters.contains(FILTER_CN_INCONSISTENCY) && region.observedNormalRatio() > GERMLINE_AMP_DEL_NORMAL_RATIO)
         {
             filters.add(FILTER_CN_INCONSISTENCY);
         }
 
-        if(cohortFrequency >= GERMLINE_DEL_COHORT_FREQ)
+        if(cohortFrequency >= GERMLINE_AMP_DEL_COHORT_FREQ)
         {
             filters.add(FILTER_COHORT_FREQ);
         }
@@ -289,7 +289,7 @@ public class GermlineDeletions
 
         // find overlapping driver genes
         List<GeneData> overlappingGenes =
-                findOverlappingGenes(region.chromosome(), adjustPosStart, adjustPosEnd, GERMLINE_DEL_GENE_BUFFER, geneDataList);
+                findOverlappingGenes(region.chromosome(), adjustPosStart, adjustPosEnd, GERMLINE_AMP_DEL_GENE_BUFFER, geneDataList);
 
         List<DriverGene> driverGenes = Lists.newArrayList();
         List<TranscriptData> transcripts = Lists.newArrayList();
@@ -309,7 +309,7 @@ public class GermlineDeletions
         }
 
         int cohortFrequency =
-                mCohortFrequency.getRegionFrequency(region.chromosome(), region.start(), region.end(), GERMLINE_DEL_REGION_MATCH_BUFFER);
+                mCohortFrequency.getRegionFrequency(region.chromosome(), region.start(), region.end(), GERMLINE_AMP_DEL_REGION_MATCH_BUFFER);
 
         List<String> filters = checkFilters(region, matchedCopyNumber, cohortFrequency);
 
@@ -324,7 +324,7 @@ public class GermlineDeletions
                 continue;
             }
 
-            List<ExonData> overlappedExons = findOverlappingExons(transData, adjustPosStart, adjustPosEnd, GERMLINE_DEL_GENE_BUFFER);
+            List<ExonData> overlappedExons = findOverlappingExons(transData, adjustPosStart, adjustPosEnd, GERMLINE_AMP_DEL_GENE_BUFFER);
             if(overlappedExons.isEmpty())
             {
                 continue;
@@ -366,7 +366,7 @@ public class GermlineDeletions
                 }
             }
 
-            mDeletions.add(new GermlineDeletion(
+            mEvents.add(new GermlineAmpDel(
                     geneData.GeneName, region.chromosome(), geneData.KaryotypeBand, adjustPosStart, adjustPosEnd,
                     region.depthWindowCount(), deletedExonRange[0], deletedExonRange[1],
                     GermlineDetectionMethod.SEGMENT, region.germlineStatus(), tumorStatus, germlineCopyNumber, tumorCopyNumber,

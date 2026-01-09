@@ -111,14 +111,14 @@ public class PurpleConstants
     public static final double GERMLINE_SV_TINC_MARGIN = 0.02;
     public static final double GERMLINE_SV_TINC_HOTSPOT_MULTIPLIER = 2;
 
-    // germline deletions
-    public static final int GERMLINE_DEL_GENE_BUFFER = 500;
-    public static final int GERMLINE_DEL_REGION_MIN = 1000;
-    public static final int GERMLINE_DEL_REGION_MATCH_BUFFER = 2000;
-    public static final double GERMLINE_DEL_CN_CONSISTENCY_MIN = 0.5;
-    public static final double GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
-    public static final double GERMLINE_DEL_NORMAL_RATIO = 0.65;
-    public static final int GERMLINE_DEL_COHORT_FREQ = 4;
+    // germline copy number events
+    public static final int GERMLINE_AMP_DEL_GENE_BUFFER = 500;
+    public static final int GERMLINE_AMP_DEL_REGION_MIN = 1000;
+    public static final int GERMLINE_AMP_DEL_REGION_MATCH_BUFFER = 2000;
+    public static final double GERMLINE_AMP_DEL_CN_CONSISTENCY_MIN = 0.5;
+    public static final double GERMLINE_AMP_DEL_CN_CONSISTENCY_MACN_PERC = 0.2;
+    public static final double GERMLINE_AMP_DEL_NORMAL_RATIO = 0.65;
+    public static final int GERMLINE_AMP_DEL_COHORT_FREQ = 4;
 
     // copy number smoothing
     public static final double MIN_OBSERVED_BAF_CHANGE = 0.03;

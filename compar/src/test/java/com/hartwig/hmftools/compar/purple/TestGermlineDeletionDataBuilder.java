@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
@@ -41,7 +41,7 @@ public class TestGermlineDeletionDataBuilder
     private GermlineDeletionData build()
     {
         return new GermlineDeletionData(
-                new GermlineDeletion(
+                new GermlineAmpDel(
                         gene,
                         "",
                         chromosomeBand,

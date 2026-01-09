@@ -5,7 +5,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -103,7 +103,7 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGermlineDeletion convert(@NotNull GermlineDeletion germlineDeletion)
+    public static PurpleGermlineDeletion convert(@NotNull GermlineAmpDel germlineDeletion)
     {
         return ImmutablePurpleGermlineDeletion.builder()
                 .gene(germlineDeletion.GeneName)

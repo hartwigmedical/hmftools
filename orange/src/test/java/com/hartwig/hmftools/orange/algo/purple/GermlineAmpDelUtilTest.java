@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GermlineDeletionUtilTest
+public class GermlineAmpDelUtilTest
 {
     private static final String TEST_GENE = "gene";
     private static final String TEST_GENE2 = "gene2";  // not compatible with test Ensembl data cache
@@ -33,11 +33,11 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion partialDeletionHetInTumor1 =
+        GermlineAmpDel partialDeletionHetInTumor1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 300, 400);
-        GermlineDeletion partialDeletionHetInTumor2 =
+        GermlineAmpDel partialDeletionHetInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 600, 800);
-        List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
+        List<GermlineAmpDel> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(2.0, maxCopyNumber, EPSILON);
@@ -49,11 +49,11 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion partialDeletionHetInTumor1 =
+        GermlineAmpDel partialDeletionHetInTumor1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 300, 400);
-        GermlineDeletion partialDeletionHetInTumor2 =
+        GermlineAmpDel partialDeletionHetInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 600, 800);
-        List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
+        List<GermlineAmpDel> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 0.8D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(1.1, maxCopyNumber, EPSILON);
@@ -65,11 +65,11 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion partialDeletionHomInTumor1 =
+        GermlineAmpDel partialDeletionHomInTumor1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 300, 400);
-        GermlineDeletion partialDeletionHomInTumor2 =
+        GermlineAmpDel partialDeletionHomInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 600, 800);
-        List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHomInTumor1, partialDeletionHomInTumor2);
+        List<GermlineAmpDel> deletions = Lists.newArrayList(partialDeletionHomInTumor1, partialDeletionHomInTumor2);
 
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
@@ -82,7 +82,7 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion fullDeletionHetInTumor =
+        GermlineAmpDel fullDeletionHetInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 100, 1000);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
@@ -96,7 +96,7 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion fullDeletionHomInTumor =
+        GermlineAmpDel fullDeletionHomInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
@@ -110,7 +110,7 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion fullDeletionHomInTumor =
+        GermlineAmpDel fullDeletionHomInTumor =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, -0.1D, 100, 1000);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber =
@@ -124,11 +124,11 @@ public class GermlineDeletionUtilTest
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
-        GermlineDeletion partialDeletionHetInTumor1 =
+        GermlineAmpDel partialDeletionHetInTumor1 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 200, 700);
-        GermlineDeletion partialDeletionHomInTumor2 =
+        GermlineAmpDel partialDeletionHomInTumor2 =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 701, 1000);
-        List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHomInTumor2);
+        List<GermlineAmpDel> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHomInTumor2);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.createGeneCopyNumber(TEST_GENE, 0, 2D);
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(1.1, maxCopyNumber, EPSILON);
@@ -137,16 +137,16 @@ public class GermlineDeletionUtilTest
     @Test
     public void testGetSomaticMinCopyNumber()
     {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 100, 1000);
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
+        GermlineAmpDel deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 100, 1000);
+        GermlineAmpDel deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
         assertEquals(0.1, GermlineDeletionUtil.getSomaticMinCopyNumber(Lists.newArrayList(deletion1, deletion2)), EPSILON);
     }
 
     @Test
     public void testGetSomaticMinCopyNumberWithNegativeCopyNumber()
     {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, -0.3D, 100, 1000);
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
+        GermlineAmpDel deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, -0.3D, 100, 1000);
+        GermlineAmpDel deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
         assertEquals(0, GermlineDeletionUtil.getSomaticMinCopyNumber(Lists.newArrayList(deletion1, deletion2)), EPSILON);
     }
 
@@ -157,10 +157,10 @@ public class GermlineDeletionUtilTest
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
 
-        GermlineDeletion fullDeletion = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
-        GermlineDeletion firstHalfDeletion =
+        GermlineAmpDel fullDeletion = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 1000);
+        GermlineAmpDel firstHalfDeletion =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.2D, 100, 500);
-        GermlineDeletion secondHalfDeletion =
+        GermlineAmpDel secondHalfDeletion =
                 GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.3D, 501, 1000);
 
         assertTrue(GermlineDeletionUtil.deletionsCoverTranscript(Lists.newArrayList(fullDeletion), transcript));
@@ -178,11 +178,11 @@ public class GermlineDeletionUtilTest
         // Exons are 250-350, 450-550 and 600-900
         TranscriptData transcript = getTestTranscript();
 
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 150);
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.2D, 200, 300);
-        GermlineDeletion deletion3 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.D, 275, 325);
-        GermlineDeletion deletion4 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.D, 302, 700);
-        GermlineDeletion deletion5 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 3.1D, 701, 1000);
+        GermlineAmpDel deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 100, 150);
+        GermlineAmpDel deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.2D, 200, 300);
+        GermlineAmpDel deletion3 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.D, 275, 325);
+        GermlineAmpDel deletion4 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.D, 302, 700);
+        GermlineAmpDel deletion5 = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 3.1D, 701, 1000);
 
         assertTrue(GermlineDeletionUtil.deletionsCoverTranscript(Lists.newArrayList(deletion1, deletion2, deletion3, deletion4, deletion5), transcript));
         assertFalse(GermlineDeletionUtil.deletionsCoverTranscript(Lists.newArrayList(deletion1, deletion2, deletion4, deletion5), transcript));
@@ -202,19 +202,19 @@ public class GermlineDeletionUtilTest
     @Test
     public void testGetChromosome()
     {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        GermlineDeletion deletion3 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        List<GermlineDeletion> deletions = Lists.newArrayList(deletion1, deletion2, deletion3);
+        GermlineAmpDel deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
+        GermlineAmpDel deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
+        GermlineAmpDel deletion3 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
+        List<GermlineAmpDel> deletions = Lists.newArrayList(deletion1, deletion2, deletion3);
         assertEquals("1", GermlineDeletionUtil.getChromosome(deletions));
     }
 
     @Test
     public void testGetChromosomeBand()
     {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        List<GermlineDeletion> deletions = Lists.newArrayList(deletion1, deletion2);
+        GermlineAmpDel deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
+        GermlineAmpDel deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
+        List<GermlineAmpDel> deletions = Lists.newArrayList(deletion1, deletion2);
         assertEquals("q20.30", GermlineDeletionUtil.getChromosomeBand(deletions));
     }
 

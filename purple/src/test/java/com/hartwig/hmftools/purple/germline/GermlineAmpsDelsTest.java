@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.purple.germline;
 
-import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_CN_INCONSISTENCY;
-import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_COHORT_FREQ;
-import static com.hartwig.hmftools.purple.germline.GermlineDeletions.FILTER_REGION_LENGTH;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpsDels.FILTER_CN_INCONSISTENCY;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpsDels.FILTER_COHORT_FREQ;
+import static com.hartwig.hmftools.purple.germline.GermlineAmpsDels.FILTER_REGION_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.common.driver.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -35,7 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class GermlineDeletionsTest
+public class GermlineAmpsDelsTest
 {
     private final String chr1 = "chr1";
     private final String chr2 = "chr2";
@@ -58,7 +58,7 @@ public class GermlineDeletionsTest
     private final DriverGene driver1_2 = driverGene(gd1_2.GeneName, DriverGeneGermlineReporting.ANY);
     private final DriverGene driver2_1 = driverGene(gd2_1.GeneName, DriverGeneGermlineReporting.ANY);
 
-    private class GDS implements GermlineDeletions.GeneDataSupplier
+    private class GDS implements GermlineAmpsDels.GeneDataSupplier
     {
         List<TranscriptData> transcriptData = List.of(td1_1, td1_2, td2_1);
         Map<String, List<GeneData>> chrGeneMap = Map.of(chr1, List.of(gd1_1, gd1_2), chr2, List.of(gd2_1));
@@ -76,7 +76,7 @@ public class GermlineDeletionsTest
     }
     private GDS mEnsemblDataCache;
     private GermlineDeletionFrequency mGermlineDeletionFrequency = Mockito.mock(GermlineDeletionFrequency.class);
-    private GermlineDeletions mGermlineDeletions;
+    private GermlineAmpsDels mGermlineDeletions;
 
     @Before
     public void setup()
@@ -85,7 +85,7 @@ public class GermlineDeletionsTest
         mGermlineDeletionFrequency = Mockito.mock(GermlineDeletionFrequency.class);
         Mockito.when(mGermlineDeletionFrequency.getRegionFrequency(any(String.class), any(Integer.class), any(Integer.class), any(Integer.class))).thenReturn(3);
         Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1, gd1_2.GeneName, driver1_2, gd2_1.GeneName, driver2_1);
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
     }
 
     @Test
@@ -93,9 +93,9 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or = or(chr1, 1001, 1400, GermlineStatus.HOM_DELETION);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or), List.of());
-        assertEquals(1, mGermlineDeletions.getDeletions().size());
-        assertEquals(driver1_1.gene(), mGermlineDeletions.getDeletions().get(0).GeneName);
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or), List.of());
+        assertEquals(1, mGermlineDeletions.getEvents().size());
+        assertEquals(driver1_1.gene(), mGermlineDeletions.getEvents().get(0).GeneName);
     }
 
     @Test
@@ -103,8 +103,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 5001, 6000, 2);
         final ObservedRegion or = or(chr1, 1001, 1400, GermlineStatus.HOM_DELETION);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or), List.of());
-        assertEquals(1, mGermlineDeletions.getDeletions().size());
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or), List.of());
+        assertEquals(1, mGermlineDeletions.getEvents().size());
     }
 
     @Test
@@ -112,8 +112,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or = or(chr1, 6001, 7000, GermlineStatus.HOM_DELETION);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or), List.of());
-        assertEquals(0, mGermlineDeletions.getDeletions().size());
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or), List.of());
+        assertEquals(0, mGermlineDeletions.getEvents().size());
     }
 
     @Test
@@ -123,8 +123,8 @@ public class GermlineDeletionsTest
         final ObservedRegion or1 = or(chr1, 1001, 1400, GermlineStatus.HOM_DELETION);
         final ObservedRegion or2 = or(chr1, 2101, 2400, GermlineStatus.HOM_DELETION);
         final ObservedRegion or3 = or(chr2, 1001, 1400, GermlineStatus.HOM_DELETION);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1, or2, or3), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1, or2, or3), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(3, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
         assertEquals(driver1_2.gene(), deletions.get(1).GeneName);
@@ -136,8 +136,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1001, 1100, GermlineStatus.HOM_DELETION);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
     }
@@ -153,8 +153,8 @@ public class GermlineDeletionsTest
         final ObservedRegion or4 = or(chr1, 2001, 2300, GermlineStatus.UNKNOWN);
         final ObservedRegion or5 = or(chr1, 2301, 2600, GermlineStatus.AMPLIFICATION);
         final ObservedRegion or6 = or(chr1, 2601, 2900, GermlineStatus.NOISE);
-        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2, or3,or4, or5, or6), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn1, pcn2), List.of(or1, or2, or3,or4, or5, or6), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(0, deletions.size());
     }
 
@@ -163,8 +163,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1201, 1500, GermlineStatus.HOM_DELETION, 1201, 1201, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(FILTER_REGION_LENGTH, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
@@ -175,8 +175,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 2, 0.9);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(FILTER_CN_INCONSISTENCY, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
@@ -190,12 +190,12 @@ public class GermlineDeletionsTest
         Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(FILTER_COHORT_FREQ, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
@@ -209,12 +209,12 @@ public class GermlineDeletionsTest
         Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1201, 1500, GermlineStatus.HOM_DELETION, 1201, 1201, 4, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         String expectedFilter = String.format("%s;%s;%s", FILTER_REGION_LENGTH, FILTER_CN_INCONSISTENCY, FILTER_COHORT_FREQ);
         assertEquals(expectedFilter, deletions.get(0).Filter);
@@ -227,14 +227,14 @@ public class GermlineDeletionsTest
         Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1, gd2_1.GeneName, driver2_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1), chr2, List.of(gd2_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 1);
         final PurpleCopyNumber pcn2 = pcn(chr2, 1001, 2000, 0);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
         final ObservedRegion or2 = or(chr2, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
@@ -251,12 +251,12 @@ public class GermlineDeletionsTest
         Map<String, DriverGene> driverMap = Map.of(gd1_1.GeneName, driverGene);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
@@ -269,12 +269,12 @@ public class GermlineDeletionsTest
         Map<String, DriverGene> driverMap = Map.of(gd1_1.GeneName, driverGene);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.NONE, deletions.get(0).Reported);
@@ -288,14 +288,14 @@ public class GermlineDeletionsTest
         Map<String, DriverGene> driverMap = Map.of(gd1_1.GeneName, driverGene1, gd2_1.GeneName, driverGene2);
         mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1), chr2, List.of(gd2_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
         final PurpleCopyNumber pcn2 = pcn(chr2, 1001, 2000, 1);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
         final ObservedRegion or2 = or(chr2, 1000, 2001, GermlineStatus.HET_DELETION, 1000, 1000, 0, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
@@ -313,14 +313,14 @@ public class GermlineDeletionsTest
         Map<String, DriverGene> driverMap = Map.of(gd1_1.GeneName, driverGene1, gd2_1.GeneName, driverGene2);
         mEnsemblDataCache.transcriptData = List.of(td1_1, td2_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1), chr2, List.of(gd2_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
         final PurpleCopyNumber pcn2 = pcn(chr2, 1001, 2000, 1);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 0.499, 0.5);
         final ObservedRegion or2 = or(chr2, 1000, 2001, GermlineStatus.HET_DELETION, 1000, 1000, 0.501, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(driver1_1.gene(), deletions.get(0).GeneName);
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
@@ -335,8 +335,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
@@ -352,8 +352,8 @@ public class GermlineDeletionsTest
         final ObservedRegion or1 = or(chr1, 1001, 2000, GermlineStatus.HOM_DELETION, 1001, 1001, 1, 0.5);
         final ObservedRegion or2 = or(chr1, 2001, 3000, GermlineStatus.DIPLOID, 2001, 2001, 1, 0.5);
         final StructuralVariant sv = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.DEL, 0.5, 0.5).build();
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(sv.start().position(), deletions.get(0).RegionStart);
         assertEquals(Objects.requireNonNull(sv.end()).position(), deletions.get(0).RegionEnd);
@@ -369,8 +369,8 @@ public class GermlineDeletionsTest
         final ObservedRegion or1 = or(chr1, 1001, 2000, GermlineStatus.HOM_DELETION, 1001, 1001, 1, 0.5);
         final ObservedRegion or2 = or(chr1, 2001, 3000, GermlineStatus.DIPLOID, 2001, 2001, 1, 0.5);
         final StructuralVariant sv = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.INV, 0.5, 0.5).build();
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1, pcn2), List.of(or0,or1,or2), List.of(sv));
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(sv.start().position(), deletions.get(0).RegionStart);
         assertEquals(or1.end(), deletions.get(0).RegionEnd);
@@ -389,7 +389,7 @@ public class GermlineDeletionsTest
         Map<String,DriverGene> driverMap = Map.of(gd1_1.GeneName, driver1_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         final PurpleCopyNumber pcn0 = pcn(chr1, 1, 1000, 2);
         final PurpleCopyNumber pcn1 = pcn(chr1, 1001, 2000, 2);
@@ -398,8 +398,8 @@ public class GermlineDeletionsTest
 
         // DUP
         final StructuralVariant svDup = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.DUP, 0.5, 0.5).build();
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svDup));
-        List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svDup));
+        List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(gd1_1.GeneName, deletions.get(0).GeneName);
 
@@ -407,12 +407,12 @@ public class GermlineDeletionsTest
         driverMap = Map.of(gd1_1.GeneName, driver1_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         // BND
         final StructuralVariant svBnd = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.BND, 0.5, 0.5).build();
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svBnd));
-        deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svBnd));
+        deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(gd1_1.GeneName, deletions.get(0).GeneName);
 
@@ -420,12 +420,12 @@ public class GermlineDeletionsTest
         driverMap = Map.of(gd1_1.GeneName, driver1_1);
         mEnsemblDataCache.transcriptData = List.of(td1_1);
         mEnsemblDataCache.chrGeneMap = Map.of(chr1, List.of(gd1_1));
-        mGermlineDeletions = new GermlineDeletions(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
+        mGermlineDeletions = new GermlineAmpsDels(driverMap, mEnsemblDataCache, mGermlineDeletionFrequency);
 
         // INS
         final StructuralVariant svIns = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.INS, 0.5, 0.5).build();
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svIns));
-        deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svIns));
+        deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(gd1_1.GeneName, deletions.get(0).GeneName);
     }
@@ -444,8 +444,8 @@ public class GermlineDeletionsTest
         final StructuralVariant svDup = PurpleTestUtils.createStructuralVariant(chr1, 1150, chr1, 1400, StructuralVariantType.DUP, 0.5, 0.5).build();
 
         // DEL type should be preferred over other types
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svInv, svDel, svDup));
-        List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1), List.of(or0, or1), List.of(svInv, svDel, svDup));
+        List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(1, deletions.size());
         assertEquals(svDel.start().position(), deletions.get(0).RegionStart);
         assertEquals(svDel.end().position(), deletions.get(0).RegionEnd);
@@ -464,12 +464,12 @@ public class GermlineDeletionsTest
         // Create an SV that matches both start and end of the region
         final StructuralVariant sv = PurpleTestUtils.createStructuralVariant(chr1, 1001, chr1, 2000, StructuralVariantType.DEL, 0.5, 0.5).build();
 
-        mGermlineDeletions.findDeletions(List.of(pcn0, pcn1, pcn2), List.of(or0, or1, or2), List.of(sv));
-        List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn0, pcn1, pcn2), List.of(or0, or1, or2), List.of(sv));
+        List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
 
         // Both deletions should have the same start and end positions
-        for (GermlineDeletion deletion : deletions) {
+        for (GermlineAmpDel deletion : deletions) {
             assertEquals(sv.start().position(), deletion.RegionStart);
             assertEquals(sv.end().position(), deletion.RegionEnd);
         }
@@ -477,7 +477,7 @@ public class GermlineDeletionsTest
         // One deletion should be for each gene
         boolean foundGene1 = false;
         boolean foundGene2 = false;
-        for (GermlineDeletion deletion : deletions) {
+        for (GermlineAmpDel deletion : deletions) {
             if (deletion.GeneName.equals(gd1_1.GeneName)) {
                 foundGene1 = true;
             } else if (deletion.GeneName.equals(gd1_2.GeneName)) {
@@ -494,8 +494,8 @@ public class GermlineDeletionsTest
     {
         final PurpleCopyNumber pcn = pcn(chr1, 1001, 2000, 2);
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HET_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(pcn), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
@@ -506,8 +506,8 @@ public class GermlineDeletionsTest
     public void emptyCopyNumbersList()
     {
         final ObservedRegion or1 = or(chr1, 1000, 2001, GermlineStatus.HOM_DELETION, 1000, 1000, 1, 0.5);
-        mGermlineDeletions.findDeletions(List.of(), List.of(or1), List.of());
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(), List.of(or1), List.of());
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
         assertEquals(CommonVcfTags.PASS_FILTER, deletions.get(0).Filter);
         assertEquals(ReportedStatus.REPORTED, deletions.get(0).Reported);
@@ -524,14 +524,14 @@ public class GermlineDeletionsTest
         final StructuralVariant sv1 = PurpleTestUtils.createStructuralVariant(chr1, 1201, chr1, 1300, StructuralVariantType.DEL, 0.5, 0.5).build();
         final StructuralVariant sv2 = PurpleTestUtils.createStructuralVariant(chr2, 1201, chr2, 1300, StructuralVariantType.DEL, 0.5, 0.5).build();
 
-        mGermlineDeletions.findDeletions(List.of(pcn1, pcn2), List.of(or1, or2), List.of(sv1, sv2));
-        final List<GermlineDeletion> deletions = mGermlineDeletions.getDeletions();
+        mGermlineDeletions.findEvents(List.of(pcn1, pcn2), List.of(or1, or2), List.of(sv1, sv2));
+        final List<GermlineAmpDel> deletions = mGermlineDeletions.getEvents();
         assertEquals(2, deletions.size());
 
         // Check that we have one deletion from each chromosome
         boolean foundChr1 = false;
         boolean foundChr2 = false;
-        for (GermlineDeletion deletion : deletions) {
+        for (GermlineAmpDel deletion : deletions) {
             if (deletion.Chromosome.equals(chr1)) {
                 foundChr1 = true;
                 assertEquals(sv1.start().position(), deletion.RegionStart);

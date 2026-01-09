@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.driver.DriverCatalog;
 import com.hartwig.hmftools.common.driver.DriverCatalogFile;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleSegment;
@@ -149,14 +149,14 @@ public class PurpleRegressionTest
 
     private void checkDeletions() throws Exception
     {
-        List<GermlineDeletion> outputDeletions =
-                GermlineDeletion.read(GermlineDeletion.generateFilename(OutputDir.getAbsolutePath(), tumor));
-        List<GermlineDeletion> baselineDeletions =
-                GermlineDeletion.read(GermlineDeletion.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
+        List<GermlineAmpDel> outputDeletions =
+                GermlineAmpDel.read(GermlineAmpDel.generateFilename(OutputDir.getAbsolutePath(), tumor));
+        List<GermlineAmpDel> baselineDeletions =
+                GermlineAmpDel.read(GermlineAmpDel.generateFilename(ConfiguredResultsDir.getAbsolutePath(), tumor));
         Assert.assertEquals(outputDeletions.size(), baselineDeletions.size());
-        for(GermlineDeletion deletion : outputDeletions)
+        for(GermlineAmpDel deletion : outputDeletions)
         {
-            GermlineDeletion baseline = findGermlineDeletion(baselineDeletions, deletion);
+            GermlineAmpDel baseline = findGermlineDeletion(baselineDeletions, deletion);
             checkObjectsHaveSameData(baseline, deletion);
         }
     }
@@ -246,14 +246,14 @@ public class PurpleRegressionTest
         }
     }
 
-    private static GermlineDeletion findGermlineDeletion(List<GermlineDeletion> deletions, GermlineDeletion toMatch)
+    private static GermlineAmpDel findGermlineDeletion(List<GermlineAmpDel> deletions, GermlineAmpDel toMatch)
     {
-        List<GermlineDeletion> matching = deletions.stream().filter(germline -> deletionsMatch(germline, toMatch)).toList();
+        List<GermlineAmpDel> matching = deletions.stream().filter(germline -> deletionsMatch(germline, toMatch)).toList();
         assertEquals("Deletions matching " + toMatch.GeneName + " has size " + matching.size(), 1, matching.size());
         return matching.get(0);
     }
 
-    private static boolean deletionsMatch(GermlineDeletion g, GermlineDeletion h)
+    private static boolean deletionsMatch(GermlineAmpDel g, GermlineAmpDel h)
     {
         return g.GeneName.equals(h.GeneName)
                 && g.Chromosome.equals(h.Chromosome)

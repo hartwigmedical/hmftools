@@ -26,7 +26,7 @@ import com.hartwig.hmftools.compar.common.MismatchType;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GermlineDeletionDataTest
+public class GermlineAmpDelDataTest
         extends ComparableItemTest<GermlineDeletionData, GermlineDeletionComparer, TestGermlineDeletionDataBuilder>
 {
     @Before

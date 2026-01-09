@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.GermlineAmpDel;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -59,7 +59,7 @@ public class GermlineDeletionComparer implements ItemComparer
     @Override
     public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
-        final List<GermlineDeletion> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
+        final List<GermlineAmpDel> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
         germlineDeletions.forEach(x -> items.add(createGermlineDeletionData(x)));
         return items;
@@ -72,7 +72,7 @@ public class GermlineDeletionComparer implements ItemComparer
 
         try
         {
-            List<GermlineDeletion> germlineDeletions = GermlineDeletion.read(GermlineDeletion.generateFilename(fileSources.Purple, sampleId));
+            List<GermlineAmpDel> germlineDeletions = GermlineAmpDel.read(GermlineAmpDel.generateFilename(fileSources.Purple, sampleId));
             germlineDeletions.forEach(x -> comparableItems.add(createGermlineDeletionData(x)));
         }
         catch(IOException e)
@@ -84,7 +84,7 @@ public class GermlineDeletionComparer implements ItemComparer
         return comparableItems;
     }
 
-    private GermlineDeletionData createGermlineDeletionData(final GermlineDeletion deletion)
+    private GermlineDeletionData createGermlineDeletionData(final GermlineAmpDel deletion)
     {
         String comparisonChromosome = determineComparisonChromosome(deletion.Chromosome, mConfig.RequiresLiftover);
         return new GermlineDeletionData(deletion, comparisonChromosome);
