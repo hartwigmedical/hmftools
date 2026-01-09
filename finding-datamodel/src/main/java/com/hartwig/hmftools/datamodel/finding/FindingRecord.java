@@ -58,5 +58,8 @@ public interface FindingRecord
     String pipelineVersion();
 
     @NotNull
+    String version();
+
+    @NotNull
     PurpleFit purpleFit();
 }
