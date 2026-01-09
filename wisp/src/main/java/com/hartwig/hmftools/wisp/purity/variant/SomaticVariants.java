@@ -258,6 +258,10 @@ public class SomaticVariants
             int depth = genotype.getDP();
             UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
 
+            // check for zero-filled defaults in the tumor from an older VCF
+            if(umiTypeCounts != NO_UMI_COUNTS && umiTypeCounts.isZeroed() && genotype.getSampleName().equals(mSample.TumorId))
+                umiTypeCounts = NO_UMI_COUNTS;
+
             int qualTotal = 0;
             int alleleCount = 0;
 

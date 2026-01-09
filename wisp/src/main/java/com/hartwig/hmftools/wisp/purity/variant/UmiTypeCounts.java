@@ -58,4 +58,9 @@ public class UmiTypeCounts
 
     public int alleleCount() { return AlleleNone + AlleleSingle + AlleleDual; }
     public int totalCount() { return TotalNone + TotalSingle + TotalDual; }
+
+    public boolean isZeroed()
+    {
+        return TotalNone == 0 && TotalSingle == 0 && TotalDual == 0 && AlleleNone == 0 && AlleleSingle == 0 && AlleleDual == 0;
+    }
 }
