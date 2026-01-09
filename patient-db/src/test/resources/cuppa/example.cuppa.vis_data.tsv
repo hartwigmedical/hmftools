@@ -1,0 +1,7 @@
+sample_id	data_type	clf_group	clf_name	feat_name	feat_value	cancer_type	data_value	rank	rank_group
+example	prob	dna	dna_combined			CANCER_TYPE_1	0.1	2	0
+example	prob	dna	dna_combined			CANCER_TYPE_2	0.9	1	0
+example	prob	dna	dna_combined			CANCER_TYPE_3	0	3	0
+example	prob	dna	gen_pos			CANCER_TYPE_1	0.2	2	1
+example	prob	dna	gen_pos			CANCER_TYPE_2	0.8	1	1
+example	prob	dna	gen_pos			CANCER_TYPE_3	0	3	1
