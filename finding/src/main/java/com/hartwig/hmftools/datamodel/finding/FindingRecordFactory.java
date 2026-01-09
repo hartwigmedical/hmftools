@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.datamodel.finding.DisruptionFactory.createDis
 
 import java.io.IOException;
 import java.io.Reader;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -63,6 +61,7 @@ public class FindingRecordFactory {
         boolean hasReliablePurity = orangeRecord.purple().fit().containsTumorCells();
 
         ImmutableFindingRecord.Builder builder = ImmutableFindingRecord.builder()
+                .version("1.0")
                 .refGenomeVersion(orangeRecord.refGenomeVersion())
                 .experimentType(orangeRecord.experimentType())
                 .pipelineVersion(orangeRecord.pipelineVersion())
@@ -188,11 +187,6 @@ public class FindingRecordFactory {
                 .filter(x -> x.type() == GainDeletion.Type.SOMATIC_LOH)
                 .sorted(Comparator.comparing(GainDeletion::gene))
                 .collect(Collectors.toList());
-    }
-
-    private static Integer toInteger(@Nullable Double value) {
-        return value != null ? BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_EVEN) // match DecimalFormat
-                .intValueExact() : null;
     }
 
     private static FindingsStatus purpleFindingsStatus(PurpleRecord purpleRecord) {
