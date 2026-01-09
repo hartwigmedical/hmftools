@@ -44,8 +44,8 @@ public class FindingsJson {
     }
 
     @NotNull
-    public FindingRecord read(@NotNull Path orangeJsonFilePath) throws IOException {
-        return read(Files.newBufferedReader(orangeJsonFilePath));
+    public FindingRecord read(@NotNull Path findingsJsonFilePath) throws IOException {
+        return read(Files.newBufferedReader(findingsJsonFilePath));
     }
 
     @NotNull
