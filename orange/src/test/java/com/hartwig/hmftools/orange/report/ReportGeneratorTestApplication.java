@@ -192,7 +192,7 @@ public class ReportGeneratorTestApplication
         for(PurpleDriver driver : drivers)
         {
             if(driver.type() == PurpleDriverType.AMP || driver.type() == PurpleDriverType.PARTIAL_AMP
-                    || driver.type() == PurpleDriverType.DEL
+                    || driver.type() == PurpleDriverType.DEL || driver.type() == PurpleDriverType.HET_DEL
                     || driver.type() == PurpleDriverType.GERMLINE_DELETION)
             {
                 copyNumberDriverGenes.add(driver.gene());
