@@ -14,7 +14,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class LoadCuppaTest extends DatabaseAutoSetup
+public class LoadCuppaDataTest extends DatabaseAutoSetup
 {
     private static final String CUPPA_VIS_DATA_TSV_PATH = Resources.getResource("cuppa/example.cuppa.vis_data.tsv").getPath();
     private static final int TOP_N_PROBS = 2;

@@ -18,7 +18,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadCuppa
+public class LoadCuppaData
 {
     private static final String CUPPA_VIS_DATA_TSV = "cuppa_vis_data_tsv";
     private static final int TOP_N_PROBS = 3;
