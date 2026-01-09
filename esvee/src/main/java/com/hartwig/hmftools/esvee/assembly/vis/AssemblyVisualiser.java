@@ -76,16 +76,15 @@ public class AssemblyVisualiser
 
     private final AssemblyConfig mConfig;
     private final AssemblyAlignment mAssemblyAlignment;
-    private final List<CigarElement> mSequenceCigar;
-
     private final List<RefSegmentViewModel> mRefViewModel;
 
     public AssemblyVisualiser(final AssemblyConfig config, final AssemblyAlignment assemblyAlignment)
     {
         mConfig = config;
         mAssemblyAlignment = assemblyAlignment;
-        mSequenceCigar = TextCigarCodec.decode(assemblyAlignment.assemblyCigar()).getCigarElements();
-        mRefViewModel = getRefViewModel(mSequenceCigar, assemblyAlignment);
+
+        List<CigarElement> sequenceCigar = TextCigarCodec.decode(assemblyAlignment.assemblyCigar()).getCigarElements();
+        mRefViewModel = getRefViewModel(sequenceCigar, assemblyAlignment);
     }
 
     public void writeVisFiles()
@@ -197,10 +196,8 @@ public class AssemblyVisualiser
         List<RefSegmentViewModel> refViewModel = Lists.newArrayList();
         int assemblyIdx = 0;
         int cigarIndex = 0;
-        for(int i = 0; i < segments.size(); i++)
+        for(AlignData segment : segments)
         {
-            AlignData segment = segments.get(i);
-
             String chromosome = segment.chromosome();
             int posStart = segment.positionStart();
             int posEnd = segment.positionEnd();
