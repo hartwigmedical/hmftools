@@ -86,11 +86,11 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(newVictim, mismatch.NewItem);
         Set<String> expectedDiffs = Set.of("unmatchedSv(:BND chr21:42000000:0/)", "unmatchedSv(/:BND chr21:40000000:0)");
-        assertEquals(expectedDiffs, new HashSet<>(mismatch.DiffValues()));
+        assertEquals(expectedDiffs, new HashSet<>(mismatch.DiffValues));
     }
 
     @Test
@@ -142,10 +142,10 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(refVictim.matches(newVictim));
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(newVictim, mismatch.NewItem);
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
     }
 
     @Test
@@ -161,17 +161,17 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
         assertTrue(reportableVictim.matches(nonReportableVictim));
         Mismatch mismatch = reportableVictim.findMismatch(nonReportableVictim, MatchLevel.REPORTABLE, diffThresholds, false);
 
-        assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
-        assertEquals(reportableVictim, mismatch.RefItem());
-        assertEquals(nonReportableVictim, mismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues());
+        assertEquals(MismatchType.REF_ONLY, mismatch.Type);
+        assertEquals(reportableVictim, mismatch.RefItem);
+        assertEquals(nonReportableVictim, mismatch.NewItem);
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported REPORTED/NONE)"), mismatch.DiffValues);
 
         Mismatch oppositeMismatch = nonReportableVictim.findMismatch(reportableVictim, MatchLevel.REPORTABLE, diffThresholds, false);
 
-        assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
-        assertEquals(nonReportableVictim, oppositeMismatch.RefItem());
-        assertEquals(reportableVictim, oppositeMismatch.NewItem());
-        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported NONE/REPORTED)"), oppositeMismatch.DiffValues());
+        assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
+        assertEquals(nonReportableVictim, oppositeMismatch.RefItem);
+        assertEquals(reportableVictim, oppositeMismatch.NewItem);
+        assertEquals(List.of("breakend(:BND chr21:41500000:0 reported NONE/REPORTED)"), oppositeMismatch.DiffValues);
     }
 
     private void assertSingleFieldDifferenceInBreakendRecognized(final String field, final Consumer<TestBreakendDataBuilder> altInitializer,
@@ -189,9 +189,9 @@ public class DisruptionDataTest extends ComparableItemTest<DisruptionData, Disru
 
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals("Test difference in " + field, MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals("Test difference in " + field, refVictim, mismatch.RefItem());
-        assertEquals("Test difference in " + field, newVictim, mismatch.NewItem());
-        assertEquals("Test difference in " + field, List.of(expectedDiff), mismatch.DiffValues());
+        assertEquals("Test difference in " + field, MismatchType.VALUE, mismatch.Type);
+        assertEquals("Test difference in " + field, refVictim, mismatch.RefItem);
+        assertEquals("Test difference in " + field, newVictim, mismatch.NewItem);
+        assertEquals("Test difference in " + field, List.of(expectedDiff), mismatch.DiffValues);
     }
 }

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_BAM_METRICS;
 import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_10X;
 import static com.hartwig.hmftools.compar.metrics.GermlineBamMetricsData.FLD_PERCENTAGE_20X;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.DUPLICATE_PERCENTAGE_ABS_THRESHOLD;
@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -34,7 +34,7 @@ public class GermlineBamMetricsComparer implements ItemComparer
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
         return GERMLINE_BAM_METRICS;
     }

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_HLA_Y;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
-import static com.hartwig.hmftools.compar.common.Category.LILAC;
+import static com.hartwig.hmftools.compar.common.CategoryType.LILAC;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -42,7 +42,7 @@ public class LilacData implements ComparableItem
     }
 
     @Override
-    public Category category() { return LILAC; }
+    public CategoryType category() { return LILAC; }
 
     @Override
     public String key()

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -30,7 +30,7 @@ public class GeneCopyNumberData implements ComparableItem
         CopyNumber = copyNumber;
     }
 
-    public Category category() {
+    public CategoryType category() {
         return GENE_COPY_NUMBER;
     }
 

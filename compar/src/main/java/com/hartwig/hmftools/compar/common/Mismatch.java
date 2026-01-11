@@ -2,106 +2,42 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.compar.common.DiffFunctions.diffsStr;
-
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.compar.ComparableItem;
 
-public record Mismatch(ComparableItem RefItem, ComparableItem NewItem, MismatchType MismatchType, List<String> DiffValues)
+public class Mismatch
 {
-    // DiffValues is list of the form: field(refValue/otherValue)
+    public final ComparableItem RefItem;
+    public final ComparableItem NewItem;
+    public final MismatchType Type;
+    public final List<String> DiffValues;
 
-    public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
+    public Mismatch(final ComparableItem refItem, final ComparableItem newItem, final MismatchType type, final List<String> diffValues)
     {
-        StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-        if(includeSampleId)
-            sj.add("SampleId");
-
-        if(includeCatagory)
-            sj.add("Category");
-
-        sj.add("MismatchType").add("Key").add("Differences");
-        return sj.toString();
+        RefItem = refItem;
+        NewItem = newItem;
+        Type = type;
+        DiffValues = diffValues;
     }
 
-    public static String header(boolean includeSampleId)
+    @Override
+    public boolean equals(final Object other)
     {
-        return commonHeader(includeSampleId, true) + "\tAllValues";
+        if(this == other)
+            return true;
+
+        if(!(other instanceof Mismatch))
+            return false;
+
+        Mismatch otherMismatch = (Mismatch)other;
+        return Type == otherMismatch.Type && RefItem == otherMismatch.RefItem && NewItem == otherMismatch.NewItem;
     }
 
-    public static String commonTsv(boolean writeCategory, final Mismatch mismatch)
+    public String toString()
     {
-        StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-        if(writeCategory)
-        {
-            if(mismatch.RefItem != null)
-                sj.add(mismatch.RefItem.category().toString());
-            else
-                sj.add(mismatch.NewItem.category().toString());
-        }
-
-        sj.add(mismatch.MismatchType.toString());
-
-        if(mismatch.RefItem != null)
-            sj.add(mismatch.RefItem.key());
-        else
-            sj.add(mismatch.NewItem.key());
-
-        return sj.toString();
+        CategoryType category = RefItem != null ? RefItem.category() : NewItem.category();
+        return format("category(%s) type(%s) item(%s) diffs(%d)",
+                category, Type, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size());
     }
-
-    public String toTsv(boolean writeFieldValues, final List<String> comparedFieldsNames)
-    {
-        StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-        sj.add(commonTsv(!writeFieldValues, this));
-
-        sj.add(diffsStr(DiffValues));
-
-        if(writeFieldValues)
-        {
-            final List<String> refFieldValues = RefItem != null ? RefItem.displayValues() : null;
-            final List<String> newFieldValues = NewItem != null ? NewItem.displayValues() : null;
-            int fieldCount = refFieldValues != null ? refFieldValues.size() : newFieldValues.size();
-
-            for(int i = 0; i < fieldCount; ++i)
-            {
-                if(refFieldValues != null)
-                    sj.add(refFieldValues.get(i));
-                else
-                    sj.add("");
-
-                if(newFieldValues != null)
-                    sj.add(newFieldValues.get(i));
-                else
-                    sj.add("");
-            }
-        }
-        else
-        {
-            ComparableItem item = RefItem != null ? RefItem : NewItem;
-
-            StringJoiner displaySj = new StringJoiner(ITEM_DELIM);
-
-            List<String> itemDisplayValues = item.displayValues();
-
-            for(int i = 0; i < itemDisplayValues.size(); ++i)
-            {
-                displaySj.add(format("%s=%s", comparedFieldsNames.get(i), itemDisplayValues.get(i)));
-            }
-
-            sj.add(displaySj.toString());
-        }
-
-        return sj.toString();
-    }
-
-    public String toString() { return format("type(%s) item(%s) diffs(%d)",
-            MismatchType, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size()); }
 }

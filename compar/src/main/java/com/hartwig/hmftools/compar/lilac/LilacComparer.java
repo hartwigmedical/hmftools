@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_DISC_INDELS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_FIT_FRAGS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_QC_STATUS;
 import static com.hartwig.hmftools.common.hla.LilacQcData.FLD_TOTAL_FRAGS;
-import static com.hartwig.hmftools.compar.common.Category.LILAC;
+import static com.hartwig.hmftools.compar.common.CategoryType.LILAC;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_ALLELES;
 import static com.hartwig.hmftools.compar.lilac.LilacData.FLD_VARIANTS;
@@ -19,7 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -44,7 +44,7 @@ public class LilacComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return LILAC; }
+    public CategoryType category() { return LILAC; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

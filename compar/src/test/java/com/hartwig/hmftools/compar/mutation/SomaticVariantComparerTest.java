@@ -87,9 +87,9 @@ public class SomaticVariantComparerTest
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.type = VariantType.INDEL));
 
         assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.NEW_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
         assertEquals(3, mismatches.size());
     }
 
@@ -138,9 +138,9 @@ public class SomaticVariantComparerTest
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.type = VariantType.INDEL));
 
         assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.NEW_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.VALUE).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.VALUE).count());
         assertEquals(3, mismatches.size());
     }
 
@@ -170,8 +170,8 @@ public class SomaticVariantComparerTest
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.create(b -> b.chromosome = "13"));
 
         assertTrue(victim.identifyMismatches(sampleId, mismatches, refVariants, newVariants, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.REF_ONLY).count());
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.NEW_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.REF_ONLY).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.NEW_ONLY).count());
         assertEquals(2, mismatches.size());
     }
 
@@ -189,7 +189,7 @@ public class SomaticVariantComparerTest
         MatchLevel matchLevel = MatchLevel.DETAILED;
 
         assertFalse(victim.identifyMismatches(sampleId, mismatches, null, null, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.INVALID_BOTH).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_BOTH).count());
         assertEquals(1, mismatches.size());
     }
 
@@ -211,7 +211,7 @@ public class SomaticVariantComparerTest
         newVariants.add(TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults());
 
         assertFalse(victim.identifyMismatches(sampleId, mismatches, null, newVariants, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.INVALID_REF).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_REF).count());
         assertEquals(1, mismatches.size());
     }
 
@@ -233,7 +233,7 @@ public class SomaticVariantComparerTest
         refVariants.add(TestSomaticVariantDataBuilder.BUILDER.createWithAlternateDefaults());
 
         assertFalse(victim.identifyMismatches(sampleId, mismatches, refVariants, null, matchLevel));
-        assertEquals(1, mismatches.stream().filter(x -> x.MismatchType() == MismatchType.INVALID_NEW).count());
+        assertEquals(1, mismatches.stream().filter(x -> x.Type == MismatchType.INVALID_NEW).count());
         assertEquals(1, mismatches.size());
     }
 }

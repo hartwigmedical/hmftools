@@ -11,7 +11,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.purple.ReportedStatus;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -21,12 +21,12 @@ public class DisruptionData implements ComparableItem
 {
     public final String GeneName;
     public final List<BreakendData> Breakends;
-    private final Category mSubCategory;
+    private final CategoryType mSubCategory;
 
     protected static final String FLD_BREAKEND_INFO = "BreakendInfo";
     protected static final String FLD_UNMATCHED_SV = "unmatchedSv";
 
-    public DisruptionData(final Category category, final String geneName, final List<BreakendData> breakends)
+    public DisruptionData(final CategoryType category, final String geneName, final List<BreakendData> breakends)
     {
         mSubCategory = category;
         GeneName = geneName;
@@ -34,7 +34,7 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
-    public Category category() { return mSubCategory; }
+    public CategoryType category() { return mSubCategory; }
 
     @Override
     public String key()

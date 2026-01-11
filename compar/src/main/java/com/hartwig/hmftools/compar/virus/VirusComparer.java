@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.virus;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.VIRUS;
+import static com.hartwig.hmftools.compar.common.CategoryType.VIRUS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_DRIVER_LIKELIHOOD;
 import static com.hartwig.hmftools.compar.virus.VirusData.FLD_INTEGRATIONS;
@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -32,7 +32,7 @@ public class VirusComparer implements ItemComparer
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
         return VIRUS;
     }

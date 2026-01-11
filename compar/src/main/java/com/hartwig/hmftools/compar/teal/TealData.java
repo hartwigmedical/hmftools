@@ -2,17 +2,16 @@ package com.hartwig.hmftools.compar.teal;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.TELOMERE_LENGTH;
+import static com.hartwig.hmftools.compar.common.CategoryType.TELOMERE_LENGTH;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -30,7 +29,7 @@ public class TealData implements ComparableItem
     }
 
     @Override
-    public Category category() { return TELOMERE_LENGTH; }
+    public CategoryType category() { return TELOMERE_LENGTH; }
 
     @Override
     public String key()

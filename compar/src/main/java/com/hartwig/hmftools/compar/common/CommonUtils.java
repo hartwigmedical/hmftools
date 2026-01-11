@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.FULL_MATCH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
@@ -67,7 +67,7 @@ public class CommonUtils
         List<ItemComparer> comparers = Lists.newArrayList();
 
         // load in a predictable order irrespective of config
-        for(Category category : Category.values())
+        for(CategoryType category : CategoryType.values())
         {
             if(!config.Categories.containsKey(category))
             {
@@ -98,7 +98,7 @@ public class CommonUtils
         return comparers;
     }
 
-    private static ItemComparer createComparer(final Category category, final ComparConfig config)
+    private static ItemComparer createComparer(final CategoryType category, final ComparConfig config)
     {
         switch(category)
         {

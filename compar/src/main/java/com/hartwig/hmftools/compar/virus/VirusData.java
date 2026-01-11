@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.virus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.VIRUS;
+import static com.hartwig.hmftools.compar.common.CategoryType.VIRUS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
@@ -12,7 +12,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -31,7 +31,7 @@ public class VirusData implements ComparableItem
     }
 
     @Override
-    public Category category() {
+    public CategoryType category() {
         return VIRUS;
     }
 

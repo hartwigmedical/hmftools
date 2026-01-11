@@ -145,10 +145,10 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(refVictim.matches(newVictim));
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(FIELDS_UP_TO_PAVE, mismatch.DiffValues());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(newVictim, mismatch.NewItem);
+        assertDifferencesAreForFields(FIELDS_UP_TO_PAVE, mismatch.DiffValues);
     }
 
     @Test
@@ -174,18 +174,18 @@ public class SomaticVariantDataTest extends ComparableItemTest<SomaticVariantDat
         assertTrue(passVictim.matches(filteredVictim));
         Mismatch mismatch = passVictim.findMismatch(filteredVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.REF_ONLY, mismatch.MismatchType());
-        assertEquals(passVictim, mismatch.RefItem());
-        assertEquals(filteredVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues());
+        assertEquals(MismatchType.REF_ONLY, mismatch.Type);
+        assertEquals(passVictim, mismatch.RefItem);
+        assertEquals(filteredVictim, mismatch.NewItem);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
 
         assertTrue(filteredVictim.matches(passVictim));
         Mismatch oppositeMismatch = filteredVictim.findMismatch(passVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.MismatchType());
-        assertEquals(filteredVictim, oppositeMismatch.RefItem());
-        assertEquals(passVictim, oppositeMismatch.NewItem());
-        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues());
+        assertEquals(MismatchType.NEW_ONLY, oppositeMismatch.Type);
+        assertEquals(filteredVictim, oppositeMismatch.RefItem);
+        assertEquals(passVictim, oppositeMismatch.NewItem);
+        assertDifferencesAreForFields(union(SAGE_ONLY_FIELDS, Set.of(FILTER_DIFF)), mismatch.DiffValues);
     }
 
     @Test

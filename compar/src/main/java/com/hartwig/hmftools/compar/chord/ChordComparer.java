@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.chord;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.compar.common.Category.CHORD;
+import static com.hartwig.hmftools.compar.common.CategoryType.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
@@ -16,7 +16,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -38,7 +38,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return CHORD; }
+    public CategoryType category() { return CHORD; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

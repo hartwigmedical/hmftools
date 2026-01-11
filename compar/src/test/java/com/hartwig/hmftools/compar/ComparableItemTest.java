@@ -111,10 +111,10 @@ public abstract class ComparableItemTest<I extends ComparableItem, C extends Ite
         assertTrue(refVictim.matches(newVictim));
         Mismatch mismatch = refVictim.findMismatch(newVictim, MatchLevel.DETAILED, diffThresholds, false);
 
-        assertEquals(MismatchType.VALUE, mismatch.MismatchType());
-        assertEquals(refVictim, mismatch.RefItem());
-        assertEquals(newVictim, mismatch.NewItem());
-        assertDifferencesAreForFields(getAllValueFieldNames(), mismatch.DiffValues());
+        assertEquals(MismatchType.VALUE, mismatch.Type);
+        assertEquals(refVictim, mismatch.RefItem);
+        assertEquals(newVictim, mismatch.NewItem);
+        assertDifferencesAreForFields(getAllValueFieldNames(), mismatch.DiffValues);
     }
 
     @Test

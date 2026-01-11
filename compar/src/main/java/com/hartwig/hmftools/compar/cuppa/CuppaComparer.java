@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.cuppa;
 
 import static com.hartwig.hmftools.common.cuppa.DataType.PROB;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.Category.CUPPA;
+import static com.hartwig.hmftools.compar.common.CategoryType.CUPPA;
 import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_PROBABILITY;
 import static com.hartwig.hmftools.compar.cuppa.CuppaData.FLD_TOP_CANCER_TYPE;
 
@@ -13,7 +13,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa.CuppaPredictions;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -33,7 +33,7 @@ public class CuppaComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return CUPPA; }
+    public CategoryType category() { return CUPPA; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

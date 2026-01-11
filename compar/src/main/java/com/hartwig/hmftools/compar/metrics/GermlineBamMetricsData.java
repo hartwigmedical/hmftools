@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.GERMLINE_BAM_METRICS;
+import static com.hartwig.hmftools.compar.common.CategoryType.GERMLINE_BAM_METRICS;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_DUPLICATE_PERCENTAGE;
@@ -12,7 +12,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamMetricSummary;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -30,7 +30,7 @@ public class GermlineBamMetricsData implements ComparableItem
     }
 
     @Override
-    public Category category()
+    public CategoryType category()
     {
         return GERMLINE_BAM_METRICS;
     }

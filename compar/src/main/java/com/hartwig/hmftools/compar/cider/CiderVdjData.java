@@ -2,7 +2,7 @@ package com.hartwig.hmftools.compar.cider;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.common.Category.CDR3_SEQUENCE;
+import static com.hartwig.hmftools.compar.common.CategoryType.CDR3_SEQUENCE;
 import static com.hartwig.hmftools.compar.common.CommonUtils.createMismatchFromDiffs;
 import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
 import com.hartwig.hmftools.common.cider.Cdr3SequenceFile;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
@@ -32,7 +32,7 @@ public class CiderVdjData implements ComparableItem
     }
 
     @Override
-    public Category category() { return CDR3_SEQUENCE; }
+    public CategoryType category() { return CDR3_SEQUENCE; }
 
     @Override
     public String key()

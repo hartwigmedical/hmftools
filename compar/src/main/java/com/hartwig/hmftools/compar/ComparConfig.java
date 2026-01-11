@@ -18,14 +18,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.perf.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.compar.common.Category.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.DRIVER;
-import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.common.Category.LINX_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.PANEL_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
-import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
-import static com.hartwig.hmftools.compar.common.Category.linxCategories;
+import static com.hartwig.hmftools.compar.common.CategoryType.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.DRIVER;
+import static com.hartwig.hmftools.compar.common.CategoryType.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.CategoryType.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.PANEL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.PURPLE_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.CategoryType.purpleCategories;
+import static com.hartwig.hmftools.compar.common.CategoryType.linxCategories;
 import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
 import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
@@ -48,7 +48,7 @@ import com.hartwig.hmftools.common.driver.panel.DriverGene;
 import com.hartwig.hmftools.common.driver.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CategoryType;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.MatchLevel;
@@ -61,7 +61,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final Map<Category,MatchLevel> Categories;
+    public final Map<CategoryType,MatchLevel> Categories;
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 
@@ -77,6 +77,7 @@ public class ComparConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final String ExpectedMismatchFile;
 
     public final boolean WriteDetailed;
     public final boolean IncludeMatches;
@@ -98,6 +99,7 @@ public class ComparConfig
     public static final String WRITE_DETAILED_FILES = "write_detailed";
     public static final String INCLUDE_MATCHES = "include_matches";
     public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
+    public static final String EXPECTED_MISMATCH_FILE = "expected_mismatches";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
@@ -122,12 +124,12 @@ public class ComparConfig
 
         if(categoriesStr.equals(ALL_CATEGORIES))
         {
-            Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
+            Arrays.stream(CategoryType.values()).forEach(x -> Categories.put(x, matchLevel));
         }
         else if(categoriesStr.contains(PANEL_CATEGORIES))
         {
             if(categoriesStr.contains(PANEL_CATEGORIES))
-                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
+                CategoryType.panelCategories().forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
@@ -141,12 +143,13 @@ public class ComparConfig
                 else if(catStr.equals(LINX_CATEGORIES))
                     linxCategories().forEach(x -> Categories.put(x, matchLevel));
                 else
-                    Categories.put(Category.valueOf(catStr), matchLevel);
+                    Categories.put(CategoryType.valueOf(catStr), matchLevel);
             }
         }
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+        ExpectedMismatchFile = configBuilder.getValue(EXPECTED_MISMATCH_FILE);
         WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
         IncludeMatches = configBuilder.hasFlag(INCLUDE_MATCHES);
         Threads = parseThreads(configBuilder);
@@ -272,7 +275,7 @@ public class ComparConfig
 
     private void loadSampleIds(final ConfigBuilder configBuilder)
     {
-        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasFlag(SAMPLE) || configBuilder.hasFlag(GERMLINE_SAMPLE)))
+        if(configBuilder.hasValue(SAMPLE_ID_FILE) && (configBuilder.hasValue(SAMPLE) || configBuilder.hasValue(GERMLINE_SAMPLE)))
         {
             CMP_LOGGER.error("when the argument '{}' is set, the arguments '{}' and '{}' should not be set",
                     SAMPLE_ID_FILE, SAMPLE, GERMLINE_SAMPLE);
@@ -438,6 +441,7 @@ public class ComparConfig
         registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addConfigItem(EXPECTED_MISMATCH_FILE, "Existing expected mismatch file");
         configBuilder.addFlag(INCLUDE_MATCHES, "Also write matches to output file(s)");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
@@ -471,5 +475,6 @@ public class ComparConfig
         mSampleIdMappings = Maps.newHashMap();
         LiftoverCache = new GenomeLiftoverCache();
         RequiresLiftover = false;
+        ExpectedMismatchFile = null;
     }
 }
