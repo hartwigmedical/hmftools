@@ -94,12 +94,35 @@ public class FilterConstants
     public static final int PRIME_MAX_BASE_FACTOR = 10;
     public static final int PRIME_MAX_SGL_FACTOR = 5;
 
-    public static final int SBX_STRAND_BIAS_NON_BND_MIN_FRAGS = 10;
-
     public static final int INV_ADJACENT_LENGTH = 100;
     public static final int INV_ADJACENT_MIN_UPS = 4;
     public static final Set<FilterType> INV_ADJACENT_EXCLUDED_FILTERS = Sets.newHashSet(
             PON, INV_SHORT_FRAG_LOW_VAF, INV_SHORT_LOW_VAF_HOM, INV_SHORT_ISOLATED);
+
+    // SBX-specific filters
+    public static final int SBX_STRAND_BIAS_NON_BND_MIN_FRAGS = 10;
+    public static final int SBX_HEURISTIC_THRESHOLD = 50;
+    public static final int SBX_HEURISTIC_SGL_THRESHOLD = 30;
+
+    public static final int SBX_HEURISTIC_SHORT_LENGTH = 300;
+    public static final double SBX_HEURISTIC_ASM_LENGTH_FACTOR = 600;
+    public static final int SBX_HEURISTIC_INEXACT_HOM_FACTOR = 2;
+    public static final int SBX_HEURISTIC_INEXACT_HOM_MAX = 50;
+
+    public static final int SBX_HEURISTIC_DUP_INS_LENGTH = 40;
+    public static final int SBX_HEURISTIC_SHORT_DUP_INS_PENALTY = 20;
+
+    public static final int SBX_HEURISTIC_INV_SHORT_LENGTH = 100;
+    public static final int SBX_HEURISTIC_INV_INS_LENGTH = 20;
+
+    public static final int SBX_HEURISTIC_LOCATION_JUNC_PENALTY = 30;
+    public static final int SBX_HEURISTIC_BND_LOCATION_JUNC_PENALTY = 20;
+
+    public static final int SBX_HEURISTIC_BND_INS_PENALTY = 20;
+    public static final int SBX_HEURISTIC_BND_LINE_BONUS = 20;
+    public static final int SBX_HEURISTIC_SGL_LINE_BONUS = 30;
+
+    public static final double SBX_HEURISTIC_BND_LINE_PERC = 0.9;
 
     public static final ChrBaseRegion PMS2_V37 = new ChrBaseRegion("7", 6002870, 6058756); // has 10K buffer
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);

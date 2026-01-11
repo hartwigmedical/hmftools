@@ -25,6 +25,7 @@ public enum FilterType
     UNPAIRED_THREE_PRIME_RANGE("unpairedPositionRange", "Unpaired position range", false),
     LINE_SOURCE("lineSource", "Remote LINE source", false),
     SBX_STRAND_BIAS("sbxStrandBias", "SBX strand-bias", false),
+    SBX_ARTEFACT("sbxArtefact", "SBX artefact", false),
     PON("PON", "Found in panel of normals", true);
 
     private final String mVcfTag;
