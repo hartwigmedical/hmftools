@@ -65,8 +65,8 @@ public class TealData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final TelomereLength otherTelomereLength = ((TealData) other).TelomereLength;
 
@@ -79,7 +79,6 @@ public class TealData implements ComparableItem
 
     public String toString()
     {
-        return format("type(%s) telomere length(%.3f)",
-            TelomereLength.type(), TelomereLength.finalTelomereLength());
+        return format("type(%s) telomere length(%.3f)", TelomereLength.type(), TelomereLength.finalTelomereLength());
     }
 }

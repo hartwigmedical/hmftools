@@ -108,6 +108,7 @@ public class MismatchWriter
         if(mismatches.isEmpty())
             return;
 
+        checkRemoveIgnoredGenes(mismatches);
         checkRemoveExpectedMismatches(sampleId, mismatches);
 
         if(mCategoryWriters.isEmpty() && mCombinedWriter == null)
@@ -132,6 +133,30 @@ public class MismatchWriter
         catch(IOException e)
         {
             CMP_LOGGER.error("failed to write sample data: {}", e.toString());
+        }
+    }
+
+    private void checkRemoveIgnoredGenes(final List<Mismatch> mismatches)
+    {
+        if(mConfig.IgnoreGenes.isEmpty())
+            return;
+
+        int index = 0;
+
+        while(index < mismatches.size())
+        {
+            Mismatch mismatch = mismatches.get(index);
+
+            ComparableItem item = mismatch.nonNullItem();
+
+            if(!item.geneName().isEmpty() && mConfig.IgnoreGenes.contains(item.geneName()))
+            {
+                mismatches.remove(index);
+            }
+            else
+            {
+                ++index;
+            }
         }
     }
 

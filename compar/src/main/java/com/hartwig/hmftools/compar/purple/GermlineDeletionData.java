@@ -69,6 +69,9 @@ public class GermlineDeletionData implements ComparableItem
     }
 
     @Override
+    public String geneName() { return Deletion.GeneName; }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GermlineDeletionData otherDeletion = (GermlineDeletionData)other;
@@ -76,8 +79,8 @@ public class GermlineDeletionData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final GermlineDeletionData otherDeletion = (GermlineDeletionData) other;
 

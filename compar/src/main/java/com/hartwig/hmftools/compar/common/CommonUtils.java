@@ -214,7 +214,8 @@ public class CommonUtils
         if(sourceItems.containsKey(REF_SOURCE) && sourceItems.containsKey(NEW_SOURCE))
         {
             // previously support comparisons for N sources but now can only be 2 as controlled by config
-            CommonUtils.compareItems(mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
+            CommonUtils.compareItems(
+                    mismatches, matchLevel, config.Thresholds, config.IncludeMatches, sourceItems.get(REF_SOURCE), sourceItems.get(NEW_SOURCE));
             return true;
         }
 
@@ -334,7 +335,8 @@ public class CommonUtils
         return Files.exists(new File(filename).toPath());
     }
 
-    public static Mismatch createMismatchFromDiffs(final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
+    public static Mismatch createMismatchFromDiffs(
+            final ComparableItem refItem, final ComparableItem newItem, final List<String> diffs,
             final MatchLevel matchLevel, final boolean includeMatches)
     {
         if(diffs.isEmpty() && !includeMatches)

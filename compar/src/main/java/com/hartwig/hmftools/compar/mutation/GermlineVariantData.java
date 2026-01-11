@@ -86,6 +86,9 @@ public class GermlineVariantData implements ComparableItem
     }
 
     @Override
+    public String geneName() { return Variant.gene(); }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;

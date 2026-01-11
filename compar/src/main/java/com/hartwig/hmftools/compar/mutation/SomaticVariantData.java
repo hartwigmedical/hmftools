@@ -180,10 +180,14 @@ public class SomaticVariantData implements ComparableItem
     }
 
     @Override
-    public boolean isPass() {
+    public boolean isPass()
+    {
         // A reportable variant not in a gene should be impossible, but if it happens we want to see it
         return !IsFromUnfilteredVcf && (Reported || !Gene.isEmpty());
     }
+
+    @Override
+    public String geneName() { return Gene; }
 
     @Override
     public boolean matches(final ComparableItem other)

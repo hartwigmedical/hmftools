@@ -83,8 +83,8 @@ public record CopyNumberData(
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final CopyNumberData otherCn = (CopyNumberData) other;
 

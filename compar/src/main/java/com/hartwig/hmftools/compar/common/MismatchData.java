@@ -24,12 +24,12 @@ public class MismatchData
         if(mismatch.Type != Type)
             return false;
 
-        CategoryType category = mismatch.RefItem != null ? mismatch.RefItem.category() : mismatch.NewItem.category();
+        CategoryType category = mismatch.nonNullItem().category();
 
         if(category != Category)
             return false;
 
-        String key = mismatch.RefItem != null ? mismatch.RefItem.key() : mismatch.NewItem.key();
+        String key = mismatch.nonNullItem().key();
 
         if(!key.equals(Key))
             return false;
@@ -48,8 +48,8 @@ public class MismatchData
 
     public static MismatchData fromMismatch(final Mismatch mismatch)
     {
-        CategoryType category = mismatch.RefItem != null ? mismatch.RefItem.category() : mismatch.NewItem.category();
-        String key = mismatch.RefItem != null ? mismatch.RefItem.key() : mismatch.NewItem.key();
+        CategoryType category = mismatch.nonNullItem().category();
+        String key = mismatch.nonNullItem().key();
         return new MismatchData(category, mismatch.Type, key, mismatch.DiffValues);
     }
 

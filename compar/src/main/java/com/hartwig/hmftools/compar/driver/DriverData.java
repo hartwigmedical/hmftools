@@ -69,6 +69,9 @@ public class DriverData implements ComparableItem
     }
 
     @Override
+    public String geneName() { return DriverCatalog.gene(); }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DriverData otherDriver = (DriverData)other;

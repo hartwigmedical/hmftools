@@ -62,6 +62,9 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     @Override
+    public String geneName() { return CopyNumber.GeneName; }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final GeneCopyNumberData otherCn = (GeneCopyNumberData)other;
@@ -70,8 +73,8 @@ public class GeneCopyNumberData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
         final GeneCopyNumberData otherCn = (GeneCopyNumberData) other;
 

@@ -34,10 +34,11 @@ public class Mismatch
         return Type == otherMismatch.Type && RefItem == otherMismatch.RefItem && NewItem == otherMismatch.NewItem;
     }
 
+    public ComparableItem nonNullItem() { return RefItem != null ? RefItem : NewItem; }
+
     public String toString()
     {
-        CategoryType category = RefItem != null ? RefItem.category() : NewItem.category();
         return format("category(%s) type(%s) item(%s) diffs(%d)",
-                category, Type, RefItem != null ? RefItem.key() : NewItem.key(), DiffValues.size());
+                nonNullItem().category(), Type, nonNullItem().key(), DiffValues.size());
     }
 }

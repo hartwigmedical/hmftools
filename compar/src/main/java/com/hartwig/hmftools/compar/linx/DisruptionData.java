@@ -69,6 +69,9 @@ public class DisruptionData implements ComparableItem
     }
 
     @Override
+    public String geneName() { return GeneName; }
+
+    @Override
     public boolean matches(final ComparableItem other)
     {
         final DisruptionData otherDisruptionData = (DisruptionData)other;

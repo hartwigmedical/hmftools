@@ -13,6 +13,15 @@ public interface ComparableItem
 
     boolean matches(final ComparableItem other);
 
+    Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches);
+
+    String key();
+
+    List<String> displayValues();
+
+    default String geneName() { return ""; }
+
     default boolean reportable()
     {
         return true;
@@ -22,11 +31,4 @@ public interface ComparableItem
     {
         return true;
     }
-
-    Mismatch findMismatch(
-            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches);
-
-    String key();
-
-    List<String> displayValues();
 }
