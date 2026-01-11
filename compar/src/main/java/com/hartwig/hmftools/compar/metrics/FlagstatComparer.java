@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.compar.metrics;
 
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.common.CategoryType.TUMOR_FLAGSTAT;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.FLD_MAPPED_PROPORTION;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_ABS_THRESHOLD;
 import static com.hartwig.hmftools.compar.metrics.MetricsCommon.MAPPED_PROPORTION_PCT_THRESHOLD;
@@ -22,19 +21,21 @@ import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-public class TumorFlagstatComparer implements ItemComparer
+public class FlagstatComparer implements ItemComparer
 {
+    public final CategoryType mCategory;
     private final ComparConfig mConfig;
 
-    public TumorFlagstatComparer(final ComparConfig config)
+    public FlagstatComparer(final CategoryType category, final ComparConfig config)
     {
+        mCategory = category;
         mConfig = config;
     }
 
     @Override
     public CategoryType category()
     {
-        return TUMOR_FLAGSTAT;
+        return mCategory;
     }
 
     @Override
@@ -69,7 +70,7 @@ public class TumorFlagstatComparer implements ItemComparer
         try
         {
             BamFlagStats flagstat = BamFlagStats.read(determineFlagStatsFilePath(sampleId, fileSources.TumorFlagstat));
-            comparableItems.add(new TumorFlagstatData(flagstat));
+            comparableItems.add(new FlagstatData(mCategory, flagstat));
         }
         catch(IOException e)
         {

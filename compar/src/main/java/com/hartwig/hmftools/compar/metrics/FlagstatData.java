@@ -17,19 +17,23 @@ import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.compar.common.Mismatch;
 
-public class TumorFlagstatData implements ComparableItem
+public class FlagstatData implements ComparableItem
 {
-    public final BamFlagStats mFlagstat;
+    private final CategoryType mCategory;
+    private final BamFlagStats mFlagstat;
 
-    public TumorFlagstatData(final BamFlagStats flagstat)
+    public FlagstatData(final CategoryType category, final BamFlagStats flagstat)
     {
+        mCategory = category;
         mFlagstat = flagstat;
     }
+
+    public BamFlagStats flagStats() { return mFlagstat; }
 
     @Override
     public CategoryType category()
     {
-        return TUMOR_FLAGSTAT;
+        return mCategory;
     }
 
     @Override
@@ -65,10 +69,10 @@ public class TumorFlagstatData implements ComparableItem
     }
 
     @Override
-    public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds,
-            final boolean includeMatches)
+    public Mismatch findMismatch(
+            final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds, final boolean includeMatches)
     {
-        final TumorFlagstatData otherData = (TumorFlagstatData) other;
+        final FlagstatData otherData = (FlagstatData) other;
 
         final List<String> diffs = Lists.newArrayList();
 
