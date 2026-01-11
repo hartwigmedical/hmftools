@@ -23,12 +23,13 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -72,70 +73,96 @@ public final class HtmlUtil
 
     public static DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
     {
-        return renderReadInfoTable(firstRead, secondRead, null);
+        String readName = firstRead.getReadName();
+        ChrBaseRegion alignment = new ChrBaseRegion(
+                firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
+        ChrBaseRegion mateAlignment = null;
+        if(firstRead.getReadPairedFlag() && !firstRead.getMateUnmappedFlag())
+        {
+            String mateChromosome = firstRead.getMateReferenceName();
+            int mateAlignmentStart = firstRead.getMateAlignmentStart();
+            int mateAlignmentEnd = getMateAlignmentEnd(firstRead);
+            mateAlignment = new ChrBaseRegion(mateChromosome, mateAlignmentStart, mateAlignmentEnd);
+        }
+
+        String cigarStr = firstRead.getCigarString();
+        String mateCigarStr = firstRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(mateCigarStr == null)
+            mateCigarStr = "missing";
+
+        int insertSize = inferredInsertSizeAbs(firstRead);
+        String orientationStr = getOrientationString(firstRead);
+        int mapQ = firstRead.getMappingQuality();
+        int readNM = getReadNM(firstRead);
+        String consensusTypeAttribute = firstRead.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
+        String consensusReadAttribute = firstRead.hasAttribute(CONSENSUS_READ_ATTRIBUTE)
+	        ? firstRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE)
+	        : null;
+        Integer secondMapQ = null;
+        Integer secondReadNM = null;
+        if(secondRead != null)
+        {
+            secondMapQ = secondRead.getMappingQuality();
+            secondReadNM = getReadNM(secondRead);
+        }
+
+        return renderReadInfoTable(readName, alignment, mateAlignment, cigarStr, mateCigarStr, insertSize, orientationStr, mapQ, readNM, consensusTypeAttribute, consensusReadAttribute, secondMapQ, secondReadNM, null);
     }
 
-    public static DomContent renderReadInfoTable(
-            final SAMRecord firstRead, @Nullable final SAMRecord secondRead, @Nullable final Map<String, String> extraInfo)
+    public static DomContent renderReadInfoTable(final String readName, final ChrBaseRegion alignment,
+            @Nullable final ChrBaseRegion mateAlignment, final String cigarStr, @Nullable final String mateCigarStr,
+            @Nullable final Integer insertSize, @Nullable final String orientationStr, @Nullable final Integer mapQ,
+            @Nullable final Integer readNM, @Nullable final String consensusTypeAttribute, @Nullable final String consensusReadAttribute,
+            @Nullable final Integer secondMapQ, @Nullable final Integer secondReadNM, @Nullable final List<Pair<String, String>> extraInfo)
     {
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
         CssBuilder readInfoStyle = baseDivStyle.display("none");
 
         List<DomContent> readInfoRows = Lists.newArrayList();
 
-        readInfoRows.add(tr(td("Read name:"), td(firstRead.getReadName())));
+        readInfoRows.add(tr(td("Read name:"), td(readName)));
+        String alignmentStr = format("%s:%s-%s", alignment.Chromosome, alignment.start(), alignment.end());
 
-        String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
         String mateAlignmentStr = "unmapped";
-        if(firstRead.getReadPairedFlag() && !firstRead.getMateUnmappedFlag())
+        if(mateAlignment != null)
         {
-            String mateChromosome = firstRead.getMateReferenceName();
-            int mateAlignmentStart = firstRead.getMateAlignmentStart();
-            int mateAlignmentEnd = getMateAlignmentEnd(firstRead);
+            String mateChromosome = mateAlignment.Chromosome;
+            int mateAlignmentStart = mateAlignment.start();
+            int mateAlignmentEnd = mateAlignment.end();
             String mateAlignmentEndStr = mateAlignmentEnd == NO_POSITION ? "?" : String.valueOf(mateAlignmentEnd);
             mateAlignmentStr = format("%s:%d-%s", mateChromosome, mateAlignmentStart, mateAlignmentEndStr);
         }
+
         readInfoRows.add(tr(td("Alignment:"), td(alignmentStr + ", " + mateAlignmentStr)));
 
-        String mateCigarStr = firstRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        if(mateCigarStr == null)
-        {
-            mateCigarStr = "missing";
-        }
+        readInfoRows.add(tr(td("Cigar:"), td(cigarStr + ", " + (mateCigarStr == null ? "missing" : mateCigarStr))));
+        readInfoRows.add(tr(td("Insert size:"), td(insertSize == null ? "unknown" : String.valueOf(insertSize))));
+        readInfoRows.add(tr(td("Orientation:"), td(orientationStr == null ? "unknown" : orientationStr)));
 
-        readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
-        int insertSize = inferredInsertSizeAbs(firstRead);
-        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(insertSize))));
-        readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
-
-        String firstMapQStr = String.valueOf(firstRead.getMappingQuality());
-        String secondMapQStr = secondRead == null ? "" : String.valueOf(secondRead.getMappingQuality());
-        String mapQStr = secondRead == null ? firstMapQStr : firstMapQStr + ", " + secondMapQStr;
+        String firstMapQStr = mapQ == null ? "unknown" : String.valueOf(mapQ);
+        String secondMapQStr = secondMapQ == null ? "" : java.lang.String.valueOf(secondMapQ);
+        String mapQStr = secondMapQ == null ? firstMapQStr : firstMapQStr + ", " + secondMapQStr;
         readInfoRows.add(tr(td("MapQ:"), td(mapQStr)));
 
-        String firstNumMutationsStr = String.valueOf(getReadNM(firstRead));
-        String secondNumMutationsStr = secondRead == null ? "" : String.valueOf(getReadNM(secondRead));
-        String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
+        String firstNumMutationsStr = readNM == null ? "unknown" : String.valueOf(readNM);
+        String secondNumMutationsStr = secondReadNM == null ? "" : java.lang.String.valueOf(secondReadNM);
+        String numMutationsStr = secondReadNM == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
         readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
 
-        String umiTypeStr = firstRead.getStringAttribute(CONSENSUS_TYPE_ATTRIBUTE);
+        String umiTypeStr = consensusTypeAttribute;
         if(umiTypeStr != null)
-        {
             readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));
-        }
 
         String dupCountStr = "0";
-        if(firstRead.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-        {
-            dupCountStr = firstRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE).split(CONSENSUS_INFO_DELIM, 2)[0];
-        }
+        if(consensusReadAttribute != null)
+            dupCountStr = consensusReadAttribute.split(CONSENSUS_INFO_DELIM, 2)[0];
 
         readInfoRows.add(tr(td("Dup count:"), td(dupCountStr)));
 
         if(extraInfo != null)
         {
-            for(Map.Entry<String, String> entry : extraInfo.entrySet())
-                readInfoRows.add(tr(td(entry.getKey()), td(entry.getValue())));
+            for(Pair<String, String> entry : extraInfo)
+                readInfoRows.add(tr(td(entry.getLeft()), td(entry.getRight())));
         }
 
         DomContent readInfoTable = styledTable(readInfoRows, CssBuilder.EMPTY);
