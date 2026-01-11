@@ -28,6 +28,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
@@ -86,6 +87,7 @@ public class SupportRead
     private int mMediumQualCount;
     private Integer mRefBaseMismatches;
     private String mMismatchInfo;
+    private List<SequenceDiffInfo> mMismatches;
 
     private Read mRead; // expect to be null unless required for BAM or read TSV writing
 
@@ -136,6 +138,7 @@ public class SupportRead
         mExtBaseMismatches = mismatches;
         mRefBaseMismatches =  null;
         mMismatchInfo = "";
+        mMismatches = null;
         mMediumQualCount = isSbx() && type == SupportType.JUNCTION ? setSbxMediumQualCount(read) : 0;
 
         mJunctionReadStartDistance = junctReadStartDistance;
@@ -203,7 +206,9 @@ public class SupportRead
     public boolean hasReferenceMismatches() { return mRefBaseMismatches != null; }
 
     public String mismatchInfo() { return mMismatchInfo; }
+    public List<SequenceDiffInfo> mismatches() { return mMismatches; }
     public void setMismatchInfo(final String mismatchInfo) { mMismatchInfo = mismatchInfo; }
+    public void setMismatches(final List<SequenceDiffInfo> mismatches) { mMismatches = mismatches; }
 
     public void setReferenceMismatches(int mismatches) { mRefBaseMismatches = mismatches; }
 

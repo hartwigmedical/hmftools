@@ -307,7 +307,9 @@ public class AssemblyConfig
             Collections.sort(SpecificJunctions);
         }
 
-        RunVisualiser = configBuilder.hasFlag(RUN_ASSEMBLY_VIS) && !SpecificJunctions.isEmpty();
+        // TODO: undo
+//        RunVisualiser = configBuilder.hasFlag(RUN_ASSEMBLY_VIS) && !SpecificJunctions.isEmpty();
+        RunVisualiser = configBuilder.hasFlag(RUN_ASSEMBLY_VIS);
 
         if(RunVisualiser || PurpleDir != null)
             CLEAR_CACHED_READ = false;

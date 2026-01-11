@@ -1,35 +1,59 @@
 package com.hartwig.hmftools.esvee.assembly.vis;
 
+import static java.lang.Math.abs;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.vis.HtmlUtil.renderReadInfoTable;
 import static com.hartwig.hmftools.common.vis.SvgRender.BOX_PADDING;
 import static com.hartwig.hmftools.common.vis.SvgRender.renderBaseSeq;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisConstants.READ_HEIGHT_PX;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
+import static htsjdk.samtools.CigarOperator.S;
+import static j2html.TagCreator.b;
+import static j2html.TagCreator.base;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.rawHtml;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.OptionalInt;
+import java.util.Queue;
+import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.vis.BaseSeqViewModel;
 import com.hartwig.hmftools.common.vis.CssBuilder;
 import com.hartwig.hmftools.common.vis.CssSize;
+import com.hartwig.hmftools.esvee.assembly.SequenceDiffInfo;
+import com.hartwig.hmftools.esvee.assembly.SequenceDiffType;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.vis.AssemblyVisualiser.SegmentViewModel;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.jfree.svg.SVGGraphics2D;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import j2html.tags.DomContent;
 
 public final class ReadViewModel
@@ -45,13 +69,78 @@ public final class ReadViewModel
         mReadViewModel = readViewModel;
     }
 
+    private static NavigableMap<Integer, List<CigarOperator>> mapCigarOperators(final List<CigarElement> cigarEls)
+    {
+        NavigableMap<Integer, List<CigarOperator>> mappedOps = Maps.newTreeMap();
+        int baseIdx = 0;
+        for(CigarElement cigarEl : cigarEls)
+        {
+            CigarOperator op = cigarEl.getOperator();
+            int length = cigarEl.getLength();
+            for(int i = 0; i < length; i++)
+            {
+                if(op.consumesReadBases())
+                {
+                    mappedOps.computeIfAbsent(baseIdx, k -> Lists.newArrayList()).add(op);
+                    baseIdx++;
+                }
+                else
+                {
+                    mappedOps.computeIfAbsent(baseIdx - 1, k ->  Lists.newArrayList()).add(op);
+                }
+            }
+        }
+
+        return mappedOps;
+    }
+
+    private static List<CigarElement> collapseMappedCigarOperators(final NavigableMap<Integer, List<CigarOperator>> mappedOps)
+    {
+        List<CigarElement> cigarEls = Lists.newArrayList();
+        CigarOperator currentOp = null;
+        int currentLength = 0;
+        for(List<CigarOperator> ops : mappedOps.values())
+        {
+            for(CigarOperator op : ops)
+            {
+                if(currentOp == null)
+                {
+                    currentOp = op;
+                    currentLength = 1;
+                    continue;
+                }
+
+                if(currentOp == op)
+                {
+                    currentLength += 1;
+                    continue;
+                }
+
+                cigarEls.add(new CigarElement(currentLength, currentOp));
+                currentOp = op;
+                currentLength = 1;
+            }
+        }
+
+        if(currentLength > 0)
+            cigarEls.add(new CigarElement(currentLength, currentOp));
+
+        return cigarEls;
+    }
+
     public static ReadViewModel create(final List<SegmentViewModel> refViewModel, final SupportRead read, final JunctionAssembly junctionAssembly)
     {
-        boolean readNegativeStrandFlag = read.cachedRead().bamRecord().getReadNegativeStrandFlag();
+        boolean readNegativeStrandFlag = read.orientation() == REVERSE;
         byte[] readBases = read.cachedRead().getBases();
         byte[] readBaseQuals = read.cachedRead().getBaseQuality();
         if(read.fullAssemblyOrientation() == REVERSE)
         {
+            // TODO: how does this interact with mismatch info?
+            if(true)
+            {
+                throw new NotImplementedException("TODO");
+            }
+
             readBases = reverseComplementBases(readBases);
 
             int left = 0;
@@ -79,6 +168,68 @@ public final class ReadViewModel
             }
         }
 
+        // TODO: Different orientations?
+        BaseRegion alignment = new BaseRegion(read.alignmentStart(), read.alignmentEnd());
+        Boolean isBuiltForward = null;
+        if(read.chromosome().equals(refViewModel.get(0).chromosome()) && alignment.overlaps(refViewModel.get(0).refRegion()))
+        {
+            isBuiltForward = true;
+        }
+        else if(read.chromosome().equals(refViewModel.get(refViewModel.size() - 1).chromosome()) && alignment.overlaps(refViewModel.get(refViewModel.size() - 1).refRegion()))
+        {
+            isBuiltForward = false;
+        }
+
+        if(isBuiltForward == null)
+        {
+            SV_LOGGER.error("Cannot find matching junction for read: {}", read.id());
+            System.exit(0);
+        }
+
+        List<SequenceDiffInfo> mismatches = read.mismatches();
+        if(mismatches == null)
+            mismatches = Lists.newArrayList();
+
+        NavigableMap<Integer, List<CigarOperator>> mappedCigarOps = mapCigarOperators(cigarEls);
+        for(SequenceDiffInfo mismatch : mismatches)
+        {
+            if(mismatch.Type == SequenceDiffType.BASE)
+                continue;
+
+            if(mismatch.Type == SequenceDiffType.INSERT)
+            {
+                int insertLength = abs(mismatch.IndelLength);
+                for(int i = 0; i < insertLength; i++)
+                {
+                    int baseIdx = isBuiltForward ? mismatch.ReadIndex + i : readBases.length - 1 - mismatch.ReadIndex - i - 1;
+                    mappedCigarOps.get(baseIdx).set(0, I);
+                }
+
+                continue;
+            }
+
+            if(mismatch.Type == SequenceDiffType.DELETE)
+            {
+                int delLength = abs(mismatch.IndelLength);
+                int baseIdx = isBuiltForward ? mismatch.ReadIndex : readBases.length - 1 - mismatch.ReadIndex - 1;
+                for(int i = 0; i < delLength; i++)
+                    mappedCigarOps.get(baseIdx).add(D);
+
+                continue;
+            }
+
+            if(mismatch.Type == SequenceDiffType.REPEAT)
+            {
+                // TODO:
+                System.out.println("*** " + read.id() + " " + mismatch);
+                continue;
+            }
+
+            SV_LOGGER.error("Cannot handle mismatch type {}", mismatch.Type.toString());
+            System.exit(1);
+        }
+
+        cigarEls = collapseMappedCigarOperators(mappedCigarOps);
         BaseSeqViewModel readViewModel = BaseSeqViewModel.create(
                 read.fullAssemblyIndexStart() + indelOffset, cigarEls, readBases, readBaseQuals, readNegativeStrandFlag);
         readViewModel.clearSoftClips();
@@ -126,14 +277,36 @@ public final class ReadViewModel
         if(renderCount <= 1)
             return null;
 
+        String readName = mSupportRead.id();
+        ChrBaseRegion alignment = new ChrBaseRegion(mSupportRead.chromosome(), mSupportRead.alignmentStart(), mSupportRead.alignmentEnd());
+        ChrBaseRegion mateAlignment =  null;
+        if(mSupportRead.mateChromosome() != NO_CHROMOSOME_NAME)
+            mateAlignment = new ChrBaseRegion(mSupportRead.mateChromosome(), mSupportRead.mateAlignmentStart(), mSupportRead.mateAlignmentEnd());
+
+        String cigarStr = mSupportRead.cigar();
+        // TODO:
+        String mateCigarStr = null;
+        OptionalInt insertSize_ = OptionalInt.of(mSupportRead.insertSize());
+        // TODO:
+        String orientationStr = null;
+        OptionalInt mapQ_ = OptionalInt.of(mSupportRead.mapQual());
+        OptionalInt readNM_ = OptionalInt.empty();
+        String consensusTypeAttribute = null;
+        String consensusReadAttribute = null;
+        OptionalInt secondMapQ = OptionalInt.empty();
+        OptionalInt secondReadNM = OptionalInt.empty();
+
         Map<String, String> extraInfo = Maps.newHashMap();
         extraInfo.put("Mismatch Info:", mSupportRead.mismatchInfo());
+
+        String trimCountStr = format("%d,%d", mSupportRead.trimCountStart(), mSupportRead.trimCountEnd());
+        extraInfo.put("Trim count:", trimCountStr);
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
 
         DomContent svgEl = rawHtml(svgCanvas.getSVGElement());
         DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
-        DomContent readInfoDiv = renderReadInfoTable(mSupportRead.cachedRead().bamRecord(), null, extraInfo);
+        DomContent readInfoDiv = renderReadInfoTable(readName, alignment, mateAlignment, cigarStr, mateCigarStr, insertSize_, orientationStr, mapQ_, readNM_, consensusTypeAttribute, consensusReadAttribute, secondMapQ, secondReadNM, extraInfo);
         DomContent containerDiv = div(svgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
 
         return containerDiv;
