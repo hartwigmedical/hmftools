@@ -236,7 +236,7 @@ public final class SvgRender
             }
             else if(base.hasCharBase())
             {
-                boolean matchesRef = !base.IsSoftClip && refBase.hasCharBase() && refBase.charBase() == base.charBase();
+                boolean matchesRef = !base.isSoftClip() && refBase.hasCharBase() && refBase.charBase() == base.charBase();
 
                 Color bgColour = Color.WHITE;
                 Color fgColour = Color.BLACK;
