@@ -175,8 +175,10 @@ public class TincAnalyser
 
         adjustedRefAltCount = variant.calcReducedAltCount(adjustedRefAltCount);
 
+        double qual = variant.Context.getPhredScaledQual();
+
         boolean isUltimaIndelRepeat = isUltima() && isPanelIndelRepeatVariant(
-                variant.tier(), variant.isIndel(), variant.Context.hasAttribute(READ_CONTEXT_REPEAT_COUNT));
+                variant.tier(), qual, variant.isIndel(), variant.Context.hasAttribute(READ_CONTEXT_REPEAT_COUNT));
 
         if(aboveMaxGermlineVaf(variant.tier(), isUltimaIndelRepeat, tumorVaf, adjustedRefAltCount, refReadCounts.Total, config.MaxGermlineVaf))
             return;
