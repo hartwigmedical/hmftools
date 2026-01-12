@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -645,7 +646,7 @@ public class VariantFilters
 
                 if(isLineInsert)
                     heuristicValue += SBX_HEURISTIC_BND_LINE_BONUS;
-                else
+                else if(var.insertSequence().length() >= LINE_POLY_AT_REQ)
                     heuristicValue -= SBX_HEURISTIC_BND_INS_PENALTY;
 
                 break;
